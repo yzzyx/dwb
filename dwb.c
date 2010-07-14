@@ -177,7 +177,6 @@ dwb_web_view_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   if (gtk_widget_has_focus(dwb.gui.entry)) {
     return false;
   }
-
   ret = dwb_eval_key(e);
   
   return ret;
@@ -277,7 +276,7 @@ void dwb_view_modify_style(View *v, GdkColor *fg, GdkColor *bg, GdkColor *tabfg,
 /* dwb_web_view_init_signals(View *v) {{{*/
 void
 dwb_web_view_init_signals(View *v) {
-  g_signal_connect(v->vbox, "key-press-event", G_CALLBACK(dwb_web_view_key_press_cb), v);
+  //g_signal_connect(v->vbox, "key-press-event", G_CALLBACK(dwb_web_view_key_press_cb), v);
 } /*}}}*/
 /* dwb_create_web_view(View *v) {{{*/
 void 
@@ -484,6 +483,7 @@ dwb_init_gui() {
   }
   gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), DEFAULT_WIDTH, DEFAULT_HEIGHT);
   g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_exit), NULL);
+  g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_web_view_key_press_cb), NULL);
 
   // Main
   dwb.gui.vbox = gtk_vbox_new(false, 0);
