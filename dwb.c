@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <string.h>
 #include <gtk/gtk.h>
@@ -8,13 +9,20 @@
 
 
 #define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
-#define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X))
+#define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X)) 
 #define NN(X)       ((X) == 0) ? 1 : (X) 
 #define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK))
+#define CLEAR_COMMAND_TEXT(X) dwb_set_command_text(X, NULL, NULL, NULL)
+
+#define CURRENT_VIEW() ((View*)dwb.state.fview->data)
+#define VIEW(X)   ((View*)X->data)
 /* Types */
 typedef enum _Mode Mode;
 typedef enum _Open Open;
 typedef enum _Layout Layout;
+typedef enum _Direction Direction;
+
+
 typedef struct _Arg Arg;
 typedef struct _Misc Misc;
 typedef struct _Dwb Dwb;
@@ -23,15 +31,10 @@ typedef struct _State State;
 typedef struct _View View;
 typedef struct _Color Color;
 typedef struct _Font Font;
-typedef struct  _FunctionMap FunctionMap;
-typedef struct  _KeyMap KeyMap;
-typedef struct  _Key Key;
-
-struct _Key {
-  const gchar *desc;
-  const gchar *key;
-  guint mod;
-};
+typedef struct _FunctionMap FunctionMap;
+typedef struct _KeyMap KeyMap;
+typedef struct _Key Key;
+typedef struct _ViewStatus ViewStatus;
 
 /* functions */
 void dwb_exit(void);
@@ -41,11 +44,14 @@ void dwb_resize(gdouble);
 void dwb_normal_mode(void);
 void dwb_update_layout(void);
 
-void dwb_set_command_text(GList *, const char *, GdkColor *,  PangoFontDescription *);
+void dwb_set_command_text(GList *, const gchar *, GdkColor *,  PangoFontDescription *);
+void dwb_set_error_message(GList *, FunctionMap *);
+void dwb_set_normal_message(GList *, FunctionMap *);
 void dwb_view_modify_style(GList *, GdkColor *, GdkColor *, GdkColor *, GdkColor *, PangoFontDescription *, gint);
 GList * dwb_create_web_view(GList *);
 void dwb_add_view(Arg *);
 void dwb_remove_view(Arg *);
+void dwb_source_remove(GList *);
 
 gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
 gboolean dwb_entry_keypress_cb(GtkWidget *, GdkEventKey *e);
@@ -56,17 +62,16 @@ void dwb_load_uri(Arg *);
 void dwb_grab_focus(GList *);
 gchar * dwb_get_resolved_uri(const gchar *);
 
-void dwb_open(Arg *);
-void dwb_focus_next(Arg *);
-void dwb_focus_prev(Arg *);
-void dwb_push_master(Arg *);
+gboolean dwb_open(Arg *);
+gboolean dwb_focus_next(Arg *);
+gboolean dwb_focus_prev(Arg *);
+gboolean dwb_push_master(Arg *);
+gboolean dwb_set_orientation(Arg *arg);
 void dwb_toggle_maximized(Arg *);
-void dwb_zoom_in(Arg *);
-void dwb_zoom_out(Arg *);
-
-void dwb_keymap_free(KeyMap *);
-KeyMap * dwb_keymap_prepend(KeyMap *, const gchar *, const gchar *, guint, void (*func)(void*), void *);
-KeyMap * dwb_keymap_new();
+gboolean dwb_zoom_in(Arg *);
+gboolean dwb_zoom_out(Arg *);
+void dwb_set_zoom_level(Arg *);
+gboolean dwb_scroll(Arg *);
 
 void dwb_init_key_map(void);
 void dwb_init_style(void);
@@ -82,13 +87,29 @@ enum _Open {
   OpenNewWindow,
 };
 enum _Layout {
-  NormalLayout = 1<<0, 
-  BottomStack = 1<<1, 
+  NormalLayout = 0,
+  BottomStack = 1<<0, 
   Maximized = 1<<2, 
 };
+enum _Direction {
+  Up, 
+  Down, 
+  Left, 
+  Right, 
+  PageUp,
+  PageDown, 
+  Top,
+  Bottom,
+};
 
+struct _Key {
+  const gchar *desc;
+  const gchar *key;
+  guint mod;
+};
 struct _Arg {
   gint n;
+  gdouble d;
   gpointer p;
 };
 struct _State {
@@ -101,17 +122,16 @@ struct _State {
 };
 struct _FunctionMap {
   const gchar *desc;
-  void (*func)(void*);
-  gchar *text;
+  gboolean (*func)(void*);
+  const gchar *text;
+  const gchar *error; 
+  gboolean hide;
   Arg arg;
 };
 struct _KeyMap {
-  const gchar  *desc;
   const gchar *key;
   guint mod;
-  void (*func)(void*);
-  gchar *text;
-  Arg arg;
+  FunctionMap *map;
 };
 
 struct _View {
@@ -126,6 +146,10 @@ struct _View {
   GtkAdjustment *hadj;
   GtkAdjustment *vadj;
   View *next;
+  ViewStatus *status;
+};
+struct _ViewStatus {
+  guint message_id;
 };
 struct _Color {
   GdkColor active_fg;
@@ -138,6 +162,7 @@ struct _Color {
   GdkColor tab_normal_bg;
   GdkColor entry_fg;
   GdkColor entry_bg;
+  GdkColor error;
 };
 struct _Font {
   PangoFontDescription *fd_normal;
@@ -175,16 +200,22 @@ Dwb dwb;
 #include "config.h"
 
 FunctionMap FMAP [] = {
-  { "open",                  (void*)dwb_open,             "open",           { .n = OpenNormal,      .p = NULL } },
-  { "open_new_view",         (void*)dwb_open,             "open new view",  { .n = OpenNewView,     .p = NULL } },
-  { "add_view",              (void*)dwb_add_view,         "add view",       { .n = 0,               .p = NULL } },
-  { "remove_view",           (void*)dwb_remove_view,      "remove view",    { .n = 0,               .p = NULL } },
-  { "zoom_in",               (void*)dwb_zoom_in,          "zoom in",        { .n = 0,               .p = NULL } },
-  { "zoom_out",              (void*)dwb_zoom_out,         "zoom out",       { .n = 0,               .p = NULL } },
-  { "push_master",           (void*)dwb_push_master,      "push master",    { .n = 0,               .p = NULL } },
-  { "focus_next",            (void*)dwb_focus_next,       "focus next",     { .n = 0,               .p = NULL } },
-  { "focus_prev",            (void*)dwb_focus_prev,       "focus prev",     { .n = 0,               .p = NULL} }, 
-  { "toggle_maximized",      (void*)dwb_toggle_maximized, "toggle maximized" },  
+    // desc                   
+  { "open",                  (void*)dwb_open,             "open",                   NULL,                         false,   { .n = OpenNormal,      .p = NULL } },
+  { "open_new_view",         (void*)dwb_open,             "open new view",          NULL,                         false,   { .n = OpenNewView,     .p = NULL } },
+  { "add_view",              (void*)dwb_add_view,         "add view",               NULL,                         true,                                        },
+  { "remove_view",           (void*)dwb_remove_view,      "remove view",            NULL,                         true,                                        },
+  { "push_master",           (void*)dwb_push_master,      "push master",            "No other view",              true,                                        },
+  { "focus_next",            (void*)dwb_focus_next,       "focus next",             "No other view",              true,                                        },
+  { "focus_prev",            (void*)dwb_focus_prev,       "focus prev",             "No other view",              true,                                        }, 
+  { "toggle_maximized",      (void*)dwb_toggle_maximized, "toggle maximized",       NULL,                         true,                                        },  
+  { "zoom_in",               (void*)dwb_zoom_in,          "zoom in",                "Cannot zoom in further",     true,                                        },
+  { "zoom_out",              (void*)dwb_zoom_out,         "zoom out",               "Cannot zoom out further",    true,                                        },
+  { "zoom_normal",           (void*)dwb_set_zoom_level,   "zoom 100%",              NULL,                         true,    { .d = 1.0,   .p = NULL }           },
+  { "toggle_bottomstack",    (void*)dwb_set_orientation,  "toggle bottomstack",     NULL,                         true,                                        }, 
+  { "scroll_up",             (void*)dwb_scroll,           "scroll up",              "Already at top of page",     true,    { .n = Up, },                       },
+  { "scroll_down",           (void*)dwb_scroll,           "scroll down",            "Already at bottom of page",  true,    { .n = Down, },                     },
+  { "scroll_left",           (void*)dwb_scroll,           "scroll left",            NULL,                         true,    { .n = Left },                      },
 };
 
 /* CALLBACKS {{{*/
@@ -235,13 +266,28 @@ dwb_web_view_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 }/*}}}*//*}}}*/
 
 /* COMMANDS {{{*/
+/* dwb_simple_command(keyMap *km) {{{*/
+void 
+dwb_simple_command(KeyMap *km) {
+  gboolean (*func)(void *) = km->map->func;
+
+  if (func(&km->map->arg)) {
+    dwb_set_normal_message(dwb.state.fview, km->map);
+  }
+  else {
+    dwb_set_error_message(dwb.state.fview, km->map);
+  }
+  dwb.state.nummod = 0;
+  g_string_free(dwb.state.buffer, true);
+  dwb.state.buffer = NULL;
+}/*}}}*/
 /* dwb_push_master {{{*/
-void
+gboolean 
 dwb_push_master(Arg *arg) {
   GList *gl, *l;
   View *old, *new;
   if (!dwb.state.views->next) {
-    return;
+    return false;
   }
   if (arg->p) {
     gl = arg->p;
@@ -273,23 +319,62 @@ dwb_push_master(Arg *arg) {
     dwb.state.views = g_list_concat(gl, dwb.state.views);
     dwb_grab_focus(dwb.state.views);
   }
+  if (LAYOUT & Maximized) {
+    gtk_widget_show(dwb.gui.left);
+    gtk_widget_hide(dwb.gui.right);
+    gtk_widget_show(new->vbox);
+    gtk_widget_hide(old->vbox);
+  }
   gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), new->tabevent, -1);
   dwb_update_layout();
+  return true;
 }/*}}}*/
 /* dwb_open(Arg *arg) {{{*/
-void 
+gboolean  
 dwb_open(Arg *arg) {
   dwb.state.nv = arg->n;
   gtk_widget_grab_focus(dwb.gui.entry);
   dwb.mode = OpenMode;
-  //dwb_set_command_text(dwb.state.fview, "open", &dwb.color.active_fg, dwb.font.fd_normal);
+  return true;
 } /*}}}*/
-/* dwb_remove_view(Arg *arg) {{{*/
+/* toggle_maximized {{{*/
+void 
+dwb_maximized_hide_zoom(View *v, View *no) {
+  if (FACTOR != 1.0) {
+    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
+  }
+  if (v != dwb.state.fview->data) {
+    gtk_widget_hide(v->vbox);
+  }
+}
+void 
+dwb_maximized_show_zoom(View *v) {
+  if (FACTOR != 1.0 && v != dwb.state.views->data) {
+    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), FACTOR);
+  }
+  gtk_widget_show(v->vbox);
+}
 void 
 dwb_toggle_maximized(Arg *arg) {
   LAYOUT ^= Maximized;
-  dwb_update_layout();
-}
+  if (LAYOUT & Maximized) {
+    g_list_foreach(dwb.state.views,  (GFunc)dwb_maximized_hide_zoom, NULL);
+    if  (dwb.state.views == dwb.state.fview) {
+      gtk_widget_hide(dwb.gui.right);
+    }
+    else if (dwb.state.views->next) {
+      gtk_widget_hide(dwb.gui.left);
+    }
+  }
+  else {
+    if (dwb.state.views->next) {
+      gtk_widget_show(dwb.gui.right);
+    }
+    gtk_widget_show(dwb.gui.left);
+    g_list_foreach(dwb.state.views,  (GFunc)dwb_maximized_show_zoom, NULL);
+  }
+}/*}}}*/
+/* dwb_remove_view(Arg *arg) {{{*/
 void 
 dwb_remove_view(Arg *arg) {
   GList *gl;
@@ -304,6 +389,7 @@ dwb_remove_view(Arg *arg) {
     gl = dwb.state.fview;
     if ( !(dwb.state.fview = dwb.state.fview->next) ) {
       dwb.state.fview = dwb.state.views;
+      gtk_widget_show_all(dwb.gui.topbox);
     }
   }
   View *v = gl->data;
@@ -316,53 +402,92 @@ dwb_remove_view(Arg *arg) {
   gtk_widget_destroy(v->vbox);
   dwb_grab_focus(dwb.state.fview);
   gtk_container_remove(GTK_CONTAINER(dwb.gui.topbox), v->tabevent);
+
+  // clean up
+  dwb_source_remove(gl);
+  g_free(v->status);
+  g_free(v);
+
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
+
+  if (LAYOUT & Maximized) {
+    gtk_widget_show(CURRENT_VIEW()->vbox);
+    if (dwb.state.fview == dwb.state.views) {
+      gtk_widget_hide(dwb.gui.right);
+      gtk_widget_show(dwb.gui.left);
+    }
+    else {
+      gtk_widget_show(dwb.gui.right);
+      gtk_widget_hide(dwb.gui.left);
+    }
+  }
   dwb_update_layout();
 }/*}}}*/
 /* dwb_zoom_in(void *arg) {{{*/
-void 
-dwb_simple_command(KeyMap *km) {
-  void (*func)(void *) = km->func;
-
-  func(&km->arg);
-  dwb.state.nummod = 0;
-  g_string_free(dwb.state.buffer, true);
-  dwb.state.buffer = NULL;
-  dwb_set_command_text(dwb.state.fview, km->text, &dwb.color.active_fg, dwb.font.fd_bold);
-}
-void
+gboolean
 dwb_zoom_in(Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
   gint limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
+  gboolean ret;
 
   for (gint i=0; i<limit; i++) {
     if ((webkit_web_view_get_zoom_level(web) > 4.0)) {
+      ret = false;
       break;
     }
     webkit_web_view_zoom_in(web);
+    ret = true;
   }
+  return ret;
 }/*}}}*/
 /* dwb_zoom_out(void *arg) {{{*/
-void
+gboolean
 dwb_zoom_out(Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
   gint limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
+  gboolean ret;
 
   for (int i=0; i<limit; i++) {
     if ((webkit_web_view_get_zoom_level(web) < 0.25)) {
+      ret = false;
       break;
     }
     webkit_web_view_zoom_out(web);
+    ret = true;
   }
-}/*}}}*//*}}}*/
+  return ret;
+}/*}}}*/
+/* dwb_scroll {{{*/
+gboolean 
+dwb_scroll(Arg *arg) {
+  gboolean ret = true;
+  return ret;
+}/*}}}*/
+/* dwb_set_zoom_level(Arg *arg) {{{*/
+void 
+dwb_set_zoom_level(Arg *arg) {
+  GList *gl = arg->p ? arg->p : dwb.state.fview;
+  webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(((View*)gl->data)->web), arg->d);
+
+}/*}}}*/
+/* dwb_set_orientation(Arg *arg) {{{*/
+gboolean 
+dwb_set_orientation(Arg *arg) {
+  LAYOUT ^= BottomStack;
+  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.paned), LAYOUT & BottomStack);
+  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.right), (LAYOUT & BottomStack) ^ 1);
+  dwb_resize(SIZE);
+  return true;
+}/*}}}*/
 /* dwb_resize(gdouble size) {{{*/
 void
 dwb_resize(gdouble size) {
-  // TODO save new size
-  gtk_widget_set_size_request(dwb.gui.left,  100 - size,  0);
-  gtk_widget_set_size_request(dwb.gui.right, size, 0);
+  gint fact = LAYOUT & BottomStack;
+
+  gtk_widget_set_size_request(dwb.gui.left,  (100 - size) * (fact^1),  (100 - size) *  fact);
+  gtk_widget_set_size_request(dwb.gui.right, size * (fact^1), size * fact);
 }/*}}}*/
 /* dwb_focus(GList *gl) {{{*/
 void 
@@ -374,95 +499,72 @@ dwb_focus(GList *gl) {
   }
   if (tmp) {
     dwb_view_modify_style(tmp, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_oblique, dwb.font.normal_size);
-    dwb_set_command_text(tmp, NULL, NULL, NULL);
+    dwb_source_remove(tmp);
+    CLEAR_COMMAND_TEXT(tmp);
   }
   dwb_grab_focus(gl);
 } /*}}}*/
 /* dwb_focus_next(Arg *arg) {{{*/
-void 
+gboolean 
 dwb_focus_next(Arg *arg) {
   GList *gl = dwb.state.fview;
+  if (!dwb.state.views->next) {
+    return false;
+  }
   if (gl->next) {
+    if (LAYOUT & Maximized) {
+      if (gl == dwb.state.views) {
+        gtk_widget_hide(dwb.gui.left);
+        gtk_widget_show(dwb.gui.right);
+      }
+      gtk_widget_show(((View *)gl->next->data)->vbox);
+      gtk_widget_hide(((View *)gl->data)->vbox);
+    }
     dwb_focus(gl->next);
   }
   else {
-    dwb_focus(dwb.state.views);
+    if (LAYOUT & Maximized) {
+      gtk_widget_hide(dwb.gui.right);
+      gtk_widget_show(dwb.gui.left);
+      gtk_widget_show(((View *)dwb.state.views->data)->vbox);
+      gtk_widget_hide(((View *)gl->data)->vbox);
+    }
+    dwb_focus(g_list_first(dwb.state.views));
   }
+  return true;
 }/*}}}*/
 /* dwb_focus_prev(Arg *arg) {{{*/
-void 
+gboolean 
 dwb_focus_prev(Arg *arg) {
   GList *gl = dwb.state.fview;
-  if (gl->prev) {
-    dwb_focus(gl->prev);
+  if (!dwb.state.views->next) {
+    return false;
+  }
+  if (gl == dwb.state.views) {
+    GList *last = g_list_last(dwb.state.views);
+    if (LAYOUT & Maximized) {
+      gtk_widget_hide(dwb.gui.left);
+      gtk_widget_show(dwb.gui.right);
+      gtk_widget_show(((View *)last->data)->vbox);
+      gtk_widget_hide(((View *)gl->data)->vbox);
+    }
+    dwb_focus(last);
   }
   else {
-    dwb_focus(g_list_last(dwb.state.views));
-  }
-}/*}}}*/
-/* dwb_grab_focus(GList *gl) {{{*/
-void 
-dwb_grab_focus(GList *gl) {
-  View *v = gl->data;
-
-  dwb.state.fview = gl;
-  dwb_view_modify_style(gl, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_bold, dwb.font.active_size);
-  gtk_widget_grab_focus(v->web);
-}/*}}}*/
-/* dwb_set_command_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
-void
-dwb_set_command_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
-  View *v = gl->data;
-  gtk_label_set_text(GTK_LABEL(v->lstatus), text);
-  if (fg) {
-    gtk_widget_modify_fg(v->lstatus, GTK_STATE_NORMAL, fg);
-  }
-  if (fd) {
-    gtk_widget_modify_font(v->lstatus, fd);
-  }
-}/*}}}*/
-/* dwb_load_uri(const char *uri) {{{*/
-void 
-dwb_load_uri(Arg *arg) {
-  gchar *uri = dwb_get_resolved_uri(arg->p);
-
-  if (dwb.state.nv == OpenNewView) {
-    dwb_add_view(NULL);
-  }
-  View *fview = dwb.state.fview->data;
-  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
-
-}/*}}}*/
-/* dwb_update_layout() {{{*/
-void
-dwb_update_layout() {
-  //TODO Maximized
-  gboolean visible = gtk_widget_get_visible(dwb.gui.right);
-  View *v;
-
-  if (LAYOUT & Maximized) {
-    if (visible) {
-      gtk_widget_hide(dwb.gui.right);
+    if (LAYOUT & Maximized) {
+      if (gl == dwb.state.views->next) {
+        gtk_widget_hide(dwb.gui.right);
+        gtk_widget_show(dwb.gui.left);
+      }
+      gtk_widget_show(((View *)gl->prev->data)->vbox);
+      gtk_widget_hide(((View *)gl->data)->vbox);
     }
+    dwb_focus(gl->prev);
   }
-
-  if (dwb.state.views->next) {
-    if (!visible) {
-      gtk_widget_show_all(dwb.gui.right);
-    }
-    v = dwb.state.views->next->data;
-    if (FACTOR != 1.0) {
-      webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), FACTOR);
-    }
-    webkit_web_view_set_full_content_zoom(WEBKIT_WEB_VIEW(v->web), true);
-  }
-  else if (visible) {
-    gtk_widget_hide(dwb.gui.right);
-  }
-  v = dwb.state.views->data;
-  webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
-  dwb_resize(SIZE);
+  return true;
 }/*}}}*/
+/*}}}*/
+
 /* DWB_WEB_VIEW {{{*/
 /* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, gint fontsize) {{{*/
 void dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, gint fontsize) {
@@ -488,6 +590,8 @@ dwb_web_view_init_signals(GList *gl) {
 GList * 
 dwb_create_web_view(GList *gl) {
   View *v = malloc(sizeof(View));
+  ViewStatus *status = malloc(sizeof(ViewStatus));
+  v->status = status;
   v->vbox = gtk_vbox_new(false, 0);
   v->web = webkit_web_view_new();
   // Statusbox
@@ -538,22 +642,25 @@ dwb_add_view(Arg *arg) {
 
   if (dwb.state.views) {
     View *views = dwb.state.views->data;
-    dwb_set_command_text(dwb.state.views, NULL, NULL, NULL);
+    CLEAR_COMMAND_TEXT(dwb.state.views);
     gtk_widget_reparent(views->vbox, dwb.gui.right);
     gtk_box_reorder_child(GTK_BOX(dwb.gui.right), views->vbox, 0);
+    if (LAYOUT & Maximized) {
+      gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
+    }
   }
   dwb.state.views = dwb_create_web_view(dwb.state.views);
-  dwb_focus(dwb.state.views);
   dwb_update_layout();
-  return ;
+  dwb_focus(dwb.state.views);
 } /*}}}*//*}}}*/
 
+/* dwb_clean_vars() {{{*/
 void 
 dwb_clean_vars() {
   dwb.mode = NormalMode;
   dwb.state.buffer = NULL;
   dwb.state.nv = 0;
-}
+}/*}}}*/
 
 // TODO
 /* dwb_get_search_engine(const gchar *uri) {{{*/
@@ -562,6 +669,95 @@ dwb_get_search_engine(const gchar *uri) {
   gchar *ret = NULL;
   return ret;
 }/*}}}*/
+/* dwb_grab_focus(GList *gl) {{{*/
+void 
+dwb_grab_focus(GList *gl) {
+  View *v = gl->data;
+
+  dwb.state.fview = gl;
+  dwb_view_modify_style(gl, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_bold, dwb.font.active_size);
+  gtk_widget_grab_focus(v->web);
+}/*}}}*/
+/* dwb_load_uri(const char *uri) {{{*/
+void 
+dwb_load_uri(Arg *arg) {
+  gchar *uri = dwb_get_resolved_uri(arg->p);
+
+  if (dwb.state.nv == OpenNewView) {
+    dwb_add_view(NULL);
+  }
+  View *fview = dwb.state.fview->data;
+  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
+
+}/*}}}*/
+/* dwb_update_layout() {{{*/
+void
+dwb_update_layout() {
+  //TODO Maximized
+  gboolean visible = gtk_widget_get_visible(dwb.gui.right);
+  View *v;
+
+  if (LAYOUT & Maximized) {
+    return; 
+  }
+  if (dwb.state.views->next) {
+    if (!visible) {
+      gtk_widget_show_all(dwb.gui.right);
+    }
+    v = dwb.state.views->next->data;
+    if (FACTOR != 1.0) {
+      webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), FACTOR);
+    }
+    webkit_web_view_set_full_content_zoom(WEBKIT_WEB_VIEW(v->web), true);
+  }
+  else if (visible) {
+    gtk_widget_hide(dwb.gui.right);
+  }
+  v = dwb.state.views->data;
+  webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
+  dwb_resize(SIZE);
+}/*}}}*/
+void 
+dwb_source_remove(GList *gl) {
+  guint id;
+  View *v = gl->data;
+  if ( (id = v->status->message_id) ) {
+    g_source_remove(id);
+  }
+}
+/* dwb_set_command_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
+void
+dwb_set_command_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
+  View *v = gl->data;
+  gtk_label_set_text(GTK_LABEL(v->lstatus), text);
+  if (fg) {
+    gtk_widget_modify_fg(v->lstatus, GTK_STATE_NORMAL, fg);
+  }
+  if (fd) {
+    gtk_widget_modify_font(v->lstatus, fd);
+  }
+}/*}}}*/
+gpointer 
+dwb_hide_message(GList *gl) {
+  CLEAR_COMMAND_TEXT(gl);
+  VIEW(gl)->status->message_id = 0;
+  return NULL;
+}
+void 
+dwb_set_normal_message(GList *gl, FunctionMap *map) {
+  View *v = gl->data;
+  dwb_set_command_text(gl, map->text, &dwb.color.active_fg, dwb.font.fd_bold);
+  dwb_source_remove(gl);
+  if (map->hide) {
+    v->status->message_id = g_timeout_add_seconds(MESSAGE_DELAY, (GSourceFunc)dwb_hide_message, gl);
+  }
+}
+void 
+dwb_set_error_message(GList *gl, FunctionMap *map) {
+  dwb_source_remove(gl);
+  dwb_set_command_text(gl, map->error, &dwb.color.error, dwb.font.fd_bold);
+  VIEW(gl)->status->message_id = g_timeout_add_seconds(MESSAGE_DELAY, (GSourceFunc)dwb_hide_message, gl);
+}
 /* dwb_get_resolved_uri(const gchar *uri) {{{*/
 gchar * 
 dwb_get_resolved_uri(const gchar *uri) {
@@ -654,7 +850,7 @@ dwb_eval_key(GdkEventKey *e) {
   }
 
   const gchar *buf = dwb.state.buffer->str;
-  gint length = strlen(buf);
+  gint length = dwb.state.buffer->len;
 
   for (GSList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
@@ -677,13 +873,11 @@ dwb_init_key_map() {
       if (!strcmp(FMAP[i].desc, KEYS[j].desc)) {
         KeyMap *keymap = malloc(sizeof(KeyMap));
         Key key = KEYS[j];
-        FunctionMap fmap = FMAP[i];
-        keymap->desc = key.desc;
+        FunctionMap *fmap = &FMAP[i];
         keymap->key = key.key;
         keymap->mod = key.mod;
-        keymap->func = fmap.func; 
-        keymap->arg = fmap.arg;
-        keymap->text = fmap.text;
+        fmap->desc = key.desc;
+        keymap->map = fmap;
         dwb.keymap = g_slist_prepend(dwb.keymap, keymap);
         break;
       }
@@ -709,6 +903,8 @@ dwb_init_style() {
   //Entry
   gdk_color_parse(ENTRY_FG_COLOR, &dwb.color.entry_fg);
   gdk_color_parse(ENTRY_BG_COLOR, &dwb.color.entry_bg);
+
+  gdk_color_parse(ERROR_COLOR, &dwb.color.error);
 
   // Fonts
   dwb.font.fd_normal = pango_font_description_from_string(FONT);
@@ -742,11 +938,11 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_web_view_key_press_cb), NULL);
 
   // Main
-  dwb.gui.vbox = gtk_vbox_new(false, 0);
+  dwb.gui.vbox = gtk_vbox_new(false, 1);
   dwb.gui.topbox = gtk_hbox_new(true, 3);
   dwb.gui.paned = gtk_hpaned_new();
   dwb.gui.left = gtk_vbox_new(true, 0);
-  dwb.gui.right = gtk_vbox_new(true, 0);
+  dwb.gui.right = gtk_vbox_new(true, 1);
 
   // Paned
   GtkWidget *paned_event = gtk_event_box_new(); 
