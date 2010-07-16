@@ -1,8 +1,11 @@
+#define _POSIX_SOURCE
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <signal.h>
 #include <webkit/webkit.h>
 #include <JavaScriptCore/JavaScript.h>
 #include <gdk/gdkkeysyms.h>
@@ -13,13 +16,14 @@
 #define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
 #define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X)) 
 #define NN(X)       ( ((X) == 0) ? 1 : (X) )
+#define NUMMOD      (dwb.state.nummod == 0 ? 1 : dwb.state.nummod)
+
 #define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK))
 
 #define CURRENT_VIEW()              ((View*)dwb.state.fview->data)
 #define VIEW(X)                     ((View*)X->data)
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GList*)arg->p)->data : dwb.state.fview->data))->web))
-#define NUMMOD                      (dwb.state.nummod == 0 ? 1 : dwb.state.nummod)
 #define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(((View *)X->data)->lstatus, NULL, NULL, NULL)
 /*}}}*/
 
@@ -54,11 +58,12 @@ gboolean dwb_eval_key(GdkEventKey *);
 
 void dwb_resize(gdouble);
 void dwb_normal_mode(void);
-void dwb_update_layout(void);
 
+void dwb_tab_label_set_text(GList *, const gchar *);
 void dwb_set_status_bar_text(GtkWidget *, const gchar *, GdkColor *,  PangoFontDescription *);
 void dwb_set_error_message(GList *, const gchar *);
 void dwb_set_normal_message(GList *, const gchar *, gboolean);
+void dwb_update_status(GList *gl);
 void dwb_update_status_text(GList *gl);
 void dwb_set_status_text(GList *, const gchar *, GdkColor *,  PangoFontDescription *);
 
@@ -85,6 +90,8 @@ gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *
 gboolean dwb_entry_keypress_cb(GtkWidget *, GdkEventKey *e);
 gboolean dwb_entry_activate_cb(GtkEntry *);
 
+void dwb_update_layout(void);
+void dwb_update_tab_label(void);
 void dwb_focus(GList *);
 void dwb_load_uri(Arg *);
 void dwb_grab_focus(GList *);
@@ -151,6 +158,7 @@ struct _Arg {
   guint n;
   gdouble d;
   gpointer p;
+  gchar *e;
 };
 struct _Navigation {
   const gchar *uri;
@@ -158,7 +166,7 @@ struct _Navigation {
 };
 struct _Quickmark {
   gchar *key; 
-  Navigation *bm;
+  Navigation *nav;
 };
 
 struct _State {
@@ -272,6 +280,7 @@ struct _Dwb {
 /* VARIABLES {{{*/
 GdkNativeWindow embed = 0;
 Dwb dwb;
+gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 /*}}}*/
 
 #include "config.h"
@@ -329,10 +338,14 @@ dwb_set_file_content(const gchar *filename, const gchar *content) {
 Navigation * 
 dwb_navigation_new(const gchar *text) {
   gchar **line;
-  Navigation *nv = malloc(sizeof(Navigation));
-  line = g_strsplit(text, " ", 2);
-  nv->uri = line[0];
-  nv->title = line[1];
+  Navigation *nv;
+  
+  if (text) {
+    nv = malloc(sizeof(Navigation));
+    line = g_strsplit(text, " ", 2);
+    nv->uri = line[0];
+    nv->title = line[1];
+  }
   return nv;
 }/*}}}*/
 /*}}}*/
@@ -439,13 +452,14 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_COMMITTED: 
       break;
     case WEBKIT_LOAD_FINISHED:
-      dwb_update_status_text(gl);
+      dwb_update_status(gl);
       break;
     case WEBKIT_LOAD_FAILED: 
       break;
     default:
       text = g_strdup_printf("loading [%d%%]", (gint)(progress * 100));
       dwb_set_status_text(gl, text, NULL, NULL); 
+      gtk_window_set_title(GTK_WINDOW(dwb.gui.window), text);
       g_free(text);
       break;
   }
@@ -462,6 +476,7 @@ dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   }
   return false;
 }/*}}}*/
+
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 gboolean 
 dwb_entry_activate_cb(GtkEntry* entry) {
@@ -472,6 +487,7 @@ dwb_entry_activate_cb(GtkEntry* entry) {
   dwb_normal_mode();
   return false;
 }/*}}}*/
+
 /* dwb_web_view_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {{{*/
 gboolean 
 dwb_web_view_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
@@ -491,12 +507,14 @@ dwb_web_view_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 void 
 dwb_simple_command(KeyMap *km) {
   gboolean (*func)(void *) = km->map->func;
+  Arg *arg = &km->map->arg;
+  arg->e = NULL;
 
-  if (func(&km->map->arg)) {
+  if (func(arg)) {
     dwb_set_normal_message(dwb.state.fview, km->map->text, km->map->hide);
   }
   else {
-    dwb_set_error_message(dwb.state.fview, km->map->error);
+    dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
   }
   dwb.state.nummod = 0;
   g_string_free(dwb.state.buffer, true);
@@ -635,6 +653,9 @@ dwb_push_master(Arg *arg) {
   }
   else if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
+    if (!gl) {
+      return false;
+    }
   }
   else {
     gl = dwb.state.fview;
@@ -931,7 +952,8 @@ dwb_create_web_view(GList *gl) {
 
   // Tabbar
   v->tabevent = gtk_event_box_new();
-  v->tablabel = gtk_label_new("hallo");
+  v->tablabel = gtk_label_new(NULL);
+  gtk_label_set_use_markup(GTK_LABEL(v->tablabel), true);
   gtk_label_set_width_chars(GTK_LABEL(v->tablabel), 1);
   gtk_misc_set_alignment(GTK_MISC(v->tablabel), 0.0, 0.0);
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel);
@@ -945,7 +967,7 @@ dwb_create_web_view(GList *gl) {
   gtk_widget_show(v->vbox);
   gtk_widget_show_all(v->statusbox);
   gtk_widget_show_all(v->web);
-  gtk_widget_show(v->tabevent);
+  gtk_widget_show_all(v->tabevent);
 
   gl = g_list_prepend(gl, v);
   dwb_web_view_init_signals(gl);
@@ -969,11 +991,13 @@ dwb_add_view(Arg *arg) {
     }
   }
   dwb.state.views = dwb_create_web_view(dwb.state.views);
-  dwb_update_layout();
   dwb_focus(dwb.state.views);
+  dwb_update_layout();
+
 } /*}}}*//*}}}*/
 
 /* COMMAND_TEXT {{{*/
+
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
@@ -1012,18 +1036,12 @@ dwb_set_normal_message(GList *gl, const gchar  *text, gboolean hide) {
 }
 
 void 
-dwb_set_error(GList *gl, const gchar *error) {
-  dwb_source_remove(gl);
-  dwb_set_status_bar_text(VIEW(gl)->lstatus, error, &dwb.color.error, dwb.font.fd_bold);
-  VIEW(gl)->status->message_id = g_timeout_add_seconds(MESSAGE_DELAY, (GSourceFunc)dwb_hide_message, gl);
-}
-
-void 
 dwb_set_error_message(GList *gl, const gchar *error) {
   dwb_source_remove(gl);
   dwb_set_status_bar_text(VIEW(gl)->lstatus, error, &dwb.color.error, dwb.font.fd_bold);
   VIEW(gl)->status->message_id = g_timeout_add_seconds(MESSAGE_DELAY, (GSourceFunc)dwb_hide_message, gl);
 }
+
 /* dwb_update_status_text(GList *gl) {{{*/
 void 
 dwb_update_status_text(GList *gl) {
@@ -1056,6 +1074,38 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+/* dwb_tab_label_set_text {{{*/
+void
+dwb_tab_label_set_text(GList *gl, const gchar *text) {
+  View *v = gl->data;
+  const gchar *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+  gchar *escaped = g_markup_printf_escaped("%d : %s", g_list_position(dwb.state.views, gl), uri ? uri : "about:blank");
+  gtk_label_set_text(GTK_LABEL(v->tablabel), escaped);
+  g_free(escaped);
+}/*}}}*/
+
+/* dwb_update_status(GList *gl) {{{*/
+void 
+dwb_update_status(GList *gl) {
+  View *v = gl->data;
+  WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
+  const gchar *title = webkit_web_view_get_title(w);
+
+  gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title);
+  dwb_tab_label_set_text(gl, title);
+
+  dwb_update_status_text(gl);
+}/*}}}*/
+void
+dwb_update_tab_label() {
+  for (GList *gl = dwb.state.views; gl; gl = gl->next) {
+    View *v = gl->data;
+    const gchar *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+    dwb_tab_label_set_text(gl, title);
+  }
+}
+
 /* dwb_grab_focus(GList *gl) {{{*/
 void 
 dwb_grab_focus(GList *gl) {
@@ -1082,7 +1132,6 @@ dwb_load_uri(Arg *arg) {
 /* dwb_update_layout() {{{*/
 void
 dwb_update_layout() {
-  //TODO Maximized
   gboolean visible = gtk_widget_get_visible(dwb.gui.right);
   View *v;
 
@@ -1104,6 +1153,7 @@ dwb_update_layout() {
   }
   v = dwb.state.views->data;
   webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
+  dwb_update_tab_label();
   dwb_resize(SIZE);
 }/*}}}*/
 
@@ -1211,19 +1261,19 @@ dwb_clean_vars() {
   dwb.state.nv = 0;
 }/*}}}*/
 
-/* clean_up() {{{*/
-void
-clean_up() {
+/* dwb_clean_up() {{{*/
+gboolean
+dwb_clean_up() {
   for (GSList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
     g_free(m);
   }
   g_slist_free(dwb.keymap);
+  return true;
 }/*}}}*/
 
-
-/* dwb_exit() {{{*/
-void 
+/* dwb_save_files() {{{*/
+gboolean 
 dwb_save_files() {
   // Bookmarks
   GString *bookmarks = g_string_new(NULL);
@@ -1243,13 +1293,36 @@ dwb_save_files() {
     g_string_append_printf(history, "%s %s\n", n->uri, n->title);
     g_free(n);
   }
-  dwb_set_file_content(dwb.files.history, bookmarks->str);
-  g_string_free(bookmarks, true);
+  dwb_set_file_content(dwb.files.history, history->str);
+  g_string_free(history, true);
+
+  GString *quickmarks = g_string_new(NULL); 
+  for (GList *l = dwb.fc.quickmarks; l; l=l->next)  {
+    Quickmark *q = l->data;
+    Navigation *n = q->nav;
+    g_string_append_printf(quickmarks, "%s %s %s\n", q->key, n->uri, n->title);
+    g_free(n);
+    g_free(q);
+  }
+  dwb_set_file_content(dwb.files.quickmarks, quickmarks->str);
+  g_string_free(quickmarks, true);
+  return true;
 }
+/* }}} */
+gboolean
+dwb_end() {
+  if (dwb_save_files()) {
+    if (dwb_clean_up()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/* dwb_exit() {{{ */
 void 
 dwb_exit() {
-  clean_up();
-  dwb_save_files();
+  dwb_end();
   gtk_main_quit();
 } /*}}}*/
 /*}}}*/
@@ -1397,7 +1470,8 @@ dwb_init_files() {
   gchar *content = dwb_get_file_content(dwb.files.bookmarks);
   if (content) {
     gchar **token = g_strsplit(content, "\n", 0);
-    for (int i=0;  i<g_strv_length(token) - 1; i++) {
+    gint length = MAX(g_strv_length(token) -1, 0);
+    for (int i=0;  i< length; i++) {
       dwb.fc.bookmarks = g_list_append(dwb.fc.bookmarks, dwb_navigation_new(token[i]));
     }
     g_free(content);
@@ -1407,14 +1481,59 @@ dwb_init_files() {
   content = dwb_get_file_content(dwb.files.history);
   if (content) {
     gchar **token = g_strsplit(content, "\n", 0);
-    for (int i=0;  i<g_strv_length(token) - 1; i++) {
+    gint length = MAX(g_strv_length(token) -1, 0);
+    for (int i=0;  i<length; i++) {
       dwb.fc.history = g_list_append(dwb.fc.history, dwb_navigation_new(token[i]));
     }
     g_free(content);
     g_strfreev(token);
   }
-
+  // Quickmarks
+  content = dwb_get_file_content(dwb.files.quickmarks);
+  if (content) {
+    gchar **token = g_strsplit(content, "\n", 0);
+    gint length = MAX(g_strv_length(token) -1, 0);
+    for (int i=0;  i<length; i++) {
+      gchar **line = g_strsplit(token[i], " ", 2);
+      gchar *key = g_strdup(line[0]);
+      Quickmark *quickmark = malloc(sizeof(Quickmark));
+      Navigation *n = dwb_navigation_new(token[1]);
+      quickmark->nav = n;
+      quickmark->key = key;
+      dwb.fc.quickmarks = g_list_append(dwb.fc.quickmarks, quickmark);
+      g_free(line);
+    }
+    g_free(token);
+  }
 }/*}}}*/
+
+/* signals{{{*/
+void
+dwb_handle_signal(gint s) {
+  if (s == SIGALRM || s == SIGFPE || s == SIGILL || s == SIGINT || s == SIGQUIT || s == SIGTERM) {
+    dwb_end();
+    exit(EXIT_SUCCESS);
+  }
+  else if (s == SIGSEGV) {
+    fprintf(stderr, "Received SIGSEGV, try to clean up.\n");
+    if (dwb_end()) {
+      fprintf(stderr, "Success.\n");
+    }
+    exit(EXIT_FAILURE);
+  }
+}
+
+void 
+dwb_init_signals() {
+  for (int i=0; i<LENGTH(signals); i++) {
+    struct sigaction act, oact;
+    act.sa_handler = dwb_handle_signal;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = 0;
+    sigaction(signals[i], &act, &oact);
+  }
+}/*}}}*/
+
 /* dwb_init() {{{*/
 void dwb_init() {
 
@@ -1422,6 +1541,7 @@ void dwb_init() {
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
 
+  dwb_init_signals();
   dwb_init_files();
   dwb_init_style();
   dwb_init_key_map();
