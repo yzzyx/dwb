@@ -12,8 +12,7 @@
 
 #define NAME "dwb2";
 
-/* MAKROS {{{*/
-#define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
+/* MAKROS {{{*/ #define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
 #define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X)) 
 #define NN(X)       ( ((X) == 0) ? 1 : (X) )
 #define NUMMOD      (dwb.state.nummod == 0 ? 1 : dwb.state.nummod)
@@ -22,9 +21,11 @@
 
 #define CURRENT_VIEW()              ((View*)dwb.state.fview->data)
 #define VIEW(X)                     ((View*)X->data)
+#define WEBVIEW(X)                  (WEBKIT_WEB_VIEW(((View*)X->data)->web))
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GList*)arg->p)->data : dwb.state.fview->data))->web))
 #define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(((View *)X->data)->lstatus, NULL, NULL, NULL)
+#define NO_URL                      "No url in current context"
 /*}}}*/
 
 /* TYPES {{{*/
@@ -52,20 +53,29 @@ typedef struct _Quickmark Quickmark;
 /*}}}*/
 
 /* DECLARATIONS {{{*/
-Navigation * dwb_navigation_new(const gchar *);
+Navigation * dwb_navigation_new_from_line(const gchar *);
+Navigation * dwb_navigation_new(const gchar *, const gchar *);
+void dwb_navigation_free(Navigation *);
+void dwb_quickmark_free(Quickmark *);
+Quickmark * dwb_quickmark_new(const gchar *, const gchar *, const gchar *);
+Quickmark * dwb_quickmark_new_from_line(const gchar *);
 
 gboolean dwb_eval_key(GdkEventKey *);
 
 void dwb_resize(gdouble);
-void dwb_normal_mode(void);
+void dwb_normal_mode(gboolean);
 
-void dwb_tab_label_set_text(GList *, const gchar *);
-void dwb_set_status_bar_text(GtkWidget *, const gchar *, GdkColor *,  PangoFontDescription *);
+gboolean dwb_append_navigation(GList *, GList **);
 void dwb_set_error_message(GList *, const gchar *);
 void dwb_set_normal_message(GList *, const gchar *, gboolean);
+void dwb_set_status_bar_text(GtkWidget *, const gchar *, GdkColor *,  PangoFontDescription *);
+void dwb_set_status_text(GList *, const gchar *, GdkColor *,  PangoFontDescription *);
+void dwb_tab_label_set_text(GList *, const gchar *);
 void dwb_update_status(GList *gl);
 void dwb_update_status_text(GList *gl);
-void dwb_set_status_text(GList *, const gchar *, GdkColor *,  PangoFontDescription *);
+
+void dwb_save_quickmark(const gchar *);
+void dwb_open_quickmark(const gchar *);
 
 void dwb_view_modify_style(GList *, GdkColor *, GdkColor *, GdkColor *, GdkColor *, PangoFontDescription *, gint);
 GList * dwb_create_web_view(GList *);
@@ -97,6 +107,8 @@ void dwb_load_uri(Arg *);
 void dwb_grab_focus(GList *);
 gchar * dwb_get_resolved_uri(const gchar *);
 
+gboolean dwb_quickmark(Arg *);
+gboolean dwb_bookmark(Arg *);
 gboolean dwb_open(Arg *);
 gboolean dwb_focus_next(Arg *);
 gboolean dwb_focus_prev(Arg *);
@@ -122,6 +134,8 @@ void dwb_exit(void);
 enum _Mode {
   NormalMode,
   OpenMode,
+  QuickmarkSave,
+  QuickmarkOpen, 
 };
 
 enum _Open {
@@ -156,13 +170,14 @@ struct _Key {
 };
 struct _Arg {
   guint n;
+  gint i;
   gdouble d;
   gpointer p;
   gchar *e;
 };
 struct _Navigation {
-  const gchar *uri;
-  const gchar *title;
+  gchar *uri;
+  gchar *title;
 };
 struct _Quickmark {
   gchar *key; 
@@ -207,6 +222,7 @@ struct _View {
 };
 struct _ViewStatus {
   guint message_id;
+  gchar *hover_uri;
 };
 struct _Color {
   GdkColor active_fg;
@@ -287,29 +303,33 @@ gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 
 /* FUNCTION_MAP{{{*/
 FunctionMap FMAP [] = {
-  { "open",                  (void*)dwb_open,             "open",                   NULL,                         false,   { .n = OpenNormal,      .p = NULL } },
-  { "open",                  (void*)dwb_open,             "open",                   NULL,                         false,   { .n = OpenNormal,      .p = NULL } },
-  { "open_new_view",         (void*)dwb_open,             "open new view",          NULL,                         false,   { .n = OpenNewView,     .p = NULL } },
-  { "add_view",              (void*)dwb_add_view,         "add view",               NULL,                         true,                                        },
-  { "remove_view",           (void*)dwb_remove_view,      "remove view",            NULL,                         true,                                        },
-  { "push_master",           (void*)dwb_push_master,      "push master",            "No other view",              true,                                        },
-  { "focus_next",            (void*)dwb_focus_next,       "focus next",             "No other view",              true,                                        },
-  { "focus_prev",            (void*)dwb_focus_prev,       "focus prev",             "No other view",              true,                                        }, 
-  { "toggle_maximized",      (void*)dwb_toggle_maximized, "toggle maximized",       NULL,                         true,                                        },  
-  { "zoom_in",               (void*)dwb_zoom_in,          "zoom in",                "Cannot zoom in further",     true,                                        },
-  { "zoom_out",              (void*)dwb_zoom_out,         "zoom out",               "Cannot zoom out further",    true,                                        },
-  { "zoom_normal",           (void*)dwb_set_zoom_level,   "zoom 100%",              NULL,                         true,    { .d = 1.0,   .p = NULL }           },
-  { "toggle_bottomstack",    (void*)dwb_set_orientation,  "toggle bottomstack",     NULL,                         true,                                        }, 
-  { "scroll_up",             (void*)dwb_scroll,           "scroll up",              "Top of the page",            true,    { .n = Up, },                       },
-  { "scroll_page_up",        (void*)dwb_scroll,           "scroll page up",         "Top of the page",            true,    { .n = PageUp, },                   },
-  { "scroll_down",           (void*)dwb_scroll,           "scroll down",            "Bottom of the page",         true,    { .n = Down, },                     },
-  { "scroll_page_down",      (void*)dwb_scroll,           "scroll page down",       "Bottom of the page",         true,    { .n = PageDown, },                 },
-  { "scroll_left",           (void*)dwb_scroll,           "scroll left",            "Left side of the  page",     true,    { .n = Left },                      },
-  { "scroll_right",          (void*)dwb_scroll,           "scroll left",            "Right side of the page",     true,    { .n = Right },                     },
-  { "scroll_top",            (void*)dwb_scroll,           "scroll top",             NULL,                         true,    { .n = Top },                       },
-  { "scroll_bottom",         (void*)dwb_scroll,           "scroll bottom",          NULL,                         true,    { .n = Bottom },                    },
-  { "history_back",          (void*)dwb_history_back,     "back",                   "Beginning of History",       true,                                        },
-  { "history_forward",       (void*)dwb_history_forward,  "forward",                "End of History",             true,                                        },
+  { "open",                  (void*)dwb_open,               "open",                     NULL,                       false,   { .n = OpenNormal,      .p = NULL }      },
+  { "open",                  (void*)dwb_open,               "open",                     NULL,                       false,   { .n = OpenNormal,      .p = NULL }      },
+  { "open_new_view",         (void*)dwb_open,               "open new view",            NULL,                       false,   { .n = OpenNewView,     .p = NULL }      },
+  { "add_view",              (void*)dwb_add_view,           "add view",                 NULL,                       true,                                             },
+  { "remove_view",           (void*)dwb_remove_view,        "remove view",              NULL,                       true,                                             },
+  { "push_master",           (void*)dwb_push_master,        "push master",              "No other view",            true,                                             },
+  { "focus_next",            (void*)dwb_focus_next,         "focus next",               "No other view",            true,                                             },
+  { "focus_prev",            (void*)dwb_focus_prev,         "focus prev",               "No other view",            true,                                             }, 
+  { "toggle_maximized",      (void*)dwb_toggle_maximized,   "toggle maximized",         NULL,                       true,                                             },  
+  { "zoom_in",               (void*)dwb_zoom_in,            "zoom in",                  "Cannot zoom in further",   true,                                             },
+  { "zoom_out",              (void*)dwb_zoom_out,           "zoom out",                 "Cannot zoom out further",  true,                                             },
+  { "zoom_normal",           (void*)dwb_set_zoom_level,     "zoom 100%",                NULL,                       true,    { .d = 1.0,   .p = NULL }                },
+  { "toggle_bottomstack",    (void*)dwb_set_orientation,    "toggle bottomstack",       NULL,                       true,                                             }, 
+  { "scroll_up",             (void*)dwb_scroll,             "scroll up",                "Top of the page",          true,    { .n = Up, },                            },
+  { "scroll_page_up",        (void*)dwb_scroll,             "scroll page up",           "Top of the page",          true,    { .n = PageUp, },                        },
+  { "scroll_down",           (void*)dwb_scroll,             "scroll down",              "Bottom of the page",       true,    { .n = Down, },                          },
+  { "scroll_page_down",      (void*)dwb_scroll,             "scroll page down",         "Bottom of the page",       true,    { .n = PageDown, },                      },
+  { "scroll_left",           (void*)dwb_scroll,             "scroll left",              "Left side of the  page",   true,    { .n = Left },                           },
+  { "scroll_right",          (void*)dwb_scroll,             "scroll left",              "Right side of the page",   true,    { .n = Right },                          },
+  { "scroll_top",            (void*)dwb_scroll,             "scroll top",               NULL,                       true,    { .n = Top },                            },
+  { "scroll_bottom",         (void*)dwb_scroll,             "scroll bottom",            NULL,                       true,    { .n = Bottom },                         },
+  { "history_back",          (void*)dwb_history_back,       "back",                     "Beginning of History",     true,                                             },
+  { "history_forward",       (void*)dwb_history_forward,    "forward",                  "End of History",           true,                                             },
+  { "bookmark",              (void*)dwb_bookmark,           "bookmark",                 NO_URL,                     true,                                             },
+  { "save_quickmark",        (void*)dwb_quickmark,          "save quickmark",           NO_URL,                     false,    { .n = QuickmarkSave },                  },
+  { "open_quickmark",        (void*)dwb_quickmark,          "open quickmark",           NO_URL,                     false,   { .n = QuickmarkOpen, .i=OpenNormal },   },
+  { "open_quickmark_nv",     (void*)dwb_quickmark,          "open quickmark new view",  NULL,                       false,    { .n = QuickmarkOpen, .i=OpenNewView },  },
 };/*}}}*/
 
 /* UTIL {{{*/
@@ -334,21 +354,75 @@ dwb_set_file_content(const gchar *filename, const gchar *content) {
   }
 }/*}}}*/
 
-/*dwb_navigation_new(const gchar *text){{{*/
+/* dwb_navigation_new(const gchar *uri, const gchar *title) {{{*/
+Navigation *
+dwb_navigation_new(const gchar *uri, const gchar *title) {
+  Navigation *nv = malloc(sizeof(Navigation)); 
+  nv->uri = uri ? g_strdup(uri) : NULL;
+  nv->title = title ? g_strdup(title) : NULL;
+  return nv;
+
+}/*}}}*/
+
+/* dwb_navigation_new_from_line(const gchar *text){{{*/
 Navigation * 
-dwb_navigation_new(const gchar *text) {
+dwb_navigation_new_from_line(const gchar *text) {
   gchar **line;
-  Navigation *nv;
+  Navigation *nv = NULL;
   
   if (text) {
-    nv = malloc(sizeof(Navigation));
     line = g_strsplit(text, " ", 2);
-    nv->uri = line[0];
-    nv->title = line[1];
+    nv = dwb_navigation_new(line[0], line[1]);
+    g_free(line);
   }
   return nv;
 }/*}}}*/
-/*}}}*/
+
+/* dwb_navigation_free(Navigation *n){{{*/
+void
+dwb_navigation_free(Navigation *n) {
+  if (n->uri)   
+    g_free(n->uri);
+  if (n->title)  
+    g_free(n->title);
+  g_free(n);
+}/*}}}*/
+
+/* dwb_quickmark_new_from_line(const gchar *line) {{{*/
+Quickmark * 
+dwb_quickmark_new_from_line(const gchar *line) {
+  Quickmark *q = NULL;
+  gchar **token;
+  if (line) {
+    token = g_strsplit(line, " ", 3);
+    q = dwb_quickmark_new(token[1], token[2], token[0]);
+    g_strfreev(token);
+  }
+  return q;
+
+}/*}}}*/
+
+/* dwb_quickmark_new(const gchar *uri, const gchar *title,  const gchar *key)  {{{*/
+Quickmark *
+dwb_quickmark_new(const gchar *uri, const gchar *title, const gchar *key) {
+  Quickmark *q = malloc(sizeof(Quickmark));
+  q->key = key ? g_strdup(key) : NULL;
+  q->nav = dwb_navigation_new(uri, title);
+  return q;
+}/* }}} */
+
+/* dwb_quickmark_free(Quickmark *q) {{{*/
+void
+dwb_quickmark_free(Quickmark *q) {
+  if (q->key) 
+    g_free(q->key);
+  if (q->nav)
+    dwb_navigation_free(q->nav);
+  g_free(q);
+
+}/*}}}*/
+
+/* }}} */
 
 /* CALLBACKS {{{*/
 
@@ -372,8 +446,9 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
 /* dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/
 gboolean 
 dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
-  // TODO implement
-  return false;
+  Arg a = { .p = gl };
+  dwb_remove_view(&a);
+  return true;
 }/*}}}*/
 
 /* dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {{{*/
@@ -401,6 +476,14 @@ dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download,
 void 
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri, GList *gl) {
   // TODO implement
+  VIEW(gl)->status->hover_uri = uri;
+  if (uri) {
+    dwb_set_status_text(gl, uri, NULL, NULL);
+  }
+  else {
+    dwb_update_status_text(gl);
+  }
+
 }/*}}}*/
 
 /* dwb_web_view_mime_type_policy_cb {{{*/
@@ -453,6 +536,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
+      dwb_append_navigation(gl, &dwb.fc.history);
       break;
     case WEBKIT_LOAD_FAILED: 
       break;
@@ -471,9 +555,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 gboolean 
 dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   // TODO implement
-  if (e->keyval  == GDK_Escape) {
-    dwb_normal_mode();
-  }
   return false;
 }/*}}}*/
 
@@ -484,7 +565,7 @@ dwb_entry_activate_cb(GtkEntry* entry) {
   Arg a = { .n = 0, .p = text };
 
   dwb_load_uri(&a);
-  dwb_normal_mode();
+  dwb_normal_mode(true);
   return false;
 }/*}}}*/
 
@@ -493,7 +574,20 @@ gboolean
 dwb_web_view_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
 
-  if (gtk_widget_has_focus(dwb.gui.entry)) {
+  gchar *key = gdk_keyval_name(e->keyval);
+  if (e->keyval == GDK_Escape) {
+    dwb_normal_mode(true);
+    return false;
+  }
+  else if (dwb.state.mode == QuickmarkSave) {
+    dwb_save_quickmark(key);
+    return true;
+  }
+  else if (dwb.state.mode == QuickmarkOpen) {
+    dwb_open_quickmark(key);
+    return true;
+  }
+  else if (gtk_widget_has_focus(dwb.gui.entry)) {
     return false;
   }
   ret = dwb_eval_key(e);
@@ -503,6 +597,7 @@ dwb_web_view_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 /*}}}*/
 
 /* COMMANDS {{{*/
+
 /* dwb_simple_command(keyMap *km) {{{*/
 void 
 dwb_simple_command(KeyMap *km) {
@@ -519,6 +614,22 @@ dwb_simple_command(KeyMap *km) {
   dwb.state.nummod = 0;
   g_string_free(dwb.state.buffer, true);
   dwb.state.buffer = NULL;
+}/*}}}*/
+
+/* {{{*/
+gboolean 
+dwb_bookmark(Arg *arg) {
+  GList *gl = arg && arg->p ? arg->p : dwb.state.fview;
+
+  return dwb_append_navigation(gl, &dwb.fc.bookmarks);
+}/*}}}*/
+
+/* dwb_quickmark(Arg *arg) {{{*/
+gboolean
+dwb_quickmark(Arg *arg) {
+  dwb.state.nv = arg->i;
+  dwb.state.mode = arg->n;
+  return true;
 }/*}}}*/
 
 /* dwb_zoom_in(void *arg) {{{*/
@@ -612,7 +723,6 @@ dwb_set_orientation(Arg *arg) {
   dwb_resize(SIZE);
   return true;
 }/*}}}*/
-
 
 /* History {{{*/
 gboolean 
@@ -1075,6 +1185,76 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 
 /* FUNCTIONS {{{*/
 
+/* dwb_append_navigation(GList *gl, GList *view) {{{*/
+gboolean 
+dwb_append_navigation(GList *gl, GList **fc) {
+  WebKitWebView *w = WEBVIEW(gl);
+  const gchar *uri = webkit_web_view_get_uri(w);
+  if (uri) {
+    const gchar *title = webkit_web_view_get_title(w);
+    for (GList *l = (*fc); l; l=l->next) {
+      Navigation *n = l->data;
+      if (!strcmp(uri, n->uri)) {
+        dwb_navigation_free(n);
+        (*fc) = g_list_delete_link((*fc), l);
+        break;
+      }
+    }
+    Navigation *n = dwb_navigation_new(uri, title);
+
+    (*fc) = g_list_prepend((*fc), n);
+    return true;
+  }
+  return false;
+  
+}/*}}}*/
+
+/* dwb_save_quickmark(const gchar *key) {{{*/
+void 
+dwb_save_quickmark(const gchar *key) {
+  WebKitWebView *w = WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web);
+  const gchar *uri = webkit_web_view_get_uri(w);
+  if (uri) {
+    const gchar *title = webkit_web_view_get_title(w);
+    for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
+      Quickmark *q = l->data;
+      if (!strcmp(key, q->key)) {
+        dwb_quickmark_free(q);
+        dwb.fc.quickmarks = g_list_delete_link(dwb.fc.quickmarks, l);
+        break;
+      }
+    }
+    dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_quickmark_new(uri, title, key));
+    dwb_normal_mode(false);
+    gchar *message = g_strdup_printf("Added quickmark: %s - %s.", key, uri);
+    dwb_set_normal_message(dwb.state.fview, message, true);
+    g_free(message);
+  }
+  else {
+    dwb_set_error_message(dwb.state.fview, NO_URL);
+  }
+}/*}}}*/
+
+void 
+dwb_open_quickmark(const gchar *key) {
+  for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
+    Quickmark *q = l->data;
+    if (!strcmp(key, q->key)) {
+      Arg a = { .p = q->nav->uri };
+      dwb_load_uri(&a);
+      dwb_normal_mode(true);
+      gchar *message = g_strdup_printf("Loading quickmark %s: %s", key, q->nav->uri);
+      dwb_set_normal_message(dwb.state.fview, message, true);
+      g_free(message);
+      return;
+    }
+  }
+  dwb_normal_mode(true);
+  gchar *message = g_strdup_printf("No such quickmark: %s", key);
+  dwb_set_error_message(dwb.state.fview, message);
+  g_free(message);
+}
+
 /* dwb_tab_label_set_text {{{*/
 void
 dwb_tab_label_set_text(GList *gl, const gchar *text) {
@@ -1097,6 +1277,8 @@ dwb_update_status(GList *gl) {
 
   dwb_update_status_text(gl);
 }/*}}}*/
+
+/* dwb_update_tab_label {{{*/
 void
 dwb_update_tab_label() {
   for (GList *gl = dwb.state.views; gl; gl = gl->next) {
@@ -1104,7 +1286,7 @@ dwb_update_tab_label() {
     const gchar *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
     dwb_tab_label_set_text(gl, title);
   }
-}
+}/*}}}*/
 
 /* dwb_grab_focus(GList *gl) {{{*/
 void 
@@ -1169,11 +1351,7 @@ dwb_eval_key(GdkEventKey *e) {
                   ||  (keyval >= GDK_a && keyval <= GDK_z);
 
   gchar *key = gdk_keyval_name(keyval);
-  if (keyval == GDK_Escape) {
-    dwb_normal_mode();
-    return false;
-  }
-  else if (keyval == GDK_BackSpace && dwb.state.buffer->str ) {
+  if (keyval == GDK_BackSpace && dwb.state.buffer->str ) {
     if (dwb.state.buffer->len > strlen(pre)) {
       g_string_erase(dwb.state.buffer, dwb.state.buffer->len - 1, 1);
       dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_normal);
@@ -1204,14 +1382,21 @@ dwb_eval_key(GdkEventKey *e) {
 
   const gchar *buf = dwb.state.buffer->str;
   gint length = dwb.state.buffer->len;
+  gint longest = 0;
+  KeyMap *tmp = NULL;
 
   for (GSList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
     if (!strcmp(&buf[length - strlen(km->key)], km->key) && !(CLEAN_STATE(e) ^ km->mod)) {
-      dwb_simple_command(km);
+      if  (!longest || strlen(km->key) > longest) {
+        longest = strlen(km->key);
+        tmp = km;
+      }
       ret = true;
-      break;
     }
+  }
+  if (tmp) {
+    dwb_simple_command(tmp);
   }
   return ret;
 
@@ -1219,11 +1404,14 @@ dwb_eval_key(GdkEventKey *e) {
 
 /* dwb_normal_mode() {{{*/
 void 
-dwb_normal_mode() {
+dwb_normal_mode(gboolean clean) {
   View *v = dwb.state.fview->data;
 
+  dwb.state.mode = NormalMode;
   gtk_widget_grab_focus(v->web);
-  CLEAR_COMMAND_TEXT(dwb.state.fview);
+  if (clean) {
+    CLEAR_COMMAND_TEXT(dwb.state.fview);
+  }
 
   if (dwb.state.buffer) {
     g_string_free(dwb.state.buffer, true);
@@ -1472,7 +1660,7 @@ dwb_init_files() {
     gchar **token = g_strsplit(content, "\n", 0);
     gint length = MAX(g_strv_length(token) -1, 0);
     for (int i=0;  i< length; i++) {
-      dwb.fc.bookmarks = g_list_append(dwb.fc.bookmarks, dwb_navigation_new(token[i]));
+      dwb.fc.bookmarks = g_list_append(dwb.fc.bookmarks, dwb_navigation_new_from_line(token[i]));
     }
     g_free(content);
     g_strfreev(token);
@@ -1483,7 +1671,7 @@ dwb_init_files() {
     gchar **token = g_strsplit(content, "\n", 0);
     gint length = MAX(g_strv_length(token) -1, 0);
     for (int i=0;  i<length; i++) {
-      dwb.fc.history = g_list_append(dwb.fc.history, dwb_navigation_new(token[i]));
+      dwb.fc.history = g_list_append(dwb.fc.history, dwb_navigation_new_from_line(token[i]));
     }
     g_free(content);
     g_strfreev(token);
@@ -1494,16 +1682,10 @@ dwb_init_files() {
     gchar **token = g_strsplit(content, "\n", 0);
     gint length = MAX(g_strv_length(token) -1, 0);
     for (int i=0;  i<length; i++) {
-      gchar **line = g_strsplit(token[i], " ", 2);
-      gchar *key = g_strdup(line[0]);
-      Quickmark *quickmark = malloc(sizeof(Quickmark));
-      Navigation *n = dwb_navigation_new(token[1]);
-      quickmark->nav = n;
-      quickmark->key = key;
-      dwb.fc.quickmarks = g_list_append(dwb.fc.quickmarks, quickmark);
-      g_free(line);
+      dwb.fc.quickmarks = g_list_append(dwb.fc.quickmarks, dwb_quickmark_new_from_line(token[i]));
     }
-    g_free(token);
+    g_strfreev(token);
+    g_free(content);
   }
 }/*}}}*/
 
