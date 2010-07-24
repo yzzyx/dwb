@@ -15,13 +15,13 @@
 #define SETTINGS "Dwb Settings"
 
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
-  body { background-color: #303030; color: #dddddd; font: fantasy; font-size:16; font-weight: bold; text-align:center;}\n\
+  body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center;}\n\
   .line { border: 1px dotted black; vertical-align: middle;  background-color: #000000; }\n \
-  .text { float: left; font-variant: normal; font-size: 14;}\n \
-  .key { text-align: right;  font-size: 12; }\n \
+  .text { float: right; font-variant: normal; font-size: 14;}\n \
+  .key { text-align: left;  font-size: 12; }\n \
   .active { background-color: #660000; }\n \
   h2 { font-variant: small-caps; }\n \
-  .alignCenter { margin-left: 25%; width: 50%; }\n \
+  .alignCenter { margin-left: 25%%; width: 50%%; }\n \
   </style>\n \
   <script type=\"text/javascript\">\n  \
   function setting_submit() { var e = document.activeElement; e.blur(); console.log(e.id + \" \" +  e.value); return false; } \
@@ -36,6 +36,7 @@
 #define HTML_DIV_KEYS_TEXT "<div class=\"text\">%s</div>\n "
 #define HTML_DIV_KEYS_VALUE "<div class=\"key\">\n <input id=\"%s\" value=\"%s %s\"/>\n</div>\n"
 #define HTML_DIV_SETTINGS_VALUE "<div class=\"key\">\n <input id=\"%s\" value=\"%s\"/>\n</div>\n"
+#define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" %s>\n</div>\n"
 #define HTML_DIV_END "</div>\n"
 
 #define INSERT_MODE "Insert Mode"
@@ -190,6 +191,7 @@ gboolean dwb_history_back(Arg *);
 gboolean dwb_history_forward(Arg *);
 gboolean dwb_insert_mode(Arg *);
 gboolean dwb_toggle_property(Arg *); 
+gboolean dwb_toggle_proxy(Arg *); 
 
 void dwb_init_key_map(void);
 void dwb_init_settings(void);
@@ -290,6 +292,7 @@ struct _State {
   Open nv;
   guint scriptlock;
   gint size;
+  GHashTable *settings_hash;
 };
 
 union _Type {
@@ -370,6 +373,8 @@ struct _Misc {
   const gchar *name;
   const gchar *scripts;
   const gchar *profile;
+  SoupSession *soupsession;
+  SoupURI *proxyuri;
 };
 struct _Files {
   const gchar *bookmarks;
@@ -400,7 +405,7 @@ struct _Dwb {
   Misc misc;
   State state;
   GSList *keymap;
-  GSList *settings;
+  GHashTable *settings;
   Files files;
   FileContent fc;
 };
@@ -457,9 +462,17 @@ FunctionMap FMAP [] = {
   { "zoom_in",               (void*)dwb_zoom_in,            "Zoom in",                        "Cannot zoom in further",   true,                                             },
   { "zoom_normal",           (void*)dwb_set_zoom_level,     "Zoom 100%",                      NULL,                       true,    { .d = 1.0,   .p = NULL }                },
   { "zoom_out",              (void*)dwb_zoom_out,           "Zoom out",                       "Cannot zoom out further",  true,                                             },
-  { "toggle_autoload_images",(void*)dwb_toggle_property,    "Toggle autoload images",         NULL,                       true,    { .p = "auto-load-images" }              },
-  { "toggle_autoresize_window",(void*)dwb_toggle_property,    "Toggle autoresize window",         NULL,                       true,    { .p = "auto-resize-window" }              },
-  { "toggle_shrink_images",(void*)dwb_toggle_property,    "Toggle autoshrink images",         NULL,                       true,    { .p = "auto-shrink-images" }              },
+  { "autoload_images",       (void*)dwb_toggle_property,           "Setting: autoload images",         NULL,                       true,    { .p = "auto-load-images" }              },
+  { "autoresize_window",     (void*)dwb_toggle_property,         "Setting: autoresize window",         NULL,                       true,    { .p = "auto-resize-window" }              },
+  { "toggle_shrink_images",  (void*)dwb_toggle_property,    "Setting: autoshrink images",         NULL,                       true,    { .p = "auto-shrink-images" }              },
+  { "caret_browsing",        (void*)dwb_toggle_property,    "Setting: caret browsing",         NULL,                       true,    { .p = "enable-caret-browsing" }              },
+  { "java_applets",          (void*)dwb_toggle_property,      "Setting: java applets",         NULL,                       true,    { .p = "enable-java-applets" }              },
+  { "plugins",               (void*)dwb_toggle_property,           "Setting: plugins",         NULL,                       true,    { .p = "enable-plugins" }              },
+  { "private_browsing",      (void*)dwb_toggle_property,  "Setting: private browsing",         NULL,                       true,    { .p = "enable-private-browsing" }              },
+  { "scripts",               (void*)dwb_toggle_property,      "Setting: scripts",         NULL,                       true,    { .p = "enable-scripts" }              },
+  { "spell_checking",        (void*)dwb_toggle_property,      "Setting: spell checking",         NULL,                       true,    { .p = "enable-spell-checking" }              },
+  { "proxy",                 (void*)dwb_toggle_proxy,      "Setting: proxy",                   NULL,                       true,    { 0 }              },
+
   //{ "create_hints",          (void*)dwb_create_hints,       "Hints",                          NULL,                       true,                                             },
 
 };/*}}}*/
@@ -491,7 +504,7 @@ static WebSettings DWB_SETTINGS[] = {
   { "enable-universal-access-from-file-uris",			true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Universal access from file  uris", },
   { "enable-xss-auditor",			                    true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "XSS auditor", },
   { "enforce-96-dpi",			                        true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Enforce 96 dpi", },
-  { "fantasy-font-family",			                  true, false,  Char,    { .p = "serif"           }, (void*) dwb_webkit_setting,      "fantasy font family", },
+  { "fantasy-font-family",			                  true, false,  Char,    { .p = "serif"           }, (void*) dwb_webkit_setting,      "Fantasy font family", },
   { "javascript-can-access-clipboard",			      true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Javascript can access clipboard", },
   { "javascript-can-open-windows-automatically",	true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Javascript can open windows automatically", },
   { "minimum-font-size",			                    true, false,  Integer, { .i = 5                 }, (void*) dwb_webkit_setting,      "Minimum font size", },
@@ -510,6 +523,7 @@ static WebSettings DWB_SETTINGS[] = {
   { "editable",                                   false, false, Boolean, { .b = false             }, (void*) dwb_webview_property,     "Content editable", },
   { "full-content-zoom",                          false, false, Boolean, { .b = false             }, (void*) dwb_webview_property,     "Full content zoom", },
   { "zoom-level",                                 false, false, Double,  { .d = 1.0               }, (void*) dwb_webview_property,     "Zoom level", },
+  { "proxy",                                      false, true,  Boolean, { .b = true              }, (void*) dwb_toggle_proxy,                "HTTP-proxy", }, 
 
 };
 
@@ -634,7 +648,6 @@ dwb_get_directory_content(const gchar *dirname) {
 
   if ( (dir = g_dir_open(dirname, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
-      puts(filename);
       if (filename[0] != '.') {
         filepath = g_strconcat(dirname, "/",  filename, NULL);
         if (g_file_get_contents(filepath, &content, NULL, &error)) {
@@ -649,7 +662,6 @@ dwb_get_directory_content(const gchar *dirname) {
     }
     g_dir_close (dir);
   }
-  puts(buffer->str);
   ret = g_strdup(buffer->str);
   g_string_free(buffer, true);
   return ret;
@@ -1057,6 +1069,22 @@ dwb_toggle_property(Arg *a) {
   return true;
 }/*}}}*/
 
+/* dwb_toggle_proxy {{{*/
+gboolean
+dwb_toggle_proxy(Arg *a) {
+  SoupURI *uri = NULL;
+
+  WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
+  s->arg.b = !s->arg.b;
+
+  printf("%d\n", s->arg.b);
+  if (s->arg.b) { 
+    uri = dwb.misc.proxyuri;
+  }
+  g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
+  return true;
+}/*}}}*/
+
 /*dwb_find {{{*/
 gboolean  
 dwb_find(Arg *arg) { 
@@ -1097,7 +1125,8 @@ dwb_show_hints(Arg *arg) {
 gboolean 
 dwb_show_keys(Arg *arg) {
   View *v = dwb.state.fview->data;
-  GString *buffer = g_string_new(SETTINGS_VIEW);
+  GString *buffer = g_string_new(NULL);
+  g_string_append_printf(buffer, SETTINGS_VIEW, SETTINGS_BG_COLOR, SETTINGS_FG_COLOR);
   g_string_append_printf(buffer, HTML_H2, "Keyboard Configuration", dwb.misc.profile);
 
   g_string_append(buffer, HTML_BODY_START);
@@ -1119,17 +1148,27 @@ dwb_show_keys(Arg *arg) {
 gboolean
 dwb_show_settings(Arg *arg) {
   View *v = dwb.state.fview->data;
-  GString *buffer = g_string_new(SETTINGS_VIEW);
+  GString *buffer = g_string_new(NULL);
+  g_string_append_printf(buffer, SETTINGS_VIEW, SETTINGS_BG_COLOR, SETTINGS_FG_COLOR);
   g_string_append_printf(buffer, HTML_H2, "Settings", dwb.misc.profile);
 
   g_string_append(buffer, HTML_BODY_START);
   g_string_append(buffer, HTML_FORM_START);
-  for (GSList *l = dwb.settings; l; l=l->next) {
+  GList *l = g_hash_table_get_values(dwb.settings);
+  l = g_list_sort(l, (GCompareFunc)dwb_web_settings_sort);
+  for (; l; l=l->next) {
     WebSettings *m = l->data;
-    gchar *value = dwb_arg_to_char(&m->arg, m->type);
     g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->desc);
-    g_string_append_printf(buffer, HTML_DIV_SETTINGS_VALUE, m->id, value ? value : "");
+    if (m->type == Boolean) {
+      const gchar *value = m->arg.b ? "checked" : "";
+      g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->id, value);
+    }
+    else {
+      gchar *value = dwb_arg_to_char(&m->arg, m->type);
+      g_string_append_printf(buffer, HTML_DIV_SETTINGS_VALUE, m->id, value ? value : "");
+    }
   }
+  g_list_free(l);
   g_string_append(buffer, HTML_FORM_END);
   g_string_append(buffer, HTML_BODY_END);
   dwb_web_view_add_history_item(dwb.state.fview);
@@ -1677,7 +1716,7 @@ dwb_add_view(Arg *arg) {
   dwb_focus(dwb.state.views);
 
   // apply settings
-  for (GSList *l = dwb.settings; l; l=l->next) {
+  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
     if (!s->builtin && !s->global) {
       s->func(dwb.state.views, s);
@@ -1767,23 +1806,10 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 
 /* FUNCTIONS {{{*/
 
-/* dwb_web_settings_get(const gchar *)    return: WebSettings {{{*/
-WebSettings *
-dwb_web_settings_get(const gchar *id) {
-  WebSettings *s = NULL;
-  for (GSList *l = dwb.settings; l; l=l->next) {
-    s = l->data;
-    if (!strcmp(id, s->id)) {
-      break;
-    }
-  }
-  return s;
-}/*}}}*/
-
 /* dwb_web_settings_get_value(const gchar *id, void *value) {{{*/
 Arg *  
 dwb_web_settings_get_value(const gchar *id) {
-  WebSettings *s = dwb_web_settings_get(id);
+  WebSettings *s = g_hash_table_lookup(dwb.settings, id);
   return &s->arg;
 }/*}}}*/
 
@@ -1791,7 +1817,7 @@ dwb_web_settings_get_value(const gchar *id) {
 void 
 dwb_web_settings_set_value(const gchar *id, Arg *a) {
   WebSettings *s;
-  for (GSList *l = dwb.settings; l; l=l->next) {
+  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     s = l->data;
     if  (!strcmp(id, s->id)) {
       s->arg = *a;
@@ -2134,12 +2160,13 @@ dwb_eval_key(GdkEventKey *e) {
 
   for (GSList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
-    if (!km->key || isblank(km->key[0])) {
+    gsize l = strlen(km->key);
+    if (!km->key || !l) {
       continue;
     }
-    if (!strcmp(&buf[length - strlen(km->key)], km->key) && !(CLEAN_STATE(e) ^ km->mod)) {
-      if  (!longest || strlen(km->key) > longest) {
-        longest = strlen(km->key);
+    if (!strcmp(&buf[length - l], km->key) && !(CLEAN_STATE(e) ^ km->mod)) {
+      if  (!longest || l > longest) {
+        longest = l;
         tmp = km;
       }
       ret = true;
@@ -2271,7 +2298,7 @@ dwb_save_files() {
   }
   for (GSList *l = dwb.keymap; l; l=l->next) {
     KeyMap *map = l->data;
-    gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key);
+    gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
     g_key_file_set_value(keyfile, dwb.misc.profile, map->map->id, sc);
 
     g_free(sc);
@@ -2293,11 +2320,10 @@ dwb_save_files() {
     fprintf(stderr, "No settingsfile found, creating a new file.\n");
     error = NULL;
   }
-  for (GSList *l = dwb.settings; l; l=l->next) {
+  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
     gchar *value = dwb_arg_to_char(&s->arg, s->type); 
     g_key_file_set_value(keyfile, dwb.misc.profile, s->id, value ? value : "" );
-
     g_free(value);
   }
   if ( (content = g_key_file_to_data(keyfile, &l, &error)) ) {
@@ -2400,6 +2426,7 @@ dwb_strv_to_key(gchar **string, gsize length) {
     }
   }
   key.str = g_strdup(buffer->str);
+  //printf("%d %d %s\n", GDK_CONTROL_MASK, key.mod, buffer->str);
   g_string_free(buffer, true);
   return key;
 }/*}}}*/
@@ -2470,7 +2497,7 @@ dwb_keymap_add(GSList *gl, KeyValue key) {
 GSList *
 dwb_read_key_config() {
   GKeyFile *keyfile = g_key_file_new();
-  gsize numkeys, l;
+  gsize numkeys;
   GError *error = NULL;
   gchar **keys;
   GSList *gl;
@@ -2481,8 +2508,9 @@ dwb_read_key_config() {
     }
     if ( (keys = g_key_file_get_keys(keyfile, dwb.misc.profile, &numkeys, &error)) ) {
       for  (int i=0; i<numkeys; i++) {
-        gchar **stringlist = g_key_file_get_string_list(keyfile, dwb.misc.profile, keys[i], &l, NULL);
-        Key key = dwb_strv_to_key(stringlist, l);
+        gchar *string = g_key_file_get_value(keyfile, dwb.misc.profile, keys[i], NULL);
+        gchar **stringlist = g_strsplit(string, " ", -1);
+        Key key = dwb_strv_to_key(stringlist, g_strv_length(stringlist));
         KeyValue kv;
         kv.id = keys[i];
         kv.key = key;
@@ -2498,9 +2526,8 @@ dwb_read_key_config() {
 }/*}}}*/
 
 /* dwb_read_settings() {{{*/
-GSList *
+gboolean
 dwb_read_settings() {
-  GSList *ret = NULL;
   GError *error = NULL;
   gsize length, numkeys;
   gchar  **keys;
@@ -2508,10 +2535,9 @@ dwb_read_settings() {
   GKeyFile  *keyfile = g_key_file_new();
   Arg *arg;
 
-  if (   g_file_get_contents(dwb.files.settings, &content, &length, &error) 
-      && g_key_file_load_from_data(keyfile, content, length, G_KEY_FILE_KEEP_COMMENTS, &error) ) {
+  if (   g_file_get_contents(dwb.files.settings, &content, &length, &error) && g_key_file_load_from_data(keyfile, content, length, G_KEY_FILE_KEEP_COMMENTS, &error) ) {
     if (! g_key_file_has_group(keyfile, dwb.misc.profile) ) {
-      return NULL;
+      return false;
     }
     if  ( (keys = g_key_file_get_keys(keyfile, dwb.misc.profile, &numkeys, &error)) )  {
 
@@ -2524,7 +2550,9 @@ dwb_read_settings() {
             if ( (arg = dwb_char_to_arg(value, s->type)) ) {
               s->arg = *arg;
             }
-            ret = g_slist_append(ret, s);
+            //ret = g_slist_append(ret, s);
+            gchar *key = g_strdup(s->id);
+            g_hash_table_insert(dwb.settings, key, s);
           }
         }
         g_free(value);
@@ -2533,8 +2561,9 @@ dwb_read_settings() {
   }
   if (error) {
     fprintf(stderr, "Couldn't read config: %s\n", error->message);
+    return false;
   }
-  return ret;
+  return true;
 }/*}}}*/
 
 /* dwb_init_key_map() {{{*/
@@ -2553,17 +2582,16 @@ dwb_init_key_map() {
 /* dwb_init_settings() {{{*/
 void
 dwb_init_settings() {
-  dwb.settings = NULL;
-  if (! g_file_test(dwb.files.settings, G_FILE_TEST_IS_REGULAR) 
-      || ! (dwb.settings = dwb_read_settings()) ) {
+  dwb.settings = g_hash_table_new(g_str_hash, g_str_equal);
+  dwb.state.web_settings = webkit_web_settings_new();
+  if (! g_file_test(dwb.files.settings, G_FILE_TEST_IS_REGULAR) || ! (dwb_read_settings()) ) {
     for (int i=0; i<LENGTH(DWB_SETTINGS); i++) {
-      dwb.settings = g_slist_prepend(dwb.settings, &DWB_SETTINGS[i]);
+      WebSettings *s = &DWB_SETTINGS[i];
+      gchar *key = g_strdup(s->id);
+      g_hash_table_insert(dwb.settings, key, s);
     }
   }
-  dwb.settings = g_slist_sort(dwb.settings, (GCompareFunc)dwb_web_settings_sort);
-
-  dwb.state.web_settings = webkit_web_settings_new();
-  for (GSList *l = dwb.settings; l; l=l->next) {
+  for (GList *l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
     WebSettings *s = l->data;
     if (s->builtin) {
       s->func(NULL, s);
@@ -2732,6 +2760,19 @@ dwb_handle_signal(gint s) {
     exit(EXIT_FAILURE);
   }
 }
+void 
+dwb_init_proxy() {
+  const gchar *proxy;
+  gchar *newproxy;
+  if ( (proxy =  g_getenv("http_proxy")) ) {
+    newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
+    dwb.misc.proxyuri = soup_uri_new(newproxy);
+    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", dwb.misc.proxyuri, NULL); 
+    g_free(newproxy);
+    WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
+    s->arg.b = true;
+  }
+}
 
 void 
 dwb_init_signals() {
@@ -2751,12 +2792,15 @@ void dwb_init() {
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
   dwb.state.size = SIZE;
+  
+  dwb.misc.soupsession = webkit_get_default_session();
 
   dwb_init_signals();
   dwb_init_files();
   dwb_init_style();
   dwb_init_key_map();
   dwb_init_settings();
+  dwb_init_proxy();
   dwb_init_gui();
 } /*}}}*/ /*}}}*/
 

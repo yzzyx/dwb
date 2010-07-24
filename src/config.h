@@ -8,18 +8,21 @@ static int HISTORY_LENGTH = 500;
 
 static const gchar *ACTIVE_FG_COLOR = "#ffffff";
 static const gchar *ACTIVE_BG_COLOR = "#000000";
-static const gchar *NORMAL_FG_COLOR = "#000000";
-static const gchar *NORMAL_BG_COLOR = "#ffffff";
+static const gchar *NORMAL_FG_COLOR = "#303030";
+static const gchar *NORMAL_BG_COLOR = "#dddddd";
 static const gchar *TAB_ACTIVE_FG_COLOR = "#ffffff";
 static const gchar *TAB_ACTIVE_BG_COLOR = "#000000";
 static const gchar *TAB_NORMAL_FG_COLOR = "#000000";
 static const gchar *TAB_NORMAL_BG_COLOR = "#ffffff";
 
 static const gchar *ENTRY_FG_COLOR = "#ffffff";
-static const gchar *ENTRY_BG_COLOR = "#000000";
+static const gchar *ENTRY_BG_COLOR = "#303030";
 
 static const gchar *INSERTMODE_FG_COLOR = "#ffffff";
 static const gchar *INSERTMODE_BG_COLOR = "#00ff00";
+
+static const gchar *SETTINGS_FG_COLOR = "#dddddd";
+static const gchar *SETTINGS_BG_COLOR = "#151515";
 
 static const gchar *ERROR_COLOR = "#ff0000";
 
@@ -48,7 +51,7 @@ static KeyValue KEYS[] = {
 { "open_new_view",            {   "O",         0,                   },  },  
 { "open_quickmark",           {   "b",         0,                   },  },  
 { "open_quickmark_nv",        {   "B",         0,                   },  },  
-{ "push_master",              {   "p",         GDK_CONTROL_MASK,    },  },  
+{ "push_master",              {   "pu",         GDK_CONTROL_MASK,    },  },  
 { "reload",                   {   "r",         0,                   },  },  
 { "remove_view",              {   "d",         0,                   },  },  
 { "save_quickmark",           {   "m",         0,                   },  },  
@@ -68,10 +71,17 @@ static KeyValue KEYS[] = {
 { "zoom_in",                  {   "zi",         0,                  },  },  
 { "zoom_normal",              {   "z=",         0,                  },  },  
 { "zoom_out",                 {   "zo",         0,                  },  },  
-{ "toggle_autoload_images",   {   NULL,           0,                  },  },
-{ "toggle_autoresize_window", {   NULL,           0,                  },  },
-{ "toggle_autoshrink_images", {   NULL,           0,                  },  },
-{ "toggle_shrink_images",     {   NULL,           0,                  },  },
+  // settings
+{ "autoload_images",   {   NULL,           0,                  },  },
+{ "autoresize_window", {   NULL,           0,                  },  },
+{ "autoshrink_images", {   NULL,           0,                  },  },
+{ "caret_browsing", {   NULL,           0,                  },  },
+{ "java_applets", {   NULL,           0,                  },  },
+{ "plugins", {   NULL,           0,                  },  },
+{ "private_browsing", {   NULL,           0,                  },  },
+{ "scripts", {   NULL,           0,                  },  },
+{ "spell_checking", {   NULL,           0,                  },  },
+{ "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
 };
 
 #endif
