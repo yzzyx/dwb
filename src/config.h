@@ -37,6 +37,8 @@ static KeyValue KEYS[] = {
 { "add_view",                 {   "ga",         0,                  },  },  
 { "bookmark",                 {   "M",         0,                   },  },  
 { "find_forward",             {   "/",         0,                   },  }, 
+{ "find_next",                {   "n",         0,                   },  },
+{ "find_previous",            {   "N",         0,                   },  },
 { "find_backward",            {   "?",         0,                   },  },  
 { "focus_next",               {   "J",         0,                   },  },  
 { "focus_prev",               {   "K",         0,                   },  },  

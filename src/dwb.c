@@ -100,6 +100,7 @@ typedef union _Type Type;
 /* DECLARATIONS {{{*/
 gchar * dwb_modmask_to_string(guint modmask);
 
+gboolean dwb_search(Arg *);
 void dwb_apply_settings(WebSettings *);
 gboolean dwb_update_hints(GdkEventKey *);
 gchar * dwb_get_directory_content(const gchar *);
@@ -212,6 +213,7 @@ enum _Mode {
   QuickmarkSave,
   QuickmarkOpen, 
   HintMode,
+  FindMode,
 };
 
 enum _Open {
@@ -300,6 +302,7 @@ struct _State {
   gint size;
   GHashTable *settings_hash;
   SettingsScope setting_apply;
+  gboolean forward_search;
 };
 
 union _Type {
@@ -337,6 +340,7 @@ struct _ViewStatus {
   guint message_id;
   gchar *hover_uri;
   gboolean add_history;
+  gchar *search_string;
 };
 struct _Color {
   GdkColor active_fg;
@@ -433,8 +437,10 @@ gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 FunctionMap FMAP [] = {
   { "add_view",              (void*)dwb_add_view,           "Add a new view",                 NULL,                       true,                                             },
   { "bookmark",              (void*)dwb_bookmark,           "Bookmark current page",          NO_URL,                     true,                                             },
-  { "find_forward",          (void*)dwb_find,               "Find Forward",                   NO_URL,                     true,                                             },
-  { "find_backward",         (void*)dwb_find,               "Find Backward",                  NO_URL,                     true,                                             },
+  { "find_forward",          (void*)dwb_find,               "Find Forward",                   NO_URL,                     false,     { .b = true },                          },
+  { "find_backward",         (void*)dwb_find,               "Find Backward",                  NO_URL,                     false,     { .b = false },                         },
+  { "find_next",             (void*)dwb_search,             "Find next",                      NO_URL,                     false,     { .b = true },                         },
+  { "find_previous",         (void*)dwb_search,             "Find next",                      NO_URL,                     false,     { .b = false },                         },
   { "focus_next",            (void*)dwb_focus_next,         "Focus next view",                "No other view",            true,                                             },
   { "focus_prev",            (void*)dwb_focus_prev,         "Focus prevous view",             "No other view",            true,                                             }, 
   { "hint_mode",             (void*)dwb_show_hints,         "Follow hints",                   NO_HINTS,                   false,    { .n = OpenNormal },                    },
@@ -1013,6 +1019,9 @@ dwb_entry_activate_cb(GtkEntry* entry) {
   if (dwb.state.mode == HintMode) {
     ret = false;
   }
+  else if (dwb.state.mode == FindMode) {
+    dwb_search(NULL);
+  }
   else {
     Arg a = { .n = 0, .p = text };
     dwb_load_uri(&a);
@@ -1122,9 +1131,10 @@ dwb_toggle_proxy(Arg *a) {
 /*dwb_find {{{*/
 gboolean  
 dwb_find(Arg *arg) { 
-  //TODO implement
-  gboolean ret = true;
-  return ret;
+  dwb.state.mode = FindMode;
+  dwb.state.forward_search = arg->b;
+  gtk_widget_grab_focus(dwb.gui.entry);
+  return true;
 }/*}}}*/
 
 /*dwb_resize_master {{{*/
@@ -2270,6 +2280,8 @@ dwb_normal_mode(gboolean clean) {
     CLEAR_COMMAND_TEXT(dwb.state.fview);
   }
 
+  webkit_web_view_unmark_text_matches(CURRENT_WEBVIEW());
+
   if (dwb.state.buffer) {
     g_string_free(dwb.state.buffer, true);
   }
@@ -2294,6 +2306,29 @@ dwb_get_resolved_uri(const gchar *uri) {
     return tmp;
 }
 /*}}}*/
+
+/*{{{*/
+gboolean
+dwb_search(Arg *arg) {
+  gboolean forward = dwb.state.forward_search;
+  if (arg && !arg->b) {
+    forward = !dwb.state.forward_search;
+  }
+  View *v = CURRENT_VIEW();
+  WebKitWebView *web = CURRENT_WEBVIEW();
+  if (!v->status->search_string) {
+    v->status->search_string = (gchar *) gtk_entry_get_text(GTK_ENTRY(dwb.gui.entry));
+  }
+  webkit_web_view_unmark_text_matches(web);
+  webkit_web_view_search_text(web, v->status->search_string, false, forward, true);
+  if ( webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0) ) {
+    webkit_web_view_set_highlight_text_matches(web, true);
+  }
+  else {
+    dwb_set_error_message(dwb.state.fview, "No matches");
+  }
+  return true;
+}/*}}}*/
 /*}}}*/
 
 /* EXIT {{{*/
