@@ -1,3 +1,6 @@
+// TODO toggle proxy
+
+
 #define _POSIX_SOURCE
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +14,7 @@
 
 #define NAME "dwb2";
 
+/* SETTINGS MAKROS {{{*/
 #define KEY_SETTINGS "Dwb Key Settings"
 #define SETTINGS "Dwb Settings"
 
@@ -39,7 +43,7 @@
 #define HTML_DIV_SETTINGS_VALUE "<div class=\"key\">\n <input id=\"%s\" value=\"%s\"/>\n</div>\n"
 #define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" onchange=\"checkbox_click();\" %s>\n</div>\n"
 #define HTML_DIV_END "</div>\n"
-
+/*}}}*/
 #define INSERT_MODE "Insert Mode"
 
 /* PRE {{{*/
@@ -100,6 +104,8 @@ typedef union _Type Type;
 /* DECLARATIONS {{{*/
 gchar * dwb_modmask_to_string(guint modmask);
 
+gboolean dwb_test_cookie_allowed(const gchar *);
+void dwb_save_cookies(void);
 gboolean dwb_search(Arg *);
 void dwb_apply_settings(WebSettings *);
 gboolean dwb_update_hints(GdkEventKey *);
@@ -155,6 +161,7 @@ void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JS
 void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
 void dwb_web_view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
 void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
+void dwb_cookie_changed_cb(SoupCookieJar *, SoupCookie *, SoupCookie *);
 
 
 gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
@@ -170,6 +177,7 @@ void dwb_grab_focus(GList *);
 gchar * dwb_get_resolved_uri(const gchar *);
 gchar * dwb_execute_script(const gchar *);
 
+gboolean dwb_allow_cookie(Arg *);
 gboolean dwb_create_hints(Arg *);
 gboolean dwb_find(Arg *);
 gboolean dwb_resize_master(Arg *);
@@ -195,6 +203,7 @@ gboolean dwb_history_forward(Arg *);
 gboolean dwb_insert_mode(Arg *);
 gboolean dwb_toggle_property(Arg *); 
 gboolean dwb_toggle_proxy(Arg *); 
+void dwb_set_websetting(GList *, WebSettings *);
 
 void dwb_init_key_map(void);
 void dwb_init_settings(void);
@@ -303,6 +312,8 @@ struct _State {
   GHashTable *settings_hash;
   SettingsScope setting_apply;
   gboolean forward_search;
+  SoupCookieJar *cookiejar;
+  SoupCookie *last_cookie;
 };
 
 union _Type {
@@ -398,6 +409,8 @@ struct _Files {
   const gchar *keys;
   const gchar *scriptdir;
   const gchar *settings;
+  const gchar *cookies;
+  const gchar *cookies_allow;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -407,6 +420,7 @@ struct _FileContent {
   GList *searchengines;
   GList *keys;
   GList *settings;
+  GList *cookies_allow;
 };
 
 struct _Dwb {
@@ -436,6 +450,7 @@ gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 #define NO_HINTS                    "No Hints in current context"
 FunctionMap FMAP [] = {
   { "add_view",              (void*)dwb_add_view,           "Add a new view",                 NULL,                       true,                                             },
+  { "allow_cookie",          (void*)dwb_allow_cookie,       "Cookie allowed",                 "No cookie in current context",  true,                                             },
   { "bookmark",              (void*)dwb_bookmark,           "Bookmark current page",          NO_URL,                     true,                                             },
   { "find_forward",          (void*)dwb_find,               "Find Forward",                   NO_URL,                     false,     { .b = true },                          },
   { "find_backward",         (void*)dwb_find,               "Find Backward",                  NO_URL,                     false,     { .b = false },                         },
@@ -490,6 +505,8 @@ FunctionMap FMAP [] = {
   //{ "create_hints",          (void*)dwb_create_hints,       "Hints",                          NULL,                       true,                                             },
 
 };/*}}}*/
+
+/* DWB_SETTINGS {{{*/
 static WebSettings DWB_SETTINGS[] = {
   { "auto-load-images",			                      true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Autoload images", }, 
   { "auto-resize-window",			                    true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Autoresize images", }, 
@@ -538,13 +555,15 @@ static WebSettings DWB_SETTINGS[] = {
   { "full-content-zoom",                          false, false, Boolean, { .b = false             }, (void*) dwb_webview_property,     "Full content zoom", },
   { "zoom-level",                                 false, false, Double,  { .d = 1.0               }, (void*) dwb_webview_property,     "Zoom level", },
   { "proxy",                                      false, true,  Boolean, { .b = true              }, (void*) dwb_toggle_proxy,                "HTTP-proxy", }, 
+  { "cookie",                                     false, true,  Boolean, { .b = true              }, (void*) dwb_set_websetting,       "All Cookies allowed", }, 
 
-};
+};/*}}}*/
 
 /*}}}*/
 
 /* UTIL {{{*/
 
+/* dwb_get_default_settings {{{*/
 GHashTable * 
 dwb_get_default_settings() {
   GHashTable *ret = g_hash_table_new(g_str_hash, g_str_equal);
@@ -556,7 +575,13 @@ dwb_get_default_settings() {
     g_hash_table_insert(ret, value, new);
   }
   return ret;
-}
+}/*}}}*/
+
+/* dwb_return {{{*/
+gchar *
+dwb_return(const gchar *ret) {
+  return g_strdup(ret);
+}/*}}}*/
 
 /* dwb_arg_to_char(Arg *arg, DwbType type) {{{*/
 gchar *
@@ -1068,6 +1093,19 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   return ret;
 }/*}}}*/
 
+/* dwb_cookie_changed_cb {{{*/
+void 
+dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new) {
+  if (new) {
+    dwb.state.last_cookie = soup_cookie_copy(new);
+    gchar *message = g_strdup_printf("Cookie received, domain: %s", new->domain);
+    dwb_set_normal_message(dwb.state.fview, message, true);
+    g_free(message);
+    if  (dwb_test_cookie_allowed(new->domain) || ((WebSettings*)g_hash_table_lookup(dwb.settings, "cookie"))->arg.b) {
+      dwb_save_cookies();
+    }
+  }
+}/*}}}*/
 
 gboolean 
 dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
@@ -1110,6 +1148,16 @@ dwb_toggle_property(Arg *a) {
   g_object_get(settings, prop, &value, NULL);
   g_object_set(settings, prop, !value, NULL);
   return true;
+}/*}}}*/
+
+/*{{{*/
+void
+dwb_set_websetting(GList *gl, WebSettings *s) {
+  if (s->global) {
+    WebSettings *new = g_hash_table_lookup(dwb.settings, s->id);
+    new->arg = s->arg;
+  }
+
 }/*}}}*/
 
 /* dwb_toggle_proxy {{{*/
@@ -1246,6 +1294,17 @@ dwb_insert_mode(Arg *arg) {
   dwb_view_modify_style(dwb.state.fview, &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL, 0);
   dwb.state.mode = InsertMode;
   return true;
+}/*}}}*/
+
+/* dwb_allow_cookie {{{*/
+gboolean
+dwb_allow_cookie(Arg *arg) {
+  if (dwb.state.last_cookie) {
+    dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, dwb.state.last_cookie->domain);
+    soup_cookie_jar_add_cookie(dwb.state.cookiejar, dwb.state.last_cookie);
+    return true;
+  }
+  return false;
 }/*}}}*/
 
 /* dwb_bookmark {{{*/
@@ -1867,6 +1926,29 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 
 /* FUNCTIONS {{{*/
 
+/* dwb_test_cookie_allowed(const gchar *)     return:  gboolean{{{*/
+gboolean 
+dwb_test_cookie_allowed(const gchar *domain) {
+  for (GList *l = dwb.fc.cookies_allow; l; l=l->next) {
+    if (!strcmp(domain, l->data)) {
+      return true;
+    }
+  }
+  return false;
+}/*}}}*/
+
+/* dwb_save_cookies {{{*/
+void 
+dwb_save_cookies() {
+  SoupCookieJar *jar; 
+
+  jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
+  for (GSList *l = soup_cookie_jar_all_cookies(dwb.state.cookiejar); l; l=l->next) {
+    soup_cookie_jar_add_cookie(jar, l->data);
+  }
+  g_object_unref(jar);
+}/*}}}*/
+
 /* dwb_apply_settings(WebSettings *s) {{{*/
 void
 dwb_apply_settings(WebSettings *s) {
@@ -2140,6 +2222,10 @@ void
 dwb_load_uri(Arg *arg) {
   gchar *uri = dwb_get_resolved_uri(arg->p);
 
+  if (dwb.state.last_cookie) {
+    soup_cookie_free(dwb.state.last_cookie); 
+    dwb.state.last_cookie = NULL;
+  }
   if (dwb.state.nv == OpenNewView) {
     dwb_add_view(NULL);
   }
@@ -2395,6 +2481,14 @@ dwb_save_files() {
   dwb_set_file_content(dwb.files.quickmarks, quickmarks->str);
   g_string_free(quickmarks, true);
 
+  // cookie allow
+  GString *cookies_allow = g_string_new(NULL);
+  for (GList *l = dwb.fc.cookies_allow; l; l=l->next)  {
+    g_string_append_printf(cookies_allow, "%s\n", (gchar*)l->data);
+    g_free(l->data);
+  }
+  dwb_set_file_content(dwb.files.cookies_allow, cookies_allow->str);
+  g_string_free(cookies_allow, true);
   // save keys
 
   keyfile = g_key_file_new();
@@ -2633,6 +2727,21 @@ dwb_read_key_config() {
   return gl;
 }/*}}}*/
 
+/* dwb_setup_cookies() {{{*/
+void
+dwb_init_cookies() {
+    SoupCookieJar *jar;
+
+    dwb.state.cookiejar = soup_cookie_jar_new();
+    soup_session_add_feature(dwb.misc.soupsession, SOUP_SESSION_FEATURE(dwb.state.cookiejar));
+    g_signal_connect(dwb.state.cookiejar, "changed", G_CALLBACK(dwb_cookie_changed_cb), NULL);
+    jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
+    for (GSList *c = soup_cookie_jar_all_cookies(jar); c; c = c->next) {
+        soup_cookie_jar_add_cookie(dwb.state.cookiejar, c->data);
+    }
+    g_object_unref(jar);
+}/*}}}*/
+
 /* dwb_read_settings() {{{*/
 gboolean
 dwb_read_settings() {
@@ -2844,13 +2953,15 @@ dwb_init_files() {
   dwb.files.keys          = g_strconcat(path, "keys", NULL);
   dwb.files.scriptdir     = g_strconcat(path, "/scripts", NULL);
   dwb.files.settings      = g_strconcat(path, "settings", NULL);
+  dwb.files.cookies       = g_strconcat(path, "cookies", NULL);
+  dwb.files.cookies_allow = g_strconcat(path, "cookies.allow", NULL);
 
   dwb.misc.scripts = dwb_get_directory_content(dwb.files.scriptdir);
-  //puts(dwb.misc.scripts);
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (void*)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (void*)dwb_navigation_new_from_line); 
   dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (void*)dwb_quickmark_new_from_line); 
+  dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (void*)dwb_return);
 }/*}}}*/
 
 /* signals{{{*/
@@ -2900,6 +3011,7 @@ void dwb_init() {
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
   dwb.state.size = SIZE;
+  dwb.state.last_cookie = NULL;
   
   dwb.misc.soupsession = webkit_get_default_session();
 
@@ -2910,6 +3022,7 @@ void dwb_init() {
   dwb_init_settings();
   dwb_init_proxy();
   dwb_init_gui();
+  dwb_init_cookies();
 } /*}}}*/ /*}}}*/
 
 int main(gint argc, gchar **argv) {
