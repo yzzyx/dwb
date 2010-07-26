@@ -65,6 +65,7 @@ static KeyValue KEYS[] = {
 { "scroll_up",                {   "k",         0,                   },  },  
 { "show_keys",                {   "sk",         0,                  },  },  
 { "show_settings",            {   "ss",         0,                  },  },  
+{ "show_global_settings",     {   "Ss",         0,                  },  },  
 { "toggle_bottomstack",       {   "go",         0,                  },  },  
 { "toggle_maximized",         {   "gm",         0,                  },  },  
 { "view_source",              {   "gf",         0,                  },  },  

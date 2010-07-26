@@ -17,14 +17,15 @@
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
   body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center;}\n\
   .line { border: 1px dotted black; vertical-align: middle;  background-color: #000000; }\n \
-  .text { float: right; font-variant: normal; font-size: 14;}\n \
-  .key { text-align: left;  font-size: 12; }\n \
+  .text { float: left; font-variant: normal; font-size: 14;}\n \
+  .key { text-align: right;  font-size: 12; }\n \
   .active { background-color: #660000; }\n \
   h2 { font-variant: small-caps; }\n \
   .alignCenter { margin-left: 25%%; width: 50%%; }\n \
   </style>\n \
   <script type=\"text/javascript\">\n  \
-  function setting_submit() { var e = document.activeElement; e.blur(); console.log(e.id + \" \" +  e.value); return false; } \
+  function setting_submit() { e = document.activeElement; console.log(e.id + \" \" +  e.value); e.blur(); return false; } \
+  function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); } \
   </script>\n<noscript>Enable scripts to add settings!</noscript>\n</head>\n"
 #define HTML_H2  "<h2>%s -- Profile: %s</h2>"
 
@@ -36,7 +37,7 @@
 #define HTML_DIV_KEYS_TEXT "<div class=\"text\">%s</div>\n "
 #define HTML_DIV_KEYS_VALUE "<div class=\"key\">\n <input id=\"%s\" value=\"%s %s\"/>\n</div>\n"
 #define HTML_DIV_SETTINGS_VALUE "<div class=\"key\">\n <input id=\"%s\" value=\"%s\"/>\n</div>\n"
-#define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" %s>\n</div>\n"
+#define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" onchange=\"checkbox_click();\" %s>\n</div>\n"
 #define HTML_DIV_END "</div>\n"
 
 #define INSERT_MODE "Insert Mode"
@@ -72,6 +73,7 @@ typedef enum _Open Open;
 typedef enum _Layout Layout;
 typedef enum _Direction Direction;
 typedef enum _DwbType DwbType;
+typedef enum _SettingsScope SettingsScope;
 
 typedef struct _Arg Arg;
 typedef struct _Misc Misc;
@@ -91,7 +93,6 @@ typedef struct _FileContent FileContent;
 typedef struct _Navigation Navigation;
 typedef struct _Quickmark Quickmark;
 typedef struct _WebSettings WebSettings;
-typedef struct _Setting Setting;
 typedef struct _Settings Settings;
 typedef union _Type Type;
 /*}}}*/
@@ -99,6 +100,7 @@ typedef union _Type Type;
 /* DECLARATIONS {{{*/
 gchar * dwb_modmask_to_string(guint modmask);
 
+void dwb_apply_settings(WebSettings *);
 gboolean dwb_update_hints(GdkEventKey *);
 gchar * dwb_get_directory_content(const gchar *);
 Navigation * dwb_navigation_new_from_line(const gchar *);
@@ -241,6 +243,10 @@ enum _DwbType {
   Boolean, 
   Pointer, 
 };
+enum _SettingsScope {
+  Global,
+  PerView,
+};
 /*}}}*/
 
 /* STRUCTS {{{*/
@@ -293,6 +299,7 @@ struct _State {
   guint scriptlock;
   gint size;
   GHashTable *settings_hash;
+  SettingsScope setting_apply;
 };
 
 union _Type {
@@ -324,7 +331,7 @@ struct _View {
   GtkAdjustment *vadj;
   View *next;
   ViewStatus *status;
-  Setting *setting;
+  GHashTable *setting;
 };
 struct _ViewStatus {
   guint message_id;
@@ -455,7 +462,8 @@ FunctionMap FMAP [] = {
   { "scroll_top",            (void*)dwb_scroll,             "Scroll to the top of the page",   NULL,                       true,    { .n = Top },                            },
   { "scroll_up",             (void*)dwb_scroll,             "Scroll up",                      "Top of the page",          true,    { .n = Up, },                            },
   { "show_keys",             (void*)dwb_show_keys,          "Key configuration",              NULL,                       true,                                             },
-  { "show_settings",         (void*)dwb_show_settings,      "Settings",                       NULL,                       true,                                             },
+  { "show_settings",         (void*)dwb_show_settings,      "Settings",                       NULL,                       true,    { .n = PerView }                         },
+  { "show_global_settings",  (void*)dwb_show_settings,      "Show global settings",           NULL,                       true,    { .n = Global }                          },
   { "toggle_bottomstack",    (void*)dwb_set_orientation,    "Toggle bottomstack",             NULL,                       true,                                             }, 
   { "toggle_maximized",      (void*)dwb_toggle_maximized,   "Toggle maximized",               NULL,                       true,                                             },  
   { "view_source",           (void*)dwb_view_source,        "View source",                    NULL,                       true,                                             },  
@@ -531,6 +539,19 @@ static WebSettings DWB_SETTINGS[] = {
 
 /* UTIL {{{*/
 
+GHashTable * 
+dwb_get_default_settings() {
+  GHashTable *ret = g_hash_table_new(g_str_hash, g_str_equal);
+  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
+    WebSettings *s = l->data;
+    WebSettings *new = g_malloc(sizeof(WebSettings)); 
+    *new = *s;
+    gchar *value = g_strdup(s->id);
+    g_hash_table_insert(ret, value, new);
+  }
+  return ret;
+}
+
 /* dwb_arg_to_char(Arg *arg, DwbType type) {{{*/
 gchar *
 dwb_arg_to_char(Arg *arg, DwbType type) {
@@ -561,7 +582,11 @@ Arg *
 dwb_char_to_arg(gchar *value, DwbType type) {
   errno = 0;
   Arg *ret = NULL;
-  if (value) {
+  if (type == Boolean && !value)  {
+    Arg a =  { .b = false };
+    ret = &a;
+  }
+  else if (value) {
     g_strstrip(value);
     if (strlen(value) == 0) {
       return NULL;
@@ -823,6 +848,15 @@ dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, g
     g_strfreev(keys);
     dwb_normal_mode(false);
 
+  }
+  else if (!(strcmp(sourceid, SETTINGS))) {
+    gchar **token = g_strsplit(message, " ", 2);
+    GHashTable *t = dwb.state.setting_apply == Global ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
+    if (token[0]) {
+      WebSettings *s = g_hash_table_lookup(t, token[0]);
+      s->arg = *dwb_char_to_arg(token[1], s->type); 
+      dwb_apply_settings(s);
+    }
   }
   return false;
 }/*}}}*/
@@ -1145,17 +1179,32 @@ dwb_show_keys(Arg *arg) {
   return true;
 }/*}}}*/
 
+/* dwb_show_settings(Arg *a) {{{*/
 gboolean
 dwb_show_settings(Arg *arg) {
   View *v = dwb.state.fview->data;
   GString *buffer = g_string_new(NULL);
+  GHashTable *t;
+  const gchar *setting_string;
+
+  dwb.state.setting_apply = arg->n;
+  if ( dwb.state.setting_apply == Global ) {
+    t = dwb.settings;
+    setting_string = "Global Settings";
+  }
+  else {
+    t = v->setting;
+    setting_string = "Settings";
+  }
+
+  GList *l = g_hash_table_get_values(t);
+  l = g_list_sort(l, (GCompareFunc)dwb_web_settings_sort);
+
   g_string_append_printf(buffer, SETTINGS_VIEW, SETTINGS_BG_COLOR, SETTINGS_FG_COLOR);
-  g_string_append_printf(buffer, HTML_H2, "Settings", dwb.misc.profile);
+  g_string_append_printf(buffer, HTML_H2, setting_string, dwb.misc.profile);
 
   g_string_append(buffer, HTML_BODY_START);
   g_string_append(buffer, HTML_FORM_START);
-  GList *l = g_hash_table_get_values(dwb.settings);
-  l = g_list_sort(l, (GCompareFunc)dwb_web_settings_sort);
   for (; l; l=l->next) {
     WebSettings *m = l->data;
     g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->desc);
@@ -1176,7 +1225,7 @@ dwb_show_settings(Arg *arg) {
   webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, SETTINGS);
   g_string_free(buffer, true);
   return true;
-}
+}/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
 gboolean
@@ -1693,6 +1742,8 @@ dwb_create_web_view(GList *gl) {
   gl = g_list_prepend(gl, v);
   dwb_web_view_init_signals(gl);
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
+  // apply settings
+  v->setting = dwb_get_default_settings();
   return gl;
 } /*}}}*/
 
@@ -1715,8 +1766,8 @@ dwb_add_view(Arg *arg) {
   dwb.state.views = dwb_create_web_view(dwb.state.views);
   dwb_focus(dwb.state.views);
 
-  // apply settings
-  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
+  for (GList *l = g_hash_table_get_values(((View*)dwb.state.views->data)->setting); l; l=l->next) {
+  //for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
     if (!s->builtin && !s->global) {
       s->func(dwb.state.views, s);
@@ -1805,6 +1856,25 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+/* dwb_apply_settings(WebSettings *s) {{{*/
+void
+dwb_apply_settings(WebSettings *s) {
+  if (dwb.state.setting_apply == Global) {
+    for (GList *l = dwb.state.views; l; l=l->next)  {
+      s->func(l, s);
+      WebSettings *new =  g_hash_table_lookup((((View*)l->data)->setting), s->id);
+      new->arg = s->arg;
+    }
+  }
+  else {
+    s->func(dwb.state.fview, s);
+    //*((WebSettings*)((View*)dwb.state.fview->data)->setting) = *s;
+    WebSettings *new =  g_hash_table_lookup((((View*)dwb.state.fview->data)->setting), s->id);
+    new->arg = s->arg;
+  }
+
+}/*}}}*/
 
 /* dwb_web_settings_get_value(const gchar *id, void *value) {{{*/
 Arg *  
@@ -1896,6 +1966,9 @@ dwb_update_hints(GdkEventKey *e) {
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
       dwb.state.scriptlock = 1;
+    }
+    else  if (!strcmp(buffer, "_dwb_check_")) {
+      dwb_normal_mode(true);
     }
     else {
       Arg a = { .p = buffer };
@@ -2479,7 +2552,7 @@ dwb_keymap_add(GSList *gl, KeyValue key) {
     if (!strcmp(FMAP[i].id, key.id)) {
       KeyMap *keymap = malloc(sizeof(KeyMap));
       FunctionMap *fmap = &FMAP[i];
-      keymap->key = key.key.str;
+      keymap->key = key.key.str ? key.key.str : "";
       keymap->mod = key.key.mod;
       fmap->id = key.id;
       keymap->map = fmap;
