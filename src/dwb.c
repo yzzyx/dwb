@@ -1,6 +1,3 @@
-// TODO toggle proxy
-
-
 #define _POSIX_SOURCE
 #include <stdlib.h>
 #include <string.h>
@@ -18,9 +15,10 @@
 #define KEY_SETTINGS "Dwb Key Settings"
 #define SETTINGS "Dwb Settings"
 
+// SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
-  body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center;}\n\
-  .line { border: 1px dotted black; vertical-align: middle;  background-color: #000000; }\n \
+  body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center; }\n\
+  .line { border: %s; vertical-align: middle; }\n \
   .text { float: left; font-variant: normal; font-size: 14;}\n \
   .key { text-align: right;  font-size: 12; }\n \
   .active { background-color: #660000; }\n \
@@ -28,7 +26,7 @@
   .alignCenter { margin-left: 25%%; width: 50%%; }\n \
   </style>\n \
   <script type=\"text/javascript\">\n  \
-  function setting_submit() { e = document.activeElement; console.log(e.id + \" \" +  e.value); e.blur(); return false; } \
+  function setting_submit() { e = document.activeElement; value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); return false; } \
   function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); } \
   </script>\n<noscript>Enable scripts to add settings!</noscript>\n</head>\n"
 #define HTML_H2  "<h2>%s -- Profile: %s</h2>"
@@ -46,6 +44,8 @@
 /*}}}*/
 #define INSERT_MODE "Insert Mode"
 
+#define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
+
 /* PRE {{{*/
 
 /* MAKROS {{{*/ 
@@ -56,7 +56,7 @@
 
 #define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK))
 
-#define GET_TEXT()                  gtk_entry_get_text(GTK_ENTRY(dwb.gui.entry));
+#define GET_TEXT()                  (gtk_entry_get_text(GTK_ENTRY(dwb.gui.entry)))
 #define CURRENT_VIEW()              ((View*)dwb.state.fview->data)
 #define VIEW(X)                     ((View*)X->data)
 #define WEBVIEW(X)                  (WEBKIT_WEB_VIEW(((View*)X->data)->web))
@@ -69,6 +69,12 @@
 #define ALPHA(X)    ((X->keyval >= GDK_A && X->keyval <= GDK_Z) ||  (X->keyval >= GDK_a && X->keyval <= GDK_z) || X->keyval == GDK_space)
 #define True (void*) true
 #define False (void*) false
+
+// Settings
+#define GET_CHAR(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.p)
+#define GET_BOOL(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.b)
+#define GET_INT(prop)               (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.i)
+#define GET_DOUBLE(prop)            (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.d)
 /*}}}*/
 
 /* TYPES {{{*/
@@ -98,12 +104,17 @@ typedef struct _Navigation Navigation;
 typedef struct _Quickmark Quickmark;
 typedef struct _WebSettings WebSettings;
 typedef struct _Settings Settings;
+typedef struct _Completion Completion;
 typedef union _Type Type;
 /*}}}*/
 
 /* DECLARATIONS {{{*/
 gchar * dwb_modmask_to_string(guint modmask);
 
+void dwb_reload_colors(GList *,  WebSettings *);
+void dwb_reload_layout(GList *,  WebSettings *);
+void dwb_save_searchengine(void);
+void dwb_focus_entry(void);
 gboolean dwb_test_cookie_allowed(const gchar *);
 void dwb_save_cookies(void);
 gboolean dwb_search(Arg *);
@@ -126,7 +137,8 @@ void dwb_webview_property(GList *, WebSettings *);
 void dwb_resize(gdouble);
 void dwb_normal_mode(gboolean);
 
-gboolean dwb_append_navigation(GList *, GList **);
+void dwb_prepend_navigation_with_argument(GList **, const gchar *, const gchar *);
+gboolean dwb_prepend_navigation(GList *, GList **);
 void dwb_set_error_message(GList *, const gchar *);
 void dwb_set_normal_message(GList *, const gchar *, gboolean);
 void dwb_set_status_bar_text(GtkWidget *, const gchar *, GdkColor *,  PangoFontDescription *);
@@ -142,6 +154,8 @@ Key dwb_strv_to_key(gchar **string, gsize length);
 GSList * dwb_keymap_delete(GSList *, KeyValue );
 GSList * dwb_keymap_add(GSList *gl, KeyValue key);
 
+void dwb_set_active_style(GList *gl);
+void dwb_set_normal_style(GList *gl);
 void dwb_view_modify_style(GList *, GdkColor *, GdkColor *, GdkColor *, GdkColor *, PangoFontDescription *, gint);
 GList * dwb_create_web_view(GList *);
 void dwb_add_view(Arg *);
@@ -162,11 +176,15 @@ void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
 void dwb_web_view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
 void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
 void dwb_cookie_changed_cb(SoupCookieJar *, SoupCookie *, SoupCookie *);
+gboolean dwb_web_view_focus_cb(WebKitWebView *, GtkDirectionType *, GList *);
 
+
+void dwb_complete(gint);
+void dwb_clean_completion(void);
 
 gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
 gboolean dwb_entry_keypress_cb(GtkWidget *, GdkEventKey *e);
-gboolean dwb_entry_release_cb(GtkWidget *, GdkEventKey *e);
+gboolean dwb_entry_keyrelease_cb(GtkWidget *, GdkEventKey *e);
 gboolean dwb_entry_activate_cb(GtkEntry *);
 
 void dwb_update_layout(void);
@@ -203,6 +221,9 @@ gboolean dwb_history_forward(Arg *);
 gboolean dwb_insert_mode(Arg *);
 gboolean dwb_toggle_property(Arg *); 
 gboolean dwb_toggle_proxy(Arg *); 
+gboolean dwb_add_search_field(Arg *);
+gboolean dwb_toggle_custom_encoding(Arg *);
+
 void dwb_set_websetting(GList *, WebSettings *);
 
 void dwb_init_key_map(void);
@@ -223,7 +244,11 @@ enum _Mode {
   QuickmarkOpen, 
   HintMode,
   FindMode,
+  CompletionMode,
+  SearchFieldMode,
+  SearchKeywordMode,
 };
+
 
 enum _Open {
   OpenNormal, 
@@ -234,7 +259,7 @@ enum _Open {
 enum _Layout {
   NormalLayout = 0,
   BottomStack = 1<<0, 
-  Maximized = 1<<2, 
+  Maximized = 1<<1, 
 };
 
 enum _Direction {
@@ -291,8 +316,8 @@ struct _KeyMap {
   FunctionMap *map;
 };
 struct _Navigation {
-  gchar *uri;
-  gchar *title;
+  gchar *first;
+  gchar *second;
 };
 struct _Quickmark {
   gchar *key; 
@@ -314,6 +339,13 @@ struct _State {
   gboolean forward_search;
   SoupCookieJar *cookiejar;
   SoupCookie *last_cookie;
+  GList *active_comp;
+  GList *completions;
+  Layout layout;
+
+  gchar *search_engine;
+  gchar *form_name;
+
 };
 
 union _Type {
@@ -341,11 +373,20 @@ struct _View {
   GtkWidget *rstatus;
   GtkWidget *lstatus;
   GtkWidget *scroll; 
+  GtkWidget *entry;
+  GtkWidget *compbox;
+  GtkWidget *bottombox;
   GtkAdjustment *hadj;
   GtkAdjustment *vadj;
   View *next;
   ViewStatus *status;
   GHashTable *setting;
+};
+struct _Completion {
+  GtkWidget *event;
+  GtkWidget *rlabel;
+  GtkWidget *llabel;
+  const gchar *text;
 };
 struct _ViewStatus {
   guint message_id;
@@ -362,11 +403,15 @@ struct _Color {
   GdkColor tab_active_bg;
   GdkColor tab_normal_fg;
   GdkColor tab_normal_bg;
-  GdkColor entry_fg;
-  GdkColor entry_bg;
   GdkColor insert_bg;
   GdkColor insert_fg;
   GdkColor error;
+  GdkColor active_c_fg;
+  GdkColor active_c_bg;
+  GdkColor normal_c_fg;
+  GdkColor normal_c_bg;
+  gchar *settings_bg_color;
+  gchar *settings_fg_color;
 };
 struct _Font {
   PangoFontDescription *fd_normal;
@@ -395,8 +440,16 @@ struct _Misc {
   const gchar *name;
   const gchar *scripts;
   const gchar *profile;
+  const gchar *default_search;
   SoupSession *soupsession;
   SoupURI *proxyuri;
+
+  gdouble factor;
+  gint max_c_items;
+  gint message_delay;
+  gint history_length;
+
+  gchar *settings_border;
 };
 struct _Files {
   const gchar *bookmarks;
@@ -421,6 +474,7 @@ struct _FileContent {
   GList *keys;
   GList *settings;
   GList *cookies_allow;
+  GList *commands;
 };
 
 struct _Dwb {
@@ -438,9 +492,11 @@ struct _Dwb {
 /*}}}*/
 
 /* VARIABLES {{{*/
-GdkNativeWindow embed = 0;
-Dwb dwb;
-gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
+static GdkNativeWindow embed = 0;
+static Dwb dwb;
+static gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
+static gint MAX_COMPLETIONS = 11;
+// TODO toggle proxy
 /*}}}*/
 
 #include "config.h"
@@ -452,22 +508,24 @@ FunctionMap FMAP [] = {
   { "add_view",              (void*)dwb_add_view,           "Add a new view",                 NULL,                       true,                                             },
   { "allow_cookie",          (void*)dwb_allow_cookie,       "Cookie allowed",                 "No cookie in current context",  true,                                             },
   { "bookmark",              (void*)dwb_bookmark,           "Bookmark current page",          NO_URL,                     true,                                             },
-  { "find_forward",          (void*)dwb_find,               "Find Forward",                   NO_URL,                     false,     { .b = true },                          },
-  { "find_backward",         (void*)dwb_find,               "Find Backward",                  NO_URL,                     false,     { .b = false },                         },
-  { "find_next",             (void*)dwb_search,             "Find next",                      NO_URL,                     false,     { .b = true },                         },
-  { "find_previous",         (void*)dwb_search,             "Find next",                      NO_URL,                     false,     { .b = false },                         },
+  { "find_forward",          (void*)dwb_find,               "Find Forward ",                   NO_URL,                     false,     { .b = true },                          },
+  { "find_backward",         (void*)dwb_find,               "Find Backward ",                  NO_URL,                     false,     { .b = false },                         },
+  { "find_next",             (void*)dwb_search,             "Find next",                      "No matches",                     false,     { .b = true },                         },
+  { "find_previous",         (void*)dwb_search,             "Find next",                      "No matches",                     false,     { .b = false },                         },
   { "focus_next",            (void*)dwb_focus_next,         "Focus next view",                "No other view",            true,                                             },
   { "focus_prev",            (void*)dwb_focus_prev,         "Focus prevous view",             "No other view",            true,                                             }, 
-  { "hint_mode",             (void*)dwb_show_hints,         "Follow hints",                   NO_HINTS,                   false,    { .n = OpenNormal },                    },
-  { "hint_mode_new_view",    (void*)dwb_show_hints,         "Follow hints in a new view",     NO_HINTS,                   false,    { .n = OpenNewView },                    },
+  { "hint_mode",             (void*)dwb_show_hints,         "Follow hints ",                   NO_HINTS,                   false,    { .n = OpenNormal },                    },
+  { "hint_mode_new_view",    (void*)dwb_show_hints,         "Follow hints in a new view ",     NO_HINTS,                   false,    { .n = OpenNewView },                    },
   { "history_back",          (void*)dwb_history_back,       "Go Back",                        "Beginning of History",     true,                                             },
   { "history_forward",       (void*)dwb_history_forward,    "Go Forward",                     "End of History",           true,                                             },
   { "insert_mode",           (void*)dwb_insert_mode,        INSERT_MODE,                    NULL,                       false,                                            },
   { "increase_master",       (void*)dwb_resize_master,      "Increase master area",           "Cannot increase further",  true,    { .n = -5 }                           },
   { "decrease_master",       (void*)dwb_resize_master,      "Decrease master area",           "Cannot decrease further",  true,    { .n = 5 }                            },
+  { "save_search_field",     (void*)dwb_add_search_field,   "Add a new searchengine",         "No input in current context",  true,                                },
 
-  { "open",                  (void*)dwb_open,               "Open URL",                       NULL,                       false,   { .n = OpenNormal,      .p = NULL }      },
-  { "open_new_view",         (void*)dwb_open,               "Open URL in a new view",         NULL,                       false,   { .n = OpenNewView,     .p = NULL }      },
+
+  { "open",                  (void*)dwb_open,               "Open URL:",                       NULL,                       false,   { .n = OpenNormal,      .p = NULL }      },
+  { "open_new_view",         (void*)dwb_open,               "Open URL in a new view:",         NULL,                       false,   { .n = OpenNewView,     .p = NULL }      },
   { "open_quickmark",        (void*)dwb_quickmark,          "Open quickmark",                 NO_URL,                     false,   { .n = QuickmarkOpen, .i=OpenNormal },   },
   { "open_quickmark_nv",     (void*)dwb_quickmark,          "Open quickmark in a new view",   NULL,                       false,    { .n = QuickmarkOpen, .i=OpenNewView },  },
   { "push_master",           (void*)dwb_push_master,        "Push to master area",            "No other view",            true,                                             },
@@ -494,6 +552,7 @@ FunctionMap FMAP [] = {
   { "autoload_images",       (void*)dwb_toggle_property,           "Setting: autoload images",         NULL,                       true,    { .p = "auto-load-images" }              },
   { "autoresize_window",     (void*)dwb_toggle_property,         "Setting: autoresize window",         NULL,                       true,    { .p = "auto-resize-window" }              },
   { "toggle_shrink_images",  (void*)dwb_toggle_property,    "Setting: autoshrink images",         NULL,                       true,    { .p = "auto-shrink-images" }              },
+  { "toggle_encoding",       (void*)dwb_toggle_custom_encoding,    "",                       NULL,                  true,                  },
   { "caret_browsing",        (void*)dwb_toggle_property,    "Setting: caret browsing",         NULL,                       true,    { .p = "enable-caret-browsing" }              },
   { "java_applets",          (void*)dwb_toggle_property,      "Setting: java applets",         NULL,                       true,    { .p = "enable-java-applets" }              },
   { "plugins",               (void*)dwb_toggle_property,           "Setting: plugins",         NULL,                       true,    { .p = "enable-plugins" }              },
@@ -508,55 +567,90 @@ FunctionMap FMAP [] = {
 
 /* DWB_SETTINGS {{{*/
 static WebSettings DWB_SETTINGS[] = {
-  { "auto-load-images",			                      true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Autoload images", }, 
-  { "auto-resize-window",			                    true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Autoresize images", }, 
-  { "auto-shrink-images",			                    true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Autoshring images", },
-  { "cursive-font-family",			                  true, false,  Char,    { .p = "serif"           }, (void*) dwb_webkit_setting,      "Cursive font family", },
-  { "default-encoding",			                      true, false,  Char,    { .p = "iso-8859-1"      }, (void*) dwb_webkit_setting,      "Default encoding", }, 
-  { "default-font-family",			                  true, false,  Char,    { .p = "sans-serif"      }, (void*) dwb_webkit_setting,      "Default font family", }, 
-  { "default-font-size",			                    true, false,  Integer, { .i = 12                }, (void*) dwb_webkit_setting,      "Default font size", }, 
-  { "default-monospace-font-size",			          true, false,  Integer, { .i = 10                }, (void*) dwb_webkit_setting,      "Default monospace font size", },
-  { "enable-caret-browsing",			                true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Caret Browsing", },
-  { "enable-default-context-menu",			          true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Enable default context menu", }, 
-  { "enable-developer-extras",			              true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Enable developer extras",    }, 
-  { "enable-dom-paste",			                      true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Enable DOM paste", },
-  { "enable-file-access-from-file-uris",			    true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "File access from file uris", },
-  { "enable-html5-database",			                true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Enable HTML5-database" },
-  { "enable-html5-local-storage",			            true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Enable HTML5 local storage", },
-  { "enable-java-applet",			                    true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Java Applets", },
-  { "enable-offline-web-application-cache",			  true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Offline web application cache", },
-  { "enable-page-cache",			                    true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Page cache", },
-  { "enable-plugins",			                        true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Plugins", },
-  { "enable-private-browsing",			              true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Private Browsing", },
-  { "enable-scripts",			                        true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Script", },
-  { "enable-site-specific-quirks",			          true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Site specific quirks", },
-  { "enable-spatial-navigation",			            true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Spatial navigation", },
-  { "enable-spell-checking",			                true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Spell checking", },
-  { "enable-universal-access-from-file-uris",			true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Universal access from file  uris", },
-  { "enable-xss-auditor",			                    true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "XSS auditor", },
-  { "enforce-96-dpi",			                        true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Enforce 96 dpi", },
-  { "fantasy-font-family",			                  true, false,  Char,    { .p = "serif"           }, (void*) dwb_webkit_setting,      "Fantasy font family", },
-  { "javascript-can-access-clipboard",			      true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Javascript can access clipboard", },
-  { "javascript-can-open-windows-automatically",	true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Javascript can open windows automatically", },
-  { "minimum-font-size",			                    true, false,  Integer, { .i = 5                 }, (void*) dwb_webkit_setting,      "Minimum font size", },
-  { "minimum-logical-font-size",			            true, false,  Integer, { .i = 5                 }, (void*) dwb_webkit_setting,      "Minimum logical font size", },
-  { "monospace-font-family",			                true, false,  Char,    { .p = "monospace"       }, (void*) dwb_webkit_setting,      "Monospace font family", },
-  { "print-backgrounds",			                    true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Print backgrounds", },
-  { "resizable-text-areas",			                  true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Resizable text areas", },
-  { "sans-serif-font-family",			                true, false,  Char,    { .p = "sans-serif"      }, (void*) dwb_webkit_setting,      "Sans serif font family", },
-  { "serif-font-family",			                    true, false,  Char,    { .p = "serif"           }, (void*) dwb_webkit_setting,      "Serif font family", },
-  { "spell-checking-languages",			              true, false,  Char,    { .p = NULL              }, (void*) dwb_webkit_setting,      "Spell checking languages", },
-  { "tab-key-cycles-through-elements",			      true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Tab cycles through elements in insert mode", },
-  { "user-agent",			                            true, false,  Char,    { .p = NULL              }, (void*) dwb_webkit_setting,      "User agent", },
-  { "user-stylesheet-uri",			                  true, false,  Char,    { .p = NULL              }, (void*) dwb_webkit_setting,      "User stylesheet uri", },
-  { "zoom-step",			                            true, false,  Double,  { .d = 0.1               }, (void*) dwb_webkit_setting,      "Zoom Step", }, 
-  { "custom-encoding",                            false, false, Char,    { .p = "utf-8"           }, (void*) dwb_webview_property,     "Custom encoding", },
-  { "editable",                                   false, false, Boolean, { .b = false             }, (void*) dwb_webview_property,     "Content editable", },
-  { "full-content-zoom",                          false, false, Boolean, { .b = false             }, (void*) dwb_webview_property,     "Full content zoom", },
-  { "zoom-level",                                 false, false, Double,  { .d = 1.0               }, (void*) dwb_webview_property,     "Zoom level", },
-  { "proxy",                                      false, true,  Boolean, { .b = true              }, (void*) dwb_toggle_proxy,                "HTTP-proxy", }, 
-  { "cookie",                                     false, true,  Boolean, { .b = true              }, (void*) dwb_set_websetting,       "All Cookies allowed", }, 
+  { "auto-load-images",			                       true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Autoload images", }, 
+  { "auto-resize-window",			                     true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Autoresize images", }, 
+  { "auto-shrink-images",			                     true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Autoshrink images", },
+  { "cursive-font-family",			                   true, false,  Char,    { .p = "serif"           }, (void*) dwb_webkit_setting,      "Cursive font family", },
+  { "default-encoding",			                       true, false,  Char,    { .p = "iso-8859-1"      }, (void*) dwb_webkit_setting,      "Default encoding", }, 
+  { "default-font-family",			                   true, false,  Char,    { .p = "sans-serif"      }, (void*) dwb_webkit_setting,      "Default font family", }, 
+  { "default-font-size",			                     true, false,  Integer, { .i = 12                }, (void*) dwb_webkit_setting,      "Default font size", }, 
+  { "default-monospace-font-size",			           true, false,  Integer, { .i = 10                }, (void*) dwb_webkit_setting,      "Default monospace font size", },
+  { "enable-caret-browsing",			                 true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Caret Browsing", },
+  { "enable-default-context-menu",			           true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Enable default context menu", }, 
+  { "enable-developer-extras",			               true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Enable developer extras",    }, 
+  { "enable-dom-paste",			                       true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Enable DOM paste", },
+  { "enable-file-access-from-file-uris",			     true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "File access from file uris", },
+  { "enable-html5-database",			                 true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Enable HTML5-database" },
+  { "enable-html5-local-storage",			             true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Enable HTML5 local storage", },
+  { "enable-java-applet",			                     true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Java Applets", },
+  { "enable-offline-web-application-cache",			   true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Offline web application cache", },
+  { "enable-page-cache",			                     true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Page cache", },
+  { "enable-plugins",			                         true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Plugins", },
+  { "enable-private-browsing",			               true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Private Browsing", },
+  { "enable-scripts",			                         true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Script", },
+  { "enable-site-specific-quirks",			           true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Site specific quirks", },
+  { "enable-spatial-navigation",			             true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Spatial navigation", },
+  { "enable-spell-checking",			                 true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Spell checking", },
+  { "enable-universal-access-from-file-uris",		   true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Universal access from file  uris", },
+  { "enable-xss-auditor",			                     true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "XSS auditor", },
+  { "enforce-96-dpi",			                         true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Enforce 96 dpi", },
+  { "fantasy-font-family",			                   true, false,  Char,    { .p = "serif"           }, (void*) dwb_webkit_setting,      "Fantasy font family", },
+  { "javascript-can-access-clipboard",			       true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Javascript can access clipboard", },
+  { "javascript-can-open-windows-automatically",   true, false,  Boolean, { .b = false             }, (void*) dwb_webkit_setting,      "Javascript can open windows automatically", },
+  { "minimum-font-size",			                     true, false,  Integer, { .i = 5                 }, (void*) dwb_webkit_setting,      "Minimum font size", },
+  { "minimum-logical-font-size",			             true, false,  Integer, { .i = 5                 }, (void*) dwb_webkit_setting,      "Minimum logical font size", },
+  { "monospace-font-family",			                 true, false,  Char,    { .p = "monospace"       }, (void*) dwb_webkit_setting,      "Monospace font family", },
+  { "print-backgrounds",			                     true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Print backgrounds", },
+  { "resizable-text-areas",			                   true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Resizable text areas", },
+  { "sans-serif-font-family",			                 true, false,  Char,    { .p = "sans-serif"      }, (void*) dwb_webkit_setting,      "Sans serif font family", },
+  { "serif-font-family",			                     true, false,  Char,    { .p = "serif"           }, (void*) dwb_webkit_setting,      "Serif font family", },
+  { "spell-checking-languages",			               true, false,  Char,    { .p = NULL              }, (void*) dwb_webkit_setting,      "Spell checking languages", },
+  { "tab-key-cycles-through-elements",			       true, false,  Boolean, { .b = true              }, (void*) dwb_webkit_setting,      "Tab cycles through elements in insert mode", },
+  { "user-agent",			                             true, false,  Char,    { .p = NULL              }, (void*) dwb_webkit_setting,      "User agent", },
+  { "user-stylesheet-uri",			                   true, false,  Char,    { .p = NULL              }, (void*) dwb_webkit_setting,      "User stylesheet uri", },
+  { "zoom-step",			                             true, false,  Double,  { .d = 0.1               }, (void*) dwb_webkit_setting,      "Zoom Step", }, 
+  { "custom-encoding",                             false, false, Char,    { .p = "utf-8"           }, (void*) dwb_webview_property,     "Custom encoding", },
+  { "editable",                                    false, false, Boolean, { .b = false             }, (void*) dwb_webview_property,     "Content editable", },
+  { "full-content-zoom",                           false, false, Boolean, { .b = false             }, (void*) dwb_webview_property,     "Full content zoom", },
+  { "zoom-level",                                  false, false, Double,  { .d = 1.0               }, (void*) dwb_webview_property,     "Zoom level", },
+  { "proxy",                                       false, true,  Boolean, { .b = true              }, (void*) dwb_set_websetting,         "HTTP-proxy", }, 
+  { "cookie",                                      false, true,  Boolean, { .b = false             }, (void*) dwb_set_websetting,       "All Cookies allowed", }, 
 
+  { "active_fg_color",                             false, true,  Char, { .p = "#ffffff"         },    (void*) dwb_reload_layout,      "UI: Active view foreground", }, 
+  { "active_bg_color",                             false, true,  Char, { .p = "#000000"         },    (void*) dwb_reload_layout,      "UI: Active view background", }, 
+  { "normal_fg_color",                             false, true,  Char, { .p = "#cccccc"         },    (void*) dwb_reload_layout,      "UI: Inactive view foreground", }, 
+  { "normal_bg_color",                             false, true,  Char, { .p = "#505050"         },    (void*) dwb_reload_layout,      "UI: Inactive view background", }, 
+
+  { "tab_active_fg_color",                         false, true,  Char, { .p = "#ffffff"         },    (void*) dwb_reload_layout,      "UI: Active view tabforeground", }, 
+  { "tab_active_bg_color",                         false, true,  Char, { .p = "#000000"         },    (void*) dwb_reload_layout,      "UI: Active view tabbackground", }, 
+  { "tab_normal_fg_color",                         false, true,  Char, { .p = "#cccccc"         },    (void*) dwb_reload_layout,      "UI: Inactive view tabforeground", }, 
+  { "tab_normal_bg_color",                         false, true,  Char, { .p = "#505050"         },    (void*) dwb_reload_layout,      "UI: Inactive view tabbackground", }, 
+
+  { "active_comp_fg_color",                        false, true,  Char, { .p = "#1793d1"         }, (void*) dwb_reload_colors,         "UI: Completion active foreground", }, 
+  { "active_comp_bg_color",                        false, true,  Char, { .p = "#000000"         }, (void*) dwb_reload_colors,         "UI: Completion active background", }, 
+  { "normal_comp_fg_color",                        false, true,  Char, { .p = "#eeeeee"         }, (void*) dwb_reload_colors,         "UI: Completion inactive foreground", }, 
+  { "normal_comp_bg_color",                        false, true,  Char, { .p = "#151515"         }, (void*) dwb_reload_colors,         "UI: Completion inactive background", }, 
+
+  { "insert_fg_color",                             false, true,  Char, { .p = "#ffffff"         }, (void*) dwb_reload_colors,         "UI: Insertmode foreground", }, 
+  { "insert_bg_color",                             false, true,  Char, { .p = "#00008b"         }, (void*) dwb_reload_colors,         "UI: Insertmode background", }, 
+  { "error_color",                                 false, true,  Char, { .p = "#ff0000"         }, (void*) dwb_reload_colors,         "UI: Error color", }, 
+
+  { "settings_fg_color",                           false, true,  Char, { .p = "#ffffff"         }, (void*) dwb_reload_colors,         "UI: Settings view foreground", }, 
+  { "settings_bg_color",                           false, true,  Char, { .p = "#151515"         }, (void*) dwb_reload_colors,         "UI: Settings view background", }, 
+  { "settings_border",                             false, true,  Char, { .p = "1px dotted black"}, (void*) dwb_reload_colors,         "UI: Settings view border", }, 
+
+  { "active_font_size",                            false, true,  Integer, { .i = 12                }, (void*) dwb_reload_layout,    "UI: Active view fontsize", }, 
+  { "normal_font_size",                            false, true,  Integer, { .i = 10                 }, (void*) dwb_reload_layout,    "UI: Inactive view fontsize", }, 
+
+  { "font",                                        false, true,  Char, { .p = "monospace"          }, (void*) dwb_reload_layout,    "UI: Font", }, 
+
+  { "default_width",                               false, true,  Integer, { .i = 1280          }, NULL,                            "Default width", }, 
+  { "default_height",                               false, true,  Integer, { .i = 1024          }, NULL,                            "Default height", }, 
+  { "message_delay",                               false, true,  Integer, { .i = 2          }, NULL,                                "Message delay", }, 
+  { "history_length",                              false, true,  Integer, { .i = 500          }, NULL,                                "History length", }, 
+  { "size",                                        false, true,  Integer, { .i = 30          }, NULL,                                "UI: Default tiling area size (in %)", }, 
+  { "factor",                                      false, true,  Double, { .d = 0.3          }, NULL,                                "UI: Default Zoom factor of tiling area", }, 
+  { "layout",                                      false, true,  Char, { .p = "Normal Maximized" },  NULL,                             "UI: Default layout (Normal, Bottomstack, Maximized)", }, 
 };/*}}}*/
 
 /*}}}*/
@@ -748,8 +842,8 @@ dwb_set_file_content(const gchar *filename, const gchar *content) {
 Navigation *
 dwb_navigation_new(const gchar *uri, const gchar *title) {
   Navigation *nv = malloc(sizeof(Navigation)); 
-  nv->uri = uri ? g_strdup(uri) : NULL;
-  nv->title = title ? g_strdup(title) : NULL;
+  nv->first = uri ? g_strdup(uri) : NULL;
+  nv->second = title ? g_strdup(title) : NULL;
   return nv;
 
 }/*}}}*/
@@ -771,10 +865,10 @@ dwb_navigation_new_from_line(const gchar *text) {
 /* dwb_navigation_free(Navigation *n){{{*/
 void
 dwb_navigation_free(Navigation *n) {
-  if (n->uri)   
-    g_free(n->uri);
-  if (n->title)  
-    g_free(n->title);
+  if (n->first)   
+    g_free(n->first);
+  if (n->second)  
+    g_free(n->second);
   g_free(n);
 }/*}}}*/
 
@@ -847,6 +941,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       dwb_push_master(&arg);
     }
   }
+  dwb_normal_mode(true);
   return false;
 }/*}}}*/
 
@@ -883,7 +978,7 @@ dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, g
   else if (!(strcmp(sourceid, SETTINGS))) {
     gchar **token = g_strsplit(message, " ", 2);
     GHashTable *t = dwb.state.setting_apply == Global ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
-    if (token[0]) {
+    if (token[0] && token[1]) {
       WebSettings *s = g_hash_table_lookup(t, token[0]);
       s->arg = *dwb_char_to_arg(token[1], s->type); 
       dwb_apply_settings(s);
@@ -925,14 +1020,33 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri,
 gboolean 
 dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, gchar *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
   // TODO implement
-  return false;
+  if (webkit_web_view_can_show_mime_type(web, mimetype)) {
+    return  false;
+  }
+  else {
+    webkit_web_policy_decision_download(policy);
+    return true;
+  }
 }/*}}}*/
 
 /* dwb_web_view_navigation_policy_cb {{{*/
 gboolean 
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
-  // TODO implement
+
+  const gchar *request_uri = webkit_network_request_get_uri(request);
+  WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
+
+  if (dwb.state.mode == SearchFieldMode && reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED ) {
+    webkit_web_policy_decision_ignore(policy);
+    dwb.state.search_engine = dwb.state.form_name && !g_strrstr(request_uri, HINT_SEARCH_SUBMIT) 
+      ? g_strdup_printf("%s?%s=%s", request_uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
+      : g_strdup(request_uri);
+    dwb_set_normal_message(dwb.state.fview, "Enter a keyword for this search:", false);
+    dwb_focus_entry();
+    dwb.state.mode = SearchKeywordMode;
+    return true;
+  }
   return false;
 }/*}}}*/
 
@@ -977,6 +1091,12 @@ dwb_web_view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
 
+/* dwb_web_view_focus_cb {{{*/
+gboolean 
+dwb_web_view_focus_cb(WebKitWebView *web, GtkDirectionType *direction, GList *gl) {
+  return false;
+}/*}}}*/
+
 /* dwb_web_view_load_status_cb {{{*/
 void 
 dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
@@ -990,7 +1110,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
-      dwb_append_navigation(gl, &dwb.fc.history);
+      dwb_prepend_navigation(gl, &dwb.fc.history);
       dwb_normal_mode(false);
       break;
     case WEBKIT_LOAD_FAILED: 
@@ -1006,10 +1126,10 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 
 /*}}}*/
 
-/* dwb_entry_keypress_cb {{{*/
+/* dwb_entry_keyrelease_cb {{{*/
 gboolean 
-dwb_entry_release_cb(GtkWidget* entry, GdkEventKey *e) { 
-  if (dwb.state.mode == HintMode) {
+dwb_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
+  if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
     if (DIGIT(e) || e->keyval == GDK_Tab) {
       return true;
     }
@@ -1023,8 +1143,7 @@ dwb_entry_release_cb(GtkWidget* entry, GdkEventKey *e) {
 /* dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {{{*/
 gboolean 
 dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
-  // TODO implement
-  if (dwb.state.mode == HintMode ) {
+  if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
     if (e->keyval == GDK_BackSpace) {
       return false;
     }
@@ -1032,26 +1151,36 @@ dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       return dwb_update_hints(e);
     }
   }
+  if (e->keyval == GDK_Tab) {
+    dwb_complete(e->state & GDK_CONTROL_MASK);
+    return true;
+  }
   return false;
 }/*}}}*/
 
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 gboolean 
 dwb_entry_activate_cb(GtkEntry* entry) {
-  gchar *text = (gchar*)gtk_entry_get_text(entry);
+  gchar *text = g_strdup(gtk_entry_get_text(entry));
   gboolean ret = false;
 
   if (dwb.state.mode == HintMode) {
     ret = false;
   }
   else if (dwb.state.mode == FindMode) {
+    gtk_widget_grab_focus(CURRENT_VIEW()->web);
     dwb_search(NULL);
+  }
+  else if (dwb.state.mode == SearchKeywordMode) {
+    dwb_save_searchengine();
   }
   else {
     Arg a = { .n = 0, .p = text };
+    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
     dwb_load_uri(&a);
     dwb_normal_mode(true);
   }
+  g_free(text);
 
   return false;
 }/*}}}*/
@@ -1107,17 +1236,42 @@ dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new
   }
 }/*}}}*/
 
+/* dwb_key_release_cb {{{*/
 gboolean 
 dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   if (e->keyval == GDK_Tab) {
     return true;
   }
   return false;
-}
+}/*}}}*/
 
 /*}}}*/
 
 /* COMMANDS {{{*/
+
+/*{{{*/
+gboolean 
+dwb_toggle_custom_encoding(Arg *arg) {
+  WebKitWebView *web = CURRENT_WEBVIEW();
+
+  const gchar *encoding= webkit_web_view_get_custom_encoding(web);
+  const gchar *custom_encoding = GET_CHAR("custom-encoding");
+
+  if (encoding && !strcmp(custom_encoding, encoding) ) {
+    webkit_web_view_set_custom_encoding(web, NULL);
+    const gchar *default_encoding = webkit_web_view_get_encoding(web);
+    gchar *message = g_strdup_printf("Using default encoding: %s", default_encoding);
+    dwb_set_normal_message(dwb.state.fview, message, true);
+    g_free(message);
+  }
+  else {
+    webkit_web_view_set_custom_encoding(web, custom_encoding);
+    gchar *message = g_strdup_printf("Using encoding: %s", custom_encoding);
+    dwb_set_normal_message(dwb.state.fview, message, true);
+    g_free(message);
+  }
+  return true;
+}/*}}}*/
 
 /* dwb_simple_command(keyMap *km) {{{*/
 void 
@@ -1127,7 +1281,9 @@ dwb_simple_command(KeyMap *km) {
   arg->e = NULL;
 
   if (func(arg)) {
-    dwb_set_normal_message(dwb.state.fview, km->map->desc, km->map->hide);
+    if (strlen(km->map->desc)) {
+      dwb_set_normal_message(dwb.state.fview, km->map->desc, km->map->hide);
+    }
   }
   else {
     dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
@@ -1139,6 +1295,26 @@ dwb_simple_command(KeyMap *km) {
   }
 }/*}}}*/
 
+/* dwb_add_search_field(Arg *) {{{*/
+gboolean
+dwb_add_search_field(Arg *a) {
+  gchar *value;
+  gboolean ret = true;
+  value = dwb_execute_script("add_searchengine()");
+  if (value ) {
+    if (!strcmp(value, "_dwb_no_hints_")) {
+      ret = false;
+    }
+    else {
+      dwb.state.mode = SearchFieldMode;
+      dwb_focus_entry();
+    }
+    g_free(value);
+  }
+  return ret;
+
+}/*}}}*/
+
 /* dwb_toggle_property {{{*/
 gboolean 
 dwb_toggle_property(Arg *a) {
@@ -1148,16 +1324,6 @@ dwb_toggle_property(Arg *a) {
   g_object_get(settings, prop, &value, NULL);
   g_object_set(settings, prop, !value, NULL);
   return true;
-}/*}}}*/
-
-/*{{{*/
-void
-dwb_set_websetting(GList *gl, WebSettings *s) {
-  if (s->global) {
-    WebSettings *new = g_hash_table_lookup(dwb.settings, s->id);
-    new->arg = s->arg;
-  }
-
 }/*}}}*/
 
 /* dwb_toggle_proxy {{{*/
@@ -1176,12 +1342,21 @@ dwb_toggle_proxy(Arg *a) {
   return true;
 }/*}}}*/
 
+/* dwb_focus_entry() {{{*/
+void 
+dwb_focus_entry() {
+  gtk_widget_grab_focus(dwb.gui.entry);
+  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
+  gtk_widget_show(dwb.gui.entry);
+}/*}}}*/
+
 /*dwb_find {{{*/
 gboolean  
 dwb_find(Arg *arg) { 
   dwb.state.mode = FindMode;
   dwb.state.forward_search = arg->b;
-  gtk_widget_grab_focus(dwb.gui.entry);
+  //g_free(CURRENT_VIEW()->status->search_string);
+  dwb_focus_entry();
   return true;
 }/*}}}*/
 
@@ -1207,7 +1382,7 @@ dwb_show_hints(Arg *arg) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
     dwb_execute_script("show_hints()");
     dwb.state.mode = HintMode;
-    gtk_widget_grab_focus(dwb.gui.entry);
+    dwb_focus_entry();
   }
   return true;
 
@@ -1218,15 +1393,17 @@ gboolean
 dwb_show_keys(Arg *arg) {
   View *v = dwb.state.fview->data;
   GString *buffer = g_string_new(NULL);
-  g_string_append_printf(buffer, SETTINGS_VIEW, SETTINGS_BG_COLOR, SETTINGS_FG_COLOR);
+  g_string_append_printf(buffer, SETTINGS_VIEW, dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
   g_string_append_printf(buffer, HTML_H2, "Keyboard Configuration", dwb.misc.profile);
 
   g_string_append(buffer, HTML_BODY_START);
   g_string_append(buffer, HTML_FORM_START);
   for (GSList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
+    g_string_append(buffer, HTML_DIV_START);
     g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->map->desc);
     g_string_append_printf(buffer, HTML_DIV_KEYS_VALUE, m->map->id, dwb_modmask_to_string(m->mod), m->key ? : "");
+    g_string_append(buffer, HTML_DIV_START);
   }
   g_string_append(buffer, HTML_FORM_END);
   g_string_append(buffer, HTML_BODY_END);
@@ -1258,21 +1435,25 @@ dwb_show_settings(Arg *arg) {
   GList *l = g_hash_table_get_values(t);
   l = g_list_sort(l, (GCompareFunc)dwb_web_settings_sort);
 
-  g_string_append_printf(buffer, SETTINGS_VIEW, SETTINGS_BG_COLOR, SETTINGS_FG_COLOR);
+  g_string_append_printf(buffer, SETTINGS_VIEW, dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
   g_string_append_printf(buffer, HTML_H2, setting_string, dwb.misc.profile);
 
   g_string_append(buffer, HTML_BODY_START);
   g_string_append(buffer, HTML_FORM_START);
   for (; l; l=l->next) {
     WebSettings *m = l->data;
-    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->desc);
-    if (m->type == Boolean) {
-      const gchar *value = m->arg.b ? "checked" : "";
-      g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->id, value);
-    }
-    else {
-      gchar *value = dwb_arg_to_char(&m->arg, m->type);
-      g_string_append_printf(buffer, HTML_DIV_SETTINGS_VALUE, m->id, value ? value : "");
+    g_string_append(buffer, HTML_DIV_START);
+    if (!m->global || (m->global && dwb.state.setting_apply == Global)) {
+      g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->desc);
+      if (m->type == Boolean) {
+        const gchar *value = m->arg.b ? "checked" : "";
+        g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->id, value);
+      }
+      else {
+        gchar *value = dwb_arg_to_char(&m->arg, m->type);
+        g_string_append_printf(buffer, HTML_DIV_SETTINGS_VALUE, m->id, value ? value : "");
+      }
+      g_string_append(buffer, HTML_DIV_END);
     }
   }
   g_list_free(l);
@@ -1312,7 +1493,7 @@ gboolean
 dwb_bookmark(Arg *arg) {
   GList *gl = arg && arg->p ? arg->p : dwb.state.fview;
 
-  return dwb_append_navigation(gl, &dwb.fc.bookmarks);
+  return dwb_prepend_navigation(gl, &dwb.fc.bookmarks);
 }/*}}}*/
 
 /* dwb_quickmark(Arg *arg) {{{*/
@@ -1425,9 +1606,16 @@ dwb_set_zoom_level(Arg *arg) {
 /* dwb_set_orientation(Arg *arg) {{{*/
 gboolean 
 dwb_set_orientation(Arg *arg) {
-  LAYOUT ^= BottomStack;
-  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.paned), LAYOUT & BottomStack);
-  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.right), (LAYOUT & BottomStack) ^ 1);
+  Layout l;
+  if (arg->n) {
+    l = arg->n;
+  }
+  else {
+    dwb.state.layout ^= BottomStack;
+    l = dwb.state.layout;
+  }
+  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.paned), l & BottomStack );
+  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.right), (l & BottomStack) ^ 1);
   dwb_resize(dwb.state.size);
   return true;
 }/*}}}*/
@@ -1462,7 +1650,7 @@ dwb_history_forward(Arg *arg) {
 gboolean 
 dwb_push_master(Arg *arg) {
   GList *gl, *l;
-  View *old, *new;
+  View *old = NULL, *new;
   if (!dwb.state.views->next) {
     return false;
   }
@@ -1474,6 +1662,8 @@ dwb_push_master(Arg *arg) {
     if (!gl) {
       return false;
     }
+    CLEAR_COMMAND_TEXT(dwb.state.views);
+    dwb_set_normal_style(dwb.state.fview);
   }
   else {
     gl = dwb.state.fview;
@@ -1499,7 +1689,7 @@ dwb_push_master(Arg *arg) {
     dwb.state.views = g_list_concat(gl, dwb.state.views);
     dwb_grab_focus(dwb.state.views);
   }
-  if (LAYOUT & Maximized) {
+  if (dwb.state.layout & Maximized) {
     gtk_widget_show(dwb.gui.left);
     gtk_widget_hide(dwb.gui.right);
     gtk_widget_show(new->vbox);
@@ -1514,22 +1704,46 @@ dwb_push_master(Arg *arg) {
 gboolean  
 dwb_open(Arg *arg) {
   dwb.state.nv = arg->n;
-  gtk_widget_grab_focus(dwb.gui.entry);
+  //gtk_widget_grab_focus(dwb.gui.entry);
+  
+  dwb_focus_entry();
   dwb.state.mode = OpenMode;
   return true;
 } /*}}}*/
+
+/* dwb_get_search_engine_uri(const gchar *uri) {{{*/
+gchar *
+dwb_get_search_engine_uri(const gchar *uri, const gchar *text) {
+  gchar **token = g_strsplit(uri, HINT_SEARCH_SUBMIT, 2);
+  gchar *ret = g_strconcat(token[0], text, token[1], NULL);
+  g_strfreev(token);
+  return ret;
+}/* }}} */
 
 /* dwb_get_search_engine(const gchar *uri) {{{*/
 gchar *
 dwb_get_search_engine(const gchar *uri) {
   gchar *ret = NULL;
+  if ( (!strstr(uri, ".") || strstr(uri, " ")) && !strstr(uri, "localhost:")) {
+    gchar **token = g_strsplit(uri, " ", 2);
+    for (GList *l = dwb.fc.searchengines; l; l=l->next) {
+      Navigation *n = l->data;
+      if (!strcmp(token[0], n->first)) {
+        ret = dwb_get_search_engine_uri(n->second, token[1]);
+        break;
+      }
+    }
+    if (!ret) {
+      ret = dwb_get_search_engine_uri(dwb.misc.default_search, uri);
+    }
+  }
   return ret;
 }/*}}}*/
 
 /* dwb_toggle_maximized {{{*/
 void 
 dwb_maximized_hide_zoom(View *v, View *no) {
-  if (FACTOR != 1.0) {
+  if (dwb.misc.factor != 1.0) {
     webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
   }
   if (v != dwb.state.fview->data) {
@@ -1538,16 +1752,16 @@ dwb_maximized_hide_zoom(View *v, View *no) {
 }
 void 
 dwb_maximized_show_zoom(View *v) {
-  if (FACTOR != 1.0 && v != dwb.state.views->data) {
-    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), FACTOR);
+  if (dwb.misc.factor != 1.0 && v != dwb.state.views->data) {
+    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), dwb.misc.factor);
   }
   gtk_widget_show(v->vbox);
 }
 
 void 
 dwb_toggle_maximized(Arg *arg) {
-  LAYOUT ^= Maximized;
-  if (LAYOUT & Maximized) {
+  dwb.state.layout ^= Maximized;
+  if (dwb.state.layout & Maximized) {
     g_list_foreach(dwb.state.views,  (GFunc)dwb_maximized_hide_zoom, NULL);
     if  (dwb.state.views == dwb.state.fview) {
       gtk_widget_hide(dwb.gui.right);
@@ -1563,6 +1777,7 @@ dwb_toggle_maximized(Arg *arg) {
     gtk_widget_show(dwb.gui.left);
     g_list_foreach(dwb.state.views,  (GFunc)dwb_maximized_show_zoom, NULL);
   }
+  dwb_resize(dwb.state.size);
 }/*}}}*/
 
 /* dwb_remove_view(Arg *arg) {{{*/
@@ -1591,6 +1806,7 @@ dwb_remove_view(Arg *arg) {
     }
   }
   gtk_widget_destroy(v->vbox);
+  dwb.gui.entry = NULL;
   dwb_grab_focus(dwb.state.fview);
   gtk_container_remove(GTK_CONTAINER(dwb.gui.topbox), v->tabevent);
 
@@ -1601,7 +1817,7 @@ dwb_remove_view(Arg *arg) {
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
 
-  if (LAYOUT & Maximized) {
+  if (dwb.state.layout & Maximized) {
     gtk_widget_show(CURRENT_VIEW()->vbox);
     if (dwb.state.fview == dwb.state.views) {
       gtk_widget_hide(dwb.gui.right);
@@ -1618,7 +1834,7 @@ dwb_remove_view(Arg *arg) {
 /* dwb_resize(gdouble size) {{{*/
 void
 dwb_resize(gdouble size) {
-  gint fact = LAYOUT & BottomStack;
+  gint fact = dwb.state.layout & BottomStack;
 
   gtk_widget_set_size_request(dwb.gui.left,  (100 - size) * (fact^1),  (100 - size) *  fact);
   gtk_widget_set_size_request(dwb.gui.right, size * (fact^1), size * fact);
@@ -1634,7 +1850,7 @@ dwb_focus(GList *gl) {
     tmp = dwb.state.fview;
   }
   if (tmp) {
-    dwb_view_modify_style(tmp, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_oblique, dwb.font.normal_size);
+    dwb_set_normal_style(tmp);
     dwb_source_remove(tmp);
     CLEAR_COMMAND_TEXT(tmp);
   }
@@ -1649,7 +1865,7 @@ dwb_focus_next(Arg *arg) {
     return false;
   }
   if (gl->next) {
-    if (LAYOUT & Maximized) {
+    if (dwb.state.layout & Maximized) {
       if (gl == dwb.state.views) {
         gtk_widget_hide(dwb.gui.left);
         gtk_widget_show(dwb.gui.right);
@@ -1660,7 +1876,7 @@ dwb_focus_next(Arg *arg) {
     dwb_focus(gl->next);
   }
   else {
-    if (LAYOUT & Maximized) {
+    if (dwb.state.layout & Maximized) {
       gtk_widget_hide(dwb.gui.right);
       gtk_widget_show(dwb.gui.left);
       gtk_widget_show(((View *)dwb.state.views->data)->vbox);
@@ -1680,7 +1896,7 @@ dwb_focus_prev(Arg *arg) {
   }
   if (gl == dwb.state.views) {
     GList *last = g_list_last(dwb.state.views);
-    if (LAYOUT & Maximized) {
+    if (dwb.state.layout & Maximized) {
       gtk_widget_hide(dwb.gui.left);
       gtk_widget_show(dwb.gui.right);
       gtk_widget_show(((View *)last->data)->vbox);
@@ -1689,7 +1905,7 @@ dwb_focus_prev(Arg *arg) {
     dwb_focus(last);
   }
   else {
-    if (LAYOUT & Maximized) {
+    if (dwb.state.layout & Maximized) {
       if (gl == dwb.state.views->next) {
         gtk_widget_hide(dwb.gui.right);
         gtk_widget_show(dwb.gui.left);
@@ -1716,15 +1932,28 @@ dwb_web_view_add_history_item(GList *gl) {
   webkit_web_back_forward_list_add_item(bl, hitem);
 }/*}}}*/
 
+void 
+dwb_set_active_style(GList *gl) {
+  dwb_view_modify_style(gl, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_bold, dwb.font.active_size);
+}
+void 
+dwb_set_normal_style(GList *gl) {
+  dwb_view_modify_style(gl, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_bold, dwb.font.normal_size);
+}
+
 /* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, gint fontsize) {{{*/
-void dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, gint fontsize) {
+void 
+dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, gint fontsize) {
   View *v = gl->data;
   if (fg) {
     gtk_widget_modify_fg(v->rstatus, GTK_STATE_NORMAL, fg);
     gtk_widget_modify_fg(v->lstatus, GTK_STATE_NORMAL, fg);
+    gtk_widget_modify_text(v->entry, GTK_STATE_NORMAL, fg);
   }
-  if (bg) 
+  if (bg) {
     gtk_widget_modify_bg(v->statusbox, GTK_STATE_NORMAL, bg);
+    gtk_widget_modify_base(v->entry, GTK_STATE_NORMAL, bg);
+  }
   if (tabfg) 
     gtk_widget_modify_fg(v->tablabel, GTK_STATE_NORMAL, tabfg);
   if (tabbg)
@@ -1733,6 +1962,7 @@ void dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabf
     pango_font_description_set_absolute_size(fd, fontsize * PANGO_SCALE);
     gtk_widget_modify_font(v->rstatus, fd);
     gtk_widget_modify_font(v->lstatus, fd);
+    gtk_widget_modify_font(v->tablabel, fd);
   }
 
 } /*}}}*/
@@ -1757,7 +1987,11 @@ dwb_web_view_init_signals(GList *gl) {
 
   g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
   g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
+  g_signal_connect(v->web, "focus",                                 G_CALLBACK(dwb_web_view_focus_cb), gl);
 
+  g_signal_connect(v->entry, "key-press-event", G_CALLBACK(dwb_entry_keypress_cb), NULL);
+  g_signal_connect(v->entry, "key-release-event", G_CALLBACK(dwb_entry_keyrelease_cb), NULL);
+  g_signal_connect(v->entry, "activate", G_CALLBACK(dwb_entry_activate_cb), NULL);
 } /*}}}*/
 
 /* dwb_create_web_view(View *v) {{{*/
@@ -1768,15 +2002,29 @@ dwb_create_web_view(GList *gl) {
   v->status = status;
   v->vbox = gtk_vbox_new(false, 0);
   v->web = webkit_web_view_new();
+
+  // Entry
+  v->entry = gtk_entry_new();
+  gtk_entry_set_inner_border(GTK_ENTRY(v->entry), NULL);
+
+  gtk_widget_modify_font(v->entry, dwb.font.fd_bold);
+  gtk_entry_set_has_frame(GTK_ENTRY(v->entry), false);
+  gtk_entry_set_inner_border(GTK_ENTRY(v->entry), false);
+
+  // completion
+  v->bottombox = gtk_vbox_new(false, 1);
+
   // Statusbox
   GtkWidget *status_hbox;
   v->statusbox = gtk_event_box_new();
   v->lstatus = gtk_label_new(NULL);
   v->rstatus = gtk_label_new(NULL);
-  gtk_misc_set_alignment(GTK_MISC(v->lstatus), 0.0, 0.0);
-  gtk_misc_set_alignment(GTK_MISC(v->rstatus), 1.0, 1.0);
-  status_hbox = gtk_hbox_new(false, 0);
-  gtk_box_pack_start(GTK_BOX(status_hbox), v->lstatus, true, true, 0);
+  gtk_misc_set_alignment(GTK_MISC(v->lstatus), 0.0, 0.5);
+  gtk_misc_set_alignment(GTK_MISC(v->rstatus), 1.0, 0.5);
+  status_hbox = gtk_hbox_new(false, 5);
+  gtk_box_pack_end(GTK_BOX(v->bottombox), v->statusbox, false, false, 0);
+  gtk_box_pack_start(GTK_BOX(status_hbox), v->lstatus, false, false, 0);
+  gtk_box_pack_start(GTK_BOX(status_hbox), v->entry, true, true, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->rstatus, true, true, 0);
   gtk_label_set_use_markup(GTK_LABEL(v->lstatus), true);
   gtk_label_set_use_markup(GTK_LABEL(v->rstatus), true);
@@ -1789,22 +2037,24 @@ dwb_create_web_view(GList *gl) {
   gtk_widget_set_scroll_adjustments(v->web, v->hadj, v->vadj);
   gtk_box_pack_start(GTK_BOX(v->vbox), v->web, true, true, 0);
 
+
+
   // Tabbar
   v->tabevent = gtk_event_box_new();
   v->tablabel = gtk_label_new(NULL);
   gtk_label_set_use_markup(GTK_LABEL(v->tablabel), true);
   gtk_label_set_width_chars(GTK_LABEL(v->tablabel), 1);
-  gtk_misc_set_alignment(GTK_MISC(v->tablabel), 0.0, 0.0);
+  gtk_misc_set_alignment(GTK_MISC(v->tablabel), 0.0, 0.5);
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel);
   gtk_widget_modify_font(v->tablabel, dwb.font.fd_normal);
 
   gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
-  gtk_box_pack_start(GTK_BOX(v->vbox), v->statusbox, false, false, 0);
+  gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);
   gtk_container_add(GTK_CONTAINER(v->statusbox), status_hbox);
 
   gtk_box_pack_start(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0);
   gtk_widget_show(v->vbox);
-  gtk_widget_show_all(v->statusbox);
+  gtk_widget_show_all(v->bottombox);
   gtk_widget_show_all(v->web);
   gtk_widget_show_all(v->tabevent);
 
@@ -1824,7 +2074,7 @@ dwb_add_view(Arg *arg) {
     CLEAR_COMMAND_TEXT(dwb.state.views);
     gtk_widget_reparent(views->vbox, dwb.gui.right);
     gtk_box_reorder_child(GTK_BOX(dwb.gui.right), views->vbox, 0);
-    if (LAYOUT & Maximized) {
+    if (dwb.state.layout & Maximized) {
       gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
       if (dwb.state.fview != dwb.state.views) {
         gtk_widget_hide(dwb.gui.right);
@@ -1836,7 +2086,6 @@ dwb_add_view(Arg *arg) {
   dwb_focus(dwb.state.views);
 
   for (GList *l = g_hash_table_get_values(((View*)dwb.state.views->data)->setting); l; l=l->next) {
-  //for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
     if (!s->builtin && !s->global) {
       s->func(dwb.state.views, s);
@@ -1881,7 +2130,7 @@ dwb_set_normal_message(GList *gl, const gchar  *text, gboolean hide) {
   dwb_set_status_bar_text(v->lstatus, text, &dwb.color.active_fg, dwb.font.fd_bold);
   dwb_source_remove(gl);
   if (hide) {
-    v->status->message_id = g_timeout_add_seconds(MESSAGE_DELAY, (GSourceFunc)dwb_hide_message, gl);
+    v->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
   }
 }/*}}}*/
 
@@ -1890,7 +2139,7 @@ void
 dwb_set_error_message(GList *gl, const gchar *error) {
   dwb_source_remove(gl);
   dwb_set_status_bar_text(VIEW(gl)->lstatus, error, &dwb.color.error, dwb.font.fd_bold);
-  VIEW(gl)->status->message_id = g_timeout_add_seconds(MESSAGE_DELAY, (GSourceFunc)dwb_hide_message, gl);
+  VIEW(gl)->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
 }/*}}}*/
 
 /* dwb_update_status_text(GList *gl) {{{*/
@@ -1924,7 +2173,248 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 }/*}}}*/
 /*}}}*/
 
+/* COMPLETION {{{*/
+
+/* dwb_clean_completion() {{{*/
+void 
+dwb_clean_completion() {
+  for (GList *l = dwb.state.completions; l; l=l->next) {
+    g_free(l->data);
+  }
+  g_list_free(dwb.state.completions);
+  gtk_widget_destroy(CURRENT_VIEW()->compbox);
+  dwb.state.completions = NULL;
+  dwb.state.active_comp = NULL;
+}/*}}}*/
+
+/* dwb_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
+void 
+dwb_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {
+  gtk_widget_modify_fg(c->llabel, GTK_STATE_NORMAL, fg);
+  gtk_widget_modify_fg(c->rlabel, GTK_STATE_NORMAL, fg);
+  gtk_widget_modify_bg(c->event, GTK_STATE_NORMAL, bg);
+  gtk_widget_modify_font(c->llabel, fd);
+  gtk_widget_modify_font(c->rlabel, dwb.font.fd_oblique);
+}/*}}}*/
+
+/* dwb_get_completion_item(Navigation *)      return: Completion * {{{*/
+Completion * 
+dwb_get_completion_item(Navigation *n) {
+  Completion *c = malloc(sizeof(Completion));
+
+  c->rlabel = gtk_label_new(n->second);
+  c->llabel = gtk_label_new(n->first);
+  c->event = gtk_event_box_new();
+  GtkWidget *hbox = gtk_hbox_new(false, 0);
+  gtk_box_pack_start(GTK_BOX(hbox), c->llabel, true, true, 5);
+  gtk_box_pack_start(GTK_BOX(hbox), c->rlabel, true, true, 5);
+
+  gtk_misc_set_alignment(GTK_MISC(c->llabel), 0.0, 0.5);
+  gtk_misc_set_alignment(GTK_MISC(c->rlabel), 1.0, 0.5);
+
+  dwb_modify_completion_item(c, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_normal);
+
+  gtk_container_add(GTK_CONTAINER(c->event), hbox);
+  return c;
+}/*}}}*/
+
+/* dwb_init_completion {{{*/
+GList * 
+dwb_init_completion(GList *store, GList *gl) {
+  Navigation *n;
+  const gchar *input = GET_TEXT();
+  for (GList *l = gl; l; l=l->next) {
+    n = l->data;
+    if (g_strrstr(n->first, input)) {
+      Completion *c = dwb_get_completion_item(n);
+      gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
+      store = g_list_prepend(store, c);
+    }
+  }
+  return store;
+}/*}}}*/
+
+/* dwb_completion_set_text(Completion *) {{{*/
+void
+dwb_completion_set_entry_text(Completion *c) {
+  const gchar *text = gtk_label_get_text(GTK_LABEL(c->llabel));
+  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
+  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
+
+}/*}}}*/
+
+/* dwb_complete {{{*/
+void
+dwb_complete(gint back) {
+  View *v = CURRENT_VIEW();
+
+  if (dwb.state.mode != CompletionMode) {
+    v->compbox = gtk_vbox_new(true, 0);
+    gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
+    if (dwb.state.mode == OpenMode) {
+      dwb.state.completions = dwb_init_completion(dwb.state.completions, dwb.fc.history);
+      dwb.state.completions = dwb_init_completion(dwb.state.completions, dwb.fc.bookmarks);
+      dwb.state.completions = dwb_init_completion(dwb.state.completions, dwb.fc.commands);
+    }
+    if (!dwb.state.completions) {
+      return;
+    }
+    int i=0;
+    if (back) {
+      dwb.state.active_comp = g_list_last(dwb.state.completions);
+      for (GList *l = dwb.state.active_comp; l && i<dwb.misc.max_c_items; l=l->prev, i++) {
+        gtk_widget_show_all(((Completion*)l->data)->event);
+      }
+    }
+    else {
+      dwb.state.active_comp = g_list_first(dwb.state.completions);
+      for (GList *l = dwb.state.active_comp; l && i<dwb.misc.max_c_items; l=l->next, i++) {
+        gtk_widget_show_all(((Completion*)l->data)->event);
+      }
+    }
+    dwb_modify_completion_item(dwb.state.active_comp->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
+    dwb_completion_set_entry_text(dwb.state.active_comp->data);
+    gtk_widget_show(CURRENT_VIEW()->compbox);
+    dwb.state.mode = CompletionMode;
+  }
+  else if (dwb.state.completions && dwb.state.active_comp) {
+    // TODO implement update completion
+    GList *old, *new;
+    Completion *c;
+
+    gint length = g_list_length(dwb.state.completions);
+    gint items = MAX(length, dwb.misc.max_c_items);
+    gint r = (dwb.misc.max_c_items) % 2;
+    gint offset = dwb.misc.max_c_items / 2 - 1 + r;
+
+    old = dwb.state.active_comp;
+    gint position = g_list_position(dwb.state.completions, dwb.state.active_comp) + 1;
+    if (!back) {
+      if (! (new = old->next) ) {
+        new = g_list_first(dwb.state.completions);
+      }
+      if (position > offset &&  position < items - offset - 1 + r) {
+        c = g_list_nth(dwb.state.completions, position - offset - 1)->data;
+        gtk_widget_hide(c->event);
+        c = g_list_nth(dwb.state.completions, position + offset + 1 - r)->data;
+        gtk_widget_show_all(c->event);
+      }
+      else {
+        if (position == items || position  == 1) {
+          gtk_widget_hide_all(v->compbox);
+          gtk_widget_show(v->compbox);
+          int i = 0;
+          for (GList *l = g_list_first(dwb.state.completions); l && i<dwb.misc.max_c_items ;l=l->next, i++) {
+            gtk_widget_show_all(((Completion*)l->data)->event);
+          }
+        }
+      }
+    }
+    else {
+      if (! (new = old->prev) ) {
+        new = g_list_last(dwb.state.completions);
+      }
+      if (position > offset   &&  position < items - offset - 1 + r) {
+        c = g_list_nth(dwb.state.completions, position - offset - 1)->data;
+        gtk_widget_show_all(c->event);
+        c = g_list_nth(dwb.state.completions, position + offset + 1 - r)->data;
+        gtk_widget_hide(c->event);
+      }
+      else {
+        if (position == 1) {
+          gtk_widget_hide_all(v->compbox);
+          gtk_widget_show(v->compbox);
+          int i = 0;
+          for (GList *l = g_list_last(dwb.state.completions); l && i<dwb.misc.max_c_items ;l=l->prev, i++) {
+            c = l->data;
+            gtk_widget_show_all(c->event);
+          }
+        }
+      }
+    }
+    dwb_modify_completion_item(old->data, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_normal);
+    dwb_modify_completion_item(new->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
+    dwb.state.active_comp = new;
+    dwb_completion_set_entry_text(dwb.state.active_comp->data);
+  }
+
+}/*}}}*/
+/*}}}*/
+
 /* FUNCTIONS {{{*/
+
+/* dwb_reload_colors(GList *,  WebSettings  *s) {{{*/
+void 
+dwb_reload_colors(GList *gl, WebSettings *s) {
+  dwb_init_style();
+}/*}}}*/
+
+/* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
+void 
+dwb_reload_layout(GList *gl, WebSettings *s) {
+  dwb_init_style();
+  for (GList *l = dwb.state.views; l; l=l->next) {
+    if (l == dwb.state.fview) {
+      dwb_set_active_style(l);
+    }
+    else {
+      dwb_set_normal_style(l);
+    }
+  }
+}/*}}}*/
+
+/* dwb_save_searchengine {{{*/
+void
+dwb_save_searchengine(void) {
+  gchar *text = g_strdup(GET_TEXT());
+  if (text) {
+    g_strstrip(text);
+    if (text && strlen(text) > 0) {
+      dwb_prepend_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
+      dwb_set_normal_message(dwb.state.fview, "Search saved", true);
+      g_free(dwb.state.search_engine);
+    }
+    else {
+      dwb_set_error_message(dwb.state.fview, "No keyword specified, aborting.");
+    }
+    g_free(text);
+  }
+  dwb_normal_mode(false);
+  
+}/*}}}*/
+
+/* dwb_set_websetting(GList *, WebSettings *) {{{*/
+void
+dwb_set_websetting(GList *gl, WebSettings *s) {
+  if (s->global) {
+    WebSettings *new = g_hash_table_lookup(dwb.settings, s->id);
+    new->arg = s->arg;
+  }
+
+}/*}}}*/
+
+Layout
+dwb_layout_from_char(const gchar *desc) {
+  gchar **token = g_strsplit(desc, " ", 0);
+  gint i=0;
+  Layout layout;
+  while (token[i]) {
+    if (!(layout & BottomStack) && !g_ascii_strcasecmp(token[i], "normal")) {
+      layout |= NormalLayout;
+    }
+    else if (!(layout & NormalLayout) && !g_ascii_strcasecmp(token[i], "bottomstack")) {
+      layout |= BottomStack;
+    }
+    else if (!g_ascii_strcasecmp(token[i], "maximized")) {
+      layout |= Maximized;
+    }
+    else {
+      layout = NormalLayout;
+    }
+    i++;
+  }
+  return layout;
+}
 
 /* dwb_test_cookie_allowed(const gchar *)     return:  gboolean{{{*/
 gboolean 
@@ -1954,14 +2444,15 @@ void
 dwb_apply_settings(WebSettings *s) {
   if (dwb.state.setting_apply == Global) {
     for (GList *l = dwb.state.views; l; l=l->next)  {
-      s->func(l, s);
       WebSettings *new =  g_hash_table_lookup((((View*)l->data)->setting), s->id);
       new->arg = s->arg;
+      if (s->func) {
+        s->func(l, s);
+      }
     }
   }
   else {
     s->func(dwb.state.fview, s);
-    //*((WebSettings*)((View*)dwb.state.fview->data)->setting) = *s;
     WebSettings *new =  g_hash_table_lookup((((View*)dwb.state.fview->data)->setting), s->id);
     new->arg = s->arg;
   }
@@ -2019,7 +2510,7 @@ dwb_webview_property(GList *gl, WebSettings *s) {
 gboolean
 dwb_update_hints(GdkEventKey *e) {
   gchar *buffer = NULL;
-  gboolean ret = false;
+  gboolean ret = true;
   gchar *com = NULL;
 
   if (e->keyval == GDK_Return) {
@@ -2044,17 +2535,28 @@ dwb_update_hints(GdkEventKey *e) {
     ret = true;
   }
   else {
-    com = g_strdup_printf("update_hints(\"%s\")", gtk_entry_get_text(GTK_ENTRY(dwb.gui.entry)));
+    com = g_strdup_printf("update_hints(\"%s\")", GET_TEXT());
   }
   buffer = dwb_execute_script(com);
   g_free(com);
   if (buffer && strcmp(buffer, "undefined")) {
     if (!strcmp("_dwb_no_hints_", buffer)) {
       dwb_set_error_message(dwb.state.fview, NO_HINTS);
+      dwb_normal_mode(false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
-      gtk_widget_grab_focus(VIEW(dwb.state.fview)->web);
-      dwb_insert_mode(NULL);
+      if (dwb.state.mode == SearchFieldMode) {
+        gchar *com = g_strdup_printf("submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
+        gchar *value = dwb_execute_script(com);
+        if (value) {
+          dwb.state.form_name = value;
+        }
+        g_free(com);
+      }
+      else {
+        gtk_widget_grab_focus(VIEW(dwb.state.fview)->web);
+        dwb_insert_mode(NULL);
+      }
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
       dwb.state.scriptlock = 1;
@@ -2099,24 +2601,28 @@ dwb_execute_script(const char *com) {
 }
 /*}}}*/
 
-/* dwb_append_navigation(GList *gl, GList *view) {{{*/
+void
+dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {
+  for (GList *l = (*fc); l; l=l->next) {
+    Navigation *n = l->data;
+    if (!strcmp(first, n->first)) {
+      dwb_navigation_free(n);
+      (*fc) = g_list_delete_link((*fc), l);
+      break;
+    }
+  }
+  Navigation *n = dwb_navigation_new(first, second);
+
+  (*fc) = g_list_prepend((*fc), n);
+}
+/* dwb_prepend_navigation(GList *gl, GList *view) {{{*/
 gboolean 
-dwb_append_navigation(GList *gl, GList **fc) {
+dwb_prepend_navigation(GList *gl, GList **fc) {
   WebKitWebView *w = WEBVIEW(gl);
   const gchar *uri = webkit_web_view_get_uri(w);
-  if (uri) {
+  if (uri && strlen(uri) > 0 && strcmp(uri, SETTINGS) && strcmp(uri, KEY_SETTINGS)) {
     const gchar *title = webkit_web_view_get_title(w);
-    for (GList *l = (*fc); l; l=l->next) {
-      Navigation *n = l->data;
-      if (!strcmp(uri, n->uri)) {
-        dwb_navigation_free(n);
-        (*fc) = g_list_delete_link((*fc), l);
-        break;
-      }
-    }
-    Navigation *n = dwb_navigation_new(uri, title);
-
-    (*fc) = g_list_prepend((*fc), n);
+    dwb_prepend_navigation_with_argument(fc, uri, title);
     return true;
   }
   return false;
@@ -2128,7 +2634,7 @@ void
 dwb_save_quickmark(const gchar *key) {
   WebKitWebView *w = WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web);
   const gchar *uri = webkit_web_view_get_uri(w);
-  if (uri) {
+  if (uri && strlen(uri)) {
     const gchar *title = webkit_web_view_get_title(w);
     for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
       Quickmark *q = l->data;
@@ -2158,10 +2664,10 @@ dwb_open_quickmark(const gchar *key) {
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
-      Arg a = { .p = q->nav->uri };
+      Arg a = { .p = q->nav->first };
       dwb_load_uri(&a);
 
-      message = g_strdup_printf("Loading quickmark %s: %s", key, q->nav->uri);
+      message = g_strdup_printf("Loading quickmark %s: %s", key, q->nav->first);
       dwb_set_normal_message(dwb.state.fview, message, true);
     }
   }
@@ -2212,8 +2718,13 @@ void
 dwb_grab_focus(GList *gl) {
   View *v = gl->data;
 
+  if (dwb.gui.entry) {
+    gtk_widget_hide(dwb.gui.entry);
+  }
   dwb.state.fview = gl;
-  dwb_view_modify_style(gl, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_bold, dwb.font.active_size);
+  dwb.gui.entry = v->entry;
+  gtk_widget_show(v->entry);
+  dwb_set_active_style(gl);
   gtk_widget_grab_focus(v->web);
 }/*}}}*/
 
@@ -2231,6 +2742,7 @@ dwb_load_uri(Arg *arg) {
   }
   View *fview = dwb.state.fview->data;
   webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
+  g_free(uri);
 
 }/*}}}*/
 
@@ -2240,16 +2752,17 @@ dwb_update_layout() {
   gboolean visible = gtk_widget_get_visible(dwb.gui.right);
   View *v;
 
-  if (LAYOUT & Maximized) {
+  if (dwb.state.layout & Maximized) {
     return; 
   }
   if (dwb.state.views->next) {
     if (!visible) {
       gtk_widget_show_all(dwb.gui.right);
+      gtk_widget_hide(((View*)dwb.state.views->next->data)->entry);
     }
     v = dwb.state.views->next->data;
-    if (FACTOR != 1.0) {
-      webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), FACTOR);
+    if (dwb.misc.factor != 1.0) {
+      webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), dwb.misc.factor);
     }
     Arg *a = dwb_web_settings_get_value("full-content-zoom");
     webkit_web_view_set_full_content_zoom(WEBKIT_WEB_VIEW(v->web), a->b);
@@ -2354,14 +2867,20 @@ void
 dwb_normal_mode(gboolean clean) {
   View *v = dwb.state.fview->data;
 
-  if (dwb.state.mode == HintMode) {
+  if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
     dwb_execute_script("clear()");
   }
   else  if (dwb.state.mode  == InsertMode) {
     dwb_view_modify_style(dwb.state.fview, &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
   }
+  else if (dwb.state.mode == CompletionMode) {
+    dwb_clean_completion();
+  }
 
   gtk_widget_grab_focus(v->web);
+
+  //gtk_widget_hide(dwb.gui.entry);
+
   if (clean) {
     CLEAR_COMMAND_TEXT(dwb.state.fview);
   }
@@ -2371,6 +2890,7 @@ dwb_normal_mode(gboolean clean) {
   if (dwb.state.buffer) {
     g_string_free(dwb.state.buffer, true);
   }
+  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   dwb_clean_vars();
 }/*}}}*/
 
@@ -2393,7 +2913,7 @@ dwb_get_resolved_uri(const gchar *uri) {
 }
 /*}}}*/
 
-/*{{{*/
+/* dwb_search {{{*/
 gboolean
 dwb_search(Arg *arg) {
   gboolean forward = dwb.state.forward_search;
@@ -2402,8 +2922,13 @@ dwb_search(Arg *arg) {
   }
   View *v = CURRENT_VIEW();
   WebKitWebView *web = CURRENT_WEBVIEW();
+  const gchar *text = GET_TEXT();
+  if (strlen(text) > 0) {
+    g_free(v->status->search_string);
+    v->status->search_string =  g_strdup(GET_TEXT());
+  }
   if (!v->status->search_string) {
-    v->status->search_string = (gchar *) gtk_entry_get_text(GTK_ENTRY(dwb.gui.entry));
+    return false;
   }
   webkit_web_view_unmark_text_matches(web);
   webkit_web_view_search_text(web, v->status->search_string, false, forward, true);
@@ -2440,6 +2965,20 @@ dwb_clean_up() {
   return true;
 }/*}}}*/
 
+/* dwb_save_navigation_fc{{{*/
+void 
+dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length) {
+  GString *string = g_string_new(NULL);
+  gint i=0;
+  for (GList *l = fc; l && (length<0 || i<length) ; l=l->next, i++)  {
+    Navigation *n = l->data;
+    g_string_append_printf(string, "%s %s\n", n->first, n->second);
+    g_free(n);
+  }
+  dwb_set_file_content(filename, string->str);
+  g_string_free(string, true);
+}/*}}}*/
+
 /* dwb_save_files() {{{*/
 gboolean 
 dwb_save_files() {
@@ -2448,35 +2987,18 @@ dwb_save_files() {
   gchar *content;
   GKeyFile *keyfile;
 
-  // Bookmarks
-  GString *bookmarks = g_string_new(NULL);
-  for (GList *l = dwb.fc.bookmarks; l; l=l->next)  {
-    Navigation *n = l->data;
-    g_string_append_printf(bookmarks, "%s %s\n", n->uri, n->title);
-    g_free(n);
-  }
-  dwb_set_file_content(dwb.files.bookmarks, bookmarks->str);
-  g_string_free(bookmarks, true);
+  dwb_save_navigation_fc(dwb.fc.bookmarks, dwb.files.bookmarks, -1);
+  dwb_save_navigation_fc(dwb.fc.history, dwb.files.history, dwb.misc.history_length);
+  dwb_save_navigation_fc(dwb.fc.searchengines, dwb.files.searchengines, -1);
 
-  // History
-  GString *history = g_string_new(NULL);
-  gint n = 0;
-  for (GList *l = dwb.fc.history; n<HISTORY_LENGTH && l; l=l->next, n++)  {
-    Navigation *n = l->data;
-    g_string_append_printf(history, "%s %s\n", n->uri, n->title);
-    g_free(n);
-  }
-  dwb_set_file_content(dwb.files.history, history->str);
-  g_string_free(history, true);
 
   // quickmarks
   GString *quickmarks = g_string_new(NULL); 
   for (GList *l = dwb.fc.quickmarks; l; l=l->next)  {
     Quickmark *q = l->data;
     Navigation *n = q->nav;
-    g_string_append_printf(quickmarks, "%s %s %s\n", q->key, n->uri, n->title);
-    g_free(n);
-    g_free(q);
+    g_string_append_printf(quickmarks, "%s %s %s\n", q->key, n->first, n->second);
+    dwb_quickmark_free(q);
   }
   dwb_set_file_content(dwb.files.quickmarks, quickmarks->str);
   g_string_free(quickmarks, true);
@@ -2734,11 +3256,11 @@ dwb_init_cookies() {
 
     dwb.state.cookiejar = soup_cookie_jar_new();
     soup_session_add_feature(dwb.misc.soupsession, SOUP_SESSION_FEATURE(dwb.state.cookiejar));
-    g_signal_connect(dwb.state.cookiejar, "changed", G_CALLBACK(dwb_cookie_changed_cb), NULL);
     jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
     for (GSList *c = soup_cookie_jar_all_cookies(jar); c; c = c->next) {
         soup_cookie_jar_add_cookie(dwb.state.cookiejar, c->data);
     }
+    g_signal_connect(dwb.state.cookiejar, "changed", G_CALLBACK(dwb_cookie_changed_cb), NULL);
     g_object_unref(jar);
 }/*}}}*/
 
@@ -2821,41 +3343,52 @@ void
 dwb_init_style() {
   // Colors 
   // Statusbar
-  gdk_color_parse(ACTIVE_FG_COLOR, &dwb.color.active_fg);
-  gdk_color_parse(ACTIVE_BG_COLOR, &dwb.color.active_bg);
-  gdk_color_parse(NORMAL_FG_COLOR, &dwb.color.normal_fg);
-  gdk_color_parse(NORMAL_BG_COLOR, &dwb.color.normal_bg);
+  gdk_color_parse(GET_CHAR("active_fg_color"), &dwb.color.active_fg);
+  gdk_color_parse(GET_CHAR("active_bg_color"), &dwb.color.active_bg);
+  gdk_color_parse(GET_CHAR("normal_fg_color"), &dwb.color.normal_fg);
+  gdk_color_parse(GET_CHAR("normal_bg_color"), &dwb.color.normal_bg);
 
   // Tabs
-  gdk_color_parse(TAB_ACTIVE_FG_COLOR, &dwb.color.tab_active_fg);
-  gdk_color_parse(TAB_ACTIVE_BG_COLOR, &dwb.color.tab_active_bg);
-  gdk_color_parse(TAB_NORMAL_FG_COLOR, &dwb.color.tab_normal_fg);
-  gdk_color_parse(TAB_NORMAL_BG_COLOR, &dwb.color.tab_normal_bg);
-
-  //Entry
-  gdk_color_parse(ENTRY_FG_COLOR, &dwb.color.entry_fg);
-  gdk_color_parse(ENTRY_BG_COLOR, &dwb.color.entry_bg);
+  gdk_color_parse(GET_CHAR("tab_active_fg_color"), &dwb.color.tab_active_fg);
+  gdk_color_parse(GET_CHAR("tab_active_bg_color"), &dwb.color.tab_active_bg);
+  gdk_color_parse(GET_CHAR("tab_normal_fg_color"), &dwb.color.tab_normal_fg);
+  gdk_color_parse(GET_CHAR("tab_normal_bg_color"), &dwb.color.tab_normal_bg);
 
   //InsertMode 
-  gdk_color_parse(INSERTMODE_FG_COLOR, &dwb.color.insert_fg);
-  gdk_color_parse(INSERTMODE_BG_COLOR, &dwb.color.insert_bg);
+  gdk_color_parse(GET_CHAR("insert_fg_color"), &dwb.color.insert_fg);
+  gdk_color_parse(GET_CHAR("insert_bg_color"), &dwb.color.insert_bg);
 
-  gdk_color_parse(ERROR_COLOR, &dwb.color.error);
+  gdk_color_parse(GET_CHAR("active_comp_bg_color"), &dwb.color.active_c_bg);
+  gdk_color_parse(GET_CHAR("active_comp_fg_color"), &dwb.color.active_c_fg);
+  gdk_color_parse(GET_CHAR("normal_comp_bg_color"), &dwb.color.normal_c_bg);
+  gdk_color_parse(GET_CHAR("normal_comp_fg_color"), &dwb.color.normal_c_fg);
+
+  gdk_color_parse(GET_CHAR("error_color"), &dwb.color.error);
+
+  dwb.color.settings_fg_color = GET_CHAR("settings_fg_color");
+  dwb.color.settings_bg_color = GET_CHAR("settings_bg_color");
 
   // Fonts
-  dwb.font.fd_normal = pango_font_description_from_string(FONT);
-  pango_font_description_set_absolute_size(dwb.font.fd_normal, ACTIVE_FONT_SIZE * PANGO_SCALE);
-  dwb.font.fd_bold = pango_font_description_from_string(FONT);
-  pango_font_description_set_absolute_size(dwb.font.fd_bold, ACTIVE_FONT_SIZE * PANGO_SCALE);
-  dwb.font.fd_oblique = pango_font_description_from_string(FONT);
-  pango_font_description_set_absolute_size(dwb.font.fd_oblique, ACTIVE_FONT_SIZE * PANGO_SCALE);
+  gint active_font_size = GET_INT("active_font_size");
+  gint normal_font_size = GET_INT("normal_font_size");
+  gchar *font = GET_CHAR("font");
+
+  dwb.font.fd_normal = pango_font_description_from_string(font);
+  dwb.font.fd_bold = pango_font_description_from_string(font);
+  dwb.font.fd_oblique = pango_font_description_from_string(font);
+
+  pango_font_description_set_absolute_size(dwb.font.fd_normal, active_font_size * PANGO_SCALE);
+  pango_font_description_set_absolute_size(dwb.font.fd_bold, active_font_size * PANGO_SCALE);
+  pango_font_description_set_absolute_size(dwb.font.fd_oblique, active_font_size * PANGO_SCALE);
+
   pango_font_description_set_weight(dwb.font.fd_normal, PANGO_WEIGHT_NORMAL);
   pango_font_description_set_weight(dwb.font.fd_bold, PANGO_WEIGHT_BOLD);
   pango_font_description_set_style(dwb.font.fd_oblique, PANGO_STYLE_OBLIQUE);
   
   // Fontsizes
-  dwb.font.active_size = ACTIVE_FONT_SIZE;
-  dwb.font.normal_size = NORMAL_FONT_SIZE;
+  dwb.font.active_size = active_font_size;
+  dwb.font.normal_size = normal_font_size;
+  dwb.misc.settings_border = GET_CHAR("settings_border");
 } /*}}}*/
 
 /* dwb_init_gui() {{{*/
@@ -2870,14 +3403,14 @@ dwb_init_gui() {
     dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, dwb.misc.name);
   }
-  gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), GET_INT("default_width"), GET_INT("default_height"));
   g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_exit), NULL);
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
 
   // Main
   dwb.gui.vbox = gtk_vbox_new(false, 1);
-  dwb.gui.topbox = gtk_hbox_new(true, 3);
+  dwb.gui.topbox = gtk_hbox_new(true, 1);
   dwb.gui.paned = gtk_hpaned_new();
   dwb.gui.left = gtk_vbox_new(true, 0);
   dwb.gui.right = gtk_vbox_new(true, 1);
@@ -2888,18 +3421,6 @@ dwb_init_gui() {
   gtk_widget_modify_bg(dwb.gui.paned, GTK_STATE_NORMAL, &dwb.color.normal_bg);
   gtk_widget_modify_bg(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
   gtk_container_add(GTK_CONTAINER(paned_event), dwb.gui.paned);
-  // Entry
-  dwb.gui.entry = gtk_entry_new();
-  gtk_entry_set_inner_border(GTK_ENTRY(dwb.gui.entry), NULL);
-
-  gtk_widget_modify_font(dwb.gui.entry, dwb.font.fd_bold);
-  gtk_widget_modify_base(dwb.gui.entry, GTK_STATE_NORMAL, &dwb.color.entry_bg);
-  gtk_widget_modify_text(dwb.gui.entry, GTK_STATE_NORMAL, &dwb.color.entry_fg);
-  gtk_entry_set_has_frame(GTK_ENTRY(dwb.gui.entry), false);
-
-  g_signal_connect(dwb.gui.entry, "key-press-event", G_CALLBACK(dwb_entry_keypress_cb), NULL);
-  g_signal_connect(dwb.gui.entry, "key-release-event", G_CALLBACK(dwb_entry_release_cb), NULL);
-  g_signal_connect(dwb.gui.entry, "activate", G_CALLBACK(dwb_entry_activate_cb), NULL);
 
   // Pack
   gtk_paned_pack1(GTK_PANED(dwb.gui.paned), dwb.gui.left, true, true);
@@ -2907,13 +3428,13 @@ dwb_init_gui() {
 
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), paned_event, true, true, 0);
-  gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.entry, false, false, 0);
+  //gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.entry, false, false, 0);
 
 
   dwb_add_view(NULL);
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);
 
-  gtk_widget_show(dwb.gui.entry);
+  //gtk_widget_show(dwb.gui.entry);
   gtk_widget_show(dwb.gui.left);
   gtk_widget_show(dwb.gui.paned);
   gtk_widget_show(paned_event);
@@ -2961,6 +3482,8 @@ dwb_init_files() {
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (void*)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (void*)dwb_navigation_new_from_line); 
   dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (void*)dwb_quickmark_new_from_line); 
+  dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (void*)dwb_navigation_new_from_line); 
+  dwb.misc.default_search = ((Navigation*)g_list_last(dwb.fc.searchengines)->data)->second;
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (void*)dwb_return);
 }/*}}}*/
 
@@ -3010,20 +3533,47 @@ void dwb_init() {
   dwb_clean_vars();
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
-  dwb.state.size = SIZE;
   dwb.state.last_cookie = NULL;
+  dwb.misc.max_c_items = MAX_COMPLETIONS;
   
   dwb.misc.soupsession = webkit_get_default_session();
 
   dwb_init_signals();
   dwb_init_files();
-  dwb_init_style();
   dwb_init_key_map();
   dwb_init_settings();
+  dwb_init_style();
   dwb_init_proxy();
   dwb_init_gui();
   dwb_init_cookies();
+
+  dwb.misc.message_delay = GET_INT("message_delay");
+  dwb.misc.history_length = GET_INT("history_length");
+  dwb.state.size = GET_INT("size");
+  dwb.misc.factor = GET_DOUBLE("factor");
+  dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
+  if (dwb.state.layout & BottomStack) {
+    Arg a = { .n = dwb.state.layout };
+    dwb_set_orientation(&a);
+  }
 } /*}}}*/ /*}}}*/
+
+void 
+dwb_test_function() {
+  const gchar *path = g_getenv("PATH");
+  gchar **dirs = g_strsplit(path, ":", -1);
+  GDir *current;
+  const gchar *filename;
+  GList *bins = NULL;
+  for (gint i=0; i<g_strv_length(dirs); i++) {
+    if ( (current = g_dir_open(dirs[i], 0, NULL)) ) {
+      while ( (filename = g_dir_read_name(current)) ) {
+        Navigation *n = dwb_navigation_new(filename, NULL);
+        bins = g_list_append(bins, n);
+      }
+    }
+  }
+}
 
 int main(gint argc, gchar **argv) {
   dwb.misc.name = NAME;
@@ -3046,6 +3596,7 @@ int main(gint argc, gchar **argv) {
     }
   }
   gtk_init(&argc, &argv);
+  dwb_test_function();;
   dwb_init();
   gtk_main();
   return EXIT_SUCCESS;
