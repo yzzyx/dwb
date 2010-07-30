@@ -18,18 +18,18 @@
 
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
-  body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center; }\n\
-  .line { border: %s; vertical-align: middle; }\n \
-  .text { float: left; font-variant: normal; font-size: 14;}\n \
-  .key { text-align: right;  font-size: 12; }\n \
-  .active { background-color: #660000; }\n \
-  h2 { font-variant: small-caps; }\n \
-  .alignCenter { margin-left: 25%%; width: 50%%; }\n \
-  </style>\n \
-  <script type=\"text/javascript\">\n  \
-  function setting_submit() { e = document.activeElement; value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); return false; } \
-  function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); } \
-  </script>\n<noscript>Enable scripts to add settings!</noscript>\n</head>\n"
+body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center; }\n\
+.line { border: %s; vertical-align: middle; }\n \
+.text { float: left; font-variant: normal; font-size: 14;}\n \
+.key { text-align: right;  font-size: 12; }\n \
+.active { background-color: #660000; }\n \
+h2 { font-variant: small-caps; }\n \
+.alignCenter { margin-left: 25%%; width: 50%%; }\n \
+</style>\n \
+<script type=\"text/javascript\">\n  \
+function setting_submit() { e = document.activeElement; value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); return false; } \
+function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); } \
+</script>\n<noscript>Enable scripts to add settings!</noscript>\n</head>\n"
 #define HTML_H2  "<h2>%s -- Profile: %s</h2>"
 
 #define HTML_BODY_START "<body>\n"
@@ -91,6 +91,7 @@ typedef struct _Misc Misc;
 typedef struct _Dwb Dwb;
 typedef struct _Gui Gui;
 typedef struct _State State;
+typedef struct _Completions Completions;
 typedef struct _View View;
 typedef struct _Color Color;
 typedef struct _Font Font;
@@ -148,6 +149,8 @@ void dwb_set_status_text(GList *, const gchar *, GdkColor *,  PangoFontDescripti
 void dwb_tab_label_set_text(GList *, const gchar *);
 void dwb_update_status(GList *gl);
 void dwb_update_status_text(GList *gl);
+void dwb_autocomplete(GList *, GdkEventKey *e);
+void dwb_eval_autocompletion(void);
 
 void dwb_save_quickmark(const gchar *);
 void dwb_open_quickmark(const gchar *);
@@ -183,6 +186,7 @@ gboolean dwb_web_view_focus_cb(WebKitWebView *, GtkDirectionType *, GList *);
 
 void dwb_complete(gint);
 void dwb_clean_completion(void);
+void dwb_clean_autocompletion(void);
 
 gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
 gboolean dwb_entry_keypress_cb(GtkWidget *, GdkEventKey *e);
@@ -197,6 +201,8 @@ void dwb_grab_focus(GList *);
 gchar * dwb_get_resolved_uri(const gchar *);
 gchar * dwb_execute_script(const gchar *);
 
+gboolean dwb_set_setting(Arg *);
+gboolean dwb_set_key(Arg *);
 gboolean dwb_allow_cookie(Arg *);
 gboolean dwb_create_hints(Arg *);
 gboolean dwb_find(Arg *);
@@ -241,131 +247,138 @@ void dwb_exit(void);
 
 /* ENUMS {{{*/
 enum _Mode {
-  NormalMode,
-  InsertMode,
-  OpenMode,
-  QuickmarkSave,
-  QuickmarkOpen, 
-  HintMode,
-  FindMode,
-  CompletionMode,
-  SearchFieldMode,
-  SearchKeywordMode,
+NormalMode          = 1<<0,
+InsertMode          = 1<<1,
+OpenMode            = 1<<2,
+QuickmarkSave       = 1<<3,
+QuickmarkOpen       = 1<<4, 
+HintMode            = 1<<5,
+FindMode            = 1<<6,
+CompletionMode      = 1<<7,
+AutoComplete        = 1<<8,
+SearchFieldMode     = 1<<10,
+SearchKeywordMode   = 1<<11,
+SettingsMode        = 1<<12,
 };
 
 
 enum _Open {
-  OpenNormal, 
-  OpenNewView,
-  OpenNewWindow,
+OpenNormal, 
+OpenNewView,
+OpenNewWindow,
 };
 
 enum _Layout {
-  NormalLayout = 0,
-  BottomStack = 1<<0, 
-  Maximized = 1<<1, 
+NormalLayout = 0,
+BottomStack = 1<<0, 
+Maximized = 1<<1, 
 };
 
 enum _Direction {
-  Up, 
-  Down, 
-  Left, 
-  Right, 
-  PageUp,
-  PageDown, 
-  Top,
-  Bottom,
+Up, 
+Down, 
+Left, 
+Right, 
+PageUp,
+PageDown, 
+Top,
+Bottom,
 };
 enum _DwbType {
-  Char, 
-  Integer,
-  Double,
-  Boolean, 
-  Pointer, 
+Char, 
+Integer,
+Double,
+Boolean, 
+Pointer, 
+ColorChar,
 };
 enum _SettingsScope {
-  Global,
-  PerView,
+Global,
+PerView,
 };
 /*}}}*/
 
 /* STRUCTS {{{*/
 struct _Arg {
-  guint n;
-  gint i;
-  gdouble d;
-  gpointer p;
-  gboolean b;
-  gchar *e;
+guint n;
+gint i;
+gdouble d;
+gpointer p;
+gboolean b;
+gchar *e;
 };
 struct _Key {
-  const gchar *str;
-  guint mod;
+const gchar *str;
+guint mod;
 };
 struct _KeyValue {
-  const gchar *id;
-  Key key;
+const gchar *id;
+Key key;
 };
 struct _FunctionMap {
-  const gchar *id;
-  gboolean (*func)(void*);
-  const gchar *desc;
-  const gchar *error; 
-  gboolean hide;
-  Arg arg;
+const gchar *id;
+gboolean (*func)(void*);
+const gchar *desc;
+const gchar *error; 
+gboolean hide;
+Arg arg;
 };
 struct _KeyMap {
-  const gchar *key;
-  guint mod;
-  FunctionMap *map;
+const gchar *key;
+guint mod;
+FunctionMap *map;
 };
 struct _Navigation {
-  gchar *first;
-  gchar *second;
+gchar *first;
+gchar *second;
 };
 struct _Quickmark {
-  gchar *key; 
-  Navigation *nav;
+gchar *key; 
+Navigation *nav;
+};
+struct _Completions {
+GList *active_comp;
+GList *completions;
+GList *auto_c;
+GList *active_auto_c;
 };
 
 struct _State {
-  GList *views;
-  GList *fview;
-  WebKitWebSettings *web_settings;
-  Mode mode;
-  GString *buffer;
-  gint nummod;
-  Open nv;
-  guint scriptlock;
-  gint size;
-  GHashTable *settings_hash;
-  SettingsScope setting_apply;
-  gboolean forward_search;
-  SoupCookieJar *cookiejar;
-  SoupCookie *last_cookie;
-  GList *active_comp;
-  GList *completions;
-  Layout layout;
+GList *views;
+GList *fview;
+WebKitWebSettings *web_settings;
+Mode mode;
+GString *buffer;
+gint nummod;
+Open nv;
+guint scriptlock;
+gint size;
+GHashTable *settings_hash;
+SettingsScope setting_apply;
+gboolean forward_search;
+SoupCookieJar *cookiejar;
+SoupCookie *last_cookie;
+Layout layout;
 
-  gchar *search_engine;
-  gchar *form_name;
+gchar *search_engine;
+gchar *form_name;
 
 };
 
 union _Type {
-  gboolean b;
-  gdouble f;
-  guint i; 
-  gpointer p;
+gboolean b;
+gdouble f;
+guint i; 
+gpointer p;
 };
 struct _WebSettings {
-  gchar *id;
-  gboolean builtin;
-  gboolean global;
-  DwbType type;
-  Arg arg;
-  void (*func)(void *, WebSettings *);
-  gchar *desc;
+gchar *id;
+gboolean builtin;
+gboolean global;
+DwbType type;
+Arg arg;
+void (*func)(void *, WebSettings *);
+gchar *desc;
 };
 
 struct _View {
@@ -378,6 +391,7 @@ struct _View {
   GtkWidget *lstatus;
   GtkWidget *scroll; 
   GtkWidget *entry;
+  GtkWidget *autocompletion;
   GtkWidget *compbox;
   GtkWidget *bottombox;
   View *next;
@@ -388,7 +402,7 @@ struct _Completion {
   GtkWidget *event;
   GtkWidget *rlabel;
   GtkWidget *llabel;
-  const gchar *text;
+  void *data;
 };
 struct _ViewStatus {
   guint message_id;
@@ -440,7 +454,7 @@ struct _Gui {
 };
 struct _Misc {
   const gchar *name;
-  const gchar *scripts;
+  gchar *scripts;
   const gchar *profile;
   const gchar *default_search;
   SoupSession *soupsession;
@@ -485,6 +499,7 @@ struct _Dwb {
   Font font;
   Misc misc;
   State state;
+  Completions comps;
   GSList *keymap;
   GHashTable *settings;
   Files files;
@@ -563,6 +578,8 @@ FunctionMap FMAP [] = {
   { "scripts",               (void*)dwb_toggle_property,      "Setting: scripts",         NULL,                       true,    { .p = "enable-scripts" }              },
   { "spell_checking",        (void*)dwb_toggle_property,      "Setting: spell checking",         NULL,                       true,    { .p = "enable-spell-checking" }              },
   { "proxy",                 (void*)dwb_toggle_proxy,      "Setting: proxy",                   NULL,                       true,    { 0 }              },
+  { "set_setting",           (void*)dwb_set_setting,        "Set property",                   NULL,                       true,    { 0 }              },
+  { "set_key",               (void*)dwb_set_key,                "Set keybinding",                   NULL,                       true,    { 0 }              },
 
   //{ "create_hints",          (void*)dwb_create_hints,       "Hints",                          NULL,                       true,                                             },
 
@@ -619,27 +636,27 @@ static WebSettings DWB_SETTINGS[] = {
   { "proxy",                                       false, true,  Boolean, { .b = true              }, (void*) dwb_set_websetting,         "HTTP-proxy", }, 
   { "cookie",                                      false, true,  Boolean, { .b = false             }, (void*) dwb_set_websetting,       "All Cookies allowed", }, 
 
-  { "active_fg_color",                             false, true,  Char, { .p = "#ffffff"         },    (void*) dwb_reload_layout,      "UI: Active view foreground", }, 
-  { "active_bg_color",                             false, true,  Char, { .p = "#000000"         },    (void*) dwb_reload_layout,      "UI: Active view background", }, 
-  { "normal_fg_color",                             false, true,  Char, { .p = "#cccccc"         },    (void*) dwb_reload_layout,      "UI: Inactive view foreground", }, 
-  { "normal_bg_color",                             false, true,  Char, { .p = "#505050"         },    (void*) dwb_reload_layout,      "UI: Inactive view background", }, 
+  { "active_fg_color",                             false, true,  ColorChar, { .p = "#ffffff"         },    (void*) dwb_reload_layout,      "UI: Active view foreground", }, 
+  { "active_bg_color",                             false, true,  ColorChar, { .p = "#000000"         },    (void*) dwb_reload_layout,      "UI: Active view background", }, 
+  { "normal_fg_color",                             false, true,  ColorChar, { .p = "#cccccc"         },    (void*) dwb_reload_layout,      "UI: Inactive view foreground", }, 
+  { "normal_bg_color",                             false, true,  ColorChar, { .p = "#505050"         },    (void*) dwb_reload_layout,      "UI: Inactive view background", }, 
 
-  { "tab_active_fg_color",                         false, true,  Char, { .p = "#ffffff"         },    (void*) dwb_reload_layout,      "UI: Active view tabforeground", }, 
-  { "tab_active_bg_color",                         false, true,  Char, { .p = "#000000"         },    (void*) dwb_reload_layout,      "UI: Active view tabbackground", }, 
-  { "tab_normal_fg_color",                         false, true,  Char, { .p = "#cccccc"         },    (void*) dwb_reload_layout,      "UI: Inactive view tabforeground", }, 
-  { "tab_normal_bg_color",                         false, true,  Char, { .p = "#505050"         },    (void*) dwb_reload_layout,      "UI: Inactive view tabbackground", }, 
+  { "tab_active_fg_color",                         false, true,  ColorChar, { .p = "#ffffff"         },    (void*) dwb_reload_layout,      "UI: Active view tabforeground", }, 
+  { "tab_active_bg_color",                         false, true,  ColorChar, { .p = "#000000"         },    (void*) dwb_reload_layout,      "UI: Active view tabbackground", }, 
+  { "tab_normal_fg_color",                         false, true,  ColorChar, { .p = "#cccccc"         },    (void*) dwb_reload_layout,      "UI: Inactive view tabforeground", }, 
+  { "tab_normal_bg_color",                         false, true,  ColorChar, { .p = "#505050"         },    (void*) dwb_reload_layout,      "UI: Inactive view tabbackground", }, 
 
-  { "active_comp_fg_color",                        false, true,  Char, { .p = "#1793d1"         }, (void*) dwb_reload_colors,         "UI: Completion active foreground", }, 
-  { "active_comp_bg_color",                        false, true,  Char, { .p = "#000000"         }, (void*) dwb_reload_colors,         "UI: Completion active background", }, 
-  { "normal_comp_fg_color",                        false, true,  Char, { .p = "#eeeeee"         }, (void*) dwb_reload_colors,         "UI: Completion inactive foreground", }, 
-  { "normal_comp_bg_color",                        false, true,  Char, { .p = "#151515"         }, (void*) dwb_reload_colors,         "UI: Completion inactive background", }, 
+  { "active_comp_fg_color",                        false, true,  ColorChar, { .p = "#1793d1"         }, (void*) dwb_reload_colors,         "UI: Completion active foreground", }, 
+  { "active_comp_bg_color",                        false, true,  ColorChar, { .p = "#000000"         }, (void*) dwb_reload_colors,         "UI: Completion active background", }, 
+  { "normal_comp_fg_color",                        false, true,  ColorChar, { .p = "#eeeeee"         }, (void*) dwb_reload_colors,         "UI: Completion inactive foreground", }, 
+  { "normal_comp_bg_color",                        false, true,  ColorChar, { .p = "#151515"         }, (void*) dwb_reload_colors,         "UI: Completion inactive background", }, 
 
-  { "insert_fg_color",                             false, true,  Char, { .p = "#ffffff"         }, (void*) dwb_reload_colors,         "UI: Insertmode foreground", }, 
-  { "insert_bg_color",                             false, true,  Char, { .p = "#00008b"         }, (void*) dwb_reload_colors,         "UI: Insertmode background", }, 
-  { "error_color",                                 false, true,  Char, { .p = "#ff0000"         }, (void*) dwb_reload_colors,         "UI: Error color", }, 
+  { "insert_fg_color",                             false, true,  ColorChar, { .p = "#ffffff"         }, (void*) dwb_reload_colors,         "UI: Insertmode foreground", }, 
+  { "insert_bg_color",                             false, true,  ColorChar, { .p = "#00008b"         }, (void*) dwb_reload_colors,         "UI: Insertmode background", }, 
+  { "error_color",                                 false, true,  ColorChar, { .p = "#ff0000"         }, (void*) dwb_reload_colors,         "UI: Error color", }, 
 
-  { "settings_fg_color",                           false, true,  Char, { .p = "#ffffff"         }, (void*) dwb_reload_colors,         "UI: Settings view foreground", }, 
-  { "settings_bg_color",                           false, true,  Char, { .p = "#151515"         }, (void*) dwb_reload_colors,         "UI: Settings view background", }, 
+  { "settings_fg_color",                           false, true,  ColorChar, { .p = "#ffffff"         }, (void*) dwb_reload_colors,         "UI: Settings view foreground", }, 
+  { "settings_bg_color",                           false, true,  ColorChar, { .p = "#151515"         }, (void*) dwb_reload_colors,         "UI: Settings view background", }, 
   { "settings_border",                             false, true,  Char, { .p = "1px dotted black"}, (void*) dwb_reload_colors,         "UI: Settings view border", }, 
 
   { "active_font_size",                            false, true,  Integer, { .i = 12                }, (void*) dwb_reload_layout,    "UI: Active view fontsize", }, 
@@ -647,21 +664,19 @@ static WebSettings DWB_SETTINGS[] = {
 
   { "font",                                        false, true,  Char, { .p = "monospace"          }, (void*) dwb_reload_layout,    "UI: Font", }, 
 
-  { "hint_vertical_off",                         false, true,  Integer, { .i = 0 },     (void*) dwb_reload_scripts,      "Hints: Vertical offset", }, 
-  { "hint_horizontal_off",                         false, true,  Integer, { .i = -10 },     (void*) dwb_reload_scripts,      "Hints: Horizontal offset", }, 
   { "hint_letter_seq",                               false, true,  Char, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  },     (void*) dwb_reload_scripts,      "Hints: Letter sequence for letter hints", }, 
   { "hint_style",                               false, true,  Char, { .p = "letter"         },     (void*) dwb_reload_scripts,      "Hints: Hintstyle (letter or number)", }, 
   { "hint_font_size",                              false, true,  Char, { .p = "12px"         },     (void*) dwb_reload_scripts,      "Hints: Font size", }, 
   { "hint_font_weight",                            false, true,  Char, { .p = "normal"         },     (void*) dwb_reload_scripts,      "Hints: Font weight", }, 
   { "hint_font_family",                            false, true,  Char, { .p = "monospace"      },     (void*) dwb_reload_scripts,      "Hints: Font family", }, 
-  { "hint_fg_color",                              false, true,  Char, { .p = "#ffffff"         },    (void*) dwb_reload_scripts,      "Hints: Foreground color", }, 
-  { "hint_bg_color",                              false, true,  Char, { .p = "#000088"         },    (void*) dwb_reload_scripts,      "Hints: Background color", }, 
-  { "hint_active_color",                             false, true,  Char, { .p = "#00ff00"         }, (void*) dwb_reload_scripts,      "Hints: Active link color", }, 
-  { "hint_normal_color",                             false, true,  Char, { .p = "#ffff99"         }, (void*) dwb_reload_scripts,      "Hints: Inactive link color", }, 
+  { "hint_fg_color",                              false, true,  ColorChar, { .p = "#ffffff"         },    (void*) dwb_reload_scripts,      "Hints: Foreground color", }, 
+  { "hint_bg_color",                              false, true,  ColorChar, { .p = "#000088"         },    (void*) dwb_reload_scripts,      "Hints: Background color", }, 
+  { "hint_active_color",                             false, true,  ColorChar, { .p = "#00ff00"         }, (void*) dwb_reload_scripts,      "Hints: Active link color", }, 
+  { "hint_normal_color",                             false, true,  ColorChar, { .p = "#ffff99"         }, (void*) dwb_reload_scripts,      "Hints: Inactive link color", }, 
   { "hint_border",                             false, true,  Char, { .p = "2px dashed #000000"    }, (void*) dwb_reload_scripts,      "Hints: Hint Border", }, 
-  { "overlay_border",                             false, true,  Char, { .p = "1px dotted #000000"    }, (void*) dwb_reload_scripts,      "Hints: Overlay Border", }, 
+  //{ "overlay_border",                             false, true,  Char, { .p = "1px dotted #000000"    }, (void*) dwb_reload_scripts,      "Hints: Overlay Border", }, 
   { "hint_opacity",                             false, true,  Double, { .d = 0.75         },         (void*) dwb_reload_scripts,      "Hints: Hint Opacity", }, 
-  { "overlay_opacity",                             false, true,  Double, { .d = 0.3         },         (void*) dwb_reload_scripts,      "Hints: Overlay opacity", }, 
+  //{ "overlay_opacity",                             false, true,  Double, { .d = 0.3         },         (void*) dwb_reload_scripts,      "Hints: Overlay opacity", }, 
 
   { "default_width",                               false, true,  Integer, { .i = 1280          }, NULL,                            "Default width", }, 
   { "default_height",                               false, true,  Integer, { .i = 1024          }, NULL,                            "Default height", }, 
@@ -676,6 +691,14 @@ static WebSettings DWB_SETTINGS[] = {
 
 /* UTIL {{{*/
 
+gboolean
+dwb_ishex(const gchar *string) {
+  gchar *dup = g_strdup(string);
+  gboolean ret = !strtok(dup, "1234567890abcdefABCDEF");
+
+  g_free(dup);
+  return ret;
+}
 gboolean
 dwb_false() {
   return false;
@@ -720,7 +743,7 @@ dwb_arg_to_char(Arg *arg, DwbType type) {
   else if (type == Integer) {
     value = g_strdup_printf("%d", arg->i);
   }
-  else if (type == Char) {
+  else if (type == Char || type == ColorChar) {
     if (arg->p) {
       gchar *tmp = (gchar*) arg->p;
       value = g_strdup_printf(tmp);
@@ -770,6 +793,13 @@ dwb_char_to_arg(gchar *value, DwbType type) {
     else if (type == Char) {
       Arg a = { .p = g_strdup(value) };
       ret = &a;
+    }
+    else if (type == ColorChar) {
+      gint length = strlen(value);
+      if (value[0] == '#' && (length == 4 || length == 7) && dwb_ishex(&value[1])) {
+        Arg a = { .p = g_strdup(value) };
+        ret = &a;
+      }
     }
   }
   return ret;
@@ -1181,8 +1211,15 @@ dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     else if (DIGIT(e) || e->keyval == GDK_Tab) {
       return dwb_update_hints(e);
     }
+    else if  (e->keyval == GDK_Return) {
+      return true;
+    }
   }
-  if (e->keyval == GDK_Tab) {
+  else if (dwb.state.mode & CompletionMode && e->keyval != GDK_Tab && !e->is_modifier) {
+    dwb_clean_completion();
+    return false;
+  }
+  else if (e->keyval == GDK_Tab) {
     dwb_complete(e->state & GDK_CONTROL_MASK);
     return true;
   }
@@ -1241,6 +1278,15 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     }
     return true;
   }
+  else if (dwb.state.mode & AutoComplete) {
+    if (e->keyval == GDK_Tab) {
+      dwb_autocomplete(NULL, e);
+      return true;
+    }
+    else if (e->keyval == GDK_Return) {
+      dwb_eval_autocompletion();
+    }
+  }
   else if (gtk_widget_has_focus(dwb.gui.entry)) {
     return false;
   }
@@ -1248,6 +1294,18 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   g_free(key);
   
   return ret;
+}/*}}}*/
+
+/* dwb_key_release_cb {{{*/
+gboolean 
+dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
+  if (e->keyval == GDK_Tab) {
+    return true;
+  }
+  if (dwb.state.mode == InsertMode && e->keyval == GDK_Return) {
+    dwb_normal_mode(true);
+  }
+  return false;
 }/*}}}*/
 
 /* dwb_cookie_changed_cb {{{*/
@@ -1264,21 +1322,24 @@ dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new
   }
 }/*}}}*/
 
-/* dwb_key_release_cb {{{*/
-gboolean 
-dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
-  if (e->keyval == GDK_Tab) {
-    return true;
-  }
-  if (dwb.state.mode == InsertMode && e->keyval == GDK_Return) {
-    dwb_normal_mode(true);
-  }
-  return false;
-}/*}}}*/
 
 /*}}}*/
 
 /* COMMANDS {{{*/
+
+/* dwb_set_setting {{{*/
+gboolean 
+dwb_set_setting(Arg *arg) {
+
+  return true;
+}/*}}}*/
+
+/* dwb_set_key {{{*/
+gboolean 
+dwb_set_key(Arg *arg) {
+
+  return true;
+}/*}}}*/
 
 /* dwb_toggle_custom_encoding {{{*/
 gboolean 
@@ -1321,6 +1382,10 @@ dwb_simple_command(KeyMap *km) {
   Arg *arg = &km->map->arg;
   arg->e = NULL;
 
+  if (dwb.state.mode & AutoComplete) {
+    dwb_clean_autocompletion();
+  }
+
   if (func(arg)) {
     if (strlen(km->map->desc)) {
       dwb_set_normal_message(dwb.state.fview, km->map->desc, km->map->hide);
@@ -1342,16 +1407,14 @@ dwb_add_search_field(Arg *a) {
   gchar *value;
   gboolean ret = true;
   value = dwb_execute_script("add_searchengine()");
-  if (value ) {
+  if (value) {
     if (!strcmp(value, "_dwb_no_hints_")) {
-      ret = false;
+      return false;
     }
-    else {
-      dwb.state.mode = SearchFieldMode;
-      dwb_focus_entry();
-    }
-    g_free(value);
   }
+  dwb.state.mode = SearchFieldMode;
+  dwb_focus_entry();
+  g_free(value);
   return ret;
 
 }/*}}}*/
@@ -1375,7 +1438,6 @@ dwb_toggle_proxy(Arg *a) {
   WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
   s->arg.b = !s->arg.b;
 
-  printf("%d\n", s->arg.b);
   if (s->arg.b) { 
     uri = dwb.misc.proxyuri;
   }
@@ -1388,7 +1450,7 @@ void
 dwb_focus_entry() {
   gtk_widget_grab_focus(dwb.gui.entry);
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-  gtk_widget_show(dwb.gui.entry);
+  //gtk_widget_show(dwb.gui.entry);
 }/*}}}*/
 
 /*dwb_find {{{*/
@@ -1610,7 +1672,7 @@ dwb_scroll(Arg *arg) {
   View *v = gl->data;
 
   GtkAdjustment *a = arg->n == Left || arg->n == Right 
-    ? gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
+    ? gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
     : gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
   gint sign = arg->n == Up || arg->n == PageUp || arg->n == Left ? -1 : 1;
 
@@ -2051,7 +2113,7 @@ dwb_create_web_view(GList *gl) {
   v->entry = gtk_entry_new();
   gtk_entry_set_inner_border(GTK_ENTRY(v->entry), NULL);
 
-  gtk_widget_modify_font(v->entry, dwb.font.fd_bold);
+  gtk_widget_modify_font(v->entry, dwb.font.fd_normal);
   gtk_entry_set_has_frame(GTK_ENTRY(v->entry), false);
   gtk_entry_set_inner_border(GTK_ENTRY(v->entry), false);
 
@@ -2066,10 +2128,13 @@ dwb_create_web_view(GList *gl) {
   gtk_misc_set_alignment(GTK_MISC(v->lstatus), 0.0, 0.5);
   gtk_misc_set_alignment(GTK_MISC(v->rstatus), 1.0, 0.5);
   status_hbox = gtk_hbox_new(false, 5);
+
+
   gtk_box_pack_end(GTK_BOX(v->bottombox), v->statusbox, false, false, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->lstatus, false, false, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->entry, true, true, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->rstatus, true, true, 0);
+
   gtk_label_set_use_markup(GTK_LABEL(v->lstatus), true);
   gtk_label_set_use_markup(GTK_LABEL(v->rstatus), true);
 
@@ -2097,7 +2162,12 @@ dwb_create_web_view(GList *gl) {
 
   gtk_box_pack_start(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0);
   gtk_widget_show(v->vbox);
-  gtk_widget_show_all(v->bottombox);
+  gtk_widget_show(v->lstatus);
+  gtk_widget_show(v->entry);
+  gtk_widget_show(v->rstatus);
+  gtk_widget_show(status_hbox);
+  gtk_widget_show(v->statusbox);
+  gtk_widget_show(v->bottombox);
   gtk_widget_show_all(v->scroll);
   gtk_widget_show_all(v->tabevent);
 
@@ -2195,11 +2265,14 @@ dwb_update_status_text(GList *gl) {
   gdouble lower = gtk_adjustment_get_lower(a);
   gdouble upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
   gdouble value = gtk_adjustment_get_value(a); 
+  gboolean back = webkit_web_view_can_go_back(WEBKIT_WEB_VIEW(v->web));
+  gboolean forward = webkit_web_view_can_go_forward(WEBKIT_WEB_VIEW(v->web));
+  const gchar *bof = back && forward ? "[+-]" : back ? "[+]" : forward  ? "[-]" : "";
   gchar *position = 
-          upper == lower ? g_strdup(" -- [all]") : 
-          value == lower ? g_strdup(" -- [top]") : 
-          value == upper ? g_strdup(" -- [bot]") : 
-          g_strdup_printf(" -- [%02d%%]", (gint)(value * 100/upper));
+          upper == lower ? g_strdup_printf(" %s [all]", bof) : 
+          value == lower ? g_strdup_printf(" %s [top]", bof) : 
+          value == upper ? g_strdup_printf(" %s [bot]", bof) : 
+          g_strdup_printf(" %s [%02d%%]", bof, (gint)(value * 100/upper));
   g_string_append(string, position);
 
   dwb_set_status_text(gl, string->str, NULL, NULL);
@@ -2221,13 +2294,14 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 /* dwb_clean_completion() {{{*/
 void 
 dwb_clean_completion() {
-  for (GList *l = dwb.state.completions; l; l=l->next) {
+  for (GList *l = dwb.comps.completions; l; l=l->next) {
     g_free(l->data);
   }
-  g_list_free(dwb.state.completions);
+  g_list_free(dwb.comps.completions);
   gtk_widget_destroy(CURRENT_VIEW()->compbox);
-  dwb.state.completions = NULL;
-  dwb.state.active_comp = NULL;
+  dwb.comps.completions = NULL;
+  dwb.comps.active_comp = NULL;
+  dwb.state.mode &= ~CompletionMode;
 }/*}}}*/
 
 /* dwb_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
@@ -2242,12 +2316,13 @@ dwb_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontD
 
 /* dwb_get_completion_item(Navigation *)      return: Completion * {{{*/
 Completion * 
-dwb_get_completion_item(Navigation *n) {
+dwb_get_completion_item(Navigation *n, void *data) {
   Completion *c = malloc(sizeof(Completion));
 
   c->rlabel = gtk_label_new(n->second);
   c->llabel = gtk_label_new(n->first);
   c->event = gtk_event_box_new();
+  c->data = data;
   GtkWidget *hbox = gtk_hbox_new(false, 0);
   gtk_box_pack_start(GTK_BOX(hbox), c->llabel, true, true, 5);
   gtk_box_pack_start(GTK_BOX(hbox), c->rlabel, true, true, 5);
@@ -2269,7 +2344,7 @@ dwb_init_completion(GList *store, GList *gl) {
   for (GList *l = gl; l; l=l->next) {
     n = l->data;
     if (g_strrstr(n->first, input)) {
-      Completion *c = dwb_get_completion_item(n);
+      Completion *c = dwb_get_completion_item(n, NULL);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       store = g_list_prepend(store, c);
     }
@@ -2286,99 +2361,104 @@ dwb_completion_set_entry_text(Completion *c) {
 
 }/*}}}*/
 
+GList *
+dwb_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back) {
+  GList *old, *new;
+  Completion *c;
+
+  gint length = g_list_length(comps);
+  gint items = MAX(length, max);
+  gint r = (max) % 2;
+  gint offset = max / 2 - 1 + r;
+
+  old = active;
+  gint position = g_list_position(comps, active) + 1;
+  if (!back) {
+    if (! (new = old->next) ) {
+      new = g_list_first(comps);
+    }
+    if (position > offset &&  position < items - offset - 1 + r) {
+      c = g_list_nth(comps, position - offset - 1)->data;
+      gtk_widget_hide(c->event);
+      c = g_list_nth(comps, position + offset + 1 - r)->data;
+      gtk_widget_show_all(c->event);
+    }
+    else {
+      if (position == items || position  == 1) {
+        gtk_widget_hide_all(box);
+        gtk_widget_show(box);
+        int i = 0;
+        for (GList *l = g_list_first(comps); l && i<max ;l=l->next, i++) {
+          gtk_widget_show_all(((Completion*)l->data)->event);
+        }
+      }
+    }
+  }
+  else {
+    if (! (new = old->prev) ) {
+      new = g_list_last(comps);
+    }
+    if (position > offset   &&  position < items - offset - 1 + r) {
+      c = g_list_nth(comps, position - offset - 1)->data;
+      gtk_widget_show_all(c->event);
+      c = g_list_nth(comps, position + offset + 1 - r)->data;
+      gtk_widget_hide(c->event);
+    }
+    else {
+      if (position == 1) {
+        gtk_widget_hide_all(box);
+        gtk_widget_show(box);
+        int i = 0;
+        for (GList *l = g_list_last(comps); l && i<max ;l=l->prev, i++) {
+          c = l->data;
+          gtk_widget_show_all(c->event);
+        }
+      }
+    }
+  }
+  dwb_modify_completion_item(old->data, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_normal);
+  dwb_modify_completion_item(new->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
+  active = new;
+  dwb_completion_set_entry_text(active->data);
+  return active;
+}
+
 /* dwb_complete {{{*/
 void
 dwb_complete(gint back) {
   View *v = CURRENT_VIEW();
 
-  if (dwb.state.mode != CompletionMode) {
+  if (!(dwb.state.mode & CompletionMode)) {
     v->compbox = gtk_vbox_new(true, 0);
     gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
     if (dwb.state.mode == OpenMode) {
-      dwb.state.completions = dwb_init_completion(dwb.state.completions, dwb.fc.history);
-      dwb.state.completions = dwb_init_completion(dwb.state.completions, dwb.fc.bookmarks);
-      dwb.state.completions = dwb_init_completion(dwb.state.completions, dwb.fc.commands);
+      dwb.comps.completions = dwb_init_completion(dwb.comps.completions, dwb.fc.history);
+      dwb.comps.completions = dwb_init_completion(dwb.comps.completions, dwb.fc.bookmarks);
+      dwb.comps.completions = dwb_init_completion(dwb.comps.completions, dwb.fc.commands);
     }
-    if (!dwb.state.completions) {
+    if (!dwb.comps.completions) {
       return;
     }
     int i=0;
     if (back) {
-      dwb.state.active_comp = g_list_last(dwb.state.completions);
-      for (GList *l = dwb.state.active_comp; l && i<dwb.misc.max_c_items; l=l->prev, i++) {
+      dwb.comps.active_comp = g_list_last(dwb.comps.completions);
+      for (GList *l = dwb.comps.active_comp; l && i<dwb.misc.max_c_items; l=l->prev, i++) {
         gtk_widget_show_all(((Completion*)l->data)->event);
       }
     }
     else {
-      dwb.state.active_comp = g_list_first(dwb.state.completions);
-      for (GList *l = dwb.state.active_comp; l && i<dwb.misc.max_c_items; l=l->next, i++) {
+      dwb.comps.active_comp = g_list_first(dwb.comps.completions);
+      for (GList *l = dwb.comps.active_comp; l && i<dwb.misc.max_c_items; l=l->next, i++) {
         gtk_widget_show_all(((Completion*)l->data)->event);
       }
     }
-    dwb_modify_completion_item(dwb.state.active_comp->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
-    dwb_completion_set_entry_text(dwb.state.active_comp->data);
+    dwb_modify_completion_item(dwb.comps.active_comp->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
+    dwb_completion_set_entry_text(dwb.comps.active_comp->data);
     gtk_widget_show(CURRENT_VIEW()->compbox);
-    dwb.state.mode = CompletionMode;
+    dwb.state.mode |= CompletionMode;
   }
-  else if (dwb.state.completions && dwb.state.active_comp) {
-    // TODO implement update completion
-    GList *old, *new;
-    Completion *c;
-
-    gint length = g_list_length(dwb.state.completions);
-    gint items = MAX(length, dwb.misc.max_c_items);
-    gint r = (dwb.misc.max_c_items) % 2;
-    gint offset = dwb.misc.max_c_items / 2 - 1 + r;
-
-    old = dwb.state.active_comp;
-    gint position = g_list_position(dwb.state.completions, dwb.state.active_comp) + 1;
-    if (!back) {
-      if (! (new = old->next) ) {
-        new = g_list_first(dwb.state.completions);
-      }
-      if (position > offset &&  position < items - offset - 1 + r) {
-        c = g_list_nth(dwb.state.completions, position - offset - 1)->data;
-        gtk_widget_hide(c->event);
-        c = g_list_nth(dwb.state.completions, position + offset + 1 - r)->data;
-        gtk_widget_show_all(c->event);
-      }
-      else {
-        if (position == items || position  == 1) {
-          gtk_widget_hide_all(v->compbox);
-          gtk_widget_show(v->compbox);
-          int i = 0;
-          for (GList *l = g_list_first(dwb.state.completions); l && i<dwb.misc.max_c_items ;l=l->next, i++) {
-            gtk_widget_show_all(((Completion*)l->data)->event);
-          }
-        }
-      }
-    }
-    else {
-      if (! (new = old->prev) ) {
-        new = g_list_last(dwb.state.completions);
-      }
-      if (position > offset   &&  position < items - offset - 1 + r) {
-        c = g_list_nth(dwb.state.completions, position - offset - 1)->data;
-        gtk_widget_show_all(c->event);
-        c = g_list_nth(dwb.state.completions, position + offset + 1 - r)->data;
-        gtk_widget_hide(c->event);
-      }
-      else {
-        if (position == 1) {
-          gtk_widget_hide_all(v->compbox);
-          gtk_widget_show(v->compbox);
-          int i = 0;
-          for (GList *l = g_list_last(dwb.state.completions); l && i<dwb.misc.max_c_items ;l=l->prev, i++) {
-            c = l->data;
-            gtk_widget_show_all(c->event);
-          }
-        }
-      }
-    }
-    dwb_modify_completion_item(old->data, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_normal);
-    dwb_modify_completion_item(new->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
-    dwb.state.active_comp = new;
-    dwb_completion_set_entry_text(dwb.state.active_comp->data);
+  else if (dwb.comps.completions && dwb.comps.active_comp) {
+    dwb.comps.active_comp = dwb_update_completion(v->compbox, dwb.comps.completions, dwb.comps.active_comp, dwb.misc.max_c_items, back);
   }
 
 }/*}}}*/
@@ -2389,6 +2469,7 @@ dwb_complete(gint back) {
 /* dwb_reload_colors(GList *,  WebSettings  *s) {{{*/
 void 
 dwb_reload_scripts(GList *gl, WebSettings *s) {
+  g_free(dwb.misc.scripts);
   dwb_init_scripts();
 }/*}}}*/
 
@@ -2586,15 +2667,16 @@ dwb_update_hints(GdkEventKey *e) {
   else {
     com = g_strdup_printf("update_hints(\"%s\")", GET_TEXT());
   }
-  buffer = dwb_execute_script(com);
-  g_free(com);
+  if (com) {
+    buffer = dwb_execute_script(com);
+    g_free(com);
+  }
   if (buffer && strcmp(buffer, "undefined")) {
     if (!strcmp("_dwb_no_hints_", buffer)) {
       dwb_set_error_message(dwb.state.fview, NO_HINTS);
       dwb_normal_mode(false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
-      puts(buffer);
       if (dwb.state.mode == SearchFieldMode) {
         gchar *com = g_strdup_printf("submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
         gchar *value = dwb_execute_script(com);
@@ -2826,6 +2908,70 @@ dwb_update_layout() {
   dwb_resize(dwb.state.size);
 }/*}}}*/
 
+void 
+dwb_eval_autocompletion() {
+  Completion *c = dwb.comps.active_auto_c->data;
+  KeyMap *m = c->data;
+  dwb_simple_command(m);
+}
+void 
+dwb_clean_autocompletion() {
+  for (GList *l = dwb.comps.auto_c; l; l=l->next) {
+    g_free(l->data);
+  }
+  g_list_free(dwb.comps.auto_c);
+  gtk_widget_destroy(CURRENT_VIEW()->autocompletion);
+  dwb.comps.auto_c = NULL;
+  dwb.comps.active_auto_c = NULL;
+  dwb.state.mode &= ~AutoComplete;
+
+  View *v = CURRENT_VIEW();
+  gtk_widget_show(v->entry);
+  gtk_widget_show(v->rstatus);
+
+}
+
+GList * 
+dwb_init_autocompletion(GList *gl) {
+  View *v =  CURRENT_VIEW();
+  GList *ret = NULL;
+
+  v->autocompletion = gtk_hbox_new(true, 1);
+  gint i=0;
+  for (GList *l=gl; l; l=l->next, i++) {
+    KeyMap *m = l->data;
+    Navigation *n = dwb_navigation_new(m->key, m->map->desc);
+    Completion *c = dwb_get_completion_item(n, m);
+    ret = g_list_append(ret, c);
+    if (i<5) {
+      gtk_widget_show_all(c->event);
+    }
+
+    gtk_box_pack_start(GTK_BOX(v->autocompletion), c->event, true,  true, 1);
+  }
+  GtkWidget *hbox = gtk_bin_get_child(GTK_BIN(v->statusbox));
+  gtk_box_pack_start(GTK_BOX(hbox), v->autocompletion, true,  true, 1);
+  gtk_widget_hide(v->entry);
+  gtk_widget_hide(v->rstatus);
+  gtk_widget_show(v->autocompletion);
+  return ret;
+}
+
+void
+dwb_autocomplete(GList *gl, GdkEventKey *e) {
+  View *v = CURRENT_VIEW();
+
+  if (! (dwb.state.mode & AutoComplete) && gl) {
+    dwb.state.mode |= AutoComplete;
+    dwb.comps.auto_c = dwb_init_autocompletion(gl);
+    dwb.comps.active_auto_c = g_list_first(dwb.comps.auto_c);
+    dwb_modify_completion_item(dwb.comps.active_auto_c->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
+  }
+  else if (e) {
+    dwb.comps.active_auto_c = dwb_update_completion(v->autocompletion, dwb.comps.auto_c, dwb.comps.active_auto_c, 5, e->state & GDK_CONTROL_MASK);
+  }
+}
+
 /* dwb_eval_key(GdkEventKey *e) {{{*/
 gboolean
 dwb_eval_key(GdkEventKey *e) {
@@ -2889,6 +3035,8 @@ dwb_eval_key(GdkEventKey *e) {
   gint length = dwb.state.buffer->len;
   gint longest = 0;
   KeyMap *tmp = NULL;
+  GList *coms = NULL;
+  gint prelen = strlen(pre);
 
   for (GSList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
@@ -2896,13 +3044,24 @@ dwb_eval_key(GdkEventKey *e) {
     if (!km->key || !l) {
       continue;
     }
-    if (!strcmp(&buf[length - l], km->key) && !(CLEAN_STATE(e) ^ km->mod)) {
+    //printf("%s %s\n", buf, km->key);
+    if (g_str_has_prefix(km->key, &buf[prelen]) && CLEAN_STATE(e) == km->mod) {
+      coms = g_list_append(coms, km);
+    }
+    if (!strcmp(&buf[length - l], km->key) && (CLEAN_STATE(e) == km->mod)) {
       if  (!longest || l > longest) {
         longest = l;
         tmp = km;
       }
       ret = true;
     }
+  }
+  // autocompletion
+  if (dwb.state.mode & AutoComplete) {
+    dwb_clean_autocompletion();
+  }
+  if (coms && g_list_length(coms) > 1) {
+    dwb_autocomplete(coms, NULL);
   }
   if (tmp) {
     dwb_simple_command(tmp);
@@ -2921,8 +3080,11 @@ dwb_normal_mode(gboolean clean) {
   if (dwb.state.mode  == InsertMode) {
     dwb_view_modify_style(dwb.state.fview, &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
   }
-  else if (dwb.state.mode == CompletionMode) {
+  if (dwb.state.mode & CompletionMode) {
     dwb_clean_completion();
+  }
+  if (dwb.state.mode & AutoComplete) {
+    dwb_clean_autocompletion();
   }
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
@@ -3199,7 +3361,6 @@ dwb_strv_to_key(gchar **string, gsize length) {
     }
   }
   key.str = g_strdup(buffer->str);
-  //printf("%d %d %s\n", GDK_CONTROL_MASK, key.mod, buffer->str);
   g_string_free(buffer, true);
   return key;
 }/*}}}*/
@@ -3394,8 +3555,6 @@ dwb_init_scripts() {
   GString *buffer = g_string_new(NULL);
 
   setlocale(LC_NUMERIC, "C");
-  g_string_append_printf(buffer, "hint_vertical_off = %d;\n",     GET_INT("hint_vertical_off"));
-  g_string_append_printf(buffer, "hint_horizontal_off = %d;\n",   GET_INT("hint_horizontal_off"));
   g_string_append_printf(buffer, "hint_letter_seq = '%s';\n",       GET_CHAR("hint_letter_seq"));
   g_string_append_printf(buffer, "hint_style = '%s';\n",            GET_CHAR("hint_style"));
   g_string_append_printf(buffer, "hint_font_size = '%s';\n",        GET_CHAR("hint_font_size"));
@@ -3407,17 +3566,13 @@ dwb_init_scripts() {
   g_string_append_printf(buffer, "hint_active_color = '%s';\n",     GET_CHAR("hint_active_color"));
   g_string_append_printf(buffer, "hint_normal_color = '%s';\n",     GET_CHAR("hint_normal_color"));
   g_string_append_printf(buffer, "hint_border = '%s';\n",           GET_CHAR("hint_border"));
-  g_string_append_printf(buffer, "overlay_border = '%s';\n",        GET_CHAR("overlay_border"));
   g_string_append_printf(buffer, "hint_opacity = %f;\n",          GET_DOUBLE("hint_opacity"));
-  g_string_append_printf(buffer, "overlay_opacity = %f;\n",       GET_DOUBLE("overlay_opacity"));
 
   gchar *dircontent = dwb_get_directory_content(dwb.files.scriptdir);
   g_string_append(buffer, dircontent);
   g_free(dircontent);
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
-  puts(dwb.misc.scripts);
-  //dwb.misc.scripts = dwb_get_directory_content(dwb.files.scriptdir);
 }/*}}}*/
 
 /* dwb_init_style() {{{*/
@@ -3565,7 +3720,9 @@ dwb_init_files() {
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (void*)dwb_navigation_new_from_line); 
   dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (void*)dwb_quickmark_new_from_line); 
   dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (void*)dwb_navigation_new_from_line); 
-  dwb.misc.default_search = ((Navigation*)g_list_last(dwb.fc.searchengines)->data)->second;
+  if (g_list_last(dwb.fc.searchengines)) {
+    dwb.misc.default_search = ((Navigation*)g_list_last(dwb.fc.searchengines)->data)->second;
+  }
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (void*)dwb_return);
 }/*}}}*/
 
@@ -3643,24 +3800,31 @@ void dwb_init() {
 
 void 
 dwb_test_function() {
-  const gchar *path = g_getenv("PATH");
-  gchar **dirs = g_strsplit(path, ":", -1);
-  GDir *current;
-  const gchar *filename;
-  GList *bins = NULL;
-  for (gint i=0; i<g_strv_length(dirs); i++) {
-    if ( (current = g_dir_open(dirs[i], 0, NULL)) ) {
-      while ( (filename = g_dir_read_name(current)) ) {
-        Navigation *n = dwb_navigation_new(filename, NULL);
-        bins = g_list_append(bins, n);
-      }
-    }
-  }
+  dwb.state.mode = InsertMode;
+  dwb.state.mode |= CompletionMode;
+
+  //printf("%d %d %d \n", InsertMode, dwb.state.mode, dwb.state.mode & ~(CompletionMode) & ~(CompletionSetting));
+  printf("%d", dwb.state.mode);
+  exit(EXIT_SUCCESS);
+  //const gchar *path = g_getenv("PATH");
+  //gchar **dirs = g_strsplit(path, ":", -1);
+  //GDir *current;
+  //const gchar *filename;
+  //GList *bins = NULL;
+  //for (gint i=0; i<g_strv_length(dirs); i++) {
+  //  if ( (current = g_dir_open(dirs[i], 0, NULL)) ) {
+  //    while ( (filename = g_dir_read_name(current)) ) {
+  //      Navigation *n = dwb_navigation_new(filename, NULL);
+  //      bins = g_list_append(bins, n);
+  //    }
+  //  }
+  //}
 }
 
 int main(gint argc, gchar **argv) {
   dwb.misc.name = NAME;
   dwb.misc.profile = "default";
+  //dwb_test_function();
 
   if (!g_thread_supported()) {
     g_thread_init(NULL);
@@ -3679,7 +3843,7 @@ int main(gint argc, gchar **argv) {
     }
   }
   gtk_init(&argc, &argv);
-  dwb_test_function();;
+  //dwb_test_function();;
   dwb_init();
   gtk_main();
   return EXIT_SUCCESS;

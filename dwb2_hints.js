@@ -1,7 +1,6 @@
 var elements = [];
 var active_arr = [];
 var hints;
-var overlays;
 var active;
 var last_active;
 var lastpos = 0;
@@ -12,17 +11,17 @@ function Hint(element) {
   this.element = element;
   this.rect = element.getBoundingClientRect();
 
-  function create_span(element, h, v) {
+  function create_span(element) {
     var span = document.createElement("span");
-    var leftpos = Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) + h;
-    var toppos = Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) + v;
+    var leftpos = Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
+    var toppos = Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
     span.style.position = "absolute";
     span.style.left = leftpos + "px";
     span.style.top = toppos + "px";
     return span;
   }
   function create_hint(element) {
-    var hint = create_span(element, hint_horizontal_off, hint_vertical_off - element.rect.height/2);
+    var hint = create_span(element);
     hint.style.fontSize = hint_font_size;
     hint.style.fontWeight = hint_font_weight;
     hint.style.fontFamily = hint_font_family;
@@ -34,21 +33,8 @@ function Hint(element) {
     hint.style.visibility = 'visible';
     return hint;
   }
-  function create_overlay(element) {
-    var overlay = create_span(element, 0, 0);
-    overlay.style.width = (element.rect.right - element.rect.left) + "px";
-    overlay.style.height = (element.rect.bottom - element.rect.top) + "px";
-    overlay.style.opacity = overlay_opacity;
-    overlay.style.backgroundColor = hint_normal_color;
-    overlay.style.border = overlay_border;
-    overlay.style.zIndex = 1;
-    overlay.style.visibility = 'visible';
-    overlay.addEventListener( 'click', function() { click_element(element); }, false );
-    return overlay;
-  }
 
   this.hint = create_hint(this);
-  this.overlay = create_overlay(this);
 }
 //NumberHint
 NumberHint.prototype.getTextHint = function (i, length) {
@@ -96,6 +82,18 @@ LetterHint.prototype.getTextHint = function(i, length) {
   if (length < l) {
     text = hint_letter_seq[i];
   }
+  else if (length < 2*l) {
+    var rem = (length) % l;
+    var sqrt = Math.sqrt(2*rem);
+    var r = sqrt == (getint = parseInt(sqrt)) ? sqrt + 1 : getint ;
+    if (i < l-r) {
+      text = hint_letter_seq[i];
+    }
+    else {
+      var newrem = i%(r*r);
+      text = hint_letter_seq[Math.floor( (newrem / r) + l - r )] + hint_letter_seq[l-newrem%r - 1];
+    }
+  }
   else {
     text = hint_letter_seq[i%l] + hint_letter_seq[l - 1 - (parseInt(i/l))];
   }
@@ -104,16 +102,11 @@ LetterHint.prototype.getTextHint = function(i, length) {
 }
 
 LetterHint.prototype.betterMatch = function(input) {
-  for (var i=0; i<active_arr.length; i++) {
-    var e = active_arr[i];
-    if (e.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) == 0) {
-      return i;
-    }
-  }
+  return 0;
 }
 
 LetterHint.prototype.matchText = function(input) {
-  return this.hint.textContent.toLowerCase().match(input.toLowerCase());
+  return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) == 0);
 }
 
 
@@ -136,16 +129,37 @@ function click_element(e) {
   e.element.dispatchEvent(mouseEvent);
   clear();
 }
+function create_stylesheet() {
+  styles = document.createElement("style");
+  styles.type = "text/css";
+  document.getElementsByTagName('head')[0].appendChild(styles);
+  
+  style = document.styleSheets[document.styleSheets.length - 1];
+  style.insertRule('*:first-child[highlight=hint_normal] { background-color: ' + hint_normal_color + '  } ', 0);
+  style.insertRule('*[highlight=hint_active] { background-color: ' + hint_active_color + '  } ', 0);
+}
 
-function show_hints() {
+//function get_offset(element) {
+//  var old = element;
+//  //if (element.offsetParent) {
+//  //}
+//  //var r = element.getBoundingClientRect();
+//  var rect = old.getBoundingClientRect();
+//  console.log("calc: " + old.href + ": " + rect.top + " : " + rect.left);
+//}
+function show_hints(w) {
+  if (!w) {
+    w = window;
+  }
+  var doc = window.document;
   document.activeElement.blur();
-  var res = document.body.querySelectorAll('a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe');
+  var res = doc.body.querySelectorAll('a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe');
   hints = document.createElement("div");
-  overlays  = document.createElement("div");
+  create_stylesheet();
   for (var i=0; i<res.length; i++) {
     var e = new LetterHint(res[i]);
     hints.appendChild(e.hint);
-    overlays.appendChild(e.overlay);
+    
     var rects = e.element.getClientRects()[0];
     var r = e.rect;
     if (!r || r.top > window.innerHeight || r.bottom < 0 || r.left > window.innerWidth ||  r < 0 || !rects ) {
@@ -155,16 +169,19 @@ function show_hints() {
     if (style.getPropertyValue("visibility") != "visible" || style.getPropertyValue("display") == "none") {
       continue;
     }
+    e.element.setAttribute('highlight', 'hint_normal');
     elements.push(e);
   };
   elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
   for (var i=0; i<elements.length; i++) {
     var e = elements[i];
     e.getTextHint(i, elements.length);
+    //e.element.setAttribute('highlight', 'hint_active');
   }
   active_arr = elements;
+  
+  var  frames = w.frames;
   document.body.appendChild(hints);
-  document.body.appendChild(overlays);
 }
 
 function is_input(element) {
@@ -209,7 +226,7 @@ function update_hints(input) {
     }
     else {
       e.hint.style.visibility = 'hidden';
-      e.overlay.style.visibility = 'hidden';
+      e.element.removeAttribute('highlight');
     }
   }
   active_arr = array;
@@ -222,16 +239,26 @@ function update_hints(input) {
     return  evaluate(array[0]);
   }
   else {
-    array[lastpos].overlay.style.backgroundColor = hint_normal_color;
     lastpos = array[0].betterMatch(input);
-    array[lastpos].overlay.style.backgroundColor = hint_active_color;
+    set_active(array[lastpos]);
   }
 }
-function clear() {
-  if (overlays && overlays.parentNode) {
-    overlays.parentNode.removeChild(overlays);
+function set_active(element) {
+  var active = document.querySelector('*[highlight=hint_active]');
+  if (active) {
+    active.setAttribute('highlight', 'hint_normal' );
   }
-  if (hints  && hints.parentNode) {
+  element.element.setAttribute('highlight', 'hint_active');
+  active = element;
+}
+function clear() {
+  for (var i=0; i<elements.length; i++) {
+    elements[i].element.removeAttribute('highlight');
+  }
+  if (styles) {
+    document.getElementsByTagName('head')[0].removeChild(styles);
+  }
+  if (hints.parentNode) {
     hints.parentNode.removeChild(hints);
   }
   elements = [];
@@ -247,7 +274,6 @@ function evaluate(element) {
 
   if (tagname == "input" || tagname == "textarea" ) {
     if (type == "radio" || type == "checkbox") {
-      //e.checked = !e.checked;
       e.focus();
       click_element(element);
       ret = "_dwb_check_";
@@ -279,31 +305,28 @@ function get_active() {
 
 function focus_next() {
   var newpos = lastpos == active_arr.length-1 ? 0 : lastpos + 1;
-  active_arr[lastpos].overlay.style.backgroundColor = hint_normal_color;
-  active_arr[newpos].overlay.style.backgroundColor = hint_active_color;
   active = active_arr[newpos];
+  set_active(active);
   lastpos = newpos;
 }
 function focus_prev() {
   var newpos = lastpos == 0 ? active_arr.length-1 : lastpos - 1;
-  active_arr[lastpos].overlay.style.backgroundColor = hint_normal_color;
-  active_arr[newpos].overlay.style.backgroundColor = hint_active_color;
   active = active_arr[newpos];
+  set_active(active);
   lastpos = newpos;
 }
 function add_searchengine() {
   document.activeElement.blur();
-  var res = document.body.querySelectorAll('form');
+  var res = document.body.querySelectorAll("form");
   hints = document.createElement("div");
-  overlays  = document.createElement("div");
+  create_stylesheet();
 
   for (var i=0; i<res.length; i++) {
     var els = res[i].elements;
     for (var j=0; j<els.length; j++) {
-      if (els[j].type == "text") {
+      if (els[j].type != "text") {
         var e = new LetterHint(els[j]);
         hints.appendChild(e.hint);
-        overlays.appendChild(e.overlay);
         elements.push(e);
       }
     }
@@ -314,10 +337,12 @@ function add_searchengine() {
   elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
   for (var i=0; i<elements.length; i++) {
     elements[i].getTextHint(i, elements.length);
+    elements[i].element.setAttribute('highlight', 'hint_normal');
   }
+  set_active[elements[0]];
   active_arr = elements;
   document.body.appendChild(hints); 
-  document.body.appendChild(overlays); 
+  update_hints();
 }
 function submit_searchengine(string) {
   var e = active.element;

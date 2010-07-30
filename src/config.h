@@ -69,6 +69,8 @@ static KeyValue KEYS[] = {
 { "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
 { "toggle_encoding",                    {   "te" ,           0,  },  },
 { "focus_input",                        {   "gi",           0, }, }, 
+{ "set_setting",                        {   "sets",           0, }, }, 
+{ "set_key",                            {   "setk",           0, }, }, 
 
 };
 
