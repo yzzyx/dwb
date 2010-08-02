@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -17,7 +16,9 @@
 #include "completion.h"
 #include "commands.h"
 #include "view.h"
-#define NAME "dwb2";
+#include "util.h"
+#include "config.h"
+#define NAME "dwb";
 
 /* SETTINGS MAKROS {{{*/
 #define KEY_SETTINGS "Dwb Key Settings"
@@ -52,10 +53,10 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 /*}}}*/
 #define INSERT_MODE "Insert Mode"
 
+#define CLIPBOARD_PTR 
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
 /* DECLARATIONS {{{*/
-gchar * dwb_modmask_to_string(guint modmask);
 
 void dwb_clean_buffer(GList *);
 
@@ -64,13 +65,6 @@ void dwb_reload_colors(GList *,  WebSettings *);
 void dwb_reload_layout(GList *,  WebSettings *);
 gboolean dwb_test_cookie_allowed(const gchar *);
 void dwb_save_cookies(void);
-Navigation * dwb_navigation_new_from_line(const gchar *);
-Navigation * dwb_navigation_new(const gchar *, const gchar *);
-void dwb_navigation_free(Navigation *);
-void dwb_quickmark_free(Quickmark *);
-Quickmark * dwb_quickmark_new(const gchar *, const gchar *, const gchar *);
-Quickmark * dwb_quickmark_new_from_line(const gchar *);
-void dwb_web_view_add_history_item(GList *gl);
 void dwb_web_settings_set_value(const gchar *id, Arg *a);
 
 gboolean dwb_eval_key(GdkEventKey *);
@@ -87,66 +81,11 @@ void dwb_open_quickmark(const gchar *);
 GList * dwb_keymap_delete(GList *, KeyValue );
 
 void dwb_set_active_style(GList *gl);
-void dwb_set_normal_style(GList *gl);
 void dwb_view_modify_style(GList *, GdkColor *, GdkColor *, GdkColor *, GdkColor *, PangoFontDescription *, gint);
-void dwb_source_remove(GList *);
-
-gboolean dwb_web_view_close_web_view_cb(WebKitWebView *, GList *);
-GtkWidget * dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *);
-gboolean dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *);
-void dwb_web_view_hovering_over_link_cb(WebKitWebView *, gchar *, gchar *, GList *);
-gboolean dwb_web_view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, gchar *, WebKitWebPolicyDecision *, GList *);
-gboolean dwb_web_view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
-gboolean dwb_web_view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
-gboolean dwb_web_view_script_alert_cb(WebKitWebView *, WebKitWebFrame *, gchar *, GList *);
-void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *);
-void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
-void dwb_web_view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
-void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
-void dwb_cookie_changed_cb(SoupCookieJar *, SoupCookie *, SoupCookie *);
-gboolean dwb_web_view_focus_cb(WebKitWebView *, GtkDirectionType *, GList *);
-
-
-
-gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
-gboolean dwb_entry_keypress_cb(GtkWidget *, GdkEventKey *e);
-gboolean dwb_entry_keyrelease_cb(GtkWidget *, GdkEventKey *e);
-gboolean dwb_entry_activate_cb(GtkEntry *);
 
 void dwb_update_tab_label(void);
-void dwb_grab_focus(GList *);
 gchar * dwb_get_resolved_uri(const gchar *);
-gchar * dwb_execute_script(const gchar *);
 
-gboolean dwb_set_setting(Arg *);
-gboolean dwb_set_key(Arg *);
-gboolean dwb_allow_cookie(Arg *);
-gboolean dwb_create_hints(Arg *);
-gboolean dwb_find(Arg *);
-gboolean dwb_focus_input(Arg *);
-gboolean dwb_resize_master(Arg *);
-gboolean dwb_show_hints(Arg *);
-gboolean dwb_show_keys(Arg *);
-gboolean dwb_show_settings(Arg *);
-gboolean dwb_quickmark(Arg *);
-gboolean dwb_bookmark(Arg *);
-gboolean dwb_open(Arg *);
-gboolean dwb_focus_next(Arg *);
-gboolean dwb_focus_prev(Arg *);
-gboolean dwb_reload(Arg *);
-gboolean dwb_set_orientation(Arg *);
-void dwb_toggle_maximized(Arg *);
-gboolean dwb_view_source(Arg *);
-gboolean dwb_zoom_in(Arg *);
-gboolean dwb_zoom_out(Arg *);
-void dwb_set_zoom_level(Arg *);
-gboolean dwb_scroll(Arg *);
-gboolean dwb_history_back(Arg *);
-gboolean dwb_history_forward(Arg *);
-gboolean dwb_toggle_property(Arg *); 
-gboolean dwb_toggle_proxy(Arg *); 
-gboolean dwb_add_search_field(Arg *);
-gboolean dwb_toggle_custom_encoding(Arg *);
 
 void dwb_set_websetting(GList *, WebSettings *);
 
@@ -157,136 +96,80 @@ void dwb_init_scripts(void);
 void dwb_init_gui(void);
 
 void dwb_clean_vars(void);
-void dwb_exit(void);
 /*}}}*/
 
 static GdkNativeWindow embed = 0;
 static gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 static gint MAX_COMPLETIONS = 11;
 
-/* KEYS {{{*/
-static KeyValue KEYS[] = {
-  { "add_view",                 {   "ga",         0,                  },  },  
-  { "allow_cookie",             {   "CC",         0,                   },  },  
-  { "bookmark",                 {   "M",         0,                   },  },  
-  { "find_forward",             {   "/",         0,                   },  }, 
-  { "find_next",                {   "n",         0,                   },  },
-  { "find_previous",            {   "N",         0,                   },  },
-  { "find_backward",            {   "?",         0,                   },  },  
-  { "focus_next",               {   "J",         0,                   },  },  
-  { "focus_prev",               {   "K",         0,                   },  },  
-  { "hint_mode",                {   "f",         0,                   },  },  
-  { "hint_mode_nv",       {   "F",         0,                   },  },  
-  { "history_back",             {   "H",         0,                   },  },  
-  { "history_forward",          {   "L",         0,                   },  },  
-  { "insert_mode",              {   "i",         0,                   },  },  
-  { "increase_master",          {   "gl",         0,                  },  },  
-  { "decrease_master",          {   "gh",         0,                  },  },  
-  { "open",                     {   "o",         0,                   },  },  
-  { "open_new_view",            {   "O",         0,                   },  },  
-  { "open_quickmark",           {   "b",         0,                   },  },  
-  { "open_quickmark_nv",        {   "B",         0,                   },  },  
-  { "push_master",              {   "p",        0,    },  },  
-  { "reload",                   {   "r",         0,                   },  },  
-  { "remove_view",              {   "d",         0,                   },  },  
-  { "save_quickmark",           {   "m",         0,                   },  },  
-  { "scroll_bottom",            {   "G",         0,                   },  },  
-  { "scroll_down",              {   "j",         0,                   },  },  
-  { "scroll_left",              {   "h",         0,                   },  },  
-  { "scroll_page_down",         {   "f",         GDK_CONTROL_MASK,    },  },  
-  { "scroll_page_up",           {   "b",         GDK_CONTROL_MASK,    },  },  
-  { "scroll_right",             {   "l",         0,                   },  },  
-  { "scroll_top",               {   "gg",         0,                  },  },  
-  { "scroll_up",                {   "k",         0,                   },  },  
-  { "show_keys",                {   "Sk",         0,                  },  },  
-  { "show_settings",            {   "Ss",         0,                  },  },  
-  { "show_global_settings",     {   "Sgs",         0,                  },  },  
-  { "toggle_bottomstack",       {   "go",         0,                  },  },  
-  { "toggle_maximized",         {   "gm",         0,                  },  },  
-  { "view_source",              {   "gf",         0,                  },  },  
-  { "zoom_in",                  {   "zi",         0,                  },  },  
-  { "zoom_normal",              {   "z=",         0,                  },  },  
-  { "zoom_out",                 {   "zo",         0,                  },  },  
-  { "save_search_field",        {   "gs",         0,                  },  },  
-  // settings
-  { "autoload_images",   {   NULL,           0,                  },  },
-  { "autoresize_window", {   NULL,           0,                  },  },
-  { "autoshrink_images", {   NULL,           0,                  },  },
-  { "caret_browsing", {   NULL,           0,                  },  },
-  { "java_applets", {   NULL,           0,                  },  },
-  { "plugins", {   NULL,           0,                  },  },
-  { "private_browsing", {   NULL,           0,                  },  },
-  { "scripts", {   NULL,           0,                  },  },
-  { "spell_checking", {   NULL,           0,                  },  },
-  { "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
-  { "toggle_encoding",                    {   "te" ,           0,  },  },
-  { "focus_input",                        {   "gi",           0, }, }, 
-  { "set_setting",                        {   "ss",           0, }, }, 
-  { "set_global_setting",                 {   "sgs",           0, }, }, 
-  { "set_key",                            {   "sk",           0, }, }, 
-};/*}}}*/
 
 /* FUNCTION_MAP{{{*/
 #define NO_URL                      "No URL in current context"
 #define NO_HINTS                    "No Hints in current context"
 static FunctionMap FMAP [] = {
-  { { "add_view",              "Add a new view",                    },  (void*)dwb_add_view,           NULL,                                 AlwaysSM,     { .p = NULL }, },
-  { { "allow_cookie",          "Cookie allowed",                    },  (void*)dwb_allow_cookie,       "No cookie in current context",                 PostSM, },
-  { { "autoload_images",       "Setting: autoload images",          },  (void*)dwb_toggle_property,    NULL,                                 PostSM,    { .p = "auto-load-images" } },
-  { { "autoresize_window",     "Setting: autoresize window",        },  (void*)dwb_toggle_property,    NULL,                                 PostSM,    { .p = "auto-resize-window" } },
-  { { "bookmark",              "Bookmark current page",             },  (void*)dwb_bookmark,           NO_URL,                               PostSM, },
-  { { "caret_browsing",        "Setting: caret browsing",           },  (void*)dwb_toggle_property,    NULL,                                 PostSM,    { .p = "enable-caret-browsing" } },
-  { { "decrease_master",       "Decrease master area",              },  (void*)dwb_resize_master,      "Cannot decrease further",           AlwaysSM,    { .n = 5 } },
-  { { "find_backward",         "Find Backward ",                    },  (void*)dwb_find,               NO_URL,                               NeverSM,     { .b = false }, },
-  { { "find_forward",          "Find Forward ",                     },  (void*)dwb_find,               NO_URL,                               NeverSM,     { .b = true }, },
+  { { "add_view",              "Add a new view",                    },  (void*)dwb_add_view,           NULL,                              AlwaysSM,     { .p = NULL }, },
+  { { "allow_cookie",          "Cookie allowed",                    },  (void*)dwb_allow_cookie,       "No cookie in current context",    PostSM, },
+  { { "autoload_images",       "Setting: autoload images",          },  (void*)dwb_toggle_property,    NULL,                              PostSM,    { .p = "auto-load-images" } },
+  { { "autoresize_window",     "Setting: autoresize window",        },  (void*)dwb_toggle_property,    NULL,                              PostSM,    { .p = "auto-resize-window" } },
+  { { "bookmark",              "Bookmark current page",             },  (void*)dwb_bookmark,           NO_URL,                            PostSM, },
+  { { "caret_browsing",        "Setting: caret browsing",           },  (void*)dwb_toggle_property,    NULL,                              PostSM,    { .p = "enable-caret-browsing" } },
+  { { "decrease_master",       "Decrease master area",              },  (void*)dwb_resize_master,      "Cannot decrease further",         AlwaysSM,    { .n = 5 } },
+  { { "find_backward",         "Find Backward ",                    },  (void*)dwb_find,               NO_URL,                            NeverSM,     { .b = false }, },
+  { { "find_forward",          "Find Forward ",                     },  (void*)dwb_find,               NO_URL,                            NeverSM,     { .b = true }, },
   { { "find_next",             "Find next",                         },  (void*)dwb_search,             "No matches",                      AlwaysSM,     { .b = true }, },
   { { "find_previous",         "Find next",                         },  (void*)dwb_search,             "No matches",                      AlwaysSM,     { .b = false }, },
-  { { "focus_input",           "Focus input",                       },  (void*)dwb_focus_input,        "No input found in current context",                    AlwaysSM, },
-  { { "focus_next",            "Focus next view",                   },  (void*)dwb_focus_next,         "No other view",                AlwaysSM, },
-  { { "focus_prev",            "Focus previous view",               },  (void*)dwb_focus_prev,         "No other view",             AlwaysSM, },
-  { { "hint_mode",             "Follow hints ",                     },  (void*)dwb_show_hints,         NO_HINTS,                             NeverSM,    { .n = OpenNormal }, },
-  { { "hint_mode_nv",    "Follow hints in a new view ",       },  (void*)dwb_show_hints,         NO_HINTS,                             NeverSM,    { .n = OpenNewView }, },
-  { { "history_back",          "Go Back",                           },  (void*)dwb_history_back,       "Beginning of History",                        AlwaysSM, },
-  { { "history_forward",       "Go Forward",                        },  (void*)dwb_history_forward,    "End of History",                     AlwaysSM, },
-  { { "increase_master",       "Increase master area",              },  (void*)dwb_resize_master,      "Cannot increase further",           AlwaysSM,    { .n = -5 } },
-  { { "insert_mode",           "Insert Mode",                       },  (void*)dwb_insert_mode,        NULL,                                 NeverSM, },
-  { { "java_applets",          "Setting: java applets",             },  (void*)dwb_toggle_property,      NULL,                                 PostSM,    { .p = "enable-java-applets" } },
-  { { "open",                  "Open URL",                          },  (void*)dwb_open,               NULL,                                 NeverSM,   { .n = OpenNormal,      .p = NULL } },
-  { { "open_new_view",         "Open URL in a new view",            },  (void*)dwb_open,               NULL,                                 NeverSM,   { .n = OpenNewView,     .p = NULL } },
-  { { "open_quickmark",        "Open quickmark",                    },  (void*)dwb_quickmark,          NO_URL,                               NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
-  { { "open_quickmark_nv",     "Open quickmark in a new view",      },  (void*)dwb_quickmark,          NULL,                                 NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
-  { { "plugins",               "Setting: plugins",                  },  (void*)dwb_toggle_property,           NULL,                                 PostSM,    { .p = "enable-plugins" } },
-  { { "private_browsing",      "Setting: private browsing",         },  (void*)dwb_toggle_property,  NULL,                                 PostSM,    { .p = "enable-private-browsing" } },
-  { { "proxy",                 "Setting: proxy",                    },  (void*)dwb_toggle_proxy,      NULL,                                 PostSM,    { 0 } },
-  { { "push_master",           "Push to master area",               },  (void*)dwb_push_master,        "No other view",            AlwaysSM, },
-  { { "reload",                "Reload",                            },  (void*)dwb_reload,             NULL,                                      AlwaysSM, },
-  { { "remove_view",           "Close view",                        },  (void*)dwb_remove_view,        NULL,                                 AlwaysSM, },
-  { { "save_quickmark",        "Save a quickmark for this page",    },  (void*)dwb_quickmark,          NO_URL,                               NeverSM,    { .n = QuickmarkSave }, },
-  { { "save_search_field",     "Add a new searchengine",       },  (void*)dwb_add_search_field,   "No input in current context",         NeverSM, },
-  { { "scripts",               "Setting: scripts",                  },  (void*)dwb_toggle_property,      NULL,                                 PostSM,    { .p = "enable-scripts" } },
-  { { "scroll_bottom",         "Scroll to  bottom of the page",     },  (void*)dwb_scroll,             NULL,                                 AlwaysSM,    { .n = Bottom }, },
-  { { "scroll_down",           "Scroll down",                       },  (void*)dwb_scroll,             "Bottom of the page",                    AlwaysSM,    { .n = Down, }, },
-  { { "scroll_left",           "Scroll left",                       },  (void*)dwb_scroll,             "Left side of the page",                    AlwaysSM,    { .n = Left }, },
-  { { "scroll_page_down",      "Scroll one page down",              },  (void*)dwb_scroll,             "Bottom of the page",           AlwaysSM,    { .n = PageDown, }, },
-  { { "scroll_page_up",        "Scroll one page up",                },  (void*)dwb_scroll,             "Top of the page",             AlwaysSM,    { .n = PageUp, }, },
-  { { "scroll_right",          "Scroll left",                       },  (void*)dwb_scroll,             "Right side of the page",                    AlwaysSM,    { .n = Right }, },
-  { { "scroll_top",            "Scroll to the top of the page",     },  (void*)dwb_scroll,             NULL,                                AlwaysSM,    { .n = Top }, },
-  { { "scroll_up",             "Scroll up",                         },  (void*)dwb_scroll,             "Top of the page",                      AlwaysSM,    { .n = Up, }, },
-  { { "set_global_setting",    "Set global property",               },  (void*)dwb_set_setting,        NULL,                                 NeverSM,    { .n = Global } },
-  { { "set_key",               "Set keybinding",                    },  (void*)dwb_set_key,                NULL,                                 NeverSM,    { 0 } },
-  { { "set_setting",           "Set property",                      },  (void*)dwb_set_setting,        NULL,                                 NeverSM,    { .n = PerView } },
-  { { "show_global_settings",  "Show global settings",              },  (void*)dwb_show_settings,      NULL,                                 AlwaysSM,    { .n = Global } },
-  { { "show_keys",             "Key configuration",                 },  (void*)dwb_show_keys,          NULL,                                 AlwaysSM, },
-  { { "show_settings",         "Settings",                          },  (void*)dwb_show_settings,      NULL,                                 AlwaysSM,    { .n = PerView } },
-  { { "spell_checking",        "Setting: spell checking",           },  (void*)dwb_toggle_property,      NULL,                                 PostSM,    { .p = "enable-spell-checking" } },
-  { { "toggle_bottomstack",    "Toggle bottomstack",                },  (void*)dwb_set_orientation,    NULL,                                 AlwaysSM, },
-  { { "toggle_encoding",       "Toggle Custom encoding",            },  (void*)dwb_toggle_custom_encoding,    NULL,                                 AlwaysSM, },
-  { { "toggle_maximized",      "Toggle maximized",                  },  (void*)dwb_toggle_maximized,   NULL,                                 AlwaysSM, },
-  { { "toggle_shrink_images",  "Setting: autoshrink images",        },  (void*)dwb_toggle_property,    NULL,                                 PostSM,    { .p = "auto-shrink-images" } },
-  { { "view_source",           "View source",                       },  (void*)dwb_view_source,        NULL,                                 AlwaysSM, },
-  { { "zoom_in",               "Zoom in",                           },  (void*)dwb_zoom_in,            "Cannot zoom in further",                        AlwaysSM, },
-  { { "zoom_normal",           "Zoom 100%",                         },  (void*)dwb_set_zoom_level,     NULL,                                 AlwaysSM,    { .d = 1.0,   .p = NULL } },
-  { { "zoom_out",              "Zoom out",                          },  (void*)dwb_zoom_out,           "Cannot zoom out further",                       AlwaysSM, },
+  { { "focus_input",           "Focus input",                       },  (void*)dwb_focus_input,        "No input found in current context",      AlwaysSM, },
+  { { "focus_next",            "Focus next view",                   },  (void*)dwb_focus_next,         "No other view",                   AlwaysSM, },
+  { { "focus_prev",            "Focus previous view",               },  (void*)dwb_focus_prev,         "No other view",                   AlwaysSM, },
+  { { "hint_mode",             "Follow hints ",                     },  (void*)dwb_show_hints,         NO_HINTS,                          NeverSM,    { .n = OpenNormal }, },
+  { { "hint_mode_nv",    "Follow hints in a new view ",       },  (void*)dwb_show_hints,         NO_HINTS,                                NeverSM,    { .n = OpenNewView }, },
+  { { "history_back",          "Go Back",                           },  (void*)dwb_history_back,       "Beginning of History",            AlwaysSM, },
+  { { "history_forward",       "Go Forward",                        },  (void*)dwb_history_forward,    "End of History",                  AlwaysSM, },
+  { { "increase_master",       "Increase master area",              },  (void*)dwb_resize_master,      "Cannot increase further",         AlwaysSM,    { .n = -5 } },
+  { { "insert_mode",           "Insert Mode",                       },  (void*)dwb_insert_mode,        NULL,                              NeverSM, },
+  { { "java_applets",          "Setting: java applets",             },  (void*)dwb_toggle_property,      NULL,                            PostSM,    { .p = "enable-java-applets" } },
+  { { "open",                  "Open URL",                          },  (void*)dwb_open,               NULL,                              NeverSM,   { .n = OpenNormal,      .p = NULL } },
+  { { "open_new_view",         "Open URL in a new view",            },  (void*)dwb_open,               NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
+  { { "open_quickmark",        "Open quickmark",                    },  (void*)dwb_quickmark,          NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
+  { { "open_quickmark_nv",     "Open quickmark in a new view",      },  (void*)dwb_quickmark,          NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
+  { { "plugins",               "Setting: plugins",                  },  (void*)dwb_toggle_property,           NULL,                       PostSM,    { .p = "enable-plugins" } },
+  { { "private_browsing",      "Setting: private browsing",         },  (void*)dwb_toggle_property,  NULL,                                PostSM,    { .p = "enable-private-browsing" } },
+  { { "proxy",                 "Setting: proxy",                    },  (void*)dwb_toggle_proxy,      NULL,                               PostSM,    { 0 } },
+  { { "push_master",           "Push to master area",               },  (void*)dwb_push_master,        "No other view",                   AlwaysSM, },
+  { { "reload",                "Reload",                            },  (void*)dwb_reload,             NULL,                              AlwaysSM, },
+  { { "remove_view",           "Close view",                        },  (void*)dwb_remove_view,        NULL,                              AlwaysSM, },
+  { { "save_quickmark",        "Save a quickmark for this page",    },  (void*)dwb_quickmark,          NO_URL,                            NeverSM,    { .n = QuickmarkSave }, },
+  { { "save_search_field",     "Add a new searchengine",       },  (void*)dwb_add_search_field,   "No input in current context",          NeverSM, },
+  { { "scripts",               "Setting: scripts",                  },  (void*)dwb_toggle_property,      NULL,                            PostSM,    { .p = "enable-scripts" } },
+  { { "scroll_bottom",         "Scroll to  bottom of the page",     },  (void*)dwb_scroll,             NULL,                              AlwaysSM,    { .n = Bottom }, },
+  { { "scroll_down",           "Scroll down",                       },  (void*)dwb_scroll,             "Bottom of the page",              AlwaysSM,    { .n = Down, }, },
+  { { "scroll_left",           "Scroll left",                       },  (void*)dwb_scroll,             "Left side of the page",           AlwaysSM,    { .n = Left }, },
+  { { "scroll_page_down",      "Scroll one page down",              },  (void*)dwb_scroll,             "Bottom of the page",              AlwaysSM,    { .n = PageDown, }, },
+  { { "scroll_page_up",        "Scroll one page up",                },  (void*)dwb_scroll,             "Top of the page",                 AlwaysSM,    { .n = PageUp, }, },
+  { { "scroll_right",          "Scroll left",                       },  (void*)dwb_scroll,             "Right side of the page",          AlwaysSM,    { .n = Right }, },
+  { { "scroll_top",            "Scroll to the top of the page",     },  (void*)dwb_scroll,             NULL,                              AlwaysSM,    { .n = Top }, },
+  { { "scroll_up",             "Scroll up",                         },  (void*)dwb_scroll,             "Top of the page",                 AlwaysSM,    { .n = Up, }, },
+  { { "set_global_setting",    "Set global property",               },  (void*)dwb_set_setting,        NULL,                              NeverSM,    { .n = Global } },
+  { { "set_key",               "Set keybinding",                    },  (void*)dwb_set_key,                NULL,                          NeverSM,    { 0 } },
+  { { "set_setting",           "Set property",                      },  (void*)dwb_set_setting,        NULL,                              NeverSM,    { .n = PerView } },
+  { { "show_global_settings",  "Show global settings",              },  (void*)dwb_show_settings,      NULL,                              AlwaysSM,    { .n = Global } },
+  { { "show_keys",             "Key configuration",                 },  (void*)dwb_show_keys,          NULL,                              AlwaysSM, },
+  { { "show_settings",         "Settings",                          },  (void*)dwb_show_settings,      NULL,                              AlwaysSM,    { .n = PerView } },
+  { { "spell_checking",        "Setting: spell checking",           },  (void*)dwb_toggle_property,      NULL,                            PostSM,    { .p = "enable-spell-checking" } },
+  { { "toggle_bottomstack",    "Toggle bottomstack",                },  (void*)dwb_set_orientation,    NULL,                              AlwaysSM, },
+  { { "toggle_encoding",       "Toggle Custom encoding",            },  (void*)dwb_toggle_custom_encoding,    NULL,                       AlwaysSM, },
+  { { "toggle_maximized",      "Toggle maximized",                  },  (void*)dwb_toggle_maximized,   NULL,                              AlwaysSM, },
+  { { "toggle_shrink_images",  "Setting: autoshrink images",        },  (void*)dwb_toggle_property,    NULL,                              PostSM,    { .p = "auto-shrink-images" } },
+  { { "view_source",           "View source",                       },  (void*)dwb_view_source,        NULL,                              AlwaysSM, },
+  { { "zoom_in",               "Zoom in",                           },  (void*)dwb_zoom_in,            "Cannot zoom in further",          AlwaysSM, },
+  { { "zoom_normal",           "Zoom 100%",                         },  (void*)dwb_set_zoom_level,     NULL,                              AlwaysSM,    { .d = 1.0,   .p = NULL } },
+  { { "zoom_out",              "Zoom out",                          },  (void*)dwb_zoom_out,           "Cannot zoom out further",         AlwaysSM, },
+  { { "yank",                  "Yank",                              },  (void*)dwb_yank,                NO_URL,                           PostSM,  { .p = GDK_NONE } },
+  { { "yank_primary",          "Yank to Primary selection",         },  (void*)dwb_yank,                NO_URL,                           PostSM,  { .p = GDK_SELECTION_PRIMARY } },
+  { { "paste",                 "Paste",                             },  (void*)dwb_paste,              "Clipboard is empty",              AlwaysSM,  { .n = OpenNormal, .p = GDK_NONE } },
+  { { "paste_primary",         "Paste primary selection",           },  (void*)dwb_paste,              "No primary selection",            AlwaysSM,  { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
+  { { "paste_nv",              "Paste, new view",                   },  (void*)dwb_paste,              "Clipboard is empty",              AlwaysSM,  { .n = OpenNewView, .p = GDK_NONE } },
+  { { "paste_primary_nv",      "Paste primary selection, new view", },  (void*)dwb_paste,              "No primary selection",            AlwaysSM,  { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
 
   //{ "create_hints",          (void*)dwb_create_hints,       "Hints",                          NULL,                       true,                                             },
 
@@ -395,298 +278,6 @@ static WebSettings DWB_SETTINGS[] = {
 
 
 /* UTIL {{{*/
-
-gchar *
-dwb_build_path() {
-  gchar *path = g_strconcat(g_get_user_config_dir(), "/", dwb.misc.name, "/",  NULL);
-
-  return path;
-}
-
-gboolean
-dwb_ishex(const gchar *string) {
-  gchar *dup = g_strdup(string);
-  gboolean ret = !strtok(dup, "1234567890abcdefABCDEF");
-
-  g_free(dup);
-  return ret;
-}
-gboolean
-dwb_false() {
-  return false;
-}
-gboolean
-dwb_true() {
-  return true;
-}
-/* dwb_return {{{*/
-gchar *
-dwb_return(const gchar *ret) {
-  return g_strdup(ret);
-}/*}}}*/
-
-/* dwb_get_default_settings {{{*/
-GHashTable * 
-dwb_get_default_settings() {
-  GHashTable *ret = g_hash_table_new(g_str_hash, g_str_equal);
-  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
-    WebSettings *s = l->data;
-    WebSettings *new = g_malloc(sizeof(WebSettings)); 
-    *new = *s;
-    gchar *value = g_strdup(s->n.first);
-    g_hash_table_insert(ret, value, new);
-  }
-  return ret;
-}/*}}}*/
-
-/* dwb_arg_to_char(Arg *arg, DwbType type) {{{*/
-gchar *
-dwb_arg_to_char(Arg *arg, DwbType type) {
-  gchar *value = NULL;
-  if (type == Boolean) {
-    if (arg->b) 
-      value = g_strdup("true");
-    else
-      value = g_strdup("false");
-  }
-  else if (type == Double) {
-    value = g_strdup_printf("%.2f", arg->d);
-  }
-  else if (type == Integer) {
-    value = g_strdup_printf("%d", arg->i);
-  }
-  else if (type == Char || type == ColorChar) {
-    if (arg->p) {
-      gchar *tmp = (gchar*) arg->p;
-      value = g_strdup_printf(tmp);
-    }
-  }
-  return value;
-}/*}}}*/
-
-/* dwb_char_to_arg {{{*/
-Arg *
-dwb_char_to_arg(gchar *value, DwbType type) {
-  errno = 0;
-  Arg *ret = NULL;
-  if (type == Boolean && !value)  {
-    Arg a =  { .b = false };
-    ret = &a;
-  }
-  else if (value) {
-    g_strstrip(value);
-    if (strlen(value) == 0) {
-      return NULL;
-    }
-    if (type == Boolean) {
-      if(!g_ascii_strcasecmp(value, "false") || !strcmp(value, "0")) {
-        Arg a = { .b = false };
-        ret = &a;
-      }
-      else {
-        Arg a = { .b = true };
-        ret = &a;
-      }
-    }
-    else if (type == Integer) {
-      gint n = strtol(value, NULL, 10);
-      if (n != LONG_MAX &&  n != LONG_MIN && !errno ) {
-        Arg a = { .i = n };
-        ret = &a;
-      }
-    }
-    else if (type == Double) {
-      gdouble d;
-      if ((d = g_strtod(value, NULL)) ) {
-        Arg a = { .d = d };
-        ret = &a;
-      }
-    }
-    else if (type == Char) {
-      Arg a = { .p = g_strdup(value) };
-      ret = &a;
-    }
-    else if (type == ColorChar) {
-      gint length = strlen(value);
-      if (value[0] == '#' && (length == 4 || length == 7) && dwb_ishex(&value[1])) {
-        Arg a = { .p = g_strdup(value) };
-        ret = &a;
-      }
-    }
-  }
-  return ret;
-}/*}}}*/
-
-/* dwb_keyval_to_char (guint keyval)      return: char  *{{{*/
-gchar *
-dwb_keyval_to_char(guint keyval) {
-  gchar *key = g_malloc(6);
-  guint32 unichar;
-  gint length;
-  if ( (unichar = gdk_keyval_to_unicode(keyval)) ) {
-    if ( (length = g_unichar_to_utf8(unichar, key)) ) {
-      memset(&key[length], '\0', 6-length); 
-    }
-  }
-  if (length && isprint(key[0])) {
-    return key;
-  }
-  else {
-    g_free(key);
-    return NULL;
-  }
-}/*}}}*/
-
-/* dwb_char_to_keyval (gchar *buf) {{{*/
-guint 
-dwb_char_to_keyval(gchar *buf) {
-  return  0;
-}/*}}}*/
-
-/* dwb_keymap_sort_second {{{*/
-gint
-dwb_keymap_sort_first(KeyMap *a, KeyMap *b) {
-  return strcmp(a->map->n.first, b->map->n.first);
-}/*}}}*/
-
-/* dwb_keymap_sort_second {{{*/
-gint
-dwb_keymap_sort_second(KeyMap *a, KeyMap *b) {
-  return strcmp(a->map->n.second, b->map->n.second);
-}/*}}}*/
-
-/* dwb_web_settings_sort_first{{{*/
-gint
-dwb_web_settings_sort_first(WebSettings *a, WebSettings *b) {
-  return strcmp(a->n.first, b->n.first);
-}/*}}}*/
-
-/* dwb_web_settings_sort_second{{{*/
-gint
-dwb_web_settings_sort_second(WebSettings *a, WebSettings *b) {
-  return strcmp(a->n.second, b->n.second);
-}/*}}}*/
-
-/*dwb_get_directory_content(const gchar *filename) {{{*/
-gchar *
-dwb_get_directory_content(const gchar *dirname) {
-  GDir *dir;
-  GString *buffer = g_string_new(NULL);
-  gchar *content;
-  GError *error = NULL;
-  gchar *filename, *filepath;
-  gchar *ret;
-
-  if ( (dir = g_dir_open(dirname, 0, NULL)) ) {
-    while ( (filename = (char*)g_dir_read_name(dir)) ) {
-      if (filename[0] != '.') {
-        filepath = g_strconcat(dirname, "/",  filename, NULL);
-        if (g_file_get_contents(filepath, &content, NULL, &error)) {
-          g_string_append(buffer, content);
-        }
-        else {
-          fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
-        }
-        g_free(filepath);
-        g_free(content);
-      }
-    }
-    g_dir_close (dir);
-  }
-  ret = g_strdup(buffer->str);
-  g_string_free(buffer, true);
-  return ret;
-
-}/*}}}*/
-
-/* dwb_get_file_content(const gchar *filename){{{*/
-gchar *
-dwb_get_file_content(const gchar *filename) {
-  GError *error = NULL;
-  gchar *content = NULL;
-  if (!(g_file_test(filename, G_FILE_TEST_IS_REGULAR) &&  g_file_get_contents(filename, &content, NULL, &error))) {
-    fprintf(stderr, "Cannot open %s: %s\n", filename, error ? error->message : "file not found");
-  }
-  return content;
-}/*}}}*/
-
-/* dwb_set_file_content(const gchar *filename, const gchar *content){{{*/
-void
-dwb_set_file_content(const gchar *filename, const gchar *content) {
-  GError *error = NULL;
-  if (!g_file_set_contents(filename, content, -1, &error)) {
-    fprintf(stderr, "Cannot save %s : %s", filename, error->message);
-  }
-}/*}}}*/
-
-/* dwb_navigation_new(const gchar *uri, const gchar *title) {{{*/
-Navigation *
-dwb_navigation_new(const gchar *uri, const gchar *title) {
-  Navigation *nv = malloc(sizeof(Navigation)); 
-  nv->first = uri ? g_strdup(uri) : NULL;
-  nv->second = title ? g_strdup(title) : NULL;
-  return nv;
-
-}/*}}}*/
-
-/* dwb_navigation_new_from_line(const gchar *text){{{*/
-Navigation * 
-dwb_navigation_new_from_line(const gchar *text) {
-  gchar **line;
-  Navigation *nv = NULL;
-
-  if (text) {
-    line = g_strsplit(text, " ", 2);
-    nv = dwb_navigation_new(line[0], line[1]);
-    g_free(line);
-  }
-  return nv;
-}/*}}}*/
-
-/* dwb_navigation_free(Navigation *n){{{*/
-void
-dwb_navigation_free(Navigation *n) {
-  if (n->first)   
-    g_free(n->first);
-  if (n->second)  
-    g_free(n->second);
-  g_free(n);
-}/*}}}*/
-
-/* dwb_quickmark_new_from_line(const gchar *line) {{{*/
-Quickmark * 
-dwb_quickmark_new_from_line(const gchar *line) {
-  Quickmark *q = NULL;
-  gchar **token;
-  if (line) {
-    token = g_strsplit(line, " ", 3);
-    q = dwb_quickmark_new(token[1], token[2], token[0]);
-    g_strfreev(token);
-  }
-  return q;
-
-}/*}}}*/
-
-/* dwb_quickmark_new(const gchar *uri, const gchar *title,  const gchar *key)  {{{*/
-Quickmark *
-dwb_quickmark_new(const gchar *uri, const gchar *title, const gchar *key) {
-  Quickmark *q = malloc(sizeof(Quickmark));
-  q->key = key ? g_strdup(key) : NULL;
-  q->nav = dwb_navigation_new(uri, title);
-  return q;
-}/* }}} */
-
-/* dwb_quickmark_free(Quickmark *q) {{{*/
-void
-dwb_quickmark_free(Quickmark *q) {
-  if (q->key) 
-    g_free(q->key);
-  if (q->nav)
-    dwb_navigation_free(q->nav);
-  g_free(q);
-
-}/*}}}*/
-
 /* }}} */
 
 /* CALLBACKS {{{*/
@@ -766,707 +357,6 @@ dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new
 }/*}}}*/
 
 
-/*}}}*/
-
-/* COMMANDS {{{*/
-
-/* dwb_set_setting {{{*/
-gboolean 
-dwb_set_setting(Arg *arg) {
-  dwb.state.mode = SettingsMode;
-  dwb.state.setting_apply = arg->n;
-  dwb_focus_entry();
-  
-  //dwb_settings_completion(0);
-
-  return true;
-}/*}}}*/
-
-/* dwb_set_key {{{*/
-gboolean 
-dwb_set_key(Arg *arg) {
-  dwb.state.mode = KeyMode;
-  dwb_focus_entry();
-
-  return true;
-}/*}}}*/
-
-/* dwb_toggle_custom_encoding {{{*/
-gboolean 
-dwb_toggle_custom_encoding(Arg *arg) {
-  WebKitWebView *web = CURRENT_WEBVIEW();
-
-  const gchar *encoding= webkit_web_view_get_custom_encoding(web);
-  const gchar *custom_encoding = GET_CHAR("custom-encoding");
-
-  if (encoding && !strcmp(custom_encoding, encoding) ) {
-    webkit_web_view_set_custom_encoding(web, NULL);
-    const gchar *default_encoding = webkit_web_view_get_encoding(web);
-    gchar *message = g_strdup_printf("Using default encoding: %s", default_encoding);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
-  }
-  else {
-    webkit_web_view_set_custom_encoding(web, custom_encoding);
-    gchar *message = g_strdup_printf("Using encoding: %s", custom_encoding);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
-  }
-  return true;
-}/*}}}*/
-
-/* dwb_focus_input {{{*/
-gboolean
-dwb_focus_input(Arg *a) {
-  gchar *value;
-  value = dwb_execute_script("focus_input()");
-  if (!strcmp(value, "_dwb_no_input_")) {
-    return false;
-  }
-  return true;
-}/*}}}*/
-
-/* dwb_add_search_field(Arg *) {{{*/
-gboolean
-dwb_add_search_field(Arg *a) {
-  gchar *value;
-  gboolean ret = true;
-  value = dwb_execute_script("add_searchengine()");
-  if (value) {
-    if (!strcmp(value, "_dwb_no_hints_")) {
-      return false;
-    }
-  }
-  dwb.state.mode = SearchFieldMode;
-  dwb_focus_entry();
-  g_free(value);
-  return ret;
-
-}/*}}}*/
-
-/* dwb_toggle_property {{{*/
-gboolean 
-dwb_toggle_property(Arg *a) {
-  gchar *prop = a->p;
-  gboolean value;
-  WebKitWebSettings *settings = webkit_web_view_get_settings(CURRENT_WEBVIEW());
-  g_object_get(settings, prop, &value, NULL);
-  g_object_set(settings, prop, !value, NULL);
-  gchar *message = g_strdup_printf("Setting %s set: %s", prop, !value ? "true" : "false");
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
-  return true;
-}/*}}}*/
-
-/* dwb_toggle_proxy {{{*/
-gboolean
-dwb_toggle_proxy(Arg *a) {
-  SoupURI *uri = NULL;
-
-  WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
-  s->arg.b = !s->arg.b;
-
-  if (s->arg.b) { 
-    uri = dwb.misc.proxyuri;
-  }
-  g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
-  return true;
-}/*}}}*/
-
-/* dwb_focus_entry() {{{*/
-void 
-dwb_focus_entry() {
-  gtk_widget_grab_focus(dwb.gui.entry);
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-  //gtk_widget_show(dwb.gui.entry);
-}/*}}}*/
-
-/*dwb_find {{{*/
-gboolean  
-dwb_find(Arg *arg) { 
-  dwb.state.mode = FindMode;
-  dwb.state.forward_search = arg->b;
-  //g_free(CURRENT_VIEW()->status->search_string);
-  dwb_focus_entry();
-  return true;
-}/*}}}*/
-
-/*dwb_resize_master {{{*/
-gboolean  
-dwb_resize_master(Arg *arg) { 
-  gboolean ret = true;
-  gint inc = dwb.state.nummod == 0 ? arg->n : dwb.state.nummod * arg->n;
-  gint size = dwb.state.size + inc;
-  if (size > 90 || size < 10) {
-    size = size > 90 ? 90 : 10;
-    ret = false;
-  }
-  dwb_resize(size);
-  return ret;
-}/*}}}*/
-
-/* dwb_show_hints {{{*/
-gboolean
-dwb_show_hints(Arg *arg) {
-  dwb.state.nv = arg->n;
-  if (dwb.state.mode != HintMode) {
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    dwb_execute_script("show_hints()");
-    dwb.state.mode = HintMode;
-    dwb_focus_entry();
-  }
-  return true;
-
-}/*}}}*/
-
-/* dwb_show_keys(Arg *arg){{{*/
-gboolean 
-dwb_show_keys(Arg *arg) {
-  View *v = dwb.state.fview->data;
-  GString *buffer = g_string_new(NULL);
-  g_string_append_printf(buffer, SETTINGS_VIEW, dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
-  g_string_append_printf(buffer, HTML_H2, "Keyboard Configuration", dwb.misc.profile);
-
-  g_string_append(buffer, HTML_BODY_START);
-  g_string_append(buffer, HTML_FORM_START);
-  for (GList *l = dwb.keymap; l; l=l->next) {
-    KeyMap *m = l->data;
-    Navigation n = m->map->n;
-    g_string_append(buffer, HTML_DIV_START);
-    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.first);
-    g_string_append_printf(buffer, HTML_DIV_KEYS_VALUE, n.first, dwb_modmask_to_string(m->mod), m->key ? : "");
-    g_string_append(buffer, HTML_DIV_END);
-  }
-  g_string_append(buffer, HTML_FORM_END);
-  g_string_append(buffer, HTML_BODY_END);
-  dwb_web_view_add_history_item(dwb.state.fview);
-
-  webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, KEY_SETTINGS);
-  g_string_free(buffer, true);
-  return true;
-}/*}}}*/
-
-/* dwb_show_settings(Arg *a) {{{*/
-gboolean
-dwb_show_settings(Arg *arg) {
-  View *v = dwb.state.fview->data;
-  GString *buffer = g_string_new(NULL);
-  GHashTable *t;
-  const gchar *setting_string;
-
-  dwb.state.setting_apply = arg->n;
-  if ( dwb.state.setting_apply == Global ) {
-    t = dwb.settings;
-    setting_string = "Global Settings";
-  }
-  else {
-    t = v->setting;
-    setting_string = "Settings";
-  }
-
-  GList *l = g_hash_table_get_values(t);
-  l = g_list_sort(l, (GCompareFunc)dwb_web_settings_sort_second);
-
-  g_string_append_printf(buffer, SETTINGS_VIEW, dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
-  g_string_append_printf(buffer, HTML_H2, setting_string, dwb.misc.profile);
-
-  g_string_append(buffer, HTML_BODY_START);
-  g_string_append(buffer, HTML_FORM_START);
-  for (; l; l=l->next) {
-    WebSettings *m = l->data;
-    if (!m->global || (m->global && dwb.state.setting_apply == Global)) {
-      g_string_append(buffer, HTML_DIV_START);
-      g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->n.second);
-      if (m->type == Boolean) {
-        const gchar *value = m->arg.b ? "checked" : "";
-        g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->n.first, value);
-      }
-      else {
-        gchar *value = dwb_arg_to_char(&m->arg, m->type);
-        g_string_append_printf(buffer, HTML_DIV_SETTINGS_VALUE, m->n.first, value ? value : "");
-      }
-      g_string_append(buffer, HTML_DIV_END);
-    }
-  }
-  g_list_free(l);
-  g_string_append(buffer, HTML_FORM_END);
-  g_string_append(buffer, HTML_BODY_END);
-  dwb_web_view_add_history_item(dwb.state.fview);
-
-  webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, SETTINGS);
-  g_string_free(buffer, true);
-  return true;
-}/*}}}*/
-
-/* dwb_insert_mode(Arg *arg) {{{*/
-gboolean
-dwb_insert_mode(Arg *arg) {
-  if (dwb.state.mode == HintMode) {
-    dwb_set_normal_message(dwb.state.fview, INSERT_MODE, true);
-  }
-  dwb_view_modify_style(dwb.state.fview, &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL, 0);
-  dwb.state.mode = InsertMode;
-  return true;
-}/*}}}*/
-
-/* dwb_allow_cookie {{{*/
-gboolean
-dwb_allow_cookie(Arg *arg) {
-  if (dwb.state.last_cookie) {
-    dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, dwb.state.last_cookie->domain);
-    soup_cookie_jar_add_cookie(dwb.state.cookiejar, dwb.state.last_cookie);
-    gchar *message = g_strdup_printf("Saved cookie and allowed domain: %s", dwb.state.last_cookie->domain);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
-    return true;
-  }
-  return false;
-}/*}}}*/
-
-/* dwb_bookmark {{{*/
-gboolean 
-dwb_bookmark(Arg *arg) {
-  gboolean noerror;
-  if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) ) {
-    gchar *message = g_strdup_printf("Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
-  }
-
-    
-  return dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks);
-}/*}}}*/
-
-/* dwb_quickmark(Arg *arg) {{{*/
-gboolean
-dwb_quickmark(Arg *arg) {
-  dwb.state.nv = arg->i;
-  dwb.state.mode = arg->n;
-  return true;
-}/*}}}*/
-
-/* dwb_reload(Arg *){{{*/
-gboolean
-dwb_reload(Arg *arg) {
-  WebKitWebView *web = WEBVIEW_FROM_ARG(arg);
-  webkit_web_view_reload(web);
-  return true;
-}/*}}}*/
-
-/* dwb_view_source(Arg) {{{*/
-gboolean
-dwb_view_source(Arg *arg) {
-  WebKitWebView *web = WEBVIEW_FROM_ARG(arg);
-  webkit_web_view_set_view_source_mode(web, !webkit_web_view_get_view_source_mode(web));
-  dwb_reload(arg);
-  return true;
-}/*}}}*/
-
-/* dwb_zoom_in(void *arg) {{{*/
-gboolean
-dwb_zoom_in(Arg *arg) {
-  View *v = dwb.state.fview->data;
-  WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-  gint limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
-  gboolean ret;
-
-  for (gint i=0; i<limit; i++) {
-    if ((webkit_web_view_get_zoom_level(web) > 4.0)) {
-      ret = false;
-      break;
-    }
-    webkit_web_view_zoom_in(web);
-    ret = true;
-  }
-  return ret;
-}/*}}}*/
-
-/* dwb_zoom_out(void *arg) {{{*/
-gboolean
-dwb_zoom_out(Arg *arg) {
-  View *v = dwb.state.fview->data;
-  WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-  gint limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
-  gboolean ret;
-
-  for (int i=0; i<limit; i++) {
-    if ((webkit_web_view_get_zoom_level(web) < 0.25)) {
-      ret = false;
-      break;
-    }
-    webkit_web_view_zoom_out(web);
-    ret = true;
-  }
-  return ret;
-}/*}}}*/
-
-/* dwb_scroll {{{*/
-gboolean 
-dwb_scroll(Arg *arg) {
-  gboolean ret = true;
-  gdouble scroll;
-
-  View *v = CURRENT_VIEW();
-
-  GtkAdjustment *a = arg->n == Left || arg->n == Right 
-    ? gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
-    : gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
-  gint sign = arg->n == Up || arg->n == PageUp || arg->n == Left ? -1 : 1;
-
-  gdouble value = gtk_adjustment_get_value(a);
-
-  gdouble inc = arg->n == PageUp || arg->n == PageDown 
-    ? gtk_adjustment_get_page_increment(a) 
-    : gtk_adjustment_get_step_increment(a);
-
-  gdouble lower  = gtk_adjustment_get_lower(a);
-  gdouble upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
-  switch (arg->n) {
-    case  Top:      scroll = lower; break;
-    case  Bottom:   scroll = upper; break;
-    default:        scroll = value + sign * inc * NN(dwb.state.nummod); break;
-  }
-
-  scroll = scroll < lower ? lower : scroll > upper ? upper : scroll;
-  if (scroll == value) 
-    ret = false;
-  else {
-    gtk_adjustment_set_value(a, scroll);
-    dwb_update_status_text(dwb.state.fview);
-  }
-  return ret;
-}/*}}}*/
-
-/* dwb_set_zoom_level(Arg *arg) {{{*/
-void 
-dwb_set_zoom_level(Arg *arg) {
-  GList *gl = arg->p ? arg->p : dwb.state.fview;
-  webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(((View*)gl->data)->web), arg->d);
-
-}/*}}}*/
-
-/* dwb_set_orientation(Arg *arg) {{{*/
-gboolean 
-dwb_set_orientation(Arg *arg) {
-  Layout l;
-  if (arg->n) {
-    l = arg->n;
-  }
-  else {
-    dwb.state.layout ^= BottomStack;
-    l = dwb.state.layout;
-  }
-  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.paned), l & BottomStack );
-  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.right), (l & BottomStack) ^ 1);
-  dwb_resize(dwb.state.size);
-  return true;
-}/*}}}*/
-
-/* History {{{*/
-gboolean 
-dwb_history_back(Arg *arg) {
-  gboolean ret = false;
-  WebKitWebView *w = WEBVIEW_FROM_ARG(arg);
-  //if (!dwb.state.nummod) {
-  //  if (webkit_web_view_can_go_back(w)) {
-  webkit_web_view_go_back(w);
-  ret = true;
-  //  }
-  //}
-  //dwb_normal_mode(false);
-  return ret;
-}
-gboolean 
-dwb_history_forward(Arg *arg) {
-  gboolean ret = false;
-  WebKitWebView *w = WEBVIEW_FROM_ARG(arg);
-  if (!dwb.state.nummod) {
-    if (webkit_web_view_can_go_forward(w)) {
-      webkit_web_view_go_forward(w);
-      ret = true;
-    }
-  }
-  return ret;
-}/*}}}*/
-
-/* dwb_open(Arg *arg) {{{*/
-gboolean  
-dwb_open(Arg *arg) {
-  dwb.state.nv = arg->n;
-  //gtk_widget_grab_focus(dwb.gui.entry);
-
-  if (arg && arg->p) {
-    dwb_load_uri(arg);
-    dwb_normal_mode(true);
-    
-  }
-  else {
-    dwb_focus_entry();
-    dwb.state.mode = OpenMode;
-  }
-  return true;
-} /*}}}*/
-
-/* dwb_get_search_engine_uri(const gchar *uri) {{{*/
-gchar *
-dwb_get_search_engine_uri(const gchar *uri, const gchar *text) {
-  gchar **token = g_strsplit(uri, HINT_SEARCH_SUBMIT, 2);
-  gchar *ret = g_strconcat(token[0], text, token[1], NULL);
-  g_strfreev(token);
-  return ret;
-}/* }}} */
-
-/* dwb_get_search_engine(const gchar *uri) {{{*/
-gchar *
-dwb_get_search_engine(const gchar *uri) {
-  gchar *ret = NULL;
-  if ( (!strstr(uri, ".") || strstr(uri, " ")) && !strstr(uri, "localhost:")) {
-    gchar **token = g_strsplit(uri, " ", 2);
-    for (GList *l = dwb.fc.searchengines; l; l=l->next) {
-      Navigation *n = l->data;
-      if (!strcmp(token[0], n->first)) {
-        ret = dwb_get_search_engine_uri(n->second, token[1]);
-        break;
-      }
-    }
-    if (!ret) {
-      ret = dwb_get_search_engine_uri(dwb.misc.default_search, uri);
-    }
-  }
-  return ret;
-}/*}}}*/
-
-/* dwb_toggle_maximized {{{*/
-void 
-dwb_maximized_hide_zoom(View *v, View *no) {
-  if (dwb.misc.factor != 1.0) {
-    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
-  }
-  if (v != dwb.state.fview->data) {
-    gtk_widget_hide(v->vbox);
-  }
-}
-void 
-dwb_maximized_show_zoom(View *v) {
-  if (dwb.misc.factor != 1.0 && v != dwb.state.views->data) {
-    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), dwb.misc.factor);
-  }
-  gtk_widget_show(v->vbox);
-}
-
-void 
-dwb_toggle_maximized(Arg *arg) {
-  dwb.state.layout ^= Maximized;
-  if (dwb.state.layout & Maximized) {
-    g_list_foreach(dwb.state.views,  (GFunc)dwb_maximized_hide_zoom, NULL);
-    if  (dwb.state.views == dwb.state.fview) {
-      gtk_widget_hide(dwb.gui.right);
-    }
-    else if (dwb.state.views->next) {
-      gtk_widget_hide(dwb.gui.left);
-    }
-  }
-  else {
-    if (dwb.state.views->next) {
-      gtk_widget_show(dwb.gui.right);
-    }
-    gtk_widget_show(dwb.gui.left);
-    g_list_foreach(dwb.state.views,  (GFunc)dwb_maximized_show_zoom, NULL);
-  }
-  dwb_resize(dwb.state.size);
-}/*}}}*/
-
-/* dwb_remove_view(Arg *arg) {{{*/
-void 
-dwb_remove_view(Arg *arg) {
-  GList *gl;
-  if (!dwb.state.views->next) {
-    dwb_exit();
-    return;
-  }
-  if (dwb.state.nummod) {
-    gl = g_list_nth(dwb.state.views, dwb.state.nummod);
-  }
-  else {
-    gl = dwb.state.fview;
-    if ( !(dwb.state.fview = dwb.state.fview->next) ) {
-      dwb.state.fview = dwb.state.views;
-      gtk_widget_show_all(dwb.gui.topbox);
-    }
-  }
-  View *v = gl->data;
-  if (gl == dwb.state.views) {
-    if (dwb.state.views->next) {
-      View *newfirst = dwb.state.views->next->data;
-      gtk_widget_reparent(newfirst->vbox, dwb.gui.left);
-    }
-  }
-  gtk_widget_destroy(v->vbox);
-  dwb.gui.entry = NULL;
-  dwb_grab_focus(dwb.state.fview);
-  gtk_container_remove(GTK_CONTAINER(dwb.gui.topbox), v->tabevent);
-
-  // clean up
-  dwb_source_remove(gl);
-  g_free(v->status);
-  g_free(v);
-
-  dwb.state.views = g_list_delete_link(dwb.state.views, gl);
-
-  if (dwb.state.layout & Maximized) {
-    gtk_widget_show(CURRENT_VIEW()->vbox);
-    if (dwb.state.fview == dwb.state.views) {
-      gtk_widget_hide(dwb.gui.right);
-      gtk_widget_show(dwb.gui.left);
-    }
-    else {
-      gtk_widget_show(dwb.gui.right);
-      gtk_widget_hide(dwb.gui.left);
-    }
-  }
-  dwb_update_layout();
-}/*}}}*/
-
-/* dwb_resize(gdouble size) {{{*/
-void
-dwb_resize(gdouble size) {
-  gint fact = dwb.state.layout & BottomStack;
-
-  gtk_widget_set_size_request(dwb.gui.left,  (100 - size) * (fact^1),  (100 - size) *  fact);
-  gtk_widget_set_size_request(dwb.gui.right, size * (fact^1), size * fact);
-  dwb.state.size = size;
-}/*}}}*/
-
-/* dwb_push_master {{{*/
-gboolean 
-dwb_push_master(Arg *arg) {
-  GList *gl, *l;
-  View *old = NULL, *new;
-  if (!dwb.state.views->next) {
-    return false;
-  }
-  if (arg && arg->p) {
-    gl = arg->p;
-  }
-  else if (dwb.state.nummod) {
-    gl = g_list_nth(dwb.state.views, dwb.state.nummod);
-    if (!gl) {
-      return false;
-    }
-    CLEAR_COMMAND_TEXT(dwb.state.views);
-    dwb_set_normal_style(dwb.state.fview);
-  }
-  else {
-    gl = dwb.state.fview;
-  }
-  if (gl == dwb.state.views) {
-    old = gl->data;
-    l = dwb.state.views->next;
-    new = l->data;
-    gtk_widget_reparent(old->vbox, dwb.gui.right);
-    gtk_box_reorder_child(GTK_BOX(dwb.gui.right), old->vbox, 0);
-    gtk_widget_reparent(new->vbox, dwb.gui.left);
-    dwb.state.views = g_list_remove_link(dwb.state.views, l);
-    dwb.state.views = g_list_concat(l, dwb.state.views);
-    dwb_focus(l);
-  }
-  else {
-    old = dwb.state.views->data;
-    new = gl->data;
-    gtk_widget_reparent(new->vbox, dwb.gui.left);
-    gtk_widget_reparent(old->vbox, dwb.gui.right);
-    gtk_box_reorder_child(GTK_BOX(dwb.gui.right), old->vbox, 0);
-    dwb.state.views = g_list_remove_link(dwb.state.views, gl);
-    dwb.state.views = g_list_concat(gl, dwb.state.views);
-    dwb_grab_focus(dwb.state.views);
-  }
-  if (dwb.state.layout & Maximized) {
-    gtk_widget_show(dwb.gui.left);
-    gtk_widget_hide(dwb.gui.right);
-    gtk_widget_show(new->vbox);
-    gtk_widget_hide(old->vbox);
-  }
-  gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), new->tabevent, -1);
-  dwb_update_layout();
-  return true;
-}/*}}}*/
-
-/* dwb_focus(GList *gl) {{{*/
-void 
-dwb_focus(GList *gl) {
-  GList *tmp = NULL;
-
-  if (dwb.state.fview) {
-    tmp = dwb.state.fview;
-  }
-  if (tmp) {
-    dwb_set_normal_style(tmp);
-    dwb_source_remove(tmp);
-    CLEAR_COMMAND_TEXT(tmp);
-  }
-  dwb_grab_focus(gl);
-} /*}}}*/
-
-/* dwb_focus_next(Arg *arg) {{{*/
-gboolean 
-dwb_focus_next(Arg *arg) {
-  GList *gl = dwb.state.fview;
-  if (!dwb.state.views->next) {
-    return false;
-  }
-  if (gl->next) {
-    if (dwb.state.layout & Maximized) {
-      if (gl == dwb.state.views) {
-        gtk_widget_hide(dwb.gui.left);
-        gtk_widget_show(dwb.gui.right);
-      }
-      gtk_widget_show(((View *)gl->next->data)->vbox);
-      gtk_widget_hide(((View *)gl->data)->vbox);
-    }
-    dwb_focus(gl->next);
-  }
-  else {
-    if (dwb.state.layout & Maximized) {
-      gtk_widget_hide(dwb.gui.right);
-      gtk_widget_show(dwb.gui.left);
-      gtk_widget_show(((View *)dwb.state.views->data)->vbox);
-      gtk_widget_hide(((View *)gl->data)->vbox);
-    }
-    dwb_focus(g_list_first(dwb.state.views));
-  }
-  return true;
-}/*}}}*/
-
-/* dwb_focus_prev(Arg *arg) {{{*/
-gboolean 
-dwb_focus_prev(Arg *arg) {
-  GList *gl = dwb.state.fview;
-  if (!dwb.state.views->next) {
-    return false;
-  }
-  if (gl == dwb.state.views) {
-    GList *last = g_list_last(dwb.state.views);
-    if (dwb.state.layout & Maximized) {
-      gtk_widget_hide(dwb.gui.left);
-      gtk_widget_show(dwb.gui.right);
-      gtk_widget_show(((View *)last->data)->vbox);
-      gtk_widget_hide(((View *)gl->data)->vbox);
-    }
-    dwb_focus(last);
-  }
-  else {
-    if (dwb.state.layout & Maximized) {
-      if (gl == dwb.state.views->next) {
-        gtk_widget_hide(dwb.gui.right);
-        gtk_widget_show(dwb.gui.left);
-      }
-      gtk_widget_show(((View *)gl->prev->data)->vbox);
-      gtk_widget_hide(((View *)gl->data)->vbox);
-    }
-    dwb_focus(gl->prev);
-  }
-  return true;
-}/*}}}*/
 /*}}}*/
 
 
@@ -1553,6 +443,16 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+/* dwb_resize(gdouble size) {{{*/
+void
+dwb_resize(gdouble size) {
+  gint fact = dwb.state.layout & BottomStack;
+
+  gtk_widget_set_size_request(dwb.gui.left,  (100 - size) * (fact^1),  (100 - size) *  fact);
+  gtk_widget_set_size_request(dwb.gui.right, size * (fact^1), size * fact);
+  dwb.state.size = size;
+}/*}}}*/
 
 /* dwb_clean_buffer{{{*/
 void
@@ -1900,7 +800,7 @@ dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar
   }
   Navigation *n = dwb_navigation_new(first, second);
 
-  (*fc) = g_list_prepend((*fc), n);
+  (*fc) = g_list_append((*fc), n);
 }/*}}}*/
 
 /* dwb_prepend_navigation(GList *gl, GList *view) {{{*/
@@ -2156,6 +1056,17 @@ dwb_eval_key(GdkEventKey *e) {
 
 }/*}}}*/
 
+/* dwb_insert_mode(Arg *arg) {{{*/
+gboolean
+dwb_insert_mode(Arg *arg) {
+  if (dwb.state.mode == HintMode) {
+    dwb_set_normal_message(dwb.state.fview, INSERT_MODE, true);
+  }
+  dwb_view_modify_style(dwb.state.fview, &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL, 0);
+  dwb.state.mode = InsertMode;
+  return true;
+}/*}}}*/
+
 /* dwb_normal_mode() {{{*/
 void 
 dwb_normal_mode(gboolean clean) {
@@ -2384,41 +1295,6 @@ dwb_exit() {
 
 /* KEYS {{{*/
 
-/* dwb_mod_mask_to_string(guint modmask)      return gchar*{{{*/
-gchar *
-dwb_modmask_to_string(guint modmask) {
-  gchar *mod[7];
-  int i=0;
-  for (; i<7 && modmask; i++) {
-    if (modmask & GDK_CONTROL_MASK) {
-      mod[i] = "Control";
-      modmask ^= GDK_CONTROL_MASK;
-    }
-    else if (modmask & GDK_MOD1_MASK) {
-      mod[i] = "Mod1";
-      modmask ^= GDK_MOD1_MASK;
-    }
-    else if (modmask & GDK_MOD2_MASK) {
-      mod[i] = "Mod2";
-      modmask ^= GDK_MOD2_MASK;
-    }
-    else if (modmask & GDK_MOD3_MASK) {
-      mod[i] = "Mod3";
-      modmask ^= GDK_MOD3_MASK;
-    }
-    else if (modmask & GDK_MOD4_MASK) {
-      mod[i] = "Mod4";
-      modmask ^= GDK_MOD4_MASK;
-    }
-    else if (modmask & GDK_MOD5_MASK) {
-      mod[i] = "Mod5";
-      modmask ^= GDK_MOD5_MASK;
-    }
-  }
-  mod[i] = NULL; 
-  gchar *line = g_strjoinv(" ", mod);
-  return line;
-}/*}}}*/
 
 /* dwb_strv_to_key(gchar **string, gsize length)      return: Key{{{*/
 Key 
@@ -2657,9 +1533,17 @@ dwb_init_scripts() {
   g_string_append_printf(buffer, "hint_border = '%s';\n",           GET_CHAR("hint-border"));
   g_string_append_printf(buffer, "hint_opacity = %f;\n",          GET_DOUBLE("hint-opacity"));
 
-  gchar *dircontent = dwb_get_directory_content(dwb.files.scriptdir);
-  g_string_append(buffer, dircontent);
-  g_free(dircontent);
+  // init system scripts
+
+  gchar *dir;
+  if ( (dir = dwb_get_data_dir("scripts")) ) {
+    dwb_get_directory_content(&buffer, dir);
+    //g_string_append(buffer, dircontent);
+  }
+  dwb_get_directory_content(&buffer, dwb.files.scriptdir);
+  //dircontent = dwb_get_directory_content(dwb.files.scriptdir);
+  //g_string_append(buffer, dircontent);
+  //g_free(dircontent);
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/
@@ -2792,7 +1676,7 @@ dwb_init_files() {
   gchar *path = dwb_build_path();
   gchar *profile_path = g_strconcat(path, dwb.misc.profile, "/", NULL);
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
-    mkdir(profile_path, 0755);
+    g_mkdir_with_parents(profile_path, 0755);
   }
   dwb.files.bookmarks     = g_strconcat(profile_path, "/bookmarks",     NULL);
   dwb.files.history       = g_strconcat(profile_path, "/history",       NULL);
@@ -2806,8 +1690,6 @@ dwb_init_files() {
   dwb.files.settings      = g_strconcat(path, "settings",      NULL);
   dwb.files.cookies       = g_strconcat(profile_path, "/cookies",       NULL);
   dwb.files.cookies_allow = g_strconcat(profile_path, "/cookies.allow", NULL);
-
-  //dwb.misc.scripts = dwb_get_directory_content(dwb.files.scriptdir);
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (void*)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (void*)dwb_navigation_new_from_line); 
@@ -2976,7 +1858,6 @@ int main(gint argc, gchar *argv[]) {
   dwb.misc.name = NAME;
   dwb.misc.profile = "default";
   dwb.misc.argc = 0;
-  //dwb.misc.fifo = "/tmp/dwb.socket.37";
   gint last = 0;
 
   if (!g_thread_supported()) {

@@ -4,6 +4,7 @@
 #include "dwb.h"
 #include "completion.h"
 #include "commands.h"
+#include "util.h"
 /* COMPLETION {{{*/
 GList * dwb_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back);
 

@@ -6,6 +6,7 @@
 #include "dwb.h"
 #include "view.h"
 #include "completion.h"
+#include "util.h"
 
 /* WEB_VIEW_CALL_BACKS {{{*/
 
@@ -38,7 +39,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       dwb_push_master(&arg);
     }
   }
-  dwb_normal_mode(true);
+  //dwb_normal_mode(true);
   return false;
 }/*}}}*/
 

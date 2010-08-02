@@ -1,11 +1,13 @@
 var elements = [];
 var active_arr = [];
 var hints;
+var overlays;
 var active;
 var last_active;
 var lastpos = 0;
 var lastinput;
 var styles;
+var form_hints = "//form";
 
 function Hint(element) {
   this.element = element;
@@ -130,23 +132,35 @@ function click_element(e) {
   clear();
 }
 function create_stylesheet() {
-  styles = document.createElement("style");
+  var styles = document.createElement("style");
   styles.type = "text/css";
   document.getElementsByTagName('head')[0].appendChild(styles);
   
-  style = document.styleSheets[document.styleSheets.length - 1];
-  style.insertRule('*:first-child[highlight=hint_normal] { background-color: ' + hint_normal_color + '  } ', 0);
-  style.insertRule('*[highlight=hint_active] { background-color: ' + hint_active_color + '  } ', 0);
+  var style = document.styleSheets[document.styleSheets.length - 1];
+  style.insertRule('a[dwb_highlight=hint_normal] { background: ' + hint_normal_color + ' } ', 0);
+  style.insertRule('a[dwb_highlight=hint_normal] { outline: 1p solid ' + hint_normal_color + ' } ', 0);
+  style.insertRule('input[dwb_highlight=hint_normal] { outline: 1px solid ' + hint_normal_color + '  } ', 0);
+  style.insertRule('a[dwb_highlight=hint_active] { background: ' + hint_active_color + '  } ', 0);
+  style.insertRule('a[dwb_highlight=hint_active] { border: 2px solid ' + hint_active_color + '  } ', 0);
+  style.insertRule('input[dwb_highlight=hint_active] { outline: 2px solid ' + hint_active_color + '  } ', 0);
 }
 
-//function get_offset(element) {
-//  var old = element;
-//  //if (element.offsetParent) {
-//  //}
-//  //var r = element.getBoundingClientRect();
-//  var rect = old.getBoundingClientRect();
-//  console.log("calc: " + old.href + ": " + rect.top + " : " + rect.left);
-//}
+function get_visibility(e) {
+  var rects = e.getClientRects()[0];
+  var r = e.getBoundingClientRect();
+  if (!r || r.top > window.innerHeight || r.bottom < 0 
+      || r.left > window.innerWidth ||  r < 0 || !rects ) {
+    return false;
+  }
+  var style = document.defaultView.getComputedStyle(e, null);
+    if (style.getPropertyValue("visibility") != "visible" 
+        || style.getPropertyValue("display") == "none") {
+      return false;
+    }
+    return true;
+}
+
+
 function show_hints(w) {
   if (!w) {
     w = window;
@@ -157,26 +171,17 @@ function show_hints(w) {
   hints = document.createElement("div");
   create_stylesheet();
   for (var i=0; i<res.length; i++) {
-    var e = new LetterHint(res[i]);
-    hints.appendChild(e.hint);
-    
-    var rects = e.element.getClientRects()[0];
-    var r = e.rect;
-    if (!r || r.top > window.innerHeight || r.bottom < 0 || r.left > window.innerWidth ||  r < 0 || !rects ) {
-      continue;
+    if (get_visibility(res[i])) {
+      var e = new LetterHint(res[i]);
+      hints.appendChild(e.hint);
+      elements.push(e);
     }
-    var style = document.defaultView.getComputedStyle(e.element, null);
-    if (style.getPropertyValue("visibility") != "visible" || style.getPropertyValue("display") == "none") {
-      continue;
-    }
-    e.element.setAttribute('highlight', 'hint_normal');
-    elements.push(e);
   };
   elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
   for (var i=0; i<elements.length; i++) {
     var e = elements[i];
     e.getTextHint(i, elements.length);
-    //e.element.setAttribute('highlight', 'hint_active');
+    e.element.setAttribute('dwb_highlight', 'hint_normal');
   }
   active_arr = elements;
   
@@ -226,7 +231,7 @@ function update_hints(input) {
     }
     else {
       e.hint.style.visibility = 'hidden';
-      e.element.removeAttribute('highlight');
+      e.element.removeAttribute('dwb_highlight');
     }
   }
   active_arr = array;
@@ -244,22 +249,29 @@ function update_hints(input) {
   }
 }
 function set_active(element) {
-  var active = document.querySelector('*[highlight=hint_active]');
+  var active = document.querySelector('*[dwb_highlight=hint_active]');
   if (active) {
-    active.setAttribute('highlight', 'hint_normal' );
+    active.setAttribute('dwb_highlight', 'hint_normal' );
   }
-  element.element.setAttribute('highlight', 'hint_active');
+  element.element.setAttribute('dwb_highlight', 'hint_active');
   active = element;
 }
 function clear() {
-  for (var i=0; i<elements.length; i++) {
-    elements[i].element.removeAttribute('highlight');
+  if (elements) {
+    for (var i=0; i<elements.length; i++) {
+      elements[i].element.removeAttribute('dwb_highlight');
+    }
   }
   if (styles) {
     document.getElementsByTagName('head')[0].removeChild(styles);
   }
-  if (hints.parentNode) {
+  if (hints && hints.parentNode) {
     hints.parentNode.removeChild(hints);
+    hints = undefined;
+  }
+  if (overlays && overlays.parentNode) {
+    overlays.parentNode.removeChild(overlays);
+    overlays = undefined;
   }
   elements = [];
   active_arr = [];
@@ -316,18 +328,18 @@ function focus_prev() {
   lastpos = newpos;
 }
 function add_searchengine() {
-  document.activeElement.blur();
-  var res = document.body.querySelectorAll("form");
-  hints = document.createElement("div");
+  clear();
   create_stylesheet();
+  var hints = document.createElement("div");
+  var res = document.body.querySelectorAll("form");
 
   for (var i=0; i<res.length; i++) {
     var els = res[i].elements;
     for (var j=0; j<els.length; j++) {
-      if (els[j].type != "text") {
+      if (get_visibility(els[j]) && els[j].type == "text") {
         var e = new LetterHint(els[j]);
-        hints.appendChild(e.hint);
         elements.push(e);
+        e.element.setAttribute('dwb_highlight', 'hint_normal');
       }
     }
   }
@@ -335,14 +347,14 @@ function add_searchengine() {
     return "_dwb_no_hints_";
   }
   elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
-  for (var i=0; i<elements.length; i++) {
+  for (var i=0; i<=elements; i++) {
     elements[i].getTextHint(i, elements.length);
-    elements[i].element.setAttribute('highlight', 'hint_normal');
+    hints.appendChild(elements[i].hint);
   }
+  document.body.appendChild(hints); 
   set_active[elements[0]];
   active_arr = elements;
-  document.body.appendChild(hints); 
-  update_hints();
+  //update_hints();
 }
 function submit_searchengine(string) {
   var e = active.element;

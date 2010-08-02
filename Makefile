@@ -9,27 +9,27 @@ clean:
 	@$(MAKE) clean -C $(SRCDIR)
 
 install: install-man install-data 
-	@echo "Installing $(TARGET) to $(DESTDIR)$(BINDIR)"
+	@echo "Installing $(TARGET) to $(subst //,/,$(DESTDIR)$(BINDIR))"
 	@install -Dm 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 
 install-man: 
-	@echo "Installing manpage to $(DESTDIR)$(MAN1DIR)"
+	@echo "Installing manpage to $(subst //,/,$(DESTDIR)$(MAN1DIR))"
 	@install -Dm 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)$(MANFILE)
 
 install-data: 
-	@echo "Installing $(SHAREDIR)/hints.js to $(subst //,/,$(DESTDIR)$(DATADIR)/$(NAME))"
-	@install -Dm 644 $(SHAREDIR)/hints.js $(DESTDIR)$(DATADIR)/$(NAME)/hints.js
+	@echo "Installing $(SHAREDIR)/hints.js to $(subst //,/,$(DESTDIR)$(DATADIR)/$(NAME)/scripts)"
+	@install -Dm 644 $(SHAREDIR)/hints.js $(DESTDIR)$(DATADIR)/$(NAME)/scripts/hints.js
 
 uninstall: uninstall-man uninstall-data
-	@echo "Removing executable from $(BINDIR)/$(TARGET)"
-	@$(RM) $(BINDIR)/$(TARGET)
+	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"
+	@$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
 
 uninstall-man: 
-	@echo "Removing manpage from $(DESTDIR)$(MAN1DIR)"
+	@echo "Removing manpage from $(subst //,/,$(DESTDIR)$(MAN1DIR))"
 	@$(RM) $(DESTDIR)$(MAN1DIR)$(MANFILE)
 
 uninstall-data: 
-	@echo "Removing $(DATADIR)/$(NAME)"
+	@echo "Removing $(subst //,/,$(DESTDIR)$(DATADIR)/$(NAME))"
 	@$(RM) -r $(DESTDIR)$(DATADIR)/$(NAME)
 
 distclean: clean

@@ -371,9 +371,6 @@ Dwb dwb;
 // TODO toggle proxy
 /*}}}*/
 
-gboolean dwb_true();
-gboolean dwb_false();
-
 gboolean dwb_insert_mode(Arg *);
 void dwb_normal_mode(gboolean);
 
@@ -392,27 +389,27 @@ void dwb_update_status_text(GList *gl);
 void dwb_update_status(GList *gl);
 void dwb_update_layout(void);
 
-void dwb_navigation_free(Navigation *n);
-Navigation * dwb_navigation_new(const gchar *, const gchar *);
 gboolean dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const gchar *, const gchar *);
 
 Key dwb_strv_to_key(gchar **, gsize );
 
-Arg * dwb_char_to_arg(gchar *, DwbType );
 GList * dwb_keymap_add(GList *gl, KeyValue key);
-gint dwb_keymap_sort_first(KeyMap *a, KeyMap *b);
-gint dwb_keymap_sort_second(KeyMap *a, KeyMap *b);
 
 void dwb_apply_settings(WebSettings *);
 
 gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(Arg *);
 void dwb_save_searchengine(void);
-GHashTable * dwb_get_default_settings(void);
-gint dwb_web_settings_sort_second(WebSettings *a, WebSettings *b);
-gint dwb_web_settings_sort_first(WebSettings *a, WebSettings *b);
 void dwb_parse_setting(const gchar *);
 void dwb_parse_key_setting(const gchar *);
+gchar * dwb_execute_script(const gchar *);
+void dwb_resize(gdouble );
+void dwb_web_view_add_history_item(GList *);
+void dwb_grab_focus(GList *);
+void dwb_source_remove(GList *);
+void dwb_set_normal_style(GList *gl);
+
+void dwb_exit(void);
 
 #endif
