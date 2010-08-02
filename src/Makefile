@@ -1,4 +1,4 @@
-include config.mk
+include ../config.mk
 
 %.o: %.c $(HDR)
 	@echo "${CC} $<"
@@ -9,15 +9,16 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
 
-
 debug: 
 	@$(MAKE) -B DEBUG=$(DFLAGS) TARGET=$(DTARGET)
 
+cgdb: debug
+	cgdb $(DTARGET)
+
 clean:
-	@echo cleaning...
-	@echo "removing $(OBJ) $(TARGET)"
+	@echo Cleaning
 	@$(RM) $(OBJ)
 	@$(RM) $(TARGET)
-	@$(RM) config.h hints.h startpage.h
+	@$(RM) $(DTARGET)
 
 .PHONY: clean all

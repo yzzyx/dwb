@@ -1,11 +1,4 @@
-TARGET = dwb
-MANFILE = dwb.1
-SRCDIR = src
-DOCDIR = doc
-PREFIX = /usr
-DATADIR = $(PREFIX)/share
-MANUALDIR = $(DATADIR)/man
-MAKE = make --no-print-directory
+include config.mk
 
 all: $(TARGET) 
 
@@ -15,16 +8,43 @@ $(TARGET):
 clean: 
 	@$(MAKE) clean -C $(SRCDIR)
 
-install: all
-	@echo "Installing $(TARGET) to $(DESTDIR)$(PREFIX)/bin"
-	@install -Dm 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
-	@echo "Installing manpage to $(DESTDIR)$(MANUALDIR)/man1"
-	@install -Dm 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MANUALDIR)/man1/$(MANFILE)
+install: install-man install-data 
+	@echo "Installing $(TARGET) to $(DESTDIR)$(BINDIR)"
+	@install -Dm 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 
-uninstall:
-	@echo "Removing executable from $(PREFIX)/bin/$(TARGET)"
-	@rm -f $(PREFIX)/bin/$(TARGET)
-	@echo "Removing manpage from $(DESTDIR)$(MANUALDIR)/man1"
-	@rm -f $(DESTDIR)$(MANUALDIR)/man1/$(MANFILE)
+install-man: 
+	@echo "Installing manpage to $(DESTDIR)$(MAN1DIR)"
+	@install -Dm 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)$(MANFILE)
 
-.PHONY: clean all
+install-data: 
+	@echo "Installing $(SHAREDIR)/hints.js to $(subst //,/,$(DESTDIR)$(DATADIR)/$(NAME))"
+	@install -Dm 644 $(SHAREDIR)/hints.js $(DESTDIR)$(DATADIR)/$(NAME)/hints.js
+
+uninstall: uninstall-man uninstall-data
+	@echo "Removing executable from $(BINDIR)/$(TARGET)"
+	@$(RM) $(BINDIR)/$(TARGET)
+
+uninstall-man: 
+	@echo "Removing manpage from $(DESTDIR)$(MAN1DIR)"
+	@$(RM) $(DESTDIR)$(MAN1DIR)$(MANFILE)
+
+uninstall-data: 
+	@echo "Removing $(DATADIR)/$(NAME)"
+	@$(RM) -r $(DESTDIR)$(DATADIR)/$(NAME)
+
+distclean: clean
+
+dist: distclean
+	@mkdir -p $(DISTDIR)
+	@cp Makefile README gpl-3.0.txt config.mk $(DISTDIR)
+	@mkdir -p $(DISTDIR)/$(DOCDIR)
+	@cp $(DOCDIR)/dwb.1 $(DISTDIR)/$(DOCDIR)
+	@mkdir -p $(DISTDIR)/$(SHAREDIR)
+	@cp -r $ $(SHAREDIR)/hints.js $(DISTDIR)/$(SHAREDIR)
+	@mkdir -p $(DISTDIR)/$(SRCDIR)
+	@cp -r $ $(SOURCE) $(HDR) $(SRCDIR)/Makefile $(DISTDIR)/$(SRCDIR)
+	@tar cfz $(DISTDIR).tar.gz $(DISTDIR)
+	@rm -rf  $(DISTDIR)
+
+
+.PHONY: clean all install uninstall dist  distclean
