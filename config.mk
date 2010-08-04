@@ -8,6 +8,7 @@ SHAREDIR=data
 LIBS  += gtk+-2.0
 LIBS  += webkit-1.0
 
+FLAGS += -pedantic
 FLAGS += -Wall 
 FLAGS += -pipe
 FLAGS += `pkg-config --cflags --libs $(LIBS)` 

@@ -1,5 +1,7 @@
 #ifndef DWB_H
 #define DWB_H
+#include <gtk/gtk.h>
+#include <webkit/webkit.h>
 
 /* SETTINGS MAKROS {{{*/
 #define KEY_SETTINGS "Dwb Key Settings"
@@ -67,13 +69,6 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 /*}}}*/
 
 /* TYPES {{{*/
-typedef enum _Mode Mode;
-typedef enum _Open Open;
-typedef enum _Layout Layout;
-typedef enum _Direction Direction;
-typedef enum _DwbType DwbType;
-typedef enum _SettingsScope SettingsScope;
-typedef enum _ShowMessage ShowMessage;
 
 typedef struct _Arg Arg;
 typedef struct _Misc Misc;
@@ -97,6 +92,10 @@ typedef struct _WebSettings WebSettings;
 typedef struct _Settings Settings;
 typedef union _Type Type;
 /*}}}*/
+typedef gboolean (*Command_f)(void*);
+typedef gboolean (*Func)(void*);
+typedef void (*S_Func)(void *, WebSettings *);
+typedef void *(*Content_Func)(const gchar *);
 
 /* ENUMS {{{*/
 enum _Mode {
@@ -113,6 +112,10 @@ enum _Mode {
   SearchKeywordMode   = 1<<11,
   SettingsMode        = 1<<12,
   KeyMode             = 1<<13,
+  DownloadGetPath     = 1<<14,
+};
+enum _Edit {
+  DeleteWord,
 };
 
 enum _ShowMessage {
@@ -157,6 +160,15 @@ enum _SettingsScope {
 };
 /*}}}*/
 
+typedef enum _Mode Mode;
+typedef enum _Open Open;
+typedef enum _Layout Layout;
+typedef enum _Direction Direction;
+typedef enum _DwbType DwbType;
+typedef enum _SettingsScope SettingsScope;
+typedef enum _ShowMessage ShowMessage;
+typedef enum _Edit Edit;
+
 /* STRUCTS {{{*/
 struct _Navigation {
   gchar *first;
@@ -180,10 +192,11 @@ struct _KeyValue {
 };
 struct _FunctionMap {
   Navigation n;
-  gboolean (*func)(void*);
+  Func func;
   const gchar *error; 
   ShowMessage hide;
   Arg arg;
+  gboolean entry;
 };
 struct _KeyMap {
   const gchar *key;
@@ -200,6 +213,8 @@ struct _Completions {
   GList *auto_c;
   GList *active_auto_c;
   gboolean autocompletion;
+  GList *path_completion;
+  GList *active_path;
 };
 
 struct _State {
@@ -218,10 +233,14 @@ struct _State {
   SoupCookieJar *cookiejar;
   SoupCookie *last_cookie;
   Layout layout;
+  GList *last_com_history;
+
+  gchar *input_id;
 
   gchar *search_engine;
   gchar *form_name;
 
+  WebKitDownload *download;
 };
 
 union _Type {
@@ -237,7 +256,7 @@ struct _WebSettings {
   gboolean global;
   DwbType type;
   Arg arg;
-  void (*func)(void *, WebSettings *);
+  S_Func func;
   //gchar *desc;
 };
 struct _ViewStatus {
@@ -338,6 +357,7 @@ struct _Files {
   const gchar *settings;
   const gchar *cookies;
   const gchar *cookies_allow;
+  const gchar *download_path;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -409,6 +429,11 @@ void dwb_web_view_add_history_item(GList *);
 void dwb_grab_focus(GList *);
 void dwb_source_remove(GList *);
 void dwb_set_normal_style(GList *gl);
+gint dwb_entry_position_word_back(gint position);
+gint dwb_entry_position_word_forward(gint position);
+void dwb_entry_set_text(const gchar *text);
+
+gboolean dwb_eval_editing_key(GdkEventKey *e);
 
 void dwb_exit(void);
 

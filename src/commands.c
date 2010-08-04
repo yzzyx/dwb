@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
@@ -14,7 +15,7 @@ dwb_simple_command(KeyMap *km) {
   arg->e = NULL;
 
   if (dwb.state.mode & AutoComplete) {
-    dwb_clean_autocompletion();
+    dwb_comp_clean_autocompletion();
   }
 
   if (func(arg)) {
@@ -142,13 +143,6 @@ dwb_toggle_proxy(Arg *a) {
   return true;
 }/*}}}*/
 
-/* dwb_focus_entry() {{{*/
-void 
-dwb_focus_entry() {
-  gtk_widget_grab_focus(dwb.gui.entry);
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-  //gtk_widget_show(dwb.gui.entry);
-}/*}}}*/
 
 /*dwb_find {{{*/
 gboolean  
@@ -203,7 +197,7 @@ dwb_show_keys(Arg *arg) {
     Navigation n = m->map->n;
     g_string_append(buffer, HTML_DIV_START);
     g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.first);
-    g_string_append_printf(buffer, HTML_DIV_KEYS_VALUE, n.first, dwb_modmask_to_string(m->mod), m->key ? : "");
+    g_string_append_printf(buffer, HTML_DIV_KEYS_VALUE, n.first, dwb_modmask_to_string(m->mod), m->key ? m->key : "");
     g_string_append(buffer, HTML_DIV_END);
   }
   g_string_append(buffer, HTML_FORM_END);
@@ -463,9 +457,12 @@ dwb_open(Arg *arg) {
 /* dwb_get_search_engine_uri(const gchar *uri) {{{*/
 gchar *
 dwb_get_search_engine_uri(const gchar *uri, const gchar *text) {
-  gchar **token = g_strsplit(uri, HINT_SEARCH_SUBMIT, 2);
-  gchar *ret = g_strconcat(token[0], text, token[1], NULL);
-  g_strfreev(token);
+  gchar *ret = NULL;
+  if (uri) {
+    gchar **token = g_strsplit(uri, HINT_SEARCH_SUBMIT, 2);
+    ret = g_strconcat(token[0], text, token[1], NULL);
+    g_strfreev(token);
+  }
   return ret;
 }/* }}} */
 
@@ -755,6 +752,103 @@ dwb_paste(Arg *arg) {
   return false;
 }
 
+/* dwb_entry_delete_word {{{*/
+gboolean 
+dwb_entry_delete_word(Arg *a) {
+  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  gchar *text = g_strdup(GET_TEXT());
+
+  if (position > 0) {
+    gint new = dwb_entry_position_word_back(position);
+    dwb_cut_text(text, new,  position);
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
+    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), new);
+    g_free(text);
+  }
+  return true;
+}/*}}}*/
+
+/* dwb_entry_delete_word {{{*/
+gboolean 
+dwb_entry_delete_letter(Arg *a) {
+  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  gchar *text = g_strdup(GET_TEXT());
+
+  if (position > 0) {
+    dwb_cut_text(text, position-1,  position);
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
+    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), position-1);
+    g_free(text);
+  }
+  return true;
+}/*}}}*/
+
+/* dwb_entry_delete_line {{{*/
+gboolean 
+dwb_entry_delete_line(Arg *a) {
+  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+
+  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), &text[position]);
+  g_free(text);
+  return true;
+}/*}}}*/
+
+/* dwb_entry_word_forward {{{*/
+gboolean 
+dwb_entry_word_forward(Arg *a) {
+  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+
+  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), dwb_entry_position_word_forward(position));
+  return  true;
+}/*}}}*/
+
+/* dwb_entry_word_back {{{*/
+gboolean 
+dwb_entry_word_back(Arg *a) {
+  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+
+  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), dwb_entry_position_word_back(position));
+  return  true;
+}/*}}}*/
+
+/* dwb_entry_history_forward {{{*/
+gboolean 
+dwb_entry_history_forward(Arg *a) {
+  Navigation *n = NULL;
+  if ( dwb.state.last_com_history && dwb.state.last_com_history->next ) {
+      n = dwb.state.last_com_history->next->data;
+      dwb.state.last_com_history = dwb.state.last_com_history->next;
+  }
+  if (n) {
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), n->first);
+    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
+  }
+  return  true;
+}/*}}}*/
+
+/* dwb_entry_history_back {{{*/
+gboolean 
+dwb_entry_history_back(Arg *a) {
+  Navigation *n = NULL;
+  if (! dwb.state.last_com_history  ) {
+    if ( (dwb.state.last_com_history = g_list_last(dwb.fc.commands)) ) {
+      n = dwb.state.last_com_history->data;
+      gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+      dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
+      g_free(text);
+    }
+  }
+  else if ( dwb.state.last_com_history && dwb.state.last_com_history->prev ) {
+    n = dwb.state.last_com_history->prev->data;
+    dwb.state.last_com_history = dwb.state.last_com_history->prev;
+  }
+  if (n) {
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), n->first);
+    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
+  }
+  return  true;
+}/*}}}*/
 
 /*}}}*/
 

@@ -7,6 +7,7 @@
 #include "view.h"
 #include "completion.h"
 #include "util.h"
+#include "download.h"
 
 /* WEB_VIEW_CALL_BACKS {{{*/
 
@@ -76,6 +77,7 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
 gboolean 
 dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
   // TODO implement
+  dwb_init_download(gl, download);
   return false;
 }/*}}}*/
 
@@ -188,7 +190,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
       dwb_prepend_navigation(gl, &dwb.fc.history);
-      dwb_normal_mode(false);
+      //dwb_normal_mode(false);
       break;
     case WEBKIT_LOAD_FAILED: 
       break;
@@ -206,7 +208,8 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 /* dwb_entry_keyrelease_cb {{{*/
 gboolean 
 dwb_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
-  if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
+  Mode mode = dwb.state.mode;
+  if (mode == HintMode || mode == SearchFieldMode) {
     if (DIGIT(e) || e->keyval == GDK_Tab) {
       return true;
     }
@@ -220,7 +223,8 @@ dwb_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
 /* dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {{{*/
 gboolean 
 dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
-  if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
+  Mode mode = dwb.state.mode;
+  if (mode == HintMode || mode == SearchFieldMode) {
     if (e->keyval == GDK_BackSpace) {
       return false;
     }
@@ -231,13 +235,25 @@ dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       return true;
     }
   }
-  else if (dwb.state.mode & CompletionMode && e->keyval != GDK_Tab && !e->is_modifier) {
-    dwb_clean_completion();
+  else if (mode == DownloadGetPath) {
+    if (e->keyval == GDK_Tab) {
+      dwb_complete_download(e->state & GDK_SHIFT_MASK);
+      return true;
+    }
+    else {
+      dwb_clean_path_completion();
+    }
+  }
+  else if (mode & CompletionMode && e->keyval != GDK_Tab && !e->is_modifier) {
+    dwb_comp_clean_completion();
     return false;
   }
   else if (e->keyval == GDK_Tab) {
-    dwb_complete(e->state & GDK_CONTROL_MASK);
-    //dwb_settings_completion(e->state & GDK_CONTROL_MASK);
+    dwb_complete(e->state & GDK_SHIFT_MASK);
+    return true;
+  }
+
+  if (dwb_eval_editing_key(e)) {
     return true;
   }
   return false;
@@ -273,7 +289,7 @@ dwb_entry_activate_cb(GtkEntry* entry) {
   }
   g_free(text);
 
-  return false;
+  return true;
 }/*}}}*/
 
 

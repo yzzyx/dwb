@@ -33,5 +33,12 @@ gboolean dwb_add_search_field(Arg *);
 gboolean dwb_toggle_custom_encoding(Arg *);
 gboolean dwb_yank(Arg *);
 gboolean dwb_paste(Arg *);
-gchar * dwb_get_search_engine(const gchar *uri);
+gchar * dwb_get_search_engine(const gchar *);
+gboolean dwb_entry_delete_word(Arg *);
+gboolean dwb_entry_delete_letter(Arg *);
+gboolean dwb_entry_delete_line(Arg *);
+gboolean dwb_entry_word_forward(Arg *);
+gboolean dwb_entry_word_back(Arg *);
+gboolean dwb_entry_history_forward(Arg *);
+gboolean dwb_entry_history_back(Arg *);
 #endif

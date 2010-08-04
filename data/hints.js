@@ -8,6 +8,7 @@ var lastpos = 0;
 var lastinput;
 var styles;
 var form_hints = "//form";
+var last_entry = null;
 
 function Hint(element) {
   this.element = element;
@@ -247,6 +248,7 @@ function update_hints(input) {
     lastpos = array[0].betterMatch(input);
     set_active(array[lastpos]);
   }
+  last_entry = null;
 }
 function set_active(element) {
   var active = document.querySelector('*[dwb_highlight=hint_active]');
@@ -389,4 +391,22 @@ function focus_input() {
     }
   }
   active_input.focus();
+}
+function input_get_name() {
+  //create_stylesheet();
+  var e = document.activeElement;
+  if (e.tagName.toLowerCase() == "input") {
+    last_entry = e;
+
+    e.focus();
+    if (last_entry) {
+      return document.activeElement.type;
+    }
+  }
+}
+function input_set_text(text) {
+  if (last_entry) {
+    last_entry.value = text;
+    last_entry = null;
+  }
 }
