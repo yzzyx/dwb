@@ -77,7 +77,7 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
 gboolean 
 dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
   // TODO implement
-  dwb_init_download(gl, download);
+  dwb_dl_init_download(gl, download);
   return false;
 }/*}}}*/
 
@@ -237,11 +237,11 @@ dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   }
   else if (mode == DownloadGetPath) {
     if (e->keyval == GDK_Tab) {
-      dwb_complete_download(e->state & GDK_SHIFT_MASK);
+      dwb_comp_complete_download(e->state & GDK_SHIFT_MASK);
       return true;
     }
     else {
-      dwb_clean_path_completion();
+      dwb_comp_clean_path_completion();
     }
   }
   else if (mode & CompletionMode && e->keyval != GDK_Tab && !e->is_modifier) {
@@ -249,7 +249,7 @@ dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     return false;
   }
   else if (e->keyval == GDK_Tab) {
-    dwb_complete(e->state & GDK_SHIFT_MASK);
+    dwb_comp_complete(e->state & GDK_SHIFT_MASK);
     return true;
   }
 

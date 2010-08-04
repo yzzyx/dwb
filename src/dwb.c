@@ -275,7 +275,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  ColorChar, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
   { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
   { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_reload_scripts, },
-  { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },         (S_Func) dwb_set_autcompletion, },
+  { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func) dwb_comp_set_autcompletion, },
     
   { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 1280          }, NULL, },
   { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 1024          }, NULL, },
@@ -323,16 +323,16 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = false;
   }
   else if (e->keyval == GDK_Tab) {
-    dwb_autocomplete(dwb.keymap, e);
+    dwb_comp_autocomplete(dwb.keymap, e);
     ret = true;
   }
   else {
     if (dwb.state.mode & AutoComplete) {
       if (e->keyval == GDK_Tab) {
-        dwb_autocomplete(NULL, e);
+        dwb_comp_autocomplete(NULL, e);
       }
       else if (e->keyval == GDK_Return) {
-        dwb_eval_autocompletion();
+        dwb_comp_eval_autocompletion();
       }
       ret = true;
     }
@@ -1141,7 +1141,7 @@ dwb_eval_key(GdkEventKey *e) {
     dwb_comp_clean_autocompletion();
   }
   if (coms && g_list_length(coms) > 0) {
-    dwb_autocomplete(coms, NULL);
+    dwb_comp_autocomplete(coms, NULL);
   }
   if (tmp) {
     dwb_simple_command(tmp);
@@ -1175,7 +1175,7 @@ dwb_normal_mode(gboolean clean) {
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   }
   else if (mode == DownloadGetPath) {
-    dwb_clean_path_completion();
+    dwb_comp_clean_path_completion();
   }
   if (mode & CompletionMode) {
     dwb_comp_clean_completion();

@@ -6,7 +6,7 @@
 #include "commands.h"
 #include "util.h"
 /* COMPLETION {{{*/
-GList * dwb_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back);
+GList * dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back);
 
 
 /* dwb_clean_completion() {{{*/
@@ -79,9 +79,9 @@ dwb_completion_set_entry_text(Completion *c) {
 
 }/*}}}*/
 
-/*dwb_eval_autocompletion{{{*/
+/*dwb_comp_eval_autocompletion{{{*/
 void 
-dwb_eval_autocompletion() {
+dwb_comp_eval_autocompletion() {
   Completion *c = dwb.comps.active_auto_c->data;
   KeyMap *m = c->data;
   dwb_normal_mode(true);
@@ -90,7 +90,7 @@ dwb_eval_autocompletion() {
 
 /* dwb_set_autcompletion{{{*/
 void 
-dwb_set_autcompletion(GList *l, WebSettings *s) {
+dwb_comp_set_autcompletion(GList *l, WebSettings *s) {
   dwb.comps.autocompletion = s->arg.b;
 }/*}}}*/
 
@@ -112,9 +112,9 @@ dwb_comp_clean_autocompletion() {
 
 }/*}}}*/
 
-/* dwb_init_autocompletion (GList *gl)      return: GList * (Completion*){{{*/
+/* dwb_comp_init_autocompletion (GList *gl)      return: GList * (Completion*){{{*/
 GList * 
-dwb_init_autocompletion(GList *gl) {
+dwb_comp_init_autocompletion(GList *gl) {
   View *v =  CURRENT_VIEW();
   GList *ret = NULL;
 
@@ -142,7 +142,7 @@ dwb_init_autocompletion(GList *gl) {
 
 /* dwb_autocomplete GList *gl(KeyMap*)  GdkEventKey *{{{*/
 void
-dwb_autocomplete(GList *gl, GdkEventKey *e) {
+dwb_comp_autocomplete(GList *gl, GdkEventKey *e) {
   if (!dwb.comps.autocompletion) {
     return;
   }
@@ -150,18 +150,18 @@ dwb_autocomplete(GList *gl, GdkEventKey *e) {
 
   if (! (dwb.state.mode & AutoComplete) && gl) {
     dwb.state.mode |= AutoComplete;
-    dwb.comps.auto_c = dwb_init_autocompletion(gl);
+    dwb.comps.auto_c = dwb_comp_init_autocompletion(gl);
     dwb.comps.active_auto_c = g_list_first(dwb.comps.auto_c);
     dwb_modify_completion_item(dwb.comps.active_auto_c->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
   }
   else if (e) {
-    dwb.comps.active_auto_c = dwb_update_completion(v->autocompletion, dwb.comps.auto_c, dwb.comps.active_auto_c, 5, e->state & GDK_SHIFT_MASK);
+    dwb.comps.active_auto_c = dwb_comp_update_completion(v->autocompletion, dwb.comps.auto_c, dwb.comps.active_auto_c, 5, e->state & GDK_SHIFT_MASK);
   }
 }/*}}}*/
 
-/* dwb_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back)    Return *GList (Completions*){{{*/
+/* dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back)    Return *GList (Completions*){{{*/
 GList *
-dwb_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back) {
+dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back) {
   GList *old, *new;
   Completion *c;
 
@@ -223,7 +223,7 @@ dwb_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gin
 }/*}}}*/
 
 void 
-dwb_show_completion(gint back) {
+dwb_comp_show_completion(gint back) {
   int i=0;
   if (back) {
     dwb.comps.active_comp = g_list_last(dwb.comps.completions);
@@ -245,7 +245,7 @@ dwb_show_completion(gint back) {
 
 /* dwb_completion_get_normal      return: GList *Completions{{{*/
 GList *
-dwb_completion_get_normal() {
+dwb_comp_get_normal_completion() {
   GList *list = NULL;
   list = dwb_init_completion(list, dwb.fc.history);
   list = dwb_init_completion(list, dwb.fc.bookmarks);
@@ -255,7 +255,7 @@ dwb_completion_get_normal() {
 
 /* dwb_completion_get_settings      return: GList *Completions{{{*/
 GList *
-dwb_completion_get_settings() {
+dwb_comp_get_settings_completion() {
   GList *l = g_hash_table_get_values(dwb.settings);
   l = g_list_sort(l, (GCompareFunc)dwb_web_settings_sort_first);
   GList *data = NULL;
@@ -274,7 +274,7 @@ dwb_completion_get_settings() {
 
 /*dwb_completion_get_keys()         return  GList *Completions{{{*/
 GList * 
-dwb_completion_get_keys() {
+dwb_comp_get_key_completion() {
   GList *data = NULL;
   GList *list = NULL;
   for (GList *l = dwb.keymap; l; l=l->next) {
@@ -286,34 +286,34 @@ dwb_completion_get_keys() {
   return list;
 }/*}}}*/
 
-/* dwb_complete {{{*/
+/* dwb_comp_complete {{{*/
 void 
-dwb_complete(gint back) {
+dwb_comp_complete(gint back) {
   View *v = CURRENT_VIEW();
   if ( !(dwb.state.mode & CompletionMode) ) {
     v->compbox = gtk_vbox_new(true, 0);
     gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
     switch (dwb.state.mode) {
-      case OpenMode:      dwb.comps.completions = dwb_completion_get_normal(); break;
-      case SettingsMode:  dwb.comps.completions = dwb_completion_get_settings(); break;
-      case KeyMode:       dwb.comps.completions = dwb_completion_get_keys(); break;
+      case OpenMode:      dwb.comps.completions = dwb_comp_get_normal_completion(); break;
+      case SettingsMode:  dwb.comps.completions = dwb_comp_get_settings_completion(); break;
+      case KeyMode:       dwb.comps.completions = dwb_comp_get_key_completion(); break;
       default: break;
     }
     if (!dwb.comps.completions) {
       return;
     }
-    dwb_show_completion(back);
+    dwb_comp_show_completion(back);
     dwb.state.mode |= CompletionMode;
   }
   else if (dwb.comps.completions && dwb.comps.active_comp) {
-    dwb.comps.active_comp = dwb_update_completion(v->compbox, dwb.comps.completions, dwb.comps.active_comp, dwb.misc.max_c_items, back);
+    dwb.comps.active_comp = dwb_comp_update_completion(v->compbox, dwb.comps.completions, dwb.comps.active_comp, dwb.misc.max_c_items, back);
   }
 }/*}}}*/
 
 // Pathcompletion 
 
 void 
-dwb_clean_path_completion() {
+dwb_comp_clean_path_completion() {
   if (dwb.comps.path_completion) {
     for (GList *l = dwb.comps.path_completion; l; l=l->next) {
       g_free(l->data);
@@ -323,18 +323,16 @@ dwb_clean_path_completion() {
   }
 
 }
-GList *
-dwb_get_paths(gchar *path, gchar *last, gboolean fullpath) {
-  GList *list = g_list_prepend(NULL, path);
-
-  return list;
-}
 
 void
-dwb_init_path_completion() { 
+dwb_comp_init_path_completion() { 
   gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
   gchar *path = "/";
   gchar *last = "";
+
+  if (text[0] != '/') {
+    return;
+  }
   dwb.comps.path_completion = g_list_prepend(NULL, g_strdup(text));
 
   if (text && strlen(text)) {
@@ -365,16 +363,12 @@ dwb_init_path_completion() {
   if (dwb.comps.path_completion) {
     dwb.comps.active_path = dwb.comps.path_completion->next;
   }
-  if (strlen(last)) {
-    g_free(last);
-  }
-  g_free(text);
 }
 
 void
-dwb_complete_download(gint back) {
+dwb_comp_complete_download(gint back) {
   if (! dwb.comps.path_completion ) {
-    dwb_init_path_completion();
+    dwb_comp_init_path_completion();
   }
   else if (back) {
     
