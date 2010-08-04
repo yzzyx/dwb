@@ -17,6 +17,7 @@
 #include "commands.h"
 #include "view.h"
 #include "util.h"
+#include "download.h"
 #include "config.h"
 #define NAME "dwb";
 
@@ -60,7 +61,6 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 
 void dwb_clean_buffer(GList *);
 
-void dwb_set_download_path(GList *, WebSettings *);
 void dwb_reload_scripts(GList *,  WebSettings *);
 void dwb_reload_colors(GList *,  WebSettings *);
 void dwb_reload_layout(GList *,  WebSettings *);
@@ -180,6 +180,7 @@ static FunctionMap FMAP [] = {
   { { "entry_word_back",        "Move cursor back on word", },          (Func)dwb_entry_word_back,              NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_back",     "Command history back", },              (Func)dwb_entry_history_back,           NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_forward",  "Command history forward", },           (Func)dwb_entry_history_forward,        NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "download_set_execute",  "Complete binaries", },             (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
 
   //{ "create_hints",          (void*)dwb_create_hints,       "Hints",                          NULL,                       true,                                             },
 
@@ -246,6 +247,9 @@ static WebSettings DWB_SETTINGS[] = {
   { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
   { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
 
+  //{ { "downloadbar-fg-color",                   "UI: Downloadbar foreground", },                              false, true,  ColorChar, { .p = "#cccccc"         },    NULL, },
+  //{ { "downloadbar-bg-color",                   "UI: Downloadbar background", },                              false, true,  ColorChar, { .p = "#505050"         },    NULL, },
+
   { { "active-comp-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#1793d1"         }, (S_Func) dwb_reload_colors, },
   { { "active-comp-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_reload_colors, },
   { { "normal-comp-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_reload_colors, },
@@ -284,7 +288,6 @@ static WebSettings DWB_SETTINGS[] = {
   { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  Integer, { .i = 30          }, NULL, },
   { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, NULL, },
   { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  NULL, },
-  { { "download-path",                           "Default download path", },                                   false, true,  Char, { .p = "/tmp" },  (S_Func)dwb_set_download_path, },
 };/*}}}*/
 
 
@@ -457,6 +460,11 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 
 /* FUNCTIONS {{{*/
 
+void
+dwb_get_command_from_mimetype(gchar *mimetype) {
+  
+}
+
 void 
 dwb_entry_set_text(const gchar *text) {
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
@@ -559,6 +567,7 @@ dwb_parse_setting(const gchar *text) {
 
 }/*}}}*/
 
+/* dwb_parse_key_setting(const gchar  *text) {{{*/
 void
 dwb_parse_key_setting(const gchar *text) {
   KeyValue value;
@@ -575,12 +584,6 @@ dwb_parse_key_setting(const gchar *text) {
   g_strfreev(token);
   g_strfreev(keys);
   dwb_normal_mode(true);
-}
-
-/* dwb_set_download_path {{{*/
-void 
-dwb_set_download_path(GList *gl, WebSettings *s) {
-  dwb.files.download_path = s->arg.p;
 }/*}}}*/
 
 /* dwb_reload_colors(GList *,  WebSettings  *s) {{{*/
@@ -1304,6 +1307,7 @@ dwb_save_files() {
   dwb_save_navigation_fc(dwb.fc.bookmarks, dwb.files.bookmarks, -1);
   dwb_save_navigation_fc(dwb.fc.history, dwb.files.history, dwb.misc.history_length);
   dwb_save_navigation_fc(dwb.fc.searchengines, dwb.files.searchengines, -1);
+  dwb_save_navigation_fc(dwb.fc.mimetypes, dwb.files.mimetypes, -1);
 
 
   // quickmarks
@@ -1671,6 +1675,10 @@ dwb_init_style() {
   gdk_color_parse(GET_CHAR("insert-fg-color"), &dwb.color.insert_fg);
   gdk_color_parse(GET_CHAR("insert-bg-color"), &dwb.color.insert_bg);
 
+  //Downloads
+  gdk_color_parse("#ffffff", &dwb.color.download_fg);
+  gdk_color_parse("#000000", &dwb.color.download_bg);
+
   gdk_color_parse(GET_CHAR("active-comp-bg-color"), &dwb.color.active_c_bg);
   gdk_color_parse(GET_CHAR("active-comp-fg-color"), &dwb.color.active_c_fg);
   gdk_color_parse(GET_CHAR("normal-comp-bg-color"), &dwb.color.normal_c_bg);
@@ -1721,6 +1729,7 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_exit), NULL);
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
+  gtk_widget_modify_bg(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.normal_bg);
 
   // Main
   dwb.gui.vbox = gtk_vbox_new(false, 1);
@@ -1735,11 +1744,15 @@ dwb_init_gui() {
   gtk_widget_modify_bg(dwb.gui.paned, GTK_STATE_NORMAL, &dwb.color.normal_bg);
   gtk_widget_modify_bg(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
   gtk_container_add(GTK_CONTAINER(paned_event), dwb.gui.paned);
+  //
+  // Downloadbar 
+  dwb.gui.downloadbar = gtk_hbox_new(false, 3);
 
   // Pack
   gtk_paned_pack1(GTK_PANED(dwb.gui.paned), dwb.gui.left, true, true);
   gtk_paned_pack2(GTK_PANED(dwb.gui.paned), dwb.gui.right, true, true);
 
+  gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.downloadbar, false, false, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), paned_event, true, true, 0);
   //gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.entry, false, false, 0);
@@ -1753,6 +1766,7 @@ dwb_init_gui() {
   gtk_widget_show(dwb.gui.paned);
   gtk_widget_show(paned_event);
   gtk_widget_show_all(dwb.gui.topbox);
+  //gtk_widget_show(dwb.gui.downloadbar);
 
   gtk_widget_show(dwb.gui.vbox);
   gtk_widget_show(dwb.gui.window);
@@ -1792,6 +1806,7 @@ dwb_init_files() {
   dwb.files.keys          = g_strconcat(path, "keys",          NULL);
   dwb.files.scriptdir     = g_strconcat(path, "/scripts",      NULL);
   dwb.files.settings      = g_strconcat(path, "settings",      NULL);
+  dwb.files.mimetypes     = g_strconcat(path, "mimetypes",      NULL);
   dwb.files.cookies       = g_strconcat(profile_path, "/cookies",       NULL);
   dwb.files.cookies_allow = g_strconcat(profile_path, "/cookies.allow", NULL);
 
@@ -1800,6 +1815,8 @@ dwb_init_files() {
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (Content_Func)dwb_quickmark_new_from_line); 
   dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (Content_Func)dwb_navigation_new_from_line); 
+  dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
+
   if (g_list_last(dwb.fc.searchengines)) {
     dwb.misc.default_search = ((Navigation*)g_list_last(dwb.fc.searchengines)->data)->second;
   }
@@ -1856,6 +1873,7 @@ void dwb_init() {
   dwb.state.last_cookie = NULL;
   dwb.comps.completions = NULL; 
   dwb.comps.active_comp = NULL;
+  //dwb.misc.download_com = NULL;
   dwb.misc.max_c_items = MAX_COMPLETIONS;
 
 
@@ -1877,12 +1895,6 @@ void dwb_init() {
 
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
-
-  if ( ! (dwb.files.download_path = GET_CHAR("download-path")) ) {
-    const gchar *path = g_getenv("HOME");
-    WebSettings *s = g_hash_table_lookup(dwb.settings, "download-path");
-    s->arg.p = (gchar*)path;
-  }
 
 
   dwb.comps.autocompletion = GET_BOOL("auto-completion");

@@ -158,6 +158,11 @@ enum _SettingsScope {
   Global,
   PerView,
 };
+enum _DownloadAction  {
+  Download,
+  Execute,
+};
+typedef enum _DownloadAction DownloadAction;
 /*}}}*/
 
 typedef enum _Mode Mode;
@@ -239,8 +244,9 @@ struct _State {
 
   gchar *search_engine;
   gchar *form_name;
-
   WebKitDownload *download;
+  DownloadAction dl_action;
+  gchar *mimetype_request;
 };
 
 union _Type {
@@ -264,6 +270,7 @@ struct _ViewStatus {
   gchar *hover_uri;
   gboolean add_history;
   gchar *search_string;
+  GList *downloads;
 };
 
 struct _View {
@@ -299,6 +306,8 @@ struct _Color {
   GdkColor active_c_bg;
   GdkColor normal_c_fg;
   GdkColor normal_c_bg;
+  GdkColor download_fg;
+  GdkColor download_bg;
   gchar *settings_bg_color;
   gchar *settings_fg_color;
 };
@@ -322,6 +331,7 @@ struct _Gui {
   GtkWidget *right;
   GtkWidget *left;
   GtkWidget *entry;
+  GtkWidget *downloadbar;
   gint width;
   gint height;
 };
@@ -343,11 +353,13 @@ struct _Misc {
   gchar **argv;
   gchar *fifo;
   gboolean single;
+
+  gchar *download_com;
 };
 struct _Files {
   const gchar *bookmarks;
   const gchar *history;
-  const gchar *mimetype;
+  const gchar *mimetypes;
   const gchar *quickmarks;
   const gchar *session;
   const gchar *searchengines;
@@ -362,13 +374,13 @@ struct _Files {
 struct _FileContent {
   GList *bookmarks;
   GList *history;
-  GList *mimetype;
   GList *quickmarks;
   GList *searchengines;
   GList *keys;
   GList *settings;
   GList *cookies_allow;
   GList *commands;
+  GList *mimetypes;
 };
 
 struct _Dwb {

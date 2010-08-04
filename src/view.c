@@ -77,8 +77,8 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
 gboolean 
 dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
   // TODO implement
-  dwb_dl_init_download(gl, download);
-  return false;
+  dwb_dl_get_path(gl, download);
+  return true;
 }/*}}}*/
 
 /* dwb_web_view_hovering_over_link_cb(WebKitWebView *, gchar *title, gchar *uri, GList *) {{{*/
@@ -104,6 +104,7 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
   }
   else {
     webkit_web_policy_decision_download(policy);
+    dwb.state.mimetype_request = g_strdup(mimetype);
     return true;
   }
 }/*}}}*/
@@ -237,7 +238,7 @@ dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   }
   else if (mode == DownloadGetPath) {
     if (e->keyval == GDK_Tab) {
-      dwb_comp_complete_download(e->state & GDK_SHIFT_MASK);
+      dwb_comp_complete_download(e->state & GDK_CONTROL_MASK);
       return true;
     }
     else {
@@ -264,22 +265,26 @@ gboolean
 dwb_entry_activate_cb(GtkEntry* entry) {
   gchar *text = g_strdup(gtk_entry_get_text(entry));
   gboolean ret = false;
+  Mode mode = dwb.state.mode;
 
-  if (dwb.state.mode == HintMode) {
+  if (mode == HintMode) {
     ret = false;
   }
-  else if (dwb.state.mode == FindMode) {
+  else if (mode == FindMode) {
     gtk_widget_grab_focus(CURRENT_VIEW()->scroll);
     dwb_search(NULL);
   }
-  else if (dwb.state.mode == SearchKeywordMode) {
+  else if (mode == SearchKeywordMode) {
     dwb_save_searchengine();
   }
-  else if (dwb.state.mode == SettingsMode) {
+  else if (mode == SettingsMode) {
     dwb_parse_setting(GET_TEXT());
   }
-  else if (dwb.state.mode == KeyMode) {
+  else if (mode == KeyMode) {
     dwb_parse_key_setting(GET_TEXT());
+  }
+  else if (mode == DownloadGetPath) {
+    dwb_dl_start();
   }
   else {
     Arg a = { .n = 0, .p = text };
@@ -373,9 +378,13 @@ dwb_web_view_init_signals(GList *gl) {
 GList * 
 dwb_create_web_view(GList *gl) {
   View *v = g_malloc(sizeof(View));
+
   ViewStatus *status = g_malloc(sizeof(ViewStatus));
   status->search_string = NULL;
+  status->downloads = NULL;
   v->status = status;
+
+
   v->vbox = gtk_vbox_new(false, 0);
   v->web = webkit_web_view_new();
 
@@ -395,18 +404,20 @@ dwb_create_web_view(GList *gl) {
   v->statusbox = gtk_event_box_new();
   v->lstatus = gtk_label_new(NULL);
   v->rstatus = gtk_label_new(NULL);
+
   gtk_misc_set_alignment(GTK_MISC(v->lstatus), 0.0, 0.5);
   gtk_misc_set_alignment(GTK_MISC(v->rstatus), 1.0, 0.5);
+  gtk_label_set_use_markup(GTK_LABEL(v->lstatus), true);
+  gtk_label_set_use_markup(GTK_LABEL(v->rstatus), true);
+  gtk_label_set_ellipsize(GTK_LABEL(v->rstatus), PANGO_ELLIPSIZE_MIDDLE);
+
   status_hbox = gtk_hbox_new(false, 5);
-
-
-  gtk_box_pack_end(GTK_BOX(v->bottombox), v->statusbox, false, false, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->lstatus, false, false, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->entry, true, true, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->rstatus, true, true, 0);
+  gtk_container_add(GTK_CONTAINER(v->statusbox), status_hbox);
 
-  gtk_label_set_use_markup(GTK_LABEL(v->lstatus), true);
-  gtk_label_set_use_markup(GTK_LABEL(v->rstatus), true);
+  gtk_box_pack_end(GTK_BOX(v->bottombox), v->statusbox, false, false, 0);
 
   // Srolling
   v->scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -414,23 +425,28 @@ dwb_create_web_view(GList *gl) {
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(v->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
-  gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
 
 
   // Tabbar
   v->tabevent = gtk_event_box_new();
   v->tablabel = gtk_label_new(NULL);
+
   gtk_label_set_use_markup(GTK_LABEL(v->tablabel), true);
   gtk_label_set_width_chars(GTK_LABEL(v->tablabel), 1);
   gtk_misc_set_alignment(GTK_MISC(v->tablabel), 0.0, 0.5);
+  gtk_label_set_ellipsize(GTK_LABEL(v->tablabel), PANGO_ELLIPSIZE_END);
+
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel);
   gtk_widget_modify_font(v->tablabel, dwb.font.fd_normal);
 
   gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
+
+  gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
   gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);
-  gtk_container_add(GTK_CONTAINER(v->statusbox), status_hbox);
 
   gtk_box_pack_start(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0);
+  
+  // Show
   gtk_widget_show(v->vbox);
   gtk_widget_show(v->lstatus);
   gtk_widget_show(v->entry);

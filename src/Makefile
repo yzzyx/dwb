@@ -4,9 +4,9 @@ include ../config.mk
 	@echo "${CC} $<"
 	@$(CC) $(FLAGS) $(DEBUG) -c -o $@ $<
 
-all: $(TARGET) $(HDR)
+all: $(TARGET) 
 
-$(TARGET): $(OBJ)
+$(TARGET): $(OBJ) $(HDR)
 	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
 
 debug: 
