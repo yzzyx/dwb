@@ -1191,18 +1191,13 @@ dwb_normal_mode(gboolean clean) {
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   gtk_widget_grab_focus(v->scroll);
 
-  //gtk_widget_hide(dwb.gui.entry);
 
   if (clean) {
-    //CLEAR_COMMAND_TEXT(dwb.state.fview);
     dwb_clean_buffer(dwb.state.fview);
   }
 
   webkit_web_view_unmark_text_matches(CURRENT_WEBVIEW());
 
-  //if (dwb.state.buffer) {
-  //  g_string_free(dwb.state.buffer, true);
-  //}
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   dwb_clean_vars();
 }/*}}}*/
@@ -1268,6 +1263,7 @@ dwb_clean_vars() {
   dwb.state.nv = 0;
   dwb.state.scriptlock = 0;
   dwb.state.last_com_history = NULL;
+  dwb.state.dl_action = Download;
 }/*}}}*/
 
 /* dwb_clean_up() {{{*/

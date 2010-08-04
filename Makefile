@@ -33,6 +33,7 @@ uninstall-data:
 	@$(RM) -r $(DESTDIR)$(DATADIR)/$(NAME)
 
 distclean: clean
+	@echo "Creating tarball."
 
 dist: distclean
 	@mkdir -p $(DISTDIR)
@@ -42,7 +43,7 @@ dist: distclean
 	@mkdir -p $(DISTDIR)/$(SHAREDIR)
 	@cp -r $ $(SHAREDIR)/hints.js $(DISTDIR)/$(SHAREDIR)
 	@mkdir -p $(DISTDIR)/$(SRCDIR)
-	@cp -r $ $(SOURCE) $(HDR) $(SRCDIR)/Makefile $(DISTDIR)/$(SRCDIR)
+	@cp -r $ $(SOURCE) $(HDR) $(SRCDIR)/Makefile $(SRCDIR)/config.h $(DISTDIR)/$(SRCDIR)
 	@tar cfz $(DISTDIR).tar.gz $(DISTDIR)
 	@rm -rf  $(DISTDIR)
 

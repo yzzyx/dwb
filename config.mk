@@ -24,8 +24,6 @@ HDR = $(SOURCE:%.c=%.h)
 TARGET = $(NAME)
 DTARGET=$(TARGET)-debug
 
-
-
 MANFILE=$(NAME).1
 
 MAKE=make --no-print-directory
