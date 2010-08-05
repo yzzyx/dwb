@@ -61,6 +61,8 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 
 void dwb_clean_buffer(GList *);
 
+gboolean dwb_command_mode(Arg *arg);
+void dwb_set_vars(GList *,  WebSettings *);
 void dwb_reload_scripts(GList *,  WebSettings *);
 void dwb_reload_colors(GList *,  WebSettings *);
 void dwb_reload_layout(GList *,  WebSettings *);
@@ -95,6 +97,7 @@ void dwb_init_settings(void);
 void dwb_init_style(void);
 void dwb_init_scripts(void);
 void dwb_init_gui(void);
+void dwb_init_vars(void);
 
 void dwb_clean_vars(void);
 /*}}}*/
@@ -113,8 +116,10 @@ static FunctionMap FMAP [] = {
   { { "autoload_images",       "Setting: autoload images",          },  (Func)dwb_toggle_property,    NULL,                              PostSM,    { .p = "auto-load-images" } },
   { { "autoresize_window",     "Setting: autoresize window",        },  (Func)dwb_toggle_property,    NULL,                              PostSM,    { .p = "auto-resize-window" } },
   { { "bookmark",              "Bookmark current page",             },  (Func)dwb_bookmark,           NO_URL,                            PostSM, },
+  { { "command_mode",          "Enter command mode",                },  (Func)dwb_command_mode,       NULL,                              PostSM, },
   { { "caret_browsing",        "Setting: caret browsing",           },  (Func)dwb_toggle_property,    NULL,                              PostSM,    { .p = "enable-caret-browsing" } },
   { { "decrease_master",       "Decrease master area",              },  (Func)dwb_resize_master,      "Cannot decrease further",         AlwaysSM,    { .n = 5 } },
+  { { "download_hint",         "Download via hints",                },  (Func)dwb_show_hints,         NO_HINTS,                          NeverSM,    { .n = OpenDownload }, },
   { { "find_backward",         "Find Backward ",                    },  (Func)dwb_find,               NO_URL,                            NeverSM,     { .b = false }, },
   { { "find_forward",          "Find Forward ",                     },  (Func)dwb_find,               NO_URL,                            NeverSM,     { .b = true }, },
   { { "find_next",             "Find next",                         },  (Func)dwb_search,             "No matches",                      AlwaysSM,     { .b = true }, },
@@ -227,6 +232,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "serif-font-family",			                 "Serif font family", },                                       true, false,  Char,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
   { { "spell-checking-languages",			           "Spell checking languages", },                                true, false,  Char,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
   { { "tab-key-cycles-through-elements",			   "Tab cycles through elements in insert mode", },              true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
+
   { { "user-agent",			                         "User agent", },                                              true, false,  Char,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
   { { "user-stylesheet-uri",			               "User stylesheet uri", },                                     true, false,  Char,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
   { { "zoom-step",			                         "Zoom Step", },                                               true, false,  Double,  { .d = 0.1               }, (S_Func) dwb_webkit_setting, },
@@ -234,7 +240,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "editable",                                "Content editable", },                                        false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
   { { "full-content-zoom",                       "Full content zoom", },                                       false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
   { { "zoom-level",                              "Zoom level", },                                              false, false, Double,  { .d = 1.0               }, (S_Func) dwb_webview_property, },
-  { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = true              }, (S_Func) dwb_set_websetting, },
+  { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = true              }, (S_Func) dwb_set_proxy, },
   { { "cookie",                                  "All Cookies allowed", },                                     false, true,  Boolean, { .b = false             }, (S_Func) dwb_set_websetting, },
 
   { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
@@ -246,9 +252,6 @@ static WebSettings DWB_SETTINGS[] = {
   { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
   { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
   { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
-
-  //{ { "downloadbar-fg-color",                   "UI: Downloadbar foreground", },                              false, true,  ColorChar, { .p = "#cccccc"         },    NULL, },
-  //{ { "downloadbar-bg-color",                   "UI: Downloadbar background", },                              false, true,  ColorChar, { .p = "#505050"         },    NULL, },
 
   { { "active-comp-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#1793d1"         }, (S_Func) dwb_reload_colors, },
   { { "active-comp-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_reload_colors, },
@@ -279,12 +282,20 @@ static WebSettings DWB_SETTINGS[] = {
   { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  ColorChar, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
   { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
   { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_reload_scripts, },
-  { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func) dwb_comp_set_autcompletion, },
+  { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
+  { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
+
+  // downloads
+  { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
+              { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     NULL, },
+  { { "download-use-external-program",           "Downloads: Use external download program", },                           false, true,  Boolean, { .b = false         },     NULL, },
+
+  { { "complete-history",                        "Complete browsing history", },                              false, true,  Boolean, { .b = true         },     NULL, },
     
-  { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 1280          }, NULL, },
-  { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 1024          }, NULL, },
-  { { "message-delay",                           "Message delay", },                                           false, true,  Integer, { .i = 2          }, NULL, },
-  { { "history-length",                          "History length", },                                          false, true,  Integer, { .i = 500          }, NULL, },
+  { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, NULL, },
+  { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, NULL, },
+  { { "message-delay",                           "Message delay", },                                           false, true,  Integer, { .i = 2          }, (S_Func) dwb_set_vars, },
+  { { "history-length",                          "History length", },                                          false, true,  Integer, { .i = 500          }, (S_Func) dwb_set_vars, },
   { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  Integer, { .i = 30          }, NULL, },
   { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, NULL, },
   { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  NULL, },
@@ -460,16 +471,47 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 
 /* FUNCTIONS {{{*/
 
-void
+/*  dwb_get_command_from_mimetype(gchar *mimetype){{{*/
+gchar *
 dwb_get_command_from_mimetype(gchar *mimetype) {
-  
-}
+  gchar *command = NULL;
+  for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
+    Navigation *n = l->data;
+    if (!strcmp(n->first, mimetype)) {
+      command = n->second;
+      break;
+    }
+  }
+  return command;
+}/*}}}*/
 
+/*dwb_set_vars {{{*/
+void 
+dwb_set_vars(GList *l, WebSettings *s) {
+  dwb_init_vars();
+}/*}}}*/
+
+/* dwb_set_proxy{{{*/
+void
+dwb_set_proxy(GList *l, WebSettings *s) {
+  SoupURI *uri = NULL;
+  gchar *message;
+
+  if (s->arg.b) { 
+    uri = dwb.misc.proxyuri;
+  }
+  g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
+  message = g_strdup_printf("Set setting proxy: %s", s->arg.b ? "true" : "false");
+  dwb_set_normal_message(dwb.state.fview, message, true);
+  g_free(message);
+}/*}}}*/
+
+/* dwb_entry_set_text(const gchar *) {{{*/
 void 
 dwb_entry_set_text(const gchar *text) {
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
-}
+}/*}}}*/
 
 /* dwb_focus_entry() {{{*/
 void 
@@ -479,8 +521,7 @@ dwb_focus_entry() {
   //dwb.state.last_com_history = NULL;
 }/*}}}*/
 
-/* {{{*/
-
+/* dwb_entry_position_word_back(gint position)      return position{{{*/
 gint 
 dwb_entry_position_word_back(gint position) {
   gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
@@ -501,6 +542,7 @@ dwb_entry_position_word_back(gint position) {
   return position;
 }/*}}}*/
 
+/* dwb_entry_history_forward(gint) {{{*/
 gint 
 dwb_entry_position_word_forward(gint position) {
   gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
@@ -512,7 +554,7 @@ dwb_entry_position_word_forward(gint position) {
     position++;
   }
   return position;
-}
+}/*}}}*/
 
 /* dwb_resize(gdouble size) {{{*/
 void
@@ -591,6 +633,7 @@ void
 dwb_reload_scripts(GList *gl, WebSettings *s) {
   g_free(dwb.misc.scripts);
   dwb_init_scripts();
+  dwb_reload(NULL);
 }/*}}}*/
 
 /* dwb_reload_colors(GList *,  WebSettings  *s) {{{*/
@@ -707,8 +750,6 @@ dwb_apply_settings(WebSettings *s) {
   }
   else {
     s->func(dwb.state.fview, s);
-    //WebSettings *new =  g_hash_table_lookup((((View*)dwb.state.fview->data)->setting), s->n.first);
-    //new->arg = s->arg;
   }
   dwb_normal_mode(false);
 
@@ -743,7 +784,7 @@ dwb_webkit_setting(GList *gl, WebSettings *s) {
     case Double:  g_object_set(settings, s->n.first, s->arg.d, NULL); break;
     case Integer: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
     case Boolean: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
-    case Char:    g_object_set(settings, s->n.first, (gchar*)s->arg.p, NULL); break;
+    case Char:    g_object_set(settings, s->n.first, !s->arg.p || !strcmp(s->arg.p, "null") ? NULL : (gchar*)s->arg.p  , NULL); break;
     default: return;
   }
 }/*}}}*/
@@ -824,7 +865,9 @@ dwb_update_hints(GdkEventKey *e) {
       Arg a = { .p = buffer };
       dwb_load_uri(&a);
       dwb.state.scriptlock = 1;
-      dwb_normal_mode(true);
+      if (dwb.state.nv != OpenDownload) {
+        dwb_normal_mode(true);
+      }
     }
   }
   g_free(buffer);
@@ -954,9 +997,9 @@ dwb_update_status(GList *gl) {
   View *v = gl->data;
   WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
   const gchar *title = webkit_web_view_get_title(w);
-  const gchar *uri = webkit_web_view_get_uri(w);
+  //const gchar *uri = webkit_web_view_get_uri(w);
 
-  gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title : uri);
+  gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title :  dwb.misc.name);
   dwb_tab_label_set_text(gl, title);
 
   dwb_update_status_text(gl);
@@ -990,19 +1033,20 @@ dwb_grab_focus(GList *gl) {
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(Arg *arg) {
-  gchar *uri = dwb_get_resolved_uri(arg->p);
+  if (arg && arg->p && strlen(arg->p)) {
+    gchar *uri = dwb_get_resolved_uri(arg->p);
 
-  if (dwb.state.last_cookie) {
-    soup_cookie_free(dwb.state.last_cookie); 
-    dwb.state.last_cookie = NULL;
+    if (dwb.state.last_cookie) {
+      soup_cookie_free(dwb.state.last_cookie); 
+      dwb.state.last_cookie = NULL;
+    }
+    if (dwb.state.nv == OpenNewView) {
+      dwb_add_view(NULL);
+    }
+    View *fview = dwb.state.fview->data;
+    webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
+    g_free(uri);
   }
-  if (dwb.state.nv == OpenNewView) {
-    dwb_add_view(NULL);
-  }
-  View *fview = dwb.state.fview->data;
-  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
-  g_free(uri);
-
 }/*}}}*/
 
 /* dwb_update_layout() {{{*/
@@ -1152,6 +1196,15 @@ dwb_eval_key(GdkEventKey *e) {
   g_free(key);
   return ret;
 
+}/*}}}*/
+
+/* dwb_command_mode {{{*/
+gboolean
+dwb_command_mode(Arg *arg) {
+  dwb_set_normal_message(dwb.state.fview, ":", false);
+  dwb_focus_entry();
+  dwb.state.mode = CommandMode;
+  return true;
 }/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
@@ -1641,12 +1694,8 @@ dwb_init_scripts() {
   gchar *dir;
   if ( (dir = dwb_get_data_dir("scripts")) ) {
     dwb_get_directory_content(&buffer, dir);
-    //g_string_append(buffer, dircontent);
   }
   dwb_get_directory_content(&buffer, dwb.files.scriptdir);
-  //dircontent = dwb_get_directory_content(dwb.files.scriptdir);
-  //g_string_append(buffer, dircontent);
-  //g_free(dircontent);
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/
@@ -1838,13 +1887,11 @@ void
 dwb_init_proxy() {
   const gchar *proxy;
   gchar *newproxy;
-  if ( (proxy =  g_getenv("http_proxy")) ) {
+  if ( (proxy =  g_getenv("http_proxy")) && dwb_test_connect(proxy) ) {
     newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
     dwb.misc.proxyuri = soup_uri_new(newproxy);
     g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", dwb.misc.proxyuri, NULL); 
     g_free(newproxy);
-    WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
-    s->arg.b = true;
   }
 }
 
@@ -1860,6 +1907,17 @@ dwb_init_signals() {
   }
 }/*}}}*/
 
+void 
+dwb_init_vars() {
+  dwb.misc.message_delay = GET_INT("message-delay");
+  dwb.misc.history_length = GET_INT("history-length");
+  dwb.misc.factor = GET_DOUBLE("factor");
+  dwb.misc.startpage = GET_CHAR("startpage");
+
+  dwb.state.size = GET_INT("size");
+  dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
+  dwb.comps.autocompletion = GET_BOOL("auto-completion");
+}
 /* dwb_init() {{{*/
 void dwb_init() {
 
@@ -1884,16 +1942,8 @@ void dwb_init() {
   dwb.misc.soupsession = webkit_get_default_session();
   dwb_init_proxy();
   dwb_init_cookies();
+  dwb_init_vars();
 
-  dwb.misc.message_delay = GET_INT("message-delay");
-  dwb.misc.history_length = GET_INT("history-length");
-  dwb.misc.factor = GET_DOUBLE("factor");
-
-  dwb.state.size = GET_INT("size");
-  dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
-
-
-  dwb.comps.autocompletion = GET_BOOL("auto-completion");
 
   if (dwb.state.layout & BottomStack) {
     Arg a = { .n = dwb.state.layout };
@@ -1911,7 +1961,7 @@ void dwb_init() {
 } /*}}}*/ /*}}}*/
 
 void 
-parse_command_line(const gchar *line) {
+dwb_parse_command_line(const gchar *line) {
   gchar **token = g_strsplit(line, " ", 2);
 
   for (GList *l = dwb.keymap; l; l=l->next) {
@@ -1931,16 +1981,17 @@ parse_command_line(const gchar *line) {
     }
   }
   g_strfreev(token);
+  dwb_normal_mode(true);
 }
 
 gboolean
-handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
+dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
   gchar *line = NULL;
 
   g_io_channel_read_line(c, &line, NULL, NULL, NULL);
   if (line) {
     g_strstrip(line);
-    parse_command_line(line);
+    dwb_parse_command_line(line);
     g_io_channel_flush(c, NULL);
     g_free(line);
   }
@@ -1957,14 +2008,14 @@ dwb_init_fifo() {
     dwb.misc.fifo = unifile;
   }
   else {
-    dwb.misc.fifo = g_strdup_printf("%s/dwb-%d.fifo", path, getpid());
+    dwb.misc.fifo = g_strdup_printf("%sdwb-%d.fifo", path, getpid());
   }
   g_free(path);
 
   if (!g_file_test(dwb.misc.fifo, G_FILE_TEST_EXISTS)) {
     mkfifo(dwb.misc.fifo, 0666);
     GIOChannel *channel = g_io_channel_new_file(dwb.misc.fifo, "r+", NULL);
-    g_io_add_watch(channel, G_IO_IN, (GIOFunc)handle_channel, NULL);
+    g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
   }
   else {
     if ( (ff = fopen(dwb.misc.fifo, "w")) ) {

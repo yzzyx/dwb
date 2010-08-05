@@ -32,7 +32,7 @@ function Hint(element) {
     hint.style.background = hint_bg_color;
     hint.style.opacity = hint_opacity;
     hint.style.border = hint_border;
-    hint.style.zIndex = 2;
+    hint.style.zIndex = 20000;
     hint.style.visibility = 'visible';
     return hint;
   }
@@ -166,14 +166,14 @@ function show_hints(w) {
   if (!w) {
     w = window;
   }
-  var doc = window.document;
+  var doc = w.document;
   document.activeElement.blur();
   var res = doc.body.querySelectorAll('a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe');
   hints = document.createElement("div");
   create_stylesheet();
   for (var i=0; i<res.length; i++) {
     if (get_visibility(res[i])) {
-      var e = new LetterHint(res[i]);
+      var e = hint_style.toLowerCase() == "letter" ? new LetterHint(res[i]) : new NumberHint(res[i]);
       hints.appendChild(e.hint);
       elements.push(e);
     }
@@ -187,6 +187,9 @@ function show_hints(w) {
   active_arr = elements;
   
   var  frames = w.frames;
+  for (var i=0; i<frames.length; i++) {
+    show_hints(frames[i]);
+  }
   document.body.appendChild(hints);
 }
 

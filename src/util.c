@@ -3,10 +3,47 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <errno.h>
+#include <sys/socket.h>
 #include <webkit/webkit.h>
 #include <gdk/gdkkeysyms.h> 
 #include "dwb.h"
 #include "util.h"
+
+gchar *
+dwb_string_replace(const gchar *haystack, const gchar *needle, const gchar *replacemant) {
+  gchar **token;
+  gchar *ret = NULL;
+  if ( (token = g_regex_split_simple(needle, haystack, 0, 0)) && strcmp(token[0], haystack)) {
+    ret = g_strconcat(token[0], replacemant, token[1], NULL);
+    g_strfreev(token);
+  }
+  return ret;
+}
+
+int
+dwb_test_connect(const char *uri) {
+  struct sockaddr_in addr;
+  gint s; 
+  gint ret;
+
+  gchar **token = g_strsplit(uri, ":", 2);
+  gchar *host = !strcmp(token[0], "localhost") ? "127.0.0.1" : token[0];
+  gint port = strtol(token[1], NULL, 10);
+
+  s = socket(AF_INET, SOCK_STREAM, 0);
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(port);
+  addr.sin_addr.s_addr = inet_addr(host);
+  if ( (ret = connect(s, (struct sockaddr*)&addr, sizeof(addr))) ) {
+    fprintf(stderr, "Cannot connect to %s\n",  uri);
+  }
+
+  shutdown(s, SHUT_RDWR);
+  g_strfreev(token);
+
+  return (!ret);
+}
+/*}}}*/
 
 void
 dwb_cut_text(gchar *text, gint start, gint end) {

@@ -131,15 +131,11 @@ dwb_toggle_property(Arg *a) {
 /* dwb_toggle_proxy {{{*/
 gboolean
 dwb_toggle_proxy(Arg *a) {
-  SoupURI *uri = NULL;
-
   WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
   s->arg.b = !s->arg.b;
 
-  if (s->arg.b) { 
-    uri = dwb.misc.proxyuri;
-  }
-  g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
+  dwb_set_proxy(NULL, s);
+
   return true;
 }/*}}}*/
 
@@ -179,7 +175,6 @@ dwb_show_hints(Arg *arg) {
     dwb_focus_entry();
   }
   return true;
-
 }/*}}}*/
 
 /* dwb_show_keys(Arg *arg){{{*/
@@ -196,7 +191,7 @@ dwb_show_keys(Arg *arg) {
     KeyMap *m = l->data;
     Navigation n = m->map->n;
     g_string_append(buffer, HTML_DIV_START);
-    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.first);
+    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.second);
     g_string_append_printf(buffer, HTML_DIV_KEYS_VALUE, n.first, dwb_modmask_to_string(m->mod), m->key ? m->key : "");
     g_string_append(buffer, HTML_DIV_END);
   }
@@ -444,12 +439,9 @@ dwb_open(Arg *arg) {
 
   if (arg && arg->p) {
     dwb_load_uri(arg);
-    dwb_normal_mode(true);
-    
   }
   else {
     dwb_focus_entry();
-    dwb.state.mode = OpenMode;
   }
   return true;
 } /*}}}*/

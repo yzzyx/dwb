@@ -8,7 +8,7 @@ $(TARGET):
 clean: 
 	@$(MAKE) clean -C $(SRCDIR)
 
-install: install-man install-data 
+install: all install-man install-data 
 	@echo "Installing $(TARGET) to $(subst //,/,$(DESTDIR)$(BINDIR))"
 	@install -Dm 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 

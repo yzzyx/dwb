@@ -8,6 +8,7 @@
 /* COMPLETION {{{*/
 GList * dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back);
 
+typedef gboolean (*Match_Func)(gchar*, const gchar*);
 
 /* dwb_clean_completion() {{{*/
 void 
@@ -44,6 +45,8 @@ dwb_comp_get_completion_item(Navigation *n, void *data) {
   GtkWidget *hbox = gtk_hbox_new(false, 0);
   gtk_box_pack_start(GTK_BOX(hbox), c->llabel, true, true, 5);
   gtk_box_pack_start(GTK_BOX(hbox), c->rlabel, true, true, 5);
+  gtk_label_set_ellipsize(GTK_LABEL(c->llabel), PANGO_ELLIPSIZE_MIDDLE);
+  gtk_label_set_ellipsize(GTK_LABEL(c->rlabel), PANGO_ELLIPSIZE_MIDDLE);
 
   gtk_misc_set_alignment(GTK_MISC(c->llabel), 0.0, 0.5);
   gtk_misc_set_alignment(GTK_MISC(c->rlabel), 1.0, 0.5);
@@ -56,12 +59,14 @@ dwb_comp_get_completion_item(Navigation *n, void *data) {
 
 /* dwb_comp_init_completion {{{*/
 GList * 
-dwb_comp_init_completion(GList *store, GList *gl) {
+dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings) {
   Navigation *n;
   const gchar *input = GET_TEXT();
+  Match_Func func = word_beginnings ? (Match_Func)g_str_has_prefix : (Match_Func)g_strrstr;
+
   for (GList *l = gl; l; l=l->next) {
     n = l->data;
-    if (g_strrstr(n->first, input)) {
+    if (func(n->first, input)) {
       Completion *c = dwb_comp_get_completion_item(n, NULL);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       store = g_list_prepend(store, c);
@@ -155,7 +160,7 @@ dwb_comp_autocomplete(GList *gl, GdkEventKey *e) {
     dwb_comp_modify_completion_item(dwb.comps.active_auto_c->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
   }
   else if (e) {
-    dwb.comps.active_auto_c = dwb_comp_update_completion(v->autocompletion, dwb.comps.auto_c, dwb.comps.active_auto_c, 5, e->state & GDK_SHIFT_MASK);
+    dwb.comps.active_auto_c = dwb_comp_update_completion(v->autocompletion, dwb.comps.auto_c, dwb.comps.active_auto_c, 5, e->state & GDK_CONTROL_MASK);
   }
 }/*}}}*/
 
@@ -247,9 +252,11 @@ dwb_comp_show_completion(gint back) {
 GList *
 dwb_comp_get_normal_completion() {
   GList *list = NULL;
-  list = dwb_comp_init_completion(list, dwb.fc.history);
-  list = dwb_comp_init_completion(list, dwb.fc.bookmarks);
-  list = dwb_comp_init_completion(list, dwb.fc.commands);
+  if (GET_BOOL("complete-history")) {
+    list = dwb_comp_init_completion(list, dwb.fc.history, false);
+  }
+  list = dwb_comp_init_completion(list, dwb.fc.bookmarks, false);
+  list = dwb_comp_init_completion(list, dwb.fc.commands, true);
   return  list;
 }/*}}}*/
 
@@ -267,7 +274,7 @@ dwb_comp_get_settings_completion() {
       data = g_list_prepend(data, &s->n);
     }
   }
-  list = dwb_comp_init_completion(list, data);
+  list = dwb_comp_init_completion(list, data, true);
   g_list_free(data);
   return list;
 }/*}}}*/
@@ -281,7 +288,7 @@ dwb_comp_get_key_completion() {
     KeyMap *m = l->data;
     data  = g_list_prepend(data,  &m->map->n);
   }
-  list = dwb_comp_init_completion(list, data);
+  list = dwb_comp_init_completion(list, data, true);
   g_list_free(data);
   return list;
 }/*}}}*/
@@ -294,10 +301,10 @@ dwb_comp_complete(gint back) {
     v->compbox = gtk_vbox_new(true, 0);
     gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
     switch (dwb.state.mode) {
-      case OpenMode:      dwb.comps.completions = dwb_comp_get_normal_completion(); break;
       case SettingsMode:  dwb.comps.completions = dwb_comp_get_settings_completion(); break;
       case KeyMode:       dwb.comps.completions = dwb_comp_get_key_completion(); break;
-      default: break;
+      case CommandMode:   dwb.comps.completions = dwb_comp_get_key_completion(); break;
+      default:            dwb.comps.completions = dwb_comp_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {
       return;
@@ -307,6 +314,9 @@ dwb_comp_complete(gint back) {
   }
   else if (dwb.comps.completions && dwb.comps.active_comp) {
     dwb.comps.active_comp = dwb_comp_update_completion(v->compbox, dwb.comps.completions, dwb.comps.active_comp, dwb.misc.max_c_items, back);
+  }
+  if (dwb.state.mode == SettingsMode || dwb.state.mode == KeyMode) {
+
   }
 }/*}}}*/
 
@@ -324,66 +334,76 @@ dwb_comp_clean_path_completion() {
   }
 }/*}}}*/
 
-/* dwb_comp_init_path_completion {{{*/
-void
-dwb_comp_init_path_completion(gint back) { 
-  gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-  gchar *path = "/";
-  gchar *last = "";
+GList *
+dwb_comp_get_binaries(GList *list, gchar *text) {
+  GDir *dir;
+  gchar **paths = g_strsplit(g_getenv("PATH"), ":", -1);
+  gint i=0;
+  gchar *path;
+  const gchar *filename;
 
-  dwb.comps.path_completion = g_list_prepend(NULL, g_strdup(text));
-  if (dwb.state.dl_action == Execute) {
-    GDir *dir;
-    gchar **paths = g_strsplit(g_getenv("PATH"), ":", -1);
-    gint i=0;
-    gchar *path;
-    const gchar *filename;
-
-    while ( (path = paths[i++]) ) {
-      if ( (dir = g_dir_open(path, 'r', NULL)) ) {
-        while ( (filename = g_dir_read_name(dir))) {
-          if (g_str_has_prefix(filename, text)) {
-            gchar *store = g_strconcat(path, path[strlen(path)-1] != '/' ? "/" : "", filename, NULL);
-            dwb.comps.path_completion = g_list_prepend(dwb.comps.path_completion, store);
-          }
-        }
-        g_dir_close(dir);
-      }
-    }
-    //return;
-  }
-  else  {
-    if (text[0] != '/') {
-      return;
-    }
-    dwb.state.dl_action = Download;
-    if (text && strlen(text)) {
-      gchar *tmp = strrchr(text, '/'); 
-      tmp++;
-      last = g_strdup(tmp);
-      memset(tmp, '\0', sizeof(tmp));
-      path = text;
-    }
-
-    GDir *dir;
-    const gchar *filename;
-
+  while ( (path = paths[i++]) ) {
     if ( (dir = g_dir_open(path, 'r', NULL)) ) {
-      while ( (filename = g_dir_read_name(dir)) ) {
-        // ignore hidden files
-        if (!strlen(last) && filename[0] == '.') 
-          continue;
-        if (g_str_has_prefix(filename, last)) {
-          gchar *newpath = g_strconcat(path, filename, NULL);
-          gchar *store = g_strconcat(newpath, g_file_test(newpath, G_FILE_TEST_IS_DIR) ? "/" : "", NULL);
-          dwb.comps.path_completion = g_list_prepend(dwb.comps.path_completion, store);
-          g_free(newpath);
+      while ( (filename = g_dir_read_name(dir))) {
+        if (g_str_has_prefix(filename, text)) {
+          gchar *store = g_strconcat(path, path[strlen(path)-1] != '/' ? "/" : "", filename, NULL);
+          list = g_list_prepend(list, store);
         }
       }
       g_dir_close(dir);
     }
   }
-  dwb.comps.path_completion = g_list_sort(dwb.comps.path_completion, (GCompareFunc)strcmp);
+  return list;
+}
+GList *
+dwb_comp_get_path(GList *list, gchar *text) {
+  gchar *path = "/";
+  gchar *last = "";
+  if (text && strlen(text)) {
+    gchar *tmp = strrchr(text, '/'); 
+    tmp++;
+    last = g_strdup(tmp);
+    memset(tmp, '\0', sizeof(tmp));
+    path = text;
+  }
+
+  GDir *dir;
+  const gchar *filename;
+
+  if ( (dir = g_dir_open(path, 'r', NULL)) ) {
+    while ( (filename = g_dir_read_name(dir)) ) {
+      // ignore hidden files
+      if (!strlen(last) && filename[0] == '.') 
+        continue;
+      if (g_str_has_prefix(filename, last)) {
+        gchar *newpath = g_strconcat(path, filename, NULL);
+        gchar *store = g_strconcat(newpath, g_file_test(newpath, G_FILE_TEST_IS_DIR) ? "/" : "", NULL);
+        list = g_list_prepend(list, store);
+        g_free(newpath);
+      }
+    }
+    g_dir_close(dir);
+  }
+  return list;
+}
+
+/* dwb_comp_init_path_completion {{{*/
+void
+dwb_comp_init_path_completion(gint back) { 
+  gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+
+  dwb.comps.path_completion = g_list_append(NULL, g_strdup(text));
+  if (dwb.state.dl_action == Execute && text[0] != '/') {
+    GList *list = dwb_comp_get_binaries(NULL, text);
+    list = g_list_sort(list, (GCompareFunc)strcmp);
+    dwb.comps.path_completion = g_list_concat(dwb.comps.path_completion, list);
+  }
+  else  {
+    if (text[0] == '/') {
+      dwb.comps.path_completion = dwb_comp_get_path(dwb.comps.path_completion, text);
+      dwb.comps.path_completion = g_list_sort(dwb.comps.path_completion, (GCompareFunc)strcmp);
+    }
+  }
   if (dwb.comps.path_completion) {
     if (back) {
       dwb.comps.active_path = g_list_last(dwb.comps.path_completion);

@@ -6,7 +6,7 @@
 #include "completion.h"
 
 
-
+gchar * dwb_get_download_command(const gchar *uri, const gchar *output);
 typedef struct _DwbDownload {
   GtkWidget *event;
   GtkWidget *rlabel;
@@ -64,9 +64,11 @@ dwb_dl_set_mimetype(const gchar *command) {
     if (!strcmp(dwb.state.mimetype_request, n->first)) {
       g_free(n->second);
       n->second = g_strdup(command);
+      return;
     }
   }
-
+  Navigation *n = dwb_navigation_new(dwb.state.mimetype_request, command);
+  dwb.fc.mimetypes = g_list_prepend(dwb.fc.mimetypes, n);
 }
 
 void 
@@ -153,15 +155,19 @@ dwb_dl_start() {
   const gchar *path = GET_TEXT();
   gchar *fullpath;
   const gchar *filename = webkit_download_get_suggested_filename(dwb.state.download);
+  char *command = NULL;
+  gboolean external = GET_BOOL("download-use-external-program");
   
   if (path[0] != '/') {
     dwb_set_error_message(dwb.state.fview, "A full path must be specified");
     dwb_normal_mode(false);
     return;
   }
+
   if (!filename || !strlen(filename)) {
     filename = "dwb_download";
   }
+
   if (dwb.state.dl_action == Execute) {
     fullpath = g_strconcat("file:///tmp/", filename, NULL);
   }
@@ -170,15 +176,21 @@ dwb_dl_start() {
       path = g_get_current_dir();
     }
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-      fullpath = g_strconcat(dwb.misc.download_com ? "" : "file://", path, "/", filename, NULL);
+      fullpath = g_strconcat(external ? "" : "file://", path, "/", filename, NULL);
     }
     else {
       filename = strrchr(path, '/')+1;
-      fullpath = g_strconcat(dwb.misc.download_com ? "" : "file://", path, NULL);
+      fullpath = g_strconcat(external ? "" : "file://", path, NULL);
     }
   }
-  if (dwb.misc.download_com) {
-    //TODO spawn program
+
+  if (external && dwb.state.dl_action == Download) {
+    const gchar *uri = webkit_download_get_uri(dwb.state.download);
+    command = dwb_get_download_command(uri, fullpath);
+    puts(command);
+    if (!g_spawn_command_line_async(command, NULL)) {
+      dwb_set_error_message(dwb.state.fview, "Cannot spawn download program");
+    }
   }
   else {
     webkit_download_set_destination_uri(dwb.state.download, fullpath);
@@ -192,8 +204,8 @@ dwb_dl_start() {
     g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(dwb_dl_status_cb), NULL);
     webkit_download_start(dwb.state.download);
   }
-  dwb_normal_mode(true);
 
+  dwb_normal_mode(true);
   dwb.state.download = NULL;
   g_free(fullpath);
 }
@@ -211,39 +223,65 @@ dwb_dl_entry_set_directory() {
     g_free(newdir);
 }
 
+void
+dwb_dl_entry_set_spawn_command(const gchar *command) {
+  if (!command) {
+    command = dwb_get_command_from_mimetype(dwb.state.mimetype_request);
+  }
+  gchar *message = g_strdup_printf("Spawn (%s):", dwb.state.mimetype_request);
+  dwb_set_normal_message(dwb.state.fview, message, false);
+  g_free(message);
+  dwb_entry_set_text(command ? command : "");
+}
+
 /*{{{*/
 void 
 dwb_dl_get_path(GList *gl, WebKitDownload *d) {
+  gchar *command;
   dwb_focus_entry();
   dwb.state.mode = DownloadGetPath;
   dwb.state.download = d;
-  dwb_dl_entry_set_directory();
+
+  if ( dwb.state.mimetype_request && (command = dwb_get_command_from_mimetype(dwb.state.mimetype_request)) ) {
+    dwb.state.dl_action = Execute;
+    dwb_dl_entry_set_spawn_command(command);
+  }
+  else {
+    dwb_dl_entry_set_directory();
+  }
 }/*}}}*/
 
-void
-dwb_dl_entry_set_spawn_command() {
-  gchar *command = NULL;
-  for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
-    Navigation *n = l->data;
-    if (!strcmp(n->first, dwb.state.mimetype_request)) {
-      command = n->second;
-    }
-  }
-  dwb_set_normal_message(dwb.state.fview, "Spawn:", false);
-  dwb_entry_set_text(command ? command : "");
-}
 
 void 
 dwb_dl_set_execute(Arg *arg) {
   if (dwb.state.mode == DownloadGetPath) {
     if (dwb.state.dl_action == Download) {
       dwb.state.dl_action = Execute;
-      dwb_dl_entry_set_spawn_command();
+      dwb_dl_entry_set_spawn_command(NULL);
     }
     else {
       dwb.state.dl_action = Download;
       dwb_dl_entry_set_directory();
     }
   }
+}
+gchar *
+dwb_get_download_command(const gchar *uri, const gchar *output) {
+  gchar *command = g_strdup(GET_CHAR("download-external-command"));
+  gchar *newcommand = NULL;
+
+  if ( (newcommand = dwb_string_replace(command, "dwb_uri", uri)) ) {
+    g_free(command);
+    command = newcommand;
+  }
+  if ( (newcommand = dwb_string_replace(command, "dwb_cookies", dwb.files.cookies)) ) {
+    g_free(command);
+    command = newcommand;
+  }
+  if ( (newcommand = dwb_string_replace(command, "dwb_output", output)) ) {
+    g_free(command);
+    command = newcommand;
+  }
+  return command;
 }
 

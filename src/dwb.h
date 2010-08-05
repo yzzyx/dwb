@@ -108,14 +108,12 @@ enum _Mode {
   FindMode            = 1<<6,
   CompletionMode      = 1<<7,
   AutoComplete        = 1<<8,
+  CommandMode         = 1<<9,
   SearchFieldMode     = 1<<10,
   SearchKeywordMode   = 1<<11,
   SettingsMode        = 1<<12,
   KeyMode             = 1<<13,
   DownloadGetPath     = 1<<14,
-};
-enum _Edit {
-  DeleteWord,
 };
 
 enum _ShowMessage {
@@ -128,6 +126,7 @@ enum _Open {
   OpenNormal, 
   OpenNewView,
   OpenNewWindow,
+  OpenDownload,
 };
 
 enum _Layout {
@@ -172,7 +171,6 @@ typedef enum _Direction Direction;
 typedef enum _DwbType DwbType;
 typedef enum _SettingsScope SettingsScope;
 typedef enum _ShowMessage ShowMessage;
-typedef enum _Edit Edit;
 
 /* STRUCTS {{{*/
 struct _Navigation {
@@ -244,8 +242,10 @@ struct _State {
 
   gchar *search_engine;
   gchar *form_name;
+
   WebKitDownload *download;
   DownloadAction dl_action;
+  gchar *download_command;
   gchar *mimetype_request;
 };
 
@@ -354,6 +354,7 @@ struct _Misc {
   gchar *fifo;
   gboolean single;
 
+  gchar *startpage;
   gchar *download_com;
 };
 struct _Files {
@@ -400,7 +401,6 @@ struct _Dwb {
 
 /* VARIABLES {{{*/
 Dwb dwb;
-// TODO toggle proxy
 /*}}}*/
 
 gboolean dwb_insert_mode(Arg *);
@@ -444,9 +444,13 @@ void dwb_set_normal_style(GList *gl);
 gint dwb_entry_position_word_back(gint position);
 gint dwb_entry_position_word_forward(gint position);
 void dwb_entry_set_text(const gchar *text);
+void dwb_set_proxy(GList *, WebSettings *);
+gchar * dwb_get_command_from_mimetype(gchar *);
 
-gboolean dwb_eval_editing_key(GdkEventKey *e);
+gboolean dwb_eval_editing_key(GdkEventKey *);
+void dwb_parse_command_line(const gchar *);
 
 void dwb_exit(void);
+int dwb_test_connect(const char *uri);
 
 #endif

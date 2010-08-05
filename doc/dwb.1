@@ -34,7 +34,7 @@ Follow links via hints.
 
 
 .SH Usage
-.SS "Normalmode Keyboard Configuration:"
+.SS "Normalmode shortcuts:"
 .TP
 .BR [n]j
 Scroll [n times] down (command: 
@@ -142,7 +142,7 @@ Toggle fullcontentzoom <-> textzoom
 .BR ZZ
 Save current session and exit.
 .TP
-.BR C-p
+.BR gp
 Push current View to master area (command
 .BR push_master ).
 .TP
@@ -161,6 +161,10 @@ Show hints (command
 .BR F
 Show hints, open link in a new view. (command
 .BR hint_mode_new_view ).
+.TP
+.BR gd 
+Download via hints (command 
+.BR download_hint ).
 .TP
 .BR gi
 Focus next textinput (command 
@@ -192,7 +196,7 @@ Paste from clipboard (command
 .TP
 .BR pP
 Paste from primary selection (command
-.BR paste ).
+.BR paste_primary ).
 .TP
 .BR Pp
 Paste from clipboard and load in a new view (command 
@@ -208,12 +212,6 @@ Show print dialog.
 .BR gs
 Add a searchengine. Text fields can be focused via hints (command 
 .BR save_search_field ).
-.TP
-.BR Sf
-Save a form.
-.TP
-.BR <C-Return> 
-Autofill (and autosubmit if enabled) a form.
 .TP
 .BR Ss 
 Show settings (command
@@ -232,14 +230,14 @@ Set setting (command
 .BR set_setting ).
 .TP
 .BR sgs 
-Set setting (command
+Set global setting (command
 .BR set_global_setting ).
 .TP
 .BR sk
-Set setting (command
+Set keyboard shortcut (command
 .BR set_key ).
 .TP
-.BR C-p 
+.BR prx 
 Toggle proxy (command
 .BR proxy ).
 .TP
@@ -286,34 +284,42 @@ Toggle scripts (command
 .BR unbound 
 Toggle spell checking (command 
 .BR spell_checking ).
+.TP 
+.B Tab (C-Tab) 
+In Normal mode Tab shows the next (previous) shortcut, that matches the
+currently entered keysequence. 
+When opening a url, the next (previous) item in command
+history, bookmarks or history will be completed. In Hintmode the next (previous)
+hint will get focus. Tab also completes settings and shortcut-settings. 
+When initiating a download, full paths (downloads and spawning programs) and
+binaries (spawning programs) in PATH will be completed. 
 
-.SS "Textentry Keyboard Configuration"
+.SS "Textentry shortcuts"
+.TP
+.BR C-h
+Delete a single letter.
 .TP
 .BR C-w
-Delete previous word (command 
-.BR entry_delete_word ).
+Delete previous word.
 .TP
 .BR C-u
-Delete to the beginning of the entry (command 
-.BR entry_delete_line ).
+Delete to the beginning of the entry.
 .TP
 .BR C-f
-Move cursor one word forward (command 
-.BR entry_word_forward ).
+Move cursor one word forward.
 .TP
 .BR C-b
-Move cursor one word forward (command 
-.BR entry_word_back ).
+Move cursor one word back.
 .TP
 .BR C-j
-Show next item in command history (command 
-.BR entry_history_back ).
+Show next item in command history.
 .TP
 .BR C-k
-Show previous item in command history (command 
-.BR entry_history_back ).
-
-
+Show previous item in command history.
+.TP
+.BR C-x
+When initalizing a download, C-x toggles between choosing a file path and
+choosing a spawning application.
 
 .SH CUSTOMIZATION
 dwb can be  customized in a web interface (command 

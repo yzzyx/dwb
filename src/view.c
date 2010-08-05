@@ -40,7 +40,6 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       dwb_push_master(&arg);
     }
   }
-  //dwb_normal_mode(true);
   return false;
 }/*}}}*/
 
@@ -98,13 +97,13 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri,
 /* dwb_web_view_mime_type_policy_cb {{{*/
 gboolean 
 dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, gchar *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
-  // TODO implement
+
   if (webkit_web_view_can_show_mime_type(web, mimetype)) {
     return  false;
   }
   else {
-    webkit_web_policy_decision_download(policy);
     dwb.state.mimetype_request = g_strdup(mimetype);
+    webkit_web_policy_decision_download(policy);
     return true;
   }
 }/*}}}*/
@@ -125,6 +124,10 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     dwb_set_normal_message(dwb.state.fview, "Enter a keyword for this search:", false);
     dwb_focus_entry();
     dwb.state.mode = SearchKeywordMode;
+    return true;
+  }
+  if (dwb.state.nv == OpenDownload) {
+    webkit_web_policy_decision_download(policy);
     return true;
   }
   return false;
@@ -191,7 +194,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
       dwb_prepend_navigation(gl, &dwb.fc.history);
-      //dwb_normal_mode(false);
       break;
     case WEBKIT_LOAD_FAILED: 
       break;
@@ -250,7 +252,7 @@ dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     return false;
   }
   else if (e->keyval == GDK_Tab) {
-    dwb_comp_complete(e->state & GDK_SHIFT_MASK);
+    dwb_comp_complete(e->state & GDK_CONTROL_MASK);
     return true;
   }
 
@@ -282,6 +284,9 @@ dwb_entry_activate_cb(GtkEntry* entry) {
   }
   else if (mode == KeyMode) {
     dwb_parse_key_setting(GET_TEXT());
+  }
+  else if (mode == CommandMode) {
+    dwb_parse_command_line(text);
   }
   else if (mode == DownloadGetPath) {
     dwb_dl_start();
@@ -493,5 +498,9 @@ dwb_add_view(Arg *arg) {
   dwb_update_layout();
   if (arg && arg->p) {
     dwb_load_uri(arg);
+  }
+  else if (strcmp("about:blank", dwb.misc.startpage)) {
+    Arg a = { .p = dwb.misc.startpage }; 
+    dwb_load_uri(&a);
   }
 } /*}}}*//*}}}*/

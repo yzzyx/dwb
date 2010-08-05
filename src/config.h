@@ -2,6 +2,7 @@ static KeyValue KEYS[] = {
   { "add_view",                 {   "ga",         0,                  },  },  
   { "allow_cookie",             {   "CC",         0,                   },  },  
   { "bookmark",                 {   "M",         0,                   },  },  
+  { "command_mode",             {   ":",         0,                   },  },  
   { "find_forward",             {   "/",         0,                   },  }, 
   { "find_next",                {   "n",         0,                   },  },
   { "find_previous",            {   "N",         0,                   },  },
@@ -9,7 +10,7 @@ static KeyValue KEYS[] = {
   { "focus_next",               {   "J",         0,                   },  },  
   { "focus_prev",               {   "K",         0,                   },  },  
   { "hint_mode",                {   "f",         0,                   },  },  
-  { "hint_mode_nv",       {   "F",         0,                   },  },  
+  { "hint_mode_nv",             {   "F",         0,                   },  },  
   { "history_back",             {   "H",         0,                   },  },  
   { "history_forward",          {   "L",         0,                   },  },  
   { "insert_mode",              {   "i",         0,                   },  },  
@@ -71,4 +72,5 @@ static KeyValue KEYS[] = {
   { "entry_history_forward",    {   "j",            GDK_CONTROL_MASK, }, }, 
   { "entry_history_back",       {   "k",            GDK_CONTROL_MASK, }, }, 
   { "download_set_execute",     {   "x",            GDK_CONTROL_MASK, }, }, 
+  { "download_hint",            {   "gd",           0 }, },
 };

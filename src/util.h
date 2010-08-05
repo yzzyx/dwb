@@ -31,5 +31,7 @@ void dwb_navigation_free(Navigation *);
 void dwb_quickmark_free(Quickmark *);
 Quickmark * dwb_quickmark_new(const gchar *, const gchar *, const gchar *);
 Quickmark * dwb_quickmark_new_from_line(const gchar *);
+gchar * dwb_string_replace(const gchar *haystack, const gchar *needle, const gchar *replacemant);
+
 
 #endif
