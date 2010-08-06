@@ -7,6 +7,7 @@ struct _Completion {
   GtkWidget *event;
   GtkWidget *rlabel;
   GtkWidget *llabel;
+  GtkWidget *mlabel;
   void *data;
 };
 

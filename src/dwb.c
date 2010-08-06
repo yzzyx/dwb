@@ -54,7 +54,6 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 /*}}}*/
 #define INSERT_MODE "Insert Mode"
 
-#define CLIPBOARD_PTR 
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
 /* DECLARATIONS {{{*/
@@ -63,9 +62,9 @@ void dwb_clean_buffer(GList *);
 
 gboolean dwb_command_mode(Arg *arg);
 void dwb_set_vars(GList *,  WebSettings *);
-void dwb_reload_scripts(GList *,  WebSettings *);
-void dwb_reload_colors(GList *,  WebSettings *);
-void dwb_reload_layout(GList *,  WebSettings *);
+void dwb_com_reload_scripts(GList *,  WebSettings *);
+void dwb_com_reload_colors(GList *,  WebSettings *);
+void dwb_com_reload_layout(GList *,  WebSettings *);
 gboolean dwb_test_cookie_allowed(const gchar *);
 void dwb_save_cookies(void);
 void dwb_web_settings_set_value(const gchar *id, Arg *a);
@@ -79,7 +78,7 @@ void dwb_resize(gdouble);
 void dwb_tab_label_set_text(GList *, const gchar *);
 
 void dwb_save_quickmark(const gchar *);
-void dwb_open_quickmark(const gchar *);
+void dwb_com_open_quickmark(const gchar *);
 
 GList * dwb_keymap_delete(GList *, KeyValue );
 
@@ -111,83 +110,81 @@ static gint MAX_COMPLETIONS = 11;
 #define NO_URL                      "No URL in current context"
 #define NO_HINTS                    "No Hints in current context"
 static FunctionMap FMAP [] = {
-  { { "add_view",              "Add a new view",                    },  (Func)dwb_add_view,           NULL,                              AlwaysSM,     { .p = NULL }, },
-  { { "allow_cookie",          "Cookie allowed",                    },  (Func)dwb_allow_cookie,       "No cookie in current context",    PostSM, },
-  { { "autoload_images",       "Setting: autoload images",          },  (Func)dwb_toggle_property,    NULL,                              PostSM,    { .p = "auto-load-images" } },
-  { { "autoresize_window",     "Setting: autoresize window",        },  (Func)dwb_toggle_property,    NULL,                              PostSM,    { .p = "auto-resize-window" } },
-  { { "bookmark",              "Bookmark current page",             },  (Func)dwb_bookmark,           NO_URL,                            PostSM, },
-  { { "command_mode",          "Enter command mode",                },  (Func)dwb_command_mode,       NULL,                              PostSM, },
-  { { "caret_browsing",        "Setting: caret browsing",           },  (Func)dwb_toggle_property,    NULL,                              PostSM,    { .p = "enable-caret-browsing" } },
-  { { "decrease_master",       "Decrease master area",              },  (Func)dwb_resize_master,      "Cannot decrease further",         AlwaysSM,    { .n = 5 } },
-  { { "download_hint",         "Download via hints",                },  (Func)dwb_show_hints,         NO_HINTS,                          NeverSM,    { .n = OpenDownload }, },
-  { { "find_backward",         "Find Backward ",                    },  (Func)dwb_find,               NO_URL,                            NeverSM,     { .b = false }, },
-  { { "find_forward",          "Find Forward ",                     },  (Func)dwb_find,               NO_URL,                            NeverSM,     { .b = true }, },
-  { { "find_next",             "Find next",                         },  (Func)dwb_search,             "No matches",                      AlwaysSM,     { .b = true }, },
-  { { "find_previous",         "Find next",                         },  (Func)dwb_search,             "No matches",                      AlwaysSM,     { .b = false }, },
-  { { "focus_input",           "Focus input",                       },  (Func)dwb_focus_input,        "No input found in current context",      AlwaysSM, },
-  { { "focus_next",            "Focus next view",                   },  (Func)dwb_focus_next,         "No other view",                   AlwaysSM, },
-  { { "focus_prev",            "Focus previous view",               },  (Func)dwb_focus_prev,         "No other view",                   AlwaysSM, },
-  { { "hint_mode",             "Follow hints ",                     },  (Func)dwb_show_hints,         NO_HINTS,                          NeverSM,    { .n = OpenNormal }, },
-  { { "hint_mode_nv",          "Follow hints in a new view ",       },  (Func)dwb_show_hints,         NO_HINTS,                                NeverSM,    { .n = OpenNewView }, },
-  { { "history_back",          "Go Back",                           },  (Func)dwb_history_back,       "Beginning of History",            AlwaysSM, },
-  { { "history_forward",       "Go Forward",                        },  (Func)dwb_history_forward,    "End of History",                  AlwaysSM, },
-  { { "increase_master",       "Increase master area",              },  (Func)dwb_resize_master,      "Cannot increase further",         AlwaysSM,    { .n = -5 } },
-  { { "insert_mode",           "Insert Mode",                       },  (Func)dwb_insert_mode,        NULL,                              AlwaysSM, },
-  { { "java_applets",          "Setting: java applets",             },  (Func)dwb_toggle_property,      NULL,                            PostSM,    { .p = "enable-java-applets" } },
-  { { "open",                  "Open URL",                          },  (Func)dwb_open,               NULL,                              NeverSM,   { .n = OpenNormal,      .p = NULL } },
-  { { "open_nv",               "Open URL in a new view",            },  (Func)dwb_open,               NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
-  { { "open_quickmark",        "Open quickmark",                    },  (Func)dwb_quickmark,          NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
-  { { "open_quickmark_nv",     "Open quickmark in a new view",      },  (Func)dwb_quickmark,          NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
-  { { "plugins",               "Setting: plugins",                  },  (Func)dwb_toggle_property,           NULL,                       PostSM,    { .p = "enable-plugins" } },
-  { { "private_browsing",      "Setting: private browsing",         },  (Func)dwb_toggle_property,  NULL,                                PostSM,    { .p = "enable-private-browsing" } },
-  { { "proxy",                 "Setting: proxy",                    },  (Func)dwb_toggle_proxy,      NULL,                               PostSM,    { 0 } },
-  { { "push_master",           "Push to master area",               },  (Func)dwb_push_master,        "No other view",                   AlwaysSM, },
-  { { "reload",                "Reload",                            },  (Func)dwb_reload,             NULL,                              AlwaysSM, },
-  { { "remove_view",           "Close view",                        },  (Func)dwb_remove_view,        NULL,                              AlwaysSM, },
-  { { "save_quickmark",        "Save a quickmark for this page",    },  (Func)dwb_quickmark,          NO_URL,                            NeverSM,    { .n = QuickmarkSave }, },
-  { { "save_search_field",     "Add a new searchengine",            },  (Func)dwb_add_search_field,   "No input in current context",          NeverSM, },
-  { { "scripts",               "Setting: scripts",                  },  (Func)dwb_toggle_property,      NULL,                            PostSM,    { .p = "enable-scripts" } },
-  { { "scroll_bottom",         "Scroll to  bottom of the page",     },  (Func)dwb_scroll,             NULL,                              AlwaysSM,    { .n = Bottom }, },
-  { { "scroll_down",           "Scroll down",                       },  (Func)dwb_scroll,             "Bottom of the page",              AlwaysSM,    { .n = Down, }, },
-  { { "scroll_left",           "Scroll left",                       },  (Func)dwb_scroll,             "Left side of the page",           AlwaysSM,    { .n = Left }, },
-  { { "scroll_page_down",      "Scroll one page down",              },  (Func)dwb_scroll,             "Bottom of the page",              AlwaysSM,    { .n = PageDown, }, },
-  { { "scroll_page_up",        "Scroll one page up",                },  (Func)dwb_scroll,             "Top of the page",                 AlwaysSM,    { .n = PageUp, }, },
-  { { "scroll_right",          "Scroll left",                       },  (Func)dwb_scroll,             "Right side of the page",          AlwaysSM,    { .n = Right }, },
-  { { "scroll_top",            "Scroll to the top of the page",     },  (Func)dwb_scroll,             NULL,                              AlwaysSM,    { .n = Top }, },
-  { { "scroll_up",             "Scroll up",                         },  (Func)dwb_scroll,             "Top of the page",                 AlwaysSM,    { .n = Up, }, },
-  { { "set_global_setting",    "Set global property",               },  (Func)dwb_set_setting,        NULL,                              NeverSM,    { .n = Global } },
-  { { "set_key",               "Set keybinding",                    },  (Func)dwb_set_key,                NULL,                          NeverSM,    { 0 } },
-  { { "set_setting",           "Set property",                      },  (Func)dwb_set_setting,        NULL,                              NeverSM,    { .n = PerView } },
-  { { "show_global_settings",  "Show global settings",              },  (Func)dwb_show_settings,      NULL,                              AlwaysSM,    { .n = Global } },
-  { { "show_keys",             "Key configuration",                 },  (Func)dwb_show_keys,          NULL,                              AlwaysSM, },
-  { { "show_settings",         "Settings",                          },  (Func)dwb_show_settings,      NULL,                              AlwaysSM,    { .n = PerView } },
-  { { "spell_checking",        "Setting: spell checking",           },  (Func)dwb_toggle_property,      NULL,                            PostSM,    { .p = "enable-spell-checking" } },
-  { { "toggle_bottomstack",    "Toggle bottomstack",                },  (Func)dwb_set_orientation,    NULL,                              AlwaysSM, },
-  { { "toggle_encoding",       "Toggle Custom encoding",            },  (Func)dwb_toggle_custom_encoding,    NULL,                       AlwaysSM, },
-  { { "toggle_maximized",      "Toggle maximized",                  },  (Func)dwb_toggle_maximized,   NULL,                              AlwaysSM, },
-  { { "toggle_shrink_images",  "Setting: autoshrink images",        },  (Func)dwb_toggle_property,    NULL,                              PostSM,    { .p = "auto-shrink-images" } },
-  { { "view_source",           "View source",                       },  (Func)dwb_view_source,        NULL,                              AlwaysSM, },
-  { { "zoom_in",               "Zoom in",                           },  (Func)dwb_zoom_in,            "Cannot zoom in further",          AlwaysSM, },
-  { { "zoom_normal",           "Zoom 100%",                         },  (Func)dwb_set_zoom_level,     NULL,                              AlwaysSM,    { .d = 1.0,   .p = NULL } },
-  { { "zoom_out",              "Zoom out",                          },  (Func)dwb_zoom_out,           "Cannot zoom out further",         AlwaysSM, },
-  { { "yank",                  "Yank",                              },  (Func)dwb_yank,                NO_URL,                           PostSM,  { .p = GDK_NONE } },
-  { { "yank_primary",          "Yank to Primary selection",         },  (Func)dwb_yank,                NO_URL,                           PostSM,  { .p = GDK_SELECTION_PRIMARY } },
-  { { "paste",                 "Paste",                             },  (Func)dwb_paste,              "Clipboard is empty",              AlwaysSM,  { .n = OpenNormal, .p = GDK_NONE } },
-  { { "paste_primary",         "Paste primary selection",           },  (Func)dwb_paste,              "No primary selection",            AlwaysSM,  { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
-  { { "paste_nv",              "Paste, new view",                   },  (Func)dwb_paste,              "Clipboard is empty",              AlwaysSM,  { .n = OpenNewView, .p = GDK_NONE } },
-  { { "paste_primary_nv",      "Paste primary selection, new view", },  (Func)dwb_paste,              "No primary selection",            AlwaysSM,  { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
+  { { "add_view",              "Add a new view",                    }, (Func)dwb_add_view,                NULL,                              AlwaysSM,     { .p = NULL }, },
+  { { "allow_cookie",          "Cookie allowed",                    }, (Func)dwb_com_allow_cookie,        "No cookie in current context",    PostSM, },
+  { { "autoload_images",       "Setting: autoload images",          }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "auto-load-images" } },
+  { { "autoresize_window",     "Setting: autoresize window",        }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "auto-resize-window" } },
+  { { "bookmark",              "Bookmark current page",             }, (Func)dwb_com_bookmark,            NO_URL,                            PostSM, },
+  { { "command_mode",          "Enter command mode",                }, (Func)dwb_command_mode,            NULL,                              PostSM, },
+  { { "caret_browsing",        "Setting: caret browsing",           }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-caret-browsing" } },
+  { { "decrease_master",       "Decrease master area",              }, (Func)dwb_com_resize_master,       "Cannot decrease further",         AlwaysSM,    { .n = 5 } },
+  { { "download_hint",         "Download via hints",                }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenDownload }, },
+  { { "find_backward",         "Find Backward ",                    }, (Func)dwb_com_find,                NO_URL,                            NeverSM,     { .b = false }, },
+  { { "find_forward",          "Find Forward ",                     }, (Func)dwb_com_find,                NO_URL,                            NeverSM,     { .b = true }, },
+  { { "find_next",             "Find next",                         }, (Func)dwb_search,                  "No matches",                      AlwaysSM,     { .b = true }, },
+  { { "find_previous",         "Find next",                         }, (Func)dwb_search,                  "No matches",                      AlwaysSM,     { .b = false }, },
+  { { "focus_input",           "Focus input",                       }, (Func)dwb_com_focus_input,        "No input found in current context",      AlwaysSM, },
+  { { "focus_next",            "Focus next view",                   }, (Func)dwb_com_focus_next,          "No other view",                   AlwaysSM, },
+  { { "focus_prev",            "Focus previous view",               }, (Func)dwb_com_focus_prev,          "No other view",                   AlwaysSM, },
+  { { "hint_mode",             "Follow hints ",                     }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNormal }, },
+  { { "hint_mode_nv",          "Follow hints in a new view ",       }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewView }, },
+  { { "history_back",          "Go Back",                           }, (Func)dwb_com_history_back,        "Beginning of History",            AlwaysSM, },
+  { { "history_forward",       "Go Forward",                        }, (Func)dwb_com_history_forward,     "End of History",                  AlwaysSM, },
+  { { "increase_master",       "Increase master area",              }, (Func)dwb_com_resize_master,       "Cannot increase further",         AlwaysSM,    { .n = -5 } },
+  { { "insert_mode",           "Insert Mode",                       }, (Func)dwb_insert_mode,             NULL,                              AlwaysSM, },
+  { { "java_applets",          "Setting: java applets",             }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-java-applets" } },
+  { { "open",                  "Open URL",                          }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNormal,      .p = NULL } },
+  { { "open_nv",               "Open URL in a new view",            }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
+  { { "open_quickmark",        "Open quickmark",                    }, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
+  { { "open_quickmark_nv",     "Open quickmark in a new view",      }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
+  { { "plugins",               "Setting: plugins",                  }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-plugins" } },
+  { { "private_browsing",      "Setting: private browsing",         }, (Func)dwb_com_toggle_property,     NULL,                                PostSM,    { .p = "enable-private-browsing" } },
+  { { "proxy",                 "Setting: proxy",                    }, (Func)dwb_com_toggle_proxy,        NULL,                               PostSM,    { 0 } },
+  { { "push_master",           "Push to master area",               }, (Func)dwb_com_push_master,         "No other view",                   AlwaysSM, },
+  { { "reload",                "Reload",                            }, (Func)dwb_com_reload,              NULL,                              AlwaysSM, },
+  { { "remove_view",           "Close view",                        }, (Func)dwb_com_remove_view,         NULL,                              AlwaysSM, },
+  { { "save_quickmark",        "Save a quickmark for this page",    }, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,    { .n = QuickmarkSave }, },
+  { { "save_search_field",     "Add a new searchengine",            }, (Func)dwb_com_add_search_field,    "No input in current context",     NeverSM, },
+  { { "scripts",               "Setting: scripts",                  }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-scripts" } },
+  { { "scroll_bottom",         "Scroll to  bottom of the page",     }, (Func)dwb_com_scroll,              NULL,                              AlwaysSM,    { .n = Bottom }, },
+  { { "scroll_down",           "Scroll down",                       }, (Func)dwb_com_scroll,              "Bottom of the page",              AlwaysSM,    { .n = Down, }, },
+  { { "scroll_left",           "Scroll left",                       }, (Func)dwb_com_scroll,              "Left side of the page",           AlwaysSM,    { .n = Left }, },
+  { { "scroll_page_down",      "Scroll one page down",              }, (Func)dwb_com_scroll,              "Bottom of the page",              AlwaysSM,    { .n = PageDown, }, },
+  { { "scroll_page_up",        "Scroll one page up",                }, (Func)dwb_com_scroll,              "Top of the page",                 AlwaysSM,    { .n = PageUp, }, },
+  { { "scroll_right",          "Scroll left",                       }, (Func)dwb_com_scroll,              "Right side of the page",          AlwaysSM,    { .n = Right }, },
+  { { "scroll_top",            "Scroll to the top of the page",     }, (Func)dwb_com_scroll,              NULL,                              AlwaysSM,    { .n = Top }, },
+  { { "scroll_up",             "Scroll up",                         }, (Func)dwb_com_scroll,              "Top of the page",                 AlwaysSM,    { .n = Up, }, },
+  { { "set_global_setting",    "Set global property",               }, (Func)dwb_com_set_setting,         NULL,                              NeverSM,    { .n = Global } },
+  { { "set_key",               "Set keybinding",                    }, (Func)dwb_com_set_key,             NULL,                              NeverSM,    { 0 } },
+  { { "set_setting",           "Set property",                      }, (Func)dwb_com_set_setting,         NULL,                              NeverSM,    { .n = PerView } },
+  { { "show_global_settings",  "Show global settings",              }, (Func)dwb_com_show_settings,       NULL,                              AlwaysSM,    { .n = Global } },
+  { { "show_keys",             "Key configuration",                 }, (Func)dwb_com_show_keys,           NULL,                              AlwaysSM, },
+  { { "show_settings",         "Settings",                          }, (Func)dwb_com_show_settings,       NULL,                              AlwaysSM,    { .n = PerView } },
+  { { "spell_checking",        "Setting: spell checking",           }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
+  { { "toggle_bottomstack",    "Toggle bottomstack",                }, (Func)dwb_com_set_orientation,     NULL,                              AlwaysSM, },
+  { { "toggle_encoding",       "Toggle Custom encoding",            }, (Func)dwb_com_toggle_custom_encoding,    NULL,                        AlwaysSM, },
+  { { "toggle_maximized",      "Toggle maximized",                  }, (Func)dwb_com_toggle_maximized,    NULL,                              AlwaysSM, },
+  { { "toggle_shrink_images",  "Setting: autoshrink images",        }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "auto-shrink-images" } },
+  { { "view_source",           "View source",                       }, (Func)dwb_com_view_source,         NULL,                              AlwaysSM, },
+  { { "zoom_in",               "Zoom in",                           }, (Func)dwb_com_zoom_in,             "Cannot zoom in further",          AlwaysSM, },
+  { { "zoom_normal",           "Zoom 100%",                         }, (Func)dwb_com_set_zoom_level,      NULL,                              AlwaysSM,    { .d = 1.0,   .p = NULL } },
+  { { "zoom_out",              "Zoom out",                          }, (Func)dwb_com_zoom_out,            "Cannot zoom out further",         AlwaysSM, },
+  { { "yank",                  "Yank",                              }, (Func)dwb_com_yank,                 NO_URL,                           PostSM,  { .p = GDK_NONE } },
+  { { "yank_primary",          "Yank to Primary selection",         }, (Func)dwb_com_yank,                 NO_URL,                           PostSM,  { .p = GDK_SELECTION_PRIMARY } },
+  { { "paste",                 "Paste",                             }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM,  { .n = OpenNormal, .p = GDK_NONE } },
+  { { "paste_primary",         "Paste primary selection",           }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM,  { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
+  { { "paste_nv",              "Paste, new view",                   }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM,  { .n = OpenNewView, .p = GDK_NONE } },
+  { { "paste_primary_nv",      "Paste primary selection, new view", }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM,  { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
 
   //Entry editing
-  { { "entry_delete_word",      "Delete word", },                       (Func)dwb_entry_delete_word,            NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_delete_letter",    "Delete a single letter", },            (Func)dwb_entry_delete_letter,          NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_delete_line",      "Delete to beginning of the line", },   (Func)dwb_entry_delete_line,            NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_word_forward",     "Move cursor forward on word", },       (Func)dwb_entry_word_forward,           NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_word_back",        "Move cursor back on word", },          (Func)dwb_entry_word_back,              NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_history_back",     "Command history back", },              (Func)dwb_entry_history_back,           NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_history_forward",  "Command history forward", },           (Func)dwb_entry_history_forward,        NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "entry_delete_word",      "Delete word", },                       (Func)dwb_com_entry_delete_word,            NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "entry_delete_letter",    "Delete a single letter", },            (Func)dwb_com_entry_delete_letter,          NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "entry_delete_line",      "Delete to beginning of the line", },   (Func)dwb_com_entry_delete_line,            NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "entry_word_forward",     "Move cursor forward on word", },       (Func)dwb_com_entry_word_forward,           NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "entry_word_back",        "Move cursor back on word", },          (Func)dwb_com_entry_word_back,              NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "entry_history_back",     "Command history back", },              (Func)dwb_com_entry_history_back,           NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "entry_history_forward",  "Command history forward", },           (Func)dwb_com_entry_history_forward,        NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "download_set_execute",  "Complete binaries", },             (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
-
-  //{ "create_hints",          (void*)dwb_create_hints,       "Hints",                          NULL,                       true,                                             },
 
 };/*}}}*/
 
@@ -243,45 +240,45 @@ static WebSettings DWB_SETTINGS[] = {
   { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = true              }, (S_Func) dwb_set_proxy, },
   { { "cookie",                                  "All Cookies allowed", },                                     false, true,  Boolean, { .b = false             }, (S_Func) dwb_set_websetting, },
 
-  { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
-  { { "active-bg-color",                         "UI: Active view background", },                              false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
-  { { "normal-fg-color",                         "UI: Inactive view foreground", },                            false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
-  { { "normal-bg-color",                         "UI: Inactive view background", },                            false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
+  { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_com_reload_layout, },
+  { { "active-bg-color",                         "UI: Active view background", },                              false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_com_reload_layout, },
+  { { "normal-fg-color",                         "UI: Inactive view foreground", },                            false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_com_reload_layout, },
+  { { "normal-bg-color",                         "UI: Inactive view background", },                            false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_com_reload_layout, },
 
-  { { "tab-active-fg-color",                     "UI: Active view tabforeground", },                           false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
-  { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
-  { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
-  { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
+  { { "tab-active-fg-color",                     "UI: Active view tabforeground", },                           false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_com_reload_layout, },
+  { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_com_reload_layout, },
+  { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_com_reload_layout, },
+  { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_com_reload_layout, },
 
-  { { "active-comp-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#1793d1"         }, (S_Func) dwb_reload_colors, },
-  { { "active-comp-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_reload_colors, },
-  { { "normal-comp-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_reload_colors, },
-  { { "normal-comp-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_reload_colors, },
+  { { "active-comp-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#1793d1"         }, (S_Func) dwb_com_reload_colors, },
+  { { "active-comp-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_com_reload_colors, },
+  { { "normal-comp-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_com_reload_colors, },
+  { { "normal-comp-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_com_reload_colors, },
 
-  { { "insert-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_reload_colors, },
-  { { "insert-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#00008b"         }, (S_Func) dwb_reload_colors, },
-  { { "error-color",                             "UI: Error color", },                                         false, true,  ColorChar, { .p = "#ff0000"         }, (S_Func) dwb_reload_colors, },
+  { { "insert-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_com_reload_colors, },
+  { { "insert-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#00008b"         }, (S_Func) dwb_com_reload_colors, },
+  { { "error-color",                             "UI: Error color", },                                         false, true,  ColorChar, { .p = "#ff0000"         }, (S_Func) dwb_com_reload_colors, },
 
-  { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_reload_colors, },
-  { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_reload_colors, },
-  { { "settings-border",                         "UI: Settings view border", },                                false, true,  Char,      { .p = "1px dotted black"}, (S_Func) dwb_reload_colors, },
+  { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_com_reload_colors, },
+  { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_com_reload_colors, },
+  { { "settings-border",                         "UI: Settings view border", },                                false, true,  Char,      { .p = "1px dotted black"}, (S_Func) dwb_com_reload_colors, },
  
-  { { "active-font-size",                        "UI: Active view fontsize", },                                false, true,  Integer, { .i = 12                },   (S_Func) dwb_reload_layout, },
-  { { "normal-font-size",                        "UI: Inactive view fontsize", },                              false, true,  Integer, { .i = 10                },   (S_Func) dwb_reload_layout, },
+  { { "active-font-size",                        "UI: Active view fontsize", },                                false, true,  Integer, { .i = 12                },   (S_Func) dwb_com_reload_layout, },
+  { { "normal-font-size",                        "UI: Inactive view fontsize", },                              false, true,  Integer, { .i = 10                },   (S_Func) dwb_com_reload_layout, },
   
-  { { "font",                                    "UI: Font", },                                                false, true,  Char, { .p = "monospace"          },   (S_Func) dwb_reload_layout, },
+  { { "font",                                    "UI: Font", },                                                false, true,  Char, { .p = "monospace"          },   (S_Func) dwb_com_reload_layout, },
    
-  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  Char, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts, },
-  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  Char, { .p = "letter"            },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  Char, { .p = "12px"              },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  Char, { .p = "normal"            },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  Char, { .p = "monospace"         },     (S_Func) dwb_reload_scripts, },
-  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  ColorChar, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  ColorChar, { .p = "#000088"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  ColorChar, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  ColorChar, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
-  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_reload_scripts, },
+  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  Char, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_com_reload_scripts, },
+  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  Char, { .p = "letter"            },     (S_Func) dwb_com_reload_scripts, },
+  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  Char, { .p = "12px"              },     (S_Func) dwb_com_reload_scripts, },
+  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  Char, { .p = "normal"            },     (S_Func) dwb_com_reload_scripts, },
+  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  Char, { .p = "monospace"         },     (S_Func) dwb_com_reload_scripts, },
+  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  ColorChar, { .p = "#ffffff"      },     (S_Func) dwb_com_reload_scripts, },
+  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  ColorChar, { .p = "#000088"      },     (S_Func) dwb_com_reload_scripts, },
+  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  ColorChar, { .p = "#00ff00"      },     (S_Func) dwb_com_reload_scripts, },
+  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  ColorChar, { .p = "#ffff99"      },     (S_Func) dwb_com_reload_scripts, },
+  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_com_reload_scripts, },
+  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_com_reload_scripts, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
 
@@ -301,19 +298,14 @@ static WebSettings DWB_SETTINGS[] = {
   { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  NULL, },
 };/*}}}*/
 
-
-/* UTIL {{{*/
-/* }}} */
-
 /* CALLBACKS {{{*/
-
 
 /* dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {{{*/
 gboolean 
 dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
 
-  gchar *key = dwb_keyval_to_char(e->keyval);
+  gchar *key = dwb_util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_Escape) {
     dwb_normal_mode(true);
     ret = false;
@@ -329,7 +321,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   }
   else if (dwb.state.mode == QuickmarkOpen) {
     if (key) {
-      dwb_open_quickmark(key);
+      dwb_com_open_quickmark(key);
     }
     ret = true;
   }
@@ -383,9 +375,7 @@ dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new
   }
 }/*}}}*/
 
-
 /*}}}*/
-
 
 /* COMMAND_TEXT {{{*/
 
@@ -471,6 +461,20 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 
 /* FUNCTIONS {{{*/
 
+/* dwb_get_default_settings()         return: GHashTable {{{*/
+GHashTable * 
+dwb_get_default_settings() {
+  GHashTable *ret = g_hash_table_new(g_str_hash, g_str_equal);
+  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
+    WebSettings *s = l->data;
+    WebSettings *new = g_malloc(sizeof(WebSettings)); 
+    *new = *s;
+    gchar *value = g_strdup(s->n.first);
+    g_hash_table_insert(ret, value, new);
+  }
+  return ret;
+}/*}}}*/
+
 /*  dwb_get_command_from_mimetype(gchar *mimetype){{{*/
 gchar *
 dwb_get_command_from_mimetype(gchar *mimetype) {
@@ -513,9 +517,9 @@ dwb_entry_set_text(const gchar *text) {
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
 }/*}}}*/
 
-/* dwb_focus_entry() {{{*/
+/* dwb_com_focus_entry() {{{*/
 void 
-dwb_focus_entry() {
+dwb_com_focus_entry() {
   gtk_widget_grab_focus(dwb.gui.entry);
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   //dwb.state.last_com_history = NULL;
@@ -542,7 +546,7 @@ dwb_entry_position_word_back(gint position) {
   return position;
 }/*}}}*/
 
-/* dwb_entry_history_forward(gint) {{{*/
+/* dwb_com_entry_history_forward(gint) {{{*/
 gint 
 dwb_entry_position_word_forward(gint position) {
   gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
@@ -586,7 +590,7 @@ dwb_parse_setting(const gchar *text) {
   GHashTable *t = dwb.state.setting_apply == Global ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
   if (token[0]) {
     if  ( (s = g_hash_table_lookup(t, token[0])) ) {
-      if ( (a = dwb_char_to_arg(token[1], s->type)) ) {
+      if ( (a = dwb_util_char_to_arg(token[1], s->type)) ) {
         s->arg = *a;
         dwb_apply_settings(s);
         gchar *message = g_strdup_printf("Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
@@ -621,40 +625,73 @@ dwb_parse_key_setting(const gchar *text) {
   value.key = dwb_strv_to_key(keys, g_strv_length(keys));
 
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_keymap_sort_second);
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
 
   g_strfreev(token);
   g_strfreev(keys);
   dwb_normal_mode(true);
 }/*}}}*/
 
-/* dwb_reload_colors(GList *,  WebSettings  *s) {{{*/
+/* dwb_com_reload_colors(GList *,  WebSettings  *s) {{{*/
 void 
-dwb_reload_scripts(GList *gl, WebSettings *s) {
+dwb_com_reload_scripts(GList *gl, WebSettings *s) {
   g_free(dwb.misc.scripts);
   dwb_init_scripts();
-  dwb_reload(NULL);
+  dwb_com_reload(NULL);
 }/*}}}*/
 
-/* dwb_reload_colors(GList *,  WebSettings  *s) {{{*/
+/* dwb_com_reload_colors(GList *,  WebSettings  *s) {{{*/
 void 
-dwb_reload_colors(GList *gl, WebSettings *s) {
+dwb_com_reload_colors(GList *gl, WebSettings *s) {
   dwb_init_style();
 }/*}}}*/
 
-/* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
+/* dwb_com_reload_layout(GList *,  WebSettings  *s) {{{*/
 void 
-dwb_reload_layout(GList *gl, WebSettings *s) {
+dwb_com_reload_layout(GList *gl, WebSettings *s) {
   dwb_init_style();
   for (GList *l = dwb.state.views; l; l=l->next) {
     if (l == dwb.state.fview) {
-      dwb_set_active_style(l);
+      dwb_view_set_active_style(l);
     }
     else {
-      dwb_set_normal_style(l);
+      dwb_view_set_normal_style(l);
     }
   }
 }/*}}}*/
+
+/* dwb_get_search_engine_uri(const gchar *uri) {{{*/
+gchar *
+dwb_get_search_engine_uri(const gchar *uri, const gchar *text) {
+  gchar *ret = NULL;
+  if (uri) {
+    gchar **token = g_strsplit(uri, HINT_SEARCH_SUBMIT, 2);
+    ret = g_strconcat(token[0], text, token[1], NULL);
+    g_strfreev(token);
+  }
+  return ret;
+}/* }}} */
+
+/* dwb_get_search_engine(const gchar *uri) {{{*/
+gchar *
+dwb_get_search_engine(const gchar *uri) {
+  gchar *ret = NULL;
+  if ( (!strstr(uri, ".") || strstr(uri, " ")) && !strstr(uri, "localhost:")) {
+    gchar **token = g_strsplit(uri, " ", 2);
+    for (GList *l = dwb.fc.searchengines; l; l=l->next) {
+      Navigation *n = l->data;
+      if (!strcmp(token[0], n->first)) {
+        ret = dwb_get_search_engine_uri(n->second, token[1]);
+        break;
+      }
+    }
+    if (!ret) {
+      ret = dwb_get_search_engine_uri(dwb.misc.default_search, uri);
+    }
+  }
+  return ret;
+}/*}}}*/
+
 
 /* dwb_save_searchengine {{{*/
 void
@@ -941,12 +978,12 @@ dwb_save_quickmark(const gchar *key) {
     for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
       Quickmark *q = l->data;
       if (!strcmp(key, q->key)) {
-        dwb_quickmark_free(q);
+        dwb_com_quickmark_free(q);
         dwb.fc.quickmarks = g_list_delete_link(dwb.fc.quickmarks, l);
         break;
       }
     }
-    dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_quickmark_new(uri, title, key));
+    dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_com_quickmark_new(uri, title, key));
     dwb_normal_mode(false);
 
     gchar *message = g_strdup_printf("Added quickmark: %s - %s", key, uri);
@@ -959,9 +996,9 @@ dwb_save_quickmark(const gchar *key) {
   }
 }/*}}}*/
 
-/* dwb_open_quickmark(const gchar *key){{{*/
+/* dwb_com_open_quickmark(const gchar *key){{{*/
 void 
-dwb_open_quickmark(const gchar *key) {
+dwb_com_open_quickmark(const gchar *key) {
   gchar *message = NULL;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
@@ -1026,7 +1063,7 @@ dwb_grab_focus(GList *gl) {
   dwb.state.fview = gl;
   dwb.gui.entry = v->entry;
   gtk_widget_show(v->entry);
-  dwb_set_active_style(gl);
+  dwb_view_set_active_style(gl);
   gtk_widget_grab_focus(v->scroll);
 }/*}}}*/
 
@@ -1085,7 +1122,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
     return false;
   }
 
-  gchar *key = dwb_keyval_to_char(e->keyval);
+  gchar *key = dwb_util_keyval_to_char(e->keyval);
   gboolean ret = false;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
@@ -1132,7 +1169,7 @@ dwb_eval_key(GdkEventKey *e) {
     }
     return ret;
   }
-  gchar *key = dwb_keyval_to_char(keyval);
+  gchar *key = dwb_util_keyval_to_char(keyval);
   if (!key) {
     return false;
   }
@@ -1191,7 +1228,7 @@ dwb_eval_key(GdkEventKey *e) {
     dwb_comp_autocomplete(coms, NULL);
   }
   if (tmp) {
-    dwb_simple_command(tmp);
+    dwb_com_simple_command(tmp);
   }
   g_free(key);
   return ret;
@@ -1202,7 +1239,7 @@ dwb_eval_key(GdkEventKey *e) {
 gboolean
 dwb_command_mode(Arg *arg) {
   dwb_set_normal_message(dwb.state.fview, ":", false);
-  dwb_focus_entry();
+  dwb_com_focus_entry();
   dwb.state.mode = CommandMode;
   return true;
 }/*}}}*/
@@ -1341,7 +1378,7 @@ dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length) {
     g_string_append_printf(string, "%s %s\n", n->first, n->second);
     g_free(n);
   }
-  dwb_set_file_content(filename, string->str);
+  dwb_util_set_file_content(filename, string->str);
   g_string_free(string, true);
 }/*}}}*/
 
@@ -1365,9 +1402,9 @@ dwb_save_files() {
     Quickmark *q = l->data;
     Navigation *n = q->nav;
     g_string_append_printf(quickmarks, "%s %s %s\n", q->key, n->first, n->second);
-    dwb_quickmark_free(q);
+    dwb_com_quickmark_free(q);
   }
-  dwb_set_file_content(dwb.files.quickmarks, quickmarks->str);
+  dwb_util_set_file_content(dwb.files.quickmarks, quickmarks->str);
   g_string_free(quickmarks, true);
 
   // cookie allow
@@ -1376,7 +1413,7 @@ dwb_save_files() {
     g_string_append_printf(cookies_allow, "%s\n", (gchar*)l->data);
     g_free(l->data);
   }
-  dwb_set_file_content(dwb.files.cookies_allow, cookies_allow->str);
+  dwb_util_set_file_content(dwb.files.cookies_allow, cookies_allow->str);
   g_string_free(cookies_allow, true);
   // save keys
 
@@ -1413,7 +1450,7 @@ dwb_save_files() {
   }
   for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
-    gchar *value = dwb_arg_to_char(&s->arg, s->type); 
+    gchar *value = dwb_util_arg_to_char(&s->arg, s->type); 
     g_key_file_set_value(keyfile, dwb.misc.profile, s->n.first, value ? value : "" );
     g_free(value);
   }
@@ -1522,7 +1559,7 @@ dwb_keymap_delete(GList *gl, KeyValue key) {
       break;
     }
   }
-  gl = g_list_sort(gl, (GCompareFunc)dwb_keymap_sort_second);
+  gl = g_list_sort(gl, (GCompareFunc)dwb_util_keymap_sort_second);
   return gl;
 }/*}}}*/
 
@@ -1618,7 +1655,7 @@ dwb_read_settings() {
           if (!strcmp(keys[i], DWB_SETTINGS[j].n.first)) {
             WebSettings *s = malloc(sizeof(WebSettings));
             *s = DWB_SETTINGS[j];
-            if ( (arg = dwb_char_to_arg(value, s->type)) ) {
+            if ( (arg = dwb_util_char_to_arg(value, s->type)) ) {
               s->arg = *arg;
             }
             //ret = g_slist_append(ret, s);
@@ -1647,7 +1684,7 @@ dwb_init_key_map() {
       dwb.keymap = dwb_keymap_add(dwb.keymap, KEYS[j]);
     }
   }
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_keymap_sort_second);
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
 }/*}}}*/
 
 /* dwb_init_settings() {{{*/
@@ -1692,10 +1729,10 @@ dwb_init_scripts() {
   // init system scripts
 
   gchar *dir;
-  if ( (dir = dwb_get_data_dir("scripts")) ) {
-    dwb_get_directory_content(&buffer, dir);
+  if ( (dir = dwb_util_get_data_dir("scripts")) ) {
+    dwb_util_get_directory_content(&buffer, dir);
   }
-  dwb_get_directory_content(&buffer, dwb.files.scriptdir);
+  dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/
@@ -1774,7 +1811,7 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_exit), NULL);
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
-  gtk_widget_modify_bg(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.normal_bg);
+  gtk_widget_modify_bg(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 
   // Main
   dwb.gui.vbox = gtk_vbox_new(false, 1);
@@ -1820,7 +1857,7 @@ dwb_init_gui() {
 /* dwb_init_file_content {{{*/
 GList *
 dwb_init_file_content(GList *gl, const gchar *filename, Content_Func func) {
-  gchar *content = dwb_get_file_content(filename);
+  gchar *content = dwb_util_get_file_content(filename);
   if (content) {
     gchar **token = g_strsplit(content, "\n", 0);
     gint length = MAX(g_strv_length(token) - 1, 0);
@@ -1836,7 +1873,7 @@ dwb_init_file_content(GList *gl, const gchar *filename, Content_Func func) {
 /* dwb_init_files() {{{*/
 void
 dwb_init_files() {
-  gchar *path = dwb_build_path();
+  gchar *path = dwb_util_build_path();
   gchar *profile_path = g_strconcat(path, dwb.misc.profile, "/", NULL);
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(profile_path, 0755);
@@ -1858,7 +1895,7 @@ dwb_init_files() {
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
-  dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (Content_Func)dwb_quickmark_new_from_line); 
+  dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (Content_Func)dwb_com_quickmark_new_from_line); 
   dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
 
@@ -1887,7 +1924,7 @@ void
 dwb_init_proxy() {
   const gchar *proxy;
   gchar *newproxy;
-  if ( (proxy =  g_getenv("http_proxy")) && dwb_test_connect(proxy) ) {
+  if ( (proxy =  g_getenv("http_proxy")) && dwb_util_test_connect(proxy) ) {
     newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
     dwb.misc.proxyuri = soup_uri_new(newproxy);
     g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", dwb.misc.proxyuri, NULL); 
@@ -1918,6 +1955,16 @@ dwb_init_vars() {
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }
+
+
+gboolean
+dwb_idle(gpointer *data) {
+  //puts("hallo");
+  gint i=0;
+  i+=1;
+  i-=1;
+  return  true;
+}
 /* dwb_init() {{{*/
 void dwb_init() {
 
@@ -1944,10 +1991,9 @@ void dwb_init() {
   dwb_init_cookies();
   dwb_init_vars();
 
-
   if (dwb.state.layout & BottomStack) {
     Arg a = { .n = dwb.state.layout };
-    dwb_set_orientation(&a);
+    dwb_com_set_orientation(&a);
   }
   if (dwb.misc.argc > 0) {
     for (gint i=0; i<dwb.misc.argc; i++) {
@@ -1960,6 +2006,8 @@ void dwb_init() {
   }
 } /*}}}*/ /*}}}*/
 
+/* FIFO {{{*/
+/* dwb_parse_command_line(const gchar *line) {{{*/
 void 
 dwb_parse_command_line(const gchar *line) {
   gchar **token = g_strsplit(line, " ", 2);
@@ -1975,15 +2023,16 @@ dwb_parse_command_line(const gchar *line) {
         m->map->func(&m->map->arg);
       }
       else {
-        dwb_simple_command(m);
+        dwb_com_simple_command(m);
       }
       m->map->arg = a;
     }
   }
   g_strfreev(token);
   dwb_normal_mode(true);
-}
+}/*}}}*/
 
+/* dwb_handle_channel {{{*/
 gboolean
 dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
   gchar *line = NULL;
@@ -1995,13 +2044,14 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
     g_io_channel_flush(c, NULL);
     g_free(line);
   }
-
   return true;
-}
+}/*}}}*/
+
+/* dwb_init_fifo{{{*/
 void 
 dwb_init_fifo() {
   FILE *ff;
-  gchar *path = dwb_build_path();
+  gchar *path = dwb_util_build_path();
   gchar *unifile = g_strconcat(path, "dwb-uni.fifo", NULL);
 
   if (dwb.misc.single || g_file_test(unifile, G_FILE_TEST_EXISTS)) {
@@ -2031,7 +2081,8 @@ dwb_init_fifo() {
     }
     exit(EXIT_SUCCESS);
   }
-}
+}/*}}}*/
+/*}}}*/
 
 int main(gint argc, gchar *argv[]) {
   dwb.misc.name = NAME;

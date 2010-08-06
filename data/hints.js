@@ -9,6 +9,7 @@ var lastinput;
 var styles;
 var form_hints = "//form";
 var last_entry = null;
+var hints = "//a | //area | //textarea | //select | //link | //input | //button | //frame | //iframe | //*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href]";
 
 function Hint(element) {
   this.element = element;
@@ -149,16 +150,16 @@ function create_stylesheet() {
 function get_visibility(e) {
   var rects = e.getClientRects()[0];
   var r = e.getBoundingClientRect();
-  if (!r || r.top > window.innerHeight || r.bottom < 0 
-      || r.left > window.innerWidth ||  r < 0 || !rects ) {
+  var style = document.defaultView.getComputedStyle(e, null);
+
+  if (!r || r.top > window.innerHeight || r.bottom < 0 || r.left > window.innerWidth ||  r < 0 || !rects) {
     return false;
   }
   var style = document.defaultView.getComputedStyle(e, null);
-    if (style.getPropertyValue("visibility") != "visible" 
-        || style.getPropertyValue("display") == "none") {
+  if (style.getPropertyValue("visibility") != "visible" || style.getPropertyValue("display") == "none") {
       return false;
-    }
-    return true;
+  }
+  return true;
 }
 
 
@@ -167,10 +168,15 @@ function show_hints(w) {
     w = window;
   }
   var doc = w.document;
+
   document.activeElement.blur();
+
   var res = doc.body.querySelectorAll('a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe');
+  console.log(res.length);
+
   hints = document.createElement("div");
   create_stylesheet();
+
   for (var i=0; i<res.length; i++) {
     if (get_visibility(res[i])) {
       var e = hint_style.toLowerCase() == "letter" ? new LetterHint(res[i]) : new NumberHint(res[i]);
@@ -179,6 +185,7 @@ function show_hints(w) {
     }
   };
   elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
+  console.log(elements.length);
   for (var i=0; i<elements.length; i++) {
     var e = elements[i];
     e.getTextHint(i, elements.length);
@@ -190,7 +197,7 @@ function show_hints(w) {
   for (var i=0; i<frames.length; i++) {
     show_hints(frames[i]);
   }
-  document.body.appendChild(hints);
+  document.getElementsByTagName("body")[0].appendChild(hints);
 }
 
 function is_input(element) {

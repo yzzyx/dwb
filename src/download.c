@@ -5,8 +5,6 @@
 #include "util.h"
 #include "completion.h"
 
-
-gchar * dwb_get_download_command(const gchar *uri, const gchar *output);
 typedef struct _DwbDownload {
   GtkWidget *event;
   GtkWidget *rlabel;
@@ -16,10 +14,30 @@ typedef struct _DwbDownload {
   gchar *path;
 } DwbDownload;
 
-
 static GList *downloads = NULL;
 
+/* dwb_get_download_command {{{*/
+gchar *
+dwb_get_download_command(const gchar *uri, const gchar *output) {
+  gchar *command = g_strdup(GET_CHAR("download-external-command"));
+  gchar *newcommand = NULL;
 
+  if ( (newcommand = dwb_util_string_replace(command, "dwb_uri", uri)) ) {
+    g_free(command);
+    command = newcommand;
+  }
+  if ( (newcommand = dwb_util_string_replace(command, "dwb_cookies", dwb.files.cookies)) ) {
+    g_free(command);
+    command = newcommand;
+  }
+  if ( (newcommand = dwb_util_string_replace(command, "dwb_output", output)) ) {
+    g_free(command);
+    command = newcommand;
+  }
+  return command;
+}/*}}}*/
+
+/* dwb_dl_get_download_label(WebKitDownload *) {{{*/
 GList * 
 dwb_dl_get_download_label(WebKitDownload *download) {
   for (GList *l = downloads; l; l=l->next) {
@@ -29,8 +47,9 @@ dwb_dl_get_download_label(WebKitDownload *download) {
     }
   }
   return NULL;
-}
+}/*}}}*/
 
+/* dwb_dl_progress_cb(WebKitDownload *) {{{*/
 void
 dwb_dl_progress_cb(WebKitDownload *download) {
   GList *l = dwb_dl_get_download_label(download); 
@@ -55,22 +74,26 @@ dwb_dl_progress_cb(WebKitDownload *download) {
   gdk_color_parse(colorstring, &color);
   gtk_widget_modify_bg(label->event, GTK_STATE_NORMAL, &color);
   g_free(colorstring);
-}
+}/*}}}*/
 
-void  
+/* dwb_dl_set_mimetype(const gchar *) {{{*/
+void
 dwb_dl_set_mimetype(const gchar *command) {
-  for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
-    Navigation *n = l->data;
-    if (!strcmp(dwb.state.mimetype_request, n->first)) {
-      g_free(n->second);
-      n->second = g_strdup(command);
-      return;
+  if (dwb.state.mimetype_request) {
+    for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
+      Navigation *n = l->data;
+      if (!strcmp(dwb.state.mimetype_request, n->first)) {
+        g_free(n->second);
+        n->second = g_strdup(command);
+        return;
+      }
     }
+    Navigation *n = dwb_navigation_new(dwb.state.mimetype_request, command);
+    dwb.fc.mimetypes = g_list_prepend(dwb.fc.mimetypes, n);
   }
-  Navigation *n = dwb_navigation_new(dwb.state.mimetype_request, command);
-  dwb.fc.mimetypes = g_list_prepend(dwb.fc.mimetypes, n);
-}
+}/*}}}*/
 
+/* dwb_dl_spawn(DwbDownload *) {{{*/
 void 
 dwb_dl_spawn(DwbDownload *dl) {
   GError *error = NULL;
@@ -84,9 +107,9 @@ dwb_dl_spawn(DwbDownload *dl) {
   dwb_dl_set_mimetype(dl->path);
   g_free(command);
   g_strfreev(argv);
-}
+}/*}}}*/
 
-
+/* dwb_dl_status_cb(WebKitDownload *) {{{*/
 void
 dwb_dl_status_cb(WebKitDownload *download) {
   WebKitDownloadStatus status = webkit_download_get_status(download);
@@ -107,8 +130,9 @@ dwb_dl_status_cb(WebKitDownload *download) {
     }
     g_free(dwb.state.mimetype_request);
   }
-}
+}/*}}}*/
 
+/* dwb_dl_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *) {{{*/
 gboolean 
 dwb_dl_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *gl) {
   if (e->button == 3) {
@@ -116,8 +140,9 @@ dwb_dl_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *gl) {
     webkit_download_cancel(label->download);
   }
   return false;
-}
+}/*}}}*/
 
+/* dwb_dl_add_progress_label (GList *gl, const gchar *filename) {{{*/
 DwbDownload *
 dwb_dl_add_progress_label(GList *gl, const gchar *filename) {
   DwbDownload *l = g_malloc(sizeof(DwbDownload));
@@ -145,11 +170,11 @@ dwb_dl_add_progress_label(GList *gl, const gchar *filename) {
 
   l->download = dwb.state.download;
 
-  //gtk_widget_show_all(l->event);
   gtk_widget_show_all(dwb.gui.downloadbar);
   return l;
-}
+}/*}}}*/
 
+/* dwb_dl_start {{{*/
 void 
 dwb_dl_start() {
   const gchar *path = GET_TEXT();
@@ -208,8 +233,9 @@ dwb_dl_start() {
   dwb_normal_mode(true);
   dwb.state.download = NULL;
   g_free(fullpath);
-}
+}/*}}}*/
 
+/* dwb_dl_entry_set_directory() {{{*/
 void
 dwb_dl_entry_set_directory() {
   dwb_set_normal_message(dwb.state.fview, "Downloadpath:", false);
@@ -221,24 +247,25 @@ dwb_dl_entry_set_directory() {
     g_free(current_dir);
   if (newdir) 
     g_free(newdir);
-}
+}/*}}}*/
 
+/* dwb_dl_entry_set_spawn_command{{{*/
 void
 dwb_dl_entry_set_spawn_command(const gchar *command) {
-  if (!command) {
+  if (!command && dwb.state.mimetype_request) {
     command = dwb_get_command_from_mimetype(dwb.state.mimetype_request);
   }
-  gchar *message = g_strdup_printf("Spawn (%s):", dwb.state.mimetype_request);
+  gchar *message = g_strdup_printf("Spawn (%s):", dwb.state.mimetype_request ? dwb.state.mimetype_request : "???");
   dwb_set_normal_message(dwb.state.fview, message, false);
   g_free(message);
   dwb_entry_set_text(command ? command : "");
-}
+}/*}}}*/
 
-/*{{{*/
+/* dwb_dl_get_path {{{*/
 void 
 dwb_dl_get_path(GList *gl, WebKitDownload *d) {
   gchar *command;
-  dwb_focus_entry();
+  dwb_com_focus_entry();
   dwb.state.mode = DownloadGetPath;
   dwb.state.download = d;
 
@@ -251,7 +278,7 @@ dwb_dl_get_path(GList *gl, WebKitDownload *d) {
   }
 }/*}}}*/
 
-
+/* dwb_dl_set_execute {{{*/
 void 
 dwb_dl_set_execute(Arg *arg) {
   if (dwb.state.mode == DownloadGetPath) {
@@ -264,24 +291,4 @@ dwb_dl_set_execute(Arg *arg) {
       dwb_dl_entry_set_directory();
     }
   }
-}
-gchar *
-dwb_get_download_command(const gchar *uri, const gchar *output) {
-  gchar *command = g_strdup(GET_CHAR("download-external-command"));
-  gchar *newcommand = NULL;
-
-  if ( (newcommand = dwb_string_replace(command, "dwb_uri", uri)) ) {
-    g_free(command);
-    command = newcommand;
-  }
-  if ( (newcommand = dwb_string_replace(command, "dwb_cookies", dwb.files.cookies)) ) {
-    g_free(command);
-    command = newcommand;
-  }
-  if ( (newcommand = dwb_string_replace(command, "dwb_output", output)) ) {
-    g_free(command);
-    command = newcommand;
-  }
-  return command;
-}
-
+}/*}}}*/

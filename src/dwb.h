@@ -407,11 +407,11 @@ gboolean dwb_insert_mode(Arg *);
 void dwb_normal_mode(gboolean);
 
 void dwb_load_uri(Arg *);
-void dwb_focus_entry(void);
+void dwb_com_focus_entry(void);
 
-gboolean dwb_push_master(Arg *);
-void dwb_remove_view(Arg *);
-void dwb_focus(GList *);
+gboolean dwb_com_push_master(Arg *);
+void dwb_com_remove_view(Arg *);
+void dwb_com_focus(GList *);
 
 void dwb_set_normal_message(GList *, const gchar *, gboolean);
 void dwb_set_error_message(GList *, const gchar *);
@@ -449,8 +449,8 @@ gchar * dwb_get_command_from_mimetype(gchar *);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
 void dwb_parse_command_line(const gchar *);
+GHashTable * dwb_get_default_settings(void);
 
 void dwb_exit(void);
-int dwb_test_connect(const char *uri);
 
 #endif
