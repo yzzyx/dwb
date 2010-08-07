@@ -11,7 +11,8 @@ var form_hints = "//form";
 var last_entry = null;
 var hints = "//a | //area | //textarea | //select | //link | //input | //button | //frame | //iframe | //*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href]";
 
-function Hint(element) {
+console.log(Request.getContentType());
+function Hint(element, id) {
   this.element = element;
   this.rect = element.getBoundingClientRect();
 
@@ -35,6 +36,7 @@ function Hint(element) {
     hint.style.border = hint_border;
     hint.style.zIndex = 20000;
     hint.style.visibility = 'visible';
+    hint.name = "dwb_hint";
     return hint;
   }
 
@@ -124,7 +126,6 @@ function NumberHint(element) {
   this.constructor = Hint;
   this.constructor(element);
 }
-
 NumberHint.prototype = new Hint();
 
 function click_element(e) {
@@ -148,17 +149,20 @@ function create_stylesheet() {
 }
 
 function get_visibility(e) {
-  var rects = e.getClientRects()[0];
-  var r = e.getBoundingClientRect();
   var style = document.defaultView.getComputedStyle(e, null);
-
-  if (!r || r.top > window.innerHeight || r.bottom < 0 || r.left > window.innerWidth ||  r < 0 || !rects) {
-    return false;
-  }
-  var style = document.defaultView.getComputedStyle(e, null);
-  if (style.getPropertyValue("visibility") != "visible" || style.getPropertyValue("display") == "none") {
+  if (style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none") {
       return false;
   }
+  var rects = e.getClientRects()[0];
+  var r = e.getBoundingClientRect();
+
+  var height = window.innerHeight ? window.innerHeight : document.body.offsetHeight;
+  var width = window.innerWidth ? window.innerWidth : document.body.offsetWidth;
+  if (!r || r.top > height || r.bottom < 0 || r.left > width ||  r.right < 0 || !rects) {
+    return false;
+  }
+
+  var style = document.defaultView.getComputedStyle(e, null);
   return true;
 }
 
@@ -172,52 +176,31 @@ function show_hints(w) {
   document.activeElement.blur();
 
   var res = doc.body.querySelectorAll('a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe');
-  console.log(res.length);
 
-  hints = document.createElement("div");
+  var hints = document.createElement("div");
+  hints.id = "dwb_hints";
+
   create_stylesheet();
 
   for (var i=0; i<res.length; i++) {
     if (get_visibility(res[i])) {
-      var e = hint_style.toLowerCase() == "letter" ? new LetterHint(res[i]) : new NumberHint(res[i]);
-      hints.appendChild(e.hint);
+      var e = hint_style.toLowerCase() == "letter" ? new LetterHint(res[i], i) : new NumberHint(res[i], i);
       elements.push(e);
     }
   };
   elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
-  console.log(elements.length);
   for (var i=0; i<elements.length; i++) {
+    if (res[i] == elements[i]) {
+      continue;
+    }
     var e = elements[i];
+    hints.appendChild(e.hint);
     e.getTextHint(i, elements.length);
     e.element.setAttribute('dwb_highlight', 'hint_normal');
   }
   active_arr = elements;
   
-  var  frames = w.frames;
-  for (var i=0; i<frames.length; i++) {
-    show_hints(frames[i]);
-  }
   document.getElementsByTagName("body")[0].appendChild(hints);
-}
-
-function is_input(element) {
-  var e = element.element;
-  var type = e.type.toLowerCase();
-  var  tagname = e.toLowerCase();
-  if (tagname == "input" || tagname == "textarea" ) {
-    if (type == "radio" || type == "checkbox") {
-      e.checked = !e.checked;
-      return false;
-    }
-    else if (type == "submit" || type == "reset" || type  == "button") {
-      click_element(element);
-    }
-    else {
-      e.focus();
-    }
-    return true;
-  }
-  return false;
 }
 
 function update_hints(input) {
@@ -277,17 +260,10 @@ function clear() {
   if (styles) {
     document.getElementsByTagName('head')[0].removeChild(styles);
   }
-  if (hints && hints.parentNode) {
-    hints.parentNode.removeChild(hints);
-    hints = undefined;
-  }
-  if (overlays && overlays.parentNode) {
-    overlays.parentNode.removeChild(overlays);
-    overlays = undefined;
-  }
+  var hints = document.getElementById("dwb_hints");
+  hints.parentNode.removeChild(hints);
   elements = [];
   active_arr = [];
-  //active = undefined;
 }
 
 function evaluate(element) {
@@ -311,14 +287,9 @@ function evaluate(element) {
       ret = "_dwb_input_";
     }
   }
-  else if (e.href) {
-    if (e.href.match(/javascript:/) || (e.type.toLowerCase() == "button")) {
-      click_element(element);
-      ret = "_dwb_click_";
-    }
-    else {
-      ret = e.href;
-    }
+  else {
+    click_element(element);
+    return "_dwb_click_";
   }
   clear(); 
   return ret;
@@ -366,7 +337,6 @@ function add_searchengine() {
   document.body.appendChild(hints); 
   set_active[elements[0]];
   active_arr = elements;
-  //update_hints();
 }
 function submit_searchengine(string) {
   var e = active.element;
@@ -401,22 +371,4 @@ function focus_input() {
     }
   }
   active_input.focus();
-}
-function input_get_name() {
-  //create_stylesheet();
-  var e = document.activeElement;
-  if (e.tagName.toLowerCase() == "input") {
-    last_entry = e;
-
-    e.focus();
-    if (last_entry) {
-      return document.activeElement.type;
-    }
-  }
-}
-function input_set_text(text) {
-  if (last_entry) {
-    last_entry.value = text;
-    last_entry = null;
-  }
 }

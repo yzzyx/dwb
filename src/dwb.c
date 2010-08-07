@@ -19,6 +19,7 @@
 #include "util.h"
 #include "download.h"
 #include "config.h"
+#include "session.h"
 #define NAME "dwb";
 
 /* SETTINGS MAKROS {{{*/
@@ -103,8 +104,13 @@ void dwb_clean_vars(void);
 
 static GdkNativeWindow embed = 0;
 static gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
-static gint MAX_COMPLETIONS = 11;
+static gint MAX_COMPLETIONS = 12;
 
+gboolean
+dwb_test(Arg *a) {
+  dwb_session_save();
+  return true;
+}
 
 /* FUNCTION_MAP{{{*/
 #define NO_URL                      "No URL in current context"
@@ -175,6 +181,7 @@ static FunctionMap FMAP [] = {
   { { "paste_primary",         "Paste primary selection",           }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM,  { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
   { { "paste_nv",              "Paste, new view",                   }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM,  { .n = OpenNewView, .p = GDK_NONE } },
   { { "paste_primary_nv",      "Paste primary selection, new view", }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM,  { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
+  { { "test",                   "test", },                             (Func)dwb_test,               "test",            NeverSM,  { 0 }, },
 
   //Entry editing
   { { "entry_delete_word",      "Delete word", },                       (Func)dwb_com_entry_delete_word,            NULL,        AlwaysSM,  { 0 }, true, }, 
@@ -874,7 +881,7 @@ dwb_update_hints(GdkEventKey *e) {
     buffer = dwb_execute_script(com);
     g_free(com);
   }
-  if (buffer && strcmp(buffer, "undefined")) {
+  if (buffer) { 
     if (!strcmp("_dwb_no_hints_", buffer)) {
       dwb_set_error_message(dwb.state.fview, NO_HINTS);
       dwb_normal_mode(false);
@@ -894,17 +901,12 @@ dwb_update_hints(GdkEventKey *e) {
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
       dwb.state.scriptlock = 1;
-    }
-    else  if (!strcmp(buffer, "_dwb_check_")) {
-      dwb_normal_mode(true);
-    }
-    else {
-      Arg a = { .p = buffer };
-      dwb_load_uri(&a);
-      dwb.state.scriptlock = 1;
       if (dwb.state.nv != OpenDownload) {
         dwb_normal_mode(true);
       }
+    }
+    else  if (!strcmp(buffer, "_dwb_check_")) {
+      dwb_normal_mode(true);
     }
   }
   g_free(buffer);
@@ -1077,9 +1079,6 @@ dwb_load_uri(Arg *arg) {
       soup_cookie_free(dwb.state.last_cookie); 
       dwb.state.last_cookie = NULL;
     }
-    if (dwb.state.nv == OpenNewView) {
-      dwb_add_view(NULL);
-    }
     View *fview = dwb.state.fview->data;
     webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
     g_free(uri);
@@ -1142,7 +1141,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
 /* dwb_eval_key(GdkEventKey *e) {{{*/
 gboolean
 dwb_eval_key(GdkEventKey *e) {
-  gboolean ret = true;
+  gboolean ret = false;
   const gchar *old = dwb.state.buffer ? dwb.state.buffer->str : NULL;
   gint keyval = e->keyval;
 

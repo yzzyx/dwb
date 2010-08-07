@@ -73,4 +73,5 @@ static KeyValue KEYS[] = {
   { "entry_history_back",       {   "k",            GDK_CONTROL_MASK, }, }, 
   { "download_set_execute",     {   "x",            GDK_CONTROL_MASK, }, }, 
   { "download_hint",            {   "gd",           0 }, },
+  { "test",                     {   "qq",           0 }, }, 
 };

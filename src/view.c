@@ -109,6 +109,13 @@ gboolean
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
+  if (dwb.state.nv == OpenNewView) {
+    gchar *uri = webkit_network_request_get_uri(request);
+    dwb.state.nv = OpenNormal;
+    Arg a = { .p = uri };
+    dwb_add_view(&a); 
+    return true;
+  }
   const gchar *request_uri = webkit_network_request_get_uri(request);
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 

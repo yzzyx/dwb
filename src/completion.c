@@ -118,10 +118,10 @@ dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max
     if (! (new = old->prev) ) {
       new = g_list_last(comps);
     }
-    if (position > offset   &&  position < items - offset - 1 + r) {
-      c = g_list_nth(comps, position - offset - 1)->data;
+    if (position -1> offset   &&  position < items - offset + r) {
+      c = g_list_nth(comps, position - offset - 2)->data;
       gtk_widget_show_all(c->event);
-      c = g_list_nth(comps, position + offset + 1 - r)->data;
+      c = g_list_nth(comps, position + offset - r)->data;
       gtk_widget_hide(c->event);
     }
     else {
