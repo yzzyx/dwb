@@ -120,7 +120,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   }
   const gchar *request_uri = webkit_network_request_get_uri(request);
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
-  puts(request_uri);
 
   if (dwb.state.mode == SearchFieldMode && reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED ) {
     webkit_web_policy_decision_ignore(policy);
@@ -328,7 +327,6 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
 
   return true;
 }/*}}}*/
-
 /*}}}*/
 
 /* DWB_WEB_VIEW {{{*/
@@ -403,9 +401,9 @@ dwb_web_view_init_signals(GList *gl) {
   g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   g_signal_connect(v->web, "focus",                                 G_CALLBACK(dwb_web_view_focus_cb), gl);
 
-  g_signal_connect(v->entry, "key-press-event", G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
-  g_signal_connect(v->entry, "key-release-event", G_CALLBACK(dwb_view_entry_keyrelease_cb), NULL);
-  g_signal_connect(v->entry, "activate", G_CALLBACK(dwb_view_entry_activate_cb), NULL);
+  g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
+  g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(dwb_view_entry_keyrelease_cb), NULL);
+  g_signal_connect(v->entry, "activate",                            G_CALLBACK(dwb_view_entry_activate_cb), NULL);
 } /*}}}*/
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/

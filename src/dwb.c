@@ -2089,13 +2089,13 @@ int main(gint argc, gchar *argv[]) {
         if (argv[i][1] == 'l') {
           dwb_session_list();
         }
-        if (argv[i][1] == 'p' && argv[i++]) {
+        else if (argv[i][1] == 'p' && argv[i++]) {
           dwb.misc.profile = argv[i];
         }
-        if (argv[i][1] == 'u' && argv[i++]) {
+        else if (argv[i][1] == 'u' && argv[i++]) {
           dwb.misc.single = true;
         }
-        if (argv[i][1] == 'r' ) {
+        else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
             restore = "default";
           }
