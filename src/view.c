@@ -55,12 +55,15 @@ dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 gboolean 
 dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {
   // TODO implement
+  // 
+#ifdef WEBINTERTFACE
   if (!strcmp(sourceid, KEY_SETTINGS)) {
     dwb_parse_key_setting(message);
   }
   else if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
+#endif
   return false;
 }/*}}}*/
 
@@ -110,7 +113,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     WebKitWebPolicyDecision *policy, GList *gl) {
 
   if (dwb.state.nv == OpenNewView) {
-    gchar *uri = webkit_network_request_get_uri(request);
+    gchar *uri = (gchar *)webkit_network_request_get_uri(request);
     dwb.state.nv = OpenNormal;
     Arg a = { .p = uri };
     dwb_add_view(&a); 

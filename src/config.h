@@ -32,8 +32,10 @@ static KeyValue KEYS[] = {
   { "scroll_right",             {   "l",         0,                   },  },  
   { "scroll_top",               {   "gg",         0,                  },  },  
   { "scroll_up",                {   "k",         0,                   },  },  
+#if WEBINTERFACE
   { "show_keys",                {   "Sk",         0,                  },  },  
   { "show_settings",            {   "Ss",         0,                  },  },  
+#endif
   { "show_global_settings",     {   "Sgs",         0,                  },  },  
   { "toggle_bottomstack",       {   "go",         0,                  },  },  
   { "toggle_maximized",         {   "gm",         0,                  },  },  

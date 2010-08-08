@@ -313,15 +313,17 @@ dwb_comp_init_autocompletion(GList *gl) {
   gint i=0;
   for (GList *l=gl; l; l=l->next, i++) {
     KeyMap *m = l->data;
-    Navigation *n = dwb_navigation_new(m->key, m->map->n.second);
-    Completion *c = dwb_comp_get_completion_item(n, m, NULL);
-    ret = g_list_append(ret, c);
-    if (i<5) {
-      gtk_widget_show_all(c->event);
-    }
-    dwb_navigation_free(n);
+    if (!m->map->entry) {
+      Navigation *n = dwb_navigation_new(m->key, m->map->n.second);
+      Completion *c = dwb_comp_get_completion_item(n, m, NULL);
+      ret = g_list_append(ret, c);
+      if (i<5) {
+        gtk_widget_show_all(c->event);
+      }
+      dwb_navigation_free(n);
 
-    gtk_box_pack_start(GTK_BOX(v->autocompletion), c->event, true,  true, 1);
+      gtk_box_pack_start(GTK_BOX(v->autocompletion), c->event, true,  true, 1);
+    }
   }
   GtkWidget *hbox = gtk_bin_get_child(GTK_BIN(v->statusbox));
   gtk_box_pack_start(GTK_BOX(hbox), v->autocompletion, true,  true, 10);

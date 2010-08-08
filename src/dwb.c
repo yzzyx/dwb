@@ -22,6 +22,7 @@
 #include "session.h"
 #define NAME "dwb";
 
+#ifdef WEBINTERFACE 
 /* SETTINGS MAKROS {{{*/
 #define KEY_SETTINGS "Dwb Key Settings"
 #define SETTINGS "Dwb Settings"
@@ -52,6 +53,7 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 #define HTML_DIV_SETTINGS_VALUE "<div class=\"key\">\n <input id=\"%s\" value=\"%s\"/>\n</div>\n"
 #define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" onchange=\"checkbox_click();\" %s>\n</div>\n"
 #define HTML_DIV_END "</div>\n"
+#endif
 /*}}}*/
 #define INSERT_MODE "Insert Mode"
 
@@ -104,7 +106,7 @@ void dwb_clean_vars(void);
 
 static GdkNativeWindow embed = 0;
 static gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
-static gint MAX_COMPLETIONS = 12;
+static gint MAX_COMPLETIONS = 11;
 
 gboolean
 dwb_test(Arg *a) {
@@ -163,9 +165,11 @@ static FunctionMap FMAP [] = {
   { { "set_global_setting",    "Set global property",               }, (Func)dwb_com_set_setting,         NULL,                              NeverSM,    { .n = Global } },
   { { "set_key",               "Set keybinding",                    }, (Func)dwb_com_set_key,             NULL,                              NeverSM,    { 0 } },
   { { "set_setting",           "Set property",                      }, (Func)dwb_com_set_setting,         NULL,                              NeverSM,    { .n = PerView } },
+#if WEBINTERTFACE
   { { "show_global_settings",  "Show global settings",              }, (Func)dwb_com_show_settings,       NULL,                              AlwaysSM,    { .n = Global } },
   { { "show_keys",             "Key configuration",                 }, (Func)dwb_com_show_keys,           NULL,                              AlwaysSM, },
   { { "show_settings",         "Settings",                          }, (Func)dwb_com_show_settings,       NULL,                              AlwaysSM,    { .n = PerView } },
+#endif 
   { { "spell_checking",        "Setting: spell checking",           }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
   { { "toggle_bottomstack",    "Toggle bottomstack",                }, (Func)dwb_com_set_orientation,     NULL,                              AlwaysSM, },
   { { "toggle_encoding",       "Toggle Custom encoding",            }, (Func)dwb_com_toggle_custom_encoding,    NULL,                        AlwaysSM, },
@@ -346,6 +350,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
       }
       else if (e->keyval == GDK_Return) {
         dwb_comp_eval_autocompletion();
+        return true;
       }
       ret = true;
     }

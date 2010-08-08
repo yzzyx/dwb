@@ -11,7 +11,6 @@ var form_hints = "//form";
 var last_entry = null;
 var hints = "//a | //area | //textarea | //select | //link | //input | //button | //frame | //iframe | //*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href]";
 
-console.log(Request.getContentType());
 function Hint(element, id) {
   this.element = element;
   this.rect = element.getBoundingClientRect();

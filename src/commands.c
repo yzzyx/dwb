@@ -174,6 +174,7 @@ dwb_com_show_hints(Arg *arg) {
   return true;
 }/*}}}*/
 
+#ifdef WEBINTERTFACE 
 /* dwb_com_show_keys(Arg *arg){{{*/
 gboolean 
 dwb_com_show_keys(Arg *arg) {
@@ -252,6 +253,7 @@ dwb_com_show_settings(Arg *arg) {
   g_string_free(buffer, true);
   return true;
 }/*}}}*/
+#endif 
 
 /* dwb_com_allow_cookie {{{*/
 gboolean
