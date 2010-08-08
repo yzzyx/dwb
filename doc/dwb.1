@@ -1,0 +1,344 @@
+.TH DWB 1 dwb
+.SH NAME
+dwb \- dynamic web browser
+.SH SYNOPSIS
+.B dwb
+[ -p ] [ -u ] [ <urls> ] 
+.SH DESCRIPTION
+dwb is a small webbrowser based on webkit and GTK which aimes to be mostly
+keyboard-driven. 
+
+.SH COMMAND LINE ARGUMENTS
+.TP
+.B \-u 
+Only allow one dwb instance per user.
+.TP
+.B \-p
+Specify a profile
+.TP
+.B <urls>
+URLs that are loaded on startup.
+
+.SH MODES
+dwb has different modes:
+.TP
+.BR Normalmode
+The default Mode. Pressing "Escape" will get you always back to
+Normal-Mode.
+.TP
+.BR Insertmode 
+Used for editing text-elements in a webpage. 
+.TP
+.BR Hintmode 
+Follow links via hints. 
+
+
+.SH Usage
+.SS "Normalmode shortcuts:"
+.TP
+.BR [n]j
+Scroll [n times] down (command: 
+.BR scroll_down ).
+.TP
+.BR [n]k
+Scroll [n times] up (command: 
+.BR scroll_up ).
+.TP
+.BR [n]h
+Scroll [n times] left (command: 
+.BR scroll_left ).
+.TP
+.BR [n]l
+Scroll [n times] right (command 
+.BR scroll_right).
+.TP
+.BR  [n]C-f
+Scroll [n] Pages down (command
+.BR scroll_page_down ).
+.TP
+.BR [n]C-b
+Scroll [n] Pages up (comman
+.BR scroll_page_up  ).
+.TP
+.BR o 
+Open new url in the focused view (command
+.BR open ).
+.TP
+.BR O 
+Open url in a new view (command 
+.BR open_nv ).
+.TP
+.BR i 
+Enter Insertmode (command 
+.BR insert_mode ).
+.TP
+.BR ga 
+Add a new blank view (command
+.BR add_view ).
+.TP
+.BR d
+Close current view (command
+.BR remove_view ).
+.TP
+.BR gm 
+Toggle Monocle Layout (command 
+.BR toggle_maximized ).
+.TP
+.BR H  
+Go back (command 
+.BR history_back ).
+.TP
+.BR L 
+Go forward (command 
+.BR history_forward ).
+.TP
+.BR M 
+Add a bookmark (command
+.BR bookmark ).
+.TP
+.BR m 
+Add a quickmark (command 
+.BR save_quickmark ).
+.TP
+.BR b[a-Az-Z0-9]
+Open quickmark (command 
+.BR open_quickmark ).
+.TP
+.BR B
+Open quickmark in a new view (command
+.BR open_quickmark_nv ).
+.TP
+.BR go
+Toggle layout Normalstack <-> Bottomstack (command
+.BR toggle_bottomstack ).
+.TP
+.BR gl 
+Enlarge masterarea (command 
+.BR increase_master ). 
+.TP
+.BR gh 
+Minimize masterarea (command 
+.BR decrease_master ). 
+.TP
+.BR r
+Reload focused view (command
+.BR reload ).
+.TP
+.BR [n]zi
+Zoom in [n times] (command
+.BR zoom_in ). 
+.TP
+.BR [n]zo
+Zoom out [n times] (command 
+.BR zoom_out ). 
+.TP
+.BR z=
+Zoom to 100% (command 
+.BR zoom_normal ).
+.TP
+.BR zt
+Toggle fullcontentzoom <-> textzoom 
+.TP
+.BR ZZ
+Save current session and exit.
+.TP
+.BR gp
+Push current View to master area (command
+.BR push_master ).
+.TP
+.BR J
+Cycle focus forwards. (command 
+.BR focus_next ).
+.TP
+.BR K
+Cycle focus backwards. (command 
+.BR focus_prev ).
+.TP
+.BR f 
+Show hints (command 
+.BR hint_mode ).
+.TP
+.BR F
+Show hints, open link in a new view. (command
+.BR hint_mode_new_view ).
+.TP
+.BR gd 
+Download via hints (command 
+.BR download_hint ).
+.TP
+.BR gi
+Focus next textinput (command 
+.BR focus_input ). 
+.TP
+.BR gf 
+Toggle "view source" (command 
+.BR view_source ). 
+.TP
+.BR CC 
+Allow cookie for the current web-page. The domain will be saved in 
+.IR cookies.allow
+(command
+.BR allow_cookie ).
+.TP
+.BR yy
+Yank selected text or if no text is selected the current url to clipboard
+(command 
+.BR yank ).
+.TP
+.BR yY
+Yank selected text or if no text is selected the current url to primary
+selection (command 
+.BR yank_primary ).
+.TP
+.BR pp
+Paste from clipboard (command 
+.BR paste ).
+.TP
+.BR pP
+Paste from primary selection (command
+.BR paste_primary ).
+.TP
+.BR Pp
+Paste from clipboard and load in a new view (command 
+.BR paste_nv ).
+.TP
+.BR PP
+Paste from primary selection and load in a new view (command
+.BR paste_primary_nv ). 
+.TP
+.BR Sp 
+Show print dialog.
+.TP
+.BR gs
+Add a searchengine. Text fields can be focused via hints (command 
+.BR save_search_field ).
+.TP
+.BR Ss 
+Show settings (command
+.BR show_settings ).
+.TP
+.BR Sgs 
+Show global settings (command
+.BR show_global_settings ).
+.TP
+.BR Ss 
+Show keys (command
+.BR show_keys ).
+.TP
+.BR ss 
+Set setting (command
+.BR set_setting ).
+.TP
+.BR sgs 
+Set global setting (command
+.BR set_global_setting ).
+.TP
+.BR sk
+Set keyboard shortcut (command
+.BR set_key ).
+.TP
+.BR prx 
+Toggle proxy (command
+.BR proxy ).
+.TP
+.BR te
+Toggle use custom encoding (command
+.BR toggle_encoding ).
+.TP
+.BR unbound 
+Toggle autoload images (command 
+.BR autoload_images ).
+.TP
+.BR unbound 
+Toggle autoload images (command 
+.BR autoload_images ).
+.TP
+.BR unbound 
+Toggle autoresize window (command 
+.BR autoresize_window ).
+.TP
+.BR unbound 
+Toggle autoshrink images (command 
+.BR autoshrink_images ).
+.TP
+.BR unbound 
+Toggle caret browsing (command 
+.BR caret_browsing ).
+.TP
+.BR unbound 
+Toggle java applets (command 
+.BR java_applets ).
+.TP
+.BR unbound 
+Toggle plugins (command 
+.BR plugins ).
+.TP
+.BR unbound 
+Toggle private browsing (command 
+.BR private_browsing ).
+.TP
+.BR unbound 
+Toggle scripts (command 
+.BR scripts ).
+.TP
+.BR unbound 
+Toggle spell checking (command 
+.BR spell_checking ).
+.TP 
+.B Tab (C-Tab) 
+In Normal mode Tab shows the next (previous) shortcut, that matches the
+currently entered keysequence. 
+When opening a url, the next (previous) item in command
+history, bookmarks or history will be completed. In Hintmode the next (previous)
+hint will get focus. Tab also completes settings and shortcut-settings. 
+When initiating a download, full paths (downloads and spawning programs) and
+binaries (spawning programs) in PATH will be completed. 
+
+.SS "Textentry shortcuts"
+.TP
+.BR C-h
+Delete a single letter.
+.TP
+.BR C-w
+Delete previous word.
+.TP
+.BR C-u
+Delete to the beginning of the entry.
+.TP
+.BR C-f
+Move cursor one word forward.
+.TP
+.BR C-b
+Move cursor one word back.
+.TP
+.BR C-j
+Show next item in command history.
+.TP
+.BR C-k
+Show previous item in command history.
+.TP
+.BR C-x
+When initalizing a download, C-x toggles between choosing a file path and
+choosing a spawning application.
+
+.SH CUSTOMIZATION
+dwb can be  customized in a web interface (command 
+.BR show_settings/show_global_settings ) 
+or via command line (command
+.BR set_setting/set_global_setting ). 
+The non global commands only affect the
+current focused view, the global commands affect all views. Modified settings
+will be saved in 
+.IR ~/.config/dwb/settings 
+when closing dwb. 
+Shorcuts can also be modified in a web interface (command 
+.BR show_keys ) 
+or via command line (command 
+.BR set_key ). 
+Shortcuts will be saved in 
+.IR ~/.config/dwb/keys .
+
+.SH FILES
+
+.SH AUTHOR
+Stefan Bolte <portix@gmx.net>

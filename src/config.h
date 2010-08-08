@@ -1,91 +1,79 @@
-#ifndef CONFIG_H
-#define CONFIG_H
-static int LAYOUT = NormalLayout;
-static int SIZE = 30;
-static double FACTOR = 0.3;
-static int MESSAGE_DELAY = 2;
-static int HISTORY_LENGTH = 500;
-
-static const gchar *ACTIVE_FG_COLOR = "#ffffff";
-static const gchar *ACTIVE_BG_COLOR = "#000000";
-static const gchar *NORMAL_FG_COLOR = "#303030";
-static const gchar *NORMAL_BG_COLOR = "#dddddd";
-static const gchar *TAB_ACTIVE_FG_COLOR = "#ffffff";
-static const gchar *TAB_ACTIVE_BG_COLOR = "#000000";
-static const gchar *TAB_NORMAL_FG_COLOR = "#000000";
-static const gchar *TAB_NORMAL_BG_COLOR = "#ffffff";
-
-static const gchar *ENTRY_FG_COLOR = "#ffffff";
-static const gchar *ENTRY_BG_COLOR = "#303030";
-
-static const gchar *INSERTMODE_FG_COLOR = "#ffffff";
-static const gchar *INSERTMODE_BG_COLOR = "#00ff00";
-
-static const gchar *SETTINGS_FG_COLOR = "#dddddd";
-static const gchar *SETTINGS_BG_COLOR = "#151515";
-
-static const gchar *ERROR_COLOR = "#ff0000";
-
-static const gchar *FONT = "monospace bold";
-static const gint ACTIVE_FONT_SIZE = 12;
-static const gint NORMAL_FONT_SIZE = 9;
-
-static const gint DEFAULT_WIDTH = 1280;
-static const gint DEFAULT_HEIGHT = 1024;
-
 static KeyValue KEYS[] = {
-{ "add_view",                 {   "ga",         0,                  },  },  
-{ "allow_cookie",             {   "CC",         0,                   },  },  
-{ "bookmark",                 {   "M",         0,                   },  },  
-{ "find_forward",             {   "/",         0,                   },  }, 
-{ "find_next",                {   "n",         0,                   },  },
-{ "find_previous",            {   "N",         0,                   },  },
-{ "find_backward",            {   "?",         0,                   },  },  
-{ "focus_next",               {   "J",         0,                   },  },  
-{ "focus_prev",               {   "K",         0,                   },  },  
-{ "hint_mode",                {   "f",         0,                   },  },  
-{ "hint_mode_new_view",       {   "F",         0,                   },  },  
-{ "history_back",             {   "H",         0,                   },  },  
-{ "history_forward",          {   "L",         0,                   },  },  
-{ "insert_mode",              {   "i",         0,                   },  },  
-{ "increase_master",          {   "gl",         0,                  },  },  
-{ "decrease_master",          {   "gh",         0,                  },  },  
-{ "open",                     {   "o",         0,                   },  },  
-{ "open_new_view",            {   "O",         0,                   },  },  
-{ "open_quickmark",           {   "b",         0,                   },  },  
-{ "open_quickmark_nv",        {   "B",         0,                   },  },  
-{ "push_master",              {   "pu",         GDK_CONTROL_MASK,    },  },  
-{ "reload",                   {   "r",         0,                   },  },  
-{ "remove_view",              {   "d",         0,                   },  },  
-{ "save_quickmark",           {   "m",         0,                   },  },  
-{ "scroll_bottom",            {   "G",         0,                   },  },  
-{ "scroll_down",              {   "j",         0,                   },  },  
-{ "scroll_left",              {   "h",         0,                   },  },  
-{ "scroll_page_down",         {   "f",         GDK_CONTROL_MASK,    },  },  
-{ "scroll_page_up",           {   "b",         GDK_CONTROL_MASK,    },  },  
-{ "scroll_right",             {   "l",         0,                   },  },  
-{ "scroll_top",               {   "gg",         0,                  },  },  
-{ "scroll_up",                {   "k",         0,                   },  },  
-{ "show_keys",                {   "sk",         0,                  },  },  
-{ "show_settings",            {   "ss",         0,                  },  },  
-{ "show_global_settings",     {   "Ss",         0,                  },  },  
-{ "toggle_bottomstack",       {   "go",         0,                  },  },  
-{ "toggle_maximized",         {   "gm",         0,                  },  },  
-{ "view_source",              {   "gf",         0,                  },  },  
-{ "zoom_in",                  {   "zi",         0,                  },  },  
-{ "zoom_normal",              {   "z=",         0,                  },  },  
-{ "zoom_out",                 {   "zo",         0,                  },  },  
-  // settings
-{ "autoload_images",   {   NULL,           0,                  },  },
-{ "autoresize_window", {   NULL,           0,                  },  },
-{ "autoshrink_images", {   NULL,           0,                  },  },
-{ "caret_browsing", {   NULL,           0,                  },  },
-{ "java_applets", {   NULL,           0,                  },  },
-{ "plugins", {   NULL,           0,                  },  },
-{ "private_browsing", {   NULL,           0,                  },  },
-{ "scripts", {   NULL,           0,                  },  },
-{ "spell_checking", {   NULL,           0,                  },  },
-{ "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
-};
-
+  { "add_view",                 {   "ga",         0,                  },  },  
+  { "allow_cookie",             {   "CC",         0,                   },  },  
+  { "bookmark",                 {   "M",         0,                   },  },  
+  { "command_mode",             {   ":",         0,                   },  },  
+  { "find_forward",             {   "/",         0,                   },  }, 
+  { "find_next",                {   "n",         0,                   },  },
+  { "find_previous",            {   "N",         0,                   },  },
+  { "find_backward",            {   "?",         0,                   },  },  
+  { "focus_next",               {   "J",         0,                   },  },  
+  { "focus_prev",               {   "K",         0,                   },  },  
+  { "hint_mode",                {   "f",         0,                   },  },  
+  { "hint_mode_nv",             {   "F",         0,                   },  },  
+  { "history_back",             {   "H",         0,                   },  },  
+  { "history_forward",          {   "L",         0,                   },  },  
+  { "insert_mode",              {   "i",         0,                   },  },  
+  { "increase_master",          {   "gl",         0,                  },  },  
+  { "decrease_master",          {   "gh",         0,                  },  },  
+  { "open",                     {   "o",         0,                   },  },  
+  { "open_nv",                  {   "O",         0,                   },  },  
+  { "open_quickmark",           {   "b",         0,                   },  },  
+  { "open_quickmark_nv",        {   "B",         0,                   },  },  
+  { "push_master",              {   "gp",        0,    },  },  
+  { "reload",                   {   "r",         0,                   },  },  
+  { "remove_view",              {   "d",         0,                   },  },  
+  { "save_quickmark",           {   "m",         0,                   },  },  
+  { "scroll_bottom",            {   "G",         0,                   },  },  
+  { "scroll_down",              {   "j",         0,                   },  },  
+  { "scroll_left",              {   "h",         0,                   },  },  
+  { "scroll_page_down",         {   "f",         GDK_CONTROL_MASK,    },  },  
+  { "scroll_page_up",           {   "b",         GDK_CONTROL_MASK,    },  },  
+  { "scroll_right",             {   "l",         0,                   },  },  
+  { "scroll_top",               {   "gg",         0,                  },  },  
+  { "scroll_up",                {   "k",         0,                   },  },  
+#if WEBINTERFACE
+  { "show_keys",                {   "Sk",         0,                  },  },  
+  { "show_settings",            {   "Ss",         0,                  },  },  
 #endif
+  { "show_global_settings",     {   "Sgs",         0,                  },  },  
+  { "toggle_bottomstack",       {   "go",         0,                  },  },  
+  { "toggle_maximized",         {   "gm",         0,                  },  },  
+  { "view_source",              {   "gf",         0,                  },  },  
+  { "zoom_in",                  {   "zi",         0,                  },  },  
+  { "zoom_normal",              {   "z=",         0,                  },  },  
+  { "zoom_out",                 {   "zo",         0,                  },  },  
+  { "save_search_field",        {   "gs",         0,                  },  },  
+  // settings
+  { "autoload_images",          {   NULL,           0,                  },  },
+  { "autoresize_window",        {   NULL,           0,                  },  },
+  { "autoshrink_images",        {   NULL,           0,                  },  },
+  { "caret_browsing",           {   NULL,           0,                  },  },
+  { "java_applets",             {   NULL,           0,                  },  },
+  { "plugins",                  {   NULL,           0,                  },  },
+  { "private_browsing",         {   NULL,           0,                  },  },
+  { "scripts",                  {   NULL,           0,                  },  },
+  { "spell_checking",           {   NULL,           0,                  },  },
+  { "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
+  { "toggle_encoding",          {   "te" ,           0,  },  },
+  { "focus_input",              {   "gi",           0, }, }, 
+  { "set_setting",              {   "ss",           0, }, }, 
+  { "set_global_setting",       {   "sgs",           0, }, }, 
+  { "set_key",                  {   "sk",           0, }, }, 
+  { "yank",                     {   "yy",           0, }, }, 
+  { "yank_primary",             {   "yY",           0, }, }, 
+  { "paste",                    {   "pp",           0, }, }, 
+  { "paste_primary",            {   "pP",           0, }, }, 
+  { "paste_nv",                 {   "Pp",           0, }, }, 
+  { "paste_primary_nv",         {   "PP",           0, }, }, 
+  { "entry_delete_word",        {   "w",            GDK_CONTROL_MASK, }, }, 
+  { "entry_delete_letter",      {   "h",            GDK_CONTROL_MASK, }, }, 
+  { "entry_delete_line",        {   "u",            GDK_CONTROL_MASK, }, }, 
+  { "entry_word_forward",       {   "f",            GDK_CONTROL_MASK, }, }, 
+  { "entry_word_back",          {   "b",            GDK_CONTROL_MASK, }, }, 
+  { "entry_history_forward",    {   "j",            GDK_CONTROL_MASK, }, }, 
+  { "entry_history_back",       {   "k",            GDK_CONTROL_MASK, }, }, 
+  { "download_set_execute",     {   "x",            GDK_CONTROL_MASK, }, }, 
+  { "download_hint",            {   "gd",           0 }, },
+  { "test",                     {   "qq",           0 }, }, 
+};
