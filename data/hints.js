@@ -310,7 +310,6 @@ function focus_prev() {
   lastpos = newpos;
 }
 function add_searchengine() {
-  clear();
   create_stylesheet();
   var hints = document.createElement("div");
   var res = document.body.querySelectorAll("form");
@@ -338,6 +337,7 @@ function add_searchengine() {
   active_arr = elements;
 }
 function submit_searchengine(string) {
+  console.log("debug");
   var e = active.element;
   e.value = string;
   e.form.submit();

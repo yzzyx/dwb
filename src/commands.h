@@ -40,4 +40,5 @@ gboolean dwb_com_entry_word_forward(Arg *);
 gboolean dwb_com_entry_word_back(Arg *);
 gboolean dwb_com_entry_history_forward(Arg *);
 gboolean dwb_com_entry_history_back(Arg *);
+gboolean dwb_com_save_session(Arg *);
 #endif

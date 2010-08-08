@@ -32,10 +32,8 @@ static KeyValue KEYS[] = {
   { "scroll_right",             {   "l",         0,                   },  },  
   { "scroll_top",               {   "gg",         0,                  },  },  
   { "scroll_up",                {   "k",         0,                   },  },  
-#if WEBINTERFACE
   { "show_keys",                {   "Sk",         0,                  },  },  
   { "show_settings",            {   "Ss",         0,                  },  },  
-#endif
   { "show_global_settings",     {   "Sgs",         0,                  },  },  
   { "toggle_bottomstack",       {   "go",         0,                  },  },  
   { "toggle_maximized",         {   "gm",         0,                  },  },  
@@ -75,5 +73,6 @@ static KeyValue KEYS[] = {
   { "entry_history_back",       {   "k",            GDK_CONTROL_MASK, }, }, 
   { "download_set_execute",     {   "x",            GDK_CONTROL_MASK, }, }, 
   { "download_hint",            {   "gd",           0 }, },
-  { "test",                     {   "qq",           0 }, }, 
+  { "save_session",             {   "ZZ",           0 }, }, 
+  { "save_named_session",       {   "gZZ",           0 }, }, 
 };

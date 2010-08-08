@@ -3,7 +3,7 @@
 dwb \- dynamic web browser
 .SH SYNOPSIS
 .B dwb
-[ -p ] [ -u ] [ <urls> ] 
+[ -p profile ] [ -u ] [ -r [sessionname] ] [ -l ] [ <urls> ] 
 .SH DESCRIPTION
 dwb is a small webbrowser based on webkit and GTK which aimes to be mostly
 keyboard-driven. 
@@ -16,8 +16,11 @@ Only allow one dwb instance per user.
 .B \-p
 Specify a profile
 .TP
+.B \-r
+Restore session <sessionname> or defaultsession, if sessionname is omitted.
+.TP
 .B <urls>
-URLs that are loaded on startup.
+URLs loaded on startup.
 
 .SH MODES
 dwb has different modes:
@@ -140,7 +143,12 @@ Zoom to 100% (command
 Toggle fullcontentzoom <-> textzoom 
 .TP
 .BR ZZ
-Save current session and exit.
+Save current session and exit (command 
+.BR save_session ).
+.TP
+.BR zz 
+Save current session with name and exit (command 
+.BR save_named_session ).
 .TP
 .BR gp
 Push current View to master area (command

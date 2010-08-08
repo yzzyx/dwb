@@ -8,6 +8,7 @@
 #include "completion.h"
 #include "util.h"
 #include "download.h"
+#include "session.h"
 
 /* WEB_VIEW_CALL_BACKS {{{*/
 
@@ -56,14 +57,12 @@ gboolean
 dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {
   // TODO implement
   // 
-#ifdef WEBINTERTFACE
   if (!strcmp(sourceid, KEY_SETTINGS)) {
     dwb_parse_key_setting(message);
   }
   else if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
-#endif
   return false;
 }/*}}}*/
 
@@ -121,6 +120,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   }
   const gchar *request_uri = webkit_network_request_get_uri(request);
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
+  puts(request_uri);
 
   if (dwb.state.mode == SearchFieldMode && reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED ) {
     webkit_web_policy_decision_ignore(policy);
@@ -314,6 +314,9 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
   }
   else if (mode == DownloadGetPath) {
     dwb_dl_start();
+  }
+  else if (mode == SaveSession) {
+    dwb_session_save(GET_TEXT());
   }
   else {
     Arg a = { .n = 0, .p = text };

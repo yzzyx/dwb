@@ -114,6 +114,7 @@ enum _Mode {
   SettingsMode        = 1<<12,
   KeyMode             = 1<<13,
   DownloadGetPath     = 1<<14,
+  SaveSession         = 1<<15,
 };
 
 enum _ShowMessage {
@@ -452,5 +453,6 @@ void dwb_parse_command_line(const gchar *);
 GHashTable * dwb_get_default_settings(void);
 
 void dwb_exit(void);
+gboolean dwb_end(void);
 
 #endif

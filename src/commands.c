@@ -7,6 +7,7 @@
 #include "completion.h"
 #include "util.h"
 #include "view.h"
+#include "session.h"
 
 /* dwb_com_simple_command(keyMap *km) {{{*/
 void 
@@ -106,7 +107,7 @@ dwb_com_add_search_field(Arg *a) {
     }
   }
   dwb.state.mode = SearchFieldMode;
-  dwb_com_focus_entry();
+  ///dwb_com_focus_entry();
   g_free(value);
   return ret;
 
@@ -174,7 +175,6 @@ dwb_com_show_hints(Arg *arg) {
   return true;
 }/*}}}*/
 
-#ifdef WEBINTERTFACE 
 /* dwb_com_show_keys(Arg *arg){{{*/
 gboolean 
 dwb_com_show_keys(Arg *arg) {
@@ -253,7 +253,6 @@ dwb_com_show_settings(Arg *arg) {
   g_string_free(buffer, true);
   return true;
 }/*}}}*/
-#endif 
 
 /* dwb_com_allow_cookie {{{*/
 gboolean
@@ -811,5 +810,18 @@ dwb_com_entry_history_back(Arg *a) {
   }
   return  true;
 }/*}}}*/
+
+gboolean
+dwb_com_save_session(Arg *arg) {
+  if (arg->n == NormalMode) {
+    dwb_session_save(NULL);
+  }
+  else {
+    dwb.state.mode = arg->n;
+    dwb_com_focus_entry();
+    dwb_set_normal_message(dwb.state.fview, "Session name:", false);
+  }
+  return true;
+}
 /*}}}*/
 

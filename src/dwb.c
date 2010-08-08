@@ -22,7 +22,6 @@
 #include "session.h"
 #define NAME "dwb";
 
-#ifdef WEBINTERFACE 
 /* SETTINGS MAKROS {{{*/
 #define KEY_SETTINGS "Dwb Key Settings"
 #define SETTINGS "Dwb Settings"
@@ -53,7 +52,6 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 #define HTML_DIV_SETTINGS_VALUE "<div class=\"key\">\n <input id=\"%s\" value=\"%s\"/>\n</div>\n"
 #define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" onchange=\"checkbox_click();\" %s>\n</div>\n"
 #define HTML_DIV_END "</div>\n"
-#endif
 /*}}}*/
 #define INSERT_MODE "Insert Mode"
 
@@ -107,12 +105,7 @@ void dwb_clean_vars(void);
 static GdkNativeWindow embed = 0;
 static gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 static gint MAX_COMPLETIONS = 11;
-
-gboolean
-dwb_test(Arg *a) {
-  dwb_session_save();
-  return true;
-}
+static gchar *restore = NULL;
 
 /* FUNCTION_MAP{{{*/
 #define NO_URL                      "No URL in current context"
@@ -165,11 +158,9 @@ static FunctionMap FMAP [] = {
   { { "set_global_setting",    "Set global property",               }, (Func)dwb_com_set_setting,         NULL,                              NeverSM,    { .n = Global } },
   { { "set_key",               "Set keybinding",                    }, (Func)dwb_com_set_key,             NULL,                              NeverSM,    { 0 } },
   { { "set_setting",           "Set property",                      }, (Func)dwb_com_set_setting,         NULL,                              NeverSM,    { .n = PerView } },
-#if WEBINTERTFACE
   { { "show_global_settings",  "Show global settings",              }, (Func)dwb_com_show_settings,       NULL,                              AlwaysSM,    { .n = Global } },
   { { "show_keys",             "Key configuration",                 }, (Func)dwb_com_show_keys,           NULL,                              AlwaysSM, },
   { { "show_settings",         "Settings",                          }, (Func)dwb_com_show_settings,       NULL,                              AlwaysSM,    { .n = PerView } },
-#endif 
   { { "spell_checking",        "Setting: spell checking",           }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
   { { "toggle_bottomstack",    "Toggle bottomstack",                }, (Func)dwb_com_set_orientation,     NULL,                              AlwaysSM, },
   { { "toggle_encoding",       "Toggle Custom encoding",            }, (Func)dwb_com_toggle_custom_encoding,    NULL,                        AlwaysSM, },
@@ -181,11 +172,12 @@ static FunctionMap FMAP [] = {
   { { "zoom_out",              "Zoom out",                          }, (Func)dwb_com_zoom_out,            "Cannot zoom out further",         AlwaysSM, },
   { { "yank",                  "Yank",                              }, (Func)dwb_com_yank,                 NO_URL,                           PostSM,  { .p = GDK_NONE } },
   { { "yank_primary",          "Yank to Primary selection",         }, (Func)dwb_com_yank,                 NO_URL,                           PostSM,  { .p = GDK_SELECTION_PRIMARY } },
-  { { "paste",                 "Paste",                             }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM,  { .n = OpenNormal, .p = GDK_NONE } },
-  { { "paste_primary",         "Paste primary selection",           }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM,  { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
-  { { "paste_nv",              "Paste, new view",                   }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM,  { .n = OpenNewView, .p = GDK_NONE } },
-  { { "paste_primary_nv",      "Paste primary selection, new view", }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM,  { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
-  { { "test",                   "test", },                             (Func)dwb_test,               "test",            NeverSM,  { 0 }, },
+  { { "paste",                 "Paste",                             }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM, { .n = OpenNormal, .p = GDK_NONE } },
+  { { "paste_primary",         "Paste primary selection",           }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM, { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
+  { { "paste_nv",              "Paste, new view",                   }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM, { .n = OpenNewView, .p = GDK_NONE } },
+  { { "paste_primary_nv",      "Paste primary selection, new view", }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM, { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
+  { { "save_session",          "Save current session", },              (Func)dwb_com_save_session,        NULL,                              AlwaysSM,  { .n = NormalMode } },
+  { { "save_named_session",    "Save current session with name", },    (Func)dwb_com_save_session,        NULL,                              PostSM,  { .n = SaveSession } },
 
   //Entry editing
   { { "entry_delete_word",      "Delete word", },                       (Func)dwb_com_entry_delete_word,            NULL,        AlwaysSM,  { 0 }, true, }, 
@@ -1266,7 +1258,9 @@ dwb_normal_mode(gboolean clean) {
   View *v = dwb.state.fview->data;
   Mode mode = dwb.state.mode;
 
-  dwb_execute_script("clear()");
+  if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
+    dwb_execute_script("clear()");
+  }
   if (mode  == InsertMode) {
     dwb_view_modify_style(dwb.state.fview, &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
@@ -1886,7 +1880,7 @@ dwb_init_files() {
   dwb.files.history       = g_strconcat(profile_path, "/history",       NULL);
   dwb.files.stylesheet    = g_strconcat(profile_path, "/stylesheet",    NULL);
   dwb.files.quickmarks    = g_strconcat(profile_path, "/quickmarks",    NULL);
-  dwb.files.session       = g_strconcat(profile_path, "/session",       NULL);
+  dwb.files.session       = g_strconcat(path, "/session",       NULL);
   dwb.files.searchengines = g_strconcat(path, "searchengines", NULL);
   dwb.files.stylesheet    = g_strconcat(profile_path, "/stylesheet",    NULL);
   dwb.files.keys          = g_strconcat(path, "keys",          NULL);
@@ -1960,15 +1954,6 @@ dwb_init_vars() {
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }
 
-
-gboolean
-dwb_idle(gpointer *data) {
-  //puts("hallo");
-  gint i=0;
-  i+=1;
-  i-=1;
-  return  true;
-}
 /* dwb_init() {{{*/
 void dwb_init() {
 
@@ -1999,7 +1984,8 @@ void dwb_init() {
     Arg a = { .n = dwb.state.layout };
     dwb_com_set_orientation(&a);
   }
-  if (dwb.misc.argc > 0) {
+  if (restore && dwb_session_restore(restore));
+  else if (dwb.misc.argc > 0) {
     for (gint i=0; i<dwb.misc.argc; i++) {
       Arg a = { .p = dwb.misc.argv[i] };
       dwb_add_view(&a);
@@ -2100,12 +2086,24 @@ int main(gint argc, gchar *argv[]) {
   if (argc > 1) {
     for (int i=1; i<argc; i++) {
       if (argv[i][0] == '-') {
+        if (argv[i][1] == 'l') {
+          dwb_session_list();
+        }
         if (argv[i][1] == 'p' && argv[i++]) {
           dwb.misc.profile = argv[i];
         }
-         if (argv[i][1] == 'u' && argv[i++]) {
+        if (argv[i][1] == 'u' && argv[i++]) {
           dwb.misc.single = true;
         }
+        if (argv[i][1] == 'r' ) {
+          if (!argv[i+1] || argv[i+1][0] == '-') {
+            restore = "default";
+          }
+          else {
+            restore = argv[++i];
+          }
+        }
+
       }
       else {
         last = i;
