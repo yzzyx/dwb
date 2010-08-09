@@ -111,12 +111,15 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 
   if (dwb.state.nv == OpenNewView || dwb.state.nv == OpenNewWindow) {
     gchar *uri = (gchar *)webkit_network_request_get_uri(request);
-    dwb.state.nv = OpenNormal;
     Arg a = { .p = uri };
-    if (dwb.state.nv == OpenNewView) 
+    if (dwb.state.nv == OpenNewView) {
+      dwb.state.nv = OpenNormal;
       dwb_add_view(&a); 
-    else
+    }
+    else {
       dwb_new_window(&a);
+    }
+    dwb.state.nv = OpenNormal;
     return true;
   }
   const gchar *request_uri = webkit_network_request_get_uri(request);
