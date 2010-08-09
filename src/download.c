@@ -213,7 +213,6 @@ dwb_dl_start() {
   if (external && dwb.state.dl_action == Download) {
     const gchar *uri = webkit_download_get_uri(dwb.state.download);
     command = dwb_get_download_command(uri, fullpath);
-    puts(command);
     if (!g_spawn_command_line_async(command, NULL)) {
       dwb_set_error_message(dwb.state.fview, "Cannot spawn download program");
     }

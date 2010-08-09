@@ -330,17 +330,14 @@ function add_searchengine() {
   elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
   for (var i=0; i<elements.length; i++) {
     elements[i].getTextHint(i, elements.length);
-    //hints.appendChild(elements[i].hint);
     elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
   }
-    console.log(elements.length);
   document.body.appendChild(hints); 
   set_active[elements[0]];
   active_arr = elements;
-  update_hints("");
+  focus_next();
 }
 function submit_searchengine(string) {
-  console.log("debug");
   var e = active.element;
   e.value = string;
   e.form.submit();

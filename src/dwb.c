@@ -528,7 +528,6 @@ void
 dwb_com_focus_entry() {
   gtk_widget_grab_focus(dwb.gui.entry);
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-  //dwb.state.last_com_history = NULL;
 }/*}}}*/
 
 /* dwb_entry_position_word_back(gint position)      return position{{{*/
@@ -698,16 +697,16 @@ dwb_get_search_engine(const gchar *uri) {
   return ret;
 }/*}}}*/
 
+/* dwb_submit_searchengine {{{*/
 void 
 dwb_submit_searchengine(void) {
-  puts("hallo");
   gchar *com = g_strdup_printf("submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
   gchar *value = dwb_execute_script(com);
   if (value) {
     dwb.state.form_name = value;
   }
   g_free(com);
-}
+}/*}}}*/
 
 /* dwb_save_searchengine {{{*/
 void
@@ -897,19 +896,7 @@ dwb_update_hints(GdkEventKey *e) {
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
       dwb_execute_script("clear()");
-      if (dwb.state.mode == SearchFieldMode) {
-#if 0
-        gchar *com = g_strdup_printf("submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
-        gchar *value = dwb_execute_script(com);
-        if (value) {
-          dwb.state.form_name = value;
-        }
-        g_free(com);
-#endif
-      }
-      else {
-        dwb_insert_mode(NULL);
-      }
+      dwb_insert_mode(NULL);
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
       dwb.state.scriptlock = 1;
@@ -1048,7 +1035,6 @@ dwb_update_status(GList *gl) {
   View *v = gl->data;
   WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
   const gchar *title = webkit_web_view_get_title(w);
-  //const gchar *uri = webkit_web_view_get_uri(w);
 
   gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title :  dwb.misc.name);
   dwb_tab_label_set_text(gl, title);
@@ -1307,10 +1293,8 @@ dwb_normal_mode(gboolean clean) {
     dwb_comp_clean_autocompletion();
   }
 
-
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   gtk_widget_grab_focus(v->scroll);
-
 
   if (clean) {
     dwb_clean_buffer(dwb.state.fview);
@@ -1425,7 +1409,6 @@ dwb_save_files() {
   dwb_save_navigation_fc(dwb.fc.searchengines, dwb.files.searchengines, -1);
   dwb_save_navigation_fc(dwb.fc.mimetypes, dwb.files.mimetypes, -1);
 
-
   // quickmarks
   GString *quickmarks = g_string_new(NULL); 
   for (GList *l = dwb.fc.quickmarks; l; l=l->next)  {
@@ -1445,8 +1428,8 @@ dwb_save_files() {
   }
   dwb_util_set_file_content(dwb.files.cookies_allow, cookies_allow->str);
   g_string_free(cookies_allow, true);
-  // save keys
 
+  // save keys
   keyfile = g_key_file_new();
   error = NULL;
 
@@ -1688,7 +1671,6 @@ dwb_read_settings() {
             if ( (arg = dwb_util_char_to_arg(value, s->type)) ) {
               s->arg = *arg;
             }
-            //ret = g_slist_append(ret, s);
             gchar *key = g_strdup(s->n.first);
             g_hash_table_insert(dwb.settings, key, s);
           }
@@ -1757,7 +1739,6 @@ dwb_init_scripts() {
   g_string_append_printf(buffer, "hint_opacity = %f;\n",          GET_DOUBLE("hint-opacity"));
 
   // init system scripts
-
   gchar *dir;
   if ( (dir = dwb_util_get_data_dir("scripts")) ) {
     dwb_util_get_directory_content(&buffer, dir);
@@ -1867,18 +1848,14 @@ dwb_init_gui() {
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.downloadbar, false, false, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), paned_event, true, true, 0);
-  //gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.entry, false, false, 0);
-
 
   //dwb_add_view(NULL);
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);
 
-  //gtk_widget_show(dwb.gui.entry);
   gtk_widget_show(dwb.gui.left);
   gtk_widget_show(dwb.gui.paned);
   gtk_widget_show(paned_event);
   gtk_widget_show_all(dwb.gui.topbox);
-  //gtk_widget_show(dwb.gui.downloadbar);
 
   gtk_widget_show(dwb.gui.vbox);
   gtk_widget_show(dwb.gui.window);
@@ -1995,7 +1972,6 @@ void dwb_init() {
   dwb.state.last_cookie = NULL;
   dwb.comps.completions = NULL; 
   dwb.comps.active_comp = NULL;
-  //dwb.misc.download_com = NULL;
   dwb.misc.max_c_items = MAX_COMPLETIONS;
 
 

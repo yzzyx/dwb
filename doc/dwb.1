@@ -1,4 +1,4 @@
-.TH DWB 1 dwb
+.TH DWB 1 "August 2010" dwb
 .SH NAME
 dwb \- dynamic web browser
 .SH SYNOPSIS
@@ -27,7 +27,7 @@ dwb has different modes:
 .TP
 .BR Normalmode
 The default Mode. Pressing "Escape" will get you always back to
-Normal-Mode.
+Normalmode.
 .TP
 .BR Insertmode 
 Used for editing text-elements in a webpage. 
@@ -71,6 +71,10 @@ Open new url in the focused view (command
 Open url in a new view (command 
 .BR open_nv ).
 .TP
+.BR wo 
+Open url in a new instance (command 
+.BR open_nw ).
+.TP
 .BR i 
 Enter Insertmode (command 
 .BR insert_mode ).
@@ -84,7 +88,7 @@ Close current view (command
 .BR remove_view ).
 .TP
 .BR gm 
-Toggle Monocle Layout (command 
+Toggle Maximized Layout (command 
 .BR toggle_maximized ).
 .TP
 .BR H  
@@ -146,7 +150,7 @@ Toggle fullcontentzoom <-> textzoom
 Save current session and exit (command 
 .BR save_session ).
 .TP
-.BR zz 
+.BR gZZ 
 Save current session with name and exit (command 
 .BR save_named_session ).
 .TP
@@ -168,7 +172,11 @@ Show hints (command
 .TP
 .BR F
 Show hints, open link in a new view. (command
-.BR hint_mode_new_view ).
+.BR hint_mode_nv ).
+.TP
+.BR wf
+Show hints, open link in a new view. (command
+.BR hint_mode_nw ).
 .TP
 .BR gd 
 Download via hints (command 
@@ -214,9 +222,6 @@ Paste from clipboard and load in a new view (command
 Paste from primary selection and load in a new view (command
 .BR paste_primary_nv ). 
 .TP
-.BR Sp 
-Show print dialog.
-.TP
 .BR gs
 Add a searchengine. Text fields can be focused via hints (command 
 .BR save_search_field ).
@@ -252,10 +257,6 @@ Toggle proxy (command
 .BR te
 Toggle use custom encoding (command
 .BR toggle_encoding ).
-.TP
-.BR unbound 
-Toggle autoload images (command 
-.BR autoload_images ).
 .TP
 .BR unbound 
 Toggle autoload images (command 
@@ -335,7 +336,7 @@ dwb can be  customized in a web interface (command
 or via command line (command
 .BR set_setting/set_global_setting ). 
 The non global commands only affect the
-current focused view, the global commands affect all views. Modified settings
+currently focused view, the global commands affect all views. Modified settings
 will be saved in 
 .IR ~/.config/dwb/settings 
 when closing dwb. 

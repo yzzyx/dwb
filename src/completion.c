@@ -387,7 +387,8 @@ dwb_comp_get_binaries(GList *list, gchar *text) {
     }
   }
   return list;
-}
+}/* }}} */
+/* dwb_comp_get_path(GList *, gchar *)        return GList* */
 GList *
 dwb_comp_get_path(GList *list, gchar *text) {
   gchar *path = "/";

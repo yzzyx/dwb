@@ -287,9 +287,7 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
     dwb_search(NULL);
   }
   else if (mode == SearchFieldMode) {
-    puts("hallo");
     dwb_submit_searchengine();
-    //dwb_save_searchengine();
   }
   else if (mode == SettingsMode) {
     dwb_parse_setting(GET_TEXT());
