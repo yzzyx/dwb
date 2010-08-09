@@ -127,15 +127,17 @@ static FunctionMap FMAP [] = {
   { { "focus_input",           "Focus input",                       }, (Func)dwb_com_focus_input,        "No input found in current context",      AlwaysSM, },
   { { "focus_next",            "Focus next view",                   }, (Func)dwb_com_focus_next,          "No other view",                   AlwaysSM, },
   { { "focus_prev",            "Focus previous view",               }, (Func)dwb_com_focus_prev,          "No other view",                   AlwaysSM, },
-  { { "hint_mode",             "Follow hints ",                     }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNormal }, },
-  { { "hint_mode_nv",          "Follow hints in a new view ",       }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewView }, },
+  { { "hint_mode",             "Follow hints",                      }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNormal }, },
+  { { "hint_mode_nv",          "Follow hints (new view)",           }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewView }, },
+  { { "hint_mode_nw",          "Follow hints (new window)",         }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewWindow }, },
   { { "history_back",          "Go Back",                           }, (Func)dwb_com_history_back,        "Beginning of History",            AlwaysSM, },
   { { "history_forward",       "Go Forward",                        }, (Func)dwb_com_history_forward,     "End of History",                  AlwaysSM, },
   { { "increase_master",       "Increase master area",              }, (Func)dwb_com_resize_master,       "Cannot increase further",         AlwaysSM,    { .n = -5 } },
   { { "insert_mode",           "Insert Mode",                       }, (Func)dwb_insert_mode,             NULL,                              AlwaysSM, },
   { { "java_applets",          "Setting: java applets",             }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-java-applets" } },
-  { { "open",                  "Open URL",                          }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNormal,      .p = NULL } },
-  { { "open_nv",               "Open URL in a new view",            }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
+  { { "open",                  "Open",                          }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNormal,      .p = NULL } },
+  { { "open_nv",               "Open (new view)",            }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
+  { { "open_nw",               "Open (new window)",            }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewWindow,     .p = NULL } },
   { { "open_quickmark",        "Open quickmark",                    }, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
   { { "open_quickmark_nv",     "Open quickmark in a new view",      }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
   { { "plugins",               "Setting: plugins",                  }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-plugins" } },
@@ -187,7 +189,7 @@ static FunctionMap FMAP [] = {
   { { "entry_word_back",        "Move cursor back on word", },          (Func)dwb_com_entry_word_back,              NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_back",     "Command history back", },              (Func)dwb_com_entry_history_back,           NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_forward",  "Command history forward", },           (Func)dwb_com_entry_history_forward,        NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "download_set_execute",  "Complete binaries", },             (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "download_set_execute",   "Complete binaries", },             (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
 
 };/*}}}*/
 
@@ -1079,9 +1081,26 @@ dwb_grab_focus(GList *gl) {
   gtk_widget_grab_focus(v->scroll);
 }/*}}}*/
 
+/* dwb_new_window(Arg *arg) {{{*/
+void 
+dwb_new_window(Arg *arg) {
+  gchar *argv[5];
+
+  argv[0] = (gchar *)dwb.misc.prog_path;
+  argv[1] = "-p"; 
+  argv[2] = (gchar *)dwb.misc.profile;
+  argv[3] = arg->p;
+  argv[4] = NULL;
+  g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+}/*}}}*/
+
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(Arg *arg) {
+  if (dwb.state.nv == OpenNewWindow) {
+    dwb_new_window(arg);
+    return;
+  }
   if (arg && arg->p && strlen(arg->p)) {
     gchar *uri = dwb_get_resolved_uri(arg->p);
 
@@ -2091,6 +2110,7 @@ int main(gint argc, gchar *argv[]) {
   dwb.misc.name = NAME;
   dwb.misc.profile = "default";
   dwb.misc.argc = 0;
+  dwb.misc.prog_path = argv[0];
   gint last = 0;
 
   if (!g_thread_supported()) {

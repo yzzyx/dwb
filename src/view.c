@@ -71,7 +71,7 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
   return ((View*)dwb.state.fview->data)->web;
 }/*}}}*/
 
-/* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
+/* dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
 gboolean 
 dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
   dwb_dl_get_path(gl, download);
@@ -109,11 +109,14 @@ gboolean
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
-  if (dwb.state.nv == OpenNewView) {
+  if (dwb.state.nv == OpenNewView || dwb.state.nv == OpenNewWindow) {
     gchar *uri = (gchar *)webkit_network_request_get_uri(request);
     dwb.state.nv = OpenNormal;
     Arg a = { .p = uri };
-    dwb_add_view(&a); 
+    if (dwb.state.nv == OpenNewView) 
+      dwb_add_view(&a); 
+    else
+      dwb_new_window(&a);
     return true;
   }
   const gchar *request_uri = webkit_network_request_get_uri(request);
@@ -124,9 +127,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     dwb.state.search_engine = dwb.state.form_name && !g_strrstr(request_uri, HINT_SEARCH_SUBMIT) 
       ? g_strdup_printf("%s?%s=%s", request_uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
       : g_strdup(request_uri);
-    //dwb_set_normal_message(dwb.state.fview, "Enter a keyword for this search:", false);
-    //dwb_com_focus_entry();
-    //dwb.state.mode = SearchKeywordMode;
     dwb_save_searchengine();
     return true;
   }

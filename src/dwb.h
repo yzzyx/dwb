@@ -124,7 +124,7 @@ enum _ShowMessage {
 };
 
 enum _Open {
-  OpenNormal, 
+  OpenNormal = 0, 
   OpenNewView,
   OpenNewWindow,
   OpenDownload,
@@ -338,6 +338,7 @@ struct _Gui {
 };
 struct _Misc {
   const gchar *name;
+  const gchar *prog_path;
   gchar *scripts;
   const gchar *profile;
   const gchar *default_search;
@@ -448,6 +449,7 @@ gint dwb_entry_position_word_forward(gint position);
 void dwb_entry_set_text(const gchar *text);
 void dwb_set_proxy(GList *, WebSettings *);
 gchar * dwb_get_command_from_mimetype(gchar *);
+void dwb_new_window(Arg *arg);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
 void dwb_parse_command_line(const gchar *);
