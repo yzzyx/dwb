@@ -14,7 +14,7 @@ install: all install-man install-data
 
 install-man: 
 	@echo "Installing manpage to $(subst //,/,$(DESTDIR)$(MAN1DIR))"
-	@install -Dm 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)$(MANFILE)
+	@install -Dm 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
 
 install-data: 
 	@echo "Installing $(SHAREDIR)/hints.js to $(subst //,/,$(DESTDIR)$(DATADIR)/$(NAME)/scripts)"
