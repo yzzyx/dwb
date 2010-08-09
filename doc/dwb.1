@@ -63,6 +63,9 @@ Scroll [n] Pages down (command
 Scroll [n] Pages up (comman
 .BR scroll_page_up  ).
 .TP
+.B : 
+Enter Commandmode.
+.TP
 .BR o 
 Open new url in the focused view (command
 .BR open ).
@@ -99,21 +102,25 @@ Go back (command
 Go forward (command 
 .BR history_forward ).
 .TP
-.BR M 
-Add a bookmark (command
+.BR M[:graph:]
+Add a jbookmark (command
 .BR bookmark ).
 .TP
 .BR m 
 Add a quickmark (command 
 .BR save_quickmark ).
 .TP
-.BR b[a-Az-Z0-9]
+.BR b[:graph:]
 Open quickmark (command 
 .BR open_quickmark ).
 .TP
-.BR B
+.BR B[:graph:]
 Open quickmark in a new view (command
 .BR open_quickmark_nv ).
+.TP
+.BR wb[:graph:]
+Open quickmark in a new window (command
+.BR open_quickmark_nw ).
 .TP
 .BR go
 Toggle layout Normalstack <-> Bottomstack (command
@@ -142,9 +149,6 @@ Zoom out [n times] (command
 .BR z=
 Zoom to 100% (command 
 .BR zoom_normal ).
-.TP
-.BR zt
-Toggle fullcontentzoom <-> textzoom 
 .TP
 .BR ZZ
 Save current session and exit (command 
@@ -222,6 +226,14 @@ Paste from clipboard and load in a new view (command
 Paste from primary selection and load in a new view (command
 .BR paste_primary_nv ). 
 .TP
+.BR wp
+Paste from clipboard and load in a new window (command 
+.BR paste_nw ).
+.TP
+.BR wP
+Paste from primary selection and load in a new window (command
+.BR paste_primary_nw ). 
+.TP
 .BR gs
 Add a searchengine. Text fields can be focused via hints (command 
 .BR save_search_field ).
@@ -234,7 +246,7 @@ Show settings (command
 Show global settings (command
 .BR show_global_settings ).
 .TP
-.BR Ss 
+.BR Sk 
 Show keys (command
 .BR show_keys ).
 .TP

@@ -139,7 +139,8 @@ static FunctionMap FMAP [] = {
   { { "open_nv",               "Open (new view)",            }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
   { { "open_nw",               "Open (new window)",            }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewWindow,     .p = NULL } },
   { { "open_quickmark",        "Open quickmark",                    }, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
-  { { "open_quickmark_nv",     "Open quickmark in a new view",      }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
+  { { "open_quickmark_nv",     "Open quickmark (new view)",         }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
+  { { "open_quickmark_nw",     "Open quickmark (new window)",       }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewWindow }, },
   { { "plugins",               "Setting: plugins",                  }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-plugins" } },
   { { "private_browsing",      "Setting: private browsing",         }, (Func)dwb_com_toggle_property,     NULL,                                PostSM,    { .p = "enable-private-browsing" } },
   { { "proxy",                 "Setting: proxy",                    }, (Func)dwb_com_toggle_proxy,        NULL,                               PostSM,    { 0 } },
@@ -178,6 +179,8 @@ static FunctionMap FMAP [] = {
   { { "paste_primary",         "Paste primary selection",           }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM, { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
   { { "paste_nv",              "Paste, new view",                   }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM, { .n = OpenNewView, .p = GDK_NONE } },
   { { "paste_primary_nv",      "Paste primary selection, new view", }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM, { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
+  { { "paste_nw",              "Paste, new window",                   }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM, { .n = OpenNewWindow, .p = GDK_NONE } },
+  { { "paste_primary_nw",      "Paste primary selection, new window", }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM, { .n = OpenNewWindow, .p = GDK_SELECTION_PRIMARY } },
   { { "save_session",          "Save current session", },              (Func)dwb_com_save_session,        NULL,                              AlwaysSM,  { .n = NormalMode } },
   { { "save_named_session",    "Save current session with name", },    (Func)dwb_com_save_session,        NULL,                              PostSM,  { .n = SaveSession } },
 
@@ -1352,6 +1355,7 @@ dwb_search(Arg *arg) {
   else {
     dwb_set_error_message(dwb.state.fview, "No matches");
   }
+  dwb_normal_mode(false);
   return true;
 }/*}}}*/
 /*}}}*/
