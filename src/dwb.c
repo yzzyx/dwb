@@ -1381,7 +1381,6 @@ dwb_clean_up() {
     KeyMap *m = l->data;
     g_free(m);
   }
-  remove(dwb.misc.fifo);
   g_list_free(dwb.keymap);
   return true;
 }/*}}}*/
@@ -1979,7 +1978,6 @@ void dwb_init() {
   dwb.misc.max_c_items = MAX_COMPLETIONS;
 
 
-  dwb_init_signals();
   dwb_init_files();
   dwb_init_key_map();
   dwb_init_settings();
@@ -2051,38 +2049,33 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 
 /* dwb_init_fifo{{{*/
 void 
-dwb_init_fifo() {
+dwb_init_fifo(gint single) {
   FILE *ff;
   gchar *path = dwb_util_build_path();
   gchar *unifile = g_strconcat(path, "dwb-uni.fifo", NULL);
 
-  if (dwb.misc.single || g_file_test(unifile, G_FILE_TEST_EXISTS)) {
-    dwb.misc.fifo = unifile;
-  }
-  else {
-    dwb.misc.fifo = g_strdup_printf("%sdwb-%d.fifo", path, getpid());
-  }
-  g_free(path);
-
   if (!g_file_test(dwb.misc.fifo, G_FILE_TEST_EXISTS)) {
-    mkfifo(dwb.misc.fifo, 0666);
-    GIOChannel *channel = g_io_channel_new_file(dwb.misc.fifo, "r+", NULL);
-    g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
+    mkfifo(unifile, 0666);
   }
-  else {
-    if ( (ff = fopen(dwb.misc.fifo, "w")) ) {
-      if (dwb.misc.argc) {
-        for (int i=0; i<dwb.misc.argc; i++) {
-          fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
-        }
+  gint fd = open(unifile, O_WRONLY | O_NONBLOCK);
+  if ( (ff = fdopen(fd, "w")) ) {
+    if (dwb.misc.argc) {
+      for (int i=0; i<dwb.misc.argc; i++) {
+        fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
       }
-      else {
-        fprintf(ff, "add_view\n");
-      }
-      fclose(ff);
     }
+    else {
+      fprintf(ff, "add_view\n");
+    }
+    fclose(ff);
     exit(EXIT_SUCCESS);
   }
+  close(fd);
+  if (single) {
+    GIOChannel *channel = g_io_channel_new_file(unifile, "r+", NULL);
+    g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
+  }
+  g_free(unifile);
 }/*}}}*/
 /*}}}*/
 
@@ -2092,6 +2085,7 @@ int main(gint argc, gchar *argv[]) {
   dwb.misc.argc = 0;
   dwb.misc.prog_path = argv[0];
   gint last = 0;
+  gint single = 0;
 
   if (!g_thread_supported()) {
     g_thread_init(NULL);
@@ -2105,8 +2099,8 @@ int main(gint argc, gchar *argv[]) {
         else if (argv[i][1] == 'p' && argv[i++]) {
           dwb.misc.profile = argv[i];
         }
-        else if (argv[i][1] == 'u' && argv[i++]) {
-          dwb.misc.single = true;
+        else if (argv[i][1] == 'u') {
+          single = 1;
         }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
@@ -2116,7 +2110,6 @@ int main(gint argc, gchar *argv[]) {
             restore = argv[++i];
           }
         }
-
       }
       else {
         last = i;
@@ -2128,7 +2121,8 @@ int main(gint argc, gchar *argv[]) {
     dwb.misc.argv = &argv[last];
     dwb.misc.argc = g_strv_length(dwb.misc.argv);
   }
-  dwb_init_fifo();
+  dwb_init_fifo(single);
+  dwb_init_signals();
   gtk_init(&argc, &argv);
   dwb_init();
   gtk_main();
