@@ -107,7 +107,8 @@ dwb_com_add_search_field(Arg *a) {
     }
   }
   dwb.state.mode = SearchFieldMode;
-  ///dwb_com_focus_entry();
+  dwb_set_normal_message(dwb.state.fview, "Enter a Keyword for marked search:", false);
+  dwb_com_focus_entry();
   g_free(value);
   return ret;
 

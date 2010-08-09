@@ -55,15 +55,13 @@ dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 /* dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {{{*/
 gboolean 
 dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {
-  // TODO implement
-  // 
   if (!strcmp(sourceid, KEY_SETTINGS)) {
     dwb_parse_key_setting(message);
   }
   else if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
-  return false;
+  return true;
 }/*}}}*/
 
 /* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
@@ -126,9 +124,10 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     dwb.state.search_engine = dwb.state.form_name && !g_strrstr(request_uri, HINT_SEARCH_SUBMIT) 
       ? g_strdup_printf("%s?%s=%s", request_uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
       : g_strdup(request_uri);
-    dwb_set_normal_message(dwb.state.fview, "Enter a keyword for this search:", false);
-    dwb_com_focus_entry();
-    dwb.state.mode = SearchKeywordMode;
+    //dwb_set_normal_message(dwb.state.fview, "Enter a keyword for this search:", false);
+    //dwb_com_focus_entry();
+    //dwb.state.mode = SearchKeywordMode;
+    dwb_save_searchengine();
     return true;
   }
   if (dwb.state.nv == OpenDownload) {
@@ -151,25 +150,6 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
   // TODO implement
-#if 0
-  if (response) {
-    puts(webkit_network_response_get_uri(response));
-    SoupMessage *message = webkit_network_response_get_message(response);
-    SoupMessageHeaders *headers = message->response_headers;
-    const gchar *content = soup_message_headers_get_content_type(headers, NULL);
-    if (content) 
-      puts(content);
-  }
-  if (request) {
-    SoupMessage *message = webkit_network_request_get_message(request);
-    if (message) {
-      SoupMessageHeaders *headers = message->response_headers;
-      const gchar *content = soup_message_headers_get_content_type(headers, NULL);
-      if (content) 
-        puts(content);
-    }
-  }
-#endif 
 }/*}}}*/
 
 /* dwb_web_view_script_alert_cb {{{*/
@@ -187,8 +167,7 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
   JSValueRef exc;
 
   script = JSStringCreateWithUTF8CString(dwb.misc.scripts);
-  JSEvaluateScript((JSContextRef)context, script, JSContextGetGlobalObject((JSContextRef)context), 
-      NULL, 0, &exc);
+  JSEvaluateScript((JSContextRef)context, script, JSContextGetGlobalObject((JSContextRef)context), NULL, 0, &exc);
   JSStringRelease(script);
 }/*}}}*/
 
@@ -235,7 +214,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 gboolean 
 dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
   Mode mode = dwb.state.mode;
-  if (mode == HintMode || mode == SearchFieldMode) {
+  if (mode == HintMode) {
     if (DIGIT(e) || e->keyval == GDK_Tab) {
       return true;
     }
@@ -250,15 +229,23 @@ dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
 gboolean 
 dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
-  if (mode == HintMode || mode == SearchFieldMode) {
-    if (e->keyval == GDK_BackSpace) {
-      return false;
-    }
-    else if (DIGIT(e) || e->keyval == GDK_Tab) {
+  if (e->keyval == GDK_BackSpace) {
+    return false;
+  }
+  if (mode == HintMode) {
+    if (DIGIT(e) || e->keyval == GDK_Tab) {
       return dwb_update_hints(e);
     }
     else if  (e->keyval == GDK_Return) {
       return true;
+    }
+  }
+  else if (mode == SearchFieldMode) {
+    if (e->keyval == GDK_Tab) {
+      return dwb_update_hints(e);
+    }
+    else if (e->keyval == GDK_Return) {
+      return false;
     }
   }
   else if (mode == DownloadGetPath) {
@@ -299,8 +286,10 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
     gtk_widget_grab_focus(CURRENT_VIEW()->scroll);
     dwb_search(NULL);
   }
-  else if (mode == SearchKeywordMode) {
-    dwb_save_searchengine();
+  else if (mode == SearchFieldMode) {
+    puts("hallo");
+    dwb_submit_searchengine();
+    //dwb_save_searchengine();
   }
   else if (mode == SettingsMode) {
     dwb_parse_setting(GET_TEXT());

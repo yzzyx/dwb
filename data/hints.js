@@ -234,7 +234,7 @@ function update_hints(input) {
     return "_dwb_no_hints_";
   }
   else if (array.length == 1) {
-    return  evaluate(array[0]);
+    return evaluate(array[0]);
   }
   else {
     lastpos = array[0].betterMatch(input);
@@ -290,7 +290,7 @@ function evaluate(element) {
     click_element(element);
     return "_dwb_click_";
   }
-  clear(); 
+  //clear(); 
   return ret;
 }
 function get_active() {
@@ -328,13 +328,16 @@ function add_searchengine() {
     return "_dwb_no_hints_";
   }
   elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
-  for (var i=0; i<=elements; i++) {
+  for (var i=0; i<elements.length; i++) {
     elements[i].getTextHint(i, elements.length);
-    hints.appendChild(elements[i].hint);
+    //hints.appendChild(elements[i].hint);
+    elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
   }
+    console.log(elements.length);
   document.body.appendChild(hints); 
   set_active[elements[0]];
   active_arr = elements;
+  update_hints("");
 }
 function submit_searchengine(string) {
   console.log("debug");

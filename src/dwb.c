@@ -145,7 +145,7 @@ static FunctionMap FMAP [] = {
   { { "reload",                "Reload",                            }, (Func)dwb_com_reload,              NULL,                              AlwaysSM, },
   { { "remove_view",           "Close view",                        }, (Func)dwb_com_remove_view,         NULL,                              AlwaysSM, },
   { { "save_quickmark",        "Save a quickmark for this page",    }, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,    { .n = QuickmarkSave }, },
-  { { "save_search_field",     "Add a new searchengine",            }, (Func)dwb_com_add_search_field,    "No input in current context",     NeverSM, },
+  { { "save_search_field",     "Add a new searchengine",            }, (Func)dwb_com_add_search_field,    "No input in current context",     PostSM, },
   { { "scripts",               "Setting: scripts",                  }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-scripts" } },
   { { "scroll_bottom",         "Scroll to  bottom of the page",     }, (Func)dwb_com_scroll,              NULL,                              AlwaysSM,    { .n = Bottom }, },
   { { "scroll_down",           "Scroll down",                       }, (Func)dwb_com_scroll,              "Bottom of the page",              AlwaysSM,    { .n = Down, }, },
@@ -696,6 +696,16 @@ dwb_get_search_engine(const gchar *uri) {
   return ret;
 }/*}}}*/
 
+void 
+dwb_submit_searchengine(void) {
+  puts("hallo");
+  gchar *com = g_strdup_printf("submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
+  gchar *value = dwb_execute_script(com);
+  if (value) {
+    dwb.state.form_name = value;
+  }
+  g_free(com);
+}
 
 /* dwb_save_searchengine {{{*/
 void
@@ -884,13 +894,16 @@ dwb_update_hints(GdkEventKey *e) {
       dwb_normal_mode(false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
+      dwb_execute_script("clear()");
       if (dwb.state.mode == SearchFieldMode) {
+#if 0
         gchar *com = g_strdup_printf("submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
         gchar *value = dwb_execute_script(com);
         if (value) {
           dwb.state.form_name = value;
         }
         g_free(com);
+#endif
       }
       else {
         dwb_insert_mode(NULL);
@@ -1898,7 +1911,7 @@ dwb_init_files() {
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
 
   if (g_list_last(dwb.fc.searchengines)) {
-    dwb.misc.default_search = ((Navigation*)g_list_last(dwb.fc.searchengines)->data)->second;
+    dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;
   }
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
 }/*}}}*/

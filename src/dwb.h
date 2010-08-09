@@ -433,6 +433,7 @@ void dwb_apply_settings(WebSettings *);
 
 gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(Arg *);
+void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
 void dwb_parse_setting(const gchar *);
 void dwb_parse_key_setting(const gchar *);

@@ -15,6 +15,7 @@ typedef struct _DwbDownload {
 } DwbDownload;
 
 static GList *downloads = NULL;
+static gchar *lastdir = NULL;
 
 /* dwb_get_download_command {{{*/
 gchar *
@@ -229,6 +230,10 @@ dwb_dl_start() {
     g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(dwb_dl_status_cb), NULL);
     webkit_download_start(dwb.state.download);
   }
+  if (lastdir) {
+    g_free(lastdir);
+  }
+  lastdir = g_strdup(path);
 
   dwb_normal_mode(true);
   dwb.state.download = NULL;
@@ -239,8 +244,8 @@ dwb_dl_start() {
 void
 dwb_dl_entry_set_directory() {
   dwb_set_normal_message(dwb.state.fview, "Downloadpath:", false);
-  gchar *current_dir = g_get_current_dir();
-  gchar *newdir = g_strdup_printf("%s/", current_dir);
+  gchar *current_dir = lastdir ? g_strdup(lastdir) : g_get_current_dir();
+  gchar *newdir = current_dir[strlen(current_dir) - 1] != '/' ? g_strdup_printf("%s/", current_dir) : g_strdup(current_dir);
 
   dwb_entry_set_text(newdir);
   if (current_dir) 
