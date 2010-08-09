@@ -232,7 +232,9 @@ dwb_dl_start() {
   if (lastdir) {
     g_free(lastdir);
   }
-  lastdir = g_strdup(path);
+  if (dwb.state.dl_action != Execute) {
+    lastdir = g_strdup(path);
+  }
 
   dwb_normal_mode(true);
   dwb.state.download = NULL;
