@@ -11,7 +11,7 @@ static KeyValue KEYS[] = {
   { "focus_prev",               {   "K",         0,                   },  },  
   { "hint_mode",                {   "f",         0,                   },  },  
   { "hint_mode_nv",             {   "F",         0,                   },  },  
-  { "hint_mode_nv",             {   "wf",         0,                   },  },  
+  { "hint_mode_nw",             {   "wf",         0,                   },  },  
   { "history_back",             {   "H",         0,                   },  },  
   { "history_forward",          {   "L",         0,                   },  },  
   { "insert_mode",              {   "i",         0,                   },  },  
