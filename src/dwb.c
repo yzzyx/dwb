@@ -1354,7 +1354,6 @@ dwb_search(Arg *arg) {
   else {
     dwb_set_error_message(dwb.state.fview, "No matches");
   }
-  dwb_normal_mode(false);
   return true;
 }/*}}}*/
 /*}}}*/

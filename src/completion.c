@@ -221,7 +221,7 @@ dwb_comp_key_sort(Completion *a, Completion *b) {
   return strcmp(((KeyMap*)a->data)->map->n.first, ((KeyMap*)b->data)->map->n.first);
 }
 GList * 
-dwb_comp_get_key_completion() {
+dwb_comp_get_key_completion(gboolean entry) {
   GList *list = NULL;
   const gchar *input = GET_TEXT();
 
@@ -229,6 +229,9 @@ dwb_comp_get_key_completion() {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
+    if (!entry && m->map->entry) {
+      continue;
+    }
     Navigation n = m->map->n;
     if (g_str_has_prefix(n.first, input)) {
       gchar *value = g_strdup_printf("%s %s", dwb_modmask_to_string(m->mod), m->key);
@@ -250,8 +253,8 @@ dwb_comp_complete(gint back) {
     gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
     switch (dwb.state.mode) {
       case SettingsMode:  dwb.comps.completions = dwb_comp_get_settings_completion(); break;
-      case KeyMode:       dwb.comps.completions = dwb_comp_get_key_completion(); break;
-      case CommandMode:   dwb.comps.completions = dwb_comp_get_key_completion(); break;
+      case KeyMode:       dwb.comps.completions = dwb_comp_get_key_completion(true); break;
+      case CommandMode:   dwb.comps.completions = dwb_comp_get_key_completion(false); break;
       default:            dwb.comps.completions = dwb_comp_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {
