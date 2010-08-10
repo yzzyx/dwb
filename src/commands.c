@@ -47,7 +47,7 @@ gboolean
 dwb_com_set_setting(Arg *arg) {
   dwb.state.mode = SettingsMode;
   dwb.state.setting_apply = arg->n;
-  dwb_com_focus_entry();
+  dwb_focus_entry();
   return true;
 }/*}}}*/
 
@@ -55,7 +55,7 @@ dwb_com_set_setting(Arg *arg) {
 gboolean 
 dwb_com_set_key(Arg *arg) {
   dwb.state.mode = KeyMode;
-  dwb_com_focus_entry();
+  dwb_focus_entry();
 
   return true;
 }/*}}}*/
@@ -108,7 +108,7 @@ dwb_com_add_search_field(Arg *a) {
   }
   dwb.state.mode = SearchFieldMode;
   dwb_set_normal_message(dwb.state.fview, "Enter a Keyword for marked search:", false);
-  dwb_com_focus_entry();
+  dwb_focus_entry();
   g_free(value);
   return ret;
 
@@ -145,7 +145,7 @@ dwb_com_find(Arg *arg) {
   dwb.state.mode = FindMode;
   dwb.state.forward_search = arg->b;
   //g_free(CURRENT_VIEW()->status->search_string);
-  dwb_com_focus_entry();
+  dwb_focus_entry();
   return true;
 }/*}}}*/
 
@@ -171,7 +171,7 @@ dwb_com_show_hints(Arg *arg) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
     dwb_execute_script("show_hints()");
     dwb.state.mode = HintMode;
-    dwb_com_focus_entry();
+    dwb_focus_entry();
   }
   return true;
 }/*}}}*/
@@ -274,6 +274,7 @@ gboolean
 dwb_com_bookmark(Arg *arg) {
   gboolean noerror;
   if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) ) {
+    dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)dwb_util_navigation_sort_first);
     gchar *message = g_strdup_printf("Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
     dwb_set_normal_message(dwb.state.fview, message, true);
     g_free(message);
@@ -441,7 +442,7 @@ dwb_com_open(Arg *arg) {
     dwb_load_uri(arg);
   }
   else {
-    dwb_com_focus_entry();
+    dwb_focus_entry();
   }
   return true;
 } /*}}}*/
@@ -820,7 +821,7 @@ dwb_com_save_session(Arg *arg) {
   }
   else {
     dwb.state.mode = arg->n;
-    dwb_com_focus_entry();
+    dwb_focus_entry();
     dwb_set_normal_message(dwb.state.fview, "Session name:", false);
   }
   return true;
@@ -833,7 +834,7 @@ dwb_com_bookmarks(Arg *arg) {
   if (!g_list_length(dwb.fc.bookmarks)) {
     return false;
   }
-  dwb_com_focus_entry();
+  dwb_focus_entry();
   dwb.state.mode = BookmarksMode;
   dwb_comp_complete(0);
 

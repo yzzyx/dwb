@@ -17,6 +17,7 @@ gchar * dwb_util_arg_to_char(Arg *, DwbType );
 Arg * dwb_util_char_to_arg(gchar *, DwbType );
 
 // sort 
+gint dwb_util_navigation_sort_first(Navigation *, Navigation *);
 gint dwb_util_keymap_sort_first(KeyMap *, KeyMap *);
 gint dwb_util_keymap_sort_second(KeyMap *, KeyMap *);
 gint dwb_util_web_settings_sort_second(WebSettings *, WebSettings *);

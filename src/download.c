@@ -17,8 +17,22 @@ typedef struct _DwbDownload {
 static GList *downloads = NULL;
 static gchar *lastdir = NULL;
 
+/*  dwb_get_command_from_mimetype(gchar *mimetype){{{*/
+static gchar *
+dwb_get_command_from_mimetype(gchar *mimetype) {
+  gchar *command = NULL;
+  for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
+    Navigation *n = l->data;
+    if (!strcmp(n->first, mimetype)) {
+      command = n->second;
+      break;
+    }
+  }
+  return command;
+}/*}}}*/
+
 /* dwb_get_download_command {{{*/
-gchar *
+static gchar *
 dwb_get_download_command(const gchar *uri, const gchar *output) {
   gchar *command = g_strdup(GET_CHAR("download-external-command"));
   gchar *newcommand = NULL;
@@ -39,7 +53,7 @@ dwb_get_download_command(const gchar *uri, const gchar *output) {
 }/*}}}*/
 
 /* dwb_dl_get_download_label(WebKitDownload *) {{{*/
-GList * 
+static GList * 
 dwb_dl_get_download_label(WebKitDownload *download) {
   for (GList *l = downloads; l; l=l->next) {
     DwbDownload *label = l->data;
@@ -51,7 +65,7 @@ dwb_dl_get_download_label(WebKitDownload *download) {
 }/*}}}*/
 
 /* dwb_dl_progress_cb(WebKitDownload *) {{{*/
-void
+static void
 dwb_dl_progress_cb(WebKitDownload *download) {
   GList *l = dwb_dl_get_download_label(download); 
   DwbDownload *label = l->data;
@@ -78,7 +92,7 @@ dwb_dl_progress_cb(WebKitDownload *download) {
 }/*}}}*/
 
 /* dwb_dl_set_mimetype(const gchar *) {{{*/
-void
+static void
 dwb_dl_set_mimetype(const gchar *command) {
   if (dwb.state.mimetype_request) {
     for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
@@ -95,7 +109,7 @@ dwb_dl_set_mimetype(const gchar *command) {
 }/*}}}*/
 
 /* dwb_dl_spawn(DwbDownload *) {{{*/
-void 
+static void 
 dwb_dl_spawn(DwbDownload *dl) {
   GError *error = NULL;
   const gchar *filename = webkit_download_get_destination_uri(dl->download);
@@ -111,7 +125,7 @@ dwb_dl_spawn(DwbDownload *dl) {
 }/*}}}*/
 
 /* dwb_dl_status_cb(WebKitDownload *) {{{*/
-void
+static void
 dwb_dl_status_cb(WebKitDownload *download) {
   WebKitDownloadStatus status = webkit_download_get_status(download);
 
@@ -134,7 +148,7 @@ dwb_dl_status_cb(WebKitDownload *download) {
 }/*}}}*/
 
 /* dwb_dl_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *) {{{*/
-gboolean 
+static gboolean 
 dwb_dl_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *gl) {
   if (e->button == 3) {
     DwbDownload *label = gl->data;
@@ -144,7 +158,7 @@ dwb_dl_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *gl) {
 }/*}}}*/
 
 /* dwb_dl_add_progress_label (GList *gl, const gchar *filename) {{{*/
-DwbDownload *
+static DwbDownload *
 dwb_dl_add_progress_label(GList *gl, const gchar *filename) {
   DwbDownload *l = g_malloc(sizeof(DwbDownload));
 
@@ -242,7 +256,7 @@ dwb_dl_start() {
 }/*}}}*/
 
 /* dwb_dl_entry_set_directory() {{{*/
-void
+static void
 dwb_dl_entry_set_directory() {
   dwb_set_normal_message(dwb.state.fview, "Downloadpath:", false);
   gchar *current_dir = lastdir ? g_strdup(lastdir) : g_get_current_dir();
@@ -271,7 +285,7 @@ dwb_dl_entry_set_spawn_command(const gchar *command) {
 void 
 dwb_dl_get_path(GList *gl, WebKitDownload *d) {
   gchar *command;
-  dwb_com_focus_entry();
+  dwb_focus_entry();
   dwb.state.mode = DownloadGetPath;
   dwb.state.download = d;
 

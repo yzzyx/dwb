@@ -11,10 +11,14 @@
 #include "download.h"
 #include "session.h"
 
+static void dwb_parse_setting(const gchar *);
+static void dwb_parse_key_setting(const gchar *);
+static void dwb_apply_settings(WebSettings *);
+
 /* WEB_VIEW_CALL_BACKS {{{*/
 
 /* dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
-gboolean
+static gboolean
 dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   Arg arg = { .p = gl };
 
@@ -54,7 +58,7 @@ dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 }/*}}}*/
 
 /* dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {{{*/
-gboolean 
+static gboolean 
 dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {
   if (!strcmp(sourceid, KEY_SETTINGS)) {
     dwb_parse_key_setting(message);
@@ -66,21 +70,21 @@ dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, g
 }/*}}}*/
 
 /* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
-GtkWidget * 
+static GtkWidget * 
 dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
   dwb_add_view(NULL); 
   return ((View*)dwb.state.fview->data)->web;
 }/*}}}*/
 
 /* dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
-gboolean 
+static gboolean 
 dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
   dwb_dl_get_path(gl, download);
   return true;
 }/*}}}*/
 
 /* dwb_web_view_hovering_over_link_cb(WebKitWebView *, gchar *title, gchar *uri, GList *) {{{*/
-void 
+static void 
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri, GList *gl) {
   VIEW(gl)->status->hover_uri = uri;
   if (uri) {
@@ -93,7 +97,7 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri,
 }/*}}}*/
 
 /* dwb_web_view_mime_type_policy_cb {{{*/
-gboolean 
+static gboolean 
 dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, gchar *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OpenDownload) {
     dwb.state.mimetype_request = g_strdup(mimetype);
@@ -104,7 +108,7 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
 }/*}}}*/
 
 /* dwb_web_view_navigation_policy_cb {{{*/
-gboolean 
+static gboolean 
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
@@ -136,14 +140,14 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 }/*}}}*/
 
 /* dwb_web_view_new_window_policy_cb {{{*/
-gboolean 
+static gboolean 
 dwb_web_view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy, GList *gl) {
   // TODO implement
   return false;
 }/*}}}*/
 
 /* dwb_web_view_resource_request_cb{{{*/
-void 
+static void 
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
@@ -151,14 +155,14 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
 }/*}}}*/
 
 /* dwb_web_view_script_alert_cb {{{*/
-gboolean 
+static gboolean 
 dwb_web_view_script_alert_cb(WebKitWebView *web, WebKitWebFrame *frame, gchar *message, GList *gl) {
   // TODO implement
   return false;
 }/*}}}*/
 
 /* dwb_web_view_window_object_cleared_cb {{{*/
-void 
+static void 
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
   JSStringRef script; 
@@ -169,28 +173,27 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
   JSStringRelease(script);
 }/*}}}*/
 
-gboolean
+static gboolean
 dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
-  //dwb_set_status_bar_text(gl);
   Arg a = { .n = e->direction, .p = gl };
   dwb_com_scroll(&a);
   return  false;
 }
 
 /* dwb_web_view_title_cb {{{*/
-void 
+static void 
 dwb_web_view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
 
 /* dwb_web_view_focus_cb {{{*/
-gboolean 
+static gboolean 
 dwb_web_view_focus_cb(WebKitWebView *web, GtkDirectionType *direction, GList *gl) {
   return false;
 }/*}}}*/
 
 /* dwb_web_view_load_status_cb {{{*/
-void 
+static void 
 dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   gdouble progress = webkit_web_view_get_progress(web);
@@ -217,7 +220,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 
 // Entry
 /* dwb_entry_keyrelease_cb {{{*/
-gboolean 
+static gboolean 
 dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
   Mode mode = dwb.state.mode;
   if (mode == HintMode) {
@@ -232,7 +235,7 @@ dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
 }/*}}}*/
 
 /* dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {{{*/
-gboolean 
+static gboolean 
 dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
   gboolean ret = false;
@@ -278,7 +281,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 }/*}}}*/
 
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
-gboolean 
+static gboolean 
 dwb_view_entry_activate_cb(GtkEntry* entry) {
   gchar *text = g_strdup(gtk_entry_get_text(entry));
   gboolean ret = false;
@@ -373,7 +376,7 @@ dwb_view_set_normal_style(GList *gl) {
 }/*}}}*/
 
 /* dwb_web_view_init_signals(View *v) {{{*/
-void
+static void
 dwb_web_view_init_signals(GList *gl) {
   View *v = gl->data;
   g_signal_connect(v->web, "button-press-event",                    G_CALLBACK(dwb_web_view_button_press_cb), gl);
@@ -401,7 +404,7 @@ dwb_web_view_init_signals(GList *gl) {
 } /*}}}*/
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/
-GList * 
+static GList * 
 dwb_view_create_web_view(GList *gl) {
   View *v = g_malloc(sizeof(View));
 
@@ -524,4 +527,80 @@ dwb_add_view(Arg *arg) {
     Arg a = { .p = dwb.misc.startpage }; 
     dwb_load_uri(&a);
   }
-} /*}}}*//*}}}*/
+} /*}}}*/
+
+/* dwb_parse_setting(const gchar *){{{*/
+void
+dwb_parse_setting(const gchar *text) {
+  WebSettings *s;
+  Arg *a = NULL;
+  gchar **token = g_strsplit(text, " ", 2);
+
+  GHashTable *t = dwb.state.setting_apply == Global ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
+  if (token[0]) {
+    if  ( (s = g_hash_table_lookup(t, token[0])) ) {
+      if ( (a = dwb_util_char_to_arg(token[1], s->type)) ) {
+        s->arg = *a;
+        dwb_apply_settings(s);
+        gchar *message = g_strdup_printf("Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
+        dwb_set_normal_message(dwb.state.fview, message, true);
+        g_free(message);
+      }
+      else {
+        dwb_set_error_message(dwb.state.fview, "No valid value.");
+      }
+    }
+    else {
+      gchar *message = g_strconcat("No such setting: ", token[0], NULL);
+      dwb_set_normal_message(dwb.state.fview, message, true);
+      g_free(message);
+    }
+  }
+  dwb_normal_mode(false);
+
+  g_strfreev(token);
+
+}/*}}}*/
+
+/* dwb_parse_key_setting(const gchar  *text) {{{*/
+void
+dwb_parse_key_setting(const gchar *text) {
+  KeyValue value;
+  gchar **token = g_strsplit(text, " ", 2);
+
+  value.id = g_strdup(token[0]);
+
+  gchar  **keys = g_strsplit(token[1], " ", -1);
+  value.key = dwb_strv_to_key(keys, g_strv_length(keys));
+
+  dwb.keymap = dwb_keymap_add(dwb.keymap, value);
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+
+  g_strfreev(token);
+  g_strfreev(keys);
+  dwb_normal_mode(true);
+}/*}}}*/
+
+/* dwb_apply_settings(WebSettings *s) {{{*/
+static void
+dwb_apply_settings(WebSettings *s) {
+  WebSettings *new;
+  if (dwb.state.setting_apply == Global) {
+    new = g_hash_table_lookup(dwb.settings, s->n.first);
+    new->arg = s->arg;
+    for (GList *l = dwb.state.views; l; l=l->next)  {
+      WebSettings *new =  g_hash_table_lookup((((View*)l->data)->setting), s->n.first);
+      new->arg = s->arg;
+      if (s->func) {
+        s->func(l, s);
+      }
+    }
+  }
+  else {
+    s->func(dwb.state.fview, s);
+  }
+  dwb_normal_mode(false);
+
+}/*}}}*/
+
+/*}}}*/

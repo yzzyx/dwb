@@ -42,4 +42,7 @@ gboolean dwb_com_entry_history_forward(Arg *);
 gboolean dwb_com_entry_history_back(Arg *);
 gboolean dwb_com_save_session(Arg *);
 gboolean dwb_com_bookmarks(Arg *);
+void dwb_com_remove_view(Arg *arg);
+gboolean dwb_com_push_master(Arg *arg);
+void dwb_com_focus(GList *gl);
 #endif

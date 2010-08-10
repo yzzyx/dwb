@@ -196,6 +196,11 @@ dwb_util_arg_to_char(Arg *arg, DwbType type) {
   return value;
 }/*}}}*/
 
+/* dwb_util_navigation_sort_first {{{*/
+gint
+dwb_util_navigation_sort_first(Navigation *a, Navigation *b) {
+  return (strcmp(b->first, b->first));
+}/*}}}*/
 /* dwb_util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
 gint
 dwb_util_keymap_sort_first(KeyMap *a, KeyMap *b) {

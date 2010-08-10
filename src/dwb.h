@@ -258,14 +258,12 @@ union _Type {
   gpointer p;
 };
 struct _WebSettings {
-  //gchar *id;
   Navigation n;
   gboolean builtin;
   gboolean global;
   DwbType type;
   Arg arg;
   S_Func func;
-  //gchar *desc;
 };
 struct _ViewStatus {
   guint message_id;
@@ -410,11 +408,7 @@ gboolean dwb_insert_mode(Arg *);
 void dwb_normal_mode(gboolean);
 
 void dwb_load_uri(Arg *);
-void dwb_com_focus_entry(void);
-
-gboolean dwb_com_push_master(Arg *);
-void dwb_com_remove_view(Arg *);
-void dwb_com_focus(GList *);
+void dwb_focus_entry(void);
 
 void dwb_set_normal_message(GList *, const gchar *, gboolean);
 void dwb_set_error_message(GList *, const gchar *);
@@ -427,29 +421,20 @@ void dwb_update_layout(void);
 gboolean dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const gchar *, const gchar *);
 
-Key dwb_strv_to_key(gchar **, gsize );
-
-GList * dwb_keymap_add(GList *gl, KeyValue key);
-
-void dwb_apply_settings(WebSettings *);
-
 gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
-void dwb_parse_setting(const gchar *);
-void dwb_parse_key_setting(const gchar *);
 gchar * dwb_execute_script(const gchar *);
 void dwb_resize(gdouble );
-void dwb_web_view_add_history_item(GList *);
 void dwb_grab_focus(GList *);
 void dwb_source_remove(GList *);
-void dwb_set_normal_style(GList *gl);
+
 gint dwb_entry_position_word_back(gint position);
 gint dwb_entry_position_word_forward(gint position);
 void dwb_entry_set_text(const gchar *text);
+
 void dwb_set_proxy(GList *, WebSettings *);
-gchar * dwb_get_command_from_mimetype(gchar *);
 void dwb_new_window(Arg *arg);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
@@ -457,6 +442,8 @@ void dwb_parse_command_line(const gchar *);
 GHashTable * dwb_get_default_settings(void);
 
 void dwb_exit(void);
-gboolean dwb_end(void);
+Key dwb_strv_to_key(gchar **, gsize );
 
+GList * dwb_keymap_delete(GList *, KeyValue );
+GList * dwb_keymap_add(GList *, KeyValue );
 #endif

@@ -5,13 +5,14 @@
 #include "completion.h"
 #include "commands.h"
 #include "util.h"
-GList * dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back);
+
+static GList * dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back);
 
 typedef gboolean (*Match_Func)(gchar*, const gchar*);
 
 /* GUI_FUNCTIONS {{{*/
 /* dwb_comp_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
-void 
+static void 
 dwb_comp_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {
   gtk_widget_modify_fg(c->llabel, GTK_STATE_NORMAL, fg);
   gtk_widget_modify_fg(c->rlabel, GTK_STATE_NORMAL, fg);
@@ -23,7 +24,7 @@ dwb_comp_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, Pango
 }/*}}}*/
 
 /* dwb_comp_get_completion_item(Navigation *)      return: Completion * {{{*/
-Completion * 
+static Completion * 
 dwb_comp_get_completion_item(Navigation *n, void *data, const gchar *value) {
   Completion *c = g_malloc(sizeof(Completion));
 
@@ -54,7 +55,7 @@ dwb_comp_get_completion_item(Navigation *n, void *data, const gchar *value) {
 }/*}}}*/
 
 /* dwb_comp_init_completion {{{*/
-GList * 
+static GList * 
 dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings) {
   Navigation *n;
   const gchar *input = GET_TEXT();
@@ -72,7 +73,7 @@ dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings) {
 }/*}}}*/
 
 /* dwb_completion_set_text(Completion *) {{{*/
-void
+static void
 dwb_comp_set_entry_text(Completion *c) {
   const gchar *text = gtk_label_get_text(GTK_LABEL(c->llabel));
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
@@ -81,7 +82,7 @@ dwb_comp_set_entry_text(Completion *c) {
 }/*}}}*/
 
 /* dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back)    Return *GList (Completions*){{{*/
-GList *
+static GList *
 dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back) {
   GList *old, *new;
   Completion *c;
@@ -159,7 +160,7 @@ dwb_comp_clean_completion() {
 }/*}}}*/
 
 /* dwb_comp_show_completion(gint back) {{{*/
-void 
+static void 
 dwb_comp_show_completion(gint back) {
   int i=0;
   if (back) {
@@ -181,7 +182,7 @@ dwb_comp_show_completion(gint back) {
 }/*}}}*/
 
 /* dwb_completion_get_normal      return: GList *Completions{{{*/
-GList *
+static GList *
 dwb_comp_get_normal_completion() {
   GList *list = NULL;
   list = dwb_comp_init_completion(list, dwb.fc.commands, true);
@@ -193,7 +194,7 @@ dwb_comp_get_normal_completion() {
 }/*}}}*/
 
 /* dwb_comp_get_bookmark_completion      return: GList *Completions{{{*/
-GList *
+static GList *
 dwb_comp_get_bookmark_completion() {
   GList *list = NULL;
   list = dwb_comp_init_completion(list, dwb.fc.bookmarks, false);
@@ -201,7 +202,7 @@ dwb_comp_get_bookmark_completion() {
 }/*}}}*/
 
 /* dwb_completion_get_settings      return: GList *Completions{{{*/
-GList *
+static GList *
 dwb_comp_get_settings_completion() {
   GList *l = g_hash_table_get_values(dwb.settings);
   l = g_list_sort(l, (GCompareFunc)dwb_util_web_settings_sort_first);
@@ -224,11 +225,7 @@ dwb_comp_get_settings_completion() {
 }/*}}}*/
 
 /*dwb_completion_get_keys()         return  GList *Completions{{{*/
-gint 
-dwb_comp_key_sort(Completion *a, Completion *b) {
-  return strcmp(((KeyMap*)a->data)->map->n.first, ((KeyMap*)b->data)->map->n.first);
-}
-GList * 
+static GList * 
 dwb_comp_get_key_completion(gboolean entry) {
   GList *list = NULL;
   const gchar *input = GET_TEXT();
@@ -316,7 +313,7 @@ dwb_comp_clean_autocompletion() {
 }/*}}}*/
 
 /* dwb_comp_init_autocompletion (GList *gl)      return: GList * (Completion*){{{*/
-GList * 
+static GList * 
 dwb_comp_init_autocompletion(GList *gl) {
   View *v =  CURRENT_VIEW();
   GList *ret = NULL;
@@ -379,7 +376,7 @@ dwb_comp_clean_path_completion() {
 }/*}}}*/
 
 /* dwb_comp_get_binaries(GList *list, gchar *text)      return GList *{{{*/
-GList *
+static GList *
 dwb_comp_get_binaries(GList *list, gchar *text) {
   GDir *dir;
   gchar **paths = g_strsplit(g_getenv("PATH"), ":", -1);
@@ -401,7 +398,7 @@ dwb_comp_get_binaries(GList *list, gchar *text) {
   return list;
 }/* }}} */
 /* dwb_comp_get_path(GList *, gchar *)        return GList* */
-GList *
+static GList *
 dwb_comp_get_path(GList *list, gchar *text) {
   gchar *path = "/";
   gchar *last = "";
@@ -434,7 +431,7 @@ dwb_comp_get_path(GList *list, gchar *text) {
 }/*}}}*/
 
 /* dwb_comp_init_path_completion {{{*/
-void
+static void
 dwb_comp_init_path_completion(gint back) { 
   gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
