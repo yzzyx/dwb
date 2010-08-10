@@ -56,7 +56,7 @@ dwb_session_load_webview(WebKitWebView *web, gchar *uri, gint last) {
 void
 dwb_session_list() {
   gchar *path = dwb_util_build_path();
-  dwb.files.session = g_strconcat(path, "/session", NULL);
+  dwb.files.session = g_build_filename(path, "session", NULL);
   gchar **content = dwb_session_get_groups();
   gint i=1;
   while (content[i]) {
@@ -65,6 +65,7 @@ dwb_session_list() {
     g_strfreev(group);
   }
   g_strfreev(content);
+  g_free(path);
   exit(EXIT_SUCCESS);
 }/*}}}*/
 

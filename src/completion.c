@@ -379,7 +379,7 @@ dwb_comp_get_binaries(GList *list, gchar *text) {
     if ( (dir = g_dir_open(path, 'r', NULL)) ) {
       while ( (filename = g_dir_read_name(dir))) {
         if (g_str_has_prefix(filename, text)) {
-          gchar *store = g_strconcat(path, path[strlen(path)-1] != '/' ? "/" : "", filename, NULL);
+          gchar *store = g_build_filename(path, filename, NULL);
           list = g_list_prepend(list, store);
         }
       }
@@ -410,7 +410,7 @@ dwb_comp_get_path(GList *list, gchar *text) {
       if (!strlen(last) && filename[0] == '.') 
         continue;
       if (g_str_has_prefix(filename, last)) {
-        gchar *newpath = g_strconcat(path, filename, NULL);
+        gchar *newpath = g_build_filename(path, filename, NULL);
         gchar *store = g_strconcat(newpath, g_file_test(newpath, G_FILE_TEST_IS_DIR) ? "/" : "", NULL);
         list = g_list_prepend(list, store);
         g_free(newpath);

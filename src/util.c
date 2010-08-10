@@ -228,7 +228,7 @@ dwb_util_get_directory_entries(const gchar *path, const gchar *text) {
   if ( (dir = g_dir_open(path, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
       if (strlen(text) && g_str_has_prefix(filename, text)) {
-        gchar *newpath = g_strconcat(path, "/", filename, NULL);
+        gchar *newpath = g_build_filename(path, filename, NULL);
         if (g_file_test(newpath, G_FILE_TEST_IS_DIR)) {
           store = g_strconcat(newpath, "/", NULL);
           g_free(newpath);
@@ -254,7 +254,7 @@ dwb_util_get_directory_content(GString **buffer, const gchar *dirname) {
   if ( (dir = g_dir_open(dirname, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
       if (filename[0] != '.') {
-        filepath = g_strconcat(dirname, "/",  filename, NULL);
+        filepath = g_build_filename(dirname, filename, NULL);
         if (g_file_get_contents(filepath, &content, NULL, &error)) {
           g_string_append((*buffer), content);
         }
@@ -290,7 +290,7 @@ dwb_util_set_file_content(const gchar *filename, const gchar *content) {
 /* dwb_util_build_path()       return: gchar * (alloc) {{{*/
 gchar *
 dwb_util_build_path() {
-  gchar *path = g_strconcat(g_get_user_config_dir(), "/", dwb.misc.name, "/",  NULL);
+  gchar *path = g_build_filename(g_get_user_config_dir(), dwb.misc.name, NULL);
   if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(path, 0755);
   }
@@ -306,7 +306,7 @@ dwb_util_get_data_dir(const gchar *dir) {
   gint i = 0;
 
   while ( (dirs = config[i++]) ) {
-    path = g_strconcat(dirs, "/", dwb.misc.name, "/", dir, NULL);
+    path = g_build_filename(dirs, dwb.misc.name, dir, NULL);
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
       return path;
     }

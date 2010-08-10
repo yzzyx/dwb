@@ -195,18 +195,18 @@ dwb_dl_start() {
   }
 
   if (dwb.state.dl_action == Execute) {
-    fullpath = g_strconcat("file:///tmp/", filename, NULL);
+    fullpath = g_build_filename("file:///tmp", filename, NULL);
   }
   else {
     if (!path || !strlen(path)) {
       path = g_get_current_dir();
     }
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-      fullpath = g_strconcat(external ? "" : "file://", path, "/", filename, NULL);
+      fullpath = external ? g_build_filename(path, filename, NULL) : g_build_filename("file://", path, filename, NULL);
     }
     else {
       filename = strrchr(path, '/')+1;
-      fullpath = g_strconcat(external ? "" : "file://", path, NULL);
+      fullpath = external ? g_strdup(path) : g_build_filename("file://", path, NULL);
     }
   }
 

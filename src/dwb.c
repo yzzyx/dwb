@@ -1542,8 +1542,7 @@ dwb_strv_to_key(gchar **string, gsize length) {
 /* dwb_generate_keyfile {{{*/
 void 
 dwb_generate_keyfile() {
-  gchar *path = g_strconcat(g_get_user_config_dir(), "/", dwb.misc.name, "/",  NULL);
-  dwb.files.keys = g_strconcat(path, "keys", NULL);
+  dwb.files.keys = g_build_filename(g_get_user_config_dir(), dwb.misc.name, "keys", NULL);
   GKeyFile *keyfile = g_key_file_new();
   gsize l;
   GError *error = NULL;
@@ -1884,23 +1883,23 @@ dwb_init_file_content(GList *gl, const gchar *filename, Content_Func func) {
 void
 dwb_init_files() {
   gchar *path = dwb_util_build_path();
-  gchar *profile_path = g_strconcat(path, dwb.misc.profile, "/", NULL);
+  gchar *profile_path = g_build_filename(path, dwb.misc.profile, NULL);
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(profile_path, 0755);
   }
-  dwb.files.bookmarks     = g_strconcat(profile_path, "/bookmarks",     NULL);
-  dwb.files.history       = g_strconcat(profile_path, "/history",       NULL);
-  dwb.files.stylesheet    = g_strconcat(profile_path, "/stylesheet",    NULL);
-  dwb.files.quickmarks    = g_strconcat(profile_path, "/quickmarks",    NULL);
-  dwb.files.session       = g_strconcat(path, "/session",       NULL);
-  dwb.files.searchengines = g_strconcat(path, "searchengines", NULL);
-  dwb.files.stylesheet    = g_strconcat(profile_path, "/stylesheet",    NULL);
-  dwb.files.keys          = g_strconcat(path, "keys",          NULL);
-  dwb.files.scriptdir     = g_strconcat(path, "/scripts",      NULL);
-  dwb.files.settings      = g_strconcat(path, "settings",      NULL);
-  dwb.files.mimetypes     = g_strconcat(path, "mimetypes",      NULL);
-  dwb.files.cookies       = g_strconcat(profile_path, "/cookies",       NULL);
-  dwb.files.cookies_allow = g_strconcat(profile_path, "/cookies.allow", NULL);
+  dwb.files.bookmarks     = g_build_filename(profile_path, "bookmarks",     NULL);
+  dwb.files.history       = g_build_filename(profile_path, "history",       NULL);
+  dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);
+  dwb.files.quickmarks    = g_build_filename(profile_path, "quickmarks",    NULL);
+  dwb.files.session       = g_build_filename(path, "session",       NULL);
+  dwb.files.searchengines = g_build_filename(path, "searchengines", NULL);
+  dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);
+  dwb.files.keys          = g_build_filename(path, "keys",          NULL);
+  dwb.files.scriptdir     = g_build_filename(path, "scripts",      NULL);
+  dwb.files.settings      = g_build_filename(path, "settings",      NULL);
+  dwb.files.mimetypes     = g_build_filename(path, "mimetypes",      NULL);
+  dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
+  dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
 
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
@@ -1913,6 +1912,8 @@ dwb_init_files() {
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;
   }
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
+  g_free(path);
+  g_free(profile_path);
 }/*}}}*/
 
 /* signals{{{*/
@@ -1930,18 +1931,6 @@ dwb_handle_signal(gint s) {
     exit(EXIT_FAILURE);
   }
 }
-void 
-dwb_init_proxy() {
-  const gchar *proxy;
-  gchar *newproxy;
-  if ( (proxy =  g_getenv("http_proxy")) && dwb_util_test_connect(proxy) ) {
-    newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
-    dwb.misc.proxyuri = soup_uri_new(newproxy);
-    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", dwb.misc.proxyuri, NULL); 
-    g_free(newproxy);
-  }
-}
-
 
 void 
 dwb_init_signals() {
@@ -1954,6 +1943,20 @@ dwb_init_signals() {
   }
 }/*}}}*/
 
+/* dwb_init_proxy{{{*/
+void 
+dwb_init_proxy() {
+  const gchar *proxy;
+  gchar *newproxy;
+  if ( (proxy =  g_getenv("http_proxy")) && dwb_util_test_connect(proxy) ) {
+    newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
+    dwb.misc.proxyuri = soup_uri_new(newproxy);
+    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", dwb.misc.proxyuri, NULL); 
+    g_free(newproxy);
+  }
+}/*}}}*/
+
+/* dwb_init_vars{{{*/
 void 
 dwb_init_vars() {
   dwb.misc.message_delay = GET_INT("message-delay");
@@ -1964,7 +1967,7 @@ dwb_init_vars() {
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
-}
+}/*}}}*/
 
 /* dwb_init() {{{*/
 void dwb_init() {
@@ -2052,7 +2055,8 @@ void
 dwb_init_fifo(gint single) {
   FILE *ff;
   gchar *path = dwb_util_build_path();
-  gchar *unifile = g_strconcat(path, "dwb-uni.fifo", NULL);
+  gchar *unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
+  g_free(path);
 
   if (!g_file_test(dwb.misc.fifo, G_FILE_TEST_EXISTS)) {
     mkfifo(unifile, 0666);
