@@ -115,6 +115,7 @@ enum _Mode {
   KeyMode             = 1<<13,
   DownloadGetPath     = 1<<14,
   SaveSession         = 1<<15,
+  BookmarksMode       = 1<<16,
 };
 
 enum _ShowMessage {

@@ -235,6 +235,7 @@ dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
 gboolean 
 dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
+  gboolean ret = false;
   if (e->keyval == GDK_BackSpace) {
     return false;
   }
@@ -265,17 +266,15 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   }
   else if (mode & CompletionMode && e->keyval != GDK_Tab && !e->is_modifier) {
     dwb_comp_clean_completion();
-    return false;
   }
   else if (e->keyval == GDK_Tab) {
     dwb_comp_complete(e->state & GDK_CONTROL_MASK);
     return true;
   }
-
   if (dwb_eval_editing_key(e)) {
-    return true;
+    ret = true;
   }
-  return false;
+  return ret;
 }/*}}}*/
 
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/

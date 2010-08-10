@@ -192,6 +192,14 @@ dwb_comp_get_normal_completion() {
   return  list;
 }/*}}}*/
 
+/* dwb_comp_get_bookmark_completion      return: GList *Completions{{{*/
+GList *
+dwb_comp_get_bookmark_completion() {
+  GList *list = NULL;
+  list = dwb_comp_init_completion(list, dwb.fc.bookmarks, false);
+  return  list;
+}/*}}}*/
+
 /* dwb_completion_get_settings      return: GList *Completions{{{*/
 GList *
 dwb_comp_get_settings_completion() {
@@ -255,6 +263,7 @@ dwb_comp_complete(gint back) {
       case SettingsMode:  dwb.comps.completions = dwb_comp_get_settings_completion(); break;
       case KeyMode:       dwb.comps.completions = dwb_comp_get_key_completion(true); break;
       case CommandMode:   dwb.comps.completions = dwb_comp_get_key_completion(false); break;
+      case BookmarksMode: dwb.comps.completions = dwb_comp_get_bookmark_completion(); break;
       default:            dwb.comps.completions = dwb_comp_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {

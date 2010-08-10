@@ -827,3 +827,16 @@ dwb_com_save_session(Arg *arg) {
 }
 /*}}}*/
 
+/* dwb_com_bookmarks {{{*/
+gboolean
+dwb_com_bookmarks(Arg *arg) {
+  if (!g_list_length(dwb.fc.bookmarks)) {
+    return false;
+  }
+  dwb_com_focus_entry();
+  dwb.state.mode = BookmarksMode;
+  dwb_comp_complete(0);
+
+  return true;
+}/*}}}*/
+

@@ -116,6 +116,7 @@ static FunctionMap FMAP [] = {
   { { "autoload_images",       "Setting: autoload images",          }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "auto-load-images" } },
   { { "autoresize_window",     "Setting: autoresize window",        }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "auto-resize-window" } },
   { { "bookmark",              "Bookmark current page",             }, (Func)dwb_com_bookmark,            NO_URL,                            PostSM, },
+  { { "bookmarks",             "Bookmarks",                    }, (Func)dwb_com_bookmarks,                "No Bookmarks",                        NeverSM, },
   { { "command_mode",          "Enter command mode",                }, (Func)dwb_command_mode,            NULL,                              PostSM, },
   { { "caret_browsing",        "Setting: caret browsing",           }, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-caret-browsing" } },
   { { "decrease_master",       "Decrease master area",              }, (Func)dwb_com_resize_master,       "Cannot decrease further",         AlwaysSM,    { .n = 5 } },
@@ -258,13 +259,13 @@ static WebSettings DWB_SETTINGS[] = {
   { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_com_reload_layout, },
   { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_com_reload_layout, },
 
-  { { "active-comp-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#1793d1"         }, (S_Func) dwb_com_reload_colors, },
-  { { "active-comp-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_com_reload_colors, },
-  { { "normal-comp-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_com_reload_colors, },
+  { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#53868b"         }, (S_Func) dwb_com_reload_colors, },
+  { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_com_reload_colors, },
+  { { "normal-completion-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_com_reload_colors, },
   { { "normal-comp-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_com_reload_colors, },
 
-  { { "insert-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_com_reload_colors, },
-  { { "insert-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#00008b"         }, (S_Func) dwb_com_reload_colors, },
+  { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_com_reload_colors, },
+  { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#dddddd"         }, (S_Func) dwb_com_reload_colors, },
   { { "error-color",                             "UI: Error color", },                                         false, true,  ColorChar, { .p = "#ff0000"         }, (S_Func) dwb_com_reload_colors, },
 
   { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_com_reload_colors, },
@@ -1214,7 +1215,6 @@ dwb_eval_key(GdkEventKey *e) {
   gint longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
-  //gint prelen = strlen(pre);
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
@@ -1766,17 +1766,17 @@ dwb_init_style() {
   gdk_color_parse(GET_CHAR("tab-normal-bg-color"), &dwb.color.tab_normal_bg);
 
   //InsertMode 
-  gdk_color_parse(GET_CHAR("insert-fg-color"), &dwb.color.insert_fg);
-  gdk_color_parse(GET_CHAR("insert-bg-color"), &dwb.color.insert_bg);
+  gdk_color_parse(GET_CHAR("insertmode-fg-color"), &dwb.color.insert_fg);
+  gdk_color_parse(GET_CHAR("insertmode-bg-color"), &dwb.color.insert_bg);
 
   //Downloads
   gdk_color_parse("#ffffff", &dwb.color.download_fg);
   gdk_color_parse("#000000", &dwb.color.download_bg);
 
-  gdk_color_parse(GET_CHAR("active-comp-bg-color"), &dwb.color.active_c_bg);
-  gdk_color_parse(GET_CHAR("active-comp-fg-color"), &dwb.color.active_c_fg);
+  gdk_color_parse(GET_CHAR("active-completion-bg-color"), &dwb.color.active_c_bg);
+  gdk_color_parse(GET_CHAR("active-completion-fg-color"), &dwb.color.active_c_fg);
   gdk_color_parse(GET_CHAR("normal-comp-bg-color"), &dwb.color.normal_c_bg);
-  gdk_color_parse(GET_CHAR("normal-comp-fg-color"), &dwb.color.normal_c_fg);
+  gdk_color_parse(GET_CHAR("normal-completion-fg-color"), &dwb.color.normal_c_fg);
 
   gdk_color_parse(GET_CHAR("error-color"), &dwb.color.error);
 
