@@ -94,14 +94,12 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri,
 /* dwb_web_view_mime_type_policy_cb {{{*/
 gboolean 
 dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, gchar *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
-  if (webkit_web_view_can_show_mime_type(web, mimetype)) {
-    return  false;
-  }
-  else {
+  if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OpenDownload) {
     dwb.state.mimetype_request = g_strdup(mimetype);
     webkit_web_policy_decision_download(policy);
     return true;
   }
+  return  false;
 }/*}}}*/
 
 /* dwb_web_view_navigation_policy_cb {{{*/
@@ -131,10 +129,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
       ? g_strdup_printf("%s?%s=%s", request_uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
       : g_strdup(request_uri);
     dwb_save_searchengine();
-    return true;
-  }
-  if (dwb.state.nv == OpenDownload) {
-    webkit_web_policy_decision_download(policy);
     return true;
   }
   return false;
