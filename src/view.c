@@ -5,6 +5,7 @@
 #include <gdk/gdkkeysyms.h>
 #include "dwb.h"
 #include "view.h"
+#include "commands.h"
 #include "completion.h"
 #include "util.h"
 #include "download.h"
@@ -167,6 +168,14 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
   JSEvaluateScript((JSContextRef)context, script, JSContextGetGlobalObject((JSContextRef)context), NULL, 0, &exc);
   JSStringRelease(script);
 }/*}}}*/
+
+gboolean
+dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
+  //dwb_set_status_bar_text(gl);
+  Arg a = { .n = e->direction, .p = gl };
+  dwb_com_scroll(&a);
+  return  false;
+}
 
 /* dwb_web_view_title_cb {{{*/
 void 
@@ -384,10 +393,12 @@ dwb_web_view_init_signals(GList *gl) {
   g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
   g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   g_signal_connect(v->web, "focus",                                 G_CALLBACK(dwb_web_view_focus_cb), gl);
+  g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
 
   g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
   g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(dwb_view_entry_keyrelease_cb), NULL);
   g_signal_connect(v->entry, "activate",                            G_CALLBACK(dwb_view_entry_activate_cb), NULL);
+
 } /*}}}*/
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/

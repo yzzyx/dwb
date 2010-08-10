@@ -354,7 +354,6 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = dwb_eval_key(e);
   }
   g_free(key);
-
   return ret;
 }/*}}}*/
 
@@ -437,7 +436,7 @@ dwb_set_error_message(GList *gl, const gchar *error) {
 /* dwb_update_status_text(GList *gl) {{{*/
 void 
 dwb_update_status_text(GList *gl) {
-  View *v = gl->data;
+  View *v = gl ? gl->data : dwb.state.fview->data;
   GtkAdjustment *a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
   const gchar *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   GString *string = g_string_new(uri);

@@ -137,10 +137,10 @@ enum _Layout {
 };
 
 enum _Direction {
-  Up, 
-  Down, 
-  Left, 
-  Right, 
+  Up = GDK_SCROLL_UP,
+  Down = GDK_SCROLL_DOWN,
+  Left = GDK_SCROLL_LEFT, 
+  Right = GDK_SCROLL_RIGHT, 
   PageUp,
   PageDown, 
   Top,

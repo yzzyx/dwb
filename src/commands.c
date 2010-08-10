@@ -351,8 +351,9 @@ gboolean
 dwb_com_scroll(Arg *arg) {
   gboolean ret = true;
   gdouble scroll;
+  GList *gl = arg->p ? arg->p : dwb.state.fview;
 
-  View *v = CURRENT_VIEW();
+  View *v = gl->data;
 
   GtkAdjustment *a = arg->n == Left || arg->n == Right 
     ? gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
@@ -378,7 +379,7 @@ dwb_com_scroll(Arg *arg) {
     ret = false;
   else {
     gtk_adjustment_set_value(a, scroll);
-    dwb_update_status_text(dwb.state.fview);
+    dwb_update_status_text(gl);
   }
   return ret;
 }/*}}}*/
