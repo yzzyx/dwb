@@ -44,5 +44,5 @@ gboolean dwb_com_save_session(Arg *);
 gboolean dwb_com_bookmarks(Arg *);
 void dwb_com_remove_view(Arg *arg);
 gboolean dwb_com_push_master(Arg *arg);
-void dwb_com_focus(GList *gl);
+gboolean dwb_com_focus_nth_view(Arg *arg);
 #endif

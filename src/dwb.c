@@ -121,6 +121,7 @@ static FunctionMap FMAP [] = {
   { { "focus_input",           "Focus input",                       }, (Func)dwb_com_focus_input,        "No input found in current context",      AlwaysSM, },
   { { "focus_next",            "Focus next view",                   }, (Func)dwb_com_focus_next,          "No other view",                   AlwaysSM, },
   { { "focus_prev",            "Focus previous view",               }, (Func)dwb_com_focus_prev,          "No other view",                   AlwaysSM, },
+  { { "focus_nth_view",        "Focus nth view",                    }, (Func)dwb_com_focus_nth_view,       "No such view",                    AlwaysSM,  { 0 } },
   { { "hint_mode",             "Follow hints",                      }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNormal }, },
   { { "hint_mode_nv",          "Follow hints (new view)",           }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewView }, },
   { { "hint_mode_nw",          "Follow hints (new window)",         }, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewWindow }, },
@@ -162,14 +163,16 @@ static FunctionMap FMAP [] = {
   { { "zoom_in",               "Zoom in",                           }, (Func)dwb_com_zoom_in,             "Cannot zoom in further",          AlwaysSM, },
   { { "zoom_normal",           "Zoom 100%",                         }, (Func)dwb_com_set_zoom_level,      NULL,                              AlwaysSM,    { .d = 1.0,   .p = NULL } },
   { { "zoom_out",              "Zoom out",                          }, (Func)dwb_com_zoom_out,            "Cannot zoom out further",         AlwaysSM, },
-  { { "yank",                  "Yank",                              }, (Func)dwb_com_yank,                 NO_URL,                           PostSM,  { .p = GDK_NONE } },
-  { { "yank_primary",          "Yank to Primary selection",         }, (Func)dwb_com_yank,                 NO_URL,                           PostSM,  { .p = GDK_SELECTION_PRIMARY } },
-  { { "paste",                 "Paste",                             }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM, { .n = OpenNormal, .p = GDK_NONE } },
-  { { "paste_primary",         "Paste primary selection",           }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM, { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
-  { { "paste_nv",              "Paste, new view",                   }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM, { .n = OpenNewView, .p = GDK_NONE } },
-  { { "paste_primary_nv",      "Paste primary selection, new view", }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM, { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
-  { { "paste_nw",              "Paste, new window",                   }, (Func)dwb_com_paste,               "Clipboard is empty",              AlwaysSM, { .n = OpenNewWindow, .p = GDK_NONE } },
-  { { "paste_primary_nw",      "Paste primary selection, new window", }, (Func)dwb_com_paste,               "No primary selection",            AlwaysSM, { .n = OpenNewWindow, .p = GDK_SELECTION_PRIMARY } },
+  // yank and paste
+  { { "yank",                  "Yank",                              }, (Func)dwb_com_yank,                 NO_URL,                 PostSM,  { .p = GDK_NONE } },
+  { { "yank_primary",          "Yank to Primary selection",         }, (Func)dwb_com_yank,                 NO_URL,                 PostSM,  { .p = GDK_SELECTION_PRIMARY } },
+  { { "paste",                 "Paste",                             }, (Func)dwb_com_paste,               "Clipboard is empty",    AlwaysSM, { .n = OpenNormal, .p = GDK_NONE } },
+  { { "paste_primary",         "Paste primary selection",           }, (Func)dwb_com_paste,               "No primary selection",  AlwaysSM, { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
+  { { "paste_nv",              "Paste, new view",                   }, (Func)dwb_com_paste,               "Clipboard is empty",    AlwaysSM, { .n = OpenNewView, .p = GDK_NONE } },
+  { { "paste_primary_nv",      "Paste primary selection, new view", }, (Func)dwb_com_paste,               "No primary selection",  AlwaysSM, { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
+  { { "paste_nw",              "Paste, new window",                   }, (Func)dwb_com_paste,             "Clipboard is empty",    AlwaysSM, { .n = OpenNewWindow, .p = GDK_NONE } },
+  { { "paste_primary_nw",      "Paste primary selection, new window", }, (Func)dwb_com_paste,             "No primary selection",  AlwaysSM, { .n = OpenNewWindow, .p = GDK_SELECTION_PRIMARY } },
+
   { { "save_session",          "Save current session", },              (Func)dwb_com_save_session,        NULL,                              AlwaysSM,  { .n = NormalMode } },
   { { "save_named_session",    "Save current session with name", },    (Func)dwb_com_save_session,        NULL,                              PostSM,  { .n = SaveSession } },
 
@@ -470,6 +473,22 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+/* dwb_com_focus(GList *gl) {{{*/
+void 
+dwb_focus(GList *gl) {
+  GList *tmp = NULL;
+
+  if (dwb.state.fview) {
+    tmp = dwb.state.fview;
+  }
+  if (tmp) {
+    dwb_view_set_normal_style(tmp);
+    dwb_source_remove(tmp);
+    CLEAR_COMMAND_TEXT(tmp);
+  }
+  dwb_grab_focus(gl);
+} /*}}}*/
 
 /* dwb_get_default_settings()         return: GHashTable {{{*/
 GHashTable * 

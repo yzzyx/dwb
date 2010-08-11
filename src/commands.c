@@ -573,7 +573,7 @@ dwb_com_push_master(Arg *arg) {
     gtk_widget_reparent(new->vbox, dwb.gui.left);
     dwb.state.views = g_list_remove_link(dwb.state.views, l);
     dwb.state.views = g_list_concat(l, dwb.state.views);
-    dwb_com_focus(l);
+    dwb_focus(l);
   }
   else {
     old = dwb.state.views->data;
@@ -596,22 +596,6 @@ dwb_com_push_master(Arg *arg) {
   return true;
 }/*}}}*/
 
-/* dwb_com_focus(GList *gl) {{{*/
-void 
-dwb_com_focus(GList *gl) {
-  GList *tmp = NULL;
-
-  if (dwb.state.fview) {
-    tmp = dwb.state.fview;
-  }
-  if (tmp) {
-    dwb_view_set_normal_style(tmp);
-    dwb_source_remove(tmp);
-    CLEAR_COMMAND_TEXT(tmp);
-  }
-  dwb_grab_focus(gl);
-} /*}}}*/
-
 /* dwb_com_focus_next(Arg *arg) {{{*/
 gboolean 
 dwb_com_focus_next(Arg *arg) {
@@ -628,7 +612,7 @@ dwb_com_focus_next(Arg *arg) {
       gtk_widget_show(((View *)gl->next->data)->vbox);
       gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_com_focus(gl->next);
+    dwb_focus(gl->next);
   }
   else {
     if (dwb.state.layout & Maximized) {
@@ -637,7 +621,7 @@ dwb_com_focus_next(Arg *arg) {
       gtk_widget_show(((View *)dwb.state.views->data)->vbox);
       gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_com_focus(g_list_first(dwb.state.views));
+    dwb_focus(g_list_first(dwb.state.views));
   }
   return true;
 }/*}}}*/
@@ -657,7 +641,7 @@ dwb_com_focus_prev(Arg *arg) {
       gtk_widget_show(((View *)last->data)->vbox);
       gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_com_focus(last);
+    dwb_focus(last);
   }
   else {
     if (dwb.state.layout & Maximized) {
@@ -668,10 +652,35 @@ dwb_com_focus_prev(Arg *arg) {
       gtk_widget_show(((View *)gl->prev->data)->vbox);
       gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_com_focus(gl->prev);
+    dwb_focus(gl->prev);
   }
   return true;
 }/*}}}*/
+
+/* dwb_com_focus_view{{{*/
+gboolean
+dwb_com_focus_nth_view(Arg *arg) {
+  if (!dwb.state.views->next) 
+    return true;
+  GList *l = g_list_nth(dwb.state.views, dwb.state.nummod);
+  if (l && l != dwb.state.fview) {
+    if (dwb.state.layout & Maximized) { 
+      if (l == dwb.state.views) {
+        gtk_widget_hide(dwb.gui.right);
+        gtk_widget_show(dwb.gui.left);
+      }
+      else {
+        gtk_widget_hide(dwb.gui.left);
+        gtk_widget_show(dwb.gui.right);
+      }
+      gtk_widget_show(((View *)l->data)->vbox);
+      gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
+    }
+    dwb_focus(l);
+  }
+  return true;
+}/*}}}*/
+
 
 /* dwb_com_yank {{{*/
 gboolean

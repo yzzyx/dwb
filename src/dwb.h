@@ -421,6 +421,7 @@ void dwb_set_status_bar_text(GtkWidget *, const gchar *, GdkColor *,  PangoFontD
 void dwb_update_status_text(GList *gl);
 void dwb_update_status(GList *gl);
 void dwb_update_layout(void);
+void dwb_focus(GList *gl);
 
 gboolean dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const gchar *, const gchar *);

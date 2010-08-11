@@ -40,7 +40,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
   else if (e->button == 1) {
     if (e->type == GDK_BUTTON_PRESS) {
-      dwb_com_focus(gl);
+      dwb_focus(gl);
     }
     if (e->type == GDK_2BUTTON_PRESS) {
       dwb_com_push_master(&arg);
@@ -518,7 +518,7 @@ dwb_add_view(Arg *arg) {
     }
   }
   dwb.state.views = dwb_view_create_web_view(dwb.state.views);
-  dwb_com_focus(dwb.state.views);
+  dwb_focus(dwb.state.views);
 
   for (GList *l = g_hash_table_get_values(((View*)dwb.state.views->data)->setting); l; l=l->next) {
     WebSettings *s = l->data;
