@@ -489,7 +489,7 @@ dwb_com_toggle_maximized(Arg *arg) {
 /* dwb_com_remove_view(Arg *arg) {{{*/
 void 
 dwb_com_remove_view(Arg *arg) {
-  GList *gl;
+  GList *gl = NULL;
   if (!dwb.state.views->next) {
     dwb_exit();
     return;
@@ -540,7 +540,7 @@ dwb_com_remove_view(Arg *arg) {
 /* dwb_com_push_master {{{*/
 gboolean 
 dwb_com_push_master(Arg *arg) {
-  GList *gl, *l;
+  GList *gl = NULL, *l = NULL;
   View *old = NULL, *new;
   if (!dwb.state.views->next) {
     return false;

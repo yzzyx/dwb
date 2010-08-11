@@ -189,8 +189,8 @@ dwb_util_arg_to_char(Arg *arg, DwbType type) {
   }
   else if (type == Char || type == ColorChar) {
     if (arg->p) {
-      gchar *tmp = (gchar*) arg->p;
-      value = g_strdup_printf(tmp);
+      //gchar *tmp = (gchar*) arg->p;
+      value = g_strdup_printf(arg->p);
     }
   }
   return value;
