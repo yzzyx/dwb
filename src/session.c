@@ -108,6 +108,13 @@ dwb_session_restore(const gchar *name) {
     g_strfreev(line);
   }
   g_strfreev(lines);
+  gtk_widget_show_all(dwb.gui.window);
+  if (dwb.state.layout & Maximized) {
+    gtk_widget_hide(dwb.gui.right);
+    for (GList *l = dwb.state.views->next; l; l=l->next) {
+      gtk_widget_hide(((View*)l->data)->vbox);
+    }
+  }
   return true;
 }/*}}}*/
 
