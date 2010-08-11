@@ -436,7 +436,6 @@ dwb_com_history_forward(Arg *arg) {
 gboolean  
 dwb_com_open(Arg *arg) {
   dwb.state.nv = arg->n;
-  //gtk_widget_grab_focus(dwb.gui.entry);
 
   if (arg && arg->p) {
     dwb_load_uri(arg);

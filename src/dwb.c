@@ -20,7 +20,7 @@
 #include "download.h"
 #include "config.h"
 #include "session.h"
-#define NAME "dwb";
+#define NAME "dwb"
 
 /* SETTINGS MAKROS {{{*/
 #define KEY_SETTINGS "Dwb Key Settings"
@@ -223,7 +223,8 @@ static WebSettings DWB_SETTINGS[] = {
   { { "enable-xss-auditor",			                 "XSS auditor", },                                             true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
   { { "enforce-96-dpi",			                     "Enforce 96 dpi", },                                          true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
   { { "fantasy-font-family",			               "Fantasy font family", },                                     true, false,  Char,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
-  { { "javascript-can-access-clipboard",			   "Javascript can access clipboard", },                         true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  // not supported in older webkit versions
+  //{ { "javascript-can-access-clipboard",			   "Javascript can access clipboard", },                         true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
   { { "javascript-can-open-windows-automatically", "Javascript can open windows automatically", },             true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
   { { "minimum-font-size",			                 "Minimum font size", },                                       true, false,  Integer, { .i = 5                 }, (S_Func) dwb_webkit_setting, },
   { { "minimum-logical-font-size",			         "Minimum logical font size", },                               true, false,  Integer, { .i = 5                 }, (S_Func) dwb_webkit_setting, },
@@ -1794,7 +1795,6 @@ dwb_init_files() {
   dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
   dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
 
-
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (Content_Func)dwb_com_quickmark_new_from_line); 
@@ -1908,6 +1908,9 @@ void
 dwb_parse_command_line(const gchar *line) {
   gchar **token = g_strsplit(line, " ", 2);
 
+  if (!token[0]) 
+    return;
+
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
     if (!strcmp(m->map->n.first, token[0])) {
@@ -1922,6 +1925,7 @@ dwb_parse_command_line(const gchar *line) {
         dwb_com_simple_command(m);
       }
       m->map->arg = a;
+      break;
     }
   }
   g_strfreev(token);
