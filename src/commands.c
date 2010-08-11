@@ -142,9 +142,14 @@ dwb_com_toggle_proxy(Arg *a) {
 /*dwb_com_find {{{*/
 gboolean  
 dwb_com_find(Arg *arg) { 
+  View *v = CURRENT_VIEW();
   dwb.state.mode = FindMode;
   dwb.state.forward_search = arg->b;
   //g_free(CURRENT_VIEW()->status->search_string);
+  if (v->status->search_string) {
+    g_free(v->status->search_string);
+    v->status->search_string = NULL;
+  }
   dwb_focus_entry();
   return true;
 }/*}}}*/

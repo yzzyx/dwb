@@ -231,6 +231,10 @@ dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
       return dwb_update_hints(e);
     }
   }
+  else if (mode == FindMode) {
+    dwb_update_search(dwb.state.forward_search);
+    return false;
+  }
   return false;
 }/*}}}*/
 
@@ -269,6 +273,9 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   }
   else if (mode & CompletionMode && e->keyval != GDK_Tab && e->keyval != GDK_ISO_Left_Tab && !e->is_modifier) {
     dwb_comp_clean_completion();
+  }
+  else if (mode == FindMode) {
+    return false;
   }
   else if (DWB_TAB_KEY(e)) {
     dwb_comp_complete(e->state & GDK_SHIFT_MASK);

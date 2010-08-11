@@ -117,7 +117,7 @@ static FunctionMap FMAP [] = {
   { { "find_backward",         "Find Backward ",                    }, (Func)dwb_com_find,                NO_URL,                            NeverSM,     { .b = false }, },
   { { "find_forward",          "Find Forward ",                     }, (Func)dwb_com_find,                NO_URL,                            NeverSM,     { .b = true }, },
   { { "find_next",             "Find next",                         }, (Func)dwb_search,                  "No matches",                      AlwaysSM,     { .b = true }, },
-  { { "find_previous",         "Find next",                         }, (Func)dwb_search,                  "No matches",                      AlwaysSM,     { .b = false }, },
+  { { "find_previous",         "Find previous",                     }, (Func)dwb_search,                  "No matches",                      AlwaysSM,     { .b = false }, },
   { { "focus_input",           "Focus input",                       }, (Func)dwb_com_focus_input,        "No input found in current context",      AlwaysSM, },
   { { "focus_next",            "Focus next view",                   }, (Func)dwb_com_focus_next,          "No other view",                   AlwaysSM, },
   { { "focus_prev",            "Focus previous view",               }, (Func)dwb_com_focus_prev,          "No other view",                   AlwaysSM, },
@@ -1223,16 +1223,12 @@ dwb_get_resolved_uri(const gchar *uri) {
 }
 /*}}}*/
 
-/* dwb_search {{{*/
-gboolean
-dwb_search(Arg *arg) {
-  gboolean forward = dwb.state.forward_search;
-  if (arg && !arg->b) {
-    forward = !dwb.state.forward_search;
-  }
+gboolean 
+dwb_update_search(gboolean forward) {
   View *v = CURRENT_VIEW();
   WebKitWebView *web = CURRENT_WEBVIEW();
   const gchar *text = GET_TEXT();
+  gint matches;
   if (strlen(text) > 0) {
     if (v->status->search_string) {
       g_free(v->status->search_string);
@@ -1243,14 +1239,33 @@ dwb_search(Arg *arg) {
     return false;
   }
   webkit_web_view_unmark_text_matches(web);
-  webkit_web_view_search_text(web, v->status->search_string, false, forward, true);
-  if ( webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0) ) {
+  if ( (matches = webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0)) ) {
+    gchar *message = g_strdup_printf("[%d matches]", matches);
+    dwb_set_normal_message(dwb.state.fview, message, false);
     webkit_web_view_set_highlight_text_matches(web, true);
+    g_free(message);
   }
   else {
-    dwb_set_error_message(dwb.state.fview, "No matches");
+    dwb_set_error_message(dwb.state.fview, "[0 matches]");
+    return false;
   }
-  dwb.state.mode = NormalMode;
+  return true;
+}
+/* dwb_search {{{*/
+gboolean
+dwb_search(Arg *arg) {
+  View *v = CURRENT_VIEW();
+  gboolean forward = dwb.state.forward_search;
+  if (arg) {
+    dwb_update_search(arg->b);
+    if (!arg->b) {
+      forward = !dwb.state.forward_search;
+    }
+  }
+  if (v->status->search_string) {
+    webkit_web_view_search_text(WEBKIT_WEB_VIEW(v->web), v->status->search_string, false, forward, true);
+  }
+  dwb_normal_mode(false);
   return true;
 }/*}}}*/
 /*}}}*/

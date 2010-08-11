@@ -412,6 +412,8 @@ void dwb_normal_mode(gboolean);
 void dwb_load_uri(Arg *);
 void dwb_focus_entry(void);
 
+gboolean dwb_update_search(gboolean forward);
+
 void dwb_set_normal_message(GList *, const gchar *, gboolean);
 void dwb_set_error_message(GList *, const gchar *);
 void dwb_set_status_text(GList *, const gchar *, GdkColor *,  PangoFontDescription *);
