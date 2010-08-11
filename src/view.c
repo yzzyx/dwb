@@ -224,7 +224,7 @@ static gboolean
 dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
   Mode mode = dwb.state.mode;
   if (mode == HintMode) {
-    if (DIGIT(e) || e->keyval == GDK_Tab) {
+    if (DIGIT(e) || DWB_TAB_KEY(e)) {
       return true;
     }
     else {
@@ -243,7 +243,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     return false;
   }
   if (mode == HintMode) {
-    if (DIGIT(e) || e->keyval == GDK_Tab) {
+    if (DIGIT(e) || DWB_TAB_KEY(e)) {
       return dwb_update_hints(e);
     }
     else if  (e->keyval == GDK_Return) {
@@ -251,7 +251,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     }
   }
   else if (mode == SearchFieldMode) {
-    if (e->keyval == GDK_Tab) {
+    if (DWB_TAB_KEY(e)) {
       return dwb_update_hints(e);
     }
     else if (e->keyval == GDK_Return) {
@@ -259,19 +259,19 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     }
   }
   else if (mode == DownloadGetPath) {
-    if (e->keyval == GDK_Tab) {
-      dwb_comp_complete_download(e->state & GDK_CONTROL_MASK);
+    if (DWB_TAB_KEY(e)) {
+      dwb_comp_complete_download(e->state & GDK_SHIFT_MASK);
       return true;
     }
     else {
       dwb_comp_clean_path_completion();
     }
   }
-  else if (mode & CompletionMode && e->keyval != GDK_Tab && !e->is_modifier) {
+  else if (mode & CompletionMode && e->keyval != GDK_Tab && e->keyval != GDK_ISO_Left_Tab && !e->is_modifier) {
     dwb_comp_clean_completion();
   }
-  else if (e->keyval == GDK_Tab) {
-    dwb_comp_complete(e->state & GDK_CONTROL_MASK);
+  else if (DWB_TAB_KEY(e)) {
+    dwb_comp_complete(e->state & GDK_SHIFT_MASK);
     return true;
   }
   if (dwb_eval_editing_key(e)) {

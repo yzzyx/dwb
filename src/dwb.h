@@ -61,6 +61,8 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 #define True (void*) true
 #define False (void*) false
 
+#define DWB_TAB_KEY(e)              (e->keyval == GDK_Tab || e->keyval == GDK_ISO_Left_Tab)
+
 // Settings
 #define GET_CHAR(prop)              ((gchar*)(((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.p))
 #define GET_BOOL(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.b)
