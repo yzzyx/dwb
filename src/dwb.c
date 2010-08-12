@@ -1544,7 +1544,7 @@ dwb_read_key_config() {
   gsize numkeys;
   GError *error = NULL;
   gchar **keys;
-  GList *gl;
+  GList *gl = NULL;
 
   if (g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error)) {
     if (! g_key_file_has_group(keyfile, dwb.misc.profile) ) {
