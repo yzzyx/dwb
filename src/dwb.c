@@ -955,14 +955,14 @@ dwb_tab_label_set_text(GList *gl, const gchar *text) {
 /* dwb_update_status(GList *gl) {{{*/
 void 
 dwb_update_status(GList *gl) {
-  if (gl == dwb.state.fview) {
     View *v = gl->data;
     WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
     const gchar *title = webkit_web_view_get_title(w);
 
+  if (gl == dwb.state.fview) {
     gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title :  dwb.misc.name);
-    dwb_tab_label_set_text(gl, title);
   }
+  dwb_tab_label_set_text(gl, title);
 
   dwb_update_status_text(gl);
 }/*}}}*/
@@ -1665,7 +1665,6 @@ dwb_init_scripts() {
 
   setlocale(LC_NUMERIC, "C");
   g_string_append_printf(buffer, "hint_letter_seq = '%s';\n",       GET_CHAR("hint-letter-seq"));
-  g_string_append_printf(buffer, "hint_style = '%s';\n",            GET_CHAR("hint-style"));
   g_string_append_printf(buffer, "hint_font_size = '%s';\n",        GET_CHAR("hint-font-size"));
   g_string_append_printf(buffer, "hint_font_weight = '%s';\n",      GET_CHAR("hint-font-weight"));
   g_string_append_printf(buffer, "hint_font_family = '%s';\n",      GET_CHAR("hint-font-family"));
