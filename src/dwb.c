@@ -955,12 +955,14 @@ dwb_tab_label_set_text(GList *gl, const gchar *text) {
 /* dwb_update_status(GList *gl) {{{*/
 void 
 dwb_update_status(GList *gl) {
-  View *v = gl->data;
-  WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
-  const gchar *title = webkit_web_view_get_title(w);
+  if (gl == dwb.state.fview) {
+    View *v = gl->data;
+    WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
+    const gchar *title = webkit_web_view_get_title(w);
 
-  gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title :  dwb.misc.name);
-  dwb_tab_label_set_text(gl, title);
+    gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title :  dwb.misc.name);
+    dwb_tab_label_set_text(gl, title);
+  }
 
   dwb_update_status_text(gl);
 }/*}}}*/
@@ -988,6 +990,7 @@ dwb_grab_focus(GList *gl) {
   gtk_widget_show(v->entry);
   dwb_view_set_active_style(gl);
   gtk_widget_grab_focus(v->scroll);
+  dwb_update_status(gl);
 }/*}}}*/
 
 /* dwb_new_window(Arg *arg) {{{*/
