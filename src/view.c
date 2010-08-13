@@ -321,8 +321,8 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
   }
   else {
     Arg a = { .n = 0, .p = text };
-    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
     dwb_load_uri(&a);
+    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
     dwb_normal_mode(true);
   }
   g_free(text);
