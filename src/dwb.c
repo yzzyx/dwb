@@ -875,7 +875,7 @@ dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar
   }
   Navigation *n = dwb_navigation_new(first, second);
 
-  (*fc) = g_list_append((*fc), n);
+  (*fc) = g_list_prepend((*fc), n);
 }/*}}}*/
 
 /* dwb_prepend_navigation(GList *gl, GList *view) {{{*/

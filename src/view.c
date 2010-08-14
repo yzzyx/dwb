@@ -151,7 +151,6 @@ static void
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
-  // TODO implement
 }/*}}}*/
 
 /* dwb_web_view_script_alert_cb {{{*/
