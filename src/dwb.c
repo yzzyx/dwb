@@ -130,12 +130,12 @@ static FunctionMap FMAP [] = {
   { { "history_forward",       "Go Forward",                        }, (Func)dwb_com_history_forward,     "End of History",                  AlwaysSM, },
   { { "increase_master",       "Increase master area",              }, (Func)dwb_com_resize_master,       "Cannot increase further",         AlwaysSM,    { .n = -5 } },
   { { "insert_mode",           "Insert Mode",                       }, (Func)dwb_insert_mode,             NULL,                              AlwaysSM, },
-  { { "open",                  "Open",                          }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNormal,      .p = NULL } },
-  { { "open_nv",               "Viewopen",                        }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
-  { { "open_nw",               "Winopen",                         }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewWindow,     .p = NULL } },
-  { { "open_quickmark",        "Open quickmark",                    }, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
-  { { "open_quickmark_nv",     "Open quickmark (new view)",         }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
-  { { "open_quickmark_nw",     "Open quickmark (new window)",       }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewWindow }, },
+  { { "open",                  "Open",                              }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNormal,      .p = NULL } },
+  { { "open_nv",               "Viewopen",                          }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
+  { { "open_nw",               "Winopen",                           }, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewWindow,     .p = NULL } },
+  { { "open_quickmark",        "Quickmark",                         }, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
+  { { "open_quickmark_nv",     "Quickmark-new-view",                }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
+  { { "open_quickmark_nw",     "Quickmark-new-window",              }, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewWindow }, },
   { { "push_master",           "Push to master area",               }, (Func)dwb_com_push_master,         "No other view",                   AlwaysSM, },
   { { "reload",                "Reload",                            }, (Func)dwb_com_reload,              NULL,                              AlwaysSM, },
   { { "remove_view",           "Close view",                        }, (Func)dwb_com_remove_view,         NULL,                              AlwaysSM, },
@@ -388,9 +388,6 @@ void
 dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new) {
   if (new) {
     dwb.state.last_cookie = soup_cookie_copy(new);
-    //gchar *message = g_strdup_printf("Cookie received, domain: %s", new->domain);
-    //dwb_set_normal_message(dwb.state.fview, message, true);
-    //g_free(message);
     if  (dwb_test_cookie_allowed(new->domain) || ((WebSettings*)g_hash_table_lookup(dwb.settings, "cookie"))->arg.b) {
       dwb_save_cookies();
     }
