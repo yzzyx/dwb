@@ -1886,7 +1886,8 @@ dwb_init_proxy() {
   if ( (proxy =  g_getenv("http_proxy")) && dwb_util_test_connect(proxy) ) {
     newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
     dwb.misc.proxyuri = soup_uri_new(newproxy);
-    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", dwb.misc.proxyuri, NULL); 
+    WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
+    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", s->arg.b ? dwb.misc.proxyuri : NULL, NULL); 
     g_free(newproxy);
   }
 }/*}}}*/
