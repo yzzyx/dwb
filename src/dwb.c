@@ -204,7 +204,7 @@ static FunctionMap FMAP [] = {
   { { "resizable_text_areas",  "Toggle resizable text areas", },    (Func)dwb_com_toggle_property,      NULL,                    PostSM,    { .p = "resizable-text-areas" } },
   { { "tab_cycle",             "Toggle tab cycles through elements", },    (Func)dwb_com_toggle_property,     NULL,              PostSM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    }, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
-  { { "allow_javascript",      "Toggle allow javascript for current host" },  (Func) dwb_com_toggle_js, NULL,                  PostSM,    { 0 } }, 
+  { { "toggle_javascript",      "Toggle allow javascript for current host" },  (Func) dwb_com_toggle_js, NULL,                  PostSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
