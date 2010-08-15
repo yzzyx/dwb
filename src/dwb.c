@@ -257,7 +257,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "editable",                                "Content editable", },                                        false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
   { { "full-content-zoom",                       "Full content zoom", },                                       false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
   { { "zoom-level",                              "Zoom level", },                                              false, false, Double,  { .d = 1.0               }, (S_Func) dwb_webview_property, },
-  { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = true              }, (S_Func) dwb_set_proxy, },
+  { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = false              }, (S_Func) dwb_set_proxy, },
   { { "cookie",                                  "All Cookies allowed", },                                     false, true,  Boolean, { .b = false             }, (S_Func) dwb_set_websetting, },
 
   { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_com_reload_layout, },
@@ -302,7 +302,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
 
-  { { "block-javascript",                        "Block Javascript", },                                        false, false,  Boolean,    { .b = true },        (S_Func) dwb_set_js_block, }, 
+  { { "block-javascript",                        "Block Javascript", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_js_block, }, 
 
   // downloads
   { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
@@ -1585,38 +1585,6 @@ dwb_keymap_add(GList *gl, KeyValue key) {
 
 /* INIT {{{*/
 
-/* dwb_read_config()    return: GList *{{{*/
-GList *
-dwb_read_key_config() {
-  GKeyFile *keyfile = g_key_file_new();
-  gsize numkeys;
-  GError *error = NULL;
-  gchar **keys;
-  GList *gl = NULL;
-
-  if (g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error)) {
-    if (! g_key_file_has_group(keyfile, dwb.misc.profile) ) {
-      return NULL;
-    }
-    if ( (keys = g_key_file_get_keys(keyfile, dwb.misc.profile, &numkeys, &error)) ) {
-      for  (int i=0; i<numkeys; i++) {
-        gchar *string = g_key_file_get_value(keyfile, dwb.misc.profile, keys[i], NULL);
-        gchar **stringlist = g_strsplit(string, " ", -1);
-        Key key = dwb_strv_to_key(stringlist, g_strv_length(stringlist));
-        KeyValue kv;
-        kv.id = keys[i];
-        kv.key = key;
-        gl = dwb_keymap_add(gl, kv);
-        g_strfreev(stringlist);
-      }
-    }
-  }
-  if (error) {
-    fprintf(stderr, "Couldn't read config: %s\n", error->message);
-  }
-  return gl;
-}/*}}}*/
-
 /* dwb_setup_cookies() {{{*/
 void
 dwb_init_cookies() {
@@ -1632,58 +1600,92 @@ dwb_init_cookies() {
   g_object_unref(jar);
 }/*}}}*/
 
+/* dwb_init_key_map() {{{*/
+static void 
+dwb_init_key_map() {
+  GKeyFile *keyfile = g_key_file_new();
+  GError *error = NULL;
+  dwb.keymap = NULL;
+  gchar **keys;
+
+  g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error);
+  if (error) {
+    fprintf(stderr, "No keyfile found: %s\nUsing default values.\n", error->message);
+    error = NULL;
+  }
+  else {
+    keys = g_key_file_get_keys(keyfile, dwb.misc.profile, NULL, &error);
+    if (error) {
+        fprintf(stderr, "Couldn't read keyfile for profile %s: %s\nUsing default values.\n", dwb.misc.profile,  error->message);
+    }
+  }
+  for (gint i=0; i<LENGTH(KEYS); i++) {
+    KeyValue kv;
+    gchar *string = g_key_file_get_value(keyfile, dwb.misc.profile, KEYS[i].id, NULL);
+    if (string) {
+      gchar **stringlist = g_strsplit(string, " ", -1);
+      kv.key = dwb_strv_to_key(stringlist, g_strv_length(stringlist));
+      g_strfreev(stringlist);
+    }
+    else if (KEYS[i].key.str) {
+      kv.key = KEYS[i].key;
+    }
+    kv.id = KEYS[i].id;
+    dwb.keymap = dwb_keymap_add(dwb.keymap, kv);
+  }
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+}/*}}}*/
+
 /* dwb_read_settings() {{{*/
 gboolean
 dwb_read_settings() {
   GError *error = NULL;
-  gsize length, numkeys;
+  gsize length, numkeys = 0;
   gchar  **keys;
   gchar  *content;
   GKeyFile  *keyfile = g_key_file_new();
   Arg *arg;
   setlocale(LC_NUMERIC, "C");
 
-  if (   g_file_get_contents(dwb.files.settings, &content, &length, &error) && g_key_file_load_from_data(keyfile, content, length, G_KEY_FILE_KEEP_COMMENTS, &error) ) {
-    if (! g_key_file_has_group(keyfile, dwb.misc.profile) ) {
-      return false;
+  g_file_get_contents(dwb.files.settings, &content, &length, &error);
+  if (error) {
+    fprintf(stderr, "No settingsfile found: %s\nUsing default values.\n", error->message);
+    error = NULL;
+  }
+  else {
+    g_key_file_load_from_data(keyfile, content, length, G_KEY_FILE_KEEP_COMMENTS, &error);
+    if (error) {
+      fprintf(stderr, "Couldn't read settings file: %s\nUsing default values.\n", error->message);
+      error = NULL;
     }
-    if  ( (keys = g_key_file_get_keys(keyfile, dwb.misc.profile, &numkeys, &error)) )  {
-
-      for (int i=0; i<numkeys; i++) {
-        gchar *value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
-        for (int j=0; j<LENGTH(DWB_SETTINGS); j++) {
-          if (!strcmp(keys[i], DWB_SETTINGS[j].n.first)) {
-            WebSettings *s = malloc(sizeof(WebSettings));
-            *s = DWB_SETTINGS[j];
-            if ( (arg = dwb_util_char_to_arg(value, s->type)) ) {
-              s->arg = *arg;
-            }
-            gchar *key = g_strdup(s->n.first);
-            g_hash_table_insert(dwb.settings, key, s);
-          }
-        }
-        g_free(value);
+    else {
+      keys = g_key_file_get_keys(keyfile, dwb.misc.profile, &numkeys, &error); 
+      if (error) {
+        fprintf(stderr, "Couldn't read settings for profile %s: %s\nUsing default values.\n", dwb.misc.profile,  error->message);
       }
     }
   }
-  if (error) {
-    fprintf(stderr, "Couldn't read config: %s\n", error->message);
-    return false;
-  }
-  return true;
-}/*}}}*/
-
-/* dwb_init_key_map() {{{*/
-static void 
-dwb_init_key_map() {
-  dwb.keymap = NULL;
-  if (!g_file_test(dwb.files.keys, G_FILE_TEST_IS_REGULAR) 
-      || !(dwb.keymap = dwb_read_key_config()) ) {
-    for (int j=0; j<LENGTH(KEYS); j++) {
-      dwb.keymap = dwb_keymap_add(dwb.keymap, KEYS[j]);
+  for (int j=0; j<LENGTH(DWB_SETTINGS); j++) {
+    gboolean set = false;
+    gchar *key = g_strdup(DWB_SETTINGS[j].n.first);
+    for (int i=0; i<numkeys; i++) {
+      gchar *value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
+      if (!strcmp(keys[i], DWB_SETTINGS[j].n.first)) {
+        WebSettings *s = malloc(sizeof(WebSettings));
+        *s = DWB_SETTINGS[j];
+        if ( (arg = dwb_util_char_to_arg(value, s->type)) ) {
+          s->arg = *arg;
+        }
+        g_hash_table_insert(dwb.settings, key, s);
+        set = true;
+      }
+      g_free(value);
+    }
+    if (!set) {
+      g_hash_table_insert(dwb.settings, key, &DWB_SETTINGS[j]);
     }
   }
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+  return true;
 }/*}}}*/
 
 /* dwb_init_settings() {{{*/
@@ -1691,13 +1693,7 @@ static void
 dwb_init_settings() {
   dwb.settings = g_hash_table_new(g_str_hash, g_str_equal);
   dwb.state.web_settings = webkit_web_settings_new();
-  if (! g_file_test(dwb.files.settings, G_FILE_TEST_IS_REGULAR) || ! (dwb_read_settings()) ) {
-    for (int i=0; i<LENGTH(DWB_SETTINGS); i++) {
-      WebSettings *s = &DWB_SETTINGS[i];
-      gchar *key = g_strdup(s->n.first);
-      g_hash_table_insert(dwb.settings, key, s);
-    }
-  }
+  dwb_read_settings();
   for (GList *l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
     WebSettings *s = l->data;
     if (s->builtin) {
