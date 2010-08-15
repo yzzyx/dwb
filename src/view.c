@@ -151,6 +151,24 @@ static void
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
+  SoupMessage *msg;
+  View *v = gl->data;
+
+  if (request && (msg = webkit_network_request_get_message(request))) {
+    SoupContentSniffer *sniffer = soup_content_sniffer_new();
+    SoupBuffer buffer;
+    gchar *content = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
+    if (!v->status->current_host) {
+      const gchar *uri = webkit_network_request_get_uri(request);
+      gchar *host = dwb_get_host(uri);
+      v->status->current_host = host;
+      v->status->js_block_current = dwb_js_get_host_blocked(host) ? false : true;
+    }
+    if (v->status->js_block && v->status->js_block_current && !strcmp(content, "application/javascript")) {
+      webkit_network_request_set_uri(request, "about:blank");
+      v->status->items_blocked++;
+    }
+  }
 }/*}}}*/
 
 /* dwb_web_view_script_alert_cb {{{*/
@@ -197,8 +215,10 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   gdouble progress = webkit_web_view_get_progress(web);
   gchar *text = NULL;
+
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
+      dwb_view_clean_vars(gl);
       break;
     case WEBKIT_LOAD_COMMITTED: 
       break;
@@ -409,6 +429,18 @@ dwb_web_view_init_signals(GList *gl) {
 
 } /*}}}*/
 
+
+void
+dwb_view_clean_vars(GList *gl) {
+  View *v = gl->data;
+
+  v->status->items_blocked = 0;
+  if (v->status->current_host) {
+    g_free(v->status->current_host); 
+    v->status->current_host = NULL;
+  }
+}
+
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/
 static GList * 
 dwb_view_create_web_view(GList *gl) {
@@ -417,6 +449,7 @@ dwb_view_create_web_view(GList *gl) {
   ViewStatus *status = g_malloc(sizeof(ViewStatus));
   status->search_string = NULL;
   status->downloads = NULL;
+  status->current_host = NULL;
   v->status = status;
 
 
@@ -497,6 +530,13 @@ dwb_view_create_web_view(GList *gl) {
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
   // apply settings
   v->setting = dwb_get_default_settings();
+  for (GList *l = g_hash_table_get_values(v->setting); l; l=l->next) {
+    WebSettings *s = l->data;
+    if (!s->builtin && !s->global) {
+      s->func(gl, s);
+    }
+  }
+  dwb_view_clean_vars(gl);
   return gl;
 } /*}}}*/
 

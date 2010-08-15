@@ -204,7 +204,7 @@ dwb_comp_get_bookmark_completion() {
 /* dwb_completion_get_settings      return: GList *Completions{{{*/
 static GList *
 dwb_comp_get_settings_completion() {
-  GList *l = g_hash_table_get_values(dwb.settings);
+  GList *l = g_hash_table_get_values(dwb.state.setting_apply == Global ? dwb.settings : CURRENT_VIEW()->setting);
   l = g_list_sort(l, (GCompareFunc)dwb_util_web_settings_sort_first);
   const gchar *input = GET_TEXT();
   GList *list = NULL;

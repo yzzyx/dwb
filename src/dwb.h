@@ -271,8 +271,12 @@ struct _ViewStatus {
   guint message_id;
   gchar *hover_uri;
   gboolean add_history;
+  gint items_blocked;
   gchar *search_string;
   GList *downloads;
+  gchar *current_host;
+  gboolean js_block;
+  gboolean js_block_current;
 };
 
 struct _View {
@@ -374,6 +378,7 @@ struct _Files {
   const gchar *cookies;
   const gchar *cookies_allow;
   const gchar *download_path;
+  const gchar *js_allow;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -385,6 +390,7 @@ struct _FileContent {
   GList *cookies_allow;
   GList *commands;
   GList *mimetypes;
+  GList *js_allow;
 };
 
 struct _Dwb {
@@ -445,6 +451,9 @@ void dwb_new_window(Arg *arg);
 gboolean dwb_eval_editing_key(GdkEventKey *);
 void dwb_parse_command_line(const gchar *);
 GHashTable * dwb_get_default_settings(void);
+
+gchar * dwb_get_host(const gchar *uri);
+GList * dwb_js_get_host_blocked(gchar *host);
 
 void dwb_exit(void);
 Key dwb_strv_to_key(gchar **, gsize );

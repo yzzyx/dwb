@@ -854,3 +854,25 @@ dwb_com_bookmarks(Arg *arg) {
   return true;
 }/*}}}*/
 
+gboolean
+dwb_com_toggle_js(Arg *arg) {
+  WebKitWebView *web = CURRENT_WEBVIEW();
+  const gchar *uri = webkit_web_view_get_uri(web);
+  gchar *host = dwb_get_host(uri);
+  GList *block;
+  gchar *message;
+  if ( (block = dwb_js_get_host_blocked(host)) ) {
+    dwb.fc.js_allow = g_list_delete_link(dwb.fc.js_allow, block);
+    message = g_strdup_printf("Javascript blocked for host %s", host);
+  }
+  else {
+    dwb.fc.js_allow = g_list_prepend(dwb.fc.js_allow, host);
+    message = g_strdup_printf("Javascript allowed for host %s", host);
+  }
+  dwb_set_normal_message(dwb.state.fview, message, true);
+  g_free(message);
+  dwb_com_reload(NULL);
+  return true;
+
+}
+

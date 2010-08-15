@@ -59,6 +59,7 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 
 /* DECLARATIONS {{{*/
 
+static void dwb_set_js_block(GList *, WebSettings  *);
 void dwb_clean_buffer(GList *);
 
 gboolean dwb_command_mode(Arg *arg);
@@ -199,10 +200,11 @@ static FunctionMap FMAP [] = {
   { { "page_cache",            "Toggle page cache",               }, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-page-cache" } },
   { { "js_can_open_windows",   "Toggle Javascript can open windows automatically", }, (Func)dwb_com_toggle_property,     NULL,   PostSM,    { .p = "javascript-can-open-windows-automatically" } },
   { { "enforce_96_dpi",        "Toggle enforce a resolution of 96 dpi", },    (Func)dwb_com_toggle_property,     NULL,           PostSM,    { .p = "enforce-96-dpi" } },
-  { { "print_backgrounds",     "Toggle print backgrounds", },         (Func)dwb_com_toggle_property,     NULL,                   PostSM,    { .p = "print-backgrounds" } },
-  { { "resizable_text_areas",  "Toggle resizable text areas", },    (Func)dwb_com_toggle_property,     NULL,                     PostSM,    { .p = "resizable-text-areas" } },
+  { { "print_backgrounds",     "Toggle print backgrounds", },         (Func)dwb_com_toggle_property,    NULL,                    PostSM,    { .p = "print-backgrounds" } },
+  { { "resizable_text_areas",  "Toggle resizable text areas", },    (Func)dwb_com_toggle_property,      NULL,                    PostSM,    { .p = "resizable-text-areas" } },
   { { "tab_cycle",             "Toggle tab cycles through elements", },    (Func)dwb_com_toggle_property,     NULL,              PostSM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    }, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
+  { { "allow_javascript",      "Toggle allow javascript for current host" },  (Func) dwb_com_toggle_js, NULL,                  PostSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -300,6 +302,8 @@ static WebSettings DWB_SETTINGS[] = {
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
 
+  { { "block-javascript",                        "Block Javascript", },                                        false, false,  Boolean,    { .b = true },        (S_Func) dwb_set_js_block, }, 
+
   // downloads
   { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
               { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     NULL, },
@@ -384,9 +388,9 @@ void
 dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new) {
   if (new) {
     dwb.state.last_cookie = soup_cookie_copy(new);
-    gchar *message = g_strdup_printf("Cookie received, domain: %s", new->domain);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
+    //gchar *message = g_strdup_printf("Cookie received, domain: %s", new->domain);
+    //dwb_set_normal_message(dwb.state.fview, message, true);
+    //g_free(message);
     if  (dwb_test_cookie_allowed(new->domain) || ((WebSettings*)g_hash_table_lookup(dwb.settings, "cookie"))->arg.b) {
       dwb_save_cookies();
     }
@@ -455,12 +459,19 @@ dwb_update_status_text(GList *gl) {
   gdouble value = gtk_adjustment_get_value(a); 
   gboolean back = webkit_web_view_can_go_back(WEBKIT_WEB_VIEW(v->web));
   gboolean forward = webkit_web_view_can_go_forward(WEBKIT_WEB_VIEW(v->web));
-  const gchar *bof = back && forward ? "[+-]" : back ? "[+]" : forward  ? "[-]" : "";
+  const gchar *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : "";
+  g_string_append(string, bof);
+
+  if (v->status->js_block) {
+    gchar *js_items = v->status->js_block_current ? g_strdup_printf(" [js:%d]", v->status->items_blocked) : g_strdup(" [js:a]");
+    g_string_append(string, js_items);
+    g_free(js_items);
+  }
   gchar *position = 
-    upper == lower ? g_strdup_printf(" %s [all]", bof) : 
-    value == lower ? g_strdup_printf(" %s [top]", bof) : 
-    value == upper ? g_strdup_printf(" %s [bot]", bof) : 
-    g_strdup_printf(" %s [%02d%%]", bof, (gint)(value * 100/upper));
+    upper == lower ? g_strdup(" [all]") : 
+    value == lower ? g_strdup(" [top]") : 
+    value == upper ? g_strdup(" [bot]") : 
+    g_strdup_printf(" [%02d%%]", (gint)(value * 100/upper));
   g_string_append(string, position);
 
   dwb_set_status_text(gl, string->str, NULL, NULL);
@@ -478,6 +489,37 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+/* dwb_js_get_host_blocked (gchar *) {{{*/
+GList *
+dwb_js_get_host_blocked(gchar *host) {
+  for (GList *l = dwb.fc.js_allow; l; l=l->next) {
+    if (!strcmp(host, (gchar *) l->data)) {
+      return l;
+    }
+  }
+  return NULL;
+}/*}}}*/
+
+/* dwb_get_host(GList *)                  return: gchar (alloc) {{{*/
+gchar * 
+dwb_get_host(const gchar *uri) {
+  gchar *host;
+  SoupURI *soup_uri = soup_uri_new(uri);
+  if (soup_uri) {
+    host = g_strdup(soup_uri->host);
+    soup_uri_free(soup_uri);
+  }
+  return host;
+}/*}}}*/
+
+/* dwb_set_js_block{{{*/
+static void
+dwb_set_js_block(GList *gl, WebSettings *s) {
+  View *v = gl->data;
+
+  v->status->js_block = s->arg.b;
+}/*}}}*/
 
 /* dwb_com_focus(GList *gl) {{{*/
 void 
@@ -770,7 +812,7 @@ dwb_webkit_setting(GList *gl, WebSettings *s) {
 /* dwb_webview_property(GList, WebSettings){{{*/
 static void
 dwb_webview_property(GList *gl, WebSettings *s) {
-  WebKitWebView *web = CURRENT_WEBVIEW();
+  WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
   switch (s->type) {
     case Double:  g_object_set(web, s->n.first, s->arg.d, NULL); break;
     case Integer: g_object_set(web, s->n.first, s->arg.i, NULL); break;
@@ -1369,6 +1411,15 @@ dwb_save_files() {
   dwb_util_set_file_content(dwb.files.cookies_allow, cookies_allow->str);
   g_string_free(cookies_allow, true);
 
+  // javascript allow
+  GString *javascript_allow = g_string_new(NULL);
+  for (GList *l = dwb.fc.js_allow; l; l=l->next)  {
+    g_string_append_printf(javascript_allow, "%s\n", (gchar*)l->data);
+    g_free(l->data);
+  }
+  dwb_util_set_file_content(dwb.files.js_allow, javascript_allow->str);
+  g_string_free(javascript_allow, true);
+
   // save keys
   keyfile = g_key_file_new();
   error = NULL;
@@ -1836,6 +1887,7 @@ dwb_init_files() {
   dwb.files.mimetypes     = g_build_filename(path, "mimetypes",      NULL);
   dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
   dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
+  dwb.files.js_allow      = g_build_filename(profile_path, "js.allow",      NULL);
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
@@ -1847,6 +1899,8 @@ dwb_init_files() {
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;
   }
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
+  dwb.fc.js_allow = dwb_init_file_content(dwb.fc.js_allow, dwb.files.js_allow, (Content_Func)dwb_return);
+
   g_free(path);
   g_free(profile_path);
 }/*}}}*/

@@ -45,4 +45,5 @@ gboolean dwb_com_bookmarks(Arg *);
 void dwb_com_remove_view(Arg *arg);
 gboolean dwb_com_push_master(Arg *arg);
 gboolean dwb_com_focus_nth_view(Arg *arg);
+gboolean dwb_com_toggle_js(Arg *a);
 #endif
