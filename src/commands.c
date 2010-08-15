@@ -863,11 +863,11 @@ dwb_com_toggle_js(Arg *arg) {
   gchar *message;
   if ( (block = dwb_js_get_host_blocked(host)) ) {
     dwb.fc.js_allow = g_list_delete_link(dwb.fc.js_allow, block);
-    message = g_strdup_printf("Javascript blocked for host %s", host);
+    message = g_strdup_printf("Javascript blocked for domain %s", host);
   }
   else {
     dwb.fc.js_allow = g_list_prepend(dwb.fc.js_allow, host);
-    message = g_strdup_printf("Javascript allowed for host %s", host);
+    message = g_strdup_printf("Javascript allowed for domain %s", host);
   }
   dwb_set_normal_message(dwb.state.fview, message, true);
   g_free(message);
