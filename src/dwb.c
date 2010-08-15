@@ -204,7 +204,7 @@ static FunctionMap FMAP [] = {
   { { "resizable_text_areas",  "Toggle resizable text areas", },    (Func)dwb_com_toggle_property,      NULL,                    PostSM,    { .p = "resizable-text-areas" } },
   { { "tab_cycle",             "Toggle tab cycles through elements", },    (Func)dwb_com_toggle_property,     NULL,              PostSM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    }, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
-  { { "toggle_javascript",      "Toggle allow javascript for current host" },  (Func) dwb_com_toggle_js, NULL,                  PostSM,    { 0 } }, 
+  { { "toggle_javascript",      "Toggle allow javascript for current domain" },  (Func) dwb_com_toggle_js, NULL,                  PostSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -451,6 +451,13 @@ dwb_update_status_text(GList *gl) {
   GtkAdjustment *a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
   const gchar *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   GString *string = g_string_new(uri);
+
+  if (v->status->js_block) {
+    gchar *js_items = v->status->js_block_current ? g_strdup_printf(" [%d]", v->status->items_blocked) : g_strdup(" [a]");
+    g_string_append(string, js_items);
+    g_free(js_items);
+  }
+
   gdouble lower = gtk_adjustment_get_lower(a);
   gdouble upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
   gdouble value = gtk_adjustment_get_value(a); 
@@ -459,11 +466,6 @@ dwb_update_status_text(GList *gl) {
   const gchar *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : "";
   g_string_append(string, bof);
 
-  if (v->status->js_block) {
-    gchar *js_items = v->status->js_block_current ? g_strdup_printf(" [js:%d]", v->status->items_blocked) : g_strdup(" [js:a]");
-    g_string_append(string, js_items);
-    g_free(js_items);
-  }
   gchar *position = 
     upper == lower ? g_strdup(" [all]") : 
     value == lower ? g_strdup(" [top]") : 
