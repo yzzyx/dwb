@@ -721,7 +721,7 @@ dwb_get_search_engine(const gchar *uri) {
 /* dwb_submit_searchengine {{{*/
 void 
 dwb_submit_searchengine(void) {
-  gchar *com = g_strdup_printf("submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
+  gchar *com = g_strdup_printf("dwb_submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
   gchar *value = dwb_execute_script(com);
   if (value) {
     dwb.state.form_name = value;
@@ -846,26 +846,26 @@ dwb_update_hints(GdkEventKey *e) {
   gchar *com = NULL;
 
   if (e->keyval == GDK_Return) {
-    com = g_strdup("get_active()");
+    com = g_strdup("dwb_get_active()");
   }
   else if (DIGIT(e)) {
     dwb.state.nummod = MIN(10*dwb.state.nummod + e->keyval - GDK_0, 314159);
     gchar *text = g_strdup_printf("hint number: %d", dwb.state.nummod);
     dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, text, &dwb.color.active_fg, dwb.font.fd_normal);
 
-    com = g_strdup_printf("update_hints(\"%d\")", dwb.state.nummod);
+    com = g_strdup_printf("dwb_update_hints(\"%d\")", dwb.state.nummod);
     g_free(text);
   }
   else if (DWB_TAB_KEY(e)) {
     if (e->state & GDK_SHIFT_MASK) {
-      com = g_strdup("focus_prev()");
+      com = g_strdup("dwb_focus_prev()");
     }
     else {
-      com = g_strdup("focus_next()");
+      com = g_strdup("dwb_focus_next()");
     }
   }
   else {
-    com = g_strdup_printf("update_hints(\"%s\")", GET_TEXT());
+    com = g_strdup_printf("dwb_update_hints(\"%s\")", GET_TEXT());
   }
   if (com) {
     buffer = dwb_execute_script(com);
@@ -877,7 +877,7 @@ dwb_update_hints(GdkEventKey *e) {
       dwb_normal_mode(false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
-      dwb_execute_script("clear()");
+      dwb_execute_script("dwb_clear()");
       dwb_insert_mode(NULL);
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
@@ -1223,6 +1223,7 @@ dwb_eval_key(GdkEventKey *e) {
   }
   if (coms && g_list_length(coms) > 0) {
     dwb_comp_autocomplete(coms, NULL);
+    ret = true;
   }
   if (tmp) {
     dwb_com_simple_command(tmp);
@@ -1259,7 +1260,7 @@ dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
   if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
-    dwb_execute_script("clear()");
+    dwb_execute_script("dwb_clear()");
   }
   if (mode  == InsertMode) {
     dwb_view_modify_style(dwb.state.fview, &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);

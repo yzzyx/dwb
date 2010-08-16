@@ -89,7 +89,7 @@ dwb_com_toggle_custom_encoding(Arg *arg) {
 gboolean
 dwb_com_focus_input(Arg *a) {
   gchar *value;
-  value = dwb_execute_script("focus_input()");
+  value = dwb_execute_script("dwb_focus_input()");
   if (!strcmp(value, "_dwb_no_input_")) {
     return false;
   }
@@ -101,7 +101,7 @@ gboolean
 dwb_com_add_search_field(Arg *a) {
   gchar *value;
   gboolean ret = true;
-  value = dwb_execute_script("add_searchengine()");
+  value = dwb_execute_script("dwb_add_searchengine()");
   if (value) {
     if (!strcmp(value, "_dwb_no_hints_")) {
       return false;
@@ -175,7 +175,7 @@ dwb_com_show_hints(Arg *arg) {
   dwb.state.nv = arg->n;
   if (dwb.state.mode != HintMode) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    dwb_execute_script("show_hints()");
+    dwb_execute_script("dwb_show_hints()");
     dwb.state.mode = HintMode;
     dwb_focus_entry();
   }

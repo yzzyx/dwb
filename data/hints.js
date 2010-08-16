@@ -11,7 +11,7 @@ var form_hints = "//form";
 var last_entry = null;
 var hints = "//a | //area | //textarea | //select | //link | //input | //button | //frame | //iframe | //*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href]";
 
-function Hint(element, id) {
+function DwbHint(element, id) {
   this.element = element;
   this.rect = element.getBoundingClientRect();
 
@@ -41,13 +41,13 @@ function Hint(element, id) {
 
   this.hint = create_hint(this);
 }
-//NumberHint
-NumberHint.prototype.getTextHint = function (i, length) {
+//DwbNumberHint
+DwbNumberHint.prototype.getTextHint = function (i, length) {
   start = length <=10 ? 1 : length <= 100 ? 10 : 100;
   var content = document.createTextNode(start + i);
   this.hint.appendChild(content);
 }
-NumberHint.prototype.betterMatch = function(input) {
+DwbNumberHint.prototype.betterMatch = function(input) {
   var bestposition = 37;
   var ret = 0;
   for (var i=0; i<active_arr.length; i++) {
@@ -67,7 +67,7 @@ NumberHint.prototype.betterMatch = function(input) {
   }
   return ret;
 }
-NumberHint.prototype.matchText = function(input) {
+DwbNumberHint.prototype.matchText = function(input) {
   var ret = false;
   if (parseInt(input) == input) {
     text_content = this.hint.textContent;
@@ -80,8 +80,8 @@ NumberHint.prototype.matchText = function(input) {
   }
 }
 
-// LetterHint
-LetterHint.prototype.getTextHint = function(i, length) {
+// DwbLetterHint
+DwbLetterHint.prototype.getTextHint = function(i, length) {
   var text;
   var l = hint_letter_seq.length;
   if (length < l) {
@@ -106,34 +106,34 @@ LetterHint.prototype.getTextHint = function(i, length) {
   this.hint.appendChild(content);
 }
 
-LetterHint.prototype.betterMatch = function(input) {
+DwbLetterHint.prototype.betterMatch = function(input) {
   return 0;
 }
 
-LetterHint.prototype.matchText = function(input) {
+DwbLetterHint.prototype.matchText = function(input) {
   return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) == 0);
 }
 
 
-function LetterHint(element) {
-  this.constructor = Hint;
+function DwbLetterHint(element) {
+  this.constructor = DwbHint;
   this.constructor(element);
 }
-LetterHint.prototype = new Hint();
+DwbLetterHint.prototype = new DwbHint();
 
-function NumberHint(element) {
-  this.constructor = Hint;
+function DwbNumberHint(element) {
+  this.constructor = DwbHint;
   this.constructor(element);
 }
-NumberHint.prototype = new Hint();
+DwbNumberHint.prototype = new DwbHint();
 
-function click_element(e) {
+function dwb_click_element(e) {
   var mouseEvent = document.createEvent("MouseEvent");
   mouseEvent.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
   e.element.dispatchEvent(mouseEvent);
-  clear();
+  dwb_clear();
 }
-function create_stylesheet() {
+function dwb_create_stylesheet() {
   var styles = document.createElement("style");
   styles.type = "text/css";
   document.getElementsByTagName('head')[0].appendChild(styles);
@@ -147,7 +147,7 @@ function create_stylesheet() {
   style.insertRule('input[dwb_highlight=hint_active] { outline: 2px solid ' + hint_active_color + '  } ', 0);
 }
 
-function get_visibility(e) {
+function dwb_get_visibility(e) {
   var style = document.defaultView.getComputedStyle(e, null);
   if (style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none") {
       return false;
@@ -166,7 +166,7 @@ function get_visibility(e) {
 }
 
 
-function show_hints(w) {
+function dwb_show_hints(w) {
   if (!w) {
     w = window;
   }
@@ -179,11 +179,11 @@ function show_hints(w) {
   var hints = document.createElement("div");
   hints.id = "dwb_hints";
 
-  create_stylesheet();
+  dwb_create_stylesheet();
 
   for (var i=0; i<res.length; i++) {
-    if (get_visibility(res[i])) {
-      var e = hint_style.toLowerCase() == "letter" ? new LetterHint(res[i], i) : new NumberHint(res[i], i);
+    if (dwb_get_visibility(res[i])) {
+      var e = hint_style.toLowerCase() == "letter" ? new DwbLetterHint(res[i], i) : new DwbNumberHint(res[i], i);
       elements.push(e);
     }
   };
@@ -202,7 +202,7 @@ function show_hints(w) {
   document.getElementsByTagName("body")[0].appendChild(hints);
 }
 
-function update_hints(input) {
+function dwb_update_hints(input) {
   var array = [];
   var text_content;
   var keep = false;
@@ -210,10 +210,10 @@ function update_hints(input) {
     input = input.toLowerCase();
   }
   if (lastinput && (lastinput.length > input.length)) {
-    clear();
+    dwb_clear();
     lastinput = input;
-    show_hints();
-    update_hints(input);
+    dwb_show_hints();
+    dwb_update_hints(input);
     return;
   }
   lastinput = input;
@@ -230,7 +230,7 @@ function update_hints(input) {
   active_arr = array;
   active = array[0];
   if (array.length == 0) {
-    clear();
+    dwb_clear();
     return "_dwb_no_hints_";
   }
   else if (array.length == 1) {
@@ -238,11 +238,11 @@ function update_hints(input) {
   }
   else {
     lastpos = array[0].betterMatch(input);
-    set_active(array[lastpos]);
+    dwb_set_active(array[lastpos]);
   }
   last_entry = null;
 }
-function set_active(element) {
+function dwb_set_active(element) {
   var active = document.querySelector('*[dwb_highlight=hint_active]');
   if (active) {
     active.setAttribute('dwb_highlight', 'hint_normal' );
@@ -250,7 +250,7 @@ function set_active(element) {
   element.element.setAttribute('dwb_highlight', 'hint_active');
   active = element;
 }
-function clear() {
+function dwb_clear() {
   if (elements) {
     for (var i=0; i<elements.length; i++) {
       elements[i].element.removeAttribute('dwb_highlight');
@@ -274,11 +274,11 @@ function evaluate(element) {
   if (tagname == "input" || tagname == "textarea" ) {
     if (type == "radio" || type == "checkbox") {
       e.focus();
-      click_element(element);
+      dwb_click_element(element);
       ret = "_dwb_check_";
     }
     else if (type == "submit" || type == "reset" || type  == "button") {
-      click_element(element);
+      dwb_click_element(element);
       ret = "_dwb_click_";
     }
     else {
@@ -287,38 +287,37 @@ function evaluate(element) {
     }
   }
   else {
-    click_element(element);
+    dwb_click_element(element);
     return "_dwb_click_";
   }
-  //clear(); 
   return ret;
 }
-function get_active() {
+function dwb_get_active() {
   return evaluate(active);
 }
 
-function focus_next() {
+function dwb_focus_next() {
   var newpos = lastpos == active_arr.length-1 ? 0 : lastpos + 1;
   active = active_arr[newpos];
-  set_active(active);
+  dwb_set_active(active);
   lastpos = newpos;
 }
-function focus_prev() {
+function dwb_focus_prev() {
   var newpos = lastpos == 0 ? active_arr.length-1 : lastpos - 1;
   active = active_arr[newpos];
-  set_active(active);
+  dwb_set_active(active);
   lastpos = newpos;
 }
-function add_searchengine() {
-  create_stylesheet();
+function dwb_add_searchengine() {
+  dwb_create_stylesheet();
   var hints = document.createElement("div");
   var res = document.body.querySelectorAll("form");
 
   for (var i=0; i<res.length; i++) {
     var els = res[i].elements;
     for (var j=0; j<els.length; j++) {
-      if (get_visibility(els[j]) && els[j].type == "text") {
-        var e = new LetterHint(els[j]);
+      if (dwb_get_visibility(els[j]) && els[j].type == "text") {
+        var e = new DwbLetterHint(els[j]);
         elements.push(e);
         e.element.setAttribute('dwb_highlight', 'hint_normal');
       }
@@ -333,11 +332,11 @@ function add_searchengine() {
     elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
   }
   document.body.appendChild(hints); 
-  set_active[elements[0]];
+  dwb_set_active[elements[0]];
   active_arr = elements;
-  focus_next();
+  dwb_focus_next();
 }
-function submit_searchengine(string) {
+function dwb_submit_searchengine(string) {
   var e = active.element;
   e.value = string;
   e.form.submit();
@@ -349,7 +348,7 @@ function submit_searchengine(string) {
 }
 
 var active_input;
-function focus_input() {
+function dwb_focus_input() {
   var res = document.body.querySelectorAll('input[type=text], input[type=password], textarea');
   if (res.length == 0) {
     return "_dwb_no_input_";
