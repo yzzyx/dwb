@@ -380,9 +380,6 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   if (DWB_TAB_KEY(e)) {
     return true;
   }
-  if (dwb.state.mode == InsertMode && e->keyval == GDK_Return) {
-    dwb_normal_mode(true);
-  }
   return false;
 }/*}}}*/
 
