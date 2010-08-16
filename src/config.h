@@ -82,6 +82,5 @@ static KeyValue KEYS[] = {
   { "download_hint",            {   "gd",           0 }, },
   { "save_session",             {   "ZZ",           0 }, }, 
   { "save_named_session",       {   "gZZ",           0 }, }, 
-  { "toggle_javascript",        {   "tj",           0 }, }, 
-  { "toggle_flash",             {   "tf",           0 }, }, 
+  { "toggle_block_content",     {   "ts",           0 }, }, 
 };

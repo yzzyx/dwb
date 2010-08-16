@@ -59,8 +59,9 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 
 /* DECLARATIONS {{{*/
 
-static void dwb_set_flash_block(GList *gl, WebSettings *s);
-static void dwb_set_js_block(GList *, WebSettings  *);
+static void dwb_set_dummy(GList *, WebSettings *);
+static void dwb_set_content_block_regex(GList *, WebSettings *);
+static void dwb_set_content_block(GList *, WebSettings *);
 void dwb_clean_buffer(GList *);
 
 gboolean dwb_command_mode(Arg *arg);
@@ -205,8 +206,7 @@ static FunctionMap FMAP [] = {
   { { "resizable_text_areas",  "Toggle resizable text areas", },    (Func)dwb_com_toggle_property,      NULL,                    PostSM,    { .p = "resizable-text-areas" } },
   { { "tab_cycle",             "Toggle tab cycles through elements", },    (Func)dwb_com_toggle_property,     NULL,              PostSM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    }, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
-  { { "toggle_javascript",      "Toggle allow javascript for current domain" },  (Func) dwb_com_toggle_js, NULL,                  PostSM,    { 0 } }, 
-  { { "toggle_flash",           "Toggle allow flash for current domain" },  (Func) dwb_com_toggle_flash, NULL,                  PostSM,    { 0 } }, 
+  { { "toggle_block_content",   "Toggle block content for current domain" },  (Func) dwb_com_toggle_block_content, NULL,                  PostSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -304,23 +304,24 @@ static WebSettings DWB_SETTINGS[] = {
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
 
-  { { "block-javascript",                        "Block Javascript", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_js_block, }, 
-  { { "block-flash",                             "Block Flash", },                                             false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_flash_block, }, 
+  
+  { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_set_content_block_regex, }, 
+  { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = true },        (S_Func) dwb_set_content_block, }, 
 
   // downloads
   { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
-              { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     NULL, },
-  { { "download-use-external-program",           "Downloads: Use external download program", },                           false, true,  Boolean, { .b = false         },     NULL, },
+              { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     (S_Func)dwb_set_dummy, },
+  { { "download-use-external-program",           "Downloads: Use external download program", },                           false, true,  Boolean, { .b = false         },    (S_Func)dwb_set_dummy, },
 
-  { { "complete-history",                        "Complete browsing history", },                              false, true,  Boolean, { .b = true         },     NULL, },
+  { { "complete-history",                        "Complete browsing history", },                              false, true,  Boolean, { .b = true         },     (S_Func)dwb_set_dummy, },
     
-  { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, NULL, },
-  { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, NULL, },
+  { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, (S_Func)dwb_set_dummy, },
+  { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, (S_Func)dwb_set_dummy, },
   { { "message-delay",                           "Message delay", },                                           false, true,  Integer, { .i = 2          }, (S_Func) dwb_set_vars, },
   { { "history-length",                          "History length", },                                          false, true,  Integer, { .i = 500          }, (S_Func) dwb_set_vars, },
-  { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  Integer, { .i = 30          }, NULL, },
-  { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, NULL, },
-  { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  NULL, },
+  { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  Integer, { .i = 30          }, (S_Func)dwb_set_dummy, },
+  { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
+  { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  (S_Func)dwb_set_dummy, },
 };/*}}}*/
 
 /* CALLBACKS {{{*/
@@ -456,13 +457,8 @@ dwb_update_status_text(GList *gl) {
   const gchar *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   GString *string = g_string_new(uri);
 
-  if (v->status->flash_block) {
-    gchar *flash_items = v->status->flash_block_current ? g_strdup_printf(" [f:%d]", v->status->flash_items_blocked) : g_strdup(" [f:a]");
-    g_string_append(string, flash_items);
-    g_free(flash_items);
-  }
-  if (v->status->js_block) {
-    gchar *js_items = v->status->js_block_current ? g_strdup_printf(" [js:%d]", v->status->js_items_blocked) : g_strdup(" [js:a]");
+  if (v->status->block) {
+    gchar *js_items = v->status->block_current ? g_strdup_printf(" [%d]", v->status->items_blocked) : g_strdup(" [a]");
     g_string_append(string, js_items);
     g_free(js_items);
   }
@@ -516,18 +512,48 @@ dwb_get_host(const gchar *uri) {
 
 /* dwb_set_js_block{{{*/
 static void
-dwb_set_flash_block(GList *gl, WebSettings *s) {
+dwb_set_content_block(GList *gl, WebSettings *s) {
   View *v = gl->data;
 
-  v->status->flash_block = s->arg.b;
+  v->status->block = s->arg.b;
 }/*}}}*/
 
-/* dwb_set_js_block{{{*/
+/* dwb_set_dummy{{{*/
 static void
-dwb_set_js_block(GList *gl, WebSettings *s) {
-  View *v = gl->data;
+dwb_set_dummy(GList *gl, WebSettings *s) {
+  return;
+}/*}}}*/
 
-  v->status->js_block = s->arg.b;
+/* dwb_got_headers_cb {{{*/
+void 
+dwb_got_headers_cb(SoupMessage *msg, GList *gl) {
+  SoupContentSniffer *sniffer = soup_content_sniffer_new();
+  SoupBuffer buffer;
+  View *v = gl->data;
+  const gchar *content_type = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
+  if (!v->status->current_host) {
+    SoupURI *uri = soup_message_get_uri(msg);
+    v->status->current_host = g_strdup(uri->host);
+    v->status->block_current = dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) ? false : true;
+  }
+  if (v->status->block && v->status->block_current && g_regex_match_simple(dwb.misc.content_block_regex, content_type, 0, 0)) {
+    soup_session_cancel_message(dwb.misc.soupsession, msg, SOUP_STATUS_CANCELLED);
+    v->status->items_blocked++;
+  }
+}/*}}}*/
+
+/* dwb_soup_request_cb {{{*/
+void
+dwb_soup_request_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
+  g_signal_connect(msg, "got-headers", G_CALLBACK(dwb_got_headers_cb), dwb.state.fview);
+}/*}}}*/
+
+/* dwb_set_content_block_regex{{{*/
+static void
+dwb_set_content_block_regex(GList *gl, WebSettings *s) {
+  if (s->arg.p) {
+    dwb.misc.content_block_regex = s->arg.p;
+  }
 }/*}}}*/
 
 /* dwb_com_focus(GList *gl) {{{*/
@@ -596,12 +622,13 @@ dwb_focus_entry() {
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
 }/*}}}*/
 
+/* dwb_focus_scroll (GList *){{{*/
 void
 dwb_focus_scroll(GList *gl) {
   View *v = gl->data;
   gtk_widget_grab_focus(v->scroll);
   gtk_widget_hide(dwb.gui.entry);
-}
+}/*}}}*/
 
 /* dwb_entry_position_word_back(gint position)      return position{{{*/
 gint 
@@ -921,7 +948,7 @@ dwb_execute_script(const char *com) {
 }
 /*}}}*/
 
-/*dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {{{*/
+/*opend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {{{*/
 void
 dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {
   for (GList *l = (*fc); l; l=l->next) {
@@ -1307,6 +1334,7 @@ dwb_get_resolved_uri(const gchar *uri) {
 }
 /*}}}*/
 
+/* dwb_update_search(gboolean ) {{{*/
 gboolean 
 dwb_update_search(gboolean forward) {
   View *v = CURRENT_VIEW();
@@ -1334,7 +1362,8 @@ dwb_update_search(gboolean forward) {
     return false;
   }
   return true;
-}
+}/*}}}*/
+
 /* dwb_search {{{*/
 gboolean
 dwb_search(Arg *arg) {
@@ -1431,8 +1460,7 @@ dwb_save_files() {
 
   // cookie allow
   dwb_save_simple_file(dwb.fc.cookies_allow, dwb.files.cookies_allow);
-  dwb_save_simple_file(dwb.fc.js_allow, dwb.files.js_allow);
-  dwb_save_simple_file(dwb.fc.flash_allow, dwb.files.flash_allow);
+  dwb_save_simple_file(dwb.fc.content_block_allow, dwb.files.content_block_allow);
 
   // save keys
   keyfile = g_key_file_new();
@@ -1897,8 +1925,7 @@ dwb_init_files() {
   dwb.files.mimetypes     = g_build_filename(path, "mimetypes",      NULL);
   dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
   dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
-  dwb.files.js_allow      = g_build_filename(profile_path, "js.allow",      NULL);
-  dwb.files.flash_allow   = g_build_filename(profile_path, "flash.allow",      NULL);
+  dwb.files.content_block_allow      = g_build_filename(profile_path, "scripts.allow",      NULL);
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
@@ -1910,8 +1937,7 @@ dwb_init_files() {
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;
   }
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
-  dwb.fc.js_allow = dwb_init_file_content(dwb.fc.js_allow, dwb.files.js_allow, (Content_Func)dwb_return);
-  dwb.fc.flash_allow = dwb_init_file_content(dwb.fc.flash_allow, dwb.files.flash_allow, (Content_Func)dwb_return);
+  dwb.fc.content_block_allow = dwb_init_file_content(dwb.fc.content_block_allow, dwb.files.content_block_allow, (Content_Func)dwb_return);
 
   g_free(path);
   g_free(profile_path);
@@ -1991,6 +2017,7 @@ void dwb_init() {
   dwb_init_gui();
 
   dwb.misc.soupsession = webkit_get_default_session();
+  g_signal_connect(dwb.misc.soupsession, "request-started", G_CALLBACK(dwb_soup_request_cb), NULL);
   dwb_init_proxy();
   dwb_init_cookies();
   dwb_init_vars();

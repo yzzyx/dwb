@@ -878,12 +878,7 @@ dwb_com_toggle_ugly(GList **fc, const gchar *desc) {
 }
 
 gboolean
-dwb_com_toggle_js(Arg *arg) {
-  dwb_com_toggle_ugly(&dwb.fc.js_allow, "Javascript");
-  return true;
-}
-gboolean
-dwb_com_toggle_flash(Arg *arg) {
-  dwb_com_toggle_ugly(&dwb.fc.flash_allow, "Flash");
+dwb_com_toggle_block_content(Arg *arg) {
+  dwb_com_toggle_ugly(&dwb.fc.content_block_allow, "Content");
   return true;
 }

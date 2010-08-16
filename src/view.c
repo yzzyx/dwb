@@ -15,6 +15,7 @@ static void dwb_parse_setting(const gchar *);
 static void dwb_parse_key_setting(const gchar *);
 static void dwb_apply_settings(WebSettings *);
 
+GList *hosts = NULL;
 /* WEB_VIEW_CALL_BACKS {{{*/
 
 /* dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
@@ -156,29 +157,6 @@ static void
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
-  SoupMessage *msg;
-  View *v = gl->data;
-
-  if (request && (msg = webkit_network_request_get_message(request))) {
-    SoupContentSniffer *sniffer = soup_content_sniffer_new();
-    SoupBuffer buffer;
-    gchar *content = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
-    if (!v->status->current_host) {
-      const gchar *uri = webkit_network_request_get_uri(request);
-      gchar *host = dwb_get_host(uri);
-      v->status->current_host = host;
-      v->status->js_block_current = dwb_get_host_blocked(dwb.fc.js_allow, host) ? false : true;
-      v->status->flash_block_current = dwb_get_host_blocked(dwb.fc.flash_allow, host) ? false : true;
-    }
-    if (v->status->js_block && v->status->js_block_current && !strcmp(content, "application/javascript")) {
-      webkit_network_request_set_uri(request, "about:blank");
-      v->status->js_items_blocked++;
-    }
-    if (v->status->flash_block && v->status->flash_block_current && !strcmp(content, "application/x-shockwave-flash")) {
-      webkit_network_request_set_uri(request, "about:blank");
-      v->status->flash_items_blocked++;
-    }
-  }
 }/*}}}*/
 
 /* dwb_web_view_script_alert_cb {{{*/
@@ -445,8 +423,7 @@ void
 dwb_view_clean_vars(GList *gl) {
   View *v = gl->data;
 
-  v->status->js_items_blocked = 0;
-  v->status->flash_items_blocked = 0;
+  v->status->items_blocked = 0;
   if (v->status->current_host) {
     g_free(v->status->current_host); 
     v->status->current_host = NULL;

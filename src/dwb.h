@@ -271,15 +271,12 @@ struct _ViewStatus {
   guint message_id;
   gchar *hover_uri;
   gboolean add_history;
-  gint js_items_blocked;
-  gint flash_items_blocked;
   gchar *search_string;
   GList *downloads;
   gchar *current_host;
-  gboolean js_block;
-  gboolean js_block_current;
-  gboolean flash_block;
-  gboolean flash_block_current;
+  gint items_blocked;
+  gboolean block;
+  gboolean block_current;
 };
 
 struct _View {
@@ -366,6 +363,8 @@ struct _Misc {
 
   gchar *startpage;
   gchar *download_com;
+
+  gchar *content_block_regex;
 };
 struct _Files {
   const gchar *bookmarks;
@@ -381,8 +380,7 @@ struct _Files {
   const gchar *cookies;
   const gchar *cookies_allow;
   const gchar *download_path;
-  const gchar *js_allow;
-  const gchar *flash_allow;
+  const gchar *content_block_allow;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -394,8 +392,7 @@ struct _FileContent {
   GList *cookies_allow;
   GList *commands;
   GList *mimetypes;
-  GList *js_allow;
-  GList *flash_allow;
+  GList *content_block_allow;
 };
 
 struct _Dwb {
@@ -466,4 +463,5 @@ Key dwb_strv_to_key(gchar **, gsize );
 
 GList * dwb_keymap_delete(GList *, KeyValue );
 GList * dwb_keymap_add(GList *, KeyValue );
+void dwb_got_headers_cb(SoupMessage *msg, GList *gl);
 #endif
