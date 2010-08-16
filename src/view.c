@@ -129,13 +129,18 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   const gchar *request_uri = webkit_network_request_get_uri(request);
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
-  if (dwb.state.mode == SearchFieldMode && reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED ) {
-    webkit_web_policy_decision_ignore(policy);
-    dwb.state.search_engine = dwb.state.form_name && !g_strrstr(request_uri, HINT_SEARCH_SUBMIT) 
-      ? g_strdup_printf("%s?%s=%s", request_uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
-      : g_strdup(request_uri);
-    dwb_save_searchengine();
-    return true;
+  if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
+    if (dwb.state.mode == InsertMode) {
+      dwb_normal_mode(true);
+    }
+    if (dwb.state.mode == SearchFieldMode) {
+      webkit_web_policy_decision_ignore(policy);
+      dwb.state.search_engine = dwb.state.form_name && !g_strrstr(request_uri, HINT_SEARCH_SUBMIT) 
+        ? g_strdup_printf("%s?%s=%s", request_uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
+        : g_strdup(request_uri);
+      dwb_save_searchengine();
+      return true;
+    }
   }
   return false;
 }/*}}}*/

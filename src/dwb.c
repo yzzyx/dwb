@@ -1046,9 +1046,7 @@ dwb_grab_focus(GList *gl) {
   }
   dwb.state.fview = gl;
   dwb.gui.entry = v->entry;
-  //gtk_widget_show(v->entry);
   dwb_view_set_active_style(gl);
-  //gtk_widget_grab_focus(v->scroll);
   dwb_focus_scroll(gl);
   dwb_update_status(gl);
 }/*}}}*/
@@ -1277,8 +1275,6 @@ dwb_normal_mode(gboolean clean) {
     dwb_comp_clean_autocompletion();
   }
 
-  //gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-  //gtk_widget_grab_focus(v->scroll);
   dwb_focus_scroll(dwb.state.fview);
 
   if (clean) {
@@ -1396,6 +1392,7 @@ dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length) {
   g_string_free(string, true);
 }/*}}}*/
 
+/* dwb_save_simple_file(GList *, const gchar *){{{*/
 void
 dwb_save_simple_file(GList *fc, const gchar *filename) {
   GString *string = g_string_new(NULL);
@@ -1405,7 +1402,7 @@ dwb_save_simple_file(GList *fc, const gchar *filename) {
   }
   dwb_util_set_file_content(filename, string->str);
   g_string_free(string, true);
-}
+}/*}}}*/
 
 /* dwb_save_files() {{{*/
 gboolean 
