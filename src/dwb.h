@@ -422,6 +422,7 @@ void dwb_normal_mode(gboolean);
 
 void dwb_load_uri(Arg *);
 void dwb_focus_entry(void);
+void dwb_focus_scroll(GList *);
 
 gboolean dwb_update_search(gboolean forward);
 

@@ -88,7 +88,8 @@ static void
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri, GList *gl) {
   VIEW(gl)->status->hover_uri = uri;
   if (uri) {
-    dwb_set_status_text(gl, uri, NULL, NULL);
+    //dwb_set_status_text(gl, uri, NULL, NULL);
+    dwb_set_status_bar_text(VIEW(gl)->rstatus, uri, NULL, NULL);
   }
   else {
     dwb_update_status_text(gl);
@@ -235,7 +236,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     default:
       text = g_strdup_printf("loading [%d%%]", (gint)(progress * 100));
-      dwb_set_status_text(gl, text, NULL, NULL); 
+      dwb_set_status_bar_text(VIEW(gl)->rstatus, text, NULL, NULL); 
       gtk_window_set_title(GTK_WINDOW(dwb.gui.window), text);
       g_free(text);
       break;
@@ -322,7 +323,8 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
     ret = false;
   }
   else if (mode == FindMode) {
-    gtk_widget_grab_focus(CURRENT_VIEW()->scroll);
+    //gtk_widget_grab_focus(CURRENT_VIEW()->scroll);
+    dwb_focus_scroll(dwb.state.fview);
     dwb_search(NULL);
   }
   else if (mode == SearchFieldMode) {
@@ -485,7 +487,7 @@ dwb_view_create_web_view(GList *gl) {
   gtk_label_set_use_markup(GTK_LABEL(v->rstatus), true);
   gtk_label_set_ellipsize(GTK_LABEL(v->rstatus), PANGO_ELLIPSIZE_MIDDLE);
 
-  status_hbox = gtk_hbox_new(false, 5);
+  status_hbox = gtk_hbox_new(false, 2);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->lstatus, false, false, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->entry, true, true, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->rstatus, true, true, 0);

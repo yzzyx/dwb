@@ -29,6 +29,7 @@ dwb_com_simple_command(KeyMap *km) {
     }
     else if (km->map->hide == AlwaysSM) {
       CLEAR_COMMAND_TEXT(dwb.state.fview);
+      gtk_widget_hide(dwb.gui.entry);
     }
   }
   else {
@@ -57,7 +58,6 @@ gboolean
 dwb_com_set_key(Arg *arg) {
   dwb.state.mode = KeyMode;
   dwb_focus_entry();
-
   return true;
 }/*}}}*/
 

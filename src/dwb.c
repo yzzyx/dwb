@@ -401,7 +401,10 @@ dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
-  gtk_label_set_text(GTK_LABEL(label), text);
+  gchar *escaped = g_markup_escape_text(text ? text: "", -1);
+  gtk_label_set_markup(GTK_LABEL(label), escaped);
+  g_free(escaped);
+
   if (fg) {
     gtk_widget_modify_fg(label, GTK_STATE_NORMAL, fg);
   }
@@ -442,6 +445,7 @@ dwb_set_error_message(GList *gl, const gchar *error) {
   dwb_source_remove(gl);
   dwb_set_status_bar_text(VIEW(gl)->lstatus, error, &dwb.color.error, dwb.font.fd_bold);
   VIEW(gl)->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
+  gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
 
 /* dwb_update_status_text(GList *gl) {{{*/
@@ -478,18 +482,11 @@ dwb_update_status_text(GList *gl) {
     g_strdup_printf(" [%02d%%]", (gint)(value * 100/upper));
   g_string_append(string, position);
 
-  dwb_set_status_text(gl, string->str, NULL, NULL);
+  dwb_set_status_bar_text(VIEW(gl)->rstatus, string->str, NULL, NULL);
   g_string_free(string, true);
   g_free(position);
 }/*}}}*/
 
-/*dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescription *fd) {{{*/
-void 
-dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescription *fd) {
-  gchar *escaped = g_markup_escape_text(text, -1);
-  dwb_set_status_bar_text(VIEW(gl)->rstatus, escaped, fg, fd);
-  g_free(escaped);
-}/*}}}*/
 /*}}}*/
 
 /* FUNCTIONS {{{*/
@@ -595,8 +592,16 @@ dwb_entry_set_text(const gchar *text) {
 void 
 dwb_focus_entry() {
   gtk_widget_grab_focus(dwb.gui.entry);
+  gtk_widget_show(dwb.gui.entry);
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
 }/*}}}*/
+
+void
+dwb_focus_scroll(GList *gl) {
+  View *v = gl->data;
+  gtk_widget_grab_focus(v->scroll);
+  gtk_widget_hide(dwb.gui.entry);
+}
 
 /* dwb_entry_position_word_back(gint position)      return position{{{*/
 gint 
@@ -1041,9 +1046,10 @@ dwb_grab_focus(GList *gl) {
   }
   dwb.state.fview = gl;
   dwb.gui.entry = v->entry;
-  gtk_widget_show(v->entry);
+  //gtk_widget_show(v->entry);
   dwb_view_set_active_style(gl);
-  gtk_widget_grab_focus(v->scroll);
+  //gtk_widget_grab_focus(v->scroll);
+  dwb_focus_scroll(gl);
   dwb_update_status(gl);
 }/*}}}*/
 
@@ -1252,7 +1258,6 @@ dwb_insert_mode(Arg *arg) {
 /* dwb_normal_mode() {{{*/
 void 
 dwb_normal_mode(gboolean clean) {
-  View *v = dwb.state.fview->data;
   Mode mode = dwb.state.mode;
 
   if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
@@ -1272,8 +1277,9 @@ dwb_normal_mode(gboolean clean) {
     dwb_comp_clean_autocompletion();
   }
 
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-  gtk_widget_grab_focus(v->scroll);
+  //gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
+  //gtk_widget_grab_focus(v->scroll);
+  dwb_focus_scroll(dwb.state.fview);
 
   if (clean) {
     dwb_clean_buffer(dwb.state.fview);
