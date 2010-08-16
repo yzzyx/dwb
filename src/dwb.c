@@ -59,6 +59,7 @@ function checkbox_click(id) { e = document.activeElement; value = e.value ? e.id
 
 /* DECLARATIONS {{{*/
 
+static void dwb_set_flash_block(GList *gl, WebSettings *s);
 static void dwb_set_js_block(GList *, WebSettings  *);
 void dwb_clean_buffer(GList *);
 
@@ -205,6 +206,7 @@ static FunctionMap FMAP [] = {
   { { "tab_cycle",             "Toggle tab cycles through elements", },    (Func)dwb_com_toggle_property,     NULL,              PostSM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    }, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
   { { "toggle_javascript",      "Toggle allow javascript for current domain" },  (Func) dwb_com_toggle_js, NULL,                  PostSM,    { 0 } }, 
+  { { "toggle_flash",           "Toggle allow flash for current domain" },  (Func) dwb_com_toggle_flash, NULL,                  PostSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -303,6 +305,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
 
   { { "block-javascript",                        "Block Javascript", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_js_block, }, 
+  { { "block-flash",                             "Block Flash", },                                             false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_flash_block, }, 
 
   // downloads
   { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
@@ -452,8 +455,13 @@ dwb_update_status_text(GList *gl) {
   const gchar *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   GString *string = g_string_new(uri);
 
+  if (v->status->flash_block) {
+    gchar *flash_items = v->status->flash_block_current ? g_strdup_printf(" [f:%d]", v->status->flash_items_blocked) : g_strdup(" [f:a]");
+    g_string_append(string, flash_items);
+    g_free(flash_items);
+  }
   if (v->status->js_block) {
-    gchar *js_items = v->status->js_block_current ? g_strdup_printf(" [%d]", v->status->items_blocked) : g_strdup(" [a]");
+    gchar *js_items = v->status->js_block_current ? g_strdup_printf(" [js:%d]", v->status->js_items_blocked) : g_strdup(" [js:a]");
     g_string_append(string, js_items);
     g_free(js_items);
   }
@@ -491,8 +499,8 @@ dwb_set_status_text(GList *gl, const gchar *text, GdkColor *fg, PangoFontDescrip
 
 /* dwb_js_get_host_blocked (gchar *) {{{*/
 GList *
-dwb_js_get_host_blocked(gchar *host) {
-  for (GList *l = dwb.fc.js_allow; l; l=l->next) {
+dwb_get_host_blocked(GList *fc, gchar *host) {
+  for (GList *l = fc; l; l=l->next) {
     if (!strcmp(host, (gchar *) l->data)) {
       return l;
     }
@@ -510,6 +518,14 @@ dwb_get_host(const gchar *uri) {
     soup_uri_free(soup_uri);
   }
   return host;
+}/*}}}*/
+
+/* dwb_set_js_block{{{*/
+static void
+dwb_set_flash_block(GList *gl, WebSettings *s) {
+  View *v = gl->data;
+
+  v->status->flash_block = s->arg.b;
 }/*}}}*/
 
 /* dwb_set_js_block{{{*/
@@ -1377,6 +1393,17 @@ dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length) {
   g_string_free(string, true);
 }/*}}}*/
 
+void
+dwb_save_simple_file(GList *fc, const gchar *filename) {
+  GString *string = g_string_new(NULL);
+  for (GList *l = fc; l; l=l->next)  {
+    g_string_append_printf(string, "%s\n", (gchar*)l->data);
+    g_free(l->data);
+  }
+  dwb_util_set_file_content(filename, string->str);
+  g_string_free(string, true);
+}
+
 /* dwb_save_files() {{{*/
 gboolean 
 dwb_save_files() {
@@ -1402,22 +1429,9 @@ dwb_save_files() {
   g_string_free(quickmarks, true);
 
   // cookie allow
-  GString *cookies_allow = g_string_new(NULL);
-  for (GList *l = dwb.fc.cookies_allow; l; l=l->next)  {
-    g_string_append_printf(cookies_allow, "%s\n", (gchar*)l->data);
-    g_free(l->data);
-  }
-  dwb_util_set_file_content(dwb.files.cookies_allow, cookies_allow->str);
-  g_string_free(cookies_allow, true);
-
-  // javascript allow
-  GString *javascript_allow = g_string_new(NULL);
-  for (GList *l = dwb.fc.js_allow; l; l=l->next)  {
-    g_string_append_printf(javascript_allow, "%s\n", (gchar*)l->data);
-    g_free(l->data);
-  }
-  dwb_util_set_file_content(dwb.files.js_allow, javascript_allow->str);
-  g_string_free(javascript_allow, true);
+  dwb_save_simple_file(dwb.fc.cookies_allow, dwb.files.cookies_allow);
+  dwb_save_simple_file(dwb.fc.js_allow, dwb.files.js_allow);
+  dwb_save_simple_file(dwb.fc.flash_allow, dwb.files.flash_allow);
 
   // save keys
   keyfile = g_key_file_new();
@@ -1883,6 +1897,7 @@ dwb_init_files() {
   dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
   dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
   dwb.files.js_allow      = g_build_filename(profile_path, "js.allow",      NULL);
+  dwb.files.flash_allow   = g_build_filename(profile_path, "flash.allow",      NULL);
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
@@ -1895,6 +1910,7 @@ dwb_init_files() {
   }
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
   dwb.fc.js_allow = dwb_init_file_content(dwb.fc.js_allow, dwb.files.js_allow, (Content_Func)dwb_return);
+  dwb.fc.flash_allow = dwb_init_file_content(dwb.fc.flash_allow, dwb.files.flash_allow, (Content_Func)dwb_return);
 
   g_free(path);
   g_free(profile_path);

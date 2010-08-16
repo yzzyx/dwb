@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
@@ -497,7 +498,7 @@ dwb_com_remove_view(Arg *arg) {
   GList *gl;
   if (!dwb.state.views->next) {
     dwb_exit();
-    return;
+    exit(EXIT_SUCCESS);
   }
   if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
@@ -854,25 +855,35 @@ dwb_com_bookmarks(Arg *arg) {
   return true;
 }/*}}}*/
 
-gboolean
-dwb_com_toggle_js(Arg *arg) {
+void
+dwb_com_toggle_ugly(GList **fc, const gchar *desc) {
   WebKitWebView *web = CURRENT_WEBVIEW();
   const gchar *uri = webkit_web_view_get_uri(web);
   gchar *host = dwb_get_host(uri);
   GList *block;
   gchar *message;
-  if ( (block = dwb_js_get_host_blocked(host)) ) {
-    dwb.fc.js_allow = g_list_delete_link(dwb.fc.js_allow, block);
-    message = g_strdup_printf("Javascript blocked for domain %s", host);
+  if (host) {
+    if ( (block = dwb_get_host_blocked(*fc, host)) ) {
+      *fc = g_list_delete_link(*fc, block);
+      message = g_strdup_printf("%s blocked for domain %s", desc, host);
+    }
+    else {
+      *fc = g_list_prepend(*fc, host);
+      message = g_strdup_printf("%s allowed for domain %s", desc, host);
+    }
+    dwb_set_normal_message(dwb.state.fview, message, true);
+    g_free(message);
+    dwb_com_reload(NULL);
   }
-  else {
-    dwb.fc.js_allow = g_list_prepend(dwb.fc.js_allow, host);
-    message = g_strdup_printf("Javascript allowed for domain %s", host);
-  }
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
-  dwb_com_reload(NULL);
-  return true;
-
 }
 
+gboolean
+dwb_com_toggle_js(Arg *arg) {
+  dwb_com_toggle_ugly(&dwb.fc.js_allow, "Javascript");
+  return true;
+}
+gboolean
+dwb_com_toggle_flash(Arg *arg) {
+  dwb_com_toggle_ugly(&dwb.fc.flash_allow, "Flash");
+  return true;
+}

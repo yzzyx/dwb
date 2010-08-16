@@ -271,12 +271,15 @@ struct _ViewStatus {
   guint message_id;
   gchar *hover_uri;
   gboolean add_history;
-  gint items_blocked;
+  gint js_items_blocked;
+  gint flash_items_blocked;
   gchar *search_string;
   GList *downloads;
   gchar *current_host;
   gboolean js_block;
   gboolean js_block_current;
+  gboolean flash_block;
+  gboolean flash_block_current;
 };
 
 struct _View {
@@ -379,6 +382,7 @@ struct _Files {
   const gchar *cookies_allow;
   const gchar *download_path;
   const gchar *js_allow;
+  const gchar *flash_allow;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -391,6 +395,7 @@ struct _FileContent {
   GList *commands;
   GList *mimetypes;
   GList *js_allow;
+  GList *flash_allow;
 };
 
 struct _Dwb {
@@ -453,7 +458,7 @@ void dwb_parse_command_line(const gchar *);
 GHashTable * dwb_get_default_settings(void);
 
 gchar * dwb_get_host(const gchar *uri);
-GList * dwb_js_get_host_blocked(gchar *host);
+GList * dwb_get_host_blocked(GList *, gchar *host);
 
 void dwb_exit(void);
 Key dwb_strv_to_key(gchar **, gsize );
