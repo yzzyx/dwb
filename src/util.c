@@ -44,18 +44,20 @@ int
 dwb_util_test_connect(const char *uri) {
   struct sockaddr_in addr;
   gint s; 
-  gint ret;
+  gint ret = 1;
 
   gchar **token = g_strsplit(uri, ":", 2);
-  gchar *host = !strcmp(token[0], "localhost") ? "127.0.0.1" : token[0];
-  gint port = strtol(token[1], NULL, 10);
+  if (token[0] && token[1]) {
+    gchar *host = !strcmp(token[0], "localhost") ? "127.0.0.1" : token[0];
+    gint port = strtol(token[1], NULL, 10);
 
-  s = socket(AF_INET, SOCK_STREAM, 0);
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  addr.sin_addr.s_addr = inet_addr(host);
-  if ( (ret = connect(s, (struct sockaddr*)&addr, sizeof(addr))) ) {
-    fprintf(stderr, "Cannot connect to %s\n",  uri);
+    s = socket(AF_INET, SOCK_STREAM, 0);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = inet_addr(host);
+    if ( (ret = connect(s, (struct sockaddr*)&addr, sizeof(addr))) ) {
+      fprintf(stderr, "Cannot connect to %s\n",  uri);
+    }
   }
 
   shutdown(s, SHUT_RDWR);

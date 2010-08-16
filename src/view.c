@@ -88,7 +88,6 @@ static void
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri, GList *gl) {
   VIEW(gl)->status->hover_uri = uri;
   if (uri) {
-    //dwb_set_status_text(gl, uri, NULL, NULL);
     dwb_set_status_bar_text(VIEW(gl)->rstatus, uri, NULL, NULL);
   }
   else {
