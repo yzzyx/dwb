@@ -20,7 +20,7 @@ DFLAGS += -g -B
 
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
 SOURCE = $(wildcard $(SRCDIR)/*.c)
-HDR = $(SOURCE:%.c=%.h) 
+HDR = $(OBJ:%.o=%.h) 
 TARGET = $(NAME)
 DTARGET=$(TARGET)-debug
 
