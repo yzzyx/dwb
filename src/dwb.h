@@ -236,8 +236,11 @@ struct _State {
   GHashTable *settings_hash;
   SettingsScope setting_apply;
   gboolean forward_search;
+
   SoupCookieJar *cookiejar;
   SoupCookie *last_cookie;
+  gboolean cookies_allowed;
+
   Layout layout;
   GList *last_com_history;
 

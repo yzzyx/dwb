@@ -24,6 +24,7 @@
 
 
 /* DECLARATIONS {{{*/
+void dwb_set_cookies(GList *l, WebSettings *s);
 static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_content_block(GList *, WebSettings *);
@@ -34,7 +35,7 @@ static void dwb_set_vars(GList *,  WebSettings *);
 static void dwb_com_reload_scripts(GList *,  WebSettings *);
 static void dwb_com_reload_colors(GList *,  WebSettings *);
 static void dwb_com_reload_layout(GList *,  WebSettings *);
-static gboolean dwb_test_cookie_allowed(const gchar *);
+static gboolean dwb_test_cookie_allowed(SoupCookie *);
 static void dwb_save_cookies(void);
 
 static gboolean dwb_eval_key(GdkEventKey *);
@@ -52,8 +53,6 @@ static void dwb_open_quickmark(const gchar *);
 static void dwb_update_tab_label(void);
 static gchar * dwb_get_resolved_uri(const gchar *);
 
-
-static void dwb_set_websetting(GList *, WebSettings *);
 
 static void dwb_init_key_map(void);
 static void dwb_init_settings(void);
@@ -225,7 +224,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "full-content-zoom",                       "Full content zoom", },                                       false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
   { { "zoom-level",                              "Zoom level", },                                              false, false, Double,  { .d = 1.0               }, (S_Func) dwb_webview_property, },
   { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = false              }, (S_Func) dwb_set_proxy, },
-  { { "cookie",                                  "All Cookies allowed", },                                     false, true,  Boolean, { .b = false             }, (S_Func) dwb_set_websetting, },
+  { { "cookies",                                  "All Cookies allowed", },                                     false, true,  Boolean, { .b = false             }, (S_Func) dwb_set_cookies, },
 
   { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_com_reload_layout, },
   { { "active-bg-color",                         "UI: Active view background", },                              false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_com_reload_layout, },
@@ -354,9 +353,7 @@ void
 dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new) {
   if (new) {
     dwb.state.last_cookie = soup_cookie_copy(new);
-    if  (dwb_test_cookie_allowed(new->domain) || ((WebSettings*)g_hash_table_lookup(dwb.settings, "cookie"))->arg.b) {
-      dwb_save_cookies();
-    }
+    dwb_save_cookies();
   }
 }/*}}}*/
 
@@ -557,6 +554,11 @@ dwb_set_vars(GList *l, WebSettings *s) {
   dwb_init_vars();
 }/*}}}*/
 
+void 
+dwb_set_cookies(GList *l, WebSettings *s) {
+  dwb.state.cookies_allowed = s->arg.b;
+}
+
 /* dwb_set_proxy{{{*/
 void
 dwb_set_proxy(GList *l, WebSettings *s) {
@@ -741,16 +743,6 @@ dwb_save_searchengine(void) {
 
 }/*}}}*/
 
-/* dwb_set_websetting(GList *, WebSettings *) {{{*/
-static void
-dwb_set_websetting(GList *gl, WebSettings *s) {
-  if (s->global) {
-    WebSettings *new = g_hash_table_lookup(dwb.settings, s->n.first);
-    new->arg = s->arg;
-  }
-
-}/*}}}*/
-
 /* dwb_layout_from_char {{{*/
 Layout
 dwb_layout_from_char(const gchar *desc) {
@@ -777,7 +769,8 @@ dwb_layout_from_char(const gchar *desc) {
 
 /* dwb_test_cookie_allowed(const gchar *)     return:  gboolean{{{*/
 static gboolean 
-dwb_test_cookie_allowed(const gchar *domain) {
+dwb_test_cookie_allowed(SoupCookie *cookie) {
+  const gchar *domain = cookie->domain;
   for (GList *l = dwb.fc.cookies_allow; l; l=l->next) {
     if (!strcmp(domain, l->data)) {
       return true;
@@ -793,7 +786,9 @@ dwb_save_cookies() {
 
   jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
   for (GSList *l = soup_cookie_jar_all_cookies(dwb.state.cookiejar); l; l=l->next) {
-    soup_cookie_jar_add_cookie(jar, l->data);
+    if (dwb.state.cookies_allowed || dwb_test_cookie_allowed(l->data) ) {
+      soup_cookie_jar_add_cookie(jar, l->data);
+    }
   }
   g_object_unref(jar);
 }/*}}}*/
