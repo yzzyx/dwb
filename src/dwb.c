@@ -1290,11 +1290,10 @@ dwb_normal_mode(gboolean clean) {
 static gchar * 
 dwb_get_resolved_uri(const gchar *uri) {
   char *tmp = NULL;
+  gboolean is_file = false;
   // check if uri is a file
-  if ( g_file_test(uri, G_FILE_TEST_IS_REGULAR) ) {
-    tmp = g_str_has_prefix(uri, "file://") 
-      ? g_strdup(uri) 
-      : g_strdup_printf("file://%s", uri);
+  if ( g_file_test(uri, G_FILE_TEST_IS_REGULAR) || (is_file = g_str_has_prefix(uri, "file://")) ) {
+    tmp = is_file ? g_strdup(uri) : g_strdup_printf("file://%s", uri);
   }
   else if ( !(tmp = dwb_get_search_engine(uri)) || strstr(uri, "localhost:")) {
     tmp = g_str_has_prefix(uri, "http://") || g_str_has_prefix(uri, "https://")
