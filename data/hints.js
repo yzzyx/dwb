@@ -370,3 +370,6 @@ function dwb_focus_input() {
   }
   active_input.focus();
 }
+function dwb_blur() {
+  document.activeElement.blur();
+}

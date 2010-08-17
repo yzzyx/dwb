@@ -15,7 +15,6 @@ static void dwb_parse_setting(const gchar *);
 static void dwb_parse_key_setting(const gchar *);
 static void dwb_apply_settings(WebSettings *);
 
-GList *hosts = NULL;
 /* WEB_VIEW_CALL_BACKS {{{*/
 
 /* dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
@@ -112,7 +111,6 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
 static gboolean 
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
-
   if (dwb.state.nv == OpenNewView || dwb.state.nv == OpenNewWindow) {
     gchar *uri = (gchar *)webkit_network_request_get_uri(request);
     Arg a = { .p = uri };
@@ -305,7 +303,6 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
     ret = false;
   }
   else if (mode == FindMode) {
-    //gtk_widget_grab_focus(CURRENT_VIEW()->scroll);
     dwb_focus_scroll(dwb.state.fview);
     dwb_search(NULL);
   }
@@ -547,6 +544,7 @@ dwb_add_view(Arg *arg) {
   }
   dwb.state.views = dwb_view_create_web_view(dwb.state.views);
   dwb_focus(dwb.state.views);
+  dwb_execute_script("init()");
 
   for (GList *l = g_hash_table_get_values(((View*)dwb.state.views->data)->setting); l; l=l->next) {
     WebSettings *s = l->data;
@@ -601,19 +599,31 @@ dwb_parse_setting(const gchar *text) {
 void
 dwb_parse_key_setting(const gchar *text) {
   KeyValue value;
+  gchar **keys = NULL;
   gchar **token = g_strsplit(text, " ", 2);
 
   value.id = g_strdup(token[0]);
 
-  gchar  **keys = g_strsplit(token[1], " ", -1);
-  value.key = dwb_strv_to_key(keys, g_strv_length(keys));
+  if (token[1]) {
+    keys = g_strsplit(token[1], " ", -1);
+    value.key = dwb_strv_to_key(keys, g_strv_length(keys));
+  }
+  else {
+    Key key = { NULL, 0 };
+    value.key = key;
+  }
+
+  gchar *message = g_strdup_printf("Saved key for command %s: %s", token[0], token[1] ? token[1] : "");
+  dwb_set_normal_message(dwb.state.fview, message, true);
+  g_free(message);
 
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
 
   g_strfreev(token);
-  g_strfreev(keys);
-  dwb_normal_mode(true);
+  if (keys) 
+    g_strfreev(keys);
+  dwb_normal_mode(false);
 }/*}}}*/
 
 /* dwb_apply_settings(WebSettings *s) {{{*/
