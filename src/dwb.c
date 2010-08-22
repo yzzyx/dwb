@@ -203,8 +203,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "enable-xss-auditor",			                 "XSS auditor", },                                             true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
   { { "enforce-96-dpi",			                     "Enforce 96 dpi", },                                          true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
   { { "fantasy-font-family",			               "Fantasy font family", },                                     true, false,  Char,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
-  // not supported in older webkit versions
-  //{ { "javascript-can-access-clipboard",			   "Javascript can access clipboard", },                         true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "javascript-can-access-clipboard",			   "Javascript can access clipboard", },                         true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
   { { "javascript-can-open-windows-automatically", "Javascript can open windows automatically", },             true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
   { { "minimum-font-size",			                 "Minimum font size", },                                       true, false,  Integer, { .i = 5                 }, (S_Func) dwb_webkit_setting, },
   { { "minimum-logical-font-size",			         "Minimum logical font size", },                               true, false,  Integer, { .i = 5                 }, (S_Func) dwb_webkit_setting, },
@@ -270,7 +269,7 @@ static WebSettings DWB_SETTINGS[] = {
 
   
   { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_set_content_block_regex, }, 
-  { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = true },        (S_Func) dwb_set_content_block, }, 
+  { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_content_block, }, 
 
   // downloads
   { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
@@ -499,13 +498,14 @@ dwb_got_headers_cb(SoupMessage *msg, GList *gl) {
     v->status->block_current = dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) ? false : true;
   }
   if (v->status->block && v->status->block_current && g_regex_match_simple(dwb.misc.content_block_regex, content_type, 0, 0)) {
+    soup_message_set_flags(msg, SOUP_MESSAGE_NO_REDIRECT);
     soup_session_cancel_message(dwb.misc.soupsession, msg, SOUP_STATUS_CANCELLED);
     v->status->items_blocked++;
   }
 }/*}}}*/
 
 /* dwb_soup_request_cb {{{*/
-void
+static void
 dwb_soup_request_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
   g_signal_connect(msg, "got-headers", G_CALLBACK(dwb_got_headers_cb), dwb.state.fview);
 }/*}}}*/
@@ -1239,6 +1239,7 @@ dwb_insert_mode(Arg *arg) {
     dwb_set_normal_message(dwb.state.fview, INSERT_MODE, true);
   }
   dwb_view_modify_style(dwb.state.fview, &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL, 0);
+  //dwb_execute_script("dwb_init_vi()");
 
   dwb.state.mode = InsertMode;
   return true;
@@ -1732,10 +1733,10 @@ dwb_init_scripts() {
 
   // init system scripts
   gchar *dir;
+  dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
   if ( (dir = dwb_util_get_data_dir("scripts")) ) {
     dwb_util_get_directory_content(&buffer, dir);
   }
-  dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/

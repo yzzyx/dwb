@@ -66,7 +66,7 @@ dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, g
   else if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
-  return true;
+  return false;
 }/*}}}*/
 
 /* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
@@ -168,12 +168,7 @@ dwb_web_view_script_alert_cb(WebKitWebView *web, WebKitWebFrame *frame, gchar *m
 static void 
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
-  JSStringRef script; 
-  JSValueRef exc;
-
-  script = JSStringCreateWithUTF8CString(dwb.misc.scripts);
-  JSEvaluateScript((JSContextRef)context, script, JSContextGetGlobalObject((JSContextRef)context), NULL, 0, &exc);
-  JSStringRelease(script);
+  dwb_execute_script(NULL);
 }/*}}}*/
 
 static gboolean
@@ -209,8 +204,10 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_COMMITTED: 
       break;
     case WEBKIT_LOAD_FINISHED:
+      if (dwb.state.fview)
       dwb_update_status(gl);
       dwb_prepend_navigation(gl, &dwb.fc.history);
+      if (dwb.state.fview)
       break;
     case WEBKIT_LOAD_FAILED: 
       break;
@@ -544,7 +541,7 @@ dwb_add_view(Arg *arg) {
   }
   dwb.state.views = dwb_view_create_web_view(dwb.state.views);
   dwb_focus(dwb.state.views);
-  dwb_execute_script("init()");
+  dwb_execute_script(NULL);
 
   for (GList *l = g_hash_table_get_values(((View*)dwb.state.views->data)->setting); l; l=l->next) {
     WebSettings *s = l->data;
