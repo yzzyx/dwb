@@ -66,7 +66,7 @@ dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, g
   else if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
-  return false;
+  return true;
 }/*}}}*/
 
 /* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
@@ -543,12 +543,6 @@ dwb_add_view(Arg *arg) {
   dwb_focus(dwb.state.views);
   dwb_execute_script(NULL);
 
-  for (GList *l = g_hash_table_get_values(((View*)dwb.state.views->data)->setting); l; l=l->next) {
-    WebSettings *s = l->data;
-    if (!s->builtin && !s->global) {
-      s->func(dwb.state.views, s);
-    }
-  }
   dwb_update_layout();
   if (arg && arg->p) {
     dwb_load_uri(arg);

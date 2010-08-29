@@ -1884,7 +1884,6 @@ dwb_init_files() {
   dwb.files.quickmarks    = g_build_filename(profile_path, "quickmarks",    NULL);
   dwb.files.session       = g_build_filename(path, "session",       NULL);
   dwb.files.searchengines = g_build_filename(path, "searchengines", NULL);
-  dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);
   dwb.files.keys          = g_build_filename(path, "keys",          NULL);
   dwb.files.scriptdir     = g_build_filename(path, "scripts",      NULL);
   dwb.files.settings      = g_build_filename(path, "settings",      NULL);

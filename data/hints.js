@@ -8,7 +8,6 @@ var lastpos = 0;
 var lastinput;
 var styles;
 var form_hints = "//form";
-var last_entry = null;
 var hints = "//a | //area | //textarea | //select | //link | //input | //button | //frame | //iframe | //*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href]";
 
 function DwbHint(element, id) {
@@ -140,7 +139,7 @@ function dwb_create_stylesheet() {
   
   var style = document.styleSheets[document.styleSheets.length - 1];
   style.insertRule('a[dwb_highlight=hint_normal] { background: ' + hint_normal_color + ' } ', 0);
-  style.insertRule('a[dwb_highlight=hint_normal] { outline: 1p solid ' + hint_normal_color + ' } ', 0);
+  style.insertRule('a[dwb_highlight=hint_normal] { outline: 1px solid ' + hint_normal_color + ' } ', 0);
   style.insertRule('input[dwb_highlight=hint_normal] { outline: 1px solid ' + hint_normal_color + '  } ', 0);
   style.insertRule('a[dwb_highlight=hint_active] { background: ' + hint_active_color + '  } ', 0);
   style.insertRule('a[dwb_highlight=hint_active] { border: 2px solid ' + hint_active_color + '  } ', 0);
@@ -240,7 +239,6 @@ function dwb_update_hints(input) {
     lastpos = array[0].betterMatch(input);
     dwb_set_active(array[lastpos]);
   }
-  last_entry = null;
 }
 function dwb_set_active(element) {
   var active = document.querySelector('*[dwb_highlight=hint_active]');
