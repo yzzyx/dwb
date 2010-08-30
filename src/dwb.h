@@ -466,4 +466,6 @@ Key dwb_strv_to_key(gchar **, gsize );
 GList * dwb_keymap_delete(GList *, KeyValue );
 GList * dwb_keymap_add(GList *, KeyValue );
 void dwb_got_headers_cb(SoupMessage *msg, GList *gl);
+
+void dwb_append_navigation_with_argument(GList **, const gchar *, const gchar *);
 #endif

@@ -730,7 +730,7 @@ dwb_save_searchengine(void) {
   if (text) {
     g_strstrip(text);
     if (text && strlen(text) > 0) {
-      dwb_prepend_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
+      dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
       dwb_set_normal_message(dwb.state.fview, "Search saved", true);
       g_free(dwb.state.search_engine);
     }
@@ -911,7 +911,7 @@ dwb_execute_script(const char *com) {
 }
 /*}}}*/
 
-/*opend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {{{*/
+/*prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {{{*/
 void
 dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {
   for (GList *l = (*fc); l; l=l->next) {
@@ -925,6 +925,22 @@ dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar
   Navigation *n = dwb_navigation_new(first, second);
 
   (*fc) = g_list_prepend((*fc), n);
+}/*}}}*/
+
+/*append_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {{{*/
+void
+dwb_append_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {
+  for (GList *l = (*fc); l; l=l->next) {
+    Navigation *n = l->data;
+    if (!strcmp(first, n->first)) {
+      dwb_navigation_free(n);
+      (*fc) = g_list_delete_link((*fc), l);
+      break;
+    }
+  }
+  Navigation *n = dwb_navigation_new(first, second);
+
+  (*fc) = g_list_append((*fc), n);
 }/*}}}*/
 
 /* dwb_prepend_navigation(GList *gl, GList *view) {{{*/
