@@ -1530,17 +1530,8 @@ dwb_strv_to_key(gchar **string, gsize length) {
     else if (!g_ascii_strcasecmp(string[i], "Mod1")) {
       key.mod |= GDK_MOD1_MASK;
     }
-    else if (!g_ascii_strcasecmp(string[i], "Mod2")) {
-      key.mod |= GDK_MOD2_MASK;
-    }
-    else if (!g_ascii_strcasecmp(string[i], "Mod3")) {
-      key.mod |= GDK_MOD3_MASK;
-    }
     else if (!g_ascii_strcasecmp(string[i], "Mod4")) {
       key.mod |= GDK_MOD4_MASK;
-    }
-    else if (!g_ascii_strcasecmp(string[i], "Mod5")) {
-      key.mod |= GDK_MOD5_MASK;
     }
     else {
       g_string_append(buffer, string[i]);

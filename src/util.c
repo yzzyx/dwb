@@ -80,21 +80,9 @@ dwb_modmask_to_string(guint modmask) {
       mod[i] = "Mod1";
       modmask ^= GDK_MOD1_MASK;
     }
-    else if (modmask & GDK_MOD2_MASK) {
-      mod[i] = "Mod2";
-      modmask ^= GDK_MOD2_MASK;
-    }
-    else if (modmask & GDK_MOD3_MASK) {
-      mod[i] = "Mod3";
-      modmask ^= GDK_MOD3_MASK;
-    }
     else if (modmask & GDK_MOD4_MASK) {
       mod[i] = "Mod4";
       modmask ^= GDK_MOD4_MASK;
-    }
-    else if (modmask & GDK_MOD5_MASK) {
-      mod[i] = "Mod5";
-      modmask ^= GDK_MOD5_MASK;
     }
   }
   mod[i] = NULL; 

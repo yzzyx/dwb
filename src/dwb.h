@@ -43,7 +43,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define NN(X)       ( ((X) == 0) ? 1 : (X) )
 #define NUMMOD      (dwb.state.nummod == 0 ? 1 : dwb.state.nummod)
 
-#define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK))
+#define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
 #define CLEAN_COMP_MODE(X)          (X & ~(CompletionMode) & ~(AutoComplete))
 
 #define GET_TEXT()                  (gtk_entry_get_text(GTK_ENTRY(dwb.gui.entry)))
