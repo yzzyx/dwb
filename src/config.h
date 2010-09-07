@@ -3,6 +3,8 @@ static KeyValue KEYS[] = {
   { "allow_cookie",             {   "CC",         0,                   },  },  
   { "bookmark",                 {   "M",         0,                   },  },  
   { "bookmarks",                {   "gb",        0,                   },  },  
+  { "bookmarks_nv",             {   "gB",        0,                   },  },  
+  { "bookmarks_nw",             {   "wB",        0,                   },  },  
   { "command_mode",             {   ":",         0,                   },  },  
   { "find_forward",             {   "/",         0,                   },  }, 
   { "find_next",                {   "n",         0,                   },  },
@@ -83,4 +85,6 @@ static KeyValue KEYS[] = {
   { "save_session",             {   "ZZ",           0 }, }, 
   { "save_named_session",       {   "gZZ",           0 }, }, 
   { "toggle_block_content",     {   "ts",           0 }, }, 
+  { "new_view",                 {   "V",            0 }, }, 
+  { "new_window",               {   "W",            0 }, }, 
 };

@@ -172,7 +172,8 @@ dwb_com_resize_master(Arg *arg) {
 /* dwb_com_show_hints {{{*/
 gboolean
 dwb_com_show_hints(Arg *arg) {
-  dwb.state.nv = arg->n;
+  if (dwb.state.nv == OpenNormal)
+    dwb.state.nv = arg->n;
   if (dwb.state.mode != HintMode) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
     dwb_execute_script("dwb_show_hints()");
@@ -293,7 +294,8 @@ dwb_com_bookmark(Arg *arg) {
 /* dwb_com_quickmark(Arg *arg) {{{*/
 gboolean
 dwb_com_quickmark(Arg *arg) {
-  dwb.state.nv = arg->i;
+  if (dwb.state.nv == OpenNormal)
+    dwb.state.nv = arg->i;
   dwb.state.mode = arg->n;
   return true;
 }/*}}}*/
@@ -441,7 +443,8 @@ dwb_com_history_forward(Arg *arg) {
 /* dwb_com_open(Arg *arg) {{{*/
 gboolean  
 dwb_com_open(Arg *arg) {
-  dwb.state.nv = arg->n;
+  if (dwb.state.nv == OpenNormal)
+    dwb.state.nv = arg->n;
 
   if (arg && arg->p) {
     dwb_load_uri(arg);
@@ -721,7 +724,8 @@ dwb_com_paste(Arg *arg) {
   gchar *text = NULL;
 
   if ( (text = gtk_clipboard_wait_for_text(clipboard)) ) {
-    dwb.state.nv = arg->n;
+    if (dwb.state.nv == OpenNormal)
+      dwb.state.nv = arg->n;
     Arg a = { .p = text };
     dwb_load_uri(&a);
     g_free(text);
@@ -848,6 +852,8 @@ dwb_com_bookmarks(Arg *arg) {
   if (!g_list_length(dwb.fc.bookmarks)) {
     return false;
   }
+  if (dwb.state.nv == OpenNormal)
+    dwb.state.nv = arg->n;
   dwb_focus_entry();
   dwb.state.mode = BookmarksMode;
   dwb_comp_complete(0);
@@ -880,5 +886,10 @@ dwb_com_toggle_ugly(GList **fc, const gchar *desc) {
 gboolean
 dwb_com_toggle_block_content(Arg *arg) {
   dwb_com_toggle_ugly(&dwb.fc.content_block_allow, "Content");
+  return true;
+}
+gboolean 
+dwb_com_new_window_or_view(Arg *arg) {
+  dwb.state.nv = arg->n;
   return true;
 }
