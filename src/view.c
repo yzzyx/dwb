@@ -93,7 +93,6 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri,
   else {
     dwb_update_status_text(gl);
   }
-
 }/*}}}*/
 
 /* dwb_web_view_mime_type_policy_cb {{{*/

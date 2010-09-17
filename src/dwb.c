@@ -1928,7 +1928,7 @@ dwb_handle_signal(gint s) {
   }
   else if (s == SIGSEGV) {
     fprintf(stderr, "Received SIGSEGV, try to clean up.\n");
-    if (dwb_end()) {
+    if (dwb_session_save(NULL)) {
       fprintf(stderr, "Success.\n");
     }
     exit(EXIT_FAILURE);

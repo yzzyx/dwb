@@ -119,7 +119,7 @@ dwb_session_restore(const gchar *name) {
 }/*}}}*/
 
 /* dwb_session_save(const gchar *) {{{*/
-void  
+gboolean  
 dwb_session_save(const gchar *name) {
   if (!name) {
     name = "default";
@@ -156,4 +156,5 @@ dwb_session_save(const gchar *name) {
   dwb_util_set_file_content(dwb.files.session, buffer->str);
   g_string_free(buffer, true);
   dwb_exit();
+  return true;
 }/*}}}*/
