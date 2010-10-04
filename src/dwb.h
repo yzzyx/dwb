@@ -460,7 +460,7 @@ GHashTable * dwb_get_default_settings(void);
 gchar * dwb_get_host(const gchar *uri);
 GList * dwb_get_host_blocked(GList *, gchar *host);
 
-void dwb_exit(void);
+gboolean dwb_end(void);
 Key dwb_strv_to_key(gchar **, gsize );
 
 GList * dwb_keymap_delete(GList *, KeyValue );

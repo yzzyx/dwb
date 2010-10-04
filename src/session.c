@@ -155,6 +155,6 @@ dwb_session_save(const gchar *name) {
   }
   dwb_util_set_file_content(dwb.files.session, buffer->str);
   g_string_free(buffer, true);
-  dwb_exit();
+  //dwb_exit();
   return true;
 }/*}}}*/

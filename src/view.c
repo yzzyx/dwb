@@ -319,6 +319,7 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
   }
   else if (mode == SaveSession) {
     dwb_session_save(GET_TEXT());
+    dwb_end();
   }
   else {
     Arg a = { .n = 0, .p = text };

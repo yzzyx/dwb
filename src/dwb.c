@@ -62,7 +62,7 @@ static void dwb_init_gui(void);
 static void dwb_init_vars(void);
 
 static void dwb_clean_vars(void);
-static gboolean dwb_end(void);
+//static gboolean dwb_end(void);
 /*}}}*/
 
 static GdkNativeWindow embed = 0;
@@ -271,6 +271,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
   { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
+  { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
 
   
   { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_set_content_block_regex, }, 
@@ -1496,28 +1497,25 @@ dwb_save_files() {
   }
   g_key_file_free(keyfile);
 
+  if (GET_BOOL("save-session") && dwb.state.mode != SaveSession) {
+    dwb_session_save(NULL);
+  }
+
   return true;
 }
 /* }}} */
 
 /* dwb_end() {{{*/
-static gboolean
+gboolean
 dwb_end() {
   if (dwb_save_files()) {
     if (dwb_clean_up()) {
+      gtk_main_quit();
       return true;
     }
   }
   return false;
 }/*}}}*/
-
-/* dwb_exit() {{{ */
-void 
-dwb_exit() {
-  dwb_end();
-  gtk_main_quit();
-} /*}}}*/
-/*}}}*/
 
 /* KEYS {{{*/
 
@@ -1824,7 +1822,7 @@ dwb_init_gui() {
   }
   gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), GET_INT("default-width"), GET_INT("default-height"));
   gtk_window_set_geometry_hints(GTK_WINDOW(dwb.gui.window), NULL, NULL, GDK_HINT_MIN_SIZE);
-  g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_exit), NULL);
+  g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
   gtk_widget_modify_bg(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
@@ -2103,6 +2101,9 @@ int main(gint argc, gchar *argv[]) {
   dwb_init_files();
   dwb_init_settings();
   gint single = GET_BOOL("single-instance");
+  if (GET_BOOL("save-session")) {
+    restore = "default";
+  }
 
   if (!g_thread_supported()) {
     g_thread_init(NULL);

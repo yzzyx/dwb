@@ -500,7 +500,7 @@ void
 dwb_com_remove_view(Arg *arg) {
   GList *gl;
   if (!dwb.state.views->next) {
-    dwb_exit();
+    dwb_end();
     exit(EXIT_SUCCESS);
   }
   if (dwb.state.nummod) {
@@ -835,7 +835,9 @@ dwb_com_entry_history_back(Arg *a) {
 gboolean
 dwb_com_save_session(Arg *arg) {
   if (arg->n == NormalMode) {
+    dwb.state.mode = SaveSession;
     dwb_session_save(NULL);
+    dwb_end();
   }
   else {
     dwb.state.mode = arg->n;
