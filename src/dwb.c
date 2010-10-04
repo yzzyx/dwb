@@ -2101,7 +2101,7 @@ int main(gint argc, gchar *argv[]) {
   dwb_init_files();
   dwb_init_settings();
   gint single = GET_BOOL("single-instance");
-  if (GET_BOOL("save-session")) {
+  if (GET_BOOL("save-session") && argc == 1) {
     restore = "default";
   }
 
