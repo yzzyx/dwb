@@ -270,6 +270,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_com_reload_scripts, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
+  { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
 
   
   { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_set_content_block_regex, }, 
@@ -1740,7 +1741,7 @@ dwb_init_scripts() {
   g_string_append_printf(buffer, "hint_active_color = '%s';\n",     GET_CHAR("hint-active-color"));
   g_string_append_printf(buffer, "hint_normal_color = '%s';\n",     GET_CHAR("hint-normal-color"));
   g_string_append_printf(buffer, "hint_border = '%s';\n",           GET_CHAR("hint-border"));
-  g_string_append_printf(buffer, "hint_opacity = %f;\n",          GET_DOUBLE("hint-opacity"));
+  g_string_append_printf(buffer, "hint_opacity = %f;\n",            GET_DOUBLE("hint-opacity"));
 
   // init system scripts
   gchar *dir;
@@ -1985,9 +1986,7 @@ void dwb_init() {
   dwb.misc.max_c_items = MAX_COMPLETIONS;
 
 
-  dwb_init_files();
   dwb_init_key_map();
-  dwb_init_settings();
   dwb_init_style();
   dwb_init_scripts();
   dwb_init_gui();
@@ -2098,7 +2097,12 @@ int main(gint argc, gchar *argv[]) {
   dwb.misc.argc = 0;
   dwb.misc.prog_path = argv[0];
   gint last = 0;
-  gint single = 0;
+
+  gtk_init(&argc, &argv);
+
+  dwb_init_files();
+  dwb_init_settings();
+  gint single = GET_BOOL("single-instance");
 
   if (!g_thread_supported()) {
     g_thread_init(NULL);
@@ -2136,7 +2140,6 @@ int main(gint argc, gchar *argv[]) {
   }
   dwb_init_fifo(single);
   dwb_init_signals();
-  gtk_init(&argc, &argv);
   dwb_init();
   gtk_main();
   return EXIT_SUCCESS;
