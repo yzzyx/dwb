@@ -497,16 +497,19 @@ dwb_got_headers_cb(SoupMessage *msg, GList *gl) {
   SoupContentSniffer *sniffer = soup_content_sniffer_new();
   SoupBuffer buffer;
   View *v = gl->data;
-  const gchar *content_type = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
-  if (!v->status->current_host) {
-    SoupURI *uri = soup_message_get_uri(msg);
-    v->status->current_host = g_strdup(uri->host);
-    v->status->block_current = dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) ? false : true;
-  }
-  if (v->status->block && v->status->block_current && g_regex_match_simple(dwb.misc.content_block_regex, content_type, 0, 0)) {
-    soup_message_set_flags(msg, SOUP_MESSAGE_NO_REDIRECT);
-    soup_session_cancel_message(dwb.misc.soupsession, msg, SOUP_STATUS_CANCELLED);
-    v->status->items_blocked++;
+
+  if (v) {
+    const gchar *content_type = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
+    if (!v->status->current_host) {
+      SoupURI *uri = soup_message_get_uri(msg);
+      v->status->current_host = g_strdup(uri->host);
+      v->status->block_current = dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) ? false : true;
+    }
+    if (v->status->block && v->status->block_current && g_regex_match_simple(dwb.misc.content_block_regex, content_type, 0, 0)) {
+      soup_message_set_flags(msg, SOUP_MESSAGE_NO_REDIRECT);
+      soup_session_cancel_message(dwb.misc.soupsession, msg, SOUP_STATUS_CANCELLED);
+      v->status->items_blocked++;
+    }
   }
 }/*}}}*/
 
