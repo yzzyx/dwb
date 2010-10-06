@@ -498,7 +498,7 @@ dwb_got_headers_cb(SoupMessage *msg, GList *gl) {
   SoupBuffer buffer;
   View *v = gl->data;
 
-  if (v) {
+  if (v && v->status) {
     const gchar *content_type = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
     if (!v->status->current_host) {
       SoupURI *uri = soup_message_get_uri(msg);
