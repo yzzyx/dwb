@@ -352,6 +352,8 @@ struct _Misc {
   SoupSession *soupsession;
   SoupURI *proxyuri;
 
+  GIOChannel *si_channel;
+
   gdouble factor;
   gint max_c_items;
   gint message_delay;
@@ -383,6 +385,7 @@ struct _Files {
   const gchar *cookies_allow;
   const gchar *download_path;
   const gchar *content_block_allow;
+  const gchar *unifile;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -451,6 +454,7 @@ gint dwb_entry_position_word_forward(gint position);
 void dwb_entry_set_text(const gchar *text);
 
 void dwb_set_proxy(GList *, WebSettings *);
+void dwb_set_single_instance(GList *, WebSettings *);
 void dwb_new_window(Arg *arg);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
@@ -466,6 +470,8 @@ Key dwb_strv_to_key(gchar **, gsize );
 GList * dwb_keymap_delete(GList *, KeyValue );
 GList * dwb_keymap_add(GList *, KeyValue );
 void dwb_got_headers_cb(SoupMessage *msg, GList *gl);
+
+void dwb_save_settings(void);
 
 void dwb_append_navigation_with_argument(GList **, const gchar *, const gchar *);
 #endif

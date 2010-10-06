@@ -412,7 +412,7 @@ dwb_web_view_init_signals(GList *gl) {
 
 } /*}}}*/
 
-
+/* dwb_view_clean_vars(GList *){{{*/
 void
 dwb_view_clean_vars(GList *gl) {
   View *v = gl->data;
@@ -422,7 +422,7 @@ dwb_view_clean_vars(GList *gl) {
     g_free(v->status->current_host); 
     v->status->current_host = NULL;
   }
-}
+}/*}}}*/
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/
 static GList * 
@@ -568,6 +568,7 @@ dwb_parse_setting(const gchar *text) {
         dwb_apply_settings(s);
         gchar *message = g_strdup_printf("Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
         dwb_set_normal_message(dwb.state.fview, message, true);
+        dwb_save_settings();
         g_free(message);
       }
       else {

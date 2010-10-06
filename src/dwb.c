@@ -38,6 +38,9 @@ static void dwb_com_reload_layout(GList *,  WebSettings *);
 static gboolean dwb_test_cookie_allowed(SoupCookie *);
 static void dwb_save_cookies(void);
 
+void dwb_open_si_channel(void);
+gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
+
 static gboolean dwb_eval_key(GdkEventKey *);
 
 static void dwb_webkit_setting(GList *, WebSettings *);
@@ -270,7 +273,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_com_reload_scripts, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
-  { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
+  { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
   { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
 
   
@@ -454,6 +457,13 @@ dwb_update_status_text(GList *gl) {
 
 /* FUNCTIONS {{{*/
 
+/* dwb_open_si_channel() {{{*/
+void
+dwb_open_si_channel() {
+  dwb.misc.si_channel = g_io_channel_new_file(dwb.files.unifile, "r+", NULL);
+  g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
+}/*}}}*/
+
 /* dwb_js_get_host_blocked (gchar *) {{{*/
 GList *
 dwb_get_host_blocked(GList *fc, gchar *host) {
@@ -566,6 +576,20 @@ dwb_set_vars(GList *l, WebSettings *s) {
 void 
 dwb_set_cookies(GList *l, WebSettings *s) {
   dwb.state.cookies_allowed = s->arg.b;
+}
+
+void
+dwb_set_single_instance(GList *l, WebSettings *s) {
+  if (!s->arg.b) {
+    if (dwb.misc.si_channel) {
+      g_io_channel_shutdown(dwb.misc.si_channel, true, NULL);
+      g_io_channel_unref(dwb.misc.si_channel);
+      dwb.misc.si_channel = NULL;
+    }
+  }
+  else if (!dwb.misc.si_channel) {
+    dwb_open_si_channel();
+  }
 }
 
 /* dwb_set_proxy{{{*/
@@ -1425,14 +1449,67 @@ dwb_save_simple_file(GList *fc, const gchar *filename) {
   g_string_free(string, true);
 }/*}}}*/
 
+/* dwb_save_keys() {{{*/
+void
+dwb_save_keys() {
+  GKeyFile *keyfile = g_key_file_new();
+  GError *error = NULL;
+  gchar *content;
+  gsize size;
+
+  if (!g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error)) {
+    fprintf(stderr, "No keysfile found, creating a new file.\n");
+    error = NULL;
+  }
+  for (GList *l = dwb.keymap; l; l=l->next) {
+    KeyMap *map = l->data;
+    gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
+    g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
+
+    g_free(sc);
+  }
+  if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
+    g_file_set_contents(dwb.files.keys, content, size, &error);
+    g_free(content);
+  }
+  if (error) {
+    fprintf(stderr, "Couldn't save keyfile: %s", error->message);
+  }
+  g_key_file_free(keyfile);
+}/*}}}*/
+
+/* dwb_save_settings {{{*/
+void
+dwb_save_settings() {
+  GKeyFile *keyfile = g_key_file_new();
+  GError *error = NULL;
+  gchar *content;
+  gsize size;
+
+  if (!g_key_file_load_from_file(keyfile, dwb.files.settings, G_KEY_FILE_KEEP_COMMENTS, &error)) {
+    fprintf(stderr, "No settingsfile found, creating a new file.\n");
+    error = NULL;
+  }
+  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
+    WebSettings *s = l->data;
+    gchar *value = dwb_util_arg_to_char(&s->arg, s->type); 
+    g_key_file_set_value(keyfile, dwb.misc.profile, s->n.first, value ? value : "" );
+
+    g_free(value);
+  }
+  if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
+    g_file_set_contents(dwb.files.settings, content, size, &error);
+    g_free(content);
+  }
+  if (error) {
+    fprintf(stderr, "Couldn't save settingsfile: %s\n", error->message);
+  }
+  g_key_file_free(keyfile);
+}/*}}}*/
+
 /* dwb_save_files() {{{*/
 gboolean 
 dwb_save_files() {
-  gsize l;
-  GError *error = NULL;
-  gchar *content;
-  GKeyFile *keyfile;
-
   dwb_save_navigation_fc(dwb.fc.bookmarks, dwb.files.bookmarks, -1);
   dwb_save_navigation_fc(dwb.fc.history, dwb.files.history, dwb.misc.history_length);
   dwb_save_navigation_fc(dwb.fc.searchengines, dwb.files.searchengines, -1);
@@ -1454,52 +1531,15 @@ dwb_save_files() {
   dwb_save_simple_file(dwb.fc.content_block_allow, dwb.files.content_block_allow);
 
   // save keys
-  keyfile = g_key_file_new();
-  error = NULL;
-
-  if (!g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error)) {
-    fprintf(stderr, "No keysfile found, creating a new file.\n");
-    error = NULL;
-  }
-  for (GList *l = dwb.keymap; l; l=l->next) {
-    KeyMap *map = l->data;
-    gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
-    g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
-
-    g_free(sc);
-  }
-  if ( (content = g_key_file_to_data(keyfile, &l, &error)) ) {
-    g_file_set_contents(dwb.files.keys, content, l, &error);
-    g_free(content);
-  }
-  if (error) {
-    fprintf(stderr, "Couldn't save keyfile: %s", error->message);
-  }
-  g_key_file_free(keyfile);
+  dwb_save_keys();
 
   // save settings
-  error = NULL;
-  keyfile = g_key_file_new();
+  //error = NULL;
+  //keyfile = g_key_file_new();
+  dwb_save_settings();
 
-  if (!g_key_file_load_from_file(keyfile, dwb.files.settings, G_KEY_FILE_KEEP_COMMENTS, &error)) {
-    fprintf(stderr, "No settingsfile found, creating a new file.\n");
-    error = NULL;
-  }
-  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
-    WebSettings *s = l->data;
-    gchar *value = dwb_util_arg_to_char(&s->arg, s->type); 
-    g_key_file_set_value(keyfile, dwb.misc.profile, s->n.first, value ? value : "" );
-    g_free(value);
-  }
-  if ( (content = g_key_file_to_data(keyfile, &l, &error)) ) {
-    g_file_set_contents(dwb.files.settings, content, l, &error);
-    g_free(content);
-  }
-  if (error) {
-    fprintf(stderr, "Couldn't save settingsfile: %s\n", error->message);
-  }
-  g_key_file_free(keyfile);
 
+  // save session
   if (GET_BOOL("save-session") && dwb.state.mode != SaveSession) {
     dwb_session_save(NULL);
   }
@@ -1519,9 +1559,9 @@ dwb_end() {
   }
   return false;
 }/*}}}*/
+/* }}} */
 
 /* KEYS {{{*/
-
 
 /* dwb_strv_to_key(gchar **string, gsize length)      return: Key{{{*/
 Key 
@@ -2061,16 +2101,18 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 
 /* dwb_init_fifo{{{*/
 void 
-dwb_init_fifo(gint single) {
+dwb_init_fifo() {
   FILE *ff;
   gchar *path = dwb_util_build_path();
-  gchar *unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
+  dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
   g_free(path);
 
+  dwb.misc.si_channel = NULL;
+
   if (!g_file_test(dwb.misc.fifo, G_FILE_TEST_EXISTS)) {
-    mkfifo(unifile, 0666);
+    mkfifo(dwb.files.unifile, 0666);
   }
-  gint fd = open(unifile, O_WRONLY | O_NONBLOCK);
+  gint fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
   if ( (ff = fdopen(fd, "w")) ) {
     if (dwb.misc.argc) {
       for (int i=0; i<dwb.misc.argc; i++) {
@@ -2084,11 +2126,6 @@ dwb_init_fifo(gint single) {
     exit(EXIT_SUCCESS);
   }
   close(fd);
-  if (single) {
-    GIOChannel *channel = g_io_channel_new_file(unifile, "r+", NULL);
-    g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
-  }
-  g_free(unifile);
 }/*}}}*/
 /*}}}*/
 
@@ -2103,7 +2140,6 @@ int main(gint argc, gchar *argv[]) {
 
   dwb_init_files();
   dwb_init_settings();
-  gint single = GET_BOOL("single-instance");
   if (GET_BOOL("save-session") && argc == 1) {
     restore = "default";
   }
@@ -2119,9 +2155,6 @@ int main(gint argc, gchar *argv[]) {
         }
         else if (argv[i][1] == 'p' && argv[i++]) {
           dwb.misc.profile = argv[i];
-        }
-        else if (argv[i][1] == 'u') {
-          single = 1;
         }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
@@ -2142,7 +2175,7 @@ int main(gint argc, gchar *argv[]) {
     dwb.misc.argv = &argv[last];
     dwb.misc.argc = g_strv_length(dwb.misc.argv);
   }
-  dwb_init_fifo(single);
+  dwb_init_fifo();
   dwb_init_signals();
   dwb_init();
   gtk_main();
