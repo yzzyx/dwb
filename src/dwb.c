@@ -2126,6 +2126,9 @@ dwb_init_fifo() {
     exit(EXIT_SUCCESS);
   }
   close(fd);
+  if (GET_BOOL("single-instance")) {
+    dwb_open_si_channel();
+  }
 }/*}}}*/
 /*}}}*/
 
