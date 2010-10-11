@@ -63,7 +63,7 @@ dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings) {
 
   for (GList *l = gl; l; l=l->next) {
     n = l->data;
-    if (func(n->first, input)) {
+    if (func(n->first, input) || (!word_beginnings && n->second && func(n->second, input))) {
       Completion *c = dwb_comp_get_completion_item(n, NULL, NULL);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       store = g_list_append(store, c);
