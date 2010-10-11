@@ -388,7 +388,6 @@ dwb_com_scroll(Arg *arg) {
     ret = false;
   else {
     gtk_adjustment_set_value(a, scroll);
-    dwb_update_status_text(gl);
   }
   return ret;
 }/*}}}*/

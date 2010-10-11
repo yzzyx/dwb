@@ -176,6 +176,11 @@ dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
   dwb_com_scroll(&a);
   return  false;
 }
+static gboolean
+dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {
+  dwb_update_status_text(gl);
+  return false;
+}
 
 /* dwb_web_view_title_cb {{{*/
 static void 
@@ -388,6 +393,7 @@ dwb_view_set_normal_style(GList *gl) {
 static void
 dwb_web_view_init_signals(GList *gl) {
   View *v = gl->data;
+  GtkAdjustment *a = gtk_scrolled_window_get_vadjustment(v->scroll);
   g_signal_connect(v->web, "button-press-event",                    G_CALLBACK(dwb_web_view_button_press_cb), gl);
   g_signal_connect(v->web, "close-web-view",                        G_CALLBACK(dwb_web_view_close_web_view_cb), gl);
   g_signal_connect(v->web, "console-message",                       G_CALLBACK(dwb_web_view_console_message_cb), gl);
@@ -405,6 +411,7 @@ dwb_web_view_init_signals(GList *gl) {
   g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   g_signal_connect(v->web, "focus",                                 G_CALLBACK(dwb_web_view_focus_cb), gl);
   g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
+  g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
 
   g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
   g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(dwb_view_entry_keyrelease_cb), NULL);
