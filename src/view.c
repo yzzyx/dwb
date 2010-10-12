@@ -393,7 +393,7 @@ dwb_view_set_normal_style(GList *gl) {
 static void
 dwb_web_view_init_signals(GList *gl) {
   View *v = gl->data;
-  GtkAdjustment *a = gtk_scrolled_window_get_vadjustment(v->scroll);
+  GtkAdjustment *a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
   g_signal_connect(v->web, "button-press-event",                    G_CALLBACK(dwb_web_view_button_press_cb), gl);
   g_signal_connect(v->web, "close-web-view",                        G_CALLBACK(dwb_web_view_close_web_view_cb), gl);
   g_signal_connect(v->web, "console-message",                       G_CALLBACK(dwb_web_view_console_message_cb), gl);

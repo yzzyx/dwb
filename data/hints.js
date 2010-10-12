@@ -9,6 +9,7 @@ var lastinput;
 var styles;
 var form_hints = "//form";
 var hints = "//a | //area | //textarea | //select | //link | //input | //button | //frame | //iframe | //*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href]";
+var styles = null;
 
 function DwbHint(element, id) {
   this.element = element;
@@ -133,10 +134,12 @@ function dwb_click_element(e) {
   dwb_clear();
 }
 function dwb_create_stylesheet() {
-  var styles = document.createElement("style");
+  if (styles)
+    return;
+  styles = document.createElement("style");
   styles.type = "text/css";
   document.getElementsByTagName('head')[0].appendChild(styles);
-  
+
   var style = document.styleSheets[document.styleSheets.length - 1];
   style.insertRule('a[dwb_highlight=hint_normal] { background: ' + hint_normal_color + ' } ', 0);
   style.insertRule('a[dwb_highlight=hint_normal] { outline: 1px solid ' + hint_normal_color + ' } ', 0);
@@ -253,9 +256,6 @@ function dwb_clear() {
     for (var i=0; i<elements.length; i++) {
       elements[i].element.removeAttribute('dwb_highlight');
     }
-  }
-  if (styles) {
-    document.getElementsByTagName('head')[0].removeChild(styles);
   }
   var hints = document.getElementById("dwb_hints");
   hints.parentNode.removeChild(hints);
