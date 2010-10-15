@@ -183,13 +183,15 @@ function dwb_show_hints(w) {
 
   dwb_create_stylesheet();
 
+  var letter = hint_style.toLowerCase() == "letter";
+
   for (var i=0; i<res.length; i++) {
     if (dwb_get_visibility(res[i])) {
-      var e = hint_style.toLowerCase() == "letter" ? new DwbLetterHint(res[i], i) : new DwbNumberHint(res[i], i);
+      var e = letter ? new DwbLetterHint(res[i], i) : new DwbNumberHint(res[i], i);
       elements.push(e);
     }
   };
-  elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
+  //elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
   for (var i=0; i<elements.length; i++) {
     if (res[i] == elements[i]) {
       continue;

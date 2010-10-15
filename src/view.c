@@ -145,7 +145,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 /* dwb_web_view_new_window_policy_cb {{{*/
 static gboolean 
 dwb_web_view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy, GList *gl) {
-  // TODO implement
   return false;
 }/*}}}*/
 
