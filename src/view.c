@@ -20,8 +20,6 @@ static void dwb_apply_settings(WebSettings *);
 /* dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
 static gboolean
 dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
-  Arg arg = { .p = gl };
-
   WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
   WebKitHitTestResultContext context;
   g_object_get(result, "context", &context, NULL);
@@ -38,13 +36,8 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       dwb_load_uri(&a);
     }
   }
-  else if (e->button == 1) {
-    if (e->type == GDK_BUTTON_PRESS) {
-      dwb_focus(gl);
-    }
-    if (e->type == GDK_2BUTTON_PRESS) {
-      dwb_com_push_master(&arg);
-    }
+  else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
+    dwb_focus(gl);
   }
   return false;
 }/*}}}*/
