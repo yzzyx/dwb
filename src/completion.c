@@ -213,7 +213,7 @@ dwb_comp_get_settings_completion() {
     WebSettings *s = l->data;
     if (dwb.state.setting_apply == Global || !s->global) {
       Navigation n = s->n;
-      if (g_str_has_prefix(n.first, input)) {
+      if (g_strrstr(n.first, input)) {
         gchar *value = dwb_util_arg_to_char(&s->arg, s->type);
         Completion *c = dwb_comp_get_completion_item(&n, s, value);
         gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);

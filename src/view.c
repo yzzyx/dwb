@@ -59,6 +59,9 @@ dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, g
   else if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
+  else if (!(strcmp(sourceid, "_dwb_input_"))) {
+    dwb_insert_mode(NULL);
+  }
   return true;
 }/*}}}*/
 
