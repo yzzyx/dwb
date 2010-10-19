@@ -68,6 +68,7 @@ dwb_com_toggle_custom_encoding(Arg *arg) {
 
   const gchar *encoding= webkit_web_view_get_custom_encoding(web);
   const gchar *custom_encoding = GET_CHAR("custom-encoding");
+  puts(webkit_web_view_get_encoding(web));
 
   if (encoding && !strcmp(custom_encoding, encoding) ) {
     webkit_web_view_set_custom_encoding(web, NULL);
@@ -89,11 +90,15 @@ dwb_com_toggle_custom_encoding(Arg *arg) {
 gboolean
 dwb_com_focus_input(Arg *a) {
   gchar *value;
+  gboolean ret = true;
+
   value = dwb_execute_script("dwb_focus_input()");
-  if (!strcmp(value, "_dwb_no_input_")) {
-    return false;
+  if (value && !strcmp(value, "_dwb_no_input_")) {
+    ret = false;
   }
-  return true;
+  g_free(value);
+  
+  return ret;
 }/*}}}*/
 
 /* dwb_com_add_search_field(Arg *) {{{*/
