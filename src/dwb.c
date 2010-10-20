@@ -178,6 +178,7 @@ static FunctionMap FMAP [] = {
   { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   (Func)dwb_com_toggle_property,     NULL,              PostSM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    }, 1, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
   { { "toggle_block_content",   "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_block_content, NULL,                  PostSM,    { 0 } }, 
+  { { "allow_content",         "Allow scripts for current domain in the current session" },  1, (Func) dwb_com_allow_content, NULL,              PostSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -513,7 +514,9 @@ dwb_got_headers_cb(SoupMessage *msg, GList *gl) {
     if (!v->status->current_host) {
       SoupURI *uri = soup_message_get_uri(msg);
       v->status->current_host = g_strdup(uri->host);
-      v->status->block_current = dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) ? false : true;
+      v->status->block_current = 
+        !dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) && !dwb_get_host_blocked(dwb.fc.content_allow, v->status->current_host) 
+        ? true : false;
     }
     if (v->status->block && v->status->block_current && g_regex_match_simple(dwb.misc.content_block_regex, content_type, 0, 0)) {
       soup_message_set_flags(msg, SOUP_MESSAGE_NO_REDIRECT);

@@ -44,6 +44,7 @@ dwb_com_simple_command(KeyMap *km) {
 
 /* COMMANDS {{{*/
 
+
 /* dwb_com_set_setting {{{*/
 gboolean 
 dwb_com_set_setting(Arg *arg) {
@@ -869,6 +870,7 @@ dwb_com_bookmarks(Arg *arg) {
   return true;
 }/*}}}*/
 
+/* dwb_com_toggle_ugly {{{*/
 void
 dwb_com_toggle_ugly(GList **fc, const gchar *desc) {
   WebKitWebView *web = CURRENT_WEBVIEW();
@@ -889,15 +891,25 @@ dwb_com_toggle_ugly(GList **fc, const gchar *desc) {
     g_free(message);
     dwb_com_reload(NULL);
   }
-}
+}/*}}}*/
 
+/* dwb_com_toggle_block_content{{{*/
 gboolean
 dwb_com_toggle_block_content(Arg *arg) {
   dwb_com_toggle_ugly(&dwb.fc.content_block_allow, "Content");
   return true;
-}
+}/*}}}*/
+
+/* dwb_com_allow_content (){{{*/
+gboolean 
+dwb_com_allow_content(Arg *arg) {
+  dwb_com_toggle_ugly(&dwb.fc.content_allow, "Content");
+  return true;
+}/*}}}*/
+
+/* dwb_com_new_window_or_view{{{*/
 gboolean 
 dwb_com_new_window_or_view(Arg *arg) {
   dwb.state.nv = arg->n;
   return true;
-}
+}/*}}}*/

@@ -400,6 +400,7 @@ struct _FileContent {
   GList *commands;
   GList *mimetypes;
   GList *content_block_allow;
+  GList *content_allow;
 };
 
 struct _Dwb {

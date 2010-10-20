@@ -85,6 +85,7 @@ static KeyValue KEYS[] = {
   { "save_session",             {   "ZZ",           0 }, }, 
   { "save_named_session",       {   "gZZ",           0 }, }, 
   { "toggle_block_content",     {   "ts",           0 }, }, 
+  { "allow_content",            {   "as",           0 }, }, 
   { "new_view",                 {   "V",            0 }, }, 
   { "new_window",               {   "W",            0 }, }, 
 };
