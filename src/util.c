@@ -118,10 +118,17 @@ dwb_util_char_to_arg(gchar *value, DwbType type) {
     Arg a =  { .b = false };
     ret = &a;
   }
-  else if (value) {
-    g_strstrip(value);
-    if (strlen(value) == 0) {
-      return NULL;
+  else if (value || type == Char) {
+    if (value) {
+      g_strstrip(value);
+      if (strlen(value) == 0) {
+        if (type == Char) {
+          Arg a = { .p = NULL };
+          ret = &a;
+          return ret;
+        }
+        return NULL;
+      }
     }
     if (type == Boolean) {
       if(!g_ascii_strcasecmp(value, "false") || !strcmp(value, "0")) {
@@ -148,7 +155,7 @@ dwb_util_char_to_arg(gchar *value, DwbType type) {
       }
     }
     else if (type == Char) {
-      Arg a = { .p = g_strdup(value) };
+      Arg a = { .p = !value || (value && !strcmp(value, "null")) ? NULL : g_strdup(value) };
       ret = &a;
     }
     else if (type == ColorChar) {

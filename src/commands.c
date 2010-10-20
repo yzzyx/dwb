@@ -64,24 +64,27 @@ dwb_com_set_key(Arg *arg) {
 /* dwb_com_toggle_custom_encoding {{{*/
 gboolean 
 dwb_com_toggle_custom_encoding(Arg *arg) {
+  View *v = CURRENT_VIEW();
   WebKitWebView *web = CURRENT_WEBVIEW();
+  gchar *ce = GET_CHAR("custom-encoding");
+  gchar *message;
 
-  const gchar *encoding= webkit_web_view_get_custom_encoding(web);
-  const gchar *custom_encoding = GET_CHAR("custom-encoding");
+  if (!ce) 
+    return false;
 
-  if (encoding && !strcmp(custom_encoding, encoding) ) {
-    webkit_web_view_set_custom_encoding(web, NULL);
-    const gchar *default_encoding = webkit_web_view_get_encoding(web);
-    gchar *message = g_strdup_printf("Using default encoding: %s", default_encoding);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
+  v->status->custom_encoding = !v->status->custom_encoding;
+
+  if (v->status->custom_encoding) {
+    webkit_web_view_set_custom_encoding(web, ce);
+    message = g_strdup_printf("Using encoding: %s", ce);
   }
   else {
-    webkit_web_view_set_custom_encoding(web, custom_encoding);
-    gchar *message = g_strdup_printf("Using encoding: %s", custom_encoding);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
+    webkit_web_view_set_custom_encoding(web, NULL);
+    ce = (char*)webkit_web_view_get_encoding(web);
+    message = g_strdup_printf("Using default encoding: %s", ce);
   }
+  dwb_set_normal_message(dwb.state.fview, message, true);
+  g_free(message);
   return true;
 }/*}}}*/
 

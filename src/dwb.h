@@ -280,6 +280,7 @@ struct _ViewStatus {
   gint items_blocked;
   gboolean block;
   gboolean block_current;
+  gboolean custom_encoding;
 };
 
 struct _View {

@@ -435,6 +435,7 @@ dwb_view_create_web_view(GList *gl) {
   status->search_string = NULL;
   status->downloads = NULL;
   status->current_host = NULL;
+  status->custom_encoding = false;
   v->status = status;
 
 
@@ -565,7 +566,7 @@ dwb_parse_setting(const gchar *text) {
   GHashTable *t = dwb.state.setting_apply == Global ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
   if (token[0]) {
     if  ( (s = g_hash_table_lookup(t, token[0])) ) {
-      if ( (a = dwb_util_char_to_arg(token[1], s->type)) ) {
+      if ( (a = dwb_util_char_to_arg(token[1], s->type)) || (s->type == Char && a->p == NULL)) {
         s->arg = *a;
         dwb_apply_settings(s);
         gchar *message = g_strdup_printf("Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
