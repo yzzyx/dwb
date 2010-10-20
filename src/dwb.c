@@ -2067,6 +2067,7 @@ dwb_parse_command_line(const gchar *line) {
     if (!strcmp(m->map->n.first, token[0])) {
       Arg a = m->map->arg;
       if (token[1]) {
+        g_strstrip(token[1]);
         m->map->arg.p = token[1];
       }
       if (gtk_widget_has_focus(dwb.gui.entry) && m->map->entry) {
