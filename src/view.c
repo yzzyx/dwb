@@ -24,17 +24,8 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   WebKitHitTestResultContext context;
   g_object_get(result, "context", &context, NULL);
 
-  View *v = gl->data;
-
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
     dwb_insert_mode(NULL);
-  }
-  else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
-    if (v->status->hover_uri && e->button == 2) {
-      Arg a = { .p = v->status->hover_uri };
-      dwb.state.nv = OpenNewView;
-      dwb_load_uri(&a);
-    }
   }
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     dwb_focus(gl);
@@ -82,9 +73,9 @@ dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download,
 /* dwb_web_view_hovering_over_link_cb(WebKitWebView *, gchar *title, gchar *uri, GList *) {{{*/
 static void 
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri, GList *gl) {
-  VIEW(gl)->status->hover_uri = uri;
+  View *v = VIEW(gl);
   if (uri) {
-    dwb_set_status_bar_text(VIEW(gl)->rstatus, uri, NULL, NULL);
+    dwb_set_status_bar_text(v->rstatus, uri, NULL, NULL);
   }
   else {
     dwb_update_status_text(gl);
@@ -106,6 +97,17 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
 static gboolean 
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
+
+  gint button = webkit_web_navigation_action_get_button(action);
+  Arg a = { .p = (char*)webkit_network_request_get_uri(request) };
+  if (button != -1) {
+    if (button == 2) {
+        dwb_add_view(&a);
+        webkit_web_policy_decision_ignore(policy);
+        return true;
+    }
+  }
+
   if (dwb.state.nv == OpenNewView || dwb.state.nv == OpenNewWindow) {
     gchar *uri = (gchar *)webkit_network_request_get_uri(request);
     Arg a = { .p = uri };
