@@ -234,7 +234,7 @@ dwb_comp_get_key_completion(gboolean entry) {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
-    if (!entry && m->map->entry) {
+    if ((!entry && m->map->entry) || (!m->map->command_line)) {
       continue;
     }
     Navigation n = m->map->n;

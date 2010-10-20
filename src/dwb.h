@@ -198,6 +198,7 @@ struct _KeyValue {
 };
 struct _FunctionMap {
   Navigation n;
+  gint command_line; // command line function ? 
   Func func;
   const gchar *error; 
   ShowMessage hide;
