@@ -272,7 +272,6 @@ struct _WebSettings {
 };
 struct _ViewStatus {
   guint message_id;
-  //gchar *hover_uri;
   gboolean add_history;
   gchar *search_string;
   GList *downloads;

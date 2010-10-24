@@ -103,13 +103,17 @@ dwb_session_restore(const gchar *name) {
         g_free(uri);
       uri = g_strdup(line[1]);
     }
-    if (i == length)
+    if (i == length && lastweb)
       dwb_session_load_webview(lastweb, uri, last);
     g_strfreev(line);
   }
   g_strfreev(lines);
   gtk_widget_show_all(dwb.gui.window);
-  if (dwb.state.layout & Maximized) {
+
+  if (!dwb.state.views) 
+    dwb_add_view(NULL);
+
+  if (dwb.state.layout & Maximized && dwb.state.views) {
     gtk_widget_hide(dwb.gui.right);
     for (GList *l = dwb.state.views->next; l; l=l->next) {
       gtk_widget_hide(((View*)l->data)->vbox);

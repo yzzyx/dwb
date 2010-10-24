@@ -503,6 +503,8 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
 }/*}}}*/
 
 /* dwb_got_headers_cb {{{*/
+// TODO remove this stuff, use resource-request-started signal instead
+#ifdef GOT_HEADERS
 void 
 dwb_got_headers_cb(SoupMessage *msg, GList *gl) {
   SoupContentSniffer *sniffer = soup_content_sniffer_new();
@@ -531,6 +533,7 @@ static void
 dwb_soup_request_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
   g_signal_connect(msg, "got-headers", G_CALLBACK(dwb_got_headers_cb), dwb.state.fview);
 }/*}}}*/
+#endif
 
 /* dwb_set_content_block_regex{{{*/
 static void
@@ -2035,7 +2038,10 @@ void dwb_init() {
   dwb_init_gui();
 
   dwb.misc.soupsession = webkit_get_default_session();
+  // TODO fix got_headers_cb
+#ifdef GOT_HEADERS
   g_signal_connect(dwb.misc.soupsession, "request-started", G_CALLBACK(dwb_soup_request_cb), NULL);
+#endif
   dwb_init_proxy();
   dwb_init_cookies();
   dwb_init_vars();
