@@ -619,14 +619,12 @@ dwb_parse_setting(const gchar *text) {
 void
 dwb_parse_key_setting(const gchar *text) {
   KeyValue value;
-  gchar **keys = NULL;
   gchar **token = g_strsplit(text, " ", 2);
 
   value.id = g_strdup(token[0]);
 
   if (token[1]) {
-    keys = g_strsplit(token[1], " ", -1);
-    value.key = dwb_strv_to_key(keys, g_strv_length(keys));
+    value.key = dwb_str_to_key(token[1]); 
   }
   else {
     Key key = { NULL, 0 };
@@ -641,8 +639,6 @@ dwb_parse_key_setting(const gchar *text) {
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
 
   g_strfreev(token);
-  if (keys) 
-    g_strfreev(keys);
   dwb_normal_mode(false);
 }/*}}}*/
 

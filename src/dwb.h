@@ -381,6 +381,7 @@ struct _Files {
   const gchar *stylesheet;
   const gchar *keys;
   const gchar *scriptdir;
+  const gchar *userscripts;
   const gchar *settings;
   const gchar *cookies;
   const gchar *cookies_allow;
@@ -467,7 +468,7 @@ gchar * dwb_get_host(const gchar *uri);
 GList * dwb_get_host_blocked(GList *, gchar *host);
 
 gboolean dwb_end(void);
-Key dwb_strv_to_key(gchar **, gsize );
+Key dwb_str_to_key(gchar *);
 
 GList * dwb_keymap_delete(GList *, KeyValue );
 GList * dwb_keymap_add(GList *, KeyValue );

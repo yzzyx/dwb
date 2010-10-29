@@ -1468,10 +1468,11 @@ dwb_save_keys() {
   }
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *map = l->data;
-    gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
-    g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
-
-    g_free(sc);
+    if (g_key_file_has_key(keyfile, dwb.misc.profile, map->map->n.first, NULL) ) {
+      gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
+      g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
+      g_free(sc);
+    }
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
     g_file_set_contents(dwb.files.keys, content, size, &error);
@@ -1568,13 +1569,15 @@ dwb_end() {
 
 /* KEYS {{{*/
 
-/* dwb_strv_to_key(gchar **string, gsize length)      return: Key{{{*/
+/* dwb_str_to_key(gchar *str)      return: Key{{{*/
 Key 
-dwb_strv_to_key(gchar **string, gsize length) {
+dwb_str_to_key(gchar *str) {
   Key key = { .mod = 0, .str = NULL };
   GString *buffer = g_string_new(NULL);
 
-  for (int i=0; i<length; i++)  {
+  gchar **string = g_strsplit(str, " ", -1);
+
+  for (int i=0; i<g_strv_length(string); i++)  {
     if (!g_ascii_strcasecmp(string[i], "Control")) {
       key.mod |= GDK_CONTROL_MASK;
     }
@@ -1589,7 +1592,10 @@ dwb_strv_to_key(gchar **string, gsize length) {
     }
   }
   key.str = g_strdup(buffer->str);
+
+  g_strfreev(string);
   g_string_free(buffer, true);
+
   return key;
 }/*}}}*/
 
@@ -1629,6 +1635,57 @@ dwb_keymap_delete(GList *gl, KeyValue key) {
     }
   }
   gl = g_list_sort(gl, (GCompareFunc)dwb_util_keymap_sort_second);
+  return gl;
+}/*}}}*/
+
+void
+dwb_execute_user_script(Arg *a) {
+  GError *e = NULL;
+  gchar *argv[3] = { a->p, (gchar*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
+  if (!g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &e )) {
+    fprintf(stderr, "Couldn't execute %s: %s\n", (gchar*)a->p, e->message);
+  }
+}
+
+/* dwb_get_scripts() {{{*/
+GList * 
+dwb_get_scripts() {
+  GDir *dir;
+  gchar *filename;
+  gchar *content;
+  GList *gl = NULL;
+
+  if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
+    while ( (filename = (char*)g_dir_read_name(dir)) ) {
+      puts(filename);
+      gchar *path = g_build_filename(dwb.files.userscripts, filename, NULL);
+
+      g_file_get_contents(path, &content, NULL, NULL);
+      gchar **lines = g_strsplit(content, "\n", -1);
+      gint i=0;
+      while (lines[i]) {
+        if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
+          gchar **line = g_strsplit(lines[i], "dwb:", 2);
+          if (line[1]) {
+            KeyMap *map = malloc(sizeof(KeyMap));
+            Key key = dwb_str_to_key(line[1]);
+            FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, AlwaysSM, { .p = path } };
+            FunctionMap *fmap = malloc(sizeof(FunctionMap));
+            *fmap = fm;
+            map->map = fmap;
+            map->key = key.str;
+            map->mod = key.mod;
+            gl = g_list_prepend(gl, map);
+          }
+          g_strfreev(line);
+          break;
+        }
+        i++;
+      }
+      g_free(content);
+
+    }
+  }
   return gl;
 }/*}}}*/
 
@@ -1692,9 +1749,7 @@ dwb_init_key_map() {
     KeyValue kv;
     gchar *string = g_key_file_get_value(keyfile, dwb.misc.profile, KEYS[i].id, NULL);
     if (string) {
-      gchar **stringlist = g_strsplit(string, " ", -1);
-      kv.key = dwb_strv_to_key(stringlist, g_strv_length(stringlist));
-      g_strfreev(stringlist);
+      kv.key = dwb_str_to_key(string);
     }
     else if (KEYS[i].key.str) {
       kv.key = KEYS[i].key;
@@ -1702,6 +1757,7 @@ dwb_init_key_map() {
     kv.id = KEYS[i].id;
     dwb.keymap = dwb_keymap_add(dwb.keymap, kv);
   }
+  dwb.keymap = g_list_concat(dwb.keymap, dwb_get_scripts());
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
 }/*}}}*/
 
@@ -1944,11 +2000,19 @@ dwb_init_files() {
   dwb.files.searchengines = g_build_filename(path, "searchengines", NULL);
   dwb.files.keys          = g_build_filename(path, "keys",          NULL);
   dwb.files.scriptdir     = g_build_filename(path, "scripts",      NULL);
+  dwb.files.userscripts   = g_build_filename(path, "userscripts",   NULL);
   dwb.files.settings      = g_build_filename(path, "settings",      NULL);
   dwb.files.mimetypes     = g_build_filename(path, "mimetypes",      NULL);
   dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
   dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
   dwb.files.content_block_allow      = g_build_filename(profile_path, "scripts.allow",      NULL);
+
+  if (!g_file_test(dwb.files.scriptdir, G_FILE_TEST_IS_DIR)) {
+    g_mkdir_with_parents(dwb.files.scriptdir, 0755);
+  }
+  if (!g_file_test(dwb.files.userscripts, G_FILE_TEST_IS_DIR)) {
+    g_mkdir_with_parents(dwb.files.userscripts, 0755);
+  }
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
