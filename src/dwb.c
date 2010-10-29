@@ -1657,7 +1657,6 @@ dwb_get_scripts() {
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
-      puts(filename);
       gchar *path = g_build_filename(dwb.files.userscripts, filename, NULL);
 
       g_file_get_contents(path, &content, NULL, NULL);
