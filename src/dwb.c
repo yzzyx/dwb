@@ -2172,7 +2172,7 @@ dwb_init_fifo() {
 
   dwb.misc.si_channel = NULL;
 
-  if (!g_file_test(dwb.misc.fifo, G_FILE_TEST_EXISTS)) {
+  if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
     mkfifo(dwb.files.unifile, 0666);
   }
   gint fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);

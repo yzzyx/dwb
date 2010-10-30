@@ -130,6 +130,7 @@ enum _Open {
   OpenNewView,
   OpenNewWindow,
   OpenDownload,
+  ExecuteUserScript,
 };
 
 enum _Layout {
@@ -363,7 +364,6 @@ struct _Misc {
   gchar *settings_border;
   gint argc;
   gchar **argv;
-  gchar *fifo;
   gboolean single;
 
   gchar *startpage;
