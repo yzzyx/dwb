@@ -33,7 +33,6 @@ static void dwb_init_proxy(void);
 
 gboolean dwb_command_mode(Arg *arg);
 static void dwb_com_reload_scripts(GList *,  WebSettings *);
-static void dwb_com_reload_colors(GList *,  WebSettings *);
 static void dwb_com_reload_layout(GList *,  WebSettings *);
 static gboolean dwb_test_cookie_allowed(SoupCookie *);
 static void dwb_save_cookies(void);
@@ -244,18 +243,18 @@ static WebSettings DWB_SETTINGS[] = {
   { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_com_reload_layout, },
   { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_com_reload_layout, },
 
-  { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#53868b"         }, (S_Func) dwb_com_reload_colors, },
-  { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_com_reload_colors, },
-  { { "normal-completion-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_com_reload_colors, },
-  { { "normal-comp-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_com_reload_colors, },
+  { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#53868b"         }, (S_Func) dwb_init_style, },
+  { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
+  { { "normal-completion-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_init_style, },
+  { { "normal-comp-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
 
-  { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_com_reload_colors, },
-  { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#dddddd"         }, (S_Func) dwb_com_reload_colors, },
-  { { "error-color",                             "UI: Error color", },                                         false, true,  ColorChar, { .p = "#ff0000"         }, (S_Func) dwb_com_reload_colors, },
+  { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
+  { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#dddddd"         }, (S_Func) dwb_init_style, },
+  { { "error-color",                             "UI: Error color", },                                         false, true,  ColorChar, { .p = "#ff0000"         }, (S_Func) dwb_init_style, },
 
-  { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_com_reload_colors, },
-  { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_com_reload_colors, },
-  { { "settings-border",                         "UI: Settings view border", },                                false, true,  Char,      { .p = "1px dotted black"}, (S_Func) dwb_com_reload_colors, },
+  { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_init_style, },
+  { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
+  { { "settings-border",                         "UI: Settings view border", },                                false, true,  Char,      { .p = "1px dotted black"}, (S_Func) dwb_init_style, },
  
   { { "active-font-size",                        "UI: Active view fontsize", },                                false, true,  Integer, { .i = 12                },   (S_Func) dwb_com_reload_layout, },
   { { "normal-font-size",                        "UI: Inactive view fontsize", },                              false, true,  Integer, { .i = 10                },   (S_Func) dwb_com_reload_layout, },
@@ -686,18 +685,12 @@ dwb_clean_buffer(GList *gl) {
   CLEAR_COMMAND_TEXT(gl);
 }/*}}}*/
 
-/* dwb_com_reload_colors(GList *,  WebSettings  *s) {{{*/
+/* dwb_com_reload_scripts(GList *,  WebSettings  *s) {{{*/
 static void 
 dwb_com_reload_scripts(GList *gl, WebSettings *s) {
   g_free(dwb.misc.scripts);
   dwb_init_scripts();
   dwb_com_reload(NULL);
-}/*}}}*/
-
-/* dwb_com_reload_colors(GList *,  WebSettings  *s) {{{*/
-static void 
-dwb_com_reload_colors(GList *gl, WebSettings *s) {
-  dwb_init_style();
 }/*}}}*/
 
 /* dwb_com_reload_layout(GList *,  WebSettings  *s) {{{*/
