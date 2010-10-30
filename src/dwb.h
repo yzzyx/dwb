@@ -457,6 +457,7 @@ gint dwb_entry_position_word_forward(gint position);
 void dwb_entry_set_text(const gchar *text);
 
 void dwb_set_proxy(GList *, WebSettings *);
+
 void dwb_set_single_instance(GList *, WebSettings *);
 void dwb_new_window(Arg *arg);
 

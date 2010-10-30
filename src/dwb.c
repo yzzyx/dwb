@@ -29,9 +29,9 @@ static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_content_block(GList *, WebSettings *);
 void dwb_clean_buffer(GList *);
+static void dwb_init_proxy(void);
 
 gboolean dwb_command_mode(Arg *arg);
-static void dwb_set_vars(GList *,  WebSettings *);
 static void dwb_com_reload_scripts(GList *,  WebSettings *);
 static void dwb_com_reload_colors(GList *,  WebSettings *);
 static void dwb_com_reload_layout(GList *,  WebSettings *);
@@ -230,7 +230,8 @@ static WebSettings DWB_SETTINGS[] = {
   { { "editable",                                "Content editable", },                                        false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
   { { "full-content-zoom",                       "Full content zoom", },                                       false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
   { { "zoom-level",                              "Zoom level", },                                              false, false, Double,  { .d = 1.0               }, (S_Func) dwb_webview_property, },
-  { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = false              }, (S_Func) dwb_set_proxy, },
+  { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = false              },  (S_Func) dwb_set_proxy, },
+  { { "proxy-url",                               "HTTP-proxy url", },                                          false, true,  Char,    { .p = NULL              },   (S_Func) dwb_init_proxy, },
   { { "cookies",                                  "All Cookies allowed", },                                     false, true,  Boolean, { .b = false             }, (S_Func) dwb_set_cookies, },
 
   { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_com_reload_layout, },
@@ -273,7 +274,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_com_reload_scripts, },
   { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_com_reload_scripts, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
-  { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_set_vars, }, 
+  { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_init_vars, }, 
   { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
   { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
 
@@ -290,8 +291,8 @@ static WebSettings DWB_SETTINGS[] = {
     
   { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, (S_Func)dwb_set_dummy, },
   { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, (S_Func)dwb_set_dummy, },
-  { { "message-delay",                           "Message delay", },                                           false, true,  Integer, { .i = 2          }, (S_Func) dwb_set_vars, },
-  { { "history-length",                          "History length", },                                          false, true,  Integer, { .i = 500          }, (S_Func) dwb_set_vars, },
+  { { "message-delay",                           "Message delay", },                                           false, true,  Integer, { .i = 2          }, (S_Func) dwb_init_vars, },
+  { { "history-length",                          "History length", },                                          false, true,  Integer, { .i = 500          }, (S_Func) dwb_init_vars, },
   { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  Integer, { .i = 30          }, (S_Func)dwb_set_dummy, },
   { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
   { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  (S_Func)dwb_set_dummy, },
@@ -571,12 +572,6 @@ dwb_get_default_settings() {
     g_hash_table_insert(ret, value, new);
   }
   return ret;
-}/*}}}*/
-
-/*dwb_set_vars {{{*/
-static void 
-dwb_set_vars(GList *l, WebSettings *s) {
-  dwb_init_vars();
 }/*}}}*/
 
 void 
@@ -2061,11 +2056,14 @@ static void
 dwb_init_proxy() {
   const gchar *proxy;
   gchar *newproxy;
-  if ( (proxy =  g_getenv("http_proxy")) && dwb_util_test_connect(proxy) ) {
+  if ( !(proxy =  g_getenv("http_proxy")) && !(proxy =  GET_CHAR("proxy-url")) )
+    return;
+
+  if ( dwb_util_test_connect(proxy) ) {
     newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
     dwb.misc.proxyuri = soup_uri_new(newproxy);
-    WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
-    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", s->arg.b ? dwb.misc.proxyuri : NULL, NULL); 
+    //WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
+    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", GET_BOOL("proxy") ? dwb.misc.proxyuri : NULL, NULL); 
     g_free(newproxy);
   }
 }/*}}}*/
