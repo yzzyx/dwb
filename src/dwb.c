@@ -146,6 +146,7 @@ static FunctionMap FMAP [] = {
 
   { { "save_session",          "Save current session", },              1, (Func)dwb_com_save_session,        NULL,                              AlwaysSM,  { .n = NormalMode } },
   { { "save_named_session",    "Save current session with name", },    0, (Func)dwb_com_save_session,        NULL,                              PostSM,  { .n = SaveSession } },
+  { { "save",                  "Save all configuration files", },      1, (Func)dwb_com_save_files,        NULL,                              PostSM,  { .n = SaveSession } },
 
   //Entry editing
   { { "entry_delete_word",      "Delete word", },                      0,  (Func)dwb_com_entry_delete_word,            NULL,        AlwaysSM,  { 0 }, true, }, 
@@ -1418,13 +1419,14 @@ dwb_clean_up() {
 
 /* dwb_save_navigation_fc{{{*/
 void 
-dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length) {
+dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length, gboolean free) {
   GString *string = g_string_new(NULL);
   gint i=0;
   for (GList *l = fc; l && (length<0 || i<length) ; l=l->next, i++)  {
     Navigation *n = l->data;
     g_string_append_printf(string, "%s %s\n", n->first, n->second);
-    g_free(n);
+    if (free) 
+      g_free(n);
   }
   dwb_util_set_file_content(filename, string->str);
   g_string_free(string, true);
@@ -1432,11 +1434,13 @@ dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length) {
 
 /* dwb_save_simple_file(GList *, const gchar *){{{*/
 void
-dwb_save_simple_file(GList *fc, const gchar *filename) {
+dwb_save_simple_file(GList *fc, const gchar *filename, gboolean free) {
   GString *string = g_string_new(NULL);
   for (GList *l = fc; l; l=l->next)  {
     g_string_append_printf(string, "%s\n", (gchar*)l->data);
-    g_free(l->data);
+    if (free) {
+      g_free(l->data);
+    }
   }
   dwb_util_set_file_content(filename, string->str);
   g_string_free(string, true);
@@ -1503,38 +1507,37 @@ dwb_save_settings() {
 
 /* dwb_save_files() {{{*/
 gboolean 
-dwb_save_files() {
-  dwb_save_navigation_fc(dwb.fc.bookmarks, dwb.files.bookmarks, -1);
-  dwb_save_navigation_fc(dwb.fc.history, dwb.files.history, dwb.misc.history_length);
-  dwb_save_navigation_fc(dwb.fc.searchengines, dwb.files.searchengines, -1);
-  dwb_save_navigation_fc(dwb.fc.mimetypes, dwb.files.mimetypes, -1);
+dwb_save_files(gboolean end_session) {
+  dwb_save_navigation_fc(dwb.fc.bookmarks, dwb.files.bookmarks, -1, end_session);
+  dwb_save_navigation_fc(dwb.fc.history, dwb.files.history, dwb.misc.history_length, end_session);
+  dwb_save_navigation_fc(dwb.fc.searchengines, dwb.files.searchengines, -1, end_session);
+  dwb_save_navigation_fc(dwb.fc.mimetypes, dwb.files.mimetypes, -1, end_session);
 
   // quickmarks
   GString *quickmarks = g_string_new(NULL); 
   for (GList *l = dwb.fc.quickmarks; l; l=l->next)  {
     Quickmark *q = l->data;
-    Navigation *n = q->nav;
-    g_string_append_printf(quickmarks, "%s %s %s\n", q->key, n->first, n->second);
-    dwb_com_quickmark_free(q);
+    Navigation n = *(q->nav);
+    g_string_append_printf(quickmarks, "%s %s %s\n", q->key, n.first, n.second);
+    if (end_session)
+      dwb_com_quickmark_free(q);
   }
   dwb_util_set_file_content(dwb.files.quickmarks, quickmarks->str);
   g_string_free(quickmarks, true);
 
   // cookie allow
-  dwb_save_simple_file(dwb.fc.cookies_allow, dwb.files.cookies_allow);
-  dwb_save_simple_file(dwb.fc.content_block_allow, dwb.files.content_block_allow);
+  dwb_save_simple_file(dwb.fc.cookies_allow, dwb.files.cookies_allow, end_session);
+  dwb_save_simple_file(dwb.fc.content_block_allow, dwb.files.content_block_allow, end_session);
 
   // save keys
   dwb_save_keys();
 
   // save settings
-  //error = NULL;
-  //keyfile = g_key_file_new();
   dwb_save_settings();
 
 
   // save session
-  if (GET_BOOL("save-session") && dwb.state.mode != SaveSession) {
+  if (end_session && GET_BOOL("save-session") && dwb.state.mode != SaveSession) {
     dwb_session_save(NULL);
   }
 
@@ -1545,7 +1548,7 @@ dwb_save_files() {
 /* dwb_end() {{{*/
 gboolean
 dwb_end() {
-  if (dwb_save_files()) {
+  if (dwb_save_files(true)) {
     if (dwb_clean_up()) {
       gtk_main_quit();
       return true;

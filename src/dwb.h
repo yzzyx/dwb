@@ -476,6 +476,7 @@ GList * dwb_keymap_add(GList *, KeyValue );
 void dwb_got_headers_cb(SoupMessage *msg, GList *gl);
 
 void dwb_save_settings(void);
+gboolean dwb_save_files(gboolean);
 
 void dwb_append_navigation_with_argument(GList **, const gchar *, const gchar *);
 #endif

@@ -48,5 +48,5 @@ gboolean dwb_com_focus_nth_view(Arg *arg);
 gboolean dwb_com_toggle_block_content(Arg *a);
 gboolean dwb_com_allow_content(Arg *a);
 gboolean dwb_com_new_window_or_view(Arg *arg);
-//gboolean dwb_com_toggle_flash(Arg *arg);
+gboolean dwb_com_save_files(Arg *arg);
 #endif

@@ -913,3 +913,12 @@ dwb_com_new_window_or_view(Arg *arg) {
   dwb.state.nv = arg->n;
   return true;
 }/*}}}*/
+
+gboolean 
+dwb_com_save_files(Arg *arg) {
+  if (dwb_save_files(false)) {
+    dwb_set_normal_message(dwb.state.fview, "Configuration files saved", true);
+    return true;
+  }
+  return false;
+}
