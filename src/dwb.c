@@ -26,7 +26,6 @@
 /* DECLARATIONS {{{*/
 void dwb_set_cookies(GList *l, WebSettings *s);
 static void dwb_set_dummy(GList *, WebSettings *);
-static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_content_block(GList *, WebSettings *);
 void dwb_clean_buffer(GList *);
 static void dwb_init_proxy(void);
@@ -279,7 +278,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
 
   
-  { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_set_content_block_regex, }, 
+  { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_set_dummy, }, 
   { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_content_block, }, 
 
   // downloads
@@ -501,47 +500,6 @@ dwb_set_content_block(GList *gl, WebSettings *s) {
 static void
 dwb_set_dummy(GList *gl, WebSettings *s) {
   return;
-}/*}}}*/
-
-/* dwb_got_headers_cb {{{*/
-// TODO remove this stuff, use resource-request-started signal instead
-#ifdef GOT_HEADERS
-void 
-dwb_got_headers_cb(SoupMessage *msg, GList *gl) {
-  SoupContentSniffer *sniffer = soup_content_sniffer_new();
-  SoupBuffer buffer;
-  View *v = gl->data;
-
-  if (v && v->status) {
-    const gchar *content_type = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
-    if (!v->status->current_host) {
-      SoupURI *uri = soup_message_get_uri(msg);
-      v->status->current_host = g_strdup(uri->host);
-      v->status->block_current = 
-        !dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) && !dwb_get_host_blocked(dwb.fc.content_allow, v->status->current_host) 
-        ? true : false;
-    }
-    if (v->status->block && v->status->block_current && g_regex_match_simple(dwb.misc.content_block_regex, content_type, 0, 0)) {
-      soup_message_set_flags(msg, SOUP_MESSAGE_NO_REDIRECT);
-      soup_session_cancel_message(dwb.misc.soupsession, msg, SOUP_STATUS_CANCELLED);
-      v->status->items_blocked++;
-    }
-  }
-}/*}}}*/
-
-/* dwb_soup_request_cb {{{*/
-static void
-dwb_soup_request_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
-  g_signal_connect(msg, "got-headers", G_CALLBACK(dwb_got_headers_cb), dwb.state.fview);
-}/*}}}*/
-#endif
-
-/* dwb_set_content_block_regex{{{*/
-static void
-dwb_set_content_block_regex(GList *gl, WebSettings *s) {
-  if (s->arg.p) {
-    dwb.misc.content_block_regex = s->arg.p;
-  }
 }/*}}}*/
 
 /* dwb_com_focus(GList *gl) {{{*/
