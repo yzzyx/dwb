@@ -92,7 +92,7 @@ dwb_modmask_to_string(guint modmask) {
 /* dwb_util_keyval_to_char (guint keyval)      return: char * (alloc) {{{*/
 gchar *
 dwb_util_keyval_to_char(guint keyval) {
-  gchar *key = g_malloc(6);
+  gchar *key = dwb_malloc(6);
   guint32 unichar;
   gint length;
   if ( (unichar = gdk_keyval_to_unicode(keyval)) ) {
@@ -321,7 +321,7 @@ dwb_util_get_data_dir(const gchar *dir) {
 /* dwb_navigation_new(const gchar *uri, const gchar *title) {{{*/
 Navigation *
 dwb_navigation_new(const gchar *uri, const gchar *title) {
-  Navigation *nv = malloc(sizeof(Navigation)); 
+  Navigation *nv = dwb_malloc(sizeof(Navigation)); 
   nv->first = uri ? g_strdup(uri) : NULL;
   nv->second = title ? g_strdup(title) : NULL;
   return nv;
@@ -357,7 +357,7 @@ dwb_navigation_free(Navigation *n) {
 /* dwb_com_quickmark_new(const gchar *uri, const gchar *title,  const gchar *key)  {{{*/
 Quickmark *
 dwb_com_quickmark_new(const gchar *uri, const gchar *title, const gchar *key) {
-  Quickmark *q = malloc(sizeof(Quickmark));
+  Quickmark *q = dwb_malloc(sizeof(Quickmark));
   q->key = key ? g_strdup(key) : NULL;
   q->nav = dwb_navigation_new(uri, title);
   return q;
@@ -404,3 +404,14 @@ gchar *
 dwb_return(const gchar *ret) {
   return g_strdup(ret);
 }/*}}}*/
+
+void *
+dwb_malloc(size_t size) {
+  void *r;
+  if ( !(r = malloc(size)) ) {
+    fprintf(stderr, "Cannot malloc %d bytes of memory", (int)size);
+    dwb_end();
+    exit(EXIT_SUCCESS);
+  }
+  return r;
+}

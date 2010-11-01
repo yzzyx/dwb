@@ -566,7 +566,7 @@ dwb_get_default_settings() {
   GHashTable *ret = g_hash_table_new(g_str_hash, g_str_equal);
   for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
-    WebSettings *new = g_malloc(sizeof(WebSettings)); 
+    WebSettings *new = dwb_malloc(sizeof(WebSettings));
     *new = *s;
     gchar *value = g_strdup(s->n.first);
     g_hash_table_insert(ret, value, new);
@@ -1657,10 +1657,10 @@ dwb_get_scripts() {
         if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
           gchar **line = g_strsplit(lines[i], "dwb:", 2);
           if (line[1]) {
-            KeyMap *map = malloc(sizeof(KeyMap));
+            KeyMap *map = dwb_malloc(sizeof(KeyMap));
             Key key = dwb_str_to_key(line[1]);
             FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, AlwaysSM, { .p = path } };
-            FunctionMap *fmap = malloc(sizeof(FunctionMap));
+            FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
             *fmap = fm;
             map->map = fmap;
             map->key = key.str;
@@ -1685,7 +1685,7 @@ dwb_keymap_add(GList *gl, KeyValue key) {
   gl = dwb_keymap_delete(gl, key);
   for (int i=0; i<LENGTH(FMAP); i++) {
     if (!strcmp(FMAP[i].n.first, key.id)) {
-      KeyMap *keymap = malloc(sizeof(KeyMap));
+      KeyMap *keymap = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = &FMAP[i];
       keymap->key = key.key.str ? key.key.str : "";
       keymap->mod = key.key.mod;
@@ -1786,7 +1786,7 @@ dwb_read_settings() {
     for (int i=0; i<numkeys; i++) {
       gchar *value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
       if (!strcmp(keys[i], DWB_SETTINGS[j].n.first)) {
-        WebSettings *s = malloc(sizeof(WebSettings));
+        WebSettings *s = dwb_malloc(sizeof(WebSettings));
         *s = DWB_SETTINGS[j];
         if ( (arg = dwb_util_char_to_arg(value, s->type)) ) {
           s->arg = *arg;

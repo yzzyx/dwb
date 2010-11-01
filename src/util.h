@@ -46,4 +46,6 @@ gboolean dwb_true(void);
 gboolean dwb_false(void);
 gchar * dwb_return(const gchar *);
 
+void * dwb_malloc(size_t);
+
 #endif
