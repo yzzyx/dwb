@@ -93,6 +93,13 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
   return  false;
 }/*}}}*/
 
+/* dwb_web_view_motion_notify_cb(GtkWidget *, GdkEventMotion *, GList *){{{*/
+static gboolean 
+dwb_web_view_motion_notify_cb(GtkWidget *web, GdkEventMotion *e, GList *gl) {
+  dwb_focus(gl);
+  return false;
+}/*}}}*/
+
 /* dwb_web_view_navigation_policy_cb {{{*/
 static gboolean 
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
@@ -190,28 +197,25 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
   dwb_execute_script(NULL);
 }/*}}}*/
 
+/* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
 static gboolean
 dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
   Arg a = { .n = e->direction, .p = gl };
   dwb_com_scroll(&a);
   return  false;
-}
+}/*}}}*/
+
+/* dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {{{ */
 static gboolean
 dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {
   dwb_update_status_text(gl);
   return false;
-}
+}/* }}} */
 
 /* dwb_web_view_title_cb {{{*/
 static void 
 dwb_web_view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
-}/*}}}*/
-
-/* dwb_web_view_focus_cb {{{*/
-static gboolean 
-dwb_web_view_focus_cb(WebKitWebView *web, GtkDirectionType *direction, GList *gl) {
-  return false;
 }/*}}}*/
 
 /* dwb_web_view_load_status_cb {{{*/
@@ -358,6 +362,18 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
 }/*}}}*/
 /*}}}*/
 
+/* dwb_view_tab_button_press_cb(GtkWidget, GdkEventButton* , GList * ){{{*/
+gboolean
+dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
+  if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
+    Arg a = { .p = gl };
+    dwb_focus(gl);
+    dwb_com_push_master(&a);
+    return true;
+  }
+  return false;
+}/*}}}*/
+
 /* DWB_WEB_VIEW {{{*/
 
 /* dwb_web_view_add_history_item(GList *gl) {{{*/
@@ -429,7 +445,7 @@ dwb_web_view_init_signals(GList *gl) {
 
   g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
   g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
-  g_signal_connect(v->web, "focus",                                 G_CALLBACK(dwb_web_view_focus_cb), gl);
+  g_signal_connect(v->web, "motion-notify-event",                   G_CALLBACK(dwb_web_view_motion_notify_cb), gl);
   g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
   g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
 
@@ -437,6 +453,7 @@ dwb_web_view_init_signals(GList *gl) {
   g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(dwb_view_entry_keyrelease_cb), NULL);
   g_signal_connect(v->entry, "activate",                            G_CALLBACK(dwb_view_entry_activate_cb), NULL);
 
+  g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(dwb_view_tab_button_press_cb), gl);
 } /*}}}*/
 
 /* dwb_view_clean_vars(GList *){{{*/
