@@ -23,14 +23,30 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
   WebKitHitTestResultContext context;
   g_object_get(result, "context", &context, NULL);
+  gboolean ret = false;
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
     dwb_insert_mode(NULL);
   }
+  else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
+    gchar *clipboard = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+    g_strstrip(clipboard);
+    Arg a = { .p = clipboard };
+    if (e->button == 3) {
+      dwb_load_uri(&a);
+      ret = true;
+    }
+    else if (e->button == 2) {
+      dwb_add_view(&a);
+      ret = true;
+    }
+    if (clipboard) 
+      g_free(clipboard);
+  }
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     dwb_focus(gl);
   }
-  return false;
+  return ret;
 }/*}}}*/
 
 /* dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/

@@ -415,3 +415,11 @@ dwb_malloc(size_t size) {
   }
   return r;
 }
+
+gchar * 
+dwb_util_str_strip(gchar *string) {
+  printf(":%s:\n", string);
+  gchar *ret = g_strchomp(string);
+  printf(":%s:%s:\n", string, ret);
+  return ret;
+}

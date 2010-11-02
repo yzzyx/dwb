@@ -48,4 +48,5 @@ gchar * dwb_return(const gchar *);
 
 void * dwb_malloc(size_t);
 
+gchar * dwb_util_str_strip(gchar *);
 #endif
