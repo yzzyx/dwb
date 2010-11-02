@@ -119,6 +119,7 @@ dwb_session_restore(const gchar *name) {
       gtk_widget_hide(((View*)l->data)->vbox);
     }
   }
+  dwb_update_layout();
   return true;
 }/*}}}*/
 

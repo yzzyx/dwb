@@ -448,10 +448,10 @@ dwb_update_status_text(GList *gl) {
     value == upper ? g_strdup(" [bot]") : 
     g_strdup_printf(" [%02d%%]", (gint)(value * 100/upper));
   g_string_append(string, position);
+  g_free(position);
 
   dwb_set_status_bar_text(VIEW(gl)->rstatus, string->str, NULL, NULL);
   g_string_free(string, true);
-  g_free(position);
 }/*}}}*/
 
 /*}}}*/
