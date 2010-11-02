@@ -163,7 +163,7 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
   if (!msg) 
     return;
 
-  SoupBuffer buffer;
+  static SoupBuffer buffer;
   SoupContentSniffer *sniffer = soup_content_sniffer_new();
   View *v = gl->data;
 
