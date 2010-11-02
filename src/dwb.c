@@ -1418,11 +1418,9 @@ dwb_save_keys() {
   }
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *map = l->data;
-    if (g_key_file_has_key(keyfile, dwb.misc.profile, map->map->n.first, NULL) ) {
-      gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
-      g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
-      g_free(sc);
-    }
+    gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
+    g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
+    g_free(sc);
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
     g_file_set_contents(dwb.files.keys, content, size, &error);
