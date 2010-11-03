@@ -109,9 +109,9 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
   return  false;
 }/*}}}*/
 
-/* dwb_web_view_motion_notify_cb(GtkWidget *, GdkEventMotion *, GList *){{{*/
+/* dwb_web_view_enter_notify_cb(GtkWidget *, GdkEventCrossing *, GList *){{{*/
 static gboolean 
-dwb_web_view_motion_notify_cb(GtkWidget *web, GdkEventMotion *e, GList *gl) {
+dwb_web_view_enter_notify_cb(GtkWidget *web, GdkEventCrossing *e, GList *gl) {
   dwb_focus(gl);
   return false;
 }/*}}}*/
@@ -262,6 +262,14 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       g_free(text);
       break;
   }
+}/*}}}*/
+
+/* dwb_web_view_realize_cb {{{*/
+void
+dwb_web_view_realize_cb(GtkWidget *widget, GList *gl) {
+  GdkWindow *window = gtk_widget_get_window(widget);
+  GdkEventMask events = gdk_window_get_events(window);
+  gdk_window_set_events(window, events | GDK_ENTER_NOTIFY_MASK);
 }/*}}}*/
 
 // Entry
@@ -461,7 +469,6 @@ dwb_web_view_init_signals(GList *gl) {
 
   g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
   g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
-  g_signal_connect(v->web, "motion-notify-event",                   G_CALLBACK(dwb_web_view_motion_notify_cb), gl);
   g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
   g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
 
@@ -470,6 +477,7 @@ dwb_web_view_init_signals(GList *gl) {
   g_signal_connect(v->entry, "activate",                            G_CALLBACK(dwb_view_entry_activate_cb), NULL);
 
   g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(dwb_view_tab_button_press_cb), gl);
+  g_signal_connect(v->web,    "enter-notify-event",                   G_CALLBACK(dwb_web_view_enter_notify_cb), gl);
 } /*}}}*/
 
 /* dwb_view_clean_vars(GList *){{{*/
@@ -499,6 +507,7 @@ dwb_view_create_web_view(GList *gl) {
 
   v->vbox = gtk_vbox_new(false, 0);
   v->web = webkit_web_view_new();
+  g_signal_connect(v->web, "realize", G_CALLBACK(dwb_web_view_realize_cb), gl);
 
   // Entry
   v->entry = gtk_entry_new();
