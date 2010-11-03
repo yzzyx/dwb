@@ -274,9 +274,10 @@ dwb_com_show_settings(Arg *arg) {
 gboolean
 dwb_com_allow_cookie(Arg *arg) {
   if (dwb.state.last_cookie) {
-    dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, dwb.state.last_cookie->domain);
+    gchar *domain = (gchar*)soup_cookie_get_domain(dwb.state.last_cookie);
+    dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, domain);
     soup_cookie_jar_add_cookie(dwb.state.cookiejar, dwb.state.last_cookie);
-    gchar *message = g_strdup_printf("Saved cookie and allowed domain: %s", dwb.state.last_cookie->domain);
+    gchar *message = g_strdup_printf("Saved cookie and allowed domain: %s", domain);
     dwb_set_normal_message(dwb.state.fview, message, true);
     g_free(message);
     return true;

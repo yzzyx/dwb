@@ -756,9 +756,8 @@ dwb_layout_from_char(const gchar *desc) {
 /* dwb_test_cookie_allowed(const gchar *)     return:  gboolean{{{*/
 static gboolean 
 dwb_test_cookie_allowed(SoupCookie *cookie) {
-  const gchar *domain = cookie->domain;
   for (GList *l = dwb.fc.cookies_allow; l; l=l->next) {
-    if (!strcmp(domain, l->data)) {
+    if (soup_cookie_domain_matches(cookie, l->data)) {
       return true;
     }
   }
