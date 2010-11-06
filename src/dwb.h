@@ -246,6 +246,8 @@ struct _State {
   Layout layout;
   GList *last_com_history;
 
+  GList *undo_history;
+
   gchar *input_id;
 
   gchar *search_engine;

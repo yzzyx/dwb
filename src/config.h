@@ -89,4 +89,6 @@ static KeyValue KEYS[] = {
   { "new_view",                 {   "V",            0 }, }, 
   { "new_window",               {   "W",            0 }, }, 
   { "save",                     {   "sf",            0 }, }, 
+  { "undo",                     {   "u",            0 }, }, 
+
 };

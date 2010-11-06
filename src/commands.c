@@ -528,6 +528,9 @@ dwb_com_remove_view(Arg *arg) {
       gtk_widget_reparent(newfirst->vbox, dwb.gui.left);
     }
   }
+  gchar *uri = g_strdup(webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web)));
+  dwb.state.undo_history = g_list_prepend(dwb.state.undo_history, uri);
+
   gtk_widget_destroy(v->vbox);
   dwb.gui.entry = NULL;
   dwb_grab_focus(dwb.state.fview);
@@ -915,6 +918,7 @@ dwb_com_new_window_or_view(Arg *arg) {
   return true;
 }/*}}}*/
 
+/* dwb_com_save_files(Arg *arg) {{{*/
 gboolean 
 dwb_com_save_files(Arg *arg) {
   if (dwb_save_files(false)) {
@@ -922,4 +926,20 @@ dwb_com_save_files(Arg *arg) {
     return true;
   }
   return false;
-}
+}/*}}}*/
+
+/* dwb_com_undo() {{{*/
+gboolean
+dwb_com_undo(Arg *arg) {
+  GList *gl = dwb.state.undo_history;
+  if (gl) {
+    Arg a = { .p = dwb.state.undo_history->data };
+    dwb_add_view(&a);
+
+    g_free(gl->data);
+    dwb.state.undo_history = g_list_delete_link(dwb.state.undo_history, dwb.state.undo_history);
+    return true;
+  }
+  return false;
+}/*}}}*/
+

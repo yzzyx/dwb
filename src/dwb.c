@@ -146,6 +146,7 @@ static FunctionMap FMAP [] = {
   { { "save_session",          "Save current session", },              1, (Func)dwb_com_save_session,        NULL,                              AlwaysSM,  { .n = NormalMode } },
   { { "save_named_session",    "Save current session with name", },    0, (Func)dwb_com_save_session,        NULL,                              PostSM,  { .n = SaveSession } },
   { { "save",                  "Save all configuration files", },      1, (Func)dwb_com_save_files,        NULL,                              PostSM,  { .n = SaveSession } },
+  { { "undo",                  "Undo closing last tab", },             1, (Func)dwb_com_undo,              "No more closed views",                              PostSM },
 
   //Entry editing
   { { "entry_delete_word",      "Delete word", },                      0,  (Func)dwb_com_entry_delete_word,            NULL,        AlwaysSM,  { 0 }, true, }, 

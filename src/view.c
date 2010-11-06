@@ -593,9 +593,9 @@ dwb_view_create_web_view(GList *gl) {
   return gl;
 } /*}}}*/
 
-/* dwb_add_view(Arg *arg)               return: View *{{{*/
+
 void 
-dwb_add_view(Arg *arg) {
+dwb_view_new_reorder() {
   if (dwb.state.views) {
     View *views = dwb.state.views->data;
     CLEAR_COMMAND_TEXT(dwb.state.views);
@@ -609,6 +609,12 @@ dwb_add_view(Arg *arg) {
       }
     }
   }
+}
+
+/* dwb_add_view(Arg *arg)               return: View *{{{*/
+GList *  
+dwb_add_view(Arg *arg) {
+  dwb_view_new_reorder();
   dwb.state.views = dwb_view_create_web_view(dwb.state.views);
   dwb_focus(dwb.state.views);
   dwb_execute_script(NULL);
@@ -621,7 +627,14 @@ dwb_add_view(Arg *arg) {
     Arg a = { .p = dwb.misc.startpage }; 
     dwb_load_uri(&a);
   }
+  return dwb.state.views;
 } /*}}}*/
+
+GList *
+dwb_add_view_new_with_webview(void) {
+  dwb_view_new_reorder();
+  return NULL;
+}
 
 /* dwb_parse_setting(const gchar *){{{*/
 void
