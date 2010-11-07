@@ -86,6 +86,18 @@ dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download,
   return true;
 }/*}}}*/
 
+/* dwb_web_view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList * *){{{*/
+WebKitWebView * 
+dwb_web_view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList *gl) {
+  GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  GtkWidget *webview = webkit_web_view_new();
+  
+  gtk_container_add(GTK_CONTAINER(window), webview);
+  gtk_widget_show_all(window);
+
+  return WEBKIT_WEB_VIEW(webview);
+}/*}}}*/
+
 /* dwb_web_view_hovering_over_link_cb(WebKitWebView *, gchar *title, gchar *uri, GList *) {{{*/
 static void 
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri, GList *gl) {
@@ -547,6 +559,9 @@ dwb_view_create_web_view(GList *gl) {
   g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(v->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 
+  // WebInspector
+  WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(v->web));
+  g_signal_connect(inspector, "inspect-web-view", G_CALLBACK(dwb_web_view_inspect_web_view_cb), gl);
 
   // Tabbar
   v->tabevent = gtk_event_box_new();
