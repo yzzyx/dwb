@@ -2124,13 +2124,16 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 
 /* dwb_init_fifo{{{*/
 void 
-dwb_init_fifo() {
+dwb_init_fifo(gint single) {
   FILE *ff;
   gchar *path = dwb_util_build_path();
   dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
   g_free(path);
 
   dwb.misc.si_channel = NULL;
+  if (single == NEW_INSTANCE) {
+    return;
+  }
 
   if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
     mkfifo(dwb.files.unifile, 0666);
@@ -2161,6 +2164,7 @@ int main(gint argc, gchar *argv[]) {
   dwb.misc.argc = 0;
   dwb.misc.prog_path = argv[0];
   gint last = 0;
+  gint single = 0;
 
   gtk_init(&argc, &argv);
 
@@ -2182,6 +2186,9 @@ int main(gint argc, gchar *argv[]) {
         else if (argv[i][1] == 'p' && argv[i++]) {
           dwb.misc.profile = argv[i];
         }
+        else if (argv[i][1] == 'n') {
+          single = NEW_INSTANCE;
+        }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
             restore = "default";
@@ -2201,7 +2208,7 @@ int main(gint argc, gchar *argv[]) {
     dwb.misc.argv = &argv[last];
     dwb.misc.argc = g_strv_length(dwb.misc.argv);
   }
-  dwb_init_fifo();
+  dwb_init_fifo(single);
   dwb_init_signals();
   dwb_init();
   gtk_main();

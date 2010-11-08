@@ -7,6 +7,9 @@
 #define KEY_SETTINGS "Dwb Key Settings"
 #define SETTINGS "Dwb Settings"
 
+#define SINGLE_INSTANCE 1
+#define NEW_INSTANCE 2
+
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
   body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center; }\n\
