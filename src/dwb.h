@@ -3,6 +3,7 @@
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
 
+#define NAME "dwb"
 /* SETTINGS MAKROS {{{*/
 #define KEY_SETTINGS "Dwb Key Settings"
 #define SETTINGS "Dwb Settings"

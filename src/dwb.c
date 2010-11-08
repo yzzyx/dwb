@@ -20,7 +20,6 @@
 #include "download.h"
 #include "config.h"
 #include "session.h"
-#define NAME "dwb"
 
 
 /* DECLARATIONS {{{*/
@@ -182,6 +181,7 @@ static FunctionMap FMAP [] = {
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
+/* SETTINGS_ARRAY {{{*/
 static WebSettings DWB_SETTINGS[] = {
   { { "auto-load-images",			                   "Autoload images", },                                         true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
   { { "auto-resize-window",			                 "Autoresize images", },                                       true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
@@ -297,6 +297,85 @@ static WebSettings DWB_SETTINGS[] = {
   { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
   { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  (S_Func)dwb_set_dummy, },
 };/*}}}*/
+
+/* SETTINGS_FUNCTIONS{{{*/
+/* dwb_set_dummy{{{*/
+static void
+dwb_set_dummy(GList *gl, WebSettings *s) {
+  return;
+}/*}}}*/
+
+/* dwb_set_cookies (GList *, WebSettings *s) {{{*/
+void 
+dwb_set_cookies(GList *l, WebSettings *s) {
+  dwb.state.cookies_allowed = s->arg.b;
+}/*}}}*/
+
+/* dwb_set_single_instance(GList *l, WebSettings *s){{{*/
+void
+dwb_set_single_instance(GList *l, WebSettings *s) {
+  if (!s->arg.b) {
+    if (dwb.misc.si_channel) {
+      g_io_channel_shutdown(dwb.misc.si_channel, true, NULL);
+      g_io_channel_unref(dwb.misc.si_channel);
+      dwb.misc.si_channel = NULL;
+    }
+  }
+  else if (!dwb.misc.si_channel) {
+    dwb_open_si_channel();
+  }
+}/*}}}*/
+
+/* dwb_set_proxy{{{*/
+void
+dwb_set_proxy(GList *l, WebSettings *s) {
+  SoupURI *uri = NULL;
+  gchar *message;
+
+  if (s->arg.b) { 
+    uri = dwb.misc.proxyuri;
+  }
+  g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
+  message = g_strdup_printf("Set setting proxy: %s", s->arg.b ? "true" : "false");
+  dwb_set_normal_message(dwb.state.fview, message, true);
+  g_free(message);
+}/*}}}*/
+
+/* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
+static void
+dwb_webkit_setting(GList *gl, WebSettings *s) {
+  WebKitWebSettings *settings = gl ? webkit_web_view_get_settings(WEBVIEW(gl)) : dwb.state.web_settings;
+  switch (s->type) {
+    case Double:  g_object_set(settings, s->n.first, s->arg.d, NULL); break;
+    case Integer: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
+    case Boolean: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
+    case Char:    g_object_set(settings, s->n.first, !s->arg.p || !strcmp(s->arg.p, "null") ? NULL : (gchar*)s->arg.p  , NULL); break;
+    default: return;
+  }
+}/*}}}*/
+
+/* dwb_webview_property(GList, WebSettings){{{*/
+static void
+dwb_webview_property(GList *gl, WebSettings *s) {
+  WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
+  switch (s->type) {
+    case Double:  g_object_set(web, s->n.first, s->arg.d, NULL); break;
+    case Integer: g_object_set(web, s->n.first, s->arg.i, NULL); break;
+    case Boolean: g_object_set(web, s->n.first, s->arg.b, NULL); break;
+    case Char:    g_object_set(web, s->n.first, (gchar*)s->arg.p, NULL); break;
+    default: return;
+  }
+}/*}}}*//*}}}*/
+
+/* dwb_set_content_block{{{*/
+static void
+dwb_set_content_block(GList *gl, WebSettings *s) {
+  View *v = gl->data;
+
+  v->status->block = s->arg.b;
+}/*}}}*/
+/*}}}*/
+
 
 /* CALLBACKS {{{*/
 
@@ -489,20 +568,6 @@ dwb_get_host(const gchar *uri) {
   return host;
 }/*}}}*/
 
-/* dwb_set_content_block{{{*/
-static void
-dwb_set_content_block(GList *gl, WebSettings *s) {
-  View *v = gl->data;
-
-  v->status->block = s->arg.b;
-}/*}}}*/
-
-/* dwb_set_dummy{{{*/
-static void
-dwb_set_dummy(GList *gl, WebSettings *s) {
-  return;
-}/*}}}*/
-
 /* dwb_com_focus(GList *gl) {{{*/
 void 
 dwb_focus(GList *gl) {
@@ -531,40 +596,6 @@ dwb_get_default_settings() {
     g_hash_table_insert(ret, value, new);
   }
   return ret;
-}/*}}}*/
-
-void 
-dwb_set_cookies(GList *l, WebSettings *s) {
-  dwb.state.cookies_allowed = s->arg.b;
-}
-
-void
-dwb_set_single_instance(GList *l, WebSettings *s) {
-  if (!s->arg.b) {
-    if (dwb.misc.si_channel) {
-      g_io_channel_shutdown(dwb.misc.si_channel, true, NULL);
-      g_io_channel_unref(dwb.misc.si_channel);
-      dwb.misc.si_channel = NULL;
-    }
-  }
-  else if (!dwb.misc.si_channel) {
-    dwb_open_si_channel();
-  }
-}
-
-/* dwb_set_proxy{{{*/
-void
-dwb_set_proxy(GList *l, WebSettings *s) {
-  SoupURI *uri = NULL;
-  gchar *message;
-
-  if (s->arg.b) { 
-    uri = dwb.misc.proxyuri;
-  }
-  g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
-  message = g_strdup_printf("Set setting proxy: %s", s->arg.b ? "true" : "false");
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
 }/*}}}*/
 
 /* dwb_entry_set_text(const gchar *) {{{*/
@@ -784,32 +815,6 @@ Arg *
 dwb_web_settings_get_value(const gchar *id) {
   WebSettings *s = g_hash_table_lookup(dwb.settings, id);
   return &s->arg;
-}/*}}}*/
-
-/* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
-static void
-dwb_webkit_setting(GList *gl, WebSettings *s) {
-  WebKitWebSettings *settings = gl ? webkit_web_view_get_settings(WEBVIEW(gl)) : dwb.state.web_settings;
-  switch (s->type) {
-    case Double:  g_object_set(settings, s->n.first, s->arg.d, NULL); break;
-    case Integer: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
-    case Boolean: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
-    case Char:    g_object_set(settings, s->n.first, !s->arg.p || !strcmp(s->arg.p, "null") ? NULL : (gchar*)s->arg.p  , NULL); break;
-    default: return;
-  }
-}/*}}}*/
-
-/* dwb_webview_property(GList, WebSettings){{{*/
-static void
-dwb_webview_property(GList *gl, WebSettings *s) {
-  WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
-  switch (s->type) {
-    case Double:  g_object_set(web, s->n.first, s->arg.d, NULL); break;
-    case Integer: g_object_set(web, s->n.first, s->arg.i, NULL); break;
-    case Boolean: g_object_set(web, s->n.first, s->arg.b, NULL); break;
-    case Char:    g_object_set(web, s->n.first, (gchar*)s->arg.p, NULL); break;
-    default: return;
-  }
 }/*}}}*/
 
 /* update_hints {{{*/
@@ -1348,6 +1353,58 @@ dwb_search(Arg *arg) {
   dwb_normal_mode(false);
   return true;
 }/*}}}*/
+
+/* dwb_execute_user_script(Arg *a) {{{*/
+void
+dwb_execute_user_script(Arg *a) {
+  GError *e = NULL;
+  gchar *argv[3] = { a->p, (gchar*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
+  if (!g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &e )) {
+    fprintf(stderr, "Couldn't execute %s: %s\n", (gchar*)a->p, e->message);
+  }
+}/*}}}*/
+
+/* dwb_get_scripts() {{{*/
+GList * 
+dwb_get_scripts() {
+  GDir *dir;
+  gchar *filename;
+  gchar *content;
+  GList *gl = NULL;
+
+  if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
+    while ( (filename = (char*)g_dir_read_name(dir)) ) {
+      gchar *path = g_build_filename(dwb.files.userscripts, filename, NULL);
+
+      g_file_get_contents(path, &content, NULL, NULL);
+      gchar **lines = g_strsplit(content, "\n", -1);
+      gint i=0;
+      while (lines[i]) {
+        if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
+          gchar **line = g_strsplit(lines[i], "dwb:", 2);
+          if (line[1]) {
+            KeyMap *map = dwb_malloc(sizeof(KeyMap));
+            Key key = dwb_str_to_key(line[1]);
+            FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, AlwaysSM, { .p = path } };
+            FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
+            *fmap = fm;
+            map->map = fmap;
+            map->key = key.str;
+            map->mod = key.mod;
+            gl = g_list_prepend(gl, map);
+          }
+          g_strfreev(line);
+          break;
+        }
+        i++;
+      }
+      g_free(content);
+
+    }
+  }
+  return gl;
+}/*}}}*/
+
 /*}}}*/
 
 /* EXIT {{{*/
@@ -1582,56 +1639,6 @@ dwb_keymap_delete(GList *gl, KeyValue key) {
     }
   }
   gl = g_list_sort(gl, (GCompareFunc)dwb_util_keymap_sort_second);
-  return gl;
-}/*}}}*/
-
-void
-dwb_execute_user_script(Arg *a) {
-  GError *e = NULL;
-  gchar *argv[3] = { a->p, (gchar*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
-  if (!g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &e )) {
-    fprintf(stderr, "Couldn't execute %s: %s\n", (gchar*)a->p, e->message);
-  }
-}
-
-/* dwb_get_scripts() {{{*/
-GList * 
-dwb_get_scripts() {
-  GDir *dir;
-  gchar *filename;
-  gchar *content;
-  GList *gl = NULL;
-
-  if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
-    while ( (filename = (char*)g_dir_read_name(dir)) ) {
-      gchar *path = g_build_filename(dwb.files.userscripts, filename, NULL);
-
-      g_file_get_contents(path, &content, NULL, NULL);
-      gchar **lines = g_strsplit(content, "\n", -1);
-      gint i=0;
-      while (lines[i]) {
-        if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
-          gchar **line = g_strsplit(lines[i], "dwb:", 2);
-          if (line[1]) {
-            KeyMap *map = dwb_malloc(sizeof(KeyMap));
-            Key key = dwb_str_to_key(line[1]);
-            FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, AlwaysSM, { .p = path } };
-            FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
-            *fmap = fm;
-            map->map = fmap;
-            map->key = key.str;
-            map->mod = key.mod;
-            gl = g_list_prepend(gl, map);
-          }
-          g_strfreev(line);
-          break;
-        }
-        i++;
-      }
-      g_free(content);
-
-    }
-  }
   return gl;
 }/*}}}*/
 
@@ -1976,7 +1983,7 @@ dwb_init_files() {
   g_free(profile_path);
 }/*}}}*/
 
-/* signals{{{*/
+/* signals {{{*/
 static void
 dwb_handle_signal(gint s) {
   if (s == SIGALRM || s == SIGFPE || s == SIGILL || s == SIGINT || s == SIGQUIT || s == SIGTERM) {
