@@ -279,7 +279,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
 
   
-  { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_set_dummy, }, 
+  { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_init_vars, }, 
   { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_content_block, }, 
 
   // downloads
@@ -489,7 +489,7 @@ dwb_get_host(const gchar *uri) {
   return host;
 }/*}}}*/
 
-/* dwb_set_js_block{{{*/
+/* dwb_set_content_block{{{*/
 static void
 dwb_set_content_block(GList *gl, WebSettings *s) {
   View *v = gl->data;
@@ -2027,6 +2027,7 @@ dwb_init_vars() {
   dwb.misc.history_length = GET_INT("history-length");
   dwb.misc.factor = GET_DOUBLE("factor");
   dwb.misc.startpage = GET_CHAR("startpage");
+  dwb.misc.content_block_regex = GET_CHAR("content-block-regex");
 
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));

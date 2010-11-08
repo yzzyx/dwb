@@ -370,6 +370,8 @@ struct _Misc {
 
   gchar *startpage;
   gchar *download_com;
+
+  gchar *content_block_regex;
 };
 struct _Files {
   const gchar *bookmarks;

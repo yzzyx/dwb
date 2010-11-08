@@ -204,7 +204,7 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
         !dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) && !dwb_get_host_blocked(dwb.fc.content_allow, v->status->current_host) 
         ? true : false;
     }
-    if (v->status->block && v->status->block_current && g_regex_match_simple(GET_CHAR("content-block-regex"), content_type, 0, 0)) {
+    if (v->status->block && v->status->block_current && g_regex_match_simple(dwb.misc.content_block_regex, content_type, 0, 0)) {
       webkit_network_request_set_uri(request, "about:blank");
       v->status->items_blocked++;
     }
