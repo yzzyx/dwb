@@ -23,11 +23,17 @@
 
 
 /* DECLARATIONS {{{*/
-void dwb_set_cookies(GList *l, WebSettings *s);
+static void dwb_webkit_setting(GList *, WebSettings *);
+static void dwb_webview_property(GList *, WebSettings *);
+static void dwb_set_cookies(GList *l, WebSettings *s);
 static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_content_block(GList *, WebSettings *);
+static void dwb_set_startpage(GList *, WebSettings *);
+static void dwb_set_content_block_regex(GList *, WebSettings *);
+static void dwb_set_message_delay(GList *, WebSettings *);
+static void dwb_set_history_length(GList *, WebSettings *);
+
 void dwb_clean_buffer(GList *);
-static void dwb_init_proxy(void);
 
 gboolean dwb_command_mode(Arg *arg);
 static void dwb_com_reload_scripts(GList *,  WebSettings *);
@@ -40,9 +46,6 @@ gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
 
 static gboolean dwb_eval_key(GdkEventKey *);
 
-static void dwb_webkit_setting(GList *, WebSettings *);
-static void dwb_webview_property(GList *, WebSettings *);
-
 
 static void dwb_tab_label_set_text(GList *, const gchar *);
 
@@ -53,7 +56,7 @@ static void dwb_open_quickmark(const gchar *);
 static void dwb_update_tab_label(void);
 static gchar * dwb_get_resolved_uri(const gchar *);
 
-
+static void dwb_init_proxy(void);
 static void dwb_init_key_map(void);
 static void dwb_init_settings(void);
 static void dwb_init_style(void);
@@ -274,12 +277,12 @@ static WebSettings DWB_SETTINGS[] = {
   { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_com_reload_scripts, },
   { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_com_reload_scripts, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
-  { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func) dwb_init_vars, }, 
+  { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
   { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
   { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
 
   
-  { { "content-block-regex",   "Mimetypes that will be blocked", },       false, false,  Char,    { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" },  (S_Func) dwb_init_vars, }, 
+  { { "content-block-regex",   "Mimetypes that will be blocked", },     false, false,  Char,   { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" }, (S_Func) dwb_set_content_block_regex, }, 
   { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_content_block, }, 
 
   // downloads
@@ -291,8 +294,8 @@ static WebSettings DWB_SETTINGS[] = {
     
   { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, (S_Func)dwb_set_dummy, },
   { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, (S_Func)dwb_set_dummy, },
-  { { "message-delay",                           "Message delay", },                                           false, true,  Integer, { .i = 2          }, (S_Func) dwb_init_vars, },
-  { { "history-length",                          "History length", },                                          false, true,  Integer, { .i = 500          }, (S_Func) dwb_init_vars, },
+  { { "message-delay",                           "Message delay", },                                           false, true,  Integer, { .i = 2          }, (S_Func) dwb_set_message_delay, },
+  { { "history-length",                          "History length", },                                          false, true,  Integer, { .i = 500          }, (S_Func) dwb_set_history_length, },
   { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  Integer, { .i = 30          }, (S_Func)dwb_set_dummy, },
   { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
   { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  (S_Func)dwb_set_dummy, },
@@ -303,6 +306,30 @@ static WebSettings DWB_SETTINGS[] = {
 static void
 dwb_set_dummy(GList *gl, WebSettings *s) {
   return;
+}/*}}}*/
+
+/* dwb_set_startpage(GList *l, WebSettings *){{{*/
+static void 
+dwb_set_startpage(GList *l, WebSettings *s) {
+  dwb.misc.startpage = s->arg.p;
+}/*}}}*/
+
+/* dwb_set_content_block_regex(GList *l, WebSettings *){{{*/
+static void 
+dwb_set_content_block_regex(GList *l, WebSettings *s) {
+  dwb.misc.content_block_regex = s->arg.p;
+}/*}}}*/
+
+/* dwb_set_message_delay(GList *l, WebSettings *){{{*/
+static void 
+dwb_set_message_delay(GList *l, WebSettings *s) {
+  dwb.misc.message_delay = s->arg.i;
+}/*}}}*/
+
+/* dwb_set_history_length(GList *l, WebSettings *){{{*/
+static void 
+dwb_set_history_length(GList *l, WebSettings *s) {
+  dwb.misc.history_length = s->arg.i;
 }/*}}}*/
 
 /* dwb_set_cookies (GList *, WebSettings *s) {{{*/
