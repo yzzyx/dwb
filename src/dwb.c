@@ -529,9 +529,13 @@ dwb_set_error_message(GList *gl, const gchar *error) {
 
 /* dwb_update_status_text(GList *gl) {{{*/
 void 
-dwb_update_status_text(GList *gl) {
+dwb_update_status_text(GList *gl, GtkAdjustment *a) {
   View *v = gl ? gl->data : dwb.state.fview->data;
-  GtkAdjustment *a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
+    
+  if (!a) {
+    a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
+  }
+
   const gchar *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   GString *string = g_string_new(uri);
 
@@ -541,21 +545,23 @@ dwb_update_status_text(GList *gl) {
     g_free(js_items);
   }
 
-  gdouble lower = gtk_adjustment_get_lower(a);
-  gdouble upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
-  gdouble value = gtk_adjustment_get_value(a); 
   gboolean back = webkit_web_view_can_go_back(WEBKIT_WEB_VIEW(v->web));
   gboolean forward = webkit_web_view_can_go_forward(WEBKIT_WEB_VIEW(v->web));
   const gchar *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : "";
   g_string_append(string, bof);
 
-  gchar *position = 
-    upper == lower ? g_strdup(" [all]") : 
-    value == lower ? g_strdup(" [top]") : 
-    value == upper ? g_strdup(" [bot]") : 
-    g_strdup_printf(" [%02d%%]", (gint)(value * 100/upper));
-  g_string_append(string, position);
-  g_free(position);
+  if (a) {
+    gdouble lower = gtk_adjustment_get_lower(a);
+    gdouble upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
+    gdouble value = gtk_adjustment_get_value(a); 
+    gchar *position = 
+      upper == lower ? g_strdup(" [all]") : 
+      value == lower ? g_strdup(" [top]") : 
+      value == upper ? g_strdup(" [bot]") : 
+      g_strdup_printf(" [%02d%%]", (gint)(value * 100/upper));
+    g_string_append(string, position);
+    g_free(position);
+  }
 
   dwb_set_status_bar_text(VIEW(gl)->rstatus, string->str, NULL, NULL);
   g_string_free(string, true);
@@ -564,6 +570,20 @@ dwb_update_status_text(GList *gl) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+Navigation *
+dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
+  Navigation *n = NULL;
+  const gchar *uri;
+  const gchar *title;
+
+  if (item) {
+    uri = webkit_web_history_item_get_uri(item);
+    title = webkit_web_history_item_get_title(item);
+    n = dwb_navigation_new(uri, title);
+  }
+  return n;
+}
 
 /* dwb_open_si_channel() {{{*/
 void
@@ -1047,7 +1067,7 @@ dwb_update_status(GList *gl) {
   }
   dwb_tab_label_set_text(gl, title);
 
-  dwb_update_status_text(gl);
+  dwb_update_status_text(gl, NULL);
 }/*}}}*/
 
 /* dwb_update_tab_label {{{*/

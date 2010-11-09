@@ -250,7 +250,7 @@ struct _State {
   Layout layout;
   GList *last_com_history;
 
-  GList *undo_history;
+  GList *undo_list;
 
   gchar *input_id;
 
@@ -441,7 +441,7 @@ void dwb_set_normal_message(GList *, const gchar *, gboolean);
 void dwb_set_error_message(GList *, const gchar *);
 void dwb_set_status_text(GList *, const gchar *, GdkColor *,  PangoFontDescription *);
 void dwb_set_status_bar_text(GtkWidget *, const gchar *, GdkColor *,  PangoFontDescription *);
-void dwb_update_status_text(GList *gl);
+void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
 void dwb_update_layout(void);
 void dwb_focus(GList *gl);
@@ -449,6 +449,7 @@ void dwb_focus(GList *gl);
 gboolean dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const gchar *, const gchar *);
 
+Navigation * dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *);
 gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(Arg *);
 void dwb_submit_searchengine(void);

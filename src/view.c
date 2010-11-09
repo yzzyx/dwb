@@ -106,7 +106,7 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri,
     dwb_set_status_bar_text(v->rstatus, uri, NULL, NULL);
   }
   else {
-    dwb_update_status_text(gl);
+    dwb_update_status_text(gl, NULL);
   }
 }/*}}}*/
 
@@ -236,7 +236,7 @@ dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
 /* dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {{{ */
 static gboolean
 dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {
-  dwb_update_status_text(gl);
+  dwb_update_status_text(gl, a);
   return false;
 }/* }}} */
 

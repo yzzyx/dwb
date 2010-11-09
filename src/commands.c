@@ -503,6 +503,7 @@ dwb_com_toggle_maximized(Arg *arg) {
   dwb_resize(dwb.state.size);
 }/*}}}*/
 
+
 /* dwb_com_remove_view(Arg *arg) {{{*/
 void 
 dwb_com_remove_view(Arg *arg) {
@@ -528,9 +529,25 @@ dwb_com_remove_view(Arg *arg) {
       gtk_widget_reparent(newfirst->vbox, dwb.gui.left);
     }
   }
-  gchar *uri = g_strdup(webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web)));
-  dwb.state.undo_history = g_list_prepend(dwb.state.undo_history, uri);
 
+  WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
+  GList *list = webkit_web_back_forward_list_get_back_list_with_limit(bflist, webkit_web_back_forward_list_get_back_length(bflist));
+  GList *store = NULL;
+
+  for (GList *l = list; l; l=l->next) {
+    WebKitWebHistoryItem *item = l->data;
+    Navigation *n = dwb_navigation_from_webkit_history_item(item);
+    if (n) 
+      store = g_list_prepend(store, n);
+  }
+  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_current_item(bflist);
+  Navigation *n = dwb_navigation_from_webkit_history_item(item);
+  if (n) {
+    store = g_list_append(store, dwb_navigation_from_webkit_history_item(item));
+    dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
+  }
+
+  gtk_widget_destroy(v->scroll);
   gtk_widget_destroy(v->vbox);
   dwb.gui.entry = NULL;
   dwb_grab_focus(dwb.state.fview);
@@ -931,13 +948,20 @@ dwb_com_save_files(Arg *arg) {
 /* dwb_com_undo() {{{*/
 gboolean
 dwb_com_undo(Arg *arg) {
-  GList *gl = dwb.state.undo_history;
-  if (gl) {
-    Arg a = { .p = dwb.state.undo_history->data };
-    dwb_add_view(&a);
-
-    g_free(gl->data);
-    dwb.state.undo_history = g_list_delete_link(dwb.state.undo_history, dwb.state.undo_history);
+  if (dwb.state.undo_list) {
+    WebKitWebView *web = WEBVIEW(dwb_add_view(NULL));
+    WebKitWebBackForwardList *bflist = webkit_web_back_forward_list_new_with_web_view(web);
+    for (GList *l = dwb.state.undo_list->data; l; l=l->next) {
+      Navigation *n = l->data;
+      WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(n->first, n->second);
+      webkit_web_back_forward_list_add_item(bflist, item);
+      if (!l->next) {
+        webkit_web_view_go_to_back_forward_item(web, item);
+      }
+      dwb_navigation_free(n);
+    }
+    g_list_free(dwb.state.undo_list->data);
+    dwb.state.undo_list = g_list_delete_link(dwb.state.undo_list, dwb.state.undo_list);
     return true;
   }
   return false;
