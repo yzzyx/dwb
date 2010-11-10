@@ -1642,10 +1642,10 @@ dwb_str_to_key(gchar *str) {
       g_string_append(buffer, string[i]);
     }
   }
-  key.str = g_strdup(buffer->str);
+  key.str = buffer->str;
 
   g_strfreev(string);
-  g_string_free(buffer, true);
+  g_string_free(buffer, false);
 
   return key;
 }/*}}}*/
@@ -1732,18 +1732,11 @@ dwb_init_key_map() {
   GKeyFile *keyfile = g_key_file_new();
   GError *error = NULL;
   dwb.keymap = NULL;
-  gchar **keys;
 
   g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error);
   if (error) {
     fprintf(stderr, "No keyfile found: %s\nUsing default values.\n", error->message);
     error = NULL;
-  }
-  else {
-    keys = g_key_file_get_keys(keyfile, dwb.misc.profile, NULL, &error);
-    if (error) {
-        fprintf(stderr, "Couldn't read keyfile for profile %s: %s\nUsing default values.\n", dwb.misc.profile,  error->message);
-    }
   }
   for (gint i=0; i<LENGTH(KEYS); i++) {
     KeyValue kv;
@@ -1757,6 +1750,7 @@ dwb_init_key_map() {
     kv.id = KEYS[i].id;
     dwb.keymap = dwb_keymap_add(dwb.keymap, kv);
   }
+
   dwb.keymap = g_list_concat(dwb.keymap, dwb_get_scripts());
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
 }/*}}}*/
@@ -1766,7 +1760,7 @@ gboolean
 dwb_read_settings() {
   GError *error = NULL;
   gsize length, numkeys = 0;
-  gchar  **keys;
+  gchar  **keys = NULL;
   gchar  *content;
   GKeyFile  *keyfile = g_key_file_new();
   Arg *arg;
@@ -1810,6 +1804,8 @@ dwb_read_settings() {
       g_hash_table_insert(dwb.settings, key, &DWB_SETTINGS[j]);
     }
   }
+  if (keys)
+    g_strfreev(keys);
   return true;
 }/*}}}*/
 
