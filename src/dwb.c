@@ -47,14 +47,14 @@ gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
 static gboolean dwb_eval_key(GdkEventKey *);
 
 
-static void dwb_tab_label_set_text(GList *, const gchar *);
+static void dwb_tab_label_set_text(GList *, const char *);
 
-static void dwb_save_quickmark(const gchar *);
-static void dwb_open_quickmark(const gchar *);
+static void dwb_save_quickmark(const char *);
+static void dwb_open_quickmark(const char *);
 
 
 static void dwb_update_tab_label(void);
-static gchar * dwb_get_resolved_uri(const gchar *);
+static char * dwb_get_resolved_uri(const char *);
 
 static void dwb_init_proxy(void);
 static void dwb_init_key_map(void);
@@ -69,9 +69,9 @@ static void dwb_clean_vars(void);
 /*}}}*/
 
 static GdkNativeWindow embed = 0;
-static gint signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
-static gint MAX_COMPLETIONS = 11;
-static gchar *restore = NULL;
+static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
+static int MAX_COMPLETIONS = 11;
+static char *restore = NULL;
 
 /* FUNCTION_MAP{{{*/
 #define NO_URL                      "No URL in current context"
@@ -357,7 +357,7 @@ dwb_set_single_instance(GList *l, WebSettings *s) {
 void
 dwb_set_proxy(GList *l, WebSettings *s) {
   SoupURI *uri = NULL;
-  gchar *message;
+  char *message;
 
   if (s->arg.b) { 
     uri = dwb.misc.proxyuri;
@@ -376,7 +376,7 @@ dwb_webkit_setting(GList *gl, WebSettings *s) {
     case Double:  g_object_set(settings, s->n.first, s->arg.d, NULL); break;
     case Integer: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
     case Boolean: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
-    case Char:    g_object_set(settings, s->n.first, !s->arg.p || !strcmp(s->arg.p, "null") ? NULL : (gchar*)s->arg.p  , NULL); break;
+    case Char:    g_object_set(settings, s->n.first, !s->arg.p || !strcmp(s->arg.p, "null") ? NULL : (char*)s->arg.p  , NULL); break;
     default: return;
   }
 }/*}}}*/
@@ -389,7 +389,7 @@ dwb_webview_property(GList *gl, WebSettings *s) {
     case Double:  g_object_set(web, s->n.first, s->arg.d, NULL); break;
     case Integer: g_object_set(web, s->n.first, s->arg.i, NULL); break;
     case Boolean: g_object_set(web, s->n.first, s->arg.b, NULL); break;
-    case Char:    g_object_set(web, s->n.first, (gchar*)s->arg.p, NULL); break;
+    case Char:    g_object_set(web, s->n.first, (char*)s->arg.p, NULL); break;
     default: return;
   }
 }/*}}}*//*}}}*/
@@ -411,7 +411,7 @@ gboolean
 dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
 
-  gchar *key = dwb_util_keyval_to_char(e->keyval);
+  char *key = dwb_util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_Escape) {
     dwb_normal_mode(true);
     ret = false;
@@ -480,7 +480,7 @@ dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
-  gchar *escaped = g_markup_escape_text(text ? text: "", -1);
+  char *escaped = g_markup_escape_text(text ? text: "", -1);
   gtk_label_set_markup(GTK_LABEL(label), escaped);
   g_free(escaped);
 
@@ -509,7 +509,7 @@ dwb_hide_message(GList *gl) {
 
 /* dwb_set_normal_message {{{*/
 void 
-dwb_set_normal_message(GList *gl, const gchar  *text, gboolean hide) {
+dwb_set_normal_message(GList *gl, const char  *text, gboolean hide) {
   View *v = gl->data;
   dwb_set_status_bar_text(v->lstatus, text, &dwb.color.active_fg, dwb.font.fd_bold);
   dwb_source_remove(gl);
@@ -520,7 +520,7 @@ dwb_set_normal_message(GList *gl, const gchar  *text, gboolean hide) {
 
 /* dwb_set_error_message {{{*/
 void 
-dwb_set_error_message(GList *gl, const gchar *error) {
+dwb_set_error_message(GList *gl, const char *error) {
   dwb_source_remove(gl);
   dwb_set_status_bar_text(VIEW(gl)->lstatus, error, &dwb.color.error, dwb.font.fd_bold);
   VIEW(gl)->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
@@ -536,29 +536,29 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
   }
 
-  const gchar *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
+  const char *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   GString *string = g_string_new(uri);
 
   if (v->status->block) {
-    gchar *js_items = v->status->block_current ? g_strdup_printf(" [%d]", v->status->items_blocked) : g_strdup(" [a]");
+    char *js_items = v->status->block_current ? g_strdup_printf(" [%d]", v->status->items_blocked) : g_strdup(" [a]");
     g_string_append(string, js_items);
     g_free(js_items);
   }
 
   gboolean back = webkit_web_view_can_go_back(WEBKIT_WEB_VIEW(v->web));
   gboolean forward = webkit_web_view_can_go_forward(WEBKIT_WEB_VIEW(v->web));
-  const gchar *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : "";
+  const char *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : "";
   g_string_append(string, bof);
 
   if (a) {
-    gdouble lower = gtk_adjustment_get_lower(a);
-    gdouble upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
-    gdouble value = gtk_adjustment_get_value(a); 
-    gchar *position = 
+    double lower = gtk_adjustment_get_lower(a);
+    double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
+    double value = gtk_adjustment_get_value(a); 
+    char *position = 
       upper == lower ? g_strdup(" [all]") : 
       value == lower ? g_strdup(" [top]") : 
       value == upper ? g_strdup(" [bot]") : 
-      g_strdup_printf(" [%02d%%]", (gint)(value * 100/upper));
+      g_strdup_printf(" [%02d%%]", (int)(value * 100/upper));
     g_string_append(string, position);
     g_free(position);
   }
@@ -574,8 +574,8 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 Navigation *
 dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   Navigation *n = NULL;
-  const gchar *uri;
-  const gchar *title;
+  const char *uri;
+  const char *title;
 
   if (item) {
     uri = webkit_web_history_item_get_uri(item);
@@ -592,21 +592,21 @@ dwb_open_si_channel() {
   g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
 }/*}}}*/
 
-/* dwb_js_get_host_blocked (gchar *) {{{*/
+/* dwb_js_get_host_blocked (char *) {{{*/
 GList *
-dwb_get_host_blocked(GList *fc, gchar *host) {
+dwb_get_host_blocked(GList *fc, char *host) {
   for (GList *l = fc; l; l=l->next) {
-    if (!strcmp(host, (gchar *) l->data)) {
+    if (!strcmp(host, (char *) l->data)) {
       return l;
     }
   }
   return NULL;
 }/*}}}*/
 
-/* dwb_get_host(GList *)                  return: gchar (alloc) {{{*/
-gchar * 
-dwb_get_host(const gchar *uri) {
-  gchar *host;
+/* dwb_get_host(GList *)                  return: char (alloc) {{{*/
+char * 
+dwb_get_host(const char *uri) {
+  char *host;
   SoupURI *soup_uri = soup_uri_new(uri);
   if (soup_uri) {
     host = g_strdup(soup_uri->host);
@@ -639,15 +639,15 @@ dwb_get_default_settings() {
     WebSettings *s = l->data;
     WebSettings *new = dwb_malloc(sizeof(WebSettings));
     *new = *s;
-    gchar *value = g_strdup(s->n.first);
+    char *value = g_strdup(s->n.first);
     g_hash_table_insert(ret, value, new);
   }
   return ret;
 }/*}}}*/
 
-/* dwb_entry_set_text(const gchar *) {{{*/
+/* dwb_entry_set_text(const char *) {{{*/
 void 
-dwb_entry_set_text(const gchar *text) {
+dwb_entry_set_text(const char *text) {
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
 }/*}}}*/
@@ -668,15 +668,15 @@ dwb_focus_scroll(GList *gl) {
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
 
-/* dwb_entry_position_word_back(gint position)      return position{{{*/
-gint 
-dwb_entry_position_word_back(gint position) {
-  gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+/* dwb_entry_position_word_back(int position)      return position{{{*/
+int 
+dwb_entry_position_word_back(int position) {
+  char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
   if (position == 0) {
     return position;
   }
-  gint old = position;
+  int old = position;
   while (isalnum(text[position-1]) ) {
     --position;
   }
@@ -689,12 +689,12 @@ dwb_entry_position_word_back(gint position) {
   return position;
 }/*}}}*/
 
-/* dwb_com_entry_history_forward(gint) {{{*/
-gint 
-dwb_entry_position_word_forward(gint position) {
-  gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+/* dwb_com_entry_history_forward(int) {{{*/
+int 
+dwb_entry_position_word_forward(int position) {
+  char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
-  gint old = position;
+  int old = position;
   while ( isalnum(text[++position]) );
   while ( isblank(text[++position]) );
   if (old == position) {
@@ -703,10 +703,10 @@ dwb_entry_position_word_forward(gint position) {
   return position;
 }/*}}}*/
 
-/* dwb_resize(gdouble size) {{{*/
+/* dwb_resize(double size) {{{*/
 void
-dwb_resize(gdouble size) {
-  gint fact = dwb.state.layout & BottomStack;
+dwb_resize(double size) {
+  int fact = dwb.state.layout & BottomStack;
 
   gtk_widget_set_size_request(dwb.gui.left,  (100 - size) * (fact^1),  (100 - size) *  fact);
   gtk_widget_set_size_request(dwb.gui.right, size * (fact^1), size * fact);
@@ -745,24 +745,24 @@ dwb_com_reload_layout(GList *gl, WebSettings *s) {
   }
 }/*}}}*/
 
-/* dwb_get_search_engine_uri(const gchar *uri) {{{*/
-gchar *
-dwb_get_search_engine_uri(const gchar *uri, const gchar *text) {
-  gchar *ret = NULL;
+/* dwb_get_search_engine_uri(const char *uri) {{{*/
+char *
+dwb_get_search_engine_uri(const char *uri, const char *text) {
+  char *ret = NULL;
   if (uri) {
-    gchar **token = g_strsplit(uri, HINT_SEARCH_SUBMIT, 2);
+    char **token = g_strsplit(uri, HINT_SEARCH_SUBMIT, 2);
     ret = g_strconcat(token[0], text, token[1], NULL);
     g_strfreev(token);
   }
   return ret;
 }/* }}} */
 
-/* dwb_get_search_engine(const gchar *uri) {{{*/
-gchar *
-dwb_get_search_engine(const gchar *uri) {
-  gchar *ret = NULL;
+/* dwb_get_search_engine(const char *uri) {{{*/
+char *
+dwb_get_search_engine(const char *uri) {
+  char *ret = NULL;
   if ( (!strstr(uri, ".") || strstr(uri, " ")) && !strstr(uri, "localhost:")) {
-    gchar **token = g_strsplit(uri, " ", 2);
+    char **token = g_strsplit(uri, " ", 2);
     for (GList *l = dwb.fc.searchengines; l; l=l->next) {
       Navigation *n = l->data;
       if (!strcmp(token[0], n->first)) {
@@ -780,8 +780,8 @@ dwb_get_search_engine(const gchar *uri) {
 /* dwb_submit_searchengine {{{*/
 void 
 dwb_submit_searchengine(void) {
-  gchar *com = g_strdup_printf("dwb_submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
-  gchar *value = dwb_execute_script(com);
+  char *com = g_strdup_printf("dwb_submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
+  char *value = dwb_execute_script(com);
   if (value) {
     dwb.state.form_name = value;
   }
@@ -791,7 +791,7 @@ dwb_submit_searchengine(void) {
 /* dwb_save_searchengine {{{*/
 void
 dwb_save_searchengine(void) {
-  gchar *text = g_strdup(GET_TEXT());
+  char *text = g_strdup(GET_TEXT());
   if (text) {
     g_strstrip(text);
     if (text && strlen(text) > 0) {
@@ -810,9 +810,9 @@ dwb_save_searchengine(void) {
 
 /* dwb_layout_from_char {{{*/
 Layout
-dwb_layout_from_char(const gchar *desc) {
-  gchar **token = g_strsplit(desc, " ", 0);
-  gint i=0;
+dwb_layout_from_char(const char *desc) {
+  char **token = g_strsplit(desc, " ", 0);
+  int i=0;
   Layout layout;
   while (token[i]) {
     if (!(layout & BottomStack) && !g_ascii_strcasecmp(token[i], "normal")) {
@@ -832,7 +832,7 @@ dwb_layout_from_char(const gchar *desc) {
   return layout;
 }/*}}}*/
 
-/* dwb_test_cookie_allowed(const gchar *)     return:  gboolean{{{*/
+/* dwb_test_cookie_allowed(const char *)     return:  gboolean{{{*/
 static gboolean 
 dwb_test_cookie_allowed(SoupCookie *cookie) {
   for (GList *l = dwb.fc.cookies_allow; l; l=l->next) {
@@ -857,9 +857,9 @@ dwb_save_cookies() {
   g_object_unref(jar);
 }/*}}}*/
 
-/* dwb_web_settings_get_value(const gchar *id, void *value) {{{*/
+/* dwb_web_settings_get_value(const char *id, void *value) {{{*/
 Arg *  
-dwb_web_settings_get_value(const gchar *id) {
+dwb_web_settings_get_value(const char *id) {
   WebSettings *s = g_hash_table_lookup(dwb.settings, id);
   return &s->arg;
 }/*}}}*/
@@ -867,15 +867,15 @@ dwb_web_settings_get_value(const gchar *id) {
 /* update_hints {{{*/
 gboolean
 dwb_update_hints(GdkEventKey *e) {
-  gchar *buffer = NULL;
-  gchar *com = NULL;
+  char *buffer = NULL;
+  char *com = NULL;
 
   if (e->keyval == GDK_Return) {
     com = g_strdup("dwb_get_active()");
   }
   else if (DIGIT(e)) {
     dwb.state.nummod = MIN(10*dwb.state.nummod + e->keyval - GDK_0, 314159);
-    gchar *text = g_strdup_printf("hint number: %d", dwb.state.nummod);
+    char *text = g_strdup_printf("hint number: %d", dwb.state.nummod);
     dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, text, &dwb.color.active_fg, dwb.font.fd_normal);
 
     com = g_strdup_printf("dwb_update_hints(\"%d\")", dwb.state.nummod);
@@ -921,7 +921,7 @@ dwb_update_hints(GdkEventKey *e) {
 }/*}}}*/
 
 /* dwb_execute_script {{{*/
-gchar * 
+char * 
 dwb_execute_script(const char *com) {
   View *v = dwb.state.fview->data;
 
@@ -930,7 +930,7 @@ dwb_execute_script(const char *com) {
   }
   JSValueRef exc, eval_ret;
   size_t length;
-  gchar *ret = NULL;
+  char *ret = NULL;
 
   WebKitWebFrame *frame =  webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
   JSContextRef context = webkit_web_frame_get_global_context(frame);
@@ -941,7 +941,7 @@ dwb_execute_script(const char *com) {
   if (eval_ret) {
     JSStringRef string = JSValueToStringCopy(context, eval_ret, NULL);
     length = JSStringGetMaximumUTF8CStringSize(string);
-    ret = g_new(gchar, length);
+    ret = g_new(char, length);
     JSStringGetUTF8CString(string, ret, length);
     JSStringRelease(string);
   }
@@ -949,9 +949,9 @@ dwb_execute_script(const char *com) {
 }
 /*}}}*/
 
-/*prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {{{*/
+/*prepend_navigation_with_argument(GList **fc, const char *first, const char *second) {{{*/
 void
-dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {
+dwb_prepend_navigation_with_argument(GList **fc, const char *first, const char *second) {
   for (GList *l = (*fc); l; l=l->next) {
     Navigation *n = l->data;
     if (!strcmp(first, n->first)) {
@@ -965,9 +965,9 @@ dwb_prepend_navigation_with_argument(GList **fc, const gchar *first, const gchar
   (*fc) = g_list_prepend((*fc), n);
 }/*}}}*/
 
-/*append_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {{{*/
+/*append_navigation_with_argument(GList **fc, const char *first, const char *second) {{{*/
 void
-dwb_append_navigation_with_argument(GList **fc, const gchar *first, const gchar *second) {
+dwb_append_navigation_with_argument(GList **fc, const char *first, const char *second) {
   for (GList *l = (*fc); l; l=l->next) {
     Navigation *n = l->data;
     if (!strcmp(first, n->first)) {
@@ -985,9 +985,9 @@ dwb_append_navigation_with_argument(GList **fc, const gchar *first, const gchar 
 gboolean 
 dwb_prepend_navigation(GList *gl, GList **fc) {
   WebKitWebView *w = WEBVIEW(gl);
-  const gchar *uri = webkit_web_view_get_uri(w);
+  const char *uri = webkit_web_view_get_uri(w);
   if (uri && strlen(uri) > 0 && strcmp(uri, SETTINGS) && strcmp(uri, KEY_SETTINGS)) {
-    const gchar *title = webkit_web_view_get_title(w);
+    const char *title = webkit_web_view_get_title(w);
     dwb_prepend_navigation_with_argument(fc, uri, title);
     return true;
   }
@@ -995,13 +995,13 @@ dwb_prepend_navigation(GList *gl, GList **fc) {
 
 }/*}}}*/
 
-/* dwb_save_quickmark(const gchar *key) {{{*/
+/* dwb_save_quickmark(const char *key) {{{*/
 void 
-dwb_save_quickmark(const gchar *key) {
+dwb_save_quickmark(const char *key) {
   WebKitWebView *w = WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web);
-  const gchar *uri = webkit_web_view_get_uri(w);
+  const char *uri = webkit_web_view_get_uri(w);
   if (uri && strlen(uri)) {
-    const gchar *title = webkit_web_view_get_title(w);
+    const char *title = webkit_web_view_get_title(w);
     for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
       Quickmark *q = l->data;
       if (!strcmp(key, q->key)) {
@@ -1013,7 +1013,7 @@ dwb_save_quickmark(const gchar *key) {
     dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_com_quickmark_new(uri, title, key));
     dwb_normal_mode(false);
 
-    gchar *message = g_strdup_printf("Added quickmark: %s - %s", key, uri);
+    char *message = g_strdup_printf("Added quickmark: %s - %s", key, uri);
     dwb_set_normal_message(dwb.state.fview, message, true);
 
     g_free(message);
@@ -1023,10 +1023,10 @@ dwb_save_quickmark(const gchar *key) {
   }
 }/*}}}*/
 
-/* dwb_open_quickmark(const gchar *key){{{*/
+/* dwb_open_quickmark(const char *key){{{*/
 void 
-dwb_open_quickmark(const gchar *key) {
-  gchar *message = NULL;
+dwb_open_quickmark(const char *key) {
+  char *message = NULL;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
@@ -1047,10 +1047,10 @@ dwb_open_quickmark(const gchar *key) {
 
 /* dwb_tab_label_set_text {{{*/
 static void
-dwb_tab_label_set_text(GList *gl, const gchar *text) {
+dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
-  const gchar *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-  gchar *escaped = g_markup_printf_escaped("%d : %s", g_list_position(dwb.state.views, gl), uri ? uri : "about:blank");
+  const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+  char *escaped = g_markup_printf_escaped("%d : %s", g_list_position(dwb.state.views, gl), uri ? uri : "about:blank");
   gtk_label_set_text(GTK_LABEL(v->tablabel), escaped);
   g_free(escaped);
 }/*}}}*/
@@ -1060,7 +1060,7 @@ void
 dwb_update_status(GList *gl) {
     View *v = gl->data;
     WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
-    const gchar *title = webkit_web_view_get_title(w);
+    const char *title = webkit_web_view_get_title(w);
 
   if (gl == dwb.state.fview) {
     gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title :  dwb.misc.name);
@@ -1075,7 +1075,7 @@ static void
 dwb_update_tab_label() {
   for (GList *gl = dwb.state.views; gl; gl = gl->next) {
     View *v = gl->data;
-    const gchar *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+    const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
     dwb_tab_label_set_text(gl, title);
   }
 }/*}}}*/
@@ -1098,11 +1098,11 @@ dwb_grab_focus(GList *gl) {
 /* dwb_new_window(Arg *arg) {{{*/
 void 
 dwb_new_window(Arg *arg) {
-  gchar *argv[5];
+  char *argv[5];
 
-  argv[0] = (gchar *)dwb.misc.prog_path;
+  argv[0] = (char *)dwb.misc.prog_path;
   argv[1] = "-p"; 
-  argv[2] = (gchar *)dwb.misc.profile;
+  argv[2] = (char *)dwb.misc.profile;
   argv[3] = arg->p;
   argv[4] = NULL;
   g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
@@ -1116,7 +1116,7 @@ dwb_load_uri(Arg *arg) {
     return;
   }
   if (arg && arg->p && strlen(arg->p)) {
-    gchar *uri = dwb_get_resolved_uri(arg->p);
+    char *uri = dwb_get_resolved_uri(arg->p);
 
     if (dwb.state.last_cookie) {
       soup_cookie_free(dwb.state.last_cookie); 
@@ -1164,7 +1164,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
     return false;
   }
 
-  gchar *key = dwb_util_keyval_to_char(e->keyval);
+  char *key = dwb_util_keyval_to_char(e->keyval);
   gboolean ret = false;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
@@ -1185,8 +1185,8 @@ dwb_eval_editing_key(GdkEventKey *e) {
 static gboolean
 dwb_eval_key(GdkEventKey *e) {
   gboolean ret = false;
-  const gchar *old = dwb.state.buffer ? dwb.state.buffer->str : NULL;
-  gint keyval = e->keyval;
+  const char *old = dwb.state.buffer ? dwb.state.buffer->str : NULL;
+  int keyval = e->keyval;
 
   if (dwb.state.scriptlock) {
     return true;
@@ -1211,7 +1211,7 @@ dwb_eval_key(GdkEventKey *e) {
     }
     return ret;
   }
-  gchar *key = dwb_util_keyval_to_char(keyval);
+  char *key = dwb_util_keyval_to_char(keyval);
   if (!key) {
     return false;
   }
@@ -1235,9 +1235,9 @@ dwb_eval_key(GdkEventKey *e) {
     dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_normal);
   }
 
-  const gchar *buf = dwb.state.buffer->str;
-  gint length = dwb.state.buffer->len;
-  gint longest = 0;
+  const char *buf = dwb.state.buffer->str;
+  int length = dwb.state.buffer->len;
+  int longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
 
@@ -1335,9 +1335,9 @@ dwb_normal_mode(gboolean clean) {
   dwb_clean_vars();
 }/*}}}*/
 
-/* dwb_get_resolved_uri(const gchar *uri) {{{*/
-static gchar * 
-dwb_get_resolved_uri(const gchar *uri) {
+/* dwb_get_resolved_uri(const char *uri) {{{*/
+static char * 
+dwb_get_resolved_uri(const char *uri) {
   char *tmp = NULL;
   gboolean is_file = false;
   // check if uri is a file
@@ -1358,8 +1358,8 @@ gboolean
 dwb_update_search(gboolean forward) {
   View *v = CURRENT_VIEW();
   WebKitWebView *web = CURRENT_WEBVIEW();
-  const gchar *text = GET_TEXT();
-  gint matches;
+  const char *text = GET_TEXT();
+  int matches;
   if (strlen(text) > 0) {
     if (v->status->search_string) {
       g_free(v->status->search_string);
@@ -1371,7 +1371,7 @@ dwb_update_search(gboolean forward) {
   }
   webkit_web_view_unmark_text_matches(web);
   if ( (matches = webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0)) ) {
-    gchar *message = g_strdup_printf("[%d matches]", matches);
+    char *message = g_strdup_printf("[%d matches]", matches);
     dwb_set_normal_message(dwb.state.fview, message, false);
     webkit_web_view_set_highlight_text_matches(web, true);
     g_free(message);
@@ -1405,9 +1405,9 @@ dwb_search(Arg *arg) {
 void
 dwb_execute_user_script(Arg *a) {
   GError *e = NULL;
-  gchar *argv[3] = { a->p, (gchar*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
+  char *argv[3] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
   if (!g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &e )) {
-    fprintf(stderr, "Couldn't execute %s: %s\n", (gchar*)a->p, e->message);
+    fprintf(stderr, "Couldn't execute %s: %s\n", (char*)a->p, e->message);
   }
 }/*}}}*/
 
@@ -1415,20 +1415,20 @@ dwb_execute_user_script(Arg *a) {
 GList * 
 dwb_get_scripts() {
   GDir *dir;
-  gchar *filename;
-  gchar *content;
+  char *filename;
+  char *content;
   GList *gl = NULL;
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
-      gchar *path = g_build_filename(dwb.files.userscripts, filename, NULL);
+      char *path = g_build_filename(dwb.files.userscripts, filename, NULL);
 
       g_file_get_contents(path, &content, NULL, NULL);
-      gchar **lines = g_strsplit(content, "\n", -1);
-      gint i=0;
+      char **lines = g_strsplit(content, "\n", -1);
+      int i=0;
       while (lines[i]) {
         if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
-          gchar **line = g_strsplit(lines[i], "dwb:", 2);
+          char **line = g_strsplit(lines[i], "dwb:", 2);
           if (line[1]) {
             KeyMap *map = dwb_malloc(sizeof(KeyMap));
             Key key = dwb_str_to_key(line[1]);
@@ -1481,9 +1481,9 @@ dwb_clean_up() {
 
 /* dwb_save_navigation_fc{{{*/
 void 
-dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length, gboolean free) {
+dwb_save_navigation_fc(GList *fc, const char *filename, int length, gboolean free) {
   GString *string = g_string_new(NULL);
-  gint i=0;
+  int i=0;
   for (GList *l = fc; l && (length<0 || i<length) ; l=l->next, i++)  {
     Navigation *n = l->data;
     g_string_append_printf(string, "%s %s\n", n->first, n->second);
@@ -1494,12 +1494,12 @@ dwb_save_navigation_fc(GList *fc, const gchar *filename, gint length, gboolean f
   g_string_free(string, true);
 }/*}}}*/
 
-/* dwb_save_simple_file(GList *, const gchar *){{{*/
+/* dwb_save_simple_file(GList *, const char *){{{*/
 void
-dwb_save_simple_file(GList *fc, const gchar *filename, gboolean free) {
+dwb_save_simple_file(GList *fc, const char *filename, gboolean free) {
   GString *string = g_string_new(NULL);
   for (GList *l = fc; l; l=l->next)  {
-    g_string_append_printf(string, "%s\n", (gchar*)l->data);
+    g_string_append_printf(string, "%s\n", (char*)l->data);
     if (free) {
       g_free(l->data);
     }
@@ -1513,7 +1513,7 @@ void
 dwb_save_keys() {
   GKeyFile *keyfile = g_key_file_new();
   GError *error = NULL;
-  gchar *content;
+  char *content;
   gsize size;
 
   if (!g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error)) {
@@ -1522,7 +1522,7 @@ dwb_save_keys() {
   }
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *map = l->data;
-    gchar *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
+    char *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
     g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
     g_free(sc);
   }
@@ -1541,7 +1541,7 @@ void
 dwb_save_settings() {
   GKeyFile *keyfile = g_key_file_new();
   GError *error = NULL;
-  gchar *content;
+  char *content;
   gsize size;
 
   if (!g_key_file_load_from_file(keyfile, dwb.files.settings, G_KEY_FILE_KEEP_COMMENTS, &error)) {
@@ -1550,7 +1550,7 @@ dwb_save_settings() {
   }
   for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
-    gchar *value = dwb_util_arg_to_char(&s->arg, s->type); 
+    char *value = dwb_util_arg_to_char(&s->arg, s->type); 
     g_key_file_set_value(keyfile, dwb.misc.profile, s->n.first, value ? value : "" );
 
     g_free(value);
@@ -1620,13 +1620,13 @@ dwb_end() {
 
 /* KEYS {{{*/
 
-/* dwb_str_to_key(gchar *str)      return: Key{{{*/
+/* dwb_str_to_key(char *str)      return: Key{{{*/
 Key 
-dwb_str_to_key(gchar *str) {
+dwb_str_to_key(char *str) {
   Key key = { .mod = 0, .str = NULL };
   GString *buffer = g_string_new(NULL);
 
-  gchar **string = g_strsplit(str, " ", -1);
+  char **string = g_strsplit(str, " ", -1);
 
   for (int i=0; i<g_strv_length(string); i++)  {
     if (!g_ascii_strcasecmp(string[i], "Control")) {
@@ -1658,13 +1658,13 @@ dwb_generate_keyfile() {
   gsize l;
   GError *error = NULL;
 
-  for (gint i=0; i<LENGTH(KEYS); i++) {
+  for (int i=0; i<LENGTH(KEYS); i++) {
     KeyValue k = KEYS[i];
-    gchar *value = k.key.mod ? g_strdup_printf("%s %s", dwb_modmask_to_string(k.key.mod), k.key.str) : g_strdup(k.key.str);
+    char *value = k.key.mod ? g_strdup_printf("%s %s", dwb_modmask_to_string(k.key.mod), k.key.str) : g_strdup(k.key.str);
     g_key_file_set_value(keyfile, dwb.misc.profile, k.id, value);
     g_free(value);
   }
-  gchar *content;
+  char *content;
   if ( (content = g_key_file_to_data(keyfile, &l, &error)) ) {
     g_file_set_contents(dwb.files.keys, content, l, &error);
   }
@@ -1699,7 +1699,7 @@ dwb_keymap_add(GList *gl, KeyValue key) {
       FunctionMap *fmap = &FMAP[i];
       keymap->key = key.key.str ? key.key.str : "";
       keymap->mod = key.key.mod;
-      fmap->n.first = (gchar*)key.id;
+      fmap->n.first = (char*)key.id;
       keymap->map = fmap;
       gl = g_list_prepend(gl, keymap);
       break;
@@ -1738,9 +1738,9 @@ dwb_init_key_map() {
     fprintf(stderr, "No keyfile found: %s\nUsing default values.\n", error->message);
     error = NULL;
   }
-  for (gint i=0; i<LENGTH(KEYS); i++) {
+  for (int i=0; i<LENGTH(KEYS); i++) {
     KeyValue kv;
-    gchar *string = g_key_file_get_value(keyfile, dwb.misc.profile, KEYS[i].id, NULL);
+    char *string = g_key_file_get_value(keyfile, dwb.misc.profile, KEYS[i].id, NULL);
     if (string) {
       kv.key = dwb_str_to_key(string);
     }
@@ -1760,8 +1760,8 @@ gboolean
 dwb_read_settings() {
   GError *error = NULL;
   gsize length, numkeys = 0;
-  gchar  **keys = NULL;
-  gchar  *content;
+  char  **keys = NULL;
+  char  *content;
   GKeyFile  *keyfile = g_key_file_new();
   Arg *arg;
   setlocale(LC_NUMERIC, "C");
@@ -1786,9 +1786,9 @@ dwb_read_settings() {
   }
   for (int j=0; j<LENGTH(DWB_SETTINGS); j++) {
     gboolean set = false;
-    gchar *key = g_strdup(DWB_SETTINGS[j].n.first);
+    char *key = g_strdup(DWB_SETTINGS[j].n.first);
     for (int i=0; i<numkeys; i++) {
-      gchar *value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
+      char *value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
       if (!strcmp(keys[i], DWB_SETTINGS[j].n.first)) {
         WebSettings *s = dwb_malloc(sizeof(WebSettings));
         *s = DWB_SETTINGS[j];
@@ -1842,7 +1842,7 @@ dwb_init_scripts() {
   g_string_append_printf(buffer, "hint_opacity = %f;\n",            GET_DOUBLE("hint-opacity"));
 
   // init system scripts
-  gchar *dir;
+  char *dir;
   dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
   if ( (dir = dwb_util_get_data_dir("scripts")) ) {
     dwb_util_get_directory_content(&buffer, dir);
@@ -1886,9 +1886,9 @@ dwb_init_style() {
   dwb.color.settings_bg_color = GET_CHAR("settings-bg-color");
 
   // Fonts
-  gint active_font_size = GET_INT("active-font-size");
-  gint normal_font_size = GET_INT("normal-font-size");
-  gchar *font = GET_CHAR("font");
+  int active_font_size = GET_INT("active-font-size");
+  int normal_font_size = GET_INT("normal-font-size");
+  char *font = GET_CHAR("font");
 
   dwb.font.fd_normal = pango_font_description_from_string(font);
   dwb.font.fd_bold = pango_font_description_from_string(font);
@@ -1966,11 +1966,11 @@ dwb_init_gui() {
 
 /* dwb_init_file_content {{{*/
 GList *
-dwb_init_file_content(GList *gl, const gchar *filename, Content_Func func) {
-  gchar *content = dwb_util_get_file_content(filename);
+dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
+  char *content = dwb_util_get_file_content(filename);
   if (content) {
-    gchar **token = g_strsplit(content, "\n", 0);
-    gint length = MAX(g_strv_length(token) - 1, 0);
+    char **token = g_strsplit(content, "\n", 0);
+    int length = MAX(g_strv_length(token) - 1, 0);
     for (int i=0;  i < length; i++) {
       gl = g_list_append(gl, func(token[i]));
     }
@@ -1983,8 +1983,8 @@ dwb_init_file_content(GList *gl, const gchar *filename, Content_Func func) {
 /* dwb_init_files() {{{*/
 static void
 dwb_init_files() {
-  gchar *path = dwb_util_build_path();
-  gchar *profile_path = g_build_filename(path, dwb.misc.profile, NULL);
+  char *path = dwb_util_build_path();
+  char *profile_path = g_build_filename(path, dwb.misc.profile, NULL);
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(profile_path, 0755);
   }
@@ -2028,7 +2028,7 @@ dwb_init_files() {
 
 /* signals {{{*/
 static void
-dwb_handle_signal(gint s) {
+dwb_handle_signal(int s) {
   if (s == SIGALRM || s == SIGFPE || s == SIGILL || s == SIGINT || s == SIGQUIT || s == SIGTERM) {
     dwb_end();
     exit(EXIT_SUCCESS);
@@ -2056,8 +2056,8 @@ dwb_init_signals() {
 /* dwb_init_proxy{{{*/
 static void 
 dwb_init_proxy() {
-  const gchar *proxy;
-  gchar *newproxy;
+  const char *proxy;
+  char *newproxy;
   if ( !(proxy =  g_getenv("http_proxy")) && !(proxy =  GET_CHAR("proxy-url")) )
     return;
 
@@ -2116,7 +2116,7 @@ void dwb_init() {
   }
   if (restore && dwb_session_restore(restore));
   else if (dwb.misc.argc > 0) {
-    for (gint i=0; i<dwb.misc.argc; i++) {
+    for (int i=0; i<dwb.misc.argc; i++) {
       Arg a = { .p = dwb.misc.argv[i] };
       dwb_add_view(&a);
     }
@@ -2127,10 +2127,10 @@ void dwb_init() {
 } /*}}}*/ /*}}}*/
 
 /* FIFO {{{*/
-/* dwb_parse_command_line(const gchar *line) {{{*/
+/* dwb_parse_command_line(const char *line) {{{*/
 void 
-dwb_parse_command_line(const gchar *line) {
-  gchar **token = g_strsplit(line, " ", 2);
+dwb_parse_command_line(const char *line) {
+  char **token = g_strsplit(line, " ", 2);
 
   if (!token[0]) 
     return;
@@ -2160,7 +2160,7 @@ dwb_parse_command_line(const gchar *line) {
 /* dwb_handle_channel {{{*/
 gboolean
 dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
-  gchar *line = NULL;
+  char *line = NULL;
 
   g_io_channel_read_line(c, &line, NULL, NULL, NULL);
   if (line) {
@@ -2174,9 +2174,9 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 
 /* dwb_init_fifo{{{*/
 void 
-dwb_init_fifo(gint single) {
+dwb_init_fifo(int single) {
   FILE *ff;
-  gchar *path = dwb_util_build_path();
+  char *path = dwb_util_build_path();
   dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
   g_free(path);
 
@@ -2188,7 +2188,7 @@ dwb_init_fifo(gint single) {
   if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
     mkfifo(dwb.files.unifile, 0666);
   }
-  gint fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
+  int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
   if ( (ff = fdopen(fd, "w")) ) {
     if (dwb.misc.argc) {
       for (int i=0; i<dwb.misc.argc; i++) {
@@ -2208,13 +2208,13 @@ dwb_init_fifo(gint single) {
 }/*}}}*/
 /*}}}*/
 
-int main(gint argc, gchar *argv[]) {
+int main(int argc, char *argv[]) {
   dwb.misc.name = NAME;
   dwb.misc.profile = "default";
   dwb.misc.argc = 0;
   dwb.misc.prog_path = argv[0];
-  gint last = 0;
-  gint single = 0;
+  int last = 0;
+  int single = 0;
 
   gtk_init(&argc, &argv);
 

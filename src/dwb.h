@@ -67,7 +67,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define DWB_TAB_KEY(e)              (e->keyval == GDK_Tab || e->keyval == GDK_ISO_Left_Tab)
 
 // Settings
-#define GET_CHAR(prop)              ((gchar*)(((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.p))
+#define GET_CHAR(prop)              ((char*)(((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.p))
 #define GET_BOOL(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.b)
 #define GET_INT(prop)               (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.i)
 #define GET_DOUBLE(prop)            (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.d)
@@ -100,7 +100,7 @@ typedef union _Type Type;
 typedef gboolean (*Command_f)(void*);
 typedef gboolean (*Func)(void*);
 typedef void (*S_Func)(void *, WebSettings *);
-typedef void *(*Content_Func)(const gchar *);
+typedef void *(*Content_Func)(const char *);
 
 /* ENUMS {{{*/
 enum _Mode {
@@ -182,41 +182,41 @@ typedef enum _ShowMessage ShowMessage;
 
 /* STRUCTS {{{*/
 struct _Navigation {
-  gchar *first;
-  gchar *second;
+  char *first;
+  char *second;
 };
 struct _Arg {
   guint n;
-  gint i;
-  gdouble d;
+  int i;
+  double d;
   gpointer p;
   gboolean b;
-  gchar *e;
+  char *e;
 };
 struct _Key {
-  const gchar *str;
+  const char *str;
   guint mod;
 };
 struct _KeyValue {
-  const gchar *id;
+  const char *id;
   Key key;
 };
 struct _FunctionMap {
   Navigation n;
-  gint command_line; // command line function ? 
+  int command_line; // command line function ? 
   Func func;
-  const gchar *error; 
+  const char *error; 
   ShowMessage hide;
   Arg arg;
   gboolean entry;
 };
 struct _KeyMap {
-  const gchar *key;
+  const char *key;
   guint mod;
   FunctionMap *map;
 };
 struct _Quickmark {
-  gchar *key; 
+  char *key; 
   Navigation *nav;
 };
 struct _Completions {
@@ -235,10 +235,10 @@ struct _State {
   WebKitWebSettings *web_settings;
   Mode mode;
   GString *buffer;
-  gint nummod;
+  int nummod;
   Open nv;
   guint scriptlock;
-  gint size;
+  int size;
   GHashTable *settings_hash;
   SettingsScope setting_apply;
   gboolean forward_search;
@@ -252,20 +252,20 @@ struct _State {
 
   GList *undo_list;
 
-  gchar *input_id;
+  char *input_id;
 
-  gchar *search_engine;
-  gchar *form_name;
+  char *search_engine;
+  char *form_name;
 
   WebKitDownload *download;
   DownloadAction dl_action;
-  gchar *download_command;
-  gchar *mimetype_request;
+  char *download_command;
+  char *mimetype_request;
 };
 
 union _Type {
   gboolean b;
-  gdouble f;
+  double f;
   guint i; 
   gpointer p;
 };
@@ -280,10 +280,10 @@ struct _WebSettings {
 struct _ViewStatus {
   guint message_id;
   gboolean add_history;
-  gchar *search_string;
+  char *search_string;
   GList *downloads;
-  gchar *current_host;
-  gint items_blocked;
+  char *current_host;
+  int items_blocked;
   gboolean block;
   gboolean block_current;
   gboolean custom_encoding;
@@ -324,15 +324,15 @@ struct _Color {
   GdkColor normal_c_bg;
   GdkColor download_fg;
   GdkColor download_bg;
-  gchar *settings_bg_color;
-  gchar *settings_fg_color;
+  char *settings_bg_color;
+  char *settings_fg_color;
 };
 struct _Font {
   PangoFontDescription *fd_normal;
   PangoFontDescription *fd_bold;
   PangoFontDescription *fd_oblique;
-  gint active_size;
-  gint normal_size;
+  int active_size;
+  int normal_size;
 };
 struct _Setting {
   gboolean inc_search;
@@ -348,52 +348,52 @@ struct _Gui {
   GtkWidget *left;
   GtkWidget *entry;
   GtkWidget *downloadbar;
-  gint width;
-  gint height;
+  int width;
+  int height;
 };
 struct _Misc {
-  const gchar *name;
-  const gchar *prog_path;
-  gchar *scripts;
-  const gchar *profile;
-  const gchar *default_search;
+  const char *name;
+  const char *prog_path;
+  char *scripts;
+  const char *profile;
+  const char *default_search;
   SoupSession *soupsession;
   SoupURI *proxyuri;
 
   GIOChannel *si_channel;
 
-  gdouble factor;
-  gint max_c_items;
-  gint message_delay;
-  gint history_length;
+  double factor;
+  int max_c_items;
+  int message_delay;
+  int history_length;
 
-  gchar *settings_border;
-  gint argc;
-  gchar **argv;
+  char *settings_border;
+  int argc;
+  char **argv;
   gboolean single;
 
-  gchar *startpage;
-  gchar *download_com;
+  char *startpage;
+  char *download_com;
 
-  gchar *content_block_regex;
+  char *content_block_regex;
 };
 struct _Files {
-  const gchar *bookmarks;
-  const gchar *history;
-  const gchar *mimetypes;
-  const gchar *quickmarks;
-  const gchar *session;
-  const gchar *searchengines;
-  const gchar *stylesheet;
-  const gchar *keys;
-  const gchar *scriptdir;
-  const gchar *userscripts;
-  const gchar *settings;
-  const gchar *cookies;
-  const gchar *cookies_allow;
-  const gchar *download_path;
-  const gchar *content_block_allow;
-  const gchar *unifile;
+  const char *bookmarks;
+  const char *history;
+  const char *mimetypes;
+  const char *quickmarks;
+  const char *session;
+  const char *searchengines;
+  const char *stylesheet;
+  const char *keys;
+  const char *scriptdir;
+  const char *userscripts;
+  const char *settings;
+  const char *cookies;
+  const char *cookies_allow;
+  const char *download_path;
+  const char *content_block_allow;
+  const char *unifile;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -437,31 +437,31 @@ void dwb_focus_scroll(GList *);
 
 gboolean dwb_update_search(gboolean forward);
 
-void dwb_set_normal_message(GList *, const gchar *, gboolean);
-void dwb_set_error_message(GList *, const gchar *);
-void dwb_set_status_text(GList *, const gchar *, GdkColor *,  PangoFontDescription *);
-void dwb_set_status_bar_text(GtkWidget *, const gchar *, GdkColor *,  PangoFontDescription *);
+void dwb_set_normal_message(GList *, const char *, gboolean);
+void dwb_set_error_message(GList *, const char *);
+void dwb_set_status_text(GList *, const char *, GdkColor *,  PangoFontDescription *);
+void dwb_set_status_bar_text(GtkWidget *, const char *, GdkColor *,  PangoFontDescription *);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
 void dwb_update_layout(void);
 void dwb_focus(GList *gl);
 
 gboolean dwb_prepend_navigation(GList *, GList **);
-void dwb_prepend_navigation_with_argument(GList **, const gchar *, const gchar *);
+void dwb_prepend_navigation_with_argument(GList **, const char *, const char *);
 
 Navigation * dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *);
 gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
-gchar * dwb_execute_script(const gchar *);
-void dwb_resize(gdouble );
+char * dwb_execute_script(const char *);
+void dwb_resize(double );
 void dwb_grab_focus(GList *);
 void dwb_source_remove(GList *);
 
-gint dwb_entry_position_word_back(gint position);
-gint dwb_entry_position_word_forward(gint position);
-void dwb_entry_set_text(const gchar *text);
+int dwb_entry_position_word_back(int position);
+int dwb_entry_position_word_forward(int position);
+void dwb_entry_set_text(const char *text);
 
 void dwb_set_proxy(GList *, WebSettings *);
 
@@ -469,14 +469,14 @@ void dwb_set_single_instance(GList *, WebSettings *);
 void dwb_new_window(Arg *arg);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
-void dwb_parse_command_line(const gchar *);
+void dwb_parse_command_line(const char *);
 GHashTable * dwb_get_default_settings(void);
 
-gchar * dwb_get_host(const gchar *uri);
-GList * dwb_get_host_blocked(GList *, gchar *host);
+char * dwb_get_host(const char *uri);
+GList * dwb_get_host_blocked(GList *, char *host);
 
 gboolean dwb_end(void);
-Key dwb_str_to_key(gchar *);
+Key dwb_str_to_key(char *);
 
 GList * dwb_keymap_delete(GList *, KeyValue );
 GList * dwb_keymap_add(GList *, KeyValue );
@@ -485,5 +485,5 @@ void dwb_got_headers_cb(SoupMessage *msg, GList *gl);
 void dwb_save_settings(void);
 gboolean dwb_save_files(gboolean);
 
-void dwb_append_navigation_with_argument(GList **, const gchar *, const gchar *);
+void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 #endif

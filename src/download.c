@@ -11,16 +11,16 @@ typedef struct _DwbDownload {
   GtkWidget *llabel;
   WebKitDownload *download;
   DownloadAction action;
-  gchar *path;
+  char *path;
 } DwbDownload;
 
 static GList *downloads = NULL;
-static gchar *lastdir = NULL;
+static char *lastdir = NULL;
 
-/*  dwb_get_command_from_mimetype(gchar *mimetype){{{*/
-static gchar *
-dwb_get_command_from_mimetype(gchar *mimetype) {
-  gchar *command = NULL;
+/*  dwb_get_command_from_mimetype(char *mimetype){{{*/
+static char *
+dwb_get_command_from_mimetype(char *mimetype) {
+  char *command = NULL;
   for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
     Navigation *n = l->data;
     if (!strcmp(n->first, mimetype)) {
@@ -32,10 +32,10 @@ dwb_get_command_from_mimetype(gchar *mimetype) {
 }/*}}}*/
 
 /* dwb_get_download_command {{{*/
-static gchar *
-dwb_get_download_command(const gchar *uri, const gchar *output) {
-  gchar *command = g_strdup(GET_CHAR("download-external-command"));
-  gchar *newcommand = NULL;
+static char *
+dwb_get_download_command(const char *uri, const char *output) {
+  char *command = g_strdup(GET_CHAR("download-external-command"));
+  char *newcommand = NULL;
 
   if ( (newcommand = dwb_util_string_replace(command, "dwb_uri", uri)) ) {
     g_free(command);
@@ -70,20 +70,20 @@ dwb_dl_progress_cb(WebKitDownload *download) {
   GList *l = dwb_dl_get_download_label(download); 
   DwbDownload *label = l->data;
 
-  gdouble elapsed = webkit_download_get_elapsed_time(download);
-  gdouble progress = webkit_download_get_progress(download);
+  double elapsed = webkit_download_get_elapsed_time(download);
+  double progress = webkit_download_get_progress(download);
 
 
-  gdouble current_size = (gdouble)webkit_download_get_current_size(download) / 0x100000;
-  gdouble total_size = (gdouble)webkit_download_get_total_size(download) / 0x100000;
+  double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
+  double total_size = (double)webkit_download_get_total_size(download) / 0x100000;
   guint remaining = (guint)(elapsed / progress - elapsed);
-  gchar *message = g_strdup_printf("[%d:%02d][%d%%][%.3f/%.3f]", remaining/60, remaining%60,  (gint)(progress*100), current_size,  total_size);
+  char *message = g_strdup_printf("[%d:%02d][%d%%][%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
   gtk_label_set_text(GTK_LABEL(label->rlabel), message);
   g_free(message);
 
   guint blue = ((1 - progress) * 0xaa);
   guint green = progress * 0xaa;
-  gchar *colorstring = g_strdup_printf("#%02x%02x%02x", 0x00, green, blue);
+  char *colorstring = g_strdup_printf("#%02x%02x%02x", 0x00, green, blue);
 
   GdkColor color; 
   gdk_color_parse(colorstring, &color);
@@ -91,9 +91,9 @@ dwb_dl_progress_cb(WebKitDownload *download) {
   g_free(colorstring);
 }/*}}}*/
 
-/* dwb_dl_set_mimetype(const gchar *) {{{*/
+/* dwb_dl_set_mimetype(const char *) {{{*/
 static void
-dwb_dl_set_mimetype(const gchar *command) {
+dwb_dl_set_mimetype(const char *command) {
   if (dwb.state.mimetype_request) {
     for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
       Navigation *n = l->data;
@@ -112,10 +112,10 @@ dwb_dl_set_mimetype(const gchar *command) {
 static void 
 dwb_dl_spawn(DwbDownload *dl) {
   GError *error = NULL;
-  const gchar *filename = webkit_download_get_destination_uri(dl->download);
-  gchar *command = g_strconcat(dl->path, " ", filename + 7, NULL);
+  const char *filename = webkit_download_get_destination_uri(dl->download);
+  char *command = g_strconcat(dl->path, " ", filename + 7, NULL);
 
-  gchar **argv = g_strsplit(command, " ", -1);
+  char **argv = g_strsplit(command, " ", -1);
   if (! g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &error) ) {
     fprintf(stderr, "Couldn't open %s with %s : %s\n", filename + 7, dl->path, error->message);
   }
@@ -157,15 +157,15 @@ dwb_dl_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *gl) {
   return false;
 }/*}}}*/
 
-/* dwb_dl_add_progress_label (GList *gl, const gchar *filename) {{{*/
+/* dwb_dl_add_progress_label (GList *gl, const char *filename) {{{*/
 static DwbDownload *
-dwb_dl_add_progress_label(GList *gl, const gchar *filename) {
+dwb_dl_add_progress_label(GList *gl, const char *filename) {
   DwbDownload *l = g_malloc(sizeof(DwbDownload));
 
   GtkWidget *hbox = gtk_hbox_new(false, 5);
   l->event = gtk_event_box_new();
   l->rlabel = gtk_label_new("???");
-  gchar *escaped  = g_markup_escape_text(filename, -1);
+  char *escaped  = g_markup_escape_text(filename, -1);
   l->llabel = gtk_label_new(escaped);
 
   gtk_box_pack_start(GTK_BOX(hbox), l->llabel, false, false, 1);
@@ -192,9 +192,9 @@ dwb_dl_add_progress_label(GList *gl, const gchar *filename) {
 /* dwb_dl_start {{{*/
 void 
 dwb_dl_start() {
-  const gchar *path = GET_TEXT();
-  gchar *fullpath;
-  const gchar *filename = webkit_download_get_suggested_filename(dwb.state.download);
+  const char *path = GET_TEXT();
+  char *fullpath;
+  const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
   char *command = NULL;
   gboolean external = GET_BOOL("download-use-external-program");
   
@@ -225,7 +225,7 @@ dwb_dl_start() {
   }
 
   if (external && dwb.state.dl_action == Download) {
-    const gchar *uri = webkit_download_get_uri(dwb.state.download);
+    const char *uri = webkit_download_get_uri(dwb.state.download);
     command = dwb_get_download_command(uri, fullpath);
     if (!g_spawn_command_line_async(command, NULL)) {
       dwb_set_error_message(dwb.state.fview, "Cannot spawn download program");
@@ -259,8 +259,8 @@ dwb_dl_start() {
 static void
 dwb_dl_entry_set_directory() {
   dwb_set_normal_message(dwb.state.fview, "Downloadpath:", false);
-  gchar *current_dir = lastdir ? g_strdup(lastdir) : g_get_current_dir();
-  gchar *newdir = current_dir[strlen(current_dir) - 1] != '/' ? g_strdup_printf("%s/", current_dir) : g_strdup(current_dir);
+  char *current_dir = lastdir ? g_strdup(lastdir) : g_get_current_dir();
+  char *newdir = current_dir[strlen(current_dir) - 1] != '/' ? g_strdup_printf("%s/", current_dir) : g_strdup(current_dir);
 
   dwb_entry_set_text(newdir);
   if (current_dir) 
@@ -271,11 +271,11 @@ dwb_dl_entry_set_directory() {
 
 /* dwb_dl_entry_set_spawn_command{{{*/
 void
-dwb_dl_entry_set_spawn_command(const gchar *command) {
+dwb_dl_entry_set_spawn_command(const char *command) {
   if (!command && dwb.state.mimetype_request) {
     command = dwb_get_command_from_mimetype(dwb.state.mimetype_request);
   }
-  gchar *message = g_strdup_printf("Spawn (%s):", dwb.state.mimetype_request ? dwb.state.mimetype_request : "???");
+  char *message = g_strdup_printf("Spawn (%s):", dwb.state.mimetype_request ? dwb.state.mimetype_request : "???");
   dwb_set_normal_message(dwb.state.fview, message, false);
   g_free(message);
   dwb_entry_set_text(command ? command : "");
@@ -284,7 +284,7 @@ dwb_dl_entry_set_spawn_command(const gchar *command) {
 /* dwb_dl_get_path {{{*/
 void 
 dwb_dl_get_path(GList *gl, WebKitDownload *d) {
-  gchar *command;
+  char *command;
   dwb_focus_entry();
   dwb.state.mode = DownloadGetPath;
   dwb.state.download = d;

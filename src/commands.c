@@ -23,7 +23,7 @@ dwb_com_simple_command(KeyMap *km) {
 
   if (func(arg)) {
     if (!km->map->hide) {
-      gchar *message = g_strconcat(km->map->n.second, ":", NULL);
+      char *message = g_strconcat(km->map->n.second, ":", NULL);
       dwb_set_normal_message(dwb.state.fview, message, false);
       g_free(message);
     }
@@ -67,8 +67,8 @@ gboolean
 dwb_com_toggle_custom_encoding(Arg *arg) {
   View *v = CURRENT_VIEW();
   WebKitWebView *web = CURRENT_WEBVIEW();
-  gchar *ce = GET_CHAR("custom-encoding");
-  gchar *message;
+  char *ce = GET_CHAR("custom-encoding");
+  char *message;
 
   if (!ce) 
     return false;
@@ -92,7 +92,7 @@ dwb_com_toggle_custom_encoding(Arg *arg) {
 /* dwb_com_focus_input {{{*/
 gboolean
 dwb_com_focus_input(Arg *a) {
-  gchar *value;
+  char *value;
   gboolean ret = true;
 
   value = dwb_execute_script("dwb_focus_input()");
@@ -107,7 +107,7 @@ dwb_com_focus_input(Arg *a) {
 /* dwb_com_add_search_field(Arg *) {{{*/
 gboolean
 dwb_com_add_search_field(Arg *a) {
-  gchar *value;
+  char *value;
   gboolean ret = true;
   value = dwb_execute_script("dwb_add_searchengine()");
   if (value) {
@@ -126,12 +126,12 @@ dwb_com_add_search_field(Arg *a) {
 /* dwb_com_toggle_property {{{*/
 gboolean 
 dwb_com_toggle_property(Arg *a) {
-  gchar *prop = a->p;
+  char *prop = a->p;
   gboolean value;
   WebKitWebSettings *settings = webkit_web_view_get_settings(CURRENT_WEBVIEW());
   g_object_get(settings, prop, &value, NULL);
   g_object_set(settings, prop, !value, NULL);
-  gchar *message = g_strdup_printf("Setting %s set: %s", prop, !value ? "true" : "false");
+  char *message = g_strdup_printf("Setting %s set: %s", prop, !value ? "true" : "false");
   dwb_set_normal_message(dwb.state.fview, message, true);
   g_free(message);
   return true;
@@ -167,8 +167,8 @@ dwb_com_find(Arg *arg) {
 gboolean  
 dwb_com_resize_master(Arg *arg) { 
   gboolean ret = true;
-  gint inc = dwb.state.nummod == 0 ? arg->n : dwb.state.nummod * arg->n;
-  gint size = dwb.state.size + inc;
+  int inc = dwb.state.nummod == 0 ? arg->n : dwb.state.nummod * arg->n;
+  int size = dwb.state.size + inc;
   if (size > 90 || size < 10) {
     size = size > 90 ? 90 : 10;
     ret = false;
@@ -224,7 +224,7 @@ dwb_com_show_settings(Arg *arg) {
   View *v = dwb.state.fview->data;
   GString *buffer = g_string_new(NULL);
   GHashTable *t;
-  const gchar *setting_string;
+  const char *setting_string;
 
   dwb.state.setting_apply = arg->n;
   if ( dwb.state.setting_apply == Global ) {
@@ -250,11 +250,11 @@ dwb_com_show_settings(Arg *arg) {
       g_string_append(buffer, HTML_DIV_START);
       g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->n.second);
       if (m->type == Boolean) {
-        const gchar *value = m->arg.b ? "checked" : "";
+        const char *value = m->arg.b ? "checked" : "";
         g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->n.first, value);
       }
       else {
-        gchar *value = dwb_util_arg_to_char(&m->arg, m->type);
+        char *value = dwb_util_arg_to_char(&m->arg, m->type);
         g_string_append_printf(buffer, HTML_DIV_SETTINGS_VALUE, m->n.first, value ? value : "");
       }
       g_string_append(buffer, HTML_DIV_END);
@@ -274,10 +274,10 @@ dwb_com_show_settings(Arg *arg) {
 gboolean
 dwb_com_allow_cookie(Arg *arg) {
   if (dwb.state.last_cookie) {
-    gchar *domain = (gchar*)soup_cookie_get_domain(dwb.state.last_cookie);
+    char *domain = (char*)soup_cookie_get_domain(dwb.state.last_cookie);
     dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, domain);
     soup_cookie_jar_add_cookie(dwb.state.cookiejar, dwb.state.last_cookie);
-    gchar *message = g_strdup_printf("Saved cookie and allowed domain: %s", domain);
+    char *message = g_strdup_printf("Saved cookie and allowed domain: %s", domain);
     dwb_set_normal_message(dwb.state.fview, message, true);
     g_free(message);
     return true;
@@ -291,7 +291,7 @@ dwb_com_bookmark(Arg *arg) {
   gboolean noerror;
   if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) ) {
     dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)dwb_util_navigation_sort_first);
-    gchar *message = g_strdup_printf("Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
+    char *message = g_strdup_printf("Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
     dwb_set_normal_message(dwb.state.fview, message, true);
     g_free(message);
   }
@@ -331,10 +331,10 @@ gboolean
 dwb_com_zoom_in(Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-  gint limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
+  int limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
   gboolean ret;
 
-  for (gint i=0; i<limit; i++) {
+  for (int i=0; i<limit; i++) {
     if ((webkit_web_view_get_zoom_level(web) > 4.0)) {
       ret = false;
       break;
@@ -350,7 +350,7 @@ gboolean
 dwb_com_zoom_out(Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-  gint limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
+  int limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
   gboolean ret;
 
   for (int i=0; i<limit; i++) {
@@ -368,7 +368,7 @@ dwb_com_zoom_out(Arg *arg) {
 gboolean 
 dwb_com_scroll(Arg *arg) {
   gboolean ret = true;
-  gdouble scroll;
+  double scroll;
   GList *gl = arg->p ? arg->p : dwb.state.fview;
 
   View *v = gl->data;
@@ -376,16 +376,16 @@ dwb_com_scroll(Arg *arg) {
   GtkAdjustment *a = arg->n == Left || arg->n == Right 
     ? gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
     : gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
-  gint sign = arg->n == Up || arg->n == PageUp || arg->n == Left ? -1 : 1;
+  int sign = arg->n == Up || arg->n == PageUp || arg->n == Left ? -1 : 1;
 
-  gdouble value = gtk_adjustment_get_value(a);
+  double value = gtk_adjustment_get_value(a);
 
-  gdouble inc = arg->n == PageUp || arg->n == PageDown 
+  double inc = arg->n == PageUp || arg->n == PageDown 
     ? gtk_adjustment_get_page_increment(a) 
     : gtk_adjustment_get_step_increment(a);
 
-  gdouble lower  = gtk_adjustment_get_lower(a);
-  gdouble upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
+  double lower  = gtk_adjustment_get_lower(a);
+  double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
   switch (arg->n) {
     case  Top:      scroll = lower; break;
     case  Bottom:   scroll = upper; break;
@@ -720,7 +720,7 @@ dwb_com_yank(Arg *arg) {
   WebKitWebView *w = CURRENT_WEBVIEW();
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
   GtkClipboard *old = gtk_clipboard_get(atom);
-  gchar *text = NULL;
+  char *text = NULL;
   gboolean ret = false;
 
   if (webkit_web_view_has_selection(w)) {
@@ -734,7 +734,7 @@ dwb_com_yank(Arg *arg) {
   if (text) {
     if (strlen(text)) {
       gtk_clipboard_set_text(old, text, -1);
-      gchar *message = g_strdup_printf("Yanked: %s", text);
+      char *message = g_strdup_printf("Yanked: %s", text);
       dwb_set_normal_message(dwb.state.fview, message, true);
       g_free(message);
       ret = true;
@@ -749,7 +749,7 @@ gboolean
 dwb_com_paste(Arg *arg) {
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
   GtkClipboard *clipboard = gtk_clipboard_get(atom);
-  gchar *text = NULL;
+  char *text = NULL;
 
   if ( (text = gtk_clipboard_wait_for_text(clipboard)) ) {
     if (dwb.state.nv == OpenNormal)
@@ -765,11 +765,11 @@ dwb_com_paste(Arg *arg) {
 /* dwb_com_entry_delete_word {{{*/
 gboolean 
 dwb_com_entry_delete_word(Arg *a) {
-  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  gchar *text = g_strdup(GET_TEXT());
+  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  char *text = g_strdup(GET_TEXT());
 
   if (position > 0) {
-    gint new = dwb_entry_position_word_back(position);
+    int new = dwb_entry_position_word_back(position);
     dwb_util_cut_text(text, new,  position);
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
     gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), new);
@@ -781,8 +781,8 @@ dwb_com_entry_delete_word(Arg *a) {
 /* dwb_com_entry_delete_letter {{{*/
 gboolean 
 dwb_com_entry_delete_letter(Arg *a) {
-  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  gchar *text = g_strdup(GET_TEXT());
+  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  char *text = g_strdup(GET_TEXT());
 
   if (position > 0) {
     dwb_util_cut_text(text, position-1,  position);
@@ -796,8 +796,8 @@ dwb_com_entry_delete_letter(Arg *a) {
 /* dwb_com_entry_delete_line {{{*/
 gboolean 
 dwb_com_entry_delete_line(Arg *a) {
-  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), &text[position]);
   g_free(text);
@@ -807,7 +807,7 @@ dwb_com_entry_delete_line(Arg *a) {
 /* dwb_com_entry_word_forward {{{*/
 gboolean 
 dwb_com_entry_word_forward(Arg *a) {
-  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
 
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), dwb_entry_position_word_forward(position));
   return  true;
@@ -816,7 +816,7 @@ dwb_com_entry_word_forward(Arg *a) {
 /* dwb_com_entry_word_back {{{*/
 gboolean 
 dwb_com_entry_word_back(Arg *a) {
-  gint position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
 
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), dwb_entry_position_word_back(position));
   return  true;
@@ -844,7 +844,7 @@ dwb_com_entry_history_back(Arg *a) {
   if (! dwb.state.last_com_history  ) {
     if ( (dwb.state.last_com_history = g_list_last(dwb.fc.commands)) ) {
       n = dwb.state.last_com_history->data;
-      gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+      char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
       dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
       g_free(text);
     }
@@ -893,12 +893,12 @@ dwb_com_bookmarks(Arg *arg) {
 
 /* dwb_com_toggle_ugly {{{*/
 void
-dwb_com_toggle_ugly(GList **fc, const gchar *desc) {
+dwb_com_toggle_ugly(GList **fc, const char *desc) {
   WebKitWebView *web = CURRENT_WEBVIEW();
-  const gchar *uri = webkit_web_view_get_uri(web);
-  gchar *host = dwb_get_host(uri);
+  const char *uri = webkit_web_view_get_uri(web);
+  char *host = dwb_get_host(uri);
   GList *block;
-  gchar *message;
+  char *message;
   if (host) {
     if ( (block = dwb_get_host_blocked(*fc, host)) ) {
       *fc = g_list_delete_link(*fc, block);

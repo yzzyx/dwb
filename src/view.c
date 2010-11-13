@@ -11,8 +11,8 @@
 #include "download.h"
 #include "session.h"
 
-static void dwb_parse_setting(const gchar *);
-static void dwb_parse_key_setting(const gchar *);
+static void dwb_parse_setting(const char *);
+static void dwb_parse_key_setting(const char *);
 static void dwb_apply_settings(WebSettings *);
 
 /* WEB_VIEW_CALL_BACKS {{{*/
@@ -29,7 +29,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     dwb_insert_mode(NULL);
   }
   else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
-    gchar *clipboard = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+    char *clipboard = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
     g_strstrip(clipboard);
     Arg a = { .p = clipboard };
     if (e->button == 3) {
@@ -57,9 +57,9 @@ dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
   return true;
 }/*}}}*/
 
-/* dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {{{*/
+/* dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
 static gboolean 
-dwb_web_view_console_message_cb(WebKitWebView *web, gchar *message, gint line, gchar *sourceid, GList *gl) {
+dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
   if (!strcmp(sourceid, KEY_SETTINGS)) {
     dwb_parse_key_setting(message);
   }
@@ -98,9 +98,9 @@ dwb_web_view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *w
   return WEBKIT_WEB_VIEW(webview);
 }/*}}}*/
 
-/* dwb_web_view_hovering_over_link_cb(WebKitWebView *, gchar *title, gchar *uri, GList *) {{{*/
+/* dwb_web_view_hovering_over_link_cb(WebKitWebView *, char *title, char *uri, GList *) {{{*/
 static void 
-dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri, GList *gl) {
+dwb_web_view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl) {
   View *v = VIEW(gl);
   if (uri) {
     dwb_set_status_bar_text(v->rstatus, uri, NULL, NULL);
@@ -112,7 +112,7 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, gchar *title, gchar *uri,
 
 /* dwb_web_view_mime_type_policy_cb {{{*/
 static gboolean 
-dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, gchar *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
+dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OpenDownload) {
     dwb.state.mimetype_request = g_strdup(mimetype);
     webkit_web_policy_decision_download(policy);
@@ -133,7 +133,7 @@ static gboolean
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
-  gint button = webkit_web_navigation_action_get_button(action);
+  int button = webkit_web_navigation_action_get_button(action);
   Arg a = { .p = (char*)webkit_network_request_get_uri(request) };
   if (button != -1) {
     if (button == 2) {
@@ -144,7 +144,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   }
 
   if (dwb.state.nv == OpenNewView || dwb.state.nv == OpenNewWindow) {
-    gchar *uri = (gchar *)webkit_network_request_get_uri(request);
+    char *uri = (char *)webkit_network_request_get_uri(request);
     Arg a = { .p = uri };
     if (dwb.state.nv == OpenNewView) {
       dwb.state.nv = OpenNormal;
@@ -156,7 +156,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     dwb.state.nv = OpenNormal;
     return true;
   }
-  const gchar *request_uri = webkit_network_request_get_uri(request);
+  const char *request_uri = webkit_network_request_get_uri(request);
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
   if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
@@ -196,7 +196,7 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
   View *v = gl->data;
 
   if (v && v->status) {
-    const gchar *content_type = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
+    const char *content_type = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
     if (!v->status->current_host) {
       SoupURI *uri = soup_message_get_uri(msg);
       v->status->current_host = g_strdup(uri->host);
@@ -213,7 +213,7 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
 
 /* dwb_web_view_script_alert_cb {{{*/
 static gboolean 
-dwb_web_view_script_alert_cb(WebKitWebView *web, WebKitWebFrame *frame, gchar *message, GList *gl) {
+dwb_web_view_script_alert_cb(WebKitWebView *web, WebKitWebFrame *frame, char *message, GList *gl) {
   // TODO implement
   return false;
 }/*}}}*/
@@ -250,8 +250,8 @@ dwb_web_view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 static void 
 dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
-  gdouble progress = webkit_web_view_get_progress(web);
-  gchar *text = NULL;
+  double progress = webkit_web_view_get_progress(web);
+  char *text = NULL;
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
@@ -268,7 +268,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_FAILED: 
       break;
     default:
-      text = g_strdup_printf("loading [%d%%]", (gint)(progress * 100));
+      text = g_strdup_printf("loading [%d%%]", (int)(progress * 100));
       dwb_set_status_bar_text(VIEW(gl)->rstatus, text, NULL, NULL); 
       gtk_window_set_title(GTK_WINDOW(dwb.gui.window), text);
       g_free(text);
@@ -356,7 +356,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 static gboolean 
 dwb_view_entry_activate_cb(GtkEntry* entry) {
-  gchar *text = g_strdup(gtk_entry_get_text(entry));
+  char *text = g_strdup(gtk_entry_get_text(entry));
   gboolean ret = false;
   Mode mode = dwb.state.mode;
 
@@ -416,16 +416,16 @@ dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) 
 void 
 dwb_web_view_add_history_item(GList *gl) {
   WebKitWebView *web = WEBVIEW(gl);
-  const gchar *uri = webkit_web_view_get_uri(web);
-  const gchar *title = webkit_web_view_get_title(web);
+  const char *uri = webkit_web_view_get_uri(web);
+  const char *title = webkit_web_view_get_title(web);
   WebKitWebBackForwardList *bl = webkit_web_view_get_back_forward_list(web);
   WebKitWebHistoryItem *hitem = webkit_web_history_item_new_with_data(uri,  title);
   webkit_web_back_forward_list_add_item(bl, hitem);
 }/*}}}*/
 
-/* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, gint fontsize) {{{*/
+/* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
-dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, gint fontsize) {
+dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {
   View *v = gl->data;
   if (fg) {
     gtk_widget_modify_fg(v->rstatus, GTK_STATE_NORMAL, fg);
@@ -651,12 +651,12 @@ dwb_add_view_new_with_webview(void) {
   return NULL;
 }
 
-/* dwb_parse_setting(const gchar *){{{*/
+/* dwb_parse_setting(const char *){{{*/
 void
-dwb_parse_setting(const gchar *text) {
+dwb_parse_setting(const char *text) {
   WebSettings *s;
   Arg *a = NULL;
-  gchar **token = g_strsplit(text, " ", 2);
+  char **token = g_strsplit(text, " ", 2);
 
   GHashTable *t = dwb.state.setting_apply == Global ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
   if (token[0]) {
@@ -664,7 +664,7 @@ dwb_parse_setting(const gchar *text) {
       if ( (a = dwb_util_char_to_arg(token[1], s->type)) || (s->type == Char && a->p == NULL)) {
         s->arg = *a;
         dwb_apply_settings(s);
-        gchar *message = g_strdup_printf("Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
+        char *message = g_strdup_printf("Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
         dwb_set_normal_message(dwb.state.fview, message, true);
         dwb_save_settings();
         g_free(message);
@@ -674,7 +674,7 @@ dwb_parse_setting(const gchar *text) {
       }
     }
     else {
-      gchar *message = g_strconcat("No such setting: ", token[0], NULL);
+      char *message = g_strconcat("No such setting: ", token[0], NULL);
       dwb_set_normal_message(dwb.state.fview, message, true);
       g_free(message);
     }
@@ -685,11 +685,11 @@ dwb_parse_setting(const gchar *text) {
 
 }/*}}}*/
 
-/* dwb_parse_key_setting(const gchar  *text) {{{*/
+/* dwb_parse_key_setting(const char  *text) {{{*/
 void
-dwb_parse_key_setting(const gchar *text) {
+dwb_parse_key_setting(const char *text) {
   KeyValue value;
-  gchar **token = g_strsplit(text, " ", 2);
+  char **token = g_strsplit(text, " ", 2);
 
   value.id = g_strdup(token[0]);
 
@@ -701,7 +701,7 @@ dwb_parse_key_setting(const gchar *text) {
     value.key = key;
   }
 
-  gchar *message = g_strdup_printf("Saved key for command %s: %s", token[0], token[1] ? token[1] : "");
+  char *message = g_strdup_printf("Saved key for command %s: %s", token[0], token[1] ? token[1] : "");
   dwb_set_normal_message(dwb.state.fview, message, true);
   g_free(message);
 

@@ -6,9 +6,9 @@
 #include "commands.h"
 #include "util.h"
 
-static GList * dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back);
+static GList * dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, int max, int back);
 
-typedef gboolean (*Match_Func)(gchar*, const gchar*);
+typedef gboolean (*Match_Func)(char*, const char*);
 
 /* GUI_FUNCTIONS {{{*/
 /* dwb_comp_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
@@ -25,7 +25,7 @@ dwb_comp_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, Pango
 
 /* dwb_comp_get_completion_item(Navigation *)      return: Completion * {{{*/
 static Completion * 
-dwb_comp_get_completion_item(Navigation *n, void *data, const gchar *value) {
+dwb_comp_get_completion_item(Navigation *n, void *data, const char *value) {
   Completion *c = g_malloc(sizeof(Completion));
 
   c->rlabel = gtk_label_new(n->second);
@@ -58,7 +58,7 @@ dwb_comp_get_completion_item(Navigation *n, void *data, const gchar *value) {
 static GList * 
 dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings) {
   Navigation *n;
-  const gchar *input = GET_TEXT();
+  const char *input = GET_TEXT();
   Match_Func func = word_beginnings ? (Match_Func)g_str_has_prefix : (Match_Func)g_strrstr;
 
   for (GList *l = gl; l; l=l->next) {
@@ -75,25 +75,25 @@ dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings) {
 /* dwb_completion_set_text(Completion *) {{{*/
 static void
 dwb_comp_set_entry_text(Completion *c) {
-  const gchar *text = gtk_label_get_text(GTK_LABEL(c->llabel));
+  const char *text = gtk_label_get_text(GTK_LABEL(c->llabel));
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
 
 }/*}}}*/
 
-/* dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back)    Return *GList (Completions*){{{*/
+/* dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, int max, int back)    Return *GList (Completions*){{{*/
 static GList *
-dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, gint max, gint back) {
+dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, int max, int back) {
   GList *old, *new;
   Completion *c;
 
-  gint length = g_list_length(comps);
-  gint items = MAX(length, max);
-  gint r = (max) % 2;
-  gint offset = max / 2 - 1 + r;
+  int length = g_list_length(comps);
+  int items = MAX(length, max);
+  int r = (max) % 2;
+  int offset = max / 2 - 1 + r;
 
   old = active;
-  gint position = g_list_position(comps, active) + 1;
+  int position = g_list_position(comps, active) + 1;
   if (!back) {
     if (! (new = old->next) ) {
       new = g_list_first(comps);
@@ -159,9 +159,9 @@ dwb_comp_clean_completion() {
   dwb.state.mode &= ~CompletionMode;
 }/*}}}*/
 
-/* dwb_comp_show_completion(gint back) {{{*/
+/* dwb_comp_show_completion(int back) {{{*/
 static void 
-dwb_comp_show_completion(gint back) {
+dwb_comp_show_completion(int back) {
   int i=0;
   if (back) {
     dwb.comps.active_comp = g_list_last(dwb.comps.completions);
@@ -206,7 +206,7 @@ static GList *
 dwb_comp_get_settings_completion() {
   GList *l = g_hash_table_get_values(dwb.state.setting_apply == Global ? dwb.settings : CURRENT_VIEW()->setting);
   l = g_list_sort(l, (GCompareFunc)dwb_util_web_settings_sort_first);
-  const gchar *input = GET_TEXT();
+  const char *input = GET_TEXT();
   GList *list = NULL;
 
   for (; l; l=l->next) {
@@ -214,7 +214,7 @@ dwb_comp_get_settings_completion() {
     if (dwb.state.setting_apply == Global || !s->global) {
       Navigation n = s->n;
       if (g_strrstr(n.first, input)) {
-        gchar *value = dwb_util_arg_to_char(&s->arg, s->type);
+        char *value = dwb_util_arg_to_char(&s->arg, s->type);
         Completion *c = dwb_comp_get_completion_item(&n, s, value);
         gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
         list = g_list_append(list, c);
@@ -228,7 +228,7 @@ dwb_comp_get_settings_completion() {
 static GList * 
 dwb_comp_get_key_completion(gboolean entry) {
   GList *list = NULL;
-  const gchar *input = GET_TEXT();
+  const char *input = GET_TEXT();
 
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_first);
 
@@ -239,7 +239,7 @@ dwb_comp_get_key_completion(gboolean entry) {
     }
     Navigation n = m->map->n;
     if (g_str_has_prefix(n.first, input)) {
-      gchar *value = g_strdup_printf("%s %s", dwb_modmask_to_string(m->mod), m->key);
+      char *value = g_strdup_printf("%s %s", dwb_modmask_to_string(m->mod), m->key);
       Completion *c = dwb_comp_get_completion_item(&n, m, value);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       list = g_list_append(list, c);
@@ -251,7 +251,7 @@ dwb_comp_get_key_completion(gboolean entry) {
 
 /* dwb_comp_complete {{{*/
 void 
-dwb_comp_complete(gint back) {
+dwb_comp_complete(int back) {
   View *v = CURRENT_VIEW();
   if ( !(dwb.state.mode & CompletionMode) ) {
     v->compbox = gtk_vbox_new(true, 0);
@@ -319,7 +319,7 @@ dwb_comp_init_autocompletion(GList *gl) {
   GList *ret = NULL;
 
   v->autocompletion = gtk_hbox_new(true, 2);
-  gint i=0;
+  int i=0;
   for (GList *l=gl; l; l=l->next, i++) {
     KeyMap *m = l->data;
     if (!m->map->entry) {
@@ -375,20 +375,20 @@ dwb_comp_clean_path_completion() {
   }
 }/*}}}*/
 
-/* dwb_comp_get_binaries(GList *list, gchar *text)      return GList *{{{*/
+/* dwb_comp_get_binaries(GList *list, char *text)      return GList *{{{*/
 static GList *
-dwb_comp_get_binaries(GList *list, gchar *text) {
+dwb_comp_get_binaries(GList *list, char *text) {
   GDir *dir;
-  gchar **paths = g_strsplit(g_getenv("PATH"), ":", -1);
-  gint i=0;
-  gchar *path;
-  const gchar *filename;
+  char **paths = g_strsplit(g_getenv("PATH"), ":", -1);
+  int i=0;
+  char *path;
+  const char *filename;
 
   while ( (path = paths[i++]) ) {
     if ( (dir = g_dir_open(path, 'r', NULL)) ) {
       while ( (filename = g_dir_read_name(dir))) {
         if (g_str_has_prefix(filename, text)) {
-          gchar *store = g_build_filename(path, filename, NULL);
+          char *store = g_build_filename(path, filename, NULL);
           list = g_list_prepend(list, store);
         }
       }
@@ -397,13 +397,13 @@ dwb_comp_get_binaries(GList *list, gchar *text) {
   }
   return list;
 }/* }}} */
-/* dwb_comp_get_path(GList *, gchar *)        return GList* */
+/* dwb_comp_get_path(GList *, char *)        return GList* */
 static GList *
-dwb_comp_get_path(GList *list, gchar *text) {
-  gchar *path = "/";
-  gchar *last = "";
+dwb_comp_get_path(GList *list, char *text) {
+  char *path = "/";
+  char *last = "";
   if (text && strlen(text)) {
-    gchar *tmp = strrchr(text, '/'); 
+    char *tmp = strrchr(text, '/'); 
     tmp++;
     last = g_strdup(tmp);
     memset(tmp, '\0', sizeof(tmp));
@@ -411,7 +411,7 @@ dwb_comp_get_path(GList *list, gchar *text) {
   }
 
   GDir *dir;
-  const gchar *filename;
+  const char *filename;
 
   if ( (dir = g_dir_open(path, 'r', NULL)) ) {
     while ( (filename = g_dir_read_name(dir)) ) {
@@ -419,8 +419,8 @@ dwb_comp_get_path(GList *list, gchar *text) {
       if (!strlen(last) && filename[0] == '.') 
         continue;
       if (g_str_has_prefix(filename, last)) {
-        gchar *newpath = g_build_filename(path, filename, NULL);
-        gchar *store = g_strconcat(newpath, g_file_test(newpath, G_FILE_TEST_IS_DIR) ? "/" : "", NULL);
+        char *newpath = g_build_filename(path, filename, NULL);
+        char *store = g_strconcat(newpath, g_file_test(newpath, G_FILE_TEST_IS_DIR) ? "/" : "", NULL);
         list = g_list_prepend(list, store);
         g_free(newpath);
       }
@@ -432,8 +432,8 @@ dwb_comp_get_path(GList *list, gchar *text) {
 
 /* dwb_comp_init_path_completion {{{*/
 static void
-dwb_comp_init_path_completion(gint back) { 
-  gchar *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+dwb_comp_init_path_completion(int back) { 
+  char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
   dwb.comps.path_completion = g_list_append(NULL, g_strdup(text));
   if (dwb.state.dl_action == Execute && text[0] != '/') {
@@ -459,7 +459,7 @@ dwb_comp_init_path_completion(gint back) {
 
 /* dwb_comp_complete_download{{{*/
 void
-dwb_comp_complete_download(gint back) {
+dwb_comp_complete_download(int back) {
   if (! dwb.comps.path_completion ) {
     dwb_comp_init_path_completion(back);
   }
