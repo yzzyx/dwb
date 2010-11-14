@@ -118,6 +118,7 @@ dwb_dl_spawn(DwbDownload *dl) {
   char **argv = g_strsplit(command, " ", -1);
   if (! g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &error) ) {
     fprintf(stderr, "Couldn't open %s with %s : %s\n", filename + 7, dl->path, error->message);
+    g_clear_error(&error);
   }
   dwb_dl_set_mimetype(dl->path);
   g_free(command);

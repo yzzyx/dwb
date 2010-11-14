@@ -262,6 +262,7 @@ dwb_util_get_directory_content(GString **buffer, const char *dirname) {
         }
         else {
           fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
+          g_clear_error(&error);
         }
         g_free(filepath);
         g_free(content);
@@ -278,6 +279,7 @@ dwb_util_get_file_content(const char *filename) {
   char *content = NULL;
   if (!(g_file_test(filename, G_FILE_TEST_IS_REGULAR) &&  g_file_get_contents(filename, &content, NULL, &error))) {
     fprintf(stderr, "Cannot open %s: %s\n", filename, error ? error->message : "file not found");
+    g_clear_error(&error);
   }
   return content;
 }/*}}}*/
@@ -287,6 +289,7 @@ dwb_util_set_file_content(const char *filename, const char *content) {
   GError *error = NULL;
   if (!g_file_set_contents(filename, content, -1, &error)) {
     fprintf(stderr, "Cannot save %s : %s", filename, error->message);
+    g_clear_error(&error);
   }
 }/*}}}*/
 /* dwb_util_build_path()       return: char * (alloc) {{{*/

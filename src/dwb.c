@@ -1338,18 +1338,30 @@ dwb_normal_mode(gboolean clean) {
 /* dwb_get_resolved_uri(const char *uri) {{{*/
 static char * 
 dwb_get_resolved_uri(const char *uri) {
-  char *tmp = NULL;
-  gboolean is_file = false;
-  // check if uri is a file
-  if ( g_file_test(uri, G_FILE_TEST_IS_REGULAR) || (is_file = g_str_has_prefix(uri, "file://")) ) {
-    tmp = is_file ? g_strdup(uri) : g_strdup_printf("file://%s", uri);
+  char *tmp, *ret = NULL; 
+  GError *error = NULL;
+
+  if ( g_file_test(uri, G_FILE_TEST_IS_REGULAR) ) {
+    if ( !(ret = g_filename_to_uri(uri, NULL, &error)) ) { 
+      if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
+        g_clear_error(&error);
+        char *path = g_get_current_dir();
+        tmp = g_build_filename(path, uri, NULL);
+        if ( !(ret = g_filename_to_uri(tmp, NULL, &error))) {
+          fprintf(stderr, "Cannot open %s: %s", uri, error->message);
+          g_clear_error(&error);
+        }
+        g_free(tmp);
+        g_free(path);
+      }
+    }
   }
-  else if ( !(tmp = dwb_get_search_engine(uri)) || strstr(uri, "localhost:")) {
-    tmp = g_str_has_prefix(uri, "http://") || g_str_has_prefix(uri, "https://")
+  else if ( !(ret = dwb_get_search_engine(uri)) || strstr(uri, "localhost:")) {
+    ret = g_str_has_prefix(uri, "http://") || g_str_has_prefix(uri, "https://")
       ? g_strdup(uri)
       : g_strdup_printf("http://%s", uri);
   }
-  return tmp;
+  return ret;
 }
 /*}}}*/
 
@@ -1408,6 +1420,7 @@ dwb_execute_user_script(Arg *a) {
   char *argv[3] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
   if (!g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &e )) {
     fprintf(stderr, "Couldn't execute %s: %s\n", (char*)a->p, e->message);
+    g_clear_error(&e);
   }
 }/*}}}*/
 
@@ -1518,7 +1531,7 @@ dwb_save_keys() {
 
   if (!g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error)) {
     fprintf(stderr, "No keysfile found, creating a new file.\n");
-    error = NULL;
+    g_clear_error(&error);
   }
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *map = l->data;
@@ -1532,6 +1545,7 @@ dwb_save_keys() {
   }
   if (error) {
     fprintf(stderr, "Couldn't save keyfile: %s", error->message);
+    g_clear_error(&error);
   }
   g_key_file_free(keyfile);
 }/*}}}*/
@@ -1546,7 +1560,7 @@ dwb_save_settings() {
 
   if (!g_key_file_load_from_file(keyfile, dwb.files.settings, G_KEY_FILE_KEEP_COMMENTS, &error)) {
     fprintf(stderr, "No settingsfile found, creating a new file.\n");
-    error = NULL;
+    g_clear_error(&error);
   }
   for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
@@ -1561,6 +1575,7 @@ dwb_save_settings() {
   }
   if (error) {
     fprintf(stderr, "Couldn't save settingsfile: %s\n", error->message);
+    g_clear_error(&error);
   }
   g_key_file_free(keyfile);
 }/*}}}*/
@@ -1670,6 +1685,7 @@ dwb_generate_keyfile() {
   }
   if (error) {
     fprintf(stderr, "Couldn't create keyfile: %s\n", error->message);
+    g_clear_error(&error);
     exit(EXIT_FAILURE);
   }
   fprintf(stdout, "Keyfile created.\n");
@@ -1736,7 +1752,7 @@ dwb_init_key_map() {
   g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error);
   if (error) {
     fprintf(stderr, "No keyfile found: %s\nUsing default values.\n", error->message);
-    error = NULL;
+    g_clear_error(&error);
   }
   for (int i=0; i<LENGTH(KEYS); i++) {
     KeyValue kv;
@@ -1769,18 +1785,19 @@ dwb_read_settings() {
   g_file_get_contents(dwb.files.settings, &content, &length, &error);
   if (error) {
     fprintf(stderr, "No settingsfile found: %s\nUsing default values.\n", error->message);
-    error = NULL;
+    g_clear_error(&error);
   }
   else {
     g_key_file_load_from_data(keyfile, content, length, G_KEY_FILE_KEEP_COMMENTS, &error);
     if (error) {
       fprintf(stderr, "Couldn't read settings file: %s\nUsing default values.\n", error->message);
-      error = NULL;
+      g_clear_error(&error);
     }
     else {
       keys = g_key_file_get_keys(keyfile, dwb.misc.profile, &numkeys, &error); 
       if (error) {
         fprintf(stderr, "Couldn't read settings for profile %s: %s\nUsing default values.\n", dwb.misc.profile,  error->message);
+        g_clear_error(&error);
       }
     }
   }
