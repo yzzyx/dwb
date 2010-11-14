@@ -1584,7 +1584,9 @@ dwb_save_settings() {
 gboolean 
 dwb_save_files(gboolean end_session) {
   dwb_save_navigation_fc(dwb.fc.bookmarks, dwb.files.bookmarks, -1, end_session);
-  dwb_save_navigation_fc(dwb.fc.history, dwb.files.history, dwb.misc.history_length, end_session);
+  if (!GET_BOOL("enable-private-browsing")) {
+    dwb_save_navigation_fc(dwb.fc.history, dwb.files.history, dwb.misc.history_length, end_session);
+  }
   dwb_save_navigation_fc(dwb.fc.searchengines, dwb.files.searchengines, -1, end_session);
   dwb_save_navigation_fc(dwb.fc.mimetypes, dwb.files.mimetypes, -1, end_session);
 
