@@ -229,9 +229,7 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
 static gboolean
 dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
   Arg a = { .n = e->direction, .p = gl };
-  if (e->state & GDK_BUTTON4_MASK || e->state & GDK_BUTTON5_MASK) 
-    return true;
-  dwb_com_scroll(&a);
+  dwb_update_status_text(gl, NULL);
   return  false;
 }/*}}}*/
 
