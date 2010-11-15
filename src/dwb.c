@@ -1112,7 +1112,13 @@ dwb_new_window(Arg *arg) {
 void 
 dwb_load_uri(Arg *arg) {
   if (dwb.state.nv == OpenNewWindow) {
+    dwb.state.nv = OpenNormal;
     dwb_new_window(arg);
+    return;
+  }
+  else if (dwb.state.nv == OpenNewView) {
+    dwb.state.nv = OpenNormal;
+    dwb_add_view(arg);
     return;
   }
   if (arg && arg->p && strlen(arg->p)) {
