@@ -228,7 +228,6 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
 static gboolean
 dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
-  Arg a = { .n = e->direction, .p = gl };
   dwb_update_status_text(gl, NULL);
   return  false;
 }/*}}}*/
