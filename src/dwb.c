@@ -417,7 +417,9 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = false;
   }
   else if (dwb.state.mode == InsertMode) {
-    ret = false;
+    if (e->state & GDK_MODIFIER_MASK && !(e->state & (GDK_SHIFT_MASK | GDK_LOCK_MASK))) {
+      ret = dwb_eval_key(e);
+    }
   }
   else if (dwb.state.mode == QuickmarkSave) {
     if (key) {
@@ -1419,15 +1421,47 @@ dwb_search(Arg *arg) {
   return true;
 }/*}}}*/
 
+/* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
+gboolean
+dwb_user_script_cb(GIOChannel *channel, GIOCondition condition) {
+  GError *error = NULL;
+  char *line;
+  GString *js_buffer = g_string_new(NULL);
+
+  while (g_io_channel_read_line(channel, &line, NULL, NULL, &error) == G_IO_STATUS_NORMAL) {
+    if (g_str_has_prefix(line, "js ")) {
+      g_string_append(js_buffer, line + 3);
+    }
+    else if (g_str_has_prefix(line, "dwb ")) {
+      dwb_parse_command_line(g_strchomp(line + 4));
+    }
+    g_free(line);
+  }
+  if (error) {
+    fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
+  }
+  dwb_execute_script(js_buffer->str);
+
+  g_io_channel_shutdown(channel, true, NULL);
+  g_string_free(js_buffer, true);
+  g_clear_error(&error);
+
+  return false;
+}/*}}}*/
 /* dwb_execute_user_script(Arg *a) {{{*/
 void
 dwb_execute_user_script(Arg *a) {
-  GError *e = NULL;
+  GError *error = NULL;
   char *argv[3] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
-  if (!g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &e )) {
-    fprintf(stderr, "Couldn't execute %s: %s\n", (char*)a->p, e->message);
-    g_clear_error(&e);
+  int std_out;
+  if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &std_out, NULL, &error)) {
+    GIOChannel *channel = g_io_channel_unix_new(std_out);
+    g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, NULL);
   }
+  else {
+    fprintf(stderr, "Cannot execute %s: %s\n", (char*)a->p, error->message);
+  }
+  g_clear_error(&error);
 }/*}}}*/
 
 /* dwb_get_scripts() {{{*/
@@ -2232,6 +2266,7 @@ dwb_init_fifo(int single) {
   }
 }/*}}}*/
 /*}}}*/
+
 
 int main(int argc, char *argv[]) {
   dwb.misc.name = NAME;
