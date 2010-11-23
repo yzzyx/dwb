@@ -22,7 +22,7 @@ OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
 SOURCE = $(wildcard $(SRCDIR)/*.c)
 HDR = $(SOURCE:%.c=%.h) 
 TARGET = $(NAME)
-DTARGET=$(TARGET)-debug
+DTARGET=$(TARGET)_d
 
 MANFILE=$(NAME).1
 
