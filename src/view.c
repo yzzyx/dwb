@@ -222,7 +222,7 @@ dwb_web_view_script_alert_cb(WebKitWebView *web, WebKitWebFrame *frame, char *me
 static void 
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
-  dwb_execute_script(NULL);
+  dwb_execute_script(NULL, false);
 }/*}}}*/
 
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
@@ -630,7 +630,7 @@ dwb_add_view(Arg *arg) {
   dwb_view_new_reorder();
   dwb.state.views = dwb_view_create_web_view(dwb.state.views);
   dwb_focus(dwb.state.views);
-  dwb_execute_script(NULL);
+  dwb_execute_script(NULL, false);
 
   dwb_update_layout();
   if (arg && arg->p) {

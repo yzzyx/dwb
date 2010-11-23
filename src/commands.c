@@ -95,7 +95,7 @@ dwb_com_focus_input(Arg *a) {
   char *value;
   gboolean ret = true;
 
-  value = dwb_execute_script("dwb_focus_input()");
+  value = dwb_execute_script("dwb_focus_input()", true);
   if (value && !strcmp(value, "_dwb_no_input_")) {
     ret = false;
   }
@@ -109,7 +109,7 @@ gboolean
 dwb_com_add_search_field(Arg *a) {
   char *value;
   gboolean ret = true;
-  value = dwb_execute_script("dwb_add_searchengine()");
+  value = dwb_execute_script("dwb_add_searchengine()", true);
   if (value) {
     if (!strcmp(value, "_dwb_no_hints_")) {
       return false;
@@ -184,7 +184,7 @@ dwb_com_show_hints(Arg *arg) {
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HintMode) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    dwb_execute_script("dwb_show_hints()");
+    dwb_execute_script("dwb_show_hints()", false);
     dwb.state.mode = HintMode;
     dwb_focus_entry();
   }
@@ -525,11 +525,11 @@ dwb_com_remove_view(Arg *arg) {
   View *v = gl->data;
   if (gl == dwb.state.views) {
     if (dwb.state.views->next) {
-      View *newfirst = dwb.state.views->next->data;
-      gtk_widget_reparent(newfirst->vbox, dwb.gui.left);
+      gtk_widget_reparent(VIEW(dwb.state.views->next)->vbox, dwb.gui.left);
     }
   }
 
+  /* Get History for the undo list */
   WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
   GList *list = webkit_web_back_forward_list_get_back_list_with_limit(bflist, webkit_web_back_forward_list_get_back_length(bflist));
   GList *store = NULL;
@@ -547,19 +547,21 @@ dwb_com_remove_view(Arg *arg) {
     dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
   }
 
+  /* Destroy widget */
   gtk_widget_destroy(v->scroll);
   gtk_widget_destroy(v->vbox);
   dwb.gui.entry = NULL;
   dwb_grab_focus(dwb.state.fview);
   gtk_container_remove(GTK_CONTAINER(dwb.gui.topbox), v->tabevent);
 
-  // clean up
+  /*  clean up */ 
   dwb_source_remove(gl);
   g_free(v->status);
   g_free(v);
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
 
+  /* Update Maximized layout */ 
   if (dwb.state.layout & Maximized) {
     gtk_widget_show(CURRENT_VIEW()->vbox);
     if (dwb.state.fview == dwb.state.views) {

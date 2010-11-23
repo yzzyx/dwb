@@ -36,8 +36,8 @@ static void dwb_set_history_length(GList *, WebSettings *);
 void dwb_clean_buffer(GList *);
 
 gboolean dwb_command_mode(Arg *arg);
-static void dwb_com_reload_scripts(GList *,  WebSettings *);
-static void dwb_com_reload_layout(GList *,  WebSettings *);
+static void dwb_reload_scripts(GList *,  WebSettings *);
+static void dwb_reload_layout(GList *,  WebSettings *);
 static gboolean dwb_test_cookie_allowed(SoupCookie *);
 static void dwb_save_cookies(void);
 
@@ -74,8 +74,6 @@ static int MAX_COMPLETIONS = 11;
 static char *restore = NULL;
 
 /* FUNCTION_MAP{{{*/
-#define NO_URL                      "No URL in current context"
-#define NO_HINTS                    "No Hints in current context"
 static FunctionMap FMAP [] = {
   { { "add_view",              "Add a new view",                    }, 1, (Func)dwb_add_view,                NULL,                              AlwaysSM,     { .p = NULL }, },
   { { "allow_cookie",          "Cookie allowed",                    }, 0, (Func)dwb_com_allow_cookie,        "No cookie in current context",    PostSM, },
@@ -237,15 +235,15 @@ static WebSettings DWB_SETTINGS[] = {
   { { "proxy-url",                               "HTTP-proxy url", },                                          false, true,  Char,    { .p = NULL              },   (S_Func) dwb_init_proxy, },
   { { "cookies",                                  "All Cookies allowed", },                                     false, true,  Boolean, { .b = false             }, (S_Func) dwb_set_cookies, },
 
-  { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_com_reload_layout, },
-  { { "active-bg-color",                         "UI: Active view background", },                              false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_com_reload_layout, },
-  { { "normal-fg-color",                         "UI: Inactive view foreground", },                            false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_com_reload_layout, },
-  { { "normal-bg-color",                         "UI: Inactive view background", },                            false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_com_reload_layout, },
+  { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
+  { { "active-bg-color",                         "UI: Active view background", },                              false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
+  { { "normal-fg-color",                         "UI: Inactive view foreground", },                            false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
+  { { "normal-bg-color",                         "UI: Inactive view background", },                            false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
 
-  { { "tab-active-fg-color",                     "UI: Active view tabforeground", },                           false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_com_reload_layout, },
-  { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_com_reload_layout, },
-  { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_com_reload_layout, },
-  { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_com_reload_layout, },
+  { { "tab-active-fg-color",                     "UI: Active view tabforeground", },                           false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
+  { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
+  { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
+  { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
 
   { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#53868b"         }, (S_Func) dwb_init_style, },
   { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
@@ -260,22 +258,22 @@ static WebSettings DWB_SETTINGS[] = {
   { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
   { { "settings-border",                         "UI: Settings view border", },                                false, true,  Char,      { .p = "1px dotted black"}, (S_Func) dwb_init_style, },
  
-  { { "active-font-size",                        "UI: Active view fontsize", },                                false, true,  Integer, { .i = 12                },   (S_Func) dwb_com_reload_layout, },
-  { { "normal-font-size",                        "UI: Inactive view fontsize", },                              false, true,  Integer, { .i = 10                },   (S_Func) dwb_com_reload_layout, },
+  { { "active-font-size",                        "UI: Active view fontsize", },                                false, true,  Integer, { .i = 12                },   (S_Func) dwb_reload_layout, },
+  { { "normal-font-size",                        "UI: Inactive view fontsize", },                              false, true,  Integer, { .i = 10                },   (S_Func) dwb_reload_layout, },
   
-  { { "font",                                    "UI: Font", },                                                false, true,  Char, { .p = "monospace"          },   (S_Func) dwb_com_reload_layout, },
+  { { "font",                                    "UI: Font", },                                                false, true,  Char, { .p = "monospace"          },   (S_Func) dwb_reload_layout, },
    
-  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  Char, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_com_reload_scripts, },
-  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  Char, { .p = "letter"            },     (S_Func) dwb_com_reload_scripts, },
-  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  Char, { .p = "12px"              },     (S_Func) dwb_com_reload_scripts, },
-  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  Char, { .p = "normal"            },     (S_Func) dwb_com_reload_scripts, },
-  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  Char, { .p = "monospace"         },     (S_Func) dwb_com_reload_scripts, },
-  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  ColorChar, { .p = "#ffffff"      },     (S_Func) dwb_com_reload_scripts, },
-  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  ColorChar, { .p = "#000088"      },     (S_Func) dwb_com_reload_scripts, },
-  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  ColorChar, { .p = "#00ff00"      },     (S_Func) dwb_com_reload_scripts, },
-  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  ColorChar, { .p = "#ffff99"      },     (S_Func) dwb_com_reload_scripts, },
-  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_com_reload_scripts, },
-  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_com_reload_scripts, },
+  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  Char, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts, },
+  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  Char, { .p = "letter"            },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  Char, { .p = "12px"              },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  Char, { .p = "normal"            },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  Char, { .p = "monospace"         },     (S_Func) dwb_reload_scripts, },
+  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  ColorChar, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  ColorChar, { .p = "#000088"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  ColorChar, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  ColorChar, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
+  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_reload_scripts, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
   { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
@@ -573,6 +571,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+/* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
 Navigation *
 dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   Navigation *n = NULL;
@@ -585,7 +584,7 @@ dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
     n = dwb_navigation_new(uri, title);
   }
   return n;
-}
+}/*}}}*/
 
 /* dwb_open_si_channel() {{{*/
 void
@@ -594,7 +593,7 @@ dwb_open_si_channel() {
   g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
 }/*}}}*/
 
-/* dwb_js_get_host_blocked (char *) {{{*/
+/* dwb_js_get_host_blocked (char *)  return: GList * {{{*/
 GList *
 dwb_get_host_blocked(GList *fc, char *host) {
   for (GList *l = fc; l; l=l->next) {
@@ -605,7 +604,7 @@ dwb_get_host_blocked(GList *fc, char *host) {
   return NULL;
 }/*}}}*/
 
-/* dwb_get_host(GList *)                  return: char (alloc) {{{*/
+/* dwb_get_host(GList *)                  return: char* (alloc) {{{*/
 char * 
 dwb_get_host(const char *uri) {
   char *host;
@@ -725,17 +724,17 @@ dwb_clean_buffer(GList *gl) {
   CLEAR_COMMAND_TEXT(gl);
 }/*}}}*/
 
-/* dwb_com_reload_scripts(GList *,  WebSettings  *s) {{{*/
+/* dwb_reload_scripts(GList *,  WebSettings  *s) {{{*/
 static void 
-dwb_com_reload_scripts(GList *gl, WebSettings *s) {
+dwb_reload_scripts(GList *gl, WebSettings *s) {
   g_free(dwb.misc.scripts);
   dwb_init_scripts();
   dwb_com_reload(NULL);
 }/*}}}*/
 
-/* dwb_com_reload_layout(GList *,  WebSettings  *s) {{{*/
+/* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
 static void 
-dwb_com_reload_layout(GList *gl, WebSettings *s) {
+dwb_reload_layout(GList *gl, WebSettings *s) {
   dwb_init_style();
   for (GList *l = dwb.state.views; l; l=l->next) {
     if (l == dwb.state.fview) {
@@ -783,7 +782,7 @@ dwb_get_search_engine(const char *uri) {
 void 
 dwb_submit_searchengine(void) {
   char *com = g_strdup_printf("dwb_submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
-  char *value = dwb_execute_script(com);
+  char *value = dwb_execute_script(com, true);
   if (value) {
     dwb.state.form_name = value;
   }
@@ -895,7 +894,7 @@ dwb_update_hints(GdkEventKey *e) {
     com = g_strdup_printf("dwb_update_hints(\"%s\")", GET_TEXT());
   }
   if (com) {
-    buffer = dwb_execute_script(com);
+    buffer = dwb_execute_script(com, true);
     g_free(com);
   }
   if (buffer) { 
@@ -904,7 +903,7 @@ dwb_update_hints(GdkEventKey *e) {
       dwb_normal_mode(false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
-      dwb_execute_script("dwb_clear()");
+      dwb_execute_script("dwb_clear()", false);
       dwb_insert_mode(NULL);
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
@@ -924,7 +923,7 @@ dwb_update_hints(GdkEventKey *e) {
 
 /* dwb_execute_script {{{*/
 char * 
-dwb_execute_script(const char *com) {
+dwb_execute_script(const char *com, gboolean return_char) {
   View *v = dwb.state.fview->data;
 
   if (!com) {
@@ -940,7 +939,7 @@ dwb_execute_script(const char *com) {
   eval_ret = JSEvaluateScript(context, text, JSContextGetGlobalObject(context), NULL, 0, &exc);
   JSStringRelease(text);
 
-  if (eval_ret) {
+  if (eval_ret && return_char) {
     JSStringRef string = JSValueToStringCopy(context, eval_ret, NULL);
     length = JSStringGetMaximumUTF8CStringSize(string);
     ret = g_new(char, length);
@@ -1312,7 +1311,7 @@ dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
   if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
-    dwb_execute_script("dwb_clear()");
+    dwb_execute_script("dwb_clear()", false);
   }
   if (mode  == InsertMode) {
     dwb_view_modify_style(dwb.state.fview, &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
@@ -1334,7 +1333,7 @@ dwb_normal_mode(gboolean clean) {
     dwb_clean_buffer(dwb.state.fview);
   }
   if (mode & NormalMode) {
-    dwb_execute_script("dwb_blur()");
+    dwb_execute_script("dwb_blur()", false);
   }
 
   webkit_web_view_unmark_text_matches(CURRENT_WEBVIEW());
@@ -1440,7 +1439,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition) {
   if (error) {
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
   }
-  dwb_execute_script(js_buffer->str);
+  dwb_execute_script(js_buffer->str, false);
 
   g_io_channel_shutdown(channel, true, NULL);
   g_string_free(js_buffer, true);

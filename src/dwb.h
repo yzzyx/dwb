@@ -39,13 +39,15 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 /*}}}*/
 #define INSERT_MODE "Insert Mode"
 
+#define NO_URL                      "No URL in current context"
+#define NO_HINTS                    "No Hints in current context"
+
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
 /* MAKROS {{{*/ 
 #define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
 #define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X)) 
 #define NN(X)       ( ((X) == 0) ? 1 : (X) )
-#define NUMMOD      (dwb.state.nummod == 0 ? 1 : dwb.state.nummod)
 
 #define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
 #define CLEAN_SHIFT(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_LOCK_MASK))
@@ -58,12 +60,10 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define CURRENT_WEBVIEW()           (WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web))
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
-#define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(((View *)X->data)->lstatus, NULL, NULL, NULL)
+#define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL)
 
 #define DIGIT(X)   (X->keyval >= GDK_0 && X->keyval <= GDK_9)
 #define ALPHA(X)    ((X->keyval >= GDK_A && X->keyval <= GDK_Z) ||  (X->keyval >= GDK_a && X->keyval <= GDK_z) || X->keyval == GDK_space)
-#define True (void*) true
-#define False (void*) false
 
 #define DWB_TAB_KEY(e)              (e->keyval == GDK_Tab || e->keyval == GDK_ISO_Left_Tab)
 
@@ -96,7 +96,6 @@ typedef struct _Navigation Navigation;
 typedef struct _Quickmark Quickmark;
 typedef struct _WebSettings WebSettings;
 typedef struct _Settings Settings;
-typedef union _Type Type;
 /*}}}*/
 typedef gboolean (*Command_f)(void*);
 typedef gboolean (*Func)(void*);
@@ -263,12 +262,6 @@ struct _State {
   char *mimetype_request;
 };
 
-union _Type {
-  gboolean b;
-  double f;
-  guint i; 
-  gpointer p;
-};
 struct _WebSettings {
   Navigation n;
   gboolean builtin;
@@ -454,7 +447,7 @@ gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
-char * dwb_execute_script(const char *);
+char * dwb_execute_script(const char *, gboolean);
 void dwb_resize(double );
 void dwb_grab_focus(GList *);
 void dwb_source_remove(GList *);
