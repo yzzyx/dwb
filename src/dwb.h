@@ -471,7 +471,6 @@ GList * dwb_get_host_blocked(GList *, char *host);
 gboolean dwb_end(void);
 Key dwb_str_to_key(char *);
 
-GList * dwb_keymap_delete(GList *, KeyValue );
 GList * dwb_keymap_add(GList *, KeyValue );
 
 void dwb_save_settings(void);

@@ -33,16 +33,16 @@ static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
 
-void dwb_clean_buffer(GList *);
+static void dwb_clean_buffer(GList *);
 
-gboolean dwb_command_mode(Arg *arg);
+static gboolean dwb_command_mode(Arg *arg);
 static void dwb_reload_scripts(GList *,  WebSettings *);
 static void dwb_reload_layout(GList *,  WebSettings *);
 static gboolean dwb_test_cookie_allowed(SoupCookie *);
 static void dwb_save_cookies(void);
 
-void dwb_open_si_channel(void);
-gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
+static void dwb_open_si_channel(void);
+static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
 
 static gboolean dwb_eval_key(GdkEventKey *);
 
@@ -54,7 +54,6 @@ static void dwb_open_quickmark(const char *);
 
 
 static void dwb_update_tab_label(void);
-static char * dwb_get_resolved_uri(const char *);
 
 static void dwb_init_proxy(void);
 static void dwb_init_key_map(void);
@@ -405,7 +404,7 @@ dwb_set_content_block(GList *gl, WebSettings *s) {
 /* CALLBACKS {{{*/
 
 /* dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {{{*/
-gboolean 
+static gboolean 
 dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
 
@@ -456,7 +455,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 }/*}}}*/
 
 /* dwb_key_release_cb {{{*/
-gboolean 
+static gboolean 
 dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   if (DWB_TAB_KEY(e)) {
     return true;
@@ -465,7 +464,7 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 }/*}}}*/
 
 /* dwb_cookie_changed_cb {{{*/
-void 
+static void 
 dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new) {
   if (new) {
     dwb.state.last_cookie = soup_cookie_copy(new);
@@ -501,7 +500,7 @@ dwb_source_remove(GList *gl) {
     g_source_remove(id);
   }
 }
-gpointer 
+static gpointer 
 dwb_hide_message(GList *gl) {
   CLEAR_COMMAND_TEXT(gl);
   return NULL;
@@ -587,7 +586,7 @@ dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
 }/*}}}*/
 
 /* dwb_open_si_channel() {{{*/
-void
+static void
 dwb_open_si_channel() {
   dwb.misc.si_channel = g_io_channel_new_file(dwb.files.unifile, "r+", NULL);
   g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
@@ -715,7 +714,7 @@ dwb_resize(double size) {
 }/*}}}*/
 
 /* dwb_clean_buffer{{{*/
-void
+static void
 dwb_clean_buffer(GList *gl) {
   if (dwb.state.buffer) {
     g_string_free(dwb.state.buffer, true);
@@ -747,7 +746,7 @@ dwb_reload_layout(GList *gl, WebSettings *s) {
 }/*}}}*/
 
 /* dwb_get_search_engine_uri(const char *uri) {{{*/
-char *
+static char *
 dwb_get_search_engine_uri(const char *uri, const char *text) {
   char *ret = NULL;
   if (uri) {
@@ -759,7 +758,7 @@ dwb_get_search_engine_uri(const char *uri, const char *text) {
 }/* }}} */
 
 /* dwb_get_search_engine(const char *uri) {{{*/
-char *
+static char *
 dwb_get_search_engine(const char *uri) {
   char *ret = NULL;
   if ( (!strstr(uri, ".") || strstr(uri, " ")) && !strstr(uri, "localhost:")) {
@@ -810,7 +809,7 @@ dwb_save_searchengine(void) {
 }/*}}}*/
 
 /* dwb_layout_from_char {{{*/
-Layout
+static Layout
 dwb_layout_from_char(const char *desc) {
   char **token = g_strsplit(desc, " ", 0);
   int i=0;
@@ -859,7 +858,7 @@ dwb_save_cookies() {
 }/*}}}*/
 
 /* dwb_web_settings_get_value(const char *id, void *value) {{{*/
-Arg *  
+static Arg *  
 dwb_web_settings_get_value(const char *id) {
   WebSettings *s = g_hash_table_lookup(dwb.settings, id);
   return &s->arg;
@@ -997,7 +996,7 @@ dwb_prepend_navigation(GList *gl, GList **fc) {
 }/*}}}*/
 
 /* dwb_save_quickmark(const char *key) {{{*/
-void 
+static void 
 dwb_save_quickmark(const char *key) {
   WebKitWebView *w = WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web);
   const char *uri = webkit_web_view_get_uri(w);
@@ -1025,7 +1024,7 @@ dwb_save_quickmark(const char *key) {
 }/*}}}*/
 
 /* dwb_open_quickmark(const char *key){{{*/
-void 
+static void 
 dwb_open_quickmark(const char *key) {
   char *message = NULL;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
@@ -1123,8 +1122,32 @@ dwb_load_uri(Arg *arg) {
     return;
   }
   if (arg && arg->p && strlen(arg->p)) {
-    char *uri = dwb_get_resolved_uri(arg->p);
+    /*  get resolved uri */
+    char *tmp, *uri = NULL; 
+    GError *error = NULL;
 
+    if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
+      if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
+        if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
+          g_clear_error(&error);
+          char *path = g_get_current_dir();
+          tmp = g_build_filename(path, arg->p, NULL);
+          if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
+            fprintf(stderr, "Cannot open %s: %s", (char*)arg->p, error->message);
+            g_clear_error(&error);
+          }
+          g_free(tmp);
+          g_free(path);
+        }
+      }
+    }
+    else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
+      uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://")
+        ? g_strdup(arg->p)
+        : g_strdup_printf("http://%s", (char*)arg->p);
+    }
+
+    /* delete cookie of last visited website */
     if (dwb.state.last_cookie) {
       soup_cookie_free(dwb.state.last_cookie); 
       dwb.state.last_cookie = NULL;
@@ -1285,7 +1308,7 @@ dwb_eval_key(GdkEventKey *e) {
 }/*}}}*/
 
 /* dwb_command_mode {{{*/
-gboolean
+static gboolean
 dwb_command_mode(Arg *arg) {
   dwb_set_normal_message(dwb.state.fview, ":", false);
   dwb_focus_entry();
@@ -1342,36 +1365,6 @@ dwb_normal_mode(gboolean clean) {
   dwb_clean_vars();
 }/*}}}*/
 
-/* dwb_get_resolved_uri(const char *uri) {{{*/
-static char * 
-dwb_get_resolved_uri(const char *uri) {
-  char *tmp, *ret = NULL; 
-  GError *error = NULL;
-
-  if ( g_file_test(uri, G_FILE_TEST_IS_REGULAR) ) {
-    if ( !(ret = g_filename_to_uri(uri, NULL, &error)) ) { 
-      if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
-        g_clear_error(&error);
-        char *path = g_get_current_dir();
-        tmp = g_build_filename(path, uri, NULL);
-        if ( !(ret = g_filename_to_uri(tmp, NULL, &error))) {
-          fprintf(stderr, "Cannot open %s: %s", uri, error->message);
-          g_clear_error(&error);
-        }
-        g_free(tmp);
-        g_free(path);
-      }
-    }
-  }
-  else if ( !(ret = dwb_get_search_engine(uri)) || strstr(uri, "localhost:")) {
-    ret = g_str_has_prefix(uri, "http://") || g_str_has_prefix(uri, "https://")
-      ? g_strdup(uri)
-      : g_strdup_printf("http://%s", uri);
-  }
-  return ret;
-}
-/*}}}*/
-
 /* dwb_update_search(gboolean ) {{{*/
 gboolean 
 dwb_update_search(gboolean forward) {
@@ -1421,7 +1414,7 @@ dwb_search(Arg *arg) {
 }/*}}}*/
 
 /* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
-gboolean
+static gboolean
 dwb_user_script_cb(GIOChannel *channel, GIOCondition condition) {
   GError *error = NULL;
   char *line;
@@ -1448,7 +1441,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition) {
   return false;
 }/*}}}*/
 /* dwb_execute_user_script(Arg *a) {{{*/
-void
+static void
 dwb_execute_user_script(Arg *a) {
   GError *error = NULL;
   char *argv[3] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
@@ -1464,7 +1457,7 @@ dwb_execute_user_script(Arg *a) {
 }/*}}}*/
 
 /* dwb_get_scripts() {{{*/
-GList * 
+static GList * 
 dwb_get_scripts() {
   GDir *dir;
   char *filename;
@@ -1532,7 +1525,7 @@ dwb_clean_up() {
 }/*}}}*/
 
 /* dwb_save_navigation_fc{{{*/
-void 
+static void 
 dwb_save_navigation_fc(GList *fc, const char *filename, int length, gboolean free) {
   GString *string = g_string_new(NULL);
   int i=0;
@@ -1547,7 +1540,7 @@ dwb_save_navigation_fc(GList *fc, const char *filename, int length, gboolean fre
 }/*}}}*/
 
 /* dwb_save_simple_file(GList *, const char *){{{*/
-void
+static void
 dwb_save_simple_file(GList *fc, const char *filename, gboolean free) {
   GString *string = g_string_new(NULL);
   for (GList *l = fc; l; l=l->next)  {
@@ -1561,7 +1554,7 @@ dwb_save_simple_file(GList *fc, const char *filename, gboolean free) {
 }/*}}}*/
 
 /* dwb_save_keys() {{{*/
-void
+static void
 dwb_save_keys() {
   GKeyFile *keyfile = g_key_file_new();
   GError *error = NULL;
@@ -1651,7 +1644,6 @@ dwb_save_files(gboolean end_session) {
   // save settings
   dwb_save_settings();
 
-
   // save session
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SaveSession) {
     dwb_session_save(NULL);
@@ -1706,34 +1698,8 @@ dwb_str_to_key(char *str) {
   return key;
 }/*}}}*/
 
-/* dwb_generate_keyfile {{{*/
-void 
-dwb_generate_keyfile() {
-  dwb.files.keys = g_build_filename(g_get_user_config_dir(), dwb.misc.name, "keys", NULL);
-  GKeyFile *keyfile = g_key_file_new();
-  gsize l;
-  GError *error = NULL;
-
-  for (int i=0; i<LENGTH(KEYS); i++) {
-    KeyValue k = KEYS[i];
-    char *value = k.key.mod ? g_strdup_printf("%s %s", dwb_modmask_to_string(k.key.mod), k.key.str) : g_strdup(k.key.str);
-    g_key_file_set_value(keyfile, dwb.misc.profile, k.id, value);
-    g_free(value);
-  }
-  char *content;
-  if ( (content = g_key_file_to_data(keyfile, &l, &error)) ) {
-    g_file_set_contents(dwb.files.keys, content, l, &error);
-  }
-  if (error) {
-    fprintf(stderr, "Couldn't create keyfile: %s\n", error->message);
-    g_clear_error(&error);
-    exit(EXIT_FAILURE);
-  }
-  fprintf(stdout, "Keyfile created.\n");
-}/*}}}*/
-
 /* dwb_keymap_delete(GList *, KeyValue )     return: GList * {{{*/
-GList * 
+static GList * 
 dwb_keymap_delete(GList *gl, KeyValue key) {
   for (GList *l = gl; l; l=l->next) {
     KeyMap *km = l->data;
@@ -1769,7 +1735,7 @@ dwb_keymap_add(GList *gl, KeyValue key) {
 /* INIT {{{*/
 
 /* dwb_setup_cookies() {{{*/
-void
+static void
 dwb_init_cookies() {
   SoupCookieJar *jar;
 
@@ -1813,7 +1779,7 @@ dwb_init_key_map() {
 }/*}}}*/
 
 /* dwb_read_settings() {{{*/
-gboolean
+static gboolean
 dwb_read_settings() {
   GError *error = NULL;
   gsize length, numkeys = 0;
@@ -2041,8 +2007,9 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
 /* dwb_init_files() {{{*/
 static void
 dwb_init_files() {
-  char *path = dwb_util_build_path();
-  char *profile_path = g_build_filename(path, dwb.misc.profile, NULL);
+  char *path           = dwb_util_build_path();
+  char *profile_path   = g_build_filename(path, dwb.misc.profile, NULL);
+
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(profile_path, 0755);
   }
@@ -2064,6 +2031,7 @@ dwb_init_files() {
   if (!g_file_test(dwb.files.scriptdir, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(dwb.files.scriptdir, 0755);
   }
+
   if (!g_file_test(dwb.files.userscripts, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(dwb.files.userscripts, 0755);
   }
@@ -2105,6 +2073,7 @@ dwb_init_signals() {
   for (int i=0; i<LENGTH(signals); i++) {
     struct sigaction act, oact;
     act.sa_handler = dwb_handle_signal;
+
     sigemptyset(&act.sa_mask);
     act.sa_flags = 0;
     sigaction(signals[i], &act, &oact);
@@ -2115,14 +2084,13 @@ dwb_init_signals() {
 static void 
 dwb_init_proxy() {
   const char *proxy;
-  char *newproxy;
+  static char *newproxy;
   if ( !(proxy =  g_getenv("http_proxy")) && !(proxy =  GET_CHAR("proxy-url")) )
     return;
 
   if ( dwb_util_test_connect(proxy) ) {
     newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
     dwb.misc.proxyuri = soup_uri_new(newproxy);
-    //WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
     g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", GET_BOOL("proxy") ? dwb.misc.proxyuri : NULL, NULL); 
     g_free(newproxy);
   }
@@ -2143,7 +2111,7 @@ dwb_init_vars() {
 }/*}}}*/
 
 /* dwb_init() {{{*/
-void dwb_init() {
+static void dwb_init() {
 
   dwb_clean_vars();
   dwb.state.views = NULL;
@@ -2216,7 +2184,7 @@ dwb_parse_command_line(const char *line) {
 }/*}}}*/
 
 /* dwb_handle_channel {{{*/
-gboolean
+static gboolean
 dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
   char *line = NULL;
 
@@ -2231,7 +2199,7 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 }/*}}}*/
 
 /* dwb_init_fifo{{{*/
-void 
+static void 
 dwb_init_fifo(int single) {
   FILE *ff;
   char *path = dwb_util_build_path();
@@ -2265,7 +2233,6 @@ dwb_init_fifo(int single) {
   }
 }/*}}}*/
 /*}}}*/
-
 
 int main(int argc, char *argv[]) {
   dwb.misc.name = NAME;
