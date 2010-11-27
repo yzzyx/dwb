@@ -531,7 +531,6 @@ dwb_com_remove_view(Arg *arg) {
 
   /* Get History for the undo list */
   WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
-  GList *list = webkit_web_back_forward_list_get_back_list_with_limit(bflist, webkit_web_back_forward_list_get_back_length(bflist));
   GList *store = NULL;
 
   for (int i = -webkit_web_back_forward_list_get_back_length(bflist); i<=0; i++) {
