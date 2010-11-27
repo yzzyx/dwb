@@ -534,18 +534,13 @@ dwb_com_remove_view(Arg *arg) {
   GList *list = webkit_web_back_forward_list_get_back_list_with_limit(bflist, webkit_web_back_forward_list_get_back_length(bflist));
   GList *store = NULL;
 
-  for (GList *l = list; l; l=l->next) {
-    WebKitWebHistoryItem *item = l->data;
+  for (int i = -webkit_web_back_forward_list_get_back_length(bflist); i<=0; i++) {
+    WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bflist, i);
     Navigation *n = dwb_navigation_from_webkit_history_item(item);
     if (n) 
-      store = g_list_prepend(store, n);
+      store = g_list_append(store, n);
   }
-  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_current_item(bflist);
-  Navigation *n = dwb_navigation_from_webkit_history_item(item);
-  if (n) {
-    store = g_list_append(store, dwb_navigation_from_webkit_history_item(item));
-    dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
-  }
+  dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
 
   /* Destroy widget */
   gtk_widget_destroy(v->scroll);
