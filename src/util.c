@@ -419,10 +419,22 @@ dwb_malloc(size_t size) {
   return r;
 }
 
-char * 
-dwb_util_str_strip(char *string) {
-  printf(":%s:\n", string);
-  char *ret = g_strchomp(string);
-  printf(":%s:%s:\n", string, ret);
+char *
+dwb_util_domain_from_uri(char *uri) {
+  if (!uri) 
+    return NULL;
+
+  char *uri_p = g_strdup(uri);
+  char *p = NULL;
+  char domain[STRING_LENGTH] = { 0 };
+
+  if ( (p = strstr(uri, "://")) ) {
+    uri_p = p + 3;
+  }
+  if ( (p = strchr(uri_p, '/')) ) {
+    strncpy(domain, uri_p, p - uri_p);
+  }
+  char *ret = domain[0] ? g_strdup(domain) : g_strdup(uri_p);
   return ret;
 }
+

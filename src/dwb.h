@@ -11,6 +11,8 @@
 #define SINGLE_INSTANCE 1
 #define NEW_INSTANCE 2
 
+#define STRING_LENGTH 64
+
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
   body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center; }\n\
@@ -246,6 +248,11 @@ struct _State {
   SoupCookie *last_cookie;
   gboolean cookies_allowed;
 
+  gboolean complete_history;
+  gboolean complete_bookmarks;
+  gboolean complete_searchengines;
+  gboolean complete_commands;
+
   Layout layout;
   GList *last_com_history;
 
@@ -393,6 +400,7 @@ struct _FileContent {
   GList *history;
   GList *quickmarks;
   GList *searchengines;
+  GList *se_completion;
   GList *keys;
   GList *settings;
   GList *cookies_allow;

@@ -63,6 +63,8 @@ static void dwb_init_scripts(void);
 static void dwb_init_gui(void);
 static void dwb_init_vars(void);
 
+static Navigation * dwb_get_search_completion(const char *text);
+
 static void dwb_clean_vars(void);
 //static gboolean dwb_end(void);
 /*}}}*/
@@ -287,7 +289,10 @@ static WebSettings DWB_SETTINGS[] = {
               { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     (S_Func)dwb_set_dummy, },
   { { "download-use-external-program",           "Downloads: Use external download program", },                           false, true,  Boolean, { .b = false         },    (S_Func)dwb_set_dummy, },
 
-  { { "complete-history",                        "Complete browsing history", },                              false, true,  Boolean, { .b = true         },     (S_Func)dwb_set_dummy, },
+  { { "complete-history",                        "Complete browsing history", },                              false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-bookmarks",                        "Complete bookmarks", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-searchengines",                   "Complete searchengines", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-commands",                        "Complete input history", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
     
   { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, (S_Func)dwb_set_dummy, },
   { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, (S_Func)dwb_set_dummy, },
@@ -2004,6 +2009,18 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
   return gl;
 }/*}}}*/
 
+static Navigation * 
+dwb_get_search_completion(const char *text) {
+  Navigation *n = dwb_navigation_new_from_line(text);
+
+  char *uri = n->second;
+  n->second = dwb_util_domain_from_uri(uri);
+
+  g_free(uri);
+
+  return n;
+}
+
 /* dwb_init_files() {{{*/
 static void
 dwb_init_files() {
@@ -2040,6 +2057,7 @@ dwb_init_files() {
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (Content_Func)dwb_com_quickmark_new_from_line); 
   dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (Content_Func)dwb_navigation_new_from_line); 
+  dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files.searchengines, (Content_Func)dwb_get_search_completion);
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
 
   if (g_list_last(dwb.fc.searchengines)) {
@@ -2105,6 +2123,11 @@ dwb_init_vars() {
   dwb.misc.startpage = GET_CHAR("startpage");
   dwb.misc.content_block_regex = GET_CHAR("content-block-regex");
 
+  dwb.state.complete_history = GET_BOOL("complete-history");
+  dwb.state.complete_bookmarks = GET_BOOL("complete-bookmarks");
+  dwb.state.complete_searchengines = GET_BOOL("complete-searchengines");
+  dwb.state.complete_commands = GET_BOOL("complete-commands");
+
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
@@ -2128,10 +2151,6 @@ static void dwb_init() {
   dwb_init_gui();
 
   dwb.misc.soupsession = webkit_get_default_session();
-  // TODO fix got_headers_cb
-#ifdef GOT_HEADERS
-  g_signal_connect(dwb.misc.soupsession, "request-started", G_CALLBACK(dwb_soup_request_cb), NULL);
-#endif
   dwb_init_proxy();
   dwb_init_cookies();
   dwb_init_vars();

@@ -33,8 +33,7 @@ dwb_comp_get_completion_item(Navigation *n, void *data, const char *value) {
   c->mlabel = gtk_label_new(value);
   c->event = gtk_event_box_new();
   c->data = data;
-  GtkWidget *hbox = gtk_hbox_new(value ? true :false, 0);
-
+  GtkWidget *hbox = gtk_hbox_new(value ? true : false, 0);
 
 
   gtk_box_pack_start(GTK_BOX(hbox), c->llabel, true, true, 5);
@@ -45,7 +44,7 @@ dwb_comp_get_completion_item(Navigation *n, void *data, const char *value) {
   gtk_label_set_ellipsize(GTK_LABEL(c->rlabel), PANGO_ELLIPSIZE_MIDDLE);
 
   gtk_misc_set_alignment(GTK_MISC(c->llabel), 0.0, 0.5);
-  gtk_misc_set_alignment(GTK_MISC(c->mlabel), 0.0, 0.5);
+  gtk_misc_set_alignment(GTK_MISC(c->mlabel), 1.0, 0.5);
   gtk_misc_set_alignment(GTK_MISC(c->rlabel), 1.0, 0.5);
 
   dwb_comp_modify_completion_item(c, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_normal);
@@ -56,7 +55,7 @@ dwb_comp_get_completion_item(Navigation *n, void *data, const char *value) {
 
 /* dwb_comp_init_completion {{{*/
 static GList * 
-dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings) {
+dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings, void *data, const char *value) {
   Navigation *n;
   const char *input = GET_TEXT();
   Match_Func func = word_beginnings ? (Match_Func)g_str_has_prefix : (Match_Func)g_strrstr;
@@ -64,7 +63,7 @@ dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings) {
   for (GList *l = gl; l; l=l->next) {
     n = l->data;
     if (func(n->first, input) || (!word_beginnings && n->second && func(n->second, input))) {
-      Completion *c = dwb_comp_get_completion_item(n, NULL, NULL);
+      Completion *c = dwb_comp_get_completion_item(n, data, value);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       store = g_list_append(store, c);
     }
@@ -185,11 +184,16 @@ dwb_comp_show_completion(int back) {
 static GList *
 dwb_comp_get_normal_completion() {
   GList *list = NULL;
-  list = dwb_comp_init_completion(list, dwb.fc.commands, true);
-  list = dwb_comp_init_completion(list, dwb.fc.bookmarks, false);
-  if (GET_BOOL("complete-history")) {
-    list = dwb_comp_init_completion(list, dwb.fc.history, false);
-  }
+
+  if (dwb.state.complete_searchengines) 
+    list = dwb_comp_init_completion(list, dwb.fc.se_completion, false, NULL, "Searchengine");
+  if (dwb.state.complete_commands) 
+    list = dwb_comp_init_completion(list, dwb.fc.commands, true, NULL, "Commandline");
+  if (dwb.state.complete_bookmarks) 
+    list = dwb_comp_init_completion(list, dwb.fc.bookmarks, false, NULL, "Bookmark");
+  if (dwb.state.complete_history) 
+    list = dwb_comp_init_completion(list, dwb.fc.history, false, NULL, "History");
+
   return  list;
 }/*}}}*/
 
@@ -197,7 +201,7 @@ dwb_comp_get_normal_completion() {
 static GList *
 dwb_comp_get_bookmark_completion() {
   GList *list = NULL;
-  list = dwb_comp_init_completion(list, dwb.fc.bookmarks, false);
+  list = dwb_comp_init_completion(list, dwb.fc.bookmarks, false, NULL, NULL);
   return  list;
 }/*}}}*/
 

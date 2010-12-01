@@ -48,5 +48,5 @@ char * dwb_return(const char *);
 
 void * dwb_malloc(size_t);
 
-char * dwb_util_str_strip(char *);
+char * dwb_util_domain_from_uri(char *);
 #endif
