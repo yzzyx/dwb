@@ -186,7 +186,7 @@ static FunctionMap FMAP [] = {
 /* SETTINGS_ARRAY {{{*/
 static WebSettings DWB_SETTINGS[] = {
   { { "auto-load-images",			                   "Autoload images", },                                         true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "auto-resize-window",			                 "Autoresize images", },                                       true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "auto-resize-window",			                 "Autoresize window", },                                       true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
   { { "auto-shrink-images",			                 "Autoshrink images", },                                       true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
   { { "cursive-font-family",			               "Cursive font family", },                                     true, false,  Char,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
   { { "default-encoding",			                   "Default encoding", },                                        true, false,  Char,    { .p = NULL      }, (S_Func) dwb_webkit_setting, },
@@ -249,7 +249,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#53868b"         }, (S_Func) dwb_init_style, },
   { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
   { { "normal-completion-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_init_style, },
-  { { "normal-comp-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
+  { { "normal-completion-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
 
   { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
   { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#dddddd"         }, (S_Func) dwb_init_style, },
@@ -1906,7 +1906,7 @@ dwb_init_style() {
 
   gdk_color_parse(GET_CHAR("active-completion-bg-color"), &dwb.color.active_c_bg);
   gdk_color_parse(GET_CHAR("active-completion-fg-color"), &dwb.color.active_c_fg);
-  gdk_color_parse(GET_CHAR("normal-comp-bg-color"), &dwb.color.normal_c_bg);
+  gdk_color_parse(GET_CHAR("normal-completion-bg-color"), &dwb.color.normal_c_bg);
   gdk_color_parse(GET_CHAR("normal-completion-fg-color"), &dwb.color.normal_c_fg);
 
   gdk_color_parse(GET_CHAR("error-color"), &dwb.color.error);
