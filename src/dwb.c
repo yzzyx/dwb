@@ -575,6 +575,12 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+void 
+dwb_clean_load_end(GList *gl) {
+  View *v = gl->data;
+  g_free(v->status->mimetype);
+  v->status->mimetype = NULL;
+}
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
 Navigation *
@@ -1061,19 +1067,31 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
   g_free(escaped);
 }/*}}}*/
 
+
 /* dwb_update_status(GList *gl) {{{*/
 void 
 dwb_update_status(GList *gl) {
-    View *v = gl->data;
-    WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
-    const char *title = webkit_web_view_get_title(w);
+  View *v = gl->data;
+  char *filename = NULL;
+  WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
+  const char *title = webkit_web_view_get_title(w);
+  if (!title && v->status->mimetype && strcmp(v->status->mimetype, "text/html")) {
+    const char *uri = webkit_web_view_get_uri(w);
+    filename = g_path_get_basename(uri);
+    title = filename;
+  }
+  if (!title) {
+    title = dwb.misc.name;
+  }
 
   if (gl == dwb.state.fview) {
-    gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title :  dwb.misc.name);
+    gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title);
   }
   dwb_tab_label_set_text(gl, title);
 
   dwb_update_status_text(gl, NULL);
+  if (filename) 
+    g_free(filename);
 }/*}}}*/
 
 /* dwb_update_tab_label {{{*/

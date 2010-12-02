@@ -113,6 +113,10 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, G
 /* dwb_web_view_mime_type_policy_cb {{{*/
 static gboolean 
 dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
+  View *v = gl->data;
+
+  v->status->mimetype = g_strdup(mimetype);
+
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OpenDownload) {
     dwb.state.mimetype_request = g_strdup(mimetype);
     webkit_web_policy_decision_download(policy);
@@ -260,10 +264,12 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       if (dwb.state.fview)
-      dwb_update_status(gl);
+        dwb_update_status(gl);
       dwb_prepend_navigation(gl, &dwb.fc.history);
+      dwb_clean_load_end(gl);
       break;
     case WEBKIT_LOAD_FAILED: 
+      dwb_clean_load_end(gl);
       break;
     default:
       text = g_strdup_printf("loading [%d%%]", (int)(progress * 100));

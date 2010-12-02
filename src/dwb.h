@@ -287,6 +287,7 @@ struct _ViewStatus {
   gboolean block;
   gboolean block_current;
   gboolean custom_encoding;
+  char *mimetype;
 };
 
 struct _View {
@@ -485,4 +486,5 @@ void dwb_save_settings(void);
 gboolean dwb_save_files(gboolean);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
+void dwb_clean_load_end(GList *);
 #endif
