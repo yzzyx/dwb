@@ -962,3 +962,13 @@ dwb_com_undo(Arg *arg) {
   return false;
 }/*}}}*/
 
+gboolean
+dwb_com_print(Arg *arg) {
+  WebKitWebFrame *frame = webkit_web_view_get_focused_frame(CURRENT_WEBVIEW());
+
+  if (frame) {
+    webkit_web_frame_print(frame);
+    return true;
+  }
+  return false;
+}

@@ -157,14 +157,14 @@ static FunctionMap FMAP [] = {
   { { "entry_word_back",        "Move cursor back on word", },         0,  (Func)dwb_com_entry_word_back,              NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_back",     "Command history back", },             0,  (Func)dwb_com_entry_history_back,           NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_forward",  "Command history forward", },          0,  (Func)dwb_com_entry_history_forward,        NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "download_set_execute",   "Complete binaries", },             0, (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "download_set_execute",   "Complete binaries", },                0, (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
 
-  { { "spell_checking",        "Setting: spell checking",           }, 0, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
-  { { "scripts",               "Setting: scripts",                  }, 1, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-scripts" } },
-  { { "auto_shrink_images",    "Toggle autoshrink images",        }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-shrink-images" } },
-  { { "autoload_images",       "Toggle autoload images",          }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-load-images" } },
-  { { "autoresize_window",     "Toggle autoresize window",        }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-resize-window" } },
-  { { "caret_browsing",        "Toggle caret browsing",           }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-caret-browsing" } },
+  { { "spell_checking",        "Setting: spell checking",         },   0, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
+  { { "scripts",               "Setting: scripts",                },   1, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-scripts" } },
+  { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-shrink-images" } },
+  { { "autoload_images",       "Toggle autoload images",          },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-load-images" } },
+  { { "autoresize_window",     "Toggle autoresize window",        },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-resize-window" } },
+  { { "caret_browsing",        "Toggle caret browsing",           },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-caret-browsing" } },
   { { "default_context_menu",  "Toggle enable default context menu",           }, 0, (Func)dwb_com_toggle_property,     NULL,       PostSM,    { .p = "enable-default-context-menu" } },
   { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, (Func)dwb_com_toggle_property,     NULL,                  PostSM, { .p = "enable-file-acces-from-file-uris" } },
   { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, (Func)dwb_com_toggle_property,  NULL,   PostSM, { .p = "enable-universal-file-acces-from-file-uris" } },
@@ -180,6 +180,7 @@ static FunctionMap FMAP [] = {
   { { "proxy",                 "Toggle proxy",                    }, 1, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
   { { "toggle_block_content",   "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_block_content, NULL,                  PostSM,    { 0 } }, 
   { { "allow_content",         "Allow scripts for current domain in the current session" },  1, (Func) dwb_com_allow_content, NULL,              PostSM,    { 0 } }, 
+  { { "print",                 "Print page" },                           1, (Func) dwb_com_print, NULL,                             PostSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
