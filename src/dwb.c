@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <libsoup/soup.h>
 #include <locale.h>
+#include <stdarg.h>
 
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
@@ -360,15 +361,12 @@ dwb_set_single_instance(GList *l, WebSettings *s) {
 void
 dwb_set_proxy(GList *l, WebSettings *s) {
   SoupURI *uri = NULL;
-  char *message;
 
   if (s->arg.b) { 
     uri = dwb.misc.proxyuri;
   }
   g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
-  message = g_strdup_printf("Set setting proxy: %s", s->arg.b ? "true" : "false");
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
+  dwb_set_normal_message(dwb.state.fview, true, "Set setting proxy: %s", s->arg.b ? "true" : "false");
 }/*}}}*/
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
@@ -514,9 +512,17 @@ dwb_hide_message(GList *gl) {
 
 /* dwb_set_normal_message {{{*/
 void 
-dwb_set_normal_message(GList *gl, const char  *text, gboolean hide) {
+dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
+  va_list arg_list; 
   View *v = gl->data;
-  dwb_set_status_bar_text(v->lstatus, text, &dwb.color.active_fg, dwb.font.fd_bold);
+  
+  va_start(arg_list, text);
+  char message[STRING_LENGTH];
+  vsprintf(message, text, arg_list);
+  va_end(arg_list);
+
+  dwb_set_status_bar_text(v->lstatus, message, &dwb.color.active_fg, dwb.font.fd_bold);
+
   dwb_source_remove(gl);
   if (hide) {
     v->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
@@ -525,9 +531,17 @@ dwb_set_normal_message(GList *gl, const char  *text, gboolean hide) {
 
 /* dwb_set_error_message {{{*/
 void 
-dwb_set_error_message(GList *gl, const char *error) {
+dwb_set_error_message(GList *gl, const char *error, ...) {
+  va_list arg_list; 
+
+  va_start(arg_list, error);
+  char message[STRING_LENGTH];
+  vsprintf(message, error, arg_list);
+  va_end(arg_list);
+
   dwb_source_remove(gl);
-  dwb_set_status_bar_text(VIEW(gl)->lstatus, error, &dwb.color.error, dwb.font.fd_bold);
+
+  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.error, dwb.font.fd_bold);
   VIEW(gl)->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
@@ -808,7 +822,7 @@ dwb_save_searchengine(void) {
     g_strstrip(text);
     if (text && strlen(text) > 0) {
       dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
-      dwb_set_normal_message(dwb.state.fview, "Search saved", true);
+      dwb_set_normal_message(dwb.state.fview, true, "Search saved");
       g_free(dwb.state.search_engine);
     }
     else {
@@ -1025,10 +1039,7 @@ dwb_save_quickmark(const char *key) {
     dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_com_quickmark_new(uri, title, key));
     dwb_normal_mode(false);
 
-    char *message = g_strdup_printf("Added quickmark: %s - %s", key, uri);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-
-    g_free(message);
+    dwb_set_normal_message(dwb.state.fview, true, "Added quickmark: %s - %s", key, uri);
   }
   else {
     dwb_set_error_message(dwb.state.fview, NO_URL);
@@ -1038,23 +1049,18 @@ dwb_save_quickmark(const char *key) {
 /* dwb_open_quickmark(const char *key){{{*/
 static void 
 dwb_open_quickmark(const char *key) {
-  char *message = NULL;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
       Arg a = { .p = q->nav->first };
       dwb_load_uri(&a);
-
-      message = g_strdup_printf("Loading quickmark %s: %s", key, q->nav->first);
-      dwb_set_normal_message(dwb.state.fview, message, true);
+      dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
+      dwb_normal_mode(false);
+      return;
     }
   }
-  if (!message) {
-    message = g_strdup_printf("No such quickmark: %s", key);
-    dwb_set_error_message(dwb.state.fview, message);
-  }
+  dwb_set_error_message(dwb.state.fview, "No such quickmark: %s", key);
   dwb_normal_mode(false);
-  g_free(message);
 }/*}}}*/
 
 /* dwb_tab_label_set_text {{{*/
@@ -1334,7 +1340,7 @@ dwb_eval_key(GdkEventKey *e) {
 /* dwb_command_mode {{{*/
 static gboolean
 dwb_command_mode(Arg *arg) {
-  dwb_set_normal_message(dwb.state.fview, ":", false);
+  dwb_set_normal_message(dwb.state.fview, false, ":");
   dwb_focus_entry();
   dwb.state.mode = CommandMode;
   return true;
@@ -1344,7 +1350,7 @@ dwb_command_mode(Arg *arg) {
 gboolean
 dwb_insert_mode(Arg *arg) {
   if (dwb.state.mode == HintMode) {
-    dwb_set_normal_message(dwb.state.fview, INSERT_MODE, true);
+    dwb_set_normal_message(dwb.state.fview, true, INSERT_MODE);
   }
   dwb_view_modify_style(dwb.state.fview, &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL, 0);
 
@@ -1407,10 +1413,8 @@ dwb_update_search(gboolean forward) {
   }
   webkit_web_view_unmark_text_matches(web);
   if ( (matches = webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0)) ) {
-    char *message = g_strdup_printf("[%d matches]", matches);
-    dwb_set_normal_message(dwb.state.fview, message, false);
+    dwb_set_normal_message(dwb.state.fview, false, "[%d matches]", matches);
     webkit_web_view_set_highlight_text_matches(web, true);
-    g_free(message);
   }
   else {
     dwb_set_error_message(dwb.state.fview, "[0 matches]");
@@ -1473,6 +1477,7 @@ dwb_execute_user_script(Arg *a) {
   if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &std_out, NULL, &error)) {
     GIOChannel *channel = g_io_channel_unix_new(std_out);
     g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, NULL);
+    dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->p);
   }
   else {
     fprintf(stderr, "Cannot execute %s: %s\n", (char*)a->p, error->message);
@@ -1501,7 +1506,7 @@ dwb_get_scripts() {
           if (line[1]) {
             KeyMap *map = dwb_malloc(sizeof(KeyMap));
             Key key = dwb_str_to_key(line[1]);
-            FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, AlwaysSM, { .p = path } };
+            FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, PostSM, { .p = path } };
             FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
             *fmap = fm;
             map->map = fmap;
@@ -2122,10 +2127,11 @@ static void
 dwb_init_proxy() {
   const char *proxy;
   static char *newproxy;
+  gboolean use_proxy = GET_BOOL("proxy");
   if ( !(proxy =  g_getenv("http_proxy")) && !(proxy =  GET_CHAR("proxy-url")) )
     return;
 
-  if ( dwb_util_test_connect(proxy) ) {
+  if ( (use_proxy && dwb_util_test_connect(proxy)) || !use_proxy ) {
     newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
     dwb.misc.proxyuri = soup_uri_new(newproxy);
     g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", GET_BOOL("proxy") ? dwb.misc.proxyuri : NULL, NULL); 

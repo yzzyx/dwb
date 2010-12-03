@@ -23,9 +23,7 @@ dwb_com_simple_command(KeyMap *km) {
 
   if (func(arg)) {
     if (!km->map->hide) {
-      char *message = g_strconcat(km->map->n.second, ":", NULL);
-      dwb_set_normal_message(dwb.state.fview, message, false);
-      g_free(message);
+      dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
     }
     else if (km->map->hide == AlwaysSM) {
       CLEAR_COMMAND_TEXT(dwb.state.fview);
@@ -68,7 +66,6 @@ dwb_com_toggle_custom_encoding(Arg *arg) {
   View *v = CURRENT_VIEW();
   WebKitWebView *web = CURRENT_WEBVIEW();
   char *ce = GET_CHAR("custom-encoding");
-  char *message;
 
   if (!ce) 
     return false;
@@ -77,15 +74,13 @@ dwb_com_toggle_custom_encoding(Arg *arg) {
 
   if (v->status->custom_encoding) {
     webkit_web_view_set_custom_encoding(web, ce);
-    message = g_strdup_printf("Using encoding: %s", ce);
+    dwb_set_normal_message(dwb.state.fview, true, "Using encoding: %s", ce);
   }
   else {
     webkit_web_view_set_custom_encoding(web, NULL);
     ce = (char*)webkit_web_view_get_encoding(web);
-    message = g_strdup_printf("Using default encoding: %s", ce);
+    dwb_set_normal_message(dwb.state.fview, true, "Using default encoding: %s", ce);
   }
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
   return true;
 }/*}}}*/
 
@@ -116,7 +111,7 @@ dwb_com_add_search_field(Arg *a) {
     }
   }
   dwb.state.mode = SearchFieldMode;
-  dwb_set_normal_message(dwb.state.fview, "Enter a Keyword for marked search:", false);
+  dwb_set_normal_message(dwb.state.fview, false, "Enter a Keyword for marked search:");
   dwb_focus_entry();
   g_free(value);
   return ret;
@@ -131,9 +126,7 @@ dwb_com_toggle_property(Arg *a) {
   WebKitWebSettings *settings = webkit_web_view_get_settings(CURRENT_WEBVIEW());
   g_object_get(settings, prop, &value, NULL);
   g_object_set(settings, prop, !value, NULL);
-  char *message = g_strdup_printf("Setting %s set: %s", prop, !value ? "true" : "false");
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
+  dwb_set_normal_message(dwb.state.fview, true, "Property %s set to %s", prop, !value ? "true" : "false");
   return true;
 }/*}}}*/
 
@@ -276,9 +269,7 @@ dwb_com_allow_cookie(Arg *arg) {
     char *domain = (char*)soup_cookie_get_domain(dwb.state.last_cookie);
     dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, domain);
     soup_cookie_jar_add_cookie(dwb.state.cookiejar, dwb.state.last_cookie);
-    char *message = g_strdup_printf("Saved cookie and allowed domain: %s", domain);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
+    dwb_set_normal_message(dwb.state.fview, true, "Saved cookie and allowed domain: %s", domain);
     return true;
   }
   return false;
@@ -290,11 +281,8 @@ dwb_com_bookmark(Arg *arg) {
   gboolean noerror;
   if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) ) {
     dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)dwb_util_navigation_sort_first);
-    char *message = g_strdup_printf("Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
+    dwb_set_normal_message(dwb.state.fview, true, "Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
   }
-
     
   return dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks);
 }/*}}}*/
@@ -713,25 +701,30 @@ dwb_com_focus_nth_view(Arg *arg) {
 gboolean
 dwb_com_yank(Arg *arg) {
   WebKitWebView *w = CURRENT_WEBVIEW();
+
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
   GtkClipboard *old = gtk_clipboard_get(atom);
+
   char *text = NULL;
+  char buffer[STRING_LENGTH];
+  char *message = buffer;
+
   gboolean ret = false;
 
   if (webkit_web_view_has_selection(w)) {
     webkit_web_view_copy_clipboard(w);
     GtkClipboard *new = gtk_clipboard_get(GDK_NONE);
     text = gtk_clipboard_wait_for_text(new);
+    message = "selection";
   }
   else {
     text = g_strdup(webkit_web_view_get_uri(w));
+    message = text;
   }
   if (text) {
     if (strlen(text)) {
       gtk_clipboard_set_text(old, text, -1);
-      char *message = g_strdup_printf("Yanked: %s", text);
-      dwb_set_normal_message(dwb.state.fview, message, true);
-      g_free(message);
+      dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", message);
       ret = true;
     }
     g_free(text);
@@ -865,7 +858,7 @@ dwb_com_save_session(Arg *arg) {
   else {
     dwb.state.mode = arg->n;
     dwb_focus_entry();
-    dwb_set_normal_message(dwb.state.fview, "Session name:", false);
+    dwb_set_normal_message(dwb.state.fview, false, "Session name:");
   }
   return true;
 }
@@ -893,18 +886,15 @@ dwb_com_toggle_ugly(GList **fc, const char *desc) {
   const char *uri = webkit_web_view_get_uri(web);
   char *host = dwb_get_host(uri);
   GList *block;
-  char *message;
   if (host) {
     if ( (block = dwb_get_host_blocked(*fc, host)) ) {
       *fc = g_list_delete_link(*fc, block);
-      message = g_strdup_printf("%s blocked for domain %s", desc, host);
+      dwb_set_normal_message(dwb.state.fview, true, "%s blocked for domain %s", desc, host);
     }
     else {
       *fc = g_list_prepend(*fc, host);
-      message = g_strdup_printf("%s allowed for domain %s", desc, host);
+      dwb_set_normal_message(dwb.state.fview, true, "%s allowed for domain %s", desc, host);
     }
-    dwb_set_normal_message(dwb.state.fview, message, true);
-    g_free(message);
     dwb_com_reload(NULL);
   }
 }/*}}}*/
@@ -934,7 +924,7 @@ dwb_com_new_window_or_view(Arg *arg) {
 gboolean 
 dwb_com_save_files(Arg *arg) {
   if (dwb_save_files(false)) {
-    dwb_set_normal_message(dwb.state.fview, "Configuration files saved", true);
+    dwb_set_normal_message(dwb.state.fview, true, "Configuration files saved");
     return true;
   }
   return false;

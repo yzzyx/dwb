@@ -668,19 +668,16 @@ dwb_parse_setting(const char *text) {
       if ( (a = dwb_util_char_to_arg(token[1], s->type)) || (s->type == Char && a->p == NULL)) {
         s->arg = *a;
         dwb_apply_settings(s);
-        char *message = g_strdup_printf("Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
-        dwb_set_normal_message(dwb.state.fview, message, true);
+        dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
         dwb_save_settings();
-        g_free(message);
       }
       else {
+        puts(token[1]);
         dwb_set_error_message(dwb.state.fview, "No valid value.");
       }
     }
     else {
-      char *message = g_strconcat("No such setting: ", token[0], NULL);
-      dwb_set_normal_message(dwb.state.fview, message, true);
-      g_free(message);
+      dwb_set_error_message(dwb.state.fview, "No such setting: %s", token[0]);
     }
   }
   dwb_normal_mode(false);
@@ -705,9 +702,7 @@ dwb_parse_key_setting(const char *text) {
     value.key = key;
   }
 
-  char *message = g_strdup_printf("Saved key for command %s: %s", token[0], token[1] ? token[1] : "");
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
+  dwb_set_normal_message(dwb.state.fview, true, "Saved key for command %s: %s", token[0], token[1] ? token[1] : "");
 
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);

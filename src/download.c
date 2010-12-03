@@ -259,7 +259,7 @@ dwb_dl_start() {
 /* dwb_dl_entry_set_directory() {{{*/
 static void
 dwb_dl_entry_set_directory() {
-  dwb_set_normal_message(dwb.state.fview, "Downloadpath:", false);
+  dwb_set_normal_message(dwb.state.fview, false, "Downloadpath:");
   char *current_dir = lastdir ? g_strdup(lastdir) : g_get_current_dir();
   char *newdir = current_dir[strlen(current_dir) - 1] != '/' ? g_strdup_printf("%s/", current_dir) : g_strdup(current_dir);
 
@@ -276,9 +276,7 @@ dwb_dl_entry_set_spawn_command(const char *command) {
   if (!command && dwb.state.mimetype_request) {
     command = dwb_get_command_from_mimetype(dwb.state.mimetype_request);
   }
-  char *message = g_strdup_printf("Spawn (%s):", dwb.state.mimetype_request ? dwb.state.mimetype_request : "???");
-  dwb_set_normal_message(dwb.state.fview, message, false);
-  g_free(message);
+  dwb_set_normal_message(dwb.state.fview, false, "Spawn (%s):", dwb.state.mimetype_request ? dwb.state.mimetype_request : "???");
   dwb_entry_set_text(command ? command : "");
 }/*}}}*/
 
