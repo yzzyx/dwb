@@ -2269,7 +2269,18 @@ dwb_init_fifo(int single) {
   if ( (ff = fdopen(fd, "w")) ) {
     if (dwb.misc.argc) {
       for (int i=0; i<dwb.misc.argc; i++) {
-        fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
+        if (g_file_test(dwb.misc.argv[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute(dwb.misc.argv[i])) {
+          char *curr_dir = g_get_current_dir();
+          path = g_build_filename(curr_dir, dwb.misc.argv[i], NULL);
+
+          fprintf(ff, "add_view %s\n", path);
+
+          g_free(curr_dir);
+          g_free(path);
+        }
+        else {
+          fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
+        }
       }
     }
     else {
