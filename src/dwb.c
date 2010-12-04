@@ -1141,51 +1141,58 @@ dwb_new_window(Arg *arg) {
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(Arg *arg) {
+  g_strstrip(arg->p);
+
+  if (!arg || !arg->p || !strlen(arg->p)) {
+    return;
+  }
+  /* new window ? */
   if (dwb.state.nv == OpenNewWindow) {
     dwb.state.nv = OpenNormal;
     dwb_new_window(arg);
     return;
   }
+  /*  new tab ?  */
   else if (dwb.state.nv == OpenNewView) {
     dwb.state.nv = OpenNormal;
     dwb_add_view(arg);
     return;
   }
-  if (arg && arg->p && strlen(arg->p)) {
-    /*  get resolved uri */
-    char *tmp, *uri = NULL; 
-    GError *error = NULL;
+  /*  get resolved uri */
+  char *tmp, *uri = NULL; 
+  GError *error = NULL;
 
-    if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
-      if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
-        if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
+  g_strstrip(arg->p);
+  if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
+    if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
+      if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
+        g_clear_error(&error);
+        char *path = g_get_current_dir();
+        tmp = g_build_filename(path, arg->p, NULL);
+        if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
+          fprintf(stderr, "Cannot open %s: %s", (char*)arg->p, error->message);
           g_clear_error(&error);
-          char *path = g_get_current_dir();
-          tmp = g_build_filename(path, arg->p, NULL);
-          if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
-            fprintf(stderr, "Cannot open %s: %s", (char*)arg->p, error->message);
-            g_clear_error(&error);
-          }
-          g_free(tmp);
-          g_free(path);
         }
+        g_free(tmp);
+        g_free(path);
       }
     }
-    else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
-      uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://")
-        ? g_strdup(arg->p)
-        : g_strdup_printf("http://%s", (char*)arg->p);
-    }
-
-    /* delete cookie of last visited website */
-    if (dwb.state.last_cookie) {
-      soup_cookie_free(dwb.state.last_cookie); 
-      dwb.state.last_cookie = NULL;
-    }
-    View *fview = dwb.state.fview->data;
-    webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
-    g_free(uri);
   }
+  else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
+    uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://")
+      ? g_strdup(arg->p)
+      : g_strdup_printf("http://%s", (char*)arg->p);
+  }
+
+  /* delete cookie of last visited website */
+  if (dwb.state.last_cookie) {
+    soup_cookie_free(dwb.state.last_cookie); 
+    dwb.state.last_cookie = NULL;
+  }
+  /* load uri */
+  View *fview = dwb.state.fview->data;
+  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
+  g_free(uri);
 }/*}}}*/
 
 /* dwb_update_layout() {{{*/
@@ -2134,7 +2141,7 @@ dwb_init_proxy() {
   if ( (use_proxy && dwb_util_test_connect(proxy)) || !use_proxy ) {
     newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
     dwb.misc.proxyuri = soup_uri_new(newproxy);
-    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", GET_BOOL("proxy") ? dwb.misc.proxyuri : NULL, NULL); 
+    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", use_proxy ? dwb.misc.proxyuri : NULL, NULL); 
     g_free(newproxy);
   }
 }/*}}}*/
