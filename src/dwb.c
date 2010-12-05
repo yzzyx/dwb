@@ -418,7 +418,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = false;
   }
   else if (dwb.state.mode == InsertMode) {
-    if (e->state & GDK_MODIFIER_MASK && !(e->state & (GDK_SHIFT_MASK | GDK_LOCK_MASK))) {
+    if (CLEAN_STATE(e) & GDK_MODIFIER_MASK) {
       ret = dwb_eval_key(e);
     }
   }
