@@ -637,13 +637,15 @@ The default height of dwb's window. Possible values: height in pixel.
 .TP 
 .BR download-external-command
 A command that will be invoked if 'download-use-external-program' is set. There
-are three variables that can be used in the command: 
+are four variables that can be used in the command: 
 .IR dwb_uri
 will be replaced with the download-uri, 
 .IR dwb_output
 will be replaced with the fullpath of the destination, 
 .IR dwb_cookies
-will be replaced with the path to the cookie-file.
+will be replaced with the path to the cookie-file,
+.IR dwb_fifo
+will be replaced with the fifo-path if "use-fifo" is enabled. 
 .TP
 .BR download-use-external-program
 Whether to use an external download programm specified in
@@ -778,6 +780,10 @@ The background color the tab of a not focused view. Possible values: an rgb colo
 .BR tab-normal-fg-color
 The foreground color of the tab of a not focused view. Possible values: an rgb
 color-string.
+.TP 
+.BR use-fifo
+Use a fifo to communicate with dwb, e.g. sending "open <url>" to the fifo would
+load the url in the current view.
 
 .SH FILES
 .SS Scripts

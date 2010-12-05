@@ -395,6 +395,7 @@ struct _Files {
   const char *download_path;
   const char *content_block_allow;
   const char *unifile;
+  const char *fifo;
 };
 struct _FileContent {
   GList *bookmarks;

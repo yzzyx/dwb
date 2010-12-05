@@ -42,6 +42,7 @@ static void dwb_reload_layout(GList *,  WebSettings *);
 static gboolean dwb_test_cookie_allowed(SoupCookie *);
 static void dwb_save_cookies(void);
 
+static void dwb_open_channel(const char *);
 static void dwb_open_si_channel(void);
 static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
 
@@ -295,6 +296,8 @@ static WebSettings DWB_SETTINGS[] = {
   { { "complete-bookmarks",                        "Complete bookmarks", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
   { { "complete-searchengines",                   "Complete searchengines", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
   { { "complete-commands",                        "Complete input history", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
+
+  { { "use-fifo",                        "Create a fifo pipe for communication", },                            false, true,  Boolean, { .b = false         },     (S_Func)dwb_set_dummy },
     
   { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, (S_Func)dwb_set_dummy, },
   { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, (S_Func)dwb_set_dummy, },
@@ -611,11 +614,15 @@ dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   return n;
 }/*}}}*/
 
+static void dwb_open_channel(const char *filename) {
+  dwb.misc.si_channel = g_io_channel_new_file(filename, "r+", NULL);
+  g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
+}
+
 /* dwb_open_si_channel() {{{*/
 static void
 dwb_open_si_channel() {
-  dwb.misc.si_channel = g_io_channel_new_file(dwb.files.unifile, "r+", NULL);
-  g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
+  dwb_open_channel(dwb.files.unifile);
 }/*}}}*/
 
 /* dwb_js_get_host_blocked (char *)  return: GList * {{{*/
@@ -1557,6 +1564,10 @@ dwb_clean_up() {
     g_free(m);
   }
   g_list_free(dwb.keymap);
+
+  if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
+    unlink(dwb.files.fifo);
+  }
   return true;
 }/*}}}*/
 
@@ -2253,46 +2264,62 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 static void 
 dwb_init_fifo(int single) {
   FILE *ff;
+
+  /* Files */
   char *path = dwb_util_build_path();
   dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
-  g_free(path);
+
 
   dwb.misc.si_channel = NULL;
   if (single == NEW_INSTANCE) {
     return;
   }
 
-  if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
-    mkfifo(dwb.files.unifile, 0666);
-  }
-  int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
-  if ( (ff = fdopen(fd, "w")) ) {
-    if (dwb.misc.argc) {
-      for (int i=0; i<dwb.misc.argc; i++) {
-        if (g_file_test(dwb.misc.argv[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute(dwb.misc.argv[i])) {
-          char *curr_dir = g_get_current_dir();
-          path = g_build_filename(curr_dir, dwb.misc.argv[i], NULL);
+  if (GET_BOOL("single-instance")) {
+    if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
+      mkfifo(dwb.files.unifile, 0666);
+    }
+    int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
+    if ( (ff = fdopen(fd, "w")) ) {
+      if (dwb.misc.argc) {
+        for (int i=0; i<dwb.misc.argc; i++) {
+          if (g_file_test(dwb.misc.argv[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute(dwb.misc.argv[i])) {
+            char *curr_dir = g_get_current_dir();
+            path = g_build_filename(curr_dir, dwb.misc.argv[i], NULL);
 
-          fprintf(ff, "add_view %s\n", path);
+            fprintf(ff, "add_view %s\n", path);
 
-          g_free(curr_dir);
-          g_free(path);
-        }
-        else {
-          fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
+            g_free(curr_dir);
+            g_free(path);
+          }
+          else {
+            fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
+          }
         }
       }
+      else {
+        fprintf(ff, "add_view\n");
+      }
+      fclose(ff);
+      exit(EXIT_SUCCESS);
     }
-    else {
-      fprintf(ff, "add_view\n");
-    }
-    fclose(ff);
-    exit(EXIT_SUCCESS);
-  }
-  close(fd);
-  if (GET_BOOL("single-instance")) {
+    close(fd);
     dwb_open_si_channel();
   }
+
+  /* fifo */
+  if (GET_BOOL("use-fifo")) {
+    char *filename = g_strdup_printf("%s-%d.fifo", dwb.misc.name, getpid());
+    dwb.files.fifo = g_build_filename(path, filename, NULL);
+    g_free(filename);
+
+    if (!g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
+      mkfifo(dwb.files.fifo, 0600);
+    }
+    dwb_open_channel(dwb.files.fifo);
+  }
+
+  g_free(path);
 }/*}}}*/
 /*}}}*/
 
