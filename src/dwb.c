@@ -30,6 +30,7 @@ static void dwb_set_cookies(GList *l, WebSettings *s);
 static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_content_block(GList *, WebSettings *);
 static void dwb_set_startpage(GList *, WebSettings *);
+static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
@@ -286,6 +287,7 @@ static WebSettings DWB_SETTINGS[] = {
   
   { { "content-block-regex",   "Mimetypes that will be blocked", },     false, false,  Char,   { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" }, (S_Func) dwb_set_content_block_regex, }, 
   { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_content_block, }, 
+  { { "plugin-blocker",                       "Flashblocker", },                                              false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_plugin_blocker, }, 
 
   // downloads
   { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
@@ -319,6 +321,12 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
 static void 
 dwb_set_startpage(GList *l, WebSettings *s) {
   dwb.misc.startpage = s->arg.p;
+}/*}}}*/
+/* dwb_set_plugin_blocker(GList *l, WebSettings *){{{*/
+static void 
+dwb_set_plugin_blocker(GList *l, WebSettings *s) {
+  View *v = l->data;
+  v->status->plugin_blocker = s->arg.b;
 }/*}}}*/
 
 /* dwb_set_content_block_regex(GList *l, WebSettings *){{{*/

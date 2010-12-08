@@ -258,8 +258,6 @@ struct _State {
 
   GList *undo_list;
 
-  char *input_id;
-
   char *search_engine;
   char *form_name;
 
@@ -288,6 +286,7 @@ struct _ViewStatus {
   gboolean block_current;
   gboolean custom_encoding;
   char *mimetype;
+  gboolean plugin_blocker;
 };
 
 struct _View {

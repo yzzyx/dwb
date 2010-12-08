@@ -1,9 +1,11 @@
 NAME=dwb
-VERSION=0.0.15
+VERSION=0.0.16
 DISTDIR=$(NAME)-$(VERSION)
 DOCDIR=doc
 SRCDIR=src
 SHAREDIR=data
+EXAMPLEDIR=examples
+
 
 LIBS  += gtk+-2.0
 LIBS  += webkit-1.0
@@ -23,6 +25,9 @@ SOURCE = $(wildcard $(SRCDIR)/*.c)
 HDR = $(SOURCE:%.c=%.h) 
 TARGET = $(NAME)
 DTARGET=$(TARGET)_d
+
+EXAMPLES += $(EXAMPLEDIR)/ext_editor.sh 
+EXAMPLES += $(EXAMPLEDIR)/formfiller.sh
 
 MANFILE=$(NAME).1
 

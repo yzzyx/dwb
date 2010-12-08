@@ -15,6 +15,9 @@ static void dwb_parse_setting(const char *);
 static void dwb_parse_key_setting(const char *);
 static void dwb_apply_settings(WebSettings *);
 
+static char *lasturi;
+static GList *allowed_plugins;
+
 /* WEB_VIEW_CALL_BACKS {{{*/
 
 /* dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
@@ -77,6 +80,47 @@ static GtkWidget *
 dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
   dwb_add_view(NULL); 
   return ((View*)dwb.state.fview->data)->web;
+}/*}}}*/
+
+gboolean 
+dwb_view_plugin_blocker_button_cb(GtkWidget *widget, GdkEventButton *e, char *uri) {
+  allowed_plugins = g_list_prepend(allowed_plugins, uri);
+  GtkWidget *parent = gtk_widget_get_parent(widget);
+  gtk_container_remove(GTK_CONTAINER(parent), widget);
+  gtk_widget_destroy(widget);
+  dwb_com_reload(NULL);
+  return true;
+}
+
+/* dwb_web_view_create_plugin_widget_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
+static GtkWidget * 
+dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *t, GList *gl) {
+  GtkWidget *event_box = NULL;
+  View *v = gl->data;
+
+  for (GList *l = allowed_plugins; l; l=l->next) {
+    if (!strcmp(uri, l->data)) {
+      return NULL;
+    }
+  }
+  if (v->status->plugin_blocker) {
+    lasturi = g_strdup(uri);
+    event_box = gtk_event_box_new();
+
+    GtkWidget *label = gtk_label_new("Plugin blocked");
+    gtk_container_add(GTK_CONTAINER(event_box), label);
+    g_signal_connect(G_OBJECT(event_box), "button-press-event", G_CALLBACK(dwb_view_plugin_blocker_button_cb), lasturi);
+
+    gtk_widget_modify_fg(label, GTK_STATE_NORMAL, &dwb.color.active_fg);
+    gtk_widget_modify_bg(event_box, GTK_STATE_NORMAL, &dwb.color.active_bg);
+    PangoFontDescription *fd = dwb.font.fd_bold;
+    pango_font_description_set_absolute_size(fd, dwb.font.active_size * PANGO_SCALE);
+    gtk_widget_modify_font(label, fd);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+
+    gtk_widget_show_all(event_box);
+  }
+  return event_box;
 }/*}}}*/
 
 /* dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
@@ -474,6 +518,7 @@ dwb_web_view_init_signals(GList *gl) {
   g_signal_connect(v->web, "close-web-view",                        G_CALLBACK(dwb_web_view_close_web_view_cb), gl);
   g_signal_connect(v->web, "console-message",                       G_CALLBACK(dwb_web_view_console_message_cb), gl);
   g_signal_connect(v->web, "create-web-view",                       G_CALLBACK(dwb_web_view_create_web_view_cb), gl);
+  g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(dwb_web_view_create_plugin_widget_cb), gl);
   g_signal_connect(v->web, "download-requested",                    G_CALLBACK(dwb_web_view_download_requested_cb), gl);
   g_signal_connect(v->web, "hovering-over-link",                    G_CALLBACK(dwb_web_view_hovering_over_link_cb), gl);
   g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(dwb_web_view_mime_type_policy_cb), gl);
@@ -672,7 +717,6 @@ dwb_parse_setting(const char *text) {
         dwb_save_settings();
       }
       else {
-        puts(token[1]);
         dwb_set_error_message(dwb.state.fview, "No valid value.");
       }
     }
