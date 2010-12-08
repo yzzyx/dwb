@@ -15,6 +15,9 @@ static void dwb_parse_setting(const char *);
 static void dwb_parse_key_setting(const char *);
 static void dwb_apply_settings(WebSettings *);
 
+static char *lasturi;
+static GList *allowed_plugins;
+
 /* WEB_VIEW_CALL_BACKS {{{*/
 
 /* dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
@@ -79,6 +82,47 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
   return ((View*)dwb.state.fview->data)->web;
 }/*}}}*/
 
+gboolean 
+dwb_view_plugin_blocker_button_cb(GtkWidget *widget, GdkEventButton *e, char *uri) {
+  allowed_plugins = g_list_prepend(allowed_plugins, uri);
+  GtkWidget *parent = gtk_widget_get_parent(widget);
+  gtk_container_remove(GTK_CONTAINER(parent), widget);
+  gtk_widget_destroy(widget);
+  dwb_com_reload(NULL);
+  return true;
+}
+
+/* dwb_web_view_create_plugin_widget_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
+static GtkWidget * 
+dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *t, GList *gl) {
+  GtkWidget *event_box = NULL;
+  View *v = gl->data;
+
+  for (GList *l = allowed_plugins; l; l=l->next) {
+    if (!strcmp(uri, l->data)) {
+      return NULL;
+    }
+  }
+  if (v->status->plugin_blocker) {
+    lasturi = g_strdup(uri);
+    event_box = gtk_event_box_new();
+
+    GtkWidget *label = gtk_label_new("Plugin blocked");
+    gtk_container_add(GTK_CONTAINER(event_box), label);
+    g_signal_connect(G_OBJECT(event_box), "button-press-event", G_CALLBACK(dwb_view_plugin_blocker_button_cb), lasturi);
+
+    gtk_widget_modify_fg(label, GTK_STATE_NORMAL, &dwb.color.active_fg);
+    gtk_widget_modify_bg(event_box, GTK_STATE_NORMAL, &dwb.color.active_bg);
+    PangoFontDescription *fd = dwb.font.fd_bold;
+    pango_font_description_set_absolute_size(fd, dwb.font.active_size * PANGO_SCALE);
+    gtk_widget_modify_font(label, fd);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
+
+    gtk_widget_show_all(event_box);
+  }
+  return event_box;
+}/*}}}*/
+
 /* dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
 static gboolean 
 dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
@@ -113,6 +157,10 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, G
 /* dwb_web_view_mime_type_policy_cb {{{*/
 static gboolean 
 dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
+  View *v = gl->data;
+
+  v->status->mimetype = g_strdup(mimetype);
+
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OpenDownload) {
     dwb.state.mimetype_request = g_strdup(mimetype);
     webkit_web_policy_decision_download(policy);
@@ -260,10 +308,12 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       if (dwb.state.fview)
-      dwb_update_status(gl);
+        dwb_update_status(gl);
       dwb_prepend_navigation(gl, &dwb.fc.history);
+      dwb_clean_load_end(gl);
       break;
     case WEBKIT_LOAD_FAILED: 
+      dwb_clean_load_end(gl);
       break;
     default:
       text = g_strdup_printf("loading [%d%%]", (int)(progress * 100));
@@ -468,6 +518,7 @@ dwb_web_view_init_signals(GList *gl) {
   g_signal_connect(v->web, "close-web-view",                        G_CALLBACK(dwb_web_view_close_web_view_cb), gl);
   g_signal_connect(v->web, "console-message",                       G_CALLBACK(dwb_web_view_console_message_cb), gl);
   g_signal_connect(v->web, "create-web-view",                       G_CALLBACK(dwb_web_view_create_web_view_cb), gl);
+  g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(dwb_web_view_create_plugin_widget_cb), gl);
   g_signal_connect(v->web, "download-requested",                    G_CALLBACK(dwb_web_view_download_requested_cb), gl);
   g_signal_connect(v->web, "hovering-over-link",                    G_CALLBACK(dwb_web_view_hovering_over_link_cb), gl);
   g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(dwb_web_view_mime_type_policy_cb), gl);
@@ -662,19 +713,15 @@ dwb_parse_setting(const char *text) {
       if ( (a = dwb_util_char_to_arg(token[1], s->type)) || (s->type == Char && a->p == NULL)) {
         s->arg = *a;
         dwb_apply_settings(s);
-        char *message = g_strdup_printf("Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
-        dwb_set_normal_message(dwb.state.fview, message, true);
+        dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
         dwb_save_settings();
-        g_free(message);
       }
       else {
         dwb_set_error_message(dwb.state.fview, "No valid value.");
       }
     }
     else {
-      char *message = g_strconcat("No such setting: ", token[0], NULL);
-      dwb_set_normal_message(dwb.state.fview, message, true);
-      g_free(message);
+      dwb_set_error_message(dwb.state.fview, "No such setting: %s", token[0]);
     }
   }
   dwb_normal_mode(false);
@@ -699,9 +746,7 @@ dwb_parse_key_setting(const char *text) {
     value.key = key;
   }
 
-  char *message = g_strdup_printf("Saved key for command %s: %s", token[0], token[1] ? token[1] : "");
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
+  dwb_set_normal_message(dwb.state.fview, true, "Saved key for command %s: %s", token[0], token[1] ? token[1] : "");
 
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);

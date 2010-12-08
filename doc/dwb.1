@@ -302,6 +302,9 @@ Next navigation action will be opened in a new view.
 .TP
 .BR W
 Next navigation action will be opened in a new window.
+.TP 
+.BR C-M-p
+Print focused frame.
 .TP
 .BR unbound 
 Toggle autoload images (command 
@@ -391,6 +394,621 @@ or via command line (command
 .BR set_key ). 
 Shortcuts will be saved in 
 .IR ~/.config/dwb/keys .
+
+.SS Per-view-settings
+Per-view-settings only affect the focused view. All per-view-settings can also
+be set globally and then will affect all views. If a string value is set to 
+.IR NULL
+the default value will be used. The settings in detail are: 
+.TP
+.BR auto-load-images  
+Load images automatically. Possible values: true/false, 
+default value:
+.IR true .
+.TP
+.BR auto-resize-window
+Resize window through DOM-methods. Possible values: true/false, 
+default value:
+.IR false .
+.TP
+.BR auto-shrink-images
+Automatically shrink standalone images to fit. Possible values: true/false, 
+default value:
+.IR true .
+.TP
+.BR block-content
+Whether to block content by mime-type defined by content-block-regex. Possible
+values: true/false, 
+default value:
+.IR false .
+.TP
+.BR content-block-regex
+A regular expression that describes mimetypes, that should be blocked. Possible
+values: a regular expression.
+default value:
+.IR (application|text)/(x-)?(shockwave-flash|javascript) .
+.TP
+.BR cursive-font-family
+Default cursive font family used to display text. Possible values: a font description or 
+NULL, 
+default value:
+.IR NULL .
+.TP
+.BR custom-encoding
+A custom encoding used for the webview. Possible values: encoding string or 
+NULL,
+default value:
+.IR NULL .
+.TP
+.BR default-encoding
+The default encoding used to display text. Possible values: encoding string or 
+NULL,
+default value:
+.IR NULL .
+.TP
+.BR default-font-family
+The default font family used to display text. Possible values: a font
+description or
+NULL, 
+default value:
+.IR sans-serif .
+.TP
+.BR default-font-size
+The default font size used to display text. Possible values: a font size
+(integer),
+default value:
+.IR 12 .
+.TP
+.BR default-monospace-font-size
+The default font size used to display monospace text. Possible values: a font size
+(integer),
+default value:
+.IR 10 .
+.TP
+.BR editable
+Whether the content of a webpage should be editable. Possible values:
+true/false,
+default value:
+.IR false .
+.TP
+.BR enable-caret-browsing
+Whether to enable caret browsing. Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-default-context-menu
+Whether right-clicks open a context menu. Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-developer-extras
+Whether the web-inspector should be enabled. Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-dom-paste
+Whether enable DOM-paste. Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-file-access-from-file-uris
+Whether file uris can be accessed. Possible values: true/false, 
+default value:
+.IR true .
+.TP
+.BR enable-html5-database
+Whether to enable HTML5 client-side SQL database support.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR enable-html5-local-storage
+Whether to enable HTML5 localStorage support.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR enable-java-applet
+Whether to enable Java <applet>-tag.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR enable-offline-web-application-cache
+Enable or disable HTML5 offline web application cache support.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR enable-page-cache
+Enable or disable page cache.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-plugins
+Enable or disable embedded plugins.
+Possible values: true/false, 
+default value:
+.IR true .
+.TP
+.BR enable-private-browsing
+Enable or disable private browsing. If set globally, the sessions history will
+not be saved.
+Possible values: true/false, 
+default value:
+.IR false .
+.TP
+.BR enable-scripts
+Enable or disable embedded scripting-languages.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR enable-site-specific-quirks
+Enables the site-specific compatibility workarounds.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-spatial-navigation
+Whether to enable the Spatial Navigation. This feature consists in the ability
+to navigate between focusable elements in a Web page, such as hyperlinks and
+form controls, by using Left, Right, Up and Down arrow keys.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-spell-checking
+Whether to enable spell checking.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-universal-access-from-file-uris
+Whether to allow files loaded through file:// URIs universal access to all pages.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR enable-xss-auditor
+Whether to enable the XSS Auditor. This feature filters some kinds of reflective
+XSS attacks on vulnerable web sites.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR enforce-96-dpi
+Enforce a resolution of 96 DPI.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR fantasy-font-family
+Default fantasy font family used to display text. Possible values: a font description or 
+NULL,
+default value:
+.IR serif .
+.TP
+.BR javascript-can-access-clipboard
+Whether javascript can access Clipboard.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR full-content-zoom
+Whether the full content is scaled when zooming.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR javascript-can-open-windows-automatically
+Whether JavaScript can open popup windows automatically without user intervention.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR minimum-font-size
+The minimum font size used to display text. Possible values: a font size
+(integer),
+default value:
+.IR 5 .
+.TP
+.BR minimum-logical-font-size
+The minimum logical font size used to display text. Possible values: a font size
+(integer),
+default value:
+.IR 5 .
+.TP
+.BR monospace-font-family
+Default font family used to display monospace text. Possible values: a font description or 
+NULL,
+default value:
+.IR monospace .
+.TP
+.BR plugin-blocker
+Replace plugins with a clickable widget. Clicking the widget enables the plugin
+for the current session.
+Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR print-backgrounds
+Whether background images should be printed. 
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR resizable-text-areas
+Whether text areas are resizable.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR sans-serif-font-family
+Default sans-serif font family used to display text. Possible values: a font description or 
+NULL,
+default value:
+.IR sans-serif .
+.TP
+.BR serif-font-family
+Default serif font family used to display text. Possible values: a font description or 
+NULL,
+default value:
+.IR serif .
+.TP
+.BR spell-checking-language
+The languages to be used for spell checking, separated by commas. Possible
+values: a string or 
+NULL,
+default value:
+.IR NULL .
+.TP
+.BR tab-cycles-through-elements
+Whether the tab key cycles through elements on the page.
+Possible values: true/false,
+default value:
+.IR true .
+.TP
+.BR user-agent
+The user-agent-string. Possible values: a user-agent or 
+NULL,
+default value:
+.IR NULL .
+.TP
+.BR user-stylesheet-uri
+The URI of a stylesheet that is applied to every page. If a local file is used,
+must start with file://. Possible values: an
+uri-string or NULL,
+default value:
+.IR NULL .
+.TP
+.BR zoom-level
+The zoom level of the content. Possible values: a decimal,
+default value:
+.IR 1.0 .
+.TP
+.BR zoom-step
+The value by which the zoom level is changed when zooming in or out. Possible
+values: a decimal,
+default value:
+.IR 0.1 .
+
+.SS Global Settings
+Global settings will affect all views. All per-view-settings can also be set
+globally, see 
+.BR per-view-settings 
+for details. Settings, that only can be set globally are: 
+.TP 
+.BR active-completion-bg-color
+The background color for an active element in tab-completion. Possible values:
+an rgb color-string,
+default value:
+.IR #000000 .
+.TP 
+.BR active-completion-fg-color
+The foreground color for an active element in tab-completion. Possible values:
+an rgb color-string.
+default value:
+.IR #53868b .
+.TP 
+.BR active-bg-color
+The background color of the focused view. Possible values: an rgb color-string,
+default value:
+.IR #000000 .
+.TP 
+.TP 
+.BR active-fg-color
+The foreground color of the focused view. Possible values: an rgb color-string.
+default value:
+.IR #ffffff .
+.TP 
+.BR active-font-size
+The font size in the statusbar of the focused view. Possible values: fontsize
+(integer),
+default value:
+.IR 12 .
+.TP 
+.BR auto-completion
+Whether possible keystrokes should be shown. (Shift-) Tab cycles through keystrokes.
+Possible values: true/false,
+default value:
+.IR true .
+.TP 
+.BR complete-bookmarks
+Whether to complete bookmarks with tab-completion. Possible values: true/false,
+default value:
+.IR true .
+.TP 
+.BR complete-commands
+Whether to complete input history with tab-completion. Possible values:
+true/false,
+default value:
+.IR true .
+.TP 
+.BR complete-history
+Whether to complete browsing history with tab-completion. Possible values:
+true/false,
+default value:
+.IR true .
+.TP 
+.BR complete-searchengines
+Whether to complete searchengines with tab-completion. Possible values:
+true/false,
+default value:
+.IR true .
+.TP 
+.BR cookies
+Whether to allow all cookies. Possible values: true/false,
+default value:
+.IR false .
+.TP 
+.TP 
+.BR default-width
+The default width of dwb's window. Possible values: width in pixel,
+default value:
+.IR 800 .
+.TP 
+.BR default-height
+The default height of dwb's window. Possible values: height in pixel,
+default value:
+.IR 600 .
+.TP 
+.BR download-external-command
+A command that will be invoked if 'download-use-external-program' is set. There
+are four variables that can be used in the command: 
+.IR dwb_uri
+will be replaced with the download-uri, 
+.IR dwb_output
+will be replaced with the fullpath of the destination, 
+.IR dwb_cookies
+will be replaced with the path to the cookie-file,
+.IR dwb_fifo
+will be replaced with the fifo-path if "use-fifo" is enabled,
+default value:
+.IR xterm\ -e\ wget\ 'dwb_uri'\ -O\ 'dwb_output'\ --load-cookies\ 'dwb_cookies' .
+.TP
+.BR download-use-external-program
+Whether to use an external download programm specified in
+\'download-external-programm\' or the builtin download helper.
+Possible values: true/false,
+default value:
+.IR true .
+.TP 
+.BR error-color
+The color for error-messages. Possible values: an rgb color-string,
+default value:
+.IR #ff0000 .
+.TP 
+.BR factor
+The zoom level of stacked views. Possible values: zoom level (decimal),
+default value:
+.IR 0.3 .
+.TP 
+.BR font
+The font used in the statusbar and tabs. Possible values: a font description
+string,
+default value:
+.IR monospace .
+.TP 
+.BR hint-active-color
+The background color for active link, i.e. the link followed when Return is
+pressed. Possible values: a rgb color string,
+default value:
+.IR #00ff00 .
+.TP 
+.BR hint-bg-color
+The background color used for hints. Possible values: a rgb color string,
+default value:
+.IR #000088 .
+.TP 
+.BR hint-border
+The boreder used for hints. Possible values: a css border description,
+default value:
+.IR 2px\ dashed\ #000000 .
+.TP 
+.BR hint-fg-color
+The foreground color used for hints. Possible values: a rgb color string,
+default value:
+.IR #ffffff .
+.TP 
+.BR hint-font-family
+The font family used for hints. Possible values: css font family description,
+default value:
+.IR monospace .
+.TP 
+.BR hint-font-size
+The font size used for hints. Possible values: css font size description,
+default value:
+.IR 12px .
+.TP 
+.BR hint-font-weight
+The font wheight used for hints. Possible values: css font weight description,
+default value:
+.IR normal .
+.TP 
+.BR hint-letter-seq
+A letter sequence used for letter hints. Possible values: a letter sequence,
+every letter should appear only once.
+Default value:
+.IR FDSARTGBVECWXQYIOPMNHZULKJ .
+.TP 
+.BR hint-normal-color
+The background color for a normal link. Possible values: a rgb color string,
+default value:
+.IR #ffff99 .
+.TP 
+.BR hint-opacity
+The opacity of a hint. Possible values: a decimal from 0.0 to 1.0, 
+default value:
+.IR 0.75 .
+.TP 
+.BR hint-style
+The type of hints, that are used. When set to "number", letters will match the
+links text. Possible values: letter/number,
+default value:
+.IR letter .
+.TP 
+.BR history-length
+The urls that are saved in the browsing history. Specifying a too large value
+can make tab-completion slow. Possible values: number of urls,
+default value:
+.IR 500 .
+.TP 
+.BR insertmode-bg-color
+The background color of the statusbar in insertmode. Possible values: an rgb
+color-string,
+default value:
+.IR #dddddd .
+.TP 
+.BR insertmode-fg-color
+The foreground color of the statusbar in insertmode. Possible values: an rgb
+color-string,
+default value:
+.IR #000000 .
+.TP 
+.BR layout
+The default layout. Possible values: Normal / Normal Maximized / Bottomstack /
+Bottomstack Maximized / Maximized (same as Normal Maximized),
+default value:
+.IR Normal\ Maximized .
+.TP 
+.BR message-delay
+The duration messages are shown. Possible values: duration in seconds (integer),
+default value:
+.IR 2 .
+.TP 
+.BR normal-completion-bg-color
+The background color of inactive element in tab-completion. Possible values: an
+rgb color-string,
+default value:
+.IR #151515 .
+.TP 
+.BR normal-completion-fg-color
+The foreground color of inactive element in tab-completion. Possible values: an rgb color-string.
+color-string,
+default value:
+.IR #eeeeee .
+.TP 
+.BR normal-bg-color
+The background color of a not focused view. Possible values: an rgb
+color-string,
+default value:
+.IR #505050 .
+.TP 
+.BR normal-fg-color
+The foreground color of a not focused view. Possible values: an rgb
+color-string,
+default value:
+.IR #cccccc .
+.TP 
+.BR save-session
+Save the session when dwb is closed and restore the last saved session when
+invoking dwb. Possible values: true/false,
+default value:
+.IR false .
+.TP 
+.BR normal-font-size
+The font size in the statusbar of a not focused view. Possible values: fontsize
+(integer),
+default value:
+.IR 10 .
+.TP 
+.BR proxy
+Whether to use a HTTP-proxy. Possible values: true/false,
+default value:
+.IR false .
+.TP 
+.BR proxy-url
+The proxy-url, can also be set via the http_proxy environment variable. Possible
+values: an url string,
+default value:
+.IR NULL .
+.TP 
+.BR settings-bg-color
+The background color of a the settings view. Possible values: an rgb
+color-string,
+default value:
+.IR #151515 .
+.TP 
+.BR settings-border
+The border for used for seperating lines in the settings view. Possible values: A
+css-border-description,
+default value:
+.IR 1px\ dotted\ black .
+.TP 
+.BR settings-fg-color
+The foreground color of a the settings view. Possible values: an rgb
+color-string,
+default value:
+.IR #ffffff .
+.TP 
+.BR single-instance
+Only one instance of dwb per user. This option will be overridden by the
+commandlineoption -n. Possible values: true/false,
+default value:
+.IR false .
+.TP 
+.BR size
+The size of the stacked area. Possible values: size in percent (integer),
+default value:
+.IR 30 .
+.TP 
+.BR startpage
+The default startpage. Possible values: an url or "about:blank" for an empty
+startpage,
+default value:
+.IR about:blank .
+.TP 
+.BR tab-active-bg-color
+The background color the tab of the focused view. Possible values: an rgb
+color-string,
+default value:
+.IR #000000 .
+.TP 
+.BR tab-active-fg-color
+The foreground color of the tab of the focused view. Possible values: an rgb
+color-string,
+default value:
+.IR #ffffff .
+.TP 
+.BR tab-normal-bg-color
+The background color the tab of a not focused view. Possible values: an rgb
+color-string,
+default value:
+.IR #505050 .
+.TP 
+.BR tab-normal-fg-color
+The foreground color of the tab of a not focused view. Possible values: an rgb
+color-string,
+default value:
+.IR #cccccc .
+.TP 
+.BR use-fifo
+Use a fifo to communicate with dwb, e.g. sending "open <url>" to the fifo would
+load the url in the current view,
+default value:
+.IR false .
 
 .SH FILES
 .SS Scripts

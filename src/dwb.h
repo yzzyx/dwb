@@ -11,7 +11,7 @@
 #define SINGLE_INSTANCE 1
 #define NEW_INSTANCE 2
 
-#define STRING_LENGTH 64
+#define STRING_LENGTH 256
 
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
@@ -258,8 +258,6 @@ struct _State {
 
   GList *undo_list;
 
-  char *input_id;
-
   char *search_engine;
   char *form_name;
 
@@ -287,6 +285,8 @@ struct _ViewStatus {
   gboolean block;
   gboolean block_current;
   gboolean custom_encoding;
+  char *mimetype;
+  gboolean plugin_blocker;
 };
 
 struct _View {
@@ -394,6 +394,7 @@ struct _Files {
   const char *download_path;
   const char *content_block_allow;
   const char *unifile;
+  const char *fifo;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -438,8 +439,8 @@ void dwb_focus_scroll(GList *);
 
 gboolean dwb_update_search(gboolean forward);
 
-void dwb_set_normal_message(GList *, const char *, gboolean);
-void dwb_set_error_message(GList *, const char *);
+void dwb_set_normal_message(GList *, gboolean, const char *, ...);
+void dwb_set_error_message(GList *, const char *, ...);
 void dwb_set_status_text(GList *, const char *, GdkColor *,  PangoFontDescription *);
 void dwb_set_status_bar_text(GtkWidget *, const char *, GdkColor *,  PangoFontDescription *);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
@@ -485,4 +486,5 @@ void dwb_save_settings(void);
 gboolean dwb_save_files(gboolean);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
+void dwb_clean_load_end(GList *);
 #endif

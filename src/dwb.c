@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <libsoup/soup.h>
 #include <locale.h>
+#include <stdarg.h>
 
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
@@ -29,6 +30,7 @@ static void dwb_set_cookies(GList *l, WebSettings *s);
 static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_content_block(GList *, WebSettings *);
 static void dwb_set_startpage(GList *, WebSettings *);
+static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
@@ -41,6 +43,7 @@ static void dwb_reload_layout(GList *,  WebSettings *);
 static gboolean dwb_test_cookie_allowed(SoupCookie *);
 static void dwb_save_cookies(void);
 
+static void dwb_open_channel(const char *);
 static void dwb_open_si_channel(void);
 static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
 
@@ -157,14 +160,14 @@ static FunctionMap FMAP [] = {
   { { "entry_word_back",        "Move cursor back on word", },         0,  (Func)dwb_com_entry_word_back,              NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_back",     "Command history back", },             0,  (Func)dwb_com_entry_history_back,           NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_forward",  "Command history forward", },          0,  (Func)dwb_com_entry_history_forward,        NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "download_set_execute",   "Complete binaries", },             0, (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "download_set_execute",   "Complete binaries", },                0, (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
 
-  { { "spell_checking",        "Setting: spell checking",           }, 0, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
-  { { "scripts",               "Setting: scripts",                  }, 1, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-scripts" } },
-  { { "auto_shrink_images",    "Toggle autoshrink images",        }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-shrink-images" } },
-  { { "autoload_images",       "Toggle autoload images",          }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-load-images" } },
-  { { "autoresize_window",     "Toggle autoresize window",        }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-resize-window" } },
-  { { "caret_browsing",        "Toggle caret browsing",           }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-caret-browsing" } },
+  { { "spell_checking",        "Setting: spell checking",         },   0, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
+  { { "scripts",               "Setting: scripts",                },   1, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-scripts" } },
+  { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-shrink-images" } },
+  { { "autoload_images",       "Toggle autoload images",          },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-load-images" } },
+  { { "autoresize_window",     "Toggle autoresize window",        },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-resize-window" } },
+  { { "caret_browsing",        "Toggle caret browsing",           },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-caret-browsing" } },
   { { "default_context_menu",  "Toggle enable default context menu",           }, 0, (Func)dwb_com_toggle_property,     NULL,       PostSM,    { .p = "enable-default-context-menu" } },
   { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, (Func)dwb_com_toggle_property,     NULL,                  PostSM, { .p = "enable-file-acces-from-file-uris" } },
   { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, (Func)dwb_com_toggle_property,  NULL,   PostSM, { .p = "enable-universal-file-acces-from-file-uris" } },
@@ -180,13 +183,14 @@ static FunctionMap FMAP [] = {
   { { "proxy",                 "Toggle proxy",                    }, 1, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
   { { "toggle_block_content",   "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_block_content, NULL,                  PostSM,    { 0 } }, 
   { { "allow_content",         "Allow scripts for current domain in the current session" },  1, (Func) dwb_com_allow_content, NULL,              PostSM,    { 0 } }, 
+  { { "print",                 "Print page" },                           1, (Func) dwb_com_print, NULL,                             PostSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
 /* SETTINGS_ARRAY {{{*/
 static WebSettings DWB_SETTINGS[] = {
   { { "auto-load-images",			                   "Autoload images", },                                         true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "auto-resize-window",			                 "Autoresize images", },                                       true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "auto-resize-window",			                 "Autoresize window", },                                       true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
   { { "auto-shrink-images",			                 "Autoshrink images", },                                       true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
   { { "cursive-font-family",			               "Cursive font family", },                                     true, false,  Char,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
   { { "default-encoding",			                   "Default encoding", },                                        true, false,  Char,    { .p = NULL      }, (S_Func) dwb_webkit_setting, },
@@ -249,7 +253,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#53868b"         }, (S_Func) dwb_init_style, },
   { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
   { { "normal-completion-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_init_style, },
-  { { "normal-comp-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
+  { { "normal-completion-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
 
   { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
   { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#dddddd"         }, (S_Func) dwb_init_style, },
@@ -283,6 +287,7 @@ static WebSettings DWB_SETTINGS[] = {
   
   { { "content-block-regex",   "Mimetypes that will be blocked", },     false, false,  Char,   { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" }, (S_Func) dwb_set_content_block_regex, }, 
   { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_content_block, }, 
+  { { "plugin-blocker",                       "Flashblocker", },                                              false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_plugin_blocker, }, 
 
   // downloads
   { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
@@ -293,6 +298,8 @@ static WebSettings DWB_SETTINGS[] = {
   { { "complete-bookmarks",                        "Complete bookmarks", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
   { { "complete-searchengines",                   "Complete searchengines", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
   { { "complete-commands",                        "Complete input history", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
+
+  { { "use-fifo",                        "Create a fifo pipe for communication", },                            false, true,  Boolean, { .b = false         },     (S_Func)dwb_set_dummy },
     
   { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, (S_Func)dwb_set_dummy, },
   { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, (S_Func)dwb_set_dummy, },
@@ -314,6 +321,12 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
 static void 
 dwb_set_startpage(GList *l, WebSettings *s) {
   dwb.misc.startpage = s->arg.p;
+}/*}}}*/
+/* dwb_set_plugin_blocker(GList *l, WebSettings *){{{*/
+static void 
+dwb_set_plugin_blocker(GList *l, WebSettings *s) {
+  View *v = l->data;
+  v->status->plugin_blocker = s->arg.b;
 }/*}}}*/
 
 /* dwb_set_content_block_regex(GList *l, WebSettings *){{{*/
@@ -359,15 +372,12 @@ dwb_set_single_instance(GList *l, WebSettings *s) {
 void
 dwb_set_proxy(GList *l, WebSettings *s) {
   SoupURI *uri = NULL;
-  char *message;
 
   if (s->arg.b) { 
     uri = dwb.misc.proxyuri;
   }
   g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
-  message = g_strdup_printf("Set setting proxy: %s", s->arg.b ? "true" : "false");
-  dwb_set_normal_message(dwb.state.fview, message, true);
-  g_free(message);
+  dwb_set_normal_message(dwb.state.fview, true, "Set setting proxy: %s", s->arg.b ? "true" : "false");
 }/*}}}*/
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
@@ -419,7 +429,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = false;
   }
   else if (dwb.state.mode == InsertMode) {
-    if (e->state & GDK_MODIFIER_MASK && !(e->state & (GDK_SHIFT_MASK | GDK_LOCK_MASK))) {
+    if (CLEAN_STATE(e) & GDK_MODIFIER_MASK) {
       ret = dwb_eval_key(e);
     }
   }
@@ -513,9 +523,17 @@ dwb_hide_message(GList *gl) {
 
 /* dwb_set_normal_message {{{*/
 void 
-dwb_set_normal_message(GList *gl, const char  *text, gboolean hide) {
+dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
+  va_list arg_list; 
   View *v = gl->data;
-  dwb_set_status_bar_text(v->lstatus, text, &dwb.color.active_fg, dwb.font.fd_bold);
+  
+  va_start(arg_list, text);
+  char message[STRING_LENGTH];
+  vsprintf(message, text, arg_list);
+  va_end(arg_list);
+
+  dwb_set_status_bar_text(v->lstatus, message, &dwb.color.active_fg, dwb.font.fd_bold);
+
   dwb_source_remove(gl);
   if (hide) {
     v->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
@@ -524,9 +542,17 @@ dwb_set_normal_message(GList *gl, const char  *text, gboolean hide) {
 
 /* dwb_set_error_message {{{*/
 void 
-dwb_set_error_message(GList *gl, const char *error) {
+dwb_set_error_message(GList *gl, const char *error, ...) {
+  va_list arg_list; 
+
+  va_start(arg_list, error);
+  char message[STRING_LENGTH];
+  vsprintf(message, error, arg_list);
+  va_end(arg_list);
+
   dwb_source_remove(gl);
-  dwb_set_status_bar_text(VIEW(gl)->lstatus, error, &dwb.color.error, dwb.font.fd_bold);
+
+  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.error, dwb.font.fd_bold);
   VIEW(gl)->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
@@ -574,6 +600,12 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+void 
+dwb_clean_load_end(GList *gl) {
+  View *v = gl->data;
+  g_free(v->status->mimetype);
+  v->status->mimetype = NULL;
+}
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
 Navigation *
@@ -590,11 +622,15 @@ dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   return n;
 }/*}}}*/
 
+static void dwb_open_channel(const char *filename) {
+  dwb.misc.si_channel = g_io_channel_new_file(filename, "r+", NULL);
+  g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
+}
+
 /* dwb_open_si_channel() {{{*/
 static void
 dwb_open_si_channel() {
-  dwb.misc.si_channel = g_io_channel_new_file(dwb.files.unifile, "r+", NULL);
-  g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
+  dwb_open_channel(dwb.files.unifile);
 }/*}}}*/
 
 /* dwb_js_get_host_blocked (char *)  return: GList * {{{*/
@@ -801,7 +837,7 @@ dwb_save_searchengine(void) {
     g_strstrip(text);
     if (text && strlen(text) > 0) {
       dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
-      dwb_set_normal_message(dwb.state.fview, "Search saved", true);
+      dwb_set_normal_message(dwb.state.fview, true, "Search saved");
       g_free(dwb.state.search_engine);
     }
     else {
@@ -1018,10 +1054,7 @@ dwb_save_quickmark(const char *key) {
     dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_com_quickmark_new(uri, title, key));
     dwb_normal_mode(false);
 
-    char *message = g_strdup_printf("Added quickmark: %s - %s", key, uri);
-    dwb_set_normal_message(dwb.state.fview, message, true);
-
-    g_free(message);
+    dwb_set_normal_message(dwb.state.fview, true, "Added quickmark: %s - %s", key, uri);
   }
   else {
     dwb_set_error_message(dwb.state.fview, NO_URL);
@@ -1031,23 +1064,18 @@ dwb_save_quickmark(const char *key) {
 /* dwb_open_quickmark(const char *key){{{*/
 static void 
 dwb_open_quickmark(const char *key) {
-  char *message = NULL;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
       Arg a = { .p = q->nav->first };
       dwb_load_uri(&a);
-
-      message = g_strdup_printf("Loading quickmark %s: %s", key, q->nav->first);
-      dwb_set_normal_message(dwb.state.fview, message, true);
+      dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
+      dwb_normal_mode(false);
+      return;
     }
   }
-  if (!message) {
-    message = g_strdup_printf("No such quickmark: %s", key);
-    dwb_set_error_message(dwb.state.fview, message);
-  }
+  dwb_set_error_message(dwb.state.fview, "No such quickmark: %s", key);
   dwb_normal_mode(false);
-  g_free(message);
 }/*}}}*/
 
 /* dwb_tab_label_set_text {{{*/
@@ -1060,19 +1088,31 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
   g_free(escaped);
 }/*}}}*/
 
+
 /* dwb_update_status(GList *gl) {{{*/
 void 
 dwb_update_status(GList *gl) {
-    View *v = gl->data;
-    WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
-    const char *title = webkit_web_view_get_title(w);
+  View *v = gl->data;
+  char *filename = NULL;
+  WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
+  const char *title = webkit_web_view_get_title(w);
+  if (!title && v->status->mimetype && strcmp(v->status->mimetype, "text/html")) {
+    const char *uri = webkit_web_view_get_uri(w);
+    filename = g_path_get_basename(uri);
+    title = filename;
+  }
+  if (!title) {
+    title = dwb.misc.name;
+  }
 
   if (gl == dwb.state.fview) {
-    gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title ? title :  dwb.misc.name);
+    gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title);
   }
   dwb_tab_label_set_text(gl, title);
 
   dwb_update_status_text(gl, NULL);
+  if (filename) 
+    g_free(filename);
 }/*}}}*/
 
 /* dwb_update_tab_label {{{*/
@@ -1116,51 +1156,58 @@ dwb_new_window(Arg *arg) {
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(Arg *arg) {
+  g_strstrip(arg->p);
+
+  if (!arg || !arg->p || !strlen(arg->p)) {
+    return;
+  }
+  /* new window ? */
   if (dwb.state.nv == OpenNewWindow) {
     dwb.state.nv = OpenNormal;
     dwb_new_window(arg);
     return;
   }
+  /*  new tab ?  */
   else if (dwb.state.nv == OpenNewView) {
     dwb.state.nv = OpenNormal;
     dwb_add_view(arg);
     return;
   }
-  if (arg && arg->p && strlen(arg->p)) {
-    /*  get resolved uri */
-    char *tmp, *uri = NULL; 
-    GError *error = NULL;
+  /*  get resolved uri */
+  char *tmp, *uri = NULL; 
+  GError *error = NULL;
 
-    if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
-      if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
-        if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
+  g_strstrip(arg->p);
+  if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
+    if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
+      if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
+        g_clear_error(&error);
+        char *path = g_get_current_dir();
+        tmp = g_build_filename(path, arg->p, NULL);
+        if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
+          fprintf(stderr, "Cannot open %s: %s", (char*)arg->p, error->message);
           g_clear_error(&error);
-          char *path = g_get_current_dir();
-          tmp = g_build_filename(path, arg->p, NULL);
-          if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
-            fprintf(stderr, "Cannot open %s: %s", (char*)arg->p, error->message);
-            g_clear_error(&error);
-          }
-          g_free(tmp);
-          g_free(path);
         }
+        g_free(tmp);
+        g_free(path);
       }
     }
-    else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
-      uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://")
-        ? g_strdup(arg->p)
-        : g_strdup_printf("http://%s", (char*)arg->p);
-    }
-
-    /* delete cookie of last visited website */
-    if (dwb.state.last_cookie) {
-      soup_cookie_free(dwb.state.last_cookie); 
-      dwb.state.last_cookie = NULL;
-    }
-    View *fview = dwb.state.fview->data;
-    webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
-    g_free(uri);
   }
+  else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
+    uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://")
+      ? g_strdup(arg->p)
+      : g_strdup_printf("http://%s", (char*)arg->p);
+  }
+
+  /* delete cookie of last visited website */
+  if (dwb.state.last_cookie) {
+    soup_cookie_free(dwb.state.last_cookie); 
+    dwb.state.last_cookie = NULL;
+  }
+  /* load uri */
+  View *fview = dwb.state.fview->data;
+  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
+  g_free(uri);
 }/*}}}*/
 
 /* dwb_update_layout() {{{*/
@@ -1315,7 +1362,7 @@ dwb_eval_key(GdkEventKey *e) {
 /* dwb_command_mode {{{*/
 static gboolean
 dwb_command_mode(Arg *arg) {
-  dwb_set_normal_message(dwb.state.fview, ":", false);
+  dwb_set_normal_message(dwb.state.fview, false, ":");
   dwb_focus_entry();
   dwb.state.mode = CommandMode;
   return true;
@@ -1325,7 +1372,7 @@ dwb_command_mode(Arg *arg) {
 gboolean
 dwb_insert_mode(Arg *arg) {
   if (dwb.state.mode == HintMode) {
-    dwb_set_normal_message(dwb.state.fview, INSERT_MODE, true);
+    dwb_set_normal_message(dwb.state.fview, true, INSERT_MODE);
   }
   dwb_view_modify_style(dwb.state.fview, &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL, 0);
 
@@ -1388,10 +1435,8 @@ dwb_update_search(gboolean forward) {
   }
   webkit_web_view_unmark_text_matches(web);
   if ( (matches = webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0)) ) {
-    char *message = g_strdup_printf("[%d matches]", matches);
-    dwb_set_normal_message(dwb.state.fview, message, false);
+    dwb_set_normal_message(dwb.state.fview, false, "[%d matches]", matches);
     webkit_web_view_set_highlight_text_matches(web, true);
-    g_free(message);
   }
   else {
     dwb_set_error_message(dwb.state.fview, "[0 matches]");
@@ -1454,6 +1499,7 @@ dwb_execute_user_script(Arg *a) {
   if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &std_out, NULL, &error)) {
     GIOChannel *channel = g_io_channel_unix_new(std_out);
     g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, NULL);
+    dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->p);
   }
   else {
     fprintf(stderr, "Cannot execute %s: %s\n", (char*)a->p, error->message);
@@ -1482,7 +1528,7 @@ dwb_get_scripts() {
           if (line[1]) {
             KeyMap *map = dwb_malloc(sizeof(KeyMap));
             Key key = dwb_str_to_key(line[1]);
-            FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, AlwaysSM, { .p = path } };
+            FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, PostSM, { .p = path } };
             FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
             *fmap = fm;
             map->map = fmap;
@@ -1526,6 +1572,10 @@ dwb_clean_up() {
     g_free(m);
   }
   g_list_free(dwb.keymap);
+
+  if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
+    unlink(dwb.files.fifo);
+  }
   return true;
 }/*}}}*/
 
@@ -1906,7 +1956,7 @@ dwb_init_style() {
 
   gdk_color_parse(GET_CHAR("active-completion-bg-color"), &dwb.color.active_c_bg);
   gdk_color_parse(GET_CHAR("active-completion-fg-color"), &dwb.color.active_c_fg);
-  gdk_color_parse(GET_CHAR("normal-comp-bg-color"), &dwb.color.normal_c_bg);
+  gdk_color_parse(GET_CHAR("normal-completion-bg-color"), &dwb.color.normal_c_bg);
   gdk_color_parse(GET_CHAR("normal-completion-fg-color"), &dwb.color.normal_c_fg);
 
   gdk_color_parse(GET_CHAR("error-color"), &dwb.color.error);
@@ -2103,13 +2153,14 @@ static void
 dwb_init_proxy() {
   const char *proxy;
   static char *newproxy;
+  gboolean use_proxy = GET_BOOL("proxy");
   if ( !(proxy =  g_getenv("http_proxy")) && !(proxy =  GET_CHAR("proxy-url")) )
     return;
 
-  if ( dwb_util_test_connect(proxy) ) {
+  if ( (use_proxy && dwb_util_test_connect(proxy)) || !use_proxy ) {
     newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
     dwb.misc.proxyuri = soup_uri_new(newproxy);
-    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", GET_BOOL("proxy") ? dwb.misc.proxyuri : NULL, NULL); 
+    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", use_proxy ? dwb.misc.proxyuri : NULL, NULL); 
     g_free(newproxy);
   }
 }/*}}}*/
@@ -2221,35 +2272,62 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 static void 
 dwb_init_fifo(int single) {
   FILE *ff;
+
+  /* Files */
   char *path = dwb_util_build_path();
   dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
-  g_free(path);
+
 
   dwb.misc.si_channel = NULL;
   if (single == NEW_INSTANCE) {
     return;
   }
 
-  if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
-    mkfifo(dwb.files.unifile, 0666);
-  }
-  int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
-  if ( (ff = fdopen(fd, "w")) ) {
-    if (dwb.misc.argc) {
-      for (int i=0; i<dwb.misc.argc; i++) {
-        fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
-      }
-    }
-    else {
-      fprintf(ff, "add_view\n");
-    }
-    fclose(ff);
-    exit(EXIT_SUCCESS);
-  }
-  close(fd);
   if (GET_BOOL("single-instance")) {
+    if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
+      mkfifo(dwb.files.unifile, 0666);
+    }
+    int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
+    if ( (ff = fdopen(fd, "w")) ) {
+      if (dwb.misc.argc) {
+        for (int i=0; i<dwb.misc.argc; i++) {
+          if (g_file_test(dwb.misc.argv[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute(dwb.misc.argv[i])) {
+            char *curr_dir = g_get_current_dir();
+            path = g_build_filename(curr_dir, dwb.misc.argv[i], NULL);
+
+            fprintf(ff, "add_view %s\n", path);
+
+            g_free(curr_dir);
+            g_free(path);
+          }
+          else {
+            fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
+          }
+        }
+      }
+      else {
+        fprintf(ff, "add_view\n");
+      }
+      fclose(ff);
+      exit(EXIT_SUCCESS);
+    }
+    close(fd);
     dwb_open_si_channel();
   }
+
+  /* fifo */
+  if (GET_BOOL("use-fifo")) {
+    char *filename = g_strdup_printf("%s-%d.fifo", dwb.misc.name, getpid());
+    dwb.files.fifo = g_build_filename(path, filename, NULL);
+    g_free(filename);
+
+    if (!g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
+      mkfifo(dwb.files.fifo, 0600);
+    }
+    dwb_open_channel(dwb.files.fifo);
+  }
+
+  g_free(path);
 }/*}}}*/
 /*}}}*/
 

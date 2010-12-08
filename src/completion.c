@@ -471,9 +471,6 @@ dwb_comp_complete_download(int back) {
     if (dwb.comps.active_path && !(dwb.comps.active_path = dwb.comps.active_path->prev) ) {
       dwb.comps.active_path = g_list_last(dwb.comps.path_completion);
     }
-    if (dwb.comps.active_path) {
-      dwb_entry_set_text(dwb.comps.active_path->data);
-    }
   }
   else if (dwb.comps.active_path && !(dwb.comps.active_path = dwb.comps.active_path->next) ) {
     dwb.comps.active_path = dwb.comps.path_completion;

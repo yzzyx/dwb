@@ -44,6 +44,8 @@ dist: distclean
 	@cp -r $ $(SHAREDIR)/hints.js $(DISTDIR)/$(SHAREDIR)
 	@mkdir -p $(DISTDIR)/$(SRCDIR)
 	@cp -r $ $(SOURCE) $(HDR) $(SRCDIR)/Makefile $(SRCDIR)/config.h $(DISTDIR)/$(SRCDIR)
+	@mkdir -p $(DISTDIR)/$(EXAMPLEDIR)
+	@cp -r $(EXAMPLES) $(DISTDIR)/$(EXAMPLEDIR)
 	@tar cfz $(DISTDIR).tar.gz $(DISTDIR)
 	@rm -rf  $(DISTDIR)
 
