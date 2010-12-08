@@ -86,7 +86,7 @@ typedef struct _State State;
 typedef struct _Completions Completions;
 typedef struct _View View;
 typedef struct _Color Color;
-typedef struct _Font Font;
+typedef struct _Font DwbFont;
 typedef struct _FunctionMap FunctionMap;
 typedef struct _KeyMap KeyMap;
 typedef struct _Key Key;
@@ -414,7 +414,7 @@ struct _FileContent {
 struct _Dwb {
   Gui gui;
   Color color;
-  Font font;
+  DwbFont font;
   Misc misc;
   State state;
   Completions comps;
