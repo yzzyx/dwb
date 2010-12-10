@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
 #include <JavaScriptCore/JavaScript.h>
@@ -17,6 +18,15 @@ static void dwb_apply_settings(WebSettings *);
 
 static char *lasturi;
 static GList *allowed_plugins;
+
+typedef struct _Plugin Plugin;
+
+struct _Plugin {
+  char *uri;
+  Plugin *next;
+};
+static Plugin *plugins;
+
 
 /* WEB_VIEW_CALL_BACKS {{{*/
 
@@ -106,6 +116,11 @@ dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *
   if (v->status->plugin_blocker) {
     lasturi = g_strdup(uri);
     event_box = gtk_event_box_new();
+
+    Plugin *p = malloc(sizeof(Plugin));
+    p->uri = lasturi;
+    p->next = plugins;
+    plugins = p;
 
     GtkWidget *label = gtk_label_new("Plugin blocked");
     gtk_container_add(GTK_CONTAINER(event_box), label);
@@ -545,6 +560,14 @@ dwb_web_view_init_signals(GList *gl) {
 void
 dwb_view_clean_vars(GList *gl) {
   View *v = gl->data;
+
+  if (v->status->plugin_blocker) {
+    for (Plugin *p = plugins; p; p = p->next) {
+      g_free(p->uri);
+      g_free(p);
+    }
+    plugins = NULL;
+  }
 
   v->status->items_blocked = 0;
   if (v->status->current_host) {

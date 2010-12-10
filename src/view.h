@@ -1,5 +1,6 @@
 #ifndef VIEW_H
 #define VIEW_H
+
 GList * dwb_add_view(Arg *);
 GList * dwb_add_view_new_with_webview(void);
 void dwb_view_set_active_style(GList *);

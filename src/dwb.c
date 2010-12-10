@@ -969,6 +969,11 @@ dwb_execute_script(const char *com, gboolean return_char) {
   if (!com) {
     com = dwb.misc.scripts;
   }
+  if (!return_char) {
+    webkit_web_view_execute_script(WEBKIT_WEB_VIEW(v->web), com); 
+    return NULL;
+  }
+
   JSValueRef exc, eval_ret;
   size_t length;
   char *ret = NULL;
