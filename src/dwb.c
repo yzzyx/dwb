@@ -1991,7 +1991,6 @@ dwb_init_style() {
 static void 
 dwb_init_gui() {
   // Window
-  dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   if (embed) {
     dwb.gui.window = gtk_plug_new(embed);
   } 
