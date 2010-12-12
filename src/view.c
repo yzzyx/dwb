@@ -560,14 +560,6 @@ void
 dwb_view_clean_vars(GList *gl) {
   View *v = gl->data;
 
-  if (v->status->plugin_blocker) {
-    for (Plugin *p = plugins; p; p = p->next) {
-      dwb_free(p->uri);
-      dwb_free(p);
-    }
-    plugins = NULL;
-  }
-
   v->status->items_blocked = 0;
   dwb_free(v->status->current_host); 
 }/*}}}*/
