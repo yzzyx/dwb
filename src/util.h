@@ -36,10 +36,12 @@ Navigation * dwb_navigation_new_from_line(const char *);
 Navigation * dwb_navigation_new(const char *, const char *);
 void dwb_navigation_free(Navigation *);
 
+void dwb_web_settings_free(WebSettings *);
+
 // quickmarks
-void dwb_com_quickmark_free(Quickmark *);
-Quickmark * dwb_com_quickmark_new(const char *, const char *, const char *);
-Quickmark * dwb_com_quickmark_new_from_line(const char *);
+void dwb_quickmark_free(Quickmark *);
+Quickmark * dwb_quickmark_new(const char *, const char *, const char *);
+Quickmark * dwb_quickmark_new_from_line(const char *);
 
 // useless
 gboolean dwb_true(void);
@@ -47,6 +49,7 @@ gboolean dwb_false(void);
 char * dwb_return(const char *);
 
 void * dwb_malloc(size_t);
+gboolean dwb_free(void *);
 
 char * dwb_util_domain_from_uri(char *);
 #endif

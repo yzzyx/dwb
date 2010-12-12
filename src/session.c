@@ -13,7 +13,7 @@ dwb_session_get_groups() {
   char *content = dwb_util_get_file_content(dwb.files.session);
   if (content) {
     groups = g_regex_split_simple("^g:", content, G_REGEX_MULTILINE, G_REGEX_MATCH_NOTEMPTY);
-    g_free(content);
+    dwb_free(content);
   }
   return groups;
 }/*}}}*/
@@ -34,7 +34,7 @@ dwb_session_get_group(const char *name) {
       i++;
     }
     g_strfreev(groups);
-    g_free(group);
+    dwb_free(group);
   }
   return content;
 }/*}}}*/
@@ -65,7 +65,7 @@ dwb_session_list() {
     g_strfreev(group);
   }
   g_strfreev(content);
-  g_free(path);
+  dwb_free(path);
   exit(EXIT_SUCCESS);
 }/*}}}*/
 
@@ -99,8 +99,7 @@ dwb_session_restore(const char *name) {
       WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(line[1], line[2]);
       webkit_web_back_forward_list_add_item(bf_list, item);
       last = current;
-      if (uri) 
-        g_free(uri);
+      dwb_free(uri);
       uri = g_strdup(line[1]);
     }
     if (i == length && lastweb)
@@ -155,7 +154,7 @@ dwb_session_save(const char *name) {
       }
       i++;
     }
-    g_free(group);
+    dwb_free(group);
     g_strfreev(groups);
   }
   dwb_util_set_file_content(dwb.files.session, buffer->str);

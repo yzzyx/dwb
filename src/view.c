@@ -53,8 +53,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       dwb_add_view(&a);
       ret = true;
     }
-    if (clipboard) 
-      g_free(clipboard);
+    dwb_free(clipboard);
   }
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     dwb_focus(gl);
@@ -94,7 +93,7 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
 
 gboolean 
 dwb_view_plugin_blocker_button_cb(GtkWidget *widget, GdkEventButton *e, char *uri) {
-  allowed_plugins = g_list_prepend(allowed_plugins, uri);
+  allowed_plugins = g_list_prepend(allowed_plugins, g_strdup(uri));
   GtkWidget *parent = gtk_widget_get_parent(widget);
   gtk_container_remove(GTK_CONTAINER(parent), widget);
   gtk_widget_destroy(widget);
@@ -334,7 +333,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       text = g_strdup_printf("loading [%d%%]", (int)(progress * 100));
       dwb_set_status_bar_text(VIEW(gl)->rstatus, text, NULL, NULL); 
       gtk_window_set_title(GTK_WINDOW(dwb.gui.window), text);
-      g_free(text);
+      dwb_free(text);
       break;
   }
 }/*}}}*/
@@ -455,7 +454,7 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
     dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
     dwb_normal_mode(true);
   }
-  g_free(text);
+  dwb_free(text);
 
   return true;
 }/*}}}*/
@@ -563,17 +562,14 @@ dwb_view_clean_vars(GList *gl) {
 
   if (v->status->plugin_blocker) {
     for (Plugin *p = plugins; p; p = p->next) {
-      g_free(p->uri);
-      g_free(p);
+      dwb_free(p->uri);
+      dwb_free(p);
     }
     plugins = NULL;
   }
 
   v->status->items_blocked = 0;
-  if (v->status->current_host) {
-    g_free(v->status->current_host); 
-    v->status->current_host = NULL;
-  }
+  dwb_free(v->status->current_host); 
 }/*}}}*/
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/

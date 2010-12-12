@@ -36,7 +36,7 @@ dwb_util_is_hex(const char *string) {
   char *dup = g_strdup(string);
   gboolean ret = !strtok(dup, "1234567890abcdefABCDEF");
 
-  g_free(dup);
+  dwb_free(dup);
   return ret;
 }/*}}}*/
 /* dwb_util_test_connect(const char *uri)      return: int {{{*/
@@ -104,7 +104,7 @@ dwb_util_keyval_to_char(guint keyval) {
     return key;
   }
   else {
-    g_free(key);
+    dwb_free(key);
     return NULL;
   }
 }/*}}}*/
@@ -233,7 +233,7 @@ dwb_util_get_directory_entries(const char *path, const char *text) {
         char *newpath = g_build_filename(path, filename, NULL);
         if (g_file_test(newpath, G_FILE_TEST_IS_DIR)) {
           store = g_strconcat(newpath, "/", NULL);
-          g_free(newpath);
+          dwb_free(newpath);
         }
         else {
           store = newpath;
@@ -264,8 +264,8 @@ dwb_util_get_directory_content(GString **buffer, const char *dirname) {
           fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
           g_clear_error(&error);
         }
-        g_free(filepath);
-        g_free(content);
+        dwb_free(filepath);
+        dwb_free(content);
       }
     }
     g_dir_close (dir);
@@ -315,7 +315,7 @@ dwb_util_get_data_dir(const char *dir) {
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
       return path;
     }
-    g_free(path);
+    dwb_free(path);
   }
   return path;
 }/*}}}*/
@@ -340,7 +340,7 @@ dwb_navigation_new_from_line(const char *text) {
   if (text) {
     line = g_strsplit(text, " ", 2);
     nv = dwb_navigation_new(line[0], line[1]);
-    g_free(line);
+    dwb_free(line);
   }
   return nv;
 }/*}}}*/
@@ -348,49 +348,53 @@ dwb_navigation_new_from_line(const char *text) {
 /* dwb_navigation_free(Navigation *n){{{*/
 void
 dwb_navigation_free(Navigation *n) {
-  if (n->first)   
-    g_free(n->first);
-  if (n->second)  
-    g_free(n->second);
-  g_free(n);
+  dwb_free(n->first);
+  dwb_free(n->second);
+  dwb_free(n);
 }/*}}}*/
 /*}}}*/
 
 /* QUICKMARK {{{*/
-/* dwb_com_quickmark_new(const char *uri, const char *title,  const char *key)  {{{*/
+/* dwb_quickmark_new(const char *uri, const char *title,  const char *key)  {{{*/
 Quickmark *
-dwb_com_quickmark_new(const char *uri, const char *title, const char *key) {
+dwb_quickmark_new(const char *uri, const char *title, const char *key) {
   Quickmark *q = dwb_malloc(sizeof(Quickmark));
   q->key = key ? g_strdup(key) : NULL;
   q->nav = dwb_navigation_new(uri, title);
   return q;
 }/* }}} */
 
-/* dwb_com_quickmark_new_from_line(const char *line) {{{*/
+/* dwb_quickmark_new_from_line(const char *line) {{{*/
 Quickmark * 
-dwb_com_quickmark_new_from_line(const char *line) {
+dwb_quickmark_new_from_line(const char *line) {
   Quickmark *q = NULL;
   char **token;
   if (line) {
     token = g_strsplit(line, " ", 3);
-    q = dwb_com_quickmark_new(token[1], token[2], token[0]);
+    q = dwb_quickmark_new(token[1], token[2], token[0]);
     g_strfreev(token);
   }
   return q;
 
 }/*}}}*/
 
-/* dwb_com_quickmark_free(Quickmark *q) {{{*/
+/* dwb_quickmark_free(Quickmark *q) {{{*/
 void
-dwb_com_quickmark_free(Quickmark *q) {
-  if (q->key) 
-    g_free(q->key);
-  if (q->nav)
-    dwb_navigation_free(q->nav);
-  g_free(q);
+dwb_quickmark_free(Quickmark *q) {
+  dwb_free(q->key);
+  dwb_navigation_free(q->nav);
+  dwb_free(q);
 
 }/*}}}*/
 /*}}}*/
+
+void
+dwb_web_settings_free(WebSettings *s) {
+  if (s->type == Char || s->type == ColorChar) {
+    dwb_free(s->arg.p);
+  }
+  dwb_free(s);
+}
 
 /* dwb_true, dwb_false {{{*/
 gboolean
@@ -417,6 +421,15 @@ dwb_malloc(size_t size) {
     exit(EXIT_SUCCESS);
   }
   return r;
+}
+gboolean 
+dwb_free(void *p) {
+  if (p) {
+    g_free(p);
+    p = NULL;
+    return true;
+  }
+  return false;
 }
 
 char *

@@ -94,7 +94,7 @@ dwb_com_focus_input(Arg *a) {
   if (value && !strcmp(value, "_dwb_no_input_")) {
     ret = false;
   }
-  g_free(value);
+  dwb_free(value);
   
   return ret;
 }/*}}}*/
@@ -113,7 +113,7 @@ dwb_com_add_search_field(Arg *a) {
   dwb.state.mode = SearchFieldMode;
   dwb_set_normal_message(dwb.state.fview, false, "Enter a Keyword for marked search:");
   dwb_focus_entry();
-  g_free(value);
+  dwb_free(value);
   return ret;
 
 }/*}}}*/
@@ -148,7 +148,7 @@ dwb_com_find(Arg *arg) {
   dwb.state.mode = FindMode;
   dwb.state.forward_search = arg->b;
   if (v->status->search_string) {
-    g_free(v->status->search_string);
+    dwb_free(v->status->search_string);
     v->status->search_string = NULL;
   }
   dwb_focus_entry();
@@ -537,8 +537,8 @@ dwb_com_remove_view(Arg *arg) {
 
   /*  clean up */ 
   dwb_source_remove(gl);
-  g_free(v->status);
-  g_free(v);
+  dwb_free(v->status);
+  dwb_free(v);
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
 
@@ -727,7 +727,7 @@ dwb_com_yank(Arg *arg) {
       dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", message);
       ret = true;
     }
-    g_free(text);
+    dwb_free(text);
   }
   return ret;
 }/*}}}*/
@@ -744,7 +744,7 @@ dwb_com_paste(Arg *arg) {
       dwb.state.nv = arg->n;
     Arg a = { .p = text };
     dwb_load_uri(&a);
-    g_free(text);
+    dwb_free(text);
     return true;
   }
   return false;
@@ -761,7 +761,7 @@ dwb_com_entry_delete_word(Arg *a) {
     dwb_util_cut_text(text, new,  position);
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
     gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), new);
-    g_free(text);
+    dwb_free(text);
   }
   return true;
 }/*}}}*/
@@ -776,7 +776,7 @@ dwb_com_entry_delete_letter(Arg *a) {
     dwb_util_cut_text(text, position-1,  position);
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
     gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), position-1);
-    g_free(text);
+    dwb_free(text);
   }
   return true;
 }/*}}}*/
@@ -788,7 +788,7 @@ dwb_com_entry_delete_line(Arg *a) {
   char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), &text[position]);
-  g_free(text);
+  dwb_free(text);
   return true;
 }/*}}}*/
 
@@ -834,7 +834,7 @@ dwb_com_entry_history_back(Arg *a) {
       n = dwb.state.last_com_history->data;
       char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
       dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
-      g_free(text);
+      dwb_free(text);
     }
   }
   else if ( dwb.state.last_com_history && dwb.state.last_com_history->prev ) {
