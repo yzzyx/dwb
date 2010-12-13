@@ -176,7 +176,7 @@ dwb_com_show_hints(Arg *arg) {
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HintMode) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    dwb_execute_script("dwb_show_hints()", false);
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_show_hints()");
     dwb.state.mode = HintMode;
     dwb_focus_entry();
   }

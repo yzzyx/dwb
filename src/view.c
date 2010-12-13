@@ -81,6 +81,9 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
   else if (!(strcmp(sourceid, "_dwb_input_"))) {
     dwb_insert_mode(NULL);
   }
+  if (!strcmp(message, "_dwb_no_input_")) {
+    dwb_set_error_message(gl, "No input found in current context");
+  }
   return true;
 }/*}}}*/
 
@@ -284,7 +287,7 @@ dwb_web_view_script_alert_cb(WebKitWebView *web, WebKitWebFrame *frame, char *me
 static void 
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
-  dwb_execute_script(NULL, false);
+  webkit_web_view_execute_script(web, dwb.misc.scripts);
 }/*}}}*/
 
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
@@ -576,7 +579,6 @@ dwb_view_create_web_view(GList *gl) {
   status->custom_encoding = false;
   v->status = status;
 
-
   v->vbox = gtk_vbox_new(false, 0);
   v->web = webkit_web_view_new();
   g_signal_connect(v->web, "realize", G_CALLBACK(dwb_web_view_realize_cb), gl);
@@ -692,7 +694,6 @@ dwb_add_view(Arg *arg) {
   dwb_view_new_reorder();
   dwb.state.views = dwb_view_create_web_view(dwb.state.views);
   dwb_focus(dwb.state.views);
-  dwb_execute_script(NULL, false);
 
   dwb_update_layout();
   if (arg && arg->p) {

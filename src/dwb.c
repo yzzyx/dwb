@@ -600,12 +600,13 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+/* dwb_clean_load_end(GList *) {{{*/
 void 
 dwb_clean_load_end(GList *gl) {
   View *v = gl->data;
   dwb_free(v->status->mimetype);
   v->status->mimetype = NULL;
-}
+}/*}}}*/
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
 Navigation *
@@ -943,7 +944,7 @@ dwb_update_hints(GdkEventKey *e) {
       dwb_normal_mode(false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
-      dwb_execute_script("dwb_clear()", false);
+      webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_clear()");
       dwb_insert_mode(NULL);
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
@@ -1090,6 +1091,7 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
   char *escaped = g_markup_printf_escaped("%d : %s", g_list_position(dwb.state.views, gl), uri ? uri : "about:blank");
   gtk_label_set_text(GTK_LABEL(v->tablabel), escaped);
+
   dwb_free(escaped);
 }/*}}}*/
 
@@ -1182,8 +1184,19 @@ dwb_load_uri(Arg *arg) {
   char *tmp, *uri = NULL; 
   GError *error = NULL;
 
+  /* free cookie of last visited website */
+  if (dwb.state.last_cookie) {
+    soup_cookie_free(dwb.state.last_cookie); 
+    dwb.state.last_cookie = NULL;
+  }
+
   g_strstrip(arg->p);
-  if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
+
+  if (g_str_has_prefix(arg->p, "javascript:")) {
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), arg->p);
+    return;
+  }
+  else if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
     if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
       if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
         g_clear_error(&error);
@@ -1199,19 +1212,13 @@ dwb_load_uri(Arg *arg) {
     }
   }
   else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
-    uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://")
+    uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://") 
       ? g_strdup(arg->p)
       : g_strdup_printf("http://%s", (char*)arg->p);
   }
 
-  /* delete cookie of last visited website */
-  if (dwb.state.last_cookie) {
-    soup_cookie_free(dwb.state.last_cookie); 
-    dwb.state.last_cookie = NULL;
-  }
   /* load uri */
-  View *fview = dwb.state.fview->data;
-  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(fview->web), uri);
+  webkit_web_view_load_uri(CURRENT_WEBVIEW(), uri);
   dwb_free(uri);
 }/*}}}*/
 
@@ -1391,7 +1398,7 @@ dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
   if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
-    dwb_execute_script("dwb_clear()", false);
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_clear()");
   }
   if (mode  == InsertMode) {
     dwb_view_modify_style(dwb.state.fview, &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
@@ -1413,7 +1420,7 @@ dwb_normal_mode(gboolean clean) {
     dwb_clean_buffer(dwb.state.fview);
   }
   if (mode & NormalMode) {
-    dwb_execute_script("dwb_blur()", false);
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_blur()");
   }
 
   webkit_web_view_unmark_text_matches(CURRENT_WEBVIEW());
@@ -1487,7 +1494,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition) {
   if (error) {
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
   }
-  dwb_execute_script(js_buffer->str, false);
+  webkit_web_view_execute_script(CURRENT_WEBVIEW(), js_buffer->str);
 
   g_io_channel_shutdown(channel, true, NULL);
   g_string_free(js_buffer, true);
