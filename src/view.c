@@ -128,6 +128,7 @@ dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *
     gtk_container_add(GTK_CONTAINER(event_box), label);
     g_signal_connect(G_OBJECT(event_box), "button-press-event", G_CALLBACK(dwb_view_plugin_blocker_button_cb), lasturi);
 
+
     gtk_widget_modify_fg(label, GTK_STATE_NORMAL, &dwb.color.active_fg);
     gtk_widget_modify_bg(event_box, GTK_STATE_NORMAL, &dwb.color.active_bg);
     PangoFontDescription *fd = dwb.font.fd_bold;
@@ -564,7 +565,8 @@ dwb_view_clean_vars(GList *gl) {
   View *v = gl->data;
 
   v->status->items_blocked = 0;
-  dwb_free(v->status->current_host); 
+  if (v->status->current_host) 
+    dwb_free(v->status->current_host); 
 }/*}}}*/
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/

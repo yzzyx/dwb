@@ -494,9 +494,11 @@ dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
-  char *escaped = g_markup_escape_text(text ? text: "", -1);
-  gtk_label_set_markup(GTK_LABEL(label), escaped);
-  dwb_free(escaped);
+  if (text) {
+    char *escaped = g_markup_escape_text(text, -1);
+    gtk_label_set_markup(GTK_LABEL(label), escaped);
+    dwb_free(escaped);
+  }
 
   if (fg) {
     gtk_widget_modify_fg(label, GTK_STATE_NORMAL, fg);
@@ -2362,12 +2364,6 @@ int main(int argc, char *argv[]) {
 
   gtk_init(&argc, &argv);
 
-  dwb_init_files();
-  dwb_init_settings();
-  if (GET_BOOL("save-session") && argc == 1) {
-    restore = "default";
-  }
-
   if (!g_thread_supported()) {
     g_thread_init(NULL);
   }
@@ -2398,6 +2394,12 @@ int main(int argc, char *argv[]) {
       }
     }
   }
+  dwb_init_files();
+  dwb_init_settings();
+  if (GET_BOOL("save-session") && argc == 1 && !restore) {
+    restore = "default";
+  }
+
   if (last) {
     dwb.misc.argv = &argv[last];
     dwb.misc.argc = g_strv_length(dwb.misc.argv);
