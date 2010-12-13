@@ -1196,6 +1196,10 @@ dwb_load_uri(Arg *arg) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), arg->p);
     return;
   }
+  if (g_str_has_prefix(arg->p, "file://")) {
+    webkit_web_view_load_uri(CURRENT_WEBVIEW(), arg->p);
+    return;
+  }
   else if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
     if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
       if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
@@ -1477,27 +1481,19 @@ dwb_search(Arg *arg) {
 
 /* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
 static gboolean
-dwb_user_script_cb(GIOChannel *channel, GIOCondition condition) {
+dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, char *filename) {
   GError *error = NULL;
   char *line;
-  GString *js_buffer = g_string_new(NULL);
 
   while (g_io_channel_read_line(channel, &line, NULL, NULL, &error) == G_IO_STATUS_NORMAL) {
-    if (g_str_has_prefix(line, "js ")) {
-      g_string_append(js_buffer, line + 3);
-    }
-    else if (g_str_has_prefix(line, "dwb ")) {
-      dwb_parse_command_line(g_strchomp(line + 4));
-    }
+    dwb_parse_command_line(g_strchomp(line));
     dwb_free(line);
   }
   if (error) {
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
   }
-  webkit_web_view_execute_script(CURRENT_WEBVIEW(), js_buffer->str);
 
   g_io_channel_shutdown(channel, true, NULL);
-  g_string_free(js_buffer, true);
   g_clear_error(&error);
 
   return false;

@@ -1020,9 +1020,7 @@ Userscripts can be stored in
 The first argument of the script will be the current url. The keybinding for
 the script must be defined in the script itself in a commented line of the form
 .B <comment symbols> dwb: <keybinding>.
-Javascript can be executed from userscripts by putting "js " at the beginning
-line of the script and sending it to stdout. dwb-builtin commands can be
-executed by sending the command prefixed with "dwb " to stdout. 
+Commands can be executed by sending the command to stdout.
 
 .SS Examples
 The following script will download the actual webpage:
@@ -1035,29 +1033,14 @@ The following script will download the actual webpage:
 wget $1
 
 .P
-The following script can by used for editing textareas with vim. 
-
+Popup an alert dialog:
 .IP
 #!/bin/bash
-.IP
-# dwb: Control e
+.PD 0
+.IP 
+# dwb: Control h
 
-.IP
-FILE=/tmp/dwb_edit
-.IP
-xterm -e vim ${FILE}
-.IP
-
-CONTENT=$(sed 's/^\(.*\)$/js a.value += \\"\1\\n\\"/' ${FILE})
-
-.IP
-cat << EOF
-.IP
-js var a = document.activeElement;
-.IP
-${CONTENT}
-.IP
-EOF
+echo "open javascript:window.alert(\\"hello world\\")"
 
 
 .SH AUTHOR
