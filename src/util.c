@@ -33,10 +33,11 @@ dwb_util_cut_text(char *text, int start, int end) {
 /* dwb_util_is_hex(const char *string) {{{*/
 gboolean
 dwb_util_is_hex(const char *string) {
-  char *dup = g_strdup(string);
+  char *dup, *loc; 
+  dup = loc = g_strdup(string);
   gboolean ret = !strtok(dup, "1234567890abcdefABCDEF");
 
-  dwb_free(dup);
+  FREE(loc);
   return ret;
 }/*}}}*/
 /* dwb_util_test_connect(const char *uri)      return: int {{{*/
@@ -104,7 +105,7 @@ dwb_util_keyval_to_char(guint keyval) {
     return key;
   }
   else {
-    dwb_free(key);
+    FREE(key);
     return NULL;
   }
 }/*}}}*/
@@ -233,7 +234,7 @@ dwb_util_get_directory_entries(const char *path, const char *text) {
         char *newpath = g_build_filename(path, filename, NULL);
         if (g_file_test(newpath, G_FILE_TEST_IS_DIR)) {
           store = g_strconcat(newpath, "/", NULL);
-          dwb_free(newpath);
+          FREE(newpath);
         }
         else {
           store = newpath;
@@ -264,8 +265,8 @@ dwb_util_get_directory_content(GString **buffer, const char *dirname) {
           fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
           g_clear_error(&error);
         }
-        dwb_free(filepath);
-        dwb_free(content);
+        FREE(filepath);
+        FREE(content);
       }
     }
     g_dir_close (dir);
@@ -315,7 +316,7 @@ dwb_util_get_data_dir(const char *dir) {
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
       return path;
     }
-    dwb_free(path);
+    FREE(path);
   }
   return path;
 }/*}}}*/
@@ -340,7 +341,7 @@ dwb_navigation_new_from_line(const char *text) {
   if (text) {
     line = g_strsplit(text, " ", 2);
     nv = dwb_navigation_new(line[0], line[1]);
-    dwb_free(line);
+    FREE(line);
   }
   return nv;
 }/*}}}*/
@@ -348,9 +349,9 @@ dwb_navigation_new_from_line(const char *text) {
 /* dwb_navigation_free(Navigation *n){{{*/
 void
 dwb_navigation_free(Navigation *n) {
-  dwb_free(n->first);
-  dwb_free(n->second);
-  dwb_free(n);
+  FREE(n->first);
+  FREE(n->second);
+  FREE(n);
 }/*}}}*/
 /*}}}*/
 
@@ -381,9 +382,9 @@ dwb_quickmark_new_from_line(const char *line) {
 /* dwb_quickmark_free(Quickmark *q) {{{*/
 void
 dwb_quickmark_free(Quickmark *q) {
-  dwb_free(q->key);
+  FREE(q->key);
   dwb_navigation_free(q->nav);
-  dwb_free(q);
+  FREE(q);
 
 }/*}}}*/
 /*}}}*/
@@ -391,9 +392,9 @@ dwb_quickmark_free(Quickmark *q) {
 void
 dwb_web_settings_free(WebSettings *s) {
   if (s->type == Char || s->type == ColorChar) {
-    dwb_free(s->arg.p);
+    FREE(s->arg.p);
   }
-  dwb_free(s);
+  FREE(s);
 }
 
 /* dwb_true, dwb_false {{{*/
@@ -406,12 +407,14 @@ gboolean
 dwb_true() {
   return true;
 }/*}}}*/
+
 /* dwb_return(const char *)     return char * (alloc) {{{*/
 char *
 dwb_return(const char *ret) {
   return g_strdup(ret);
 }/*}}}*/
 
+/* dwb_malloc(size_t size)         return: void* {{{*/
 void *
 dwb_malloc(size_t size) {
   void *r;
@@ -421,17 +424,15 @@ dwb_malloc(size_t size) {
     exit(EXIT_SUCCESS);
   }
   return r;
-}
-gboolean 
+}/*}}}*/
+
+void 
 dwb_free(void *p) {
-  if (p) {
-    g_free(p);
-    p = NULL;
-    return true;
-  }
-  return false;
+  if (p) 
+    free(p);
 }
 
+/* dwb_util_domain_from_uri (char *uri)      return: char* (alloc){{{*/
 char *
 dwb_util_domain_from_uri(char *uri) {
   if (!uri) 
@@ -449,4 +450,4 @@ dwb_util_domain_from_uri(char *uri) {
   }
   char *ret = domain[0] ? g_strdup(domain) : g_strdup(uri_p);
   return ret;
-}
+}/*}}}*/

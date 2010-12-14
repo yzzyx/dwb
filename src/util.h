@@ -49,7 +49,7 @@ gboolean dwb_false(void);
 char * dwb_return(const char *);
 
 void * dwb_malloc(size_t);
-gboolean dwb_free(void *);
+void dwb_free(void *);
 
 char * dwb_util_domain_from_uri(char *);
 #endif

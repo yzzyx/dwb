@@ -2,6 +2,7 @@
 #define DWB_H
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
+#include <stdlib.h>
 
 #define NAME "dwb"
 /* SETTINGS MAKROS {{{*/
@@ -64,6 +65,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
 #define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL)
 
+#define FREE(X)                     if ((X)) free((X))
 #define DIGIT(X)   (X->keyval >= GDK_0 && X->keyval <= GDK_9)
 #define ALPHA(X)    ((X->keyval >= GDK_A && X->keyval <= GDK_Z) ||  (X->keyval >= GDK_a && X->keyval <= GDK_z) || X->keyval == GDK_space)
 

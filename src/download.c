@@ -38,19 +38,19 @@ dwb_get_download_command(const char *uri, const char *output) {
   char *newcommand = NULL;
 
   if ( (newcommand = dwb_util_string_replace(command, "dwb_uri", uri)) ) {
-    dwb_free(command);
+    FREE(command);
     command = newcommand;
   }
   if ( (newcommand = dwb_util_string_replace(command, "dwb_cookies", dwb.files.cookies)) ) {
-    dwb_free(command);
+    FREE(command);
     command = newcommand;
   }
   if ( (newcommand = dwb_util_string_replace(command, "dwb_output", output)) ) {
-    dwb_free(command);
+    FREE(command);
     command = newcommand;
   }
   if ( GET_BOOL("use-fifo") && (newcommand = dwb_util_string_replace(command, "dwb_fifo", dwb.files.fifo)) ) {
-    dwb_free(command);
+    FREE(command);
     command = newcommand;
   }
   return command;
@@ -83,7 +83,7 @@ dwb_dl_progress_cb(WebKitDownload *download) {
   guint remaining = (guint)(elapsed / progress - elapsed);
   char *message = g_strdup_printf("[%d:%02d][%d%%][%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
   gtk_label_set_text(GTK_LABEL(label->rlabel), message);
-  dwb_free(message);
+  FREE(message);
 
   guint blue = ((1 - progress) * 0xaa);
   guint green = progress * 0xaa;
@@ -92,7 +92,7 @@ dwb_dl_progress_cb(WebKitDownload *download) {
   GdkColor color; 
   gdk_color_parse(colorstring, &color);
   gtk_widget_modify_bg(label->event, GTK_STATE_NORMAL, &color);
-  dwb_free(colorstring);
+  FREE(colorstring);
 }/*}}}*/
 
 /* dwb_dl_set_mimetype(const char *) {{{*/
@@ -102,7 +102,7 @@ dwb_dl_set_mimetype(const char *command) {
     for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
       Navigation *n = l->data;
       if (!strcmp(dwb.state.mimetype_request, n->first)) {
-        dwb_free(n->second);
+        FREE(n->second);
         n->second = g_strdup(command);
         return;
       }
@@ -125,7 +125,7 @@ dwb_dl_spawn(DwbDownload *dl) {
     g_clear_error(&error);
   }
   dwb_dl_set_mimetype(dl->path);
-  dwb_free(command);
+  FREE(command);
   g_strfreev(argv);
 }/*}}}*/
 
@@ -142,13 +142,16 @@ dwb_dl_status_cb(WebKitDownload *download) {
         dwb_dl_spawn(label);
       }
       gtk_widget_destroy(label->event);
-      dwb_free(label->path);
+      FREE(label->path);
       downloads = g_list_delete_link(downloads, list);
     }
     if (!downloads) {
       gtk_widget_hide(dwb.gui.downloadbar);
     }
-    dwb_free(dwb.state.mimetype_request);
+    if (dwb.state.mimetype_request) {
+      free(dwb.state.mimetype_request);
+      dwb.state.mimetype_request = NULL;
+    }
   }
 }/*}}}*/
 
@@ -248,14 +251,14 @@ dwb_dl_start() {
     g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(dwb_dl_status_cb), NULL);
     webkit_download_start(dwb.state.download);
   }
-  dwb_free(lastdir);
+  FREE(lastdir);
   if (dwb.state.dl_action != Execute) {
     lastdir = g_strdup(path);
   }
 
   dwb_normal_mode(true);
   dwb.state.download = NULL;
-  dwb_free(fullpath);
+  FREE(fullpath);
 }/*}}}*/
 
 /* dwb_dl_entry_set_directory() {{{*/
@@ -267,8 +270,8 @@ dwb_dl_entry_set_directory() {
 
   dwb_entry_set_text(newdir);
 
-  dwb_free(current_dir);
-  dwb_free(newdir);
+  FREE(current_dir);
+  FREE(newdir);
 }/*}}}*/
 
 /* dwb_dl_entry_set_spawn_command{{{*/

@@ -53,7 +53,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       dwb_add_view(&a);
       ret = true;
     }
-    dwb_free(clipboard);
+    FREE(clipboard);
   }
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     dwb_focus(gl);
@@ -337,7 +337,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       text = g_strdup_printf("loading [%d%%]", (int)(progress * 100));
       dwb_set_status_bar_text(VIEW(gl)->rstatus, text, NULL, NULL); 
       gtk_window_set_title(GTK_WINDOW(dwb.gui.window), text);
-      dwb_free(text);
+      FREE(text);
       break;
   }
 }/*}}}*/
@@ -422,7 +422,6 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 static gboolean 
 dwb_view_entry_activate_cb(GtkEntry* entry) {
-  char *text = g_strdup(gtk_entry_get_text(entry));
   gboolean ret = false;
   Mode mode = dwb.state.mode;
 
@@ -443,7 +442,7 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
     dwb_parse_key_setting(GET_TEXT());
   }
   else if (mode == CommandMode) {
-    dwb_parse_command_line(text);
+    dwb_parse_command_line(GET_TEXT());
   }
   else if (mode == DownloadGetPath) {
     dwb_dl_start();
@@ -453,12 +452,11 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
     dwb_end();
   }
   else {
-    Arg a = { .n = 0, .p = text };
+    Arg a = { .n = 0, .p = (char*)GET_TEXT() };
     dwb_load_uri(&a);
-    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
+    dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
     dwb_normal_mode(true);
   }
-  dwb_free(text);
 
   return true;
 }/*}}}*/
@@ -565,8 +563,10 @@ dwb_view_clean_vars(GList *gl) {
   View *v = gl->data;
 
   v->status->items_blocked = 0;
-  if (v->status->current_host) 
-    dwb_free(v->status->current_host); 
+  if (v->status->current_host) {
+    free(v->status->current_host); 
+    v->status->current_host = NULL;
+  }
 }/*}}}*/
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/
