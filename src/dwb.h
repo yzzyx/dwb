@@ -256,6 +256,8 @@ struct _State {
   gboolean complete_searchengines;
   gboolean complete_commands;
 
+  gboolean view_in_background;
+
   Layout layout;
   GList *last_com_history;
 

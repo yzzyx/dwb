@@ -27,6 +27,32 @@ struct _Plugin {
 };
 static Plugin *plugins;
 
+// CALLBACKS
+static gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
+static gboolean dwb_web_view_close_web_view_cb(WebKitWebView *, GList *);
+static gboolean dwb_web_view_console_message_cb(WebKitWebView *, char *, int , char *, GList *);
+static GtkWidget * dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *);
+static gboolean dwb_view_plugin_blocker_button_cb(GtkWidget *, GdkEventButton *, char *);
+static GtkWidget * dwb_web_view_create_plugin_widget_cb(WebKitWebView *, char *, char *, GHashTable *, GList *);
+static gboolean dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *);
+static WebKitWebView * dwb_web_view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList *);
+static void dwb_web_view_hovering_over_link_cb(WebKitWebView *, char *, char *, GList *);
+static gboolean dwb_web_view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, char *, WebKitWebPolicyDecision *, GList *);
+static gboolean dwb_web_view_enter_notify_cb(GtkWidget *, GdkEventCrossing *, GList *);
+static gboolean dwb_web_view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
+static gboolean dwb_web_view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
+static void dwb_web_view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
+static gboolean dwb_web_view_script_alert_cb(WebKitWebView *, WebKitWebFrame *, char *, GList *);
+static void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *);
+static gboolean dwb_web_view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
+static gboolean dwb_web_view_value_changed_cb(GtkAdjustment *, GList *);
+static void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
+static void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
+static void dwb_web_view_realize_cb(GtkWidget *, GList *);
+static gboolean dwb_view_entry_keyrelease_cb(GtkWidget *, GdkEventKey *);
+static gboolean dwb_view_entry_keypress_cb(GtkWidget *, GdkEventKey *);
+static gboolean dwb_view_entry_activate_cb(GtkEntry *);
+static gboolean dwb_view_tab_button_press_cb(GtkWidget *, GdkEventButton *, GList *);
 
 /* WEB_VIEW_CALL_BACKS {{{*/
 
@@ -62,7 +88,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
 }/*}}}*/
 
 /* dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/
-gboolean 
+static gboolean 
 dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
   Arg a = { .p = gl };
   dwb_com_remove_view(&a);
@@ -94,7 +120,7 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
   return ((View*)dwb.state.fview->data)->web;
 }/*}}}*/
 
-gboolean 
+static gboolean 
 dwb_view_plugin_blocker_button_cb(GtkWidget *widget, GdkEventButton *e, char *uri) {
   allowed_plugins = g_list_prepend(allowed_plugins, g_strdup(uri));
   GtkWidget *parent = gtk_widget_get_parent(widget);
@@ -149,7 +175,7 @@ dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download,
 }/*}}}*/
 
 /* dwb_web_view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList * *){{{*/
-WebKitWebView * 
+static WebKitWebView * 
 dwb_web_view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList *gl) {
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   GtkWidget *webview = webkit_web_view_new();
@@ -343,7 +369,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 }/*}}}*/
 
 /* dwb_web_view_realize_cb {{{*/
-void
+static void
 dwb_web_view_realize_cb(GtkWidget *widget, GList *gl) {
   GdkWindow *window = gtk_widget_get_window(widget);
   GdkEventMask events = gdk_window_get_events(window);
@@ -463,7 +489,7 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
 /*}}}*/
 
 /* dwb_view_tab_button_press_cb(GtkWidget, GdkEventButton* , GList * ){{{*/
-gboolean
+static gboolean
 dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
   if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     Arg a = { .p = gl };

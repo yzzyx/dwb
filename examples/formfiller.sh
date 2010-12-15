@@ -8,6 +8,7 @@
 # example: https://bbs.archlinux.org/login.php req_username username req_password password save_pass true
 
 CONTENT_FILE=${XDG_CONFIG_HOME}/dwb/data/forms
+SUBMIT=1 
 
 COMMAND+="javascript:function set_value(e, value){if(e.type==\"checkbox\"||e.type==\"radio\"){e.checked=(value.toLowerCase()!=='false'&&value!=='0');}else{e.value=value;}}"
 
@@ -19,9 +20,9 @@ while read; do
       VALUE=${LINE[$((i))]}
       COMMAND+="var ${NAME}=document.getElementsByName(\"${NAME}\")[0];set_value(${NAME},\"${VALUE}\");"
     done
-    COMMAND+="var f=${NAME}.form;f.submit();"
+    test ${SUBMIT} != 0 && COMMAND+="${NAME}.form.submit();"
   fi
-done < ${CONTENT_FILE}
+done < "${CONTENT_FILE}"
 echo "open ${COMMAND}"
 
 # vim: tw=0

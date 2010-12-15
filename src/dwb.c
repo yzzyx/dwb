@@ -34,6 +34,7 @@ static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
+//static void dwb_set_view_in_background(GList *, WebSettings*);
 
 static void dwb_clean_buffer(GList *);
 
@@ -283,6 +284,8 @@ static WebSettings DWB_SETTINGS[] = {
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
   { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
   { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
+  // TODO Implement
+  //{ { "views-in-background",                     "Open views in background", },                                false, true,  Boolean,    { .b = true },           (S_Func)dwb_set_view_in_background, }, 
 
   
   { { "content-block-regex",   "Mimetypes that will be blocked", },     false, false,  Char,   { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" }, (S_Func) dwb_set_content_block_regex, }, 
@@ -346,6 +349,15 @@ static void
 dwb_set_history_length(GList *l, WebSettings *s) {
   dwb.misc.history_length = s->arg.i;
 }/*}}}*/
+
+/* dwb_set_history_length(GList *l, WebSettings *){{{*/
+// TODO implement
+#if 0 
+static void 
+dwb_set_view_in_background(GList *l, WebSettings *s) {
+  dwb.state.view_in_background = s->arg.b;
+}/*}}}*/
+#endif
 
 /* dwb_set_cookies (GList *, WebSettings *s) {{{*/
 void 
