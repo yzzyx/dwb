@@ -21,6 +21,7 @@
 #include "download.h"
 #include "config.h"
 #include "session.h"
+#include "icon.xpm"
 
 
 /* DECLARATIONS {{{*/
@@ -2038,6 +2039,10 @@ dwb_init_gui() {
     dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, dwb.misc.name);
   }
+  // Icon
+  GdkPixbuf *icon_pixbuf = gdk_pixbuf_new_from_xpm_data(icon);
+  gtk_window_set_icon(GTK_WINDOW(dwb.gui.window), icon_pixbuf);
+
   gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), GET_INT("default-width"), GET_INT("default-height"));
   gtk_window_set_geometry_hints(GTK_WINDOW(dwb.gui.window), NULL, NULL, GDK_HINT_MIN_SIZE);
   g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
