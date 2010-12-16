@@ -90,5 +90,6 @@ static KeyValue KEYS[] = {
   { "new_window",               {   "W",            0 }, }, 
   { "save",                     {   "sf",            0 }, }, 
   { "undo",                     {   "u",            0 }, }, 
+  { "execute_userscript",       {   "eu",           0 }, },  
   { "print",                    {   "p",            GDK_CONTROL_MASK | GDK_MOD1_MASK }, }, 
 };

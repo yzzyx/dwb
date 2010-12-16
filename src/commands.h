@@ -51,4 +51,5 @@ gboolean dwb_com_new_window_or_view(Arg *);
 gboolean dwb_com_save_files(Arg *);
 gboolean dwb_com_undo(Arg *);
 gboolean dwb_com_print(Arg *);
+gboolean dwb_com_execute_userscript(Arg *);
 #endif

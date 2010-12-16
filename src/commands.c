@@ -952,6 +952,7 @@ dwb_com_undo(Arg *arg) {
   return false;
 }/*}}}*/
 
+/* dwb_com_print (Arg *) {{{*/
 gboolean
 dwb_com_print(Arg *arg) {
   WebKitWebFrame *frame = webkit_web_view_get_focused_frame(CURRENT_WEBVIEW());
@@ -961,4 +962,25 @@ dwb_com_print(Arg *arg) {
     return true;
   }
   return false;
-}
+}/*}}}*/
+
+/* dwb_com_execute_userscript (Arg *) {{{*/
+gboolean
+dwb_com_execute_userscript(Arg *arg) {
+  if (!dwb.misc.userscripts) 
+    return false;
+
+  if (arg->p) {
+    char *path = g_build_filename(dwb.files.userscripts, arg->p, NULL);
+    Arg a = { .p = path };
+    dwb_execute_user_script(&a);
+    free(path);
+  }
+  else {
+    dwb_focus_entry();
+    dwb.state.mode = UserscriptMode;
+    dwb_comp_complete(0);
+  }
+
+  return true;
+}/*}}}*/

@@ -43,6 +43,7 @@ static gboolean dwb_command_mode(Arg *arg);
 static void dwb_reload_scripts(GList *,  WebSettings *);
 static void dwb_reload_layout(GList *,  WebSettings *);
 static gboolean dwb_test_cookie_allowed(SoupCookie *);
+static char * dwb_test_userscript(const char *);
 static void dwb_save_cookies(void);
 
 static void dwb_open_channel(const char *);
@@ -186,6 +187,7 @@ static FunctionMap FMAP [] = {
   { { "toggle_block_content",   "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_block_content, NULL,                  PostSM,    { 0 } }, 
   { { "allow_content",         "Allow scripts for current domain in the current session" },  1, (Func) dwb_com_allow_content, NULL,              PostSM,    { 0 } }, 
   { { "print",                 "Print page" },                           1, (Func) dwb_com_print, NULL,                             PostSM,    { 0 } }, 
+  { { "execute_userscript",    "Execute userscript" },                     1, (Func) dwb_com_execute_userscript, "No userscripts available",     NeverSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -302,6 +304,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "complete-bookmarks",                        "Complete bookmarks", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
   { { "complete-searchengines",                   "Complete searchengines", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
   { { "complete-commands",                        "Complete input history", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-userscripts",                        "Complete userscripts", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
 
   { { "use-fifo",                        "Create a fifo pipe for communication", },                            false, true,  Boolean, { .b = false         },     (S_Func)dwb_set_dummy },
     
@@ -642,10 +645,26 @@ dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   return n;
 }/*}}}*/
 
+/* dwb_open_channel (const char *filename) {{{*/
 static void dwb_open_channel(const char *filename) {
   dwb.misc.si_channel = g_io_channel_new_file(filename, "r+", NULL);
   g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
-}
+}/*}}}*/
+
+/* dwb_test_userscript (const char *)         return: char* (alloc) or NULL {{{*/
+static char * 
+dwb_test_userscript(const char *filename) {
+  char *path = g_build_filename(dwb.files.userscripts, filename, NULL); 
+
+  if (g_file_test(path, G_FILE_TEST_IS_REGULAR) || 
+      (g_str_has_prefix(filename, dwb.files.userscripts) && g_file_test(filename, G_FILE_TEST_IS_REGULAR) && (path = g_strdup(filename))) ) {
+    return path;
+  }
+  else {
+    free(path);
+  }
+  return NULL;
+}/*}}}*/
 
 /* dwb_open_si_channel() {{{*/
 static void
@@ -1213,6 +1232,12 @@ dwb_load_uri(Arg *arg) {
 
   g_strstrip(arg->p);
 
+  if ( (uri = dwb_test_userscript(arg->p)) ) {
+    Arg a = { .p = uri };
+    dwb_execute_user_script(&a);
+    free(uri);
+    return;
+  }
   if (g_str_has_prefix(arg->p, "javascript:")) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), arg->p);
     return;
@@ -1518,7 +1543,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, char *filename) 
   return false;
 }/*}}}*/
 /* dwb_execute_user_script(Arg *a) {{{*/
-static void
+void
 dwb_execute_user_script(Arg *a) {
   GError *error = NULL;
   char *argv[3] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
@@ -1541,6 +1566,7 @@ dwb_get_scripts() {
   char *filename;
   char *content;
   GList *gl = NULL;
+  Navigation *n = NULL;
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
@@ -1553,6 +1579,7 @@ dwb_get_scripts() {
         if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
           char **line = g_strsplit(lines[i], "dwb:", 2);
           if (line[1]) {
+            n = dwb_navigation_new(filename, line[1]);
             KeyMap *map = dwb_malloc(sizeof(KeyMap));
             Key key = dwb_str_to_key(line[1]);
             FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, PostSM, { .p = path } };
@@ -1569,7 +1596,11 @@ dwb_get_scripts() {
         i++;
       }
       FREE(content);
-
+      if (!n) {
+        n = dwb_navigation_new(filename, "");
+      }
+      dwb.misc.userscripts = g_list_prepend(dwb.misc.userscripts, n);
+      n = NULL;
     }
   }
   return gl;
@@ -2223,6 +2254,7 @@ dwb_init_vars() {
   dwb.state.complete_bookmarks = GET_BOOL("complete-bookmarks");
   dwb.state.complete_searchengines = GET_BOOL("complete-searchengines");
   dwb.state.complete_commands = GET_BOOL("complete-commands");
+  dwb.state.complete_userscripts = GET_BOOL("complete-userscripts");
 
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
@@ -2239,6 +2271,7 @@ static void dwb_init() {
   dwb.comps.completions = NULL; 
   dwb.comps.active_comp = NULL;
   dwb.misc.max_c_items = MAX_COMPLETIONS;
+  dwb.misc.userscripts = NULL;
 
 
   dwb_init_key_map();

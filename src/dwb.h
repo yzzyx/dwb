@@ -126,6 +126,7 @@ enum _Mode {
   DownloadGetPath     = 1<<14,
   SaveSession         = 1<<15,
   BookmarksMode       = 1<<16,
+  UserscriptMode      = 1<<17,
 };
 
 enum _ShowMessage {
@@ -255,6 +256,7 @@ struct _State {
   gboolean complete_bookmarks;
   gboolean complete_searchengines;
   gboolean complete_commands;
+  gboolean complete_userscripts;
 
   gboolean view_in_background;
 
@@ -366,6 +368,7 @@ struct _Misc {
   SoupURI *proxyuri;
 
   GIOChannel *si_channel;
+  GList *userscripts;
 
   double factor;
   int max_c_items;
@@ -384,22 +387,22 @@ struct _Misc {
 };
 struct _Files {
   const char *bookmarks;
-  const char *history;
-  const char *mimetypes;
-  const char *quickmarks;
-  const char *session;
-  const char *searchengines;
-  const char *stylesheet;
-  const char *keys;
-  const char *scriptdir;
-  const char *userscripts;
-  const char *settings;
+  const char *content_block_allow;
   const char *cookies;
   const char *cookies_allow;
   const char *download_path;
-  const char *content_block_allow;
-  const char *unifile;
   const char *fifo;
+  const char *history;
+  const char *keys;
+  const char *mimetypes;
+  const char *quickmarks;
+  const char *scriptdir;
+  const char *searchengines;
+  const char *session;
+  const char *settings;
+  const char *stylesheet;
+  const char *unifile;
+  const char *userscripts;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -439,6 +442,8 @@ gboolean dwb_insert_mode(Arg *);
 void dwb_normal_mode(gboolean);
 
 void dwb_load_uri(Arg *);
+void dwb_execute_user_script(Arg *a);
+
 void dwb_focus_entry(void);
 void dwb_focus_scroll(GList *);
 

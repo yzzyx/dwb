@@ -90,7 +90,7 @@ DwbLetterHint.prototype.getTextHint = function(i, length) {
   else if (length < 2*l) {
     var rem = (length) % l;
     var sqrt = Math.sqrt(2*rem);
-    var r = sqrt == (getint = parseInt(sqrt)) ? sqrt + 1 : getint ;
+    var r = sqrt == (getint = parseInt(sqrt)) ? sqrt + 1 : getint;
     if (i < l-r) {
       text = hint_letter_seq[i];
     }

@@ -7,6 +7,7 @@
 #include "util.h"
 
 static GList * dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, int max, int back);
+static GList * dwb_comp_get_simple_completion(GList *gl);
 
 typedef gboolean (*Match_Func)(char*, const char*);
 
@@ -185,6 +186,8 @@ static GList *
 dwb_comp_get_normal_completion() {
   GList *list = NULL;
 
+  if (dwb.state.complete_userscripts) 
+    list = dwb_comp_init_completion(list, dwb.misc.userscripts, false, NULL, "Userscript");
   if (dwb.state.complete_searchengines) 
     list = dwb_comp_init_completion(list, dwb.fc.se_completion, false, NULL, "Searchengine");
   if (dwb.state.complete_commands) 
@@ -197,11 +200,11 @@ dwb_comp_get_normal_completion() {
   return  list;
 }/*}}}*/
 
-/* dwb_comp_get_bookmark_completion      return: GList *Completions{{{*/
+/* dwb_comp_get_simple_completion      return: GList *Completions{{{*/
 static GList *
-dwb_comp_get_bookmark_completion() {
+dwb_comp_get_simple_completion(GList *gl) {
   GList *list = NULL;
-  list = dwb_comp_init_completion(list, dwb.fc.bookmarks, false, NULL, NULL);
+  list = dwb_comp_init_completion(list, gl, false, NULL, NULL);
   return  list;
 }/*}}}*/
 
@@ -261,11 +264,12 @@ dwb_comp_complete(int back) {
     v->compbox = gtk_vbox_new(true, 0);
     gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
     switch (dwb.state.mode) {
-      case SettingsMode:  dwb.comps.completions = dwb_comp_get_settings_completion(); break;
-      case KeyMode:       dwb.comps.completions = dwb_comp_get_key_completion(true); break;
-      case CommandMode:   dwb.comps.completions = dwb_comp_get_key_completion(false); break;
-      case BookmarksMode: dwb.comps.completions = dwb_comp_get_bookmark_completion(); break;
-      default:            dwb.comps.completions = dwb_comp_get_normal_completion(); break;
+      case SettingsMode:    dwb.comps.completions = dwb_comp_get_settings_completion(); break;
+      case KeyMode:         dwb.comps.completions = dwb_comp_get_key_completion(true); break;
+      case CommandMode:     dwb.comps.completions = dwb_comp_get_key_completion(false); break;
+      case BookmarksMode:   dwb.comps.completions = dwb_comp_get_simple_completion(dwb.fc.bookmarks); break;
+      case UserscriptMode:  dwb.comps.completions = dwb_comp_get_simple_completion(dwb.misc.userscripts); break;
+      default:              dwb.comps.completions = dwb_comp_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {
       return;
@@ -275,9 +279,6 @@ dwb_comp_complete(int back) {
   }
   else if (dwb.comps.completions && dwb.comps.active_comp) {
     dwb.comps.active_comp = dwb_comp_update_completion(v->compbox, dwb.comps.completions, dwb.comps.active_comp, dwb.misc.max_c_items, back);
-  }
-  if (dwb.state.mode == SettingsMode || dwb.state.mode == KeyMode) {
-
   }
 }/*}}}*/
 /*}}}*/

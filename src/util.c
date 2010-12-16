@@ -451,3 +451,4 @@ dwb_util_domain_from_uri(char *uri) {
   char *ret = domain[0] ? g_strdup(domain) : g_strdup(uri_p);
   return ret;
 }/*}}}*/
+
