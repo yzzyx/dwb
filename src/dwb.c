@@ -1191,13 +1191,14 @@ dwb_grab_focus(GList *gl) {
 /* dwb_new_window(Arg *arg) {{{*/
 void 
 dwb_new_window(Arg *arg) {
-  char *argv[5];
+  char *argv[6];
 
   argv[0] = (char *)dwb.misc.prog_path;
   argv[1] = "-p"; 
   argv[2] = (char *)dwb.misc.profile;
-  argv[3] = arg->p;
-  argv[4] = NULL;
+  argv[3] = "-n";
+  argv[4] = arg->p;
+  argv[5] = NULL;
   g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
 }/*}}}*/
 
