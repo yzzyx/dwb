@@ -149,7 +149,7 @@ dwb_dl_status_cb(WebKitDownload *download) {
       gtk_widget_hide(dwb.gui.downloadbar);
     }
     if (dwb.state.mimetype_request) {
-      free(dwb.state.mimetype_request);
+      g_free(dwb.state.mimetype_request);
       dwb.state.mimetype_request = NULL;
     }
   }

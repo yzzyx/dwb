@@ -51,5 +51,5 @@ char * dwb_return(const char *);
 void * dwb_malloc(size_t);
 void dwb_free(void *);
 
-char * dwb_util_domain_from_uri(char *);
+char * dwb_util_domain_from_uri(const char *);
 #endif

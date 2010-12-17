@@ -186,8 +186,9 @@ static FunctionMap FMAP [] = {
   { { "proxy",                 "Toggle proxy",                    }, 1, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
   { { "toggle_block_content",   "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_block_content, NULL,                  PostSM,    { 0 } }, 
   { { "allow_content",         "Allow scripts for current domain in the current session" },  1, (Func) dwb_com_allow_content, NULL,              PostSM,    { 0 } }, 
-  { { "print",                 "Print page" },                           1, (Func) dwb_com_print, NULL,                             PostSM,    { 0 } }, 
-  { { "execute_userscript",    "Execute userscript" },                     1, (Func) dwb_com_execute_userscript, "No userscripts available",     NeverSM,    { 0 } }, 
+  { { "allow_plugins",         "Allow plugins for this domain" },      1, (Func) dwb_com_allow_plugins, NO_URL,              PostSM,    { 0 } }, 
+  { { "print",                 "Print page" },                         1, (Func) dwb_com_print, NULL,                             PostSM,    { 0 } }, 
+  { { "execute_userscript",    "Execute userscript" },                 1, (Func) dwb_com_execute_userscript, "No userscripts available",     NeverSM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -625,7 +626,7 @@ void
 dwb_clean_load_end(GList *gl) {
   View *v = gl->data;
   if (v->status->mimetype) {
-    free(v->status->mimetype);
+    g_free(v->status->mimetype);
     v->status->mimetype = NULL;
   }
 }/*}}}*/
@@ -661,7 +662,7 @@ dwb_test_userscript(const char *filename) {
     return path;
   }
   else {
-    free(path);
+    g_free(path);
   }
   return NULL;
 }/*}}}*/
@@ -878,14 +879,14 @@ dwb_save_searchengine(void) {
       dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
       dwb_set_normal_message(dwb.state.fview, true, "Search saved");
       if (dwb.state.search_engine) {
-        free(dwb.state.search_engine);
+        g_free(dwb.state.search_engine);
         dwb.state.search_engine = NULL;
       }
     }
     else {
       dwb_set_error_message(dwb.state.fview, "No keyword specified, aborting.");
     }
-    free(text);
+    g_free(text);
   }
   dwb_normal_mode(false);
 
@@ -977,7 +978,7 @@ dwb_update_hints(GdkEventKey *e) {
   }
   if (com) {
     buffer = dwb_execute_script(com, true);
-    free(com);
+    g_free(com);
   }
   if (buffer) { 
     if (!strcmp("_dwb_no_hints_", buffer)) {
@@ -1235,7 +1236,7 @@ dwb_load_uri(Arg *arg) {
   if ( (uri = dwb_test_userscript(arg->p)) ) {
     Arg a = { .p = uri };
     dwb_execute_user_script(&a);
-    free(uri);
+    g_free(uri);
     return;
   }
   if (g_str_has_prefix(arg->p, "javascript:")) {
@@ -1702,7 +1703,7 @@ dwb_save_keys() {
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
     g_file_set_contents(dwb.files.keys, content, size, &error);
-    free(content);
+    g_free(content);
   }
   if (error) {
     fprintf(stderr, "Couldn't save keyfile: %s", error->message);
@@ -1732,7 +1733,7 @@ dwb_save_settings() {
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
     g_file_set_contents(dwb.files.settings, content, size, &error);
-    free(content);
+    g_free(content);
   }
   if (error) {
     fprintf(stderr, "Couldn't save settingsfile: %s\n", error->message);
@@ -1764,6 +1765,7 @@ dwb_save_files(gboolean end_session) {
   // cookie allow
   dwb_save_simple_file(dwb.fc.cookies_allow, dwb.files.cookies_allow);
   dwb_save_simple_file(dwb.fc.content_block_allow, dwb.files.content_block_allow);
+  dwb_save_simple_file(dwb.fc.plugins_allow, dwb.files.plugins_allow);
 
   // save keys
   dwb_save_keys();
@@ -2129,7 +2131,7 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
     for (int i=0;  i < length; i++) {
       gl = g_list_append(gl, func(token[i]));
     }
-    free(content);
+    g_free(content);
     g_strfreev(token);
   }
   return gl;
@@ -2140,7 +2142,7 @@ dwb_get_search_completion(const char *text) {
   Navigation *n = dwb_navigation_new_from_line(text);
 
   char *uri = n->second;
-  n->second = dwb_util_domain_from_uri(uri);
+  n->second = g_strdup(dwb_util_domain_from_uri(n->second));
 
   FREE(uri);
 
@@ -2170,6 +2172,7 @@ dwb_init_files() {
   dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
   dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
   dwb.files.content_block_allow      = g_build_filename(profile_path, "scripts.allow",      NULL);
+  dwb.files.plugins_allow = g_build_filename(profile_path, "plugins.allow",      NULL);
 
   if (!g_file_test(dwb.files.scriptdir, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(dwb.files.scriptdir, 0755);
@@ -2191,6 +2194,7 @@ dwb_init_files() {
   }
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
   dwb.fc.content_block_allow = dwb_init_file_content(dwb.fc.content_block_allow, dwb.files.content_block_allow, (Content_Func)dwb_return);
+  dwb.fc.plugins_allow = dwb_init_file_content(dwb.fc.plugins_allow, dwb.files.plugins_allow, (Content_Func)dwb_return);
 
   FREE(path);
   FREE(profile_path);
@@ -2263,7 +2267,6 @@ dwb_init_vars() {
 
 /* dwb_init() {{{*/
 static void dwb_init() {
-
   dwb_clean_vars();
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
@@ -2341,7 +2344,7 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
     g_strstrip(line);
     dwb_parse_command_line(line);
     g_io_channel_flush(c, NULL);
-    free(line);
+    g_free(line);
   }
   return true;
 }/*}}}*/

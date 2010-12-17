@@ -91,5 +91,6 @@ static KeyValue KEYS[] = {
   { "save",                     {   "sf",            0 }, }, 
   { "undo",                     {   "u",            0 }, }, 
   { "execute_userscript",       {   "eu",           0 }, },  
+  { "allow_plugins",             {   "ap",           0 }, },  
   { "print",                    {   "p",            GDK_CONTROL_MASK | GDK_MOD1_MASK }, }, 
 };

@@ -148,7 +148,7 @@ dwb_com_find(Arg *arg) {
   dwb.state.mode = FindMode;
   dwb.state.forward_search = arg->b;
   if (v->status->search_string) {
-    free(v->status->search_string);
+    g_free(v->status->search_string);
     v->status->search_string = NULL;
   }
   dwb_focus_entry();
@@ -727,7 +727,7 @@ dwb_com_yank(Arg *arg) {
       dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", message);
       ret = true;
     }
-    free(text);
+    g_free(text);
   }
   return ret;
 }/*}}}*/
@@ -744,7 +744,7 @@ dwb_com_paste(Arg *arg) {
       dwb.state.nv = arg->n;
     Arg a = { .p = text };
     dwb_load_uri(&a);
-    free(text);
+    g_free(text);
     return true;
   }
   return false;
@@ -913,6 +913,30 @@ dwb_com_allow_content(Arg *arg) {
   return true;
 }/*}}}*/
 
+/* dwb_com_allow_plugins (Arg *){{{*/
+gboolean 
+dwb_com_allow_plugins(Arg *arg) {
+  const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+  char *domain = g_strdup(dwb_util_domain_from_uri(uri));
+  GList *list = NULL;
+
+  if (!domain || !strlen(domain)) {
+    return false;
+  }
+
+  if ( (list = g_list_find_custom(dwb.fc.plugins_allow, domain, (GCompareFunc)strcmp)) ) {
+    g_free(list->data);
+    dwb.fc.plugins_allow = g_list_remove_link(dwb.fc.plugins_allow, list);
+    dwb_set_normal_message(dwb.state.fview, true, "Plugins blocked on %s", domain);
+  }
+  else {
+    dwb.fc.plugins_allow = g_list_prepend(dwb.fc.plugins_allow, domain);
+    dwb_set_normal_message(dwb.state.fview, true, "Plugins allowed on %s", domain);
+  }
+  dwb_com_reload(NULL);
+  return true;
+}/*}}}*/
+
 /* dwb_com_new_window_or_view{{{*/
 gboolean 
 dwb_com_new_window_or_view(Arg *arg) {
@@ -974,7 +998,7 @@ dwb_com_execute_userscript(Arg *arg) {
     char *path = g_build_filename(dwb.files.userscripts, arg->p, NULL);
     Arg a = { .p = path };
     dwb_execute_user_script(&a);
-    free(path);
+    g_free(path);
   }
   else {
     dwb_focus_entry();

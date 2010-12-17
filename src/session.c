@@ -13,7 +13,7 @@ dwb_session_get_groups() {
   char *content = dwb_util_get_file_content(dwb.files.session);
   if (content) {
     groups = g_regex_split_simple("^g:", content, G_REGEX_MULTILINE, G_REGEX_MATCH_NOTEMPTY);
-    free(content);
+    g_free(content);
   }
   return groups;
 }/*}}}*/

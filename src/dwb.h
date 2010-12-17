@@ -12,7 +12,7 @@
 #define SINGLE_INSTANCE 1
 #define NEW_INSTANCE 2
 
-#define STRING_LENGTH 256
+#define STRING_LENGTH 1024
 
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
@@ -65,7 +65,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
 #define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL)
 
-#define FREE(X)                     if ((X)) free((X))
+#define FREE(X)                     if ((X)) g_free((X))
 #define DIGIT(X)   (X->keyval >= GDK_0 && X->keyval <= GDK_9)
 #define ALPHA(X)    ((X->keyval >= GDK_A && X->keyval <= GDK_Z) ||  (X->keyval >= GDK_a && X->keyval <= GDK_z) || X->keyval == GDK_space)
 
@@ -81,25 +81,26 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 /* TYPES {{{*/
 
 typedef struct _Arg Arg;
-typedef struct _Misc Misc;
-typedef struct _Dwb Dwb;
-typedef struct _Gui Gui;
-typedef struct _State State;
-typedef struct _Completions Completions;
-typedef struct _View View;
 typedef struct _Color Color;
+typedef struct _Completions Completions;
+typedef struct _Dwb Dwb;
+typedef struct _FileContent FileContent;
+typedef struct _Files Files;
 typedef struct _Font DwbFont;
 typedef struct _FunctionMap FunctionMap;
-typedef struct _KeyMap KeyMap;
+typedef struct _Gui Gui;
 typedef struct _Key Key;
+typedef struct _KeyMap KeyMap;
 typedef struct _KeyValue KeyValue;
-typedef struct _ViewStatus ViewStatus;
-typedef struct _Files Files;
-typedef struct _FileContent FileContent;
+typedef struct _Misc Misc;
 typedef struct _Navigation Navigation;
+typedef struct _Plugin Plugin;
 typedef struct _Quickmark Quickmark;
-typedef struct _WebSettings WebSettings;
 typedef struct _Settings Settings;
+typedef struct _State State;
+typedef struct _View View;
+typedef struct _ViewStatus ViewStatus;
+typedef struct _WebSettings WebSettings;
 /*}}}*/
 typedef gboolean (*Command_f)(void*);
 typedef gboolean (*Func)(void*);
@@ -294,6 +295,11 @@ struct _ViewStatus {
   gboolean custom_encoding;
   char *mimetype;
   gboolean plugin_blocker;
+  Plugin *plugins;
+};
+struct _Plugin {
+  char *uri;
+  Plugin *next;
 };
 
 struct _View {
@@ -403,6 +409,7 @@ struct _Files {
   const char *stylesheet;
   const char *unifile;
   const char *userscripts;
+  const char *plugins_allow;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -417,6 +424,7 @@ struct _FileContent {
   GList *mimetypes;
   GList *content_block_allow;
   GList *content_allow;
+  GList *plugins_allow;
 };
 
 struct _Dwb {

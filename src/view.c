@@ -19,20 +19,12 @@ static void dwb_apply_settings(WebSettings *);
 static char *lasturi;
 static GList *allowed_plugins;
 
-typedef struct _Plugin Plugin;
-
-struct _Plugin {
-  char *uri;
-  Plugin *next;
-};
-static Plugin *plugins;
-
 // CALLBACKS
 static gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
 static gboolean dwb_web_view_close_web_view_cb(WebKitWebView *, GList *);
 static gboolean dwb_web_view_console_message_cb(WebKitWebView *, char *, int , char *, GList *);
 static GtkWidget * dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *);
-static gboolean dwb_view_plugin_blocker_button_cb(GtkWidget *, GdkEventButton *, char *);
+static gboolean dwb_web_view_plugin_blocker_button_cb(GtkWidget *, GdkEventButton *, char *);
 static GtkWidget * dwb_web_view_create_plugin_widget_cb(WebKitWebView *, char *, char *, GHashTable *, GList *);
 static gboolean dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *);
 static WebKitWebView * dwb_web_view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList *);
@@ -120,40 +112,42 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
   return ((View*)dwb.state.fview->data)->web;
 }/*}}}*/
 
+/* dwb_web_view_plugin_blocker_button_cb (GtkWidget *, GdkEventButton, char *uri) {{{*/
 static gboolean 
-dwb_view_plugin_blocker_button_cb(GtkWidget *widget, GdkEventButton *e, char *uri) {
+dwb_web_view_plugin_blocker_button_cb(GtkWidget *widget, GdkEventButton *e, char *uri) {
   allowed_plugins = g_list_prepend(allowed_plugins, g_strdup(uri));
   GtkWidget *parent = gtk_widget_get_parent(widget);
   gtk_container_remove(GTK_CONTAINER(parent), widget);
   gtk_widget_destroy(widget);
   dwb_com_reload(NULL);
   return true;
-}
+}/*}}}*/
 
 /* dwb_web_view_create_plugin_widget_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
 static GtkWidget * 
 dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *t, GList *gl) {
   GtkWidget *event_box = NULL;
   View *v = gl->data;
+  const char *curi = webkit_web_view_get_uri(CURRENT_WEBVIEW());
 
   for (GList *l = allowed_plugins; l; l=l->next) {
     if (!strcmp(uri, l->data)) {
       return NULL;
     }
   }
-  if (v->status->plugin_blocker) {
+  if (v->status->plugin_blocker &&  !g_list_find_custom(dwb.fc.plugins_allow, dwb_util_domain_from_uri(curi), (GCompareFunc)strcmp) ) {
     lasturi = g_strdup(uri);
-    event_box = gtk_event_box_new();
 
+    // save all pluginuris so they can be freed since an allocated string has to be passed to g_signal_connect
     Plugin *p = malloc(sizeof(Plugin));
     p->uri = lasturi;
-    p->next = plugins;
-    plugins = p;
+    p->next = v->status->plugins;
+    v->status->plugins = p;
 
+    event_box = gtk_event_box_new();
     GtkWidget *label = gtk_label_new("Plugin blocked");
     gtk_container_add(GTK_CONTAINER(event_box), label);
-    g_signal_connect(G_OBJECT(event_box), "button-press-event", G_CALLBACK(dwb_view_plugin_blocker_button_cb), lasturi);
-
+    g_signal_connect(G_OBJECT(event_box), "button-press-event", G_CALLBACK(dwb_web_view_plugin_blocker_button_cb), lasturi);
 
     gtk_widget_modify_fg(label, GTK_STATE_NORMAL, &dwb.color.active_fg);
     gtk_widget_modify_bg(event_box, GTK_STATE_NORMAL, &dwb.color.active_bg);
@@ -588,9 +582,15 @@ void
 dwb_view_clean_vars(GList *gl) {
   View *v = gl->data;
 
+  for (Plugin *p = v->status->plugins; p; p=p->next) {
+    g_free(p->uri);
+    g_free(p);
+  }
+  v->status->plugins = NULL;
+
   v->status->items_blocked = 0;
   if (v->status->current_host) {
-    free(v->status->current_host); 
+    g_free(v->status->current_host); 
     v->status->current_host = NULL;
   }
 }/*}}}*/
@@ -605,6 +605,7 @@ dwb_view_create_web_view(GList *gl) {
   status->downloads = NULL;
   status->current_host = NULL;
   status->custom_encoding = false;
+  status->plugins = NULL;
   v->status = status;
 
   v->vbox = gtk_vbox_new(false, 0);

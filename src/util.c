@@ -429,16 +429,16 @@ dwb_malloc(size_t size) {
 void 
 dwb_free(void *p) {
   if (p) 
-    free(p);
+    g_free(p);
 }
 
-/* dwb_util_domain_from_uri (char *uri)      return: char* (alloc){{{*/
+/* dwb_util_domain_from_uri (char *uri)      return: char* {{{*/
 char *
-dwb_util_domain_from_uri(char *uri) {
+dwb_util_domain_from_uri(const char *uri) {
   if (!uri) 
     return NULL;
 
-  char *uri_p = g_strdup(uri);
+  char *uri_p = (char*)uri;
   char *p = NULL;
   char domain[STRING_LENGTH] = { 0 };
 
@@ -448,7 +448,7 @@ dwb_util_domain_from_uri(char *uri) {
   if ( (p = strchr(uri_p, '/')) ) {
     strncpy(domain, uri_p, p - uri_p);
   }
-  char *ret = domain[0] ? g_strdup(domain) : g_strdup(uri_p);
+  char *ret = domain[0] ? domain : uri_p;
   return ret;
 }/*}}}*/
 
