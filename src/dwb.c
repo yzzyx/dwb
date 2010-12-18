@@ -1651,6 +1651,7 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
   dwb_free_list(dwb.fc.content_block_allow, (void_func)dwb_free);
+  dwb_free_list(dwb.fc.plugins_allow, (void_func)dwb_free);
 
 
   if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
