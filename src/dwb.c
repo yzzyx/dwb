@@ -913,6 +913,7 @@ dwb_layout_from_char(const char *desc) {
     }
     i++;
   }
+  g_strfreev(token);
   return layout;
 }/*}}}*/
 
@@ -1584,7 +1585,7 @@ dwb_get_scripts() {
             n = dwb_navigation_new(filename, line[1]);
             KeyMap *map = dwb_malloc(sizeof(KeyMap));
             Key key = dwb_str_to_key(line[1]);
-            FunctionMap fm = { { filename, filename }, 0, (Func)dwb_execute_user_script, NULL, PostSM, { .p = path } };
+            FunctionMap fm = { { n->first, n->first }, FM_DONT_SAVE, (Func)dwb_execute_user_script, NULL, PostSM, { .p = path } };
             FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
             *fmap = fm;
             map->map = fmap;
@@ -1603,7 +1604,10 @@ dwb_get_scripts() {
       }
       dwb.misc.userscripts = g_list_prepend(dwb.misc.userscripts, n);
       n = NULL;
+
+      g_strfreev(lines);
     }
+    g_dir_close(dir);
   }
   return gl;
 }/*}}}*/
@@ -1699,9 +1703,13 @@ dwb_save_keys() {
   }
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *map = l->data;
-    char *sc = g_strdup_printf("%s %s", dwb_modmask_to_string(map->mod), map->key ? map->key : "");
-    g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
-    FREE(sc);
+    if (! (map->map->prop & FM_DONT_SAVE) ) {
+      char *mod = dwb_modmask_to_string(map->mod);
+      char *sc = g_strdup_printf("%s %s", mod, map->key ? map->key : "");
+      g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
+      FREE(sc);
+      FREE(mod);
+    }
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
     g_file_set_contents(dwb.files.keys, content, size, &error);
@@ -1897,6 +1905,7 @@ dwb_init_key_map() {
     char *string = g_key_file_get_value(keyfile, dwb.misc.profile, KEYS[i].id, NULL);
     if (string) {
       kv.key = dwb_str_to_key(string);
+      g_free(string);
     }
     else if (KEYS[i].key.str) {
       kv.key = KEYS[i].key;
@@ -1907,6 +1916,8 @@ dwb_init_key_map() {
 
   dwb.keymap = g_list_concat(dwb.keymap, dwb_get_scripts());
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+
+  g_key_file_free(keyfile);
 }/*}}}*/
 
 /* dwb_read_settings() {{{*/
@@ -1939,6 +1950,7 @@ dwb_read_settings() {
       }
     }
   }
+  FREE(content);
   for (int j=0; j<LENGTH(DWB_SETTINGS); j++) {
     gboolean set = false;
     char *key = g_strdup(DWB_SETTINGS[j].n.first);
@@ -1997,10 +2009,11 @@ dwb_init_scripts() {
   g_string_append_printf(buffer, "hint_opacity = %f;\n",            GET_DOUBLE("hint-opacity"));
 
   // init system scripts
-  char *dir;
+  char *dir = NULL;
   dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
   if ( (dir = dwb_util_get_data_dir("scripts")) ) {
     dwb_util_get_directory_content(&buffer, dir);
+    g_free(dir);
   }
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);

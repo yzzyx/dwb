@@ -47,6 +47,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
+
 /* MAKROS {{{*/ 
 #define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
 #define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X)) 
@@ -200,16 +201,19 @@ struct _Arg {
   char *e;
 };
 struct _Key {
-  const char *str;
+  char *str;
   guint mod;
 };
 struct _KeyValue {
   const char *id;
   Key key;
 };
+
+#define FM_COMMANDLINE    1<<0
+#define FM_DONT_SAVE      1<<1
 struct _FunctionMap {
   Navigation n;
-  int command_line; // command line function ? 
+  int prop; 
   Func func;
   const char *error; 
   ShowMessage hide;

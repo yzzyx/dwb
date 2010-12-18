@@ -318,7 +318,7 @@ dwb_util_get_data_dir(const char *dir) {
     }
     FREE(path);
   }
-  return path;
+  return NULL;
 }/*}}}*/
 
 /* NAVIGATION {{{*/
@@ -341,7 +341,7 @@ dwb_navigation_new_from_line(const char *text) {
   if (text) {
     line = g_strsplit(text, " ", 2);
     nv = dwb_navigation_new(line[0], line[1]);
-    FREE(line);
+    g_strfreev(line);
   }
   return nv;
 }/*}}}*/
