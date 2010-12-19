@@ -375,6 +375,7 @@ dwb_web_view_realize_cb(GtkWidget *widget, GList *gl) {
 static gboolean 
 dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
   Mode mode = dwb.state.mode;
+
   if (mode == HintMode) {
     if (DIGIT(e) || DWB_TAB_KEY(e)) {
       return true;
@@ -385,7 +386,6 @@ dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
   }
   else if (mode == FindMode) {
     dwb_update_search(dwb.state.forward_search);
-    return false;
   }
   return false;
 }/*}}}*/

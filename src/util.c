@@ -389,14 +389,6 @@ dwb_quickmark_free(Quickmark *q) {
 }/*}}}*/
 /*}}}*/
 
-void
-dwb_web_settings_free(WebSettings *s) {
-  if (s->type == Char || s->type == ColorChar) {
-    FREE(s->arg.p);
-  }
-  FREE(s);
-}
-
 /* dwb_true, dwb_false {{{*/
 gboolean
 dwb_false() {
