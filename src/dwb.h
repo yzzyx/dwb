@@ -453,7 +453,7 @@ Dwb dwb;
 gboolean dwb_insert_mode(Arg *);
 void dwb_normal_mode(gboolean);
 
-void dwb_load_uri(Arg *);
+void dwb_load_uri(Arg *, GList *gl);
 void dwb_execute_user_script(Arg *a);
 
 void dwb_focus_entry(void);
@@ -468,7 +468,7 @@ void dwb_set_status_bar_text(GtkWidget *, const char *, GdkColor *,  PangoFontDe
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
 void dwb_update_layout(void);
-void dwb_focus(GList *gl);
+void dwb_focus(GList *gl, gboolean);
 
 gboolean dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const char *, const char *);
@@ -480,7 +480,7 @@ void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
 char * dwb_execute_script(const char *, gboolean);
 void dwb_resize(double );
-void dwb_grab_focus(GList *);
+void dwb_grab_focus(GList *, gboolean);
 void dwb_source_remove(GList *);
 
 int dwb_entry_position_word_back(int position);

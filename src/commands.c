@@ -442,7 +442,7 @@ dwb_com_open(Arg *arg) {
     dwb.state.nv = arg->n;
 
   if (arg && arg->p) {
-    dwb_load_uri(arg);
+    dwb_load_uri(arg, NULL);
   }
   else {
     dwb_focus_entry();
@@ -532,7 +532,8 @@ dwb_com_remove_view(Arg *arg) {
   gtk_widget_destroy(v->scroll);
   gtk_widget_destroy(v->vbox);
   dwb.gui.entry = NULL;
-  dwb_grab_focus(dwb.state.fview);
+  // TODO implement bg
+  dwb_grab_focus(dwb.state.fview, false);
   gtk_container_remove(GTK_CONTAINER(dwb.gui.topbox), v->tabevent);
 
   /*  clean up */ 
@@ -588,7 +589,8 @@ dwb_com_push_master(Arg *arg) {
     gtk_widget_reparent(new->vbox, dwb.gui.left);
     dwb.state.views = g_list_remove_link(dwb.state.views, l);
     dwb.state.views = g_list_concat(l, dwb.state.views);
-    dwb_focus(l);
+    // TODO implement bg
+    dwb_focus(l, false);
   }
   else {
     old = dwb.state.views->data;
@@ -598,7 +600,8 @@ dwb_com_push_master(Arg *arg) {
     gtk_box_reorder_child(GTK_BOX(dwb.gui.right), old->vbox, 0);
     dwb.state.views = g_list_remove_link(dwb.state.views, gl);
     dwb.state.views = g_list_concat(gl, dwb.state.views);
-    dwb_grab_focus(dwb.state.views);
+    // TODO implement bg
+    dwb_grab_focus(dwb.state.views, false);
   }
   if (dwb.state.layout & Maximized) {
     gtk_widget_show(dwb.gui.left);
@@ -627,7 +630,8 @@ dwb_com_focus_next(Arg *arg) {
       gtk_widget_show(((View *)gl->next->data)->vbox);
       gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_focus(gl->next);
+    // TODO implement bg
+    dwb_focus(gl->next, false);
   }
   else {
     if (dwb.state.layout & Maximized) {
@@ -636,7 +640,8 @@ dwb_com_focus_next(Arg *arg) {
       gtk_widget_show(((View *)dwb.state.views->data)->vbox);
       gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_focus(g_list_first(dwb.state.views));
+    // TODO implement bg
+    dwb_focus(g_list_first(dwb.state.views), false);
   }
   return true;
 }/*}}}*/
@@ -656,7 +661,8 @@ dwb_com_focus_prev(Arg *arg) {
       gtk_widget_show(((View *)last->data)->vbox);
       gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_focus(last);
+    // TODO implement bg
+    dwb_focus(last, false);
   }
   else {
     if (dwb.state.layout & Maximized) {
@@ -667,7 +673,8 @@ dwb_com_focus_prev(Arg *arg) {
       gtk_widget_show(((View *)gl->prev->data)->vbox);
       gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_focus(gl->prev);
+    // TODO implement bg
+    dwb_focus(gl->prev, false);
   }
   return true;
 }/*}}}*/
@@ -691,7 +698,8 @@ dwb_com_focus_nth_view(Arg *arg) {
       gtk_widget_show(((View *)l->data)->vbox);
       gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
     }
-    dwb_focus(l);
+    // TODO implement bg
+    dwb_focus(l, false);
   }
   return true;
 }/*}}}*/
@@ -743,7 +751,7 @@ dwb_com_paste(Arg *arg) {
     if (dwb.state.nv == OpenNormal)
       dwb.state.nv = arg->n;
     Arg a = { .p = text };
-    dwb_load_uri(&a);
+    dwb_load_uri(&a, NULL);
     g_free(text);
     return true;
   }

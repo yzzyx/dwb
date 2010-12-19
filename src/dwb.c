@@ -35,7 +35,7 @@ static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
-//static void dwb_set_view_in_background(GList *, WebSettings*);
+static void dwb_set_view_in_background(GList *, WebSettings*);
 
 static void dwb_clean_buffer(GList *);
 
@@ -289,7 +289,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
   { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
   // TODO Implement
-  //{ { "views-in-background",                     "Open views in background", },                                false, true,  Boolean,    { .b = true },           (S_Func)dwb_set_view_in_background, }, 
+  { { "views-in-background",                     "Open views in background", },                                false, true,  Boolean,    { .b = true },           (S_Func)dwb_set_view_in_background, }, 
 
   
   { { "content-block-regex",   "Mimetypes that will be blocked", },     false, false,  Char,   { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" }, (S_Func) dwb_set_content_block_regex, }, 
@@ -355,14 +355,12 @@ dwb_set_history_length(GList *l, WebSettings *s) {
   dwb.misc.history_length = s->arg.i;
 }/*}}}*/
 
-/* dwb_set_history_length(GList *l, WebSettings *){{{*/
+/* dwb_set_view_in_background(GList *l, WebSettings *){{{*/
 // TODO implement
-#if 0 
 static void 
 dwb_set_view_in_background(GList *l, WebSettings *s) {
   dwb.state.view_in_background = s->arg.b;
 }/*}}}*/
-#endif
 
 /* dwb_set_cookies (GList *, WebSettings *s) {{{*/
 void 
@@ -698,18 +696,21 @@ dwb_get_host(const char *uri) {
 
 /* dwb_com_focus(GList *gl) {{{*/
 void 
-dwb_focus(GList *gl) {
+dwb_focus(GList *gl, gboolean bg) {
+  // TODO implement bg
   GList *tmp = NULL;
 
-  if (dwb.state.fview) {
-    tmp = dwb.state.fview;
+  if (!bg) {
+    if (dwb.state.fview) {
+      tmp = dwb.state.fview;
+    }
+    if (tmp) {
+      dwb_view_set_normal_style(tmp);
+      dwb_source_remove(tmp);
+      CLEAR_COMMAND_TEXT(tmp);
+    }
   }
-  if (tmp) {
-    dwb_view_set_normal_style(tmp);
-    dwb_source_remove(tmp);
-    CLEAR_COMMAND_TEXT(tmp);
-  }
-  dwb_grab_focus(gl);
+  dwb_grab_focus(gl, bg);
 } /*}}}*/
 
 /* dwb_get_default_settings()         return: GHashTable {{{*/
@@ -1124,7 +1125,7 @@ dwb_open_quickmark(const char *key) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
       Arg a = { .p = q->nav->first };
-      dwb_load_uri(&a);
+      dwb_load_uri(&a, NULL);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
       dwb_normal_mode(false);
       return;
@@ -1147,6 +1148,9 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
 
 
 /* dwb_update_status(GList *gl) {{{*/
+/*  
+ *  Sets the window title and tabstring
+ *  */
 void 
 dwb_update_status(GList *gl) {
   View *v = gl->data;
@@ -1183,16 +1187,23 @@ dwb_update_tab_label() {
 
 /* dwb_grab_focus(GList *gl) {{{*/
 void 
-dwb_grab_focus(GList *gl) {
+dwb_grab_focus(GList *gl, gboolean bg) {
+  // TODO implement bg
   View *v = gl->data;
 
   if (dwb.gui.entry) {
     gtk_widget_hide(dwb.gui.entry);
   }
-  dwb.state.fview = gl;
-  dwb.gui.entry = v->entry;
-  dwb_view_set_active_style(gl);
-  dwb_focus_scroll(gl);
+  if (bg) {
+    dwb_view_set_normal_style(gl);
+    dwb_focus_scroll(dwb.state.fview);
+  }
+  else {
+    dwb.state.fview = gl;
+    dwb.gui.entry = v->entry;
+    dwb_view_set_active_style(gl);
+    dwb_focus_scroll(gl);
+  }
   dwb_update_status(gl);
 }/*}}}*/
 
@@ -1212,8 +1223,10 @@ dwb_new_window(Arg *arg) {
 
 /* dwb_load_uri(const char *uri) {{{*/
 void 
-dwb_load_uri(Arg *arg) {
+dwb_load_uri(Arg *arg, GList *gl) {
   g_strstrip(arg->p);
+
+  WebKitWebView *web = gl ? WEBVIEW(gl) : WEBVIEW(dwb.state.fview);
 
   if (!arg || !arg->p || !strlen(arg->p)) {
     return;
@@ -1249,11 +1262,11 @@ dwb_load_uri(Arg *arg) {
     return;
   }
   if (g_str_has_prefix(arg->p, "javascript:")) {
-    webkit_web_view_execute_script(CURRENT_WEBVIEW(), arg->p);
+    webkit_web_view_execute_script(web, arg->p);
     return;
   }
   if (g_str_has_prefix(arg->p, "file://")) {
-    webkit_web_view_load_uri(CURRENT_WEBVIEW(), arg->p);
+    webkit_web_view_load_uri(web, arg->p);
     return;
   }
   else if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
@@ -1278,7 +1291,7 @@ dwb_load_uri(Arg *arg) {
   }
 
   /* load uri */
-  webkit_web_view_load_uri(CURRENT_WEBVIEW(), uri);
+  webkit_web_view_load_uri(web, uri);
   FREE(uri);
 }/*}}}*/
 

@@ -64,7 +64,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     g_strstrip(clipboard);
     Arg a = { .p = clipboard };
     if (e->button == 3) {
-      dwb_load_uri(&a);
+      dwb_load_uri(&a, NULL);
       ret = true;
     }
     else if (e->button == 2) {
@@ -74,7 +74,8 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     FREE(clipboard);
   }
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
-    dwb_focus(gl);
+    // TODO implement bg
+    dwb_focus(gl, false);
   }
   return ret;
 }/*}}}*/
@@ -210,7 +211,8 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
 /* dwb_web_view_enter_notify_cb(GtkWidget *, GdkEventCrossing *, GList *){{{*/
 static gboolean 
 dwb_web_view_enter_notify_cb(GtkWidget *web, GdkEventCrossing *e, GList *gl) {
-  dwb_focus(gl);
+  // TODO implement bg
+  dwb_focus(gl, false);
   return false;
 }/*}}}*/
 
@@ -231,7 +233,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 
   if (dwb.state.nv == OpenNewView || dwb.state.nv == OpenNewWindow) {
     char *uri = (char *)webkit_network_request_get_uri(request);
-    Arg a = { .p = uri };
+    Arg a = { .p = uri, .b = true };
     if (dwb.state.nv == OpenNewView) {
       dwb.state.nv = OpenNormal;
       dwb_add_view(&a); 
@@ -473,7 +475,7 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
   }
   else {
     Arg a = { .n = 0, .p = (char*)GET_TEXT() };
-    dwb_load_uri(&a);
+    dwb_load_uri(&a, NULL);
     dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
     dwb_normal_mode(true);
   }
@@ -487,7 +489,8 @@ static gboolean
 dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
   if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     Arg a = { .p = gl };
-    dwb_focus(gl);
+    // TODO implement bg
+    dwb_focus(gl, false);
     dwb_com_push_master(&a);
     return true;
   }
@@ -597,7 +600,7 @@ dwb_view_clean_vars(GList *gl) {
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/
 static GList * 
-dwb_view_create_web_view(GList *gl) {
+dwb_view_create_web_view(GList *gl, gboolean bg) {
   View *v = g_malloc(sizeof(View));
 
   ViewStatus *status = g_malloc(sizeof(ViewStatus));
@@ -671,7 +674,16 @@ dwb_view_create_web_view(GList *gl) {
   gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
   gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);
 
-  gtk_box_pack_start(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0);
+  int n = g_list_position(dwb.state.views, dwb.state.fview);
+  if (bg) {
+    if (n == 0) {
+      gtk_box_pack_start(GTK_BOX(dwb.gui.right), v->vbox, true, true, 0);
+      gtk_box_reorder_child(GTK_BOX(dwb.gui.right), v->vbox, 0);
+    }
+  }
+  else {
+    gtk_box_pack_start(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0);
+  }
   
   // Show
   gtk_widget_show(v->vbox);
@@ -684,7 +696,12 @@ dwb_view_create_web_view(GList *gl) {
   gtk_widget_show_all(v->scroll);
   gtk_widget_show_all(v->tabevent);
 
-  gl = g_list_prepend(gl, v);
+  if (bg) {
+    gl = g_list_insert(gl, v, n);
+  }
+  else {
+    gl = g_list_prepend(gl, v);
+  }
   dwb_web_view_init_signals(gl);
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
   // apply settings
@@ -720,17 +737,26 @@ dwb_view_new_reorder() {
 /* dwb_add_view(Arg *arg)               return: View *{{{*/
 GList *  
 dwb_add_view(Arg *arg) {
-  dwb_view_new_reorder();
-  dwb.state.views = dwb_view_create_web_view(dwb.state.views);
-  dwb_focus(dwb.state.views);
+  //dwb_view_new_reorder();
+  gboolean background = arg ? arg->b : false;
+
+  GList *gl = dwb_view_create_web_view(dwb.state.views, background);
+  // TODO implement bg
+  if (! background )  {// not in background
+    dwb.state.views = gl;
+    dwb_focus(dwb.state.views, false);
+  }
+  else {
+    dwb_focus(gl, true);
+  }
 
   dwb_update_layout();
   if (arg && arg->p) {
-    dwb_load_uri(arg);
+    dwb_load_uri(arg, gl);
   }
   else if (strcmp("about:blank", dwb.misc.startpage)) {
     Arg a = { .p = dwb.misc.startpage }; 
-    dwb_load_uri(&a);
+    dwb_load_uri(&a, NULL);
   }
   return dwb.state.views;
 } /*}}}*/
