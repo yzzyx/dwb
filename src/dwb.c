@@ -59,8 +59,6 @@ static void dwb_save_quickmark(const char *);
 static void dwb_open_quickmark(const char *);
 
 
-static void dwb_update_tab_label(void);
-
 static void dwb_init_proxy(void);
 static void dwb_init_key_map(void);
 static void dwb_init_settings(void);
@@ -100,7 +98,7 @@ static FunctionMap FMAP [] = {
   { { "focus_input",           "Focus input",                       }, 1, (Func)dwb_com_focus_input,        "No input found in current context",      AlwaysSM, },
   { { "focus_next",            "Focus next view",                   }, 0, (Func)dwb_com_focus_next,          "No other view",                   AlwaysSM, },
   { { "focus_prev",            "Focus previous view",               }, 0, (Func)dwb_com_focus_prev,          "No other view",                   AlwaysSM, },
-  { { "focus_nth_view",        "Focus nth view",                    }, 0, (Func)dwb_com_focus_nth_view,       "No such view",                    AlwaysSM,  { 0 } },
+  { { "focus_nth_view",        "Focus nth view",                    }, 0, (Func)dwb_com_focus_nth_view,       "No such view",                   AlwaysSM,  { 0 } },
   { { "hint_mode",             "Follow hints",                      }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNormal }, },
   { { "hint_mode_nv",          "Follow hints (new view)",           }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewView }, },
   { { "hint_mode_nw",          "Follow hints (new window)",         }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewWindow }, },
@@ -1171,16 +1169,6 @@ dwb_update_status(GList *gl) {
   FREE(filename);
 }/*}}}*/
 
-/* dwb_update_tab_label {{{*/
-static void
-dwb_update_tab_label() {
-  for (GList *gl = dwb.state.views; gl; gl = gl->next) {
-    View *v = gl->data;
-    const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-    dwb_tab_label_set_text(gl, title);
-  }
-}/*}}}*/
-
 /* dwb_grab_focus(GList *gl) {{{*/
 void 
 dwb_grab_focus(GList *gl) {
@@ -1308,7 +1296,12 @@ dwb_update_layout() {
     webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
     dwb_resize(dwb.state.size);
   }
-  dwb_update_tab_label();
+  /* update tab label */
+  for (GList *gl = dwb.state.views; gl; gl = gl->next) {
+    View *v = gl->data;
+    const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+    dwb_tab_label_set_text(gl, title);
+  }
 }/*}}}*/
 
 /* dwb_eval_editing_key(GdkEventKey *) {{{*/

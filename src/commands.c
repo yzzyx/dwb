@@ -678,7 +678,9 @@ dwb_com_focus_nth_view(Arg *arg) {
   if (!dwb.state.views->next) 
     return true;
   GList *l = g_list_nth(dwb.state.views, dwb.state.nummod);
-  if (l && l != dwb.state.fview) {
+  if (!l) 
+    return false;
+  if (l != dwb.state.fview) {
     if (dwb.state.layout & Maximized) { 
       if (l == dwb.state.views) {
         gtk_widget_hide(dwb.gui.right);
