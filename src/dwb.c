@@ -873,22 +873,29 @@ dwb_submit_searchengine(void) {
 void
 dwb_save_searchengine(void) {
   char *text = g_strdup(GET_TEXT());
-  if (text) {
-    g_strstrip(text);
-    if (text && strlen(text) > 0) {
-      dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
-      dwb_set_normal_message(dwb.state.fview, true, "Search saved");
-      if (dwb.state.search_engine) {
+  dwb_normal_mode(false);
+
+  if (!text)
+    return;
+
+  g_strstrip(text);
+  if (text && strlen(text) > 0) {
+    dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
+    dwb_set_normal_message(dwb.state.fview, true, "Search saved");
+    if (dwb.state.search_engine) {
+      if (!dwb.misc.default_search) {
+        dwb.misc.default_search = dwb.state.search_engine;
+      }
+      else  {
         g_free(dwb.state.search_engine);
         dwb.state.search_engine = NULL;
       }
     }
-    else {
-      dwb_set_error_message(dwb.state.fview, "No keyword specified, aborting.");
-    }
-    g_free(text);
   }
-  dwb_normal_mode(false);
+  else {
+    dwb_set_error_message(dwb.state.fview, "No keyword specified, aborting.");
+  }
+  g_free(text);
 
 }/*}}}*/
 
@@ -2204,9 +2211,10 @@ dwb_init_files() {
   dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files.searchengines, (Content_Func)dwb_get_search_completion);
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
 
-  if (g_list_last(dwb.fc.searchengines)) {
+  if (g_list_last(dwb.fc.searchengines)) 
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;
-  }
+  else 
+    dwb.misc.default_search = NULL;
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
   dwb.fc.content_block_allow = dwb_init_file_content(dwb.fc.content_block_allow, dwb.files.content_block_allow, (Content_Func)dwb_return);
   dwb.fc.plugins_allow = dwb_init_file_content(dwb.fc.plugins_allow, dwb.files.plugins_allow, (Content_Func)dwb_return);
