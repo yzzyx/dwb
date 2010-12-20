@@ -498,13 +498,7 @@ dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
-  if (text) {
-    char *escaped = g_markup_escape_text(text, -1);
-    gtk_label_set_markup(GTK_LABEL(label), escaped);
-    FREE(escaped);
-  }
-  else 
-    gtk_label_set_text(GTK_LABEL(label), NULL);
+  gtk_label_set_text(GTK_LABEL(label), text);
 
   if (fg) {
     gtk_widget_modify_fg(label, GTK_STATE_NORMAL, fg);
@@ -1146,7 +1140,7 @@ static void
 dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-  char *escaped = g_markup_printf_escaped("%d : %s", g_list_position(dwb.state.views, gl), uri ? uri : "about:blank");
+  char *escaped = g_strdup_printf("%d : %s", g_list_position(dwb.state.views, gl), uri ? uri : "about:blank");
   gtk_label_set_text(GTK_LABEL(v->tablabel), escaped);
 
   FREE(escaped);
