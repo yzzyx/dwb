@@ -14,7 +14,7 @@ char *
 dwb_util_string_replace(const char *haystack, const char *needle, const char *replacemant) {
   char **token;
   char *ret = NULL;
-  if ( (token = g_regex_split_simple(needle, haystack, 0, 0)) && strcmp(token[0], haystack)) {
+  if ( haystack && needle && (token = g_regex_split_simple(needle, haystack, 0, 0)) && strcmp(token[0], haystack)) {
     ret = g_strconcat(token[0], replacemant, token[1], NULL);
     g_strfreev(token);
   }

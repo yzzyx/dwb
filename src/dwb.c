@@ -35,7 +35,6 @@ static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
-//static void dwb_set_view_in_background(GList *, WebSettings*);
 
 static void dwb_clean_buffer(GList *);
 
@@ -191,6 +190,7 @@ static FunctionMap FMAP [] = {
 
 /* DWB_SETTINGS {{{*/
 /* SETTINGS_ARRAY {{{*/
+  // { name,                                     description,                                                  builtin, global, type,  argument,                  set-function
 static WebSettings DWB_SETTINGS[] = {
   { { "auto-load-images",			                   "Autoload images", },                                         true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
   { { "auto-resize-window",			                 "Autoresize window", },                                       true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
@@ -286,9 +286,6 @@ static WebSettings DWB_SETTINGS[] = {
   { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
   { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
   { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
-  // TODO Implement
-  //{ { "views-in-background",                     "Open views in background", },                                false, true,  Boolean,    { .b = true },           (S_Func)dwb_set_view_in_background, }, 
-
   
   { { "content-block-regex",   "Mimetypes that will be blocked", },     false, false,  Char,   { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" }, (S_Func) dwb_set_content_block_regex, }, 
   { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_content_block, }, 
@@ -314,6 +311,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  Integer, { .i = 30          }, (S_Func)dwb_set_dummy, },
   { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
   { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  (S_Func)dwb_set_dummy, },
+  { { "mail-program",                            "Mail program", },                                            false, true,  Char, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy }, 
 };/*}}}*/
 
 /* SETTINGS_FUNCTIONS{{{*/
@@ -352,15 +350,6 @@ static void
 dwb_set_history_length(GList *l, WebSettings *s) {
   dwb.misc.history_length = s->arg.i;
 }/*}}}*/
-
-/* dwb_set_history_length(GList *l, WebSettings *){{{*/
-// TODO implement
-#if 0 
-static void 
-dwb_set_view_in_background(GList *l, WebSettings *s) {
-  dwb.state.view_in_background = s->arg.b;
-}/*}}}*/
-#endif
 
 /* dwb_set_cookies (GList *, WebSettings *s) {{{*/
 void 
@@ -780,6 +769,26 @@ dwb_entry_position_word_forward(int position) {
     position++;
   }
   return position;
+}/*}}}*/
+
+/* dwb_handle_mail(const char *uri)        return: true if it is a mail-address{{{*/
+gboolean 
+dwb_handle_mail(const char *uri) {
+  if (g_str_has_prefix(uri, "mailto:")) {
+    const char *program;
+    char *command;
+    if ( !(program = GET_CHAR("mail-program")) ) {
+      return true;
+    }
+    if ( !(command = dwb_util_string_replace(program, "dwb_uri", uri))) {
+      return true;
+    }
+
+    g_spawn_command_line_async(command, NULL);
+    free(command);
+    return true;
+  }
+  return false;
 }/*}}}*/
 
 /* dwb_resize(double size) {{{*/
@@ -1230,6 +1239,10 @@ dwb_load_uri(Arg *arg) {
 
   g_strstrip(arg->p);
 
+  if (dwb_handle_mail(arg->p)) {
+    return;
+  }
+
   if ( (uri = dwb_test_userscript(arg->p)) ) {
     Arg a = { .p = uri };
     dwb_execute_user_script(&a);
@@ -1264,8 +1277,7 @@ dwb_load_uri(Arg *arg) {
       ? g_strdup(arg->p)
       : g_strdup_printf("http://%s", (char*)arg->p);
   }
-
-  /* load uri */
+    /* load uri */
   webkit_web_view_load_uri(CURRENT_WEBVIEW(), uri);
   FREE(uri);
 }/*}}}*/

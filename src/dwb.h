@@ -482,6 +482,7 @@ char * dwb_execute_script(const char *, gboolean);
 void dwb_resize(double );
 void dwb_grab_focus(GList *);
 void dwb_source_remove(GList *);
+gboolean dwb_handle_mail(const char *uri);
 
 int dwb_entry_position_word_back(int position);
 int dwb_entry_position_word_forward(int position);

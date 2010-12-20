@@ -905,6 +905,12 @@ The default layout. Possible values: Normal / Normal Maximized / Bottomstack /
 Bottomstack Maximized / Maximized (same as Normal Maximized),
 default value:
 .IR Normal\ Maximized .
+.TP
+.BR mail-program
+The email program that is used for mailto:-urls. 
+.IR dwb_uri
+will be replaced with the mail-url. Default value: 
+.IR 'xterm\ -e\ mutt\ 'dwb_uri'"
 .TP 
 .BR message-delay
 The duration messages are shown. Possible values: duration in seconds (integer),

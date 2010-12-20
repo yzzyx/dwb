@@ -219,8 +219,11 @@ static gboolean
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
+  char *uri = (char *) webkit_network_request_get_uri(request);
   int button = webkit_web_navigation_action_get_button(action);
-  Arg a = { .p = (char*)webkit_network_request_get_uri(request) };
+
+  Arg a = { .p = uri };
+
   if (button != -1) {
     if (button == 2) {
         dwb_add_view(&a);
@@ -230,8 +233,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   }
 
   if (dwb.state.nv == OpenNewView || dwb.state.nv == OpenNewWindow) {
-    char *uri = (char *)webkit_network_request_get_uri(request);
-    Arg a = { .p = uri };
     if (dwb.state.nv == OpenNewView) {
       dwb.state.nv = OpenNormal;
       dwb_add_view(&a); 
@@ -258,6 +259,10 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
       return true;
     }
   }
+
+  if (dwb_handle_mail(uri)) 
+    return true;
+
   return false;
 }/*}}}*/
 
