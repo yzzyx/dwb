@@ -403,7 +403,7 @@ dwb_true() {
 /* dwb_return(const char *)     return char * (alloc) {{{*/
 char *
 dwb_return(const char *ret) {
-  return g_strdup(ret);
+  return ret && strlen(ret) > 0 ? g_strdup(ret) : NULL;
 }/*}}}*/
 
 /* dwb_malloc(size_t size)         return: void* {{{*/
