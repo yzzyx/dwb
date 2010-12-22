@@ -197,7 +197,7 @@ dwb_com_show_keys(Arg *arg) {
     KeyMap *m = l->data;
     Navigation n = m->map->n;
     g_string_append(buffer, HTML_DIV_START);
-    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.second);
+    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.first, n.second);
     g_string_append_printf(buffer, HTML_DIV_KEYS_VALUE, n.first, dwb_modmask_to_string(m->mod), m->key ? m->key : "");
     g_string_append(buffer, HTML_DIV_END);
   }
@@ -229,7 +229,7 @@ dwb_com_show_settings(Arg *arg) {
   }
 
   GList *l = g_hash_table_get_values(t);
-  l = g_list_sort(l, (GCompareFunc)dwb_util_web_settings_sort_second);
+  l = g_list_sort(l, (GCompareFunc)dwb_util_web_settings_sort_first);
 
   g_string_append_printf(buffer, SETTINGS_VIEW, dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
   g_string_append_printf(buffer, HTML_H2, setting_string, dwb.misc.profile);
@@ -240,7 +240,7 @@ dwb_com_show_settings(Arg *arg) {
     WebSettings *m = l->data;
     if (!m->global || (m->global && dwb.state.setting_apply == Global)) {
       g_string_append(buffer, HTML_DIV_START);
-      g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->n.second);
+      g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->n.first, m->n.second);
       if (m->type == Boolean) {
         const char *value = m->arg.b ? "checked" : "";
         g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->n.first, value);
@@ -918,22 +918,20 @@ dwb_com_allow_content(Arg *arg) {
 /* dwb_com_allow_plugins (Arg *){{{*/
 gboolean 
 dwb_com_allow_plugins(Arg *arg) {
-  const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
-  char *domain = g_strdup(dwb_util_domain_from_uri(uri));
+  const char *host = CURRENT_HOST();
   GList *list = NULL;
 
-  if (!domain || !strlen(domain)) {
+  if (!host || !strlen(host)) {
     return false;
   }
-
-  if ( (list = g_list_find_custom(dwb.fc.plugins_allow, domain, (GCompareFunc)strcmp)) ) {
+  if ( (list = g_list_find_custom(dwb.fc.plugins_allow, host, (GCompareFunc)strcmp)) ) {
     g_free(list->data);
     dwb.fc.plugins_allow = g_list_remove_link(dwb.fc.plugins_allow, list);
-    dwb_set_normal_message(dwb.state.fview, true, "Plugins blocked on %s", domain);
+    dwb_set_normal_message(dwb.state.fview, true, "Plugins blocked on %s", host);
   }
   else {
-    dwb.fc.plugins_allow = g_list_prepend(dwb.fc.plugins_allow, domain);
-    dwb_set_normal_message(dwb.state.fview, true, "Plugins allowed on %s", domain);
+    dwb.fc.plugins_allow = g_list_prepend(dwb.fc.plugins_allow, g_strdup(host));
+    dwb_set_normal_message(dwb.state.fview, true, "Plugins allowed on %s", host);
   }
   dwb_com_reload(NULL);
   return true;

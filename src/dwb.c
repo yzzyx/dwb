@@ -35,6 +35,7 @@ static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
+static void dwb_set_adblock(GList *, WebSettings *);
 
 static void dwb_clean_buffer(GList *);
 
@@ -312,6 +313,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
   { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  (S_Func)dwb_set_dummy, },
   { { "mail-program",                            "Mail program", },                                            false, true,  Char, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy }, 
+  { { "adblocker",                               "Block advertisements via a filterlist", },                   false, false,  Boolean, { .b = false }, (S_Func)dwb_set_adblock }, 
 };/*}}}*/
 
 /* SETTINGS_FUNCTIONS{{{*/
@@ -321,11 +323,19 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
   return;
 }/*}}}*/
 
+/* dwb_set_dummy{{{*/
+static void
+dwb_set_adblock(GList *gl, WebSettings *s) {
+  View *v = gl->data;
+  v->status->adblocker = s->arg.b;
+}/*}}}*/
+
 /* dwb_set_startpage(GList *l, WebSettings *){{{*/
 static void 
 dwb_set_startpage(GList *l, WebSettings *s) {
   dwb.misc.startpage = s->arg.p;
 }/*}}}*/
+
 /* dwb_set_plugin_blocker(GList *l, WebSettings *){{{*/
 static void 
 dwb_set_plugin_blocker(GList *l, WebSettings *s) {
@@ -1662,6 +1672,7 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
   dwb_free_list(dwb.fc.content_block_allow, (void_func)dwb_free);
   dwb_free_list(dwb.fc.plugins_allow, (void_func)dwb_free);
+  dwb_free_list(dwb.fc.adblock, (void_func)dwb_free);
 
 
   if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
@@ -2194,6 +2205,7 @@ dwb_init_files() {
   dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
   dwb.files.content_block_allow      = g_build_filename(profile_path, "scripts.allow",      NULL);
   dwb.files.plugins_allow = g_build_filename(profile_path, "plugins.allow",      NULL);
+  dwb.files.adblock       = g_build_filename(path, "adblock",      NULL);
 
   if (!g_file_test(dwb.files.scriptdir, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(dwb.files.scriptdir, 0755);
@@ -2217,6 +2229,7 @@ dwb_init_files() {
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
   dwb.fc.content_block_allow = dwb_init_file_content(dwb.fc.content_block_allow, dwb.files.content_block_allow, (Content_Func)dwb_return);
   dwb.fc.plugins_allow = dwb_init_file_content(dwb.fc.plugins_allow, dwb.files.plugins_allow, (Content_Func)dwb_return);
+  dwb.fc.adblock = dwb_init_file_content(dwb.fc.adblock, dwb.files.adblock, (Content_Func)dwb_return);
 
   FREE(path);
   FREE(profile_path);

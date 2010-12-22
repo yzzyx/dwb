@@ -6,7 +6,7 @@ include ../config.mk
 
 all: $(TARGET) 
 
-$(TARGET): $(OBJ) 
+$(TARGET): $(OBJ) $(HDR)
 	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
 
 debug: 

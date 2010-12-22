@@ -128,14 +128,13 @@ static GtkWidget *
 dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *t, GList *gl) {
   GtkWidget *event_box = NULL;
   View *v = gl->data;
-  const char *curi = webkit_web_view_get_uri(CURRENT_WEBVIEW());
 
   for (GList *l = allowed_plugins; l; l=l->next) {
     if (!strcmp(uri, l->data)) {
       return NULL;
     }
   }
-  if (v->status->plugin_blocker &&  !g_list_find_custom(dwb.fc.plugins_allow, dwb_util_domain_from_uri(curi), (GCompareFunc)strcmp) ) {
+  if (v->status->plugin_blocker &&  !g_list_find_custom(dwb.fc.plugins_allow, CURRENT_HOST(), (GCompareFunc)strcmp) ) {
     lasturi = g_strdup(uri);
 
     // save all pluginuris so they can be freed since an allocated string has to be passed to g_signal_connect
@@ -272,12 +271,36 @@ dwb_web_view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   return false;
 }/*}}}*/
 
+static gboolean 
+dwb_block_ad(GList *gl, WebKitNetworkRequest *request) {
+  if (!VIEW(gl)->status->adblocker) 
+    return false;
+
+  const char *uri = webkit_network_request_get_uri(request);
+
+  for (GList *l = dwb.fc.adblock; l; l=l->next) {
+    char *data = l->data;
+    if (data[0] == '@') {
+      if (g_regex_match_simple(data + 1, uri, 0, 0) )
+        return true;
+    }
+    else if (strstr(uri, data)) {
+      return true;
+    }
+  }
+  return false;
+}
 /* dwb_web_view_resource_request_cb{{{*/
 static void 
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
   SoupMessage *msg = webkit_network_request_get_message(request);
+
+  if (dwb_block_ad(gl, request)) {
+    webkit_network_request_set_uri(request, "about:blank");
+    return;
+  }
 
   if (!msg) 
     return;

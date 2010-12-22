@@ -18,7 +18,7 @@
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
   body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center; }\n\
 .line { border: %s; vertical-align: middle; }\n \
-.text { float: left; font-variant: normal; font-size: 14;}\n \
+.text { float: left; font-variant: normal; font-size: 16;}\n \
 .key { text-align: right;  font-size: 12; }\n \
 .active { background-color: #660000; }\n \
 h2 { font-variant: small-caps; }\n \
@@ -34,7 +34,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define HTML_FORM_START "<div class=\"alignCenter\">\n <form onsubmit=\"return false\">\n"
 #define HTML_FORM_END "</form>\n</div>\n"
 #define HTML_DIV_START "<div class=\"line\">\n"
-#define HTML_DIV_KEYS_TEXT "<div class=\"text\">%s</div>\n "
+#define HTML_DIV_KEYS_TEXT "<div class=\"text\">%s: <span style=\"text-align:block; font-style:oblique; font-size:12;\">%s</span></div>\n "
 #define HTML_DIV_KEYS_VALUE "<div class=\"key\">\n <input onchange=\"get_value(this)\" id=\"%s\" value=\"%s %s\"/>\n</div>\n"
 #define HTML_DIV_SETTINGS_VALUE "<div class=\"key\">\n <input onchange=\"get_value(this);\" id=\"%s\" value=\"%s\"/>\n</div>\n"
 #define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" onchange=\"get_value(this);\" %s>\n</div>\n"
@@ -65,6 +65,8 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
 #define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL)
+
+#define CURRENT_HOST()            (webkit_security_origin_get_host(webkit_web_frame_get_security_origin(webkit_web_view_get_main_frame(CURRENT_WEBVIEW()))))
 
 #define FREE(X)                     if ((X)) g_free((X))
 #define DIGIT(X)   (X->keyval >= GDK_0 && X->keyval <= GDK_9)
@@ -299,6 +301,7 @@ struct _ViewStatus {
   gboolean custom_encoding;
   char *mimetype;
   gboolean plugin_blocker;
+  gboolean adblocker;
   Plugin *plugins;
 };
 struct _Plugin {
@@ -414,6 +417,7 @@ struct _Files {
   const char *unifile;
   const char *userscripts;
   const char *plugins_allow;
+  const char *adblock;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -429,6 +433,7 @@ struct _FileContent {
   GList *content_block_allow;
   GList *content_allow;
   GList *plugins_allow;
+  GList *adblock;
 };
 
 struct _Dwb {
