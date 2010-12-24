@@ -414,6 +414,13 @@ be set globally and then will affect all views. If a string value is set to
 .IR NULL
 the default value will be used. The settings in detail are: 
 .TP
+.BR adblocker
+Block advertisements using a filterlist. The filter can be specified in
+.IR $XDG_CONFIG_HOME/dwb/adblock .
+Regular expressions can be used by putting a '@' at the beginning of the line. 
+default value:
+.IR false .
+.TP
 .BR auto-load-images  
 Load images automatically. Possible values: true/false, 
 default value:
