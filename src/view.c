@@ -128,13 +128,14 @@ static GtkWidget *
 dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *t, GList *gl) {
   GtkWidget *event_box = NULL;
   View *v = gl->data;
+  const char *host = CURRENT_HOST();
 
   for (GList *l = allowed_plugins; l; l=l->next) {
     if (!strcmp(uri, l->data)) {
       return NULL;
     }
   }
-  if (v->status->plugin_blocker &&  !g_list_find_custom(dwb.fc.plugins_allow, CURRENT_HOST(), (GCompareFunc)strcmp) ) {
+  if (v->status->plugin_blocker && host && !g_list_find_custom(dwb.fc.plugins_allow, host, (GCompareFunc)strcmp) ) {
     lasturi = g_strdup(uri);
 
     // save all pluginuris so they can be freed since an allocated string has to be passed to g_signal_connect
