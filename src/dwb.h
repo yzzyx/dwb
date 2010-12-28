@@ -157,6 +157,8 @@ enum _Direction {
   Down = GDK_SCROLL_DOWN,
   Left = GDK_SCROLL_LEFT, 
   Right = GDK_SCROLL_RIGHT, 
+  HalfPageUp,
+  HalfPageDown,
   PageUp,
   PageDown, 
   Top,

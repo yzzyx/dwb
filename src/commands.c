@@ -363,13 +363,17 @@ dwb_com_scroll(Arg *arg) {
   GtkAdjustment *a = arg->n == Left || arg->n == Right 
     ? gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
     : gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
-  int sign = arg->n == Up || arg->n == PageUp || arg->n == Left ? -1 : 1;
+  int sign = arg->n == Up || arg->n == PageUp || arg->n == HalfPageUp || arg->n == Left ? -1 : 1;
 
   double value = gtk_adjustment_get_value(a);
 
-  double inc = arg->n == PageUp || arg->n == PageDown 
-    ? gtk_adjustment_get_page_increment(a) 
-    : gtk_adjustment_get_step_increment(a);
+  double inc;
+  if (arg->n == PageUp || arg->n == PageDown)
+    inc = gtk_adjustment_get_page_increment(a);
+  else if (arg->n == HalfPageUp || arg->n == HalfPageDown)
+    inc = gtk_adjustment_get_page_increment(a) / 2;
+  else
+    inc = gtk_adjustment_get_step_increment(a);
 
   double lower  = gtk_adjustment_get_lower(a);
   double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;

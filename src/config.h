@@ -34,6 +34,8 @@ static KeyValue KEYS[] = {
   { "scroll_bottom",            {   "G",         0,                   },  },  
   { "scroll_down",              {   "j",         0,                   },  },  
   { "scroll_left",              {   "h",         0,                   },  },  
+  { "scroll_halfpage_down",     {   "d",         GDK_CONTROL_MASK,    },  },  
+  { "scroll_halfpage_up",       {   "u",         GDK_CONTROL_MASK,    },  },  
   { "scroll_page_down",         {   "f",         GDK_CONTROL_MASK,    },  },  
   { "scroll_page_up",           {   "b",         GDK_CONTROL_MASK,    },  },  
   { "scroll_right",             {   "l",         0,                   },  },  
