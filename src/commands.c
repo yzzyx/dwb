@@ -820,9 +820,10 @@ dwb_com_entry_word_back(Arg *a) {
 gboolean 
 dwb_com_entry_history_forward(Arg *a) {
   Navigation *n = NULL;
-  if ( dwb.state.last_com_history && dwb.state.last_com_history->next ) {
-      n = dwb.state.last_com_history->next->data;
-      dwb.state.last_com_history = dwb.state.last_com_history->next;
+  GList *l;
+  if ( (l = g_list_last(dwb.state.last_com_history)) && dwb.state.last_com_history->prev ) {
+      n = dwb.state.last_com_history->prev->data;
+      dwb.state.last_com_history = dwb.state.last_com_history->prev;
   }
   if (n) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), n->first);
@@ -835,17 +836,20 @@ dwb_com_entry_history_forward(Arg *a) {
 gboolean 
 dwb_com_entry_history_back(Arg *a) {
   Navigation *n = NULL;
+
+  if (!dwb.fc.commands)
+    return false;
+
   if (! dwb.state.last_com_history  ) {
-    if ( (dwb.state.last_com_history = g_list_last(dwb.fc.commands)) ) {
-      n = dwb.state.last_com_history->data;
-      char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-      dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
-      FREE(text);
-    }
+    dwb.state.last_com_history = dwb.fc.commands;
+    n = dwb.state.last_com_history->data;
+    char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
+    FREE(text);
   }
-  else if ( dwb.state.last_com_history && dwb.state.last_com_history->prev ) {
-    n = dwb.state.last_com_history->prev->data;
-    dwb.state.last_com_history = dwb.state.last_com_history->prev;
+  else if ( dwb.state.last_com_history && dwb.state.last_com_history->next ) {
+    n = dwb.state.last_com_history->next->data;
+    dwb.state.last_com_history = dwb.state.last_com_history->next;
   }
   if (n) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), n->first);
