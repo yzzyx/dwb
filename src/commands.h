@@ -25,6 +25,7 @@ gboolean dwb_com_history_back(Arg *);
 gboolean dwb_com_history_forward(Arg *);
 gboolean dwb_com_new_window_or_view(Arg *);
 gboolean dwb_com_open(Arg *);
+gboolean dwb_com_open_startpage(Arg *);
 gboolean dwb_com_paste(Arg *);
 gboolean dwb_com_print(Arg *);
 gboolean dwb_com_push_master(Arg *);

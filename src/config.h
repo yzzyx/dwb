@@ -24,6 +24,7 @@ static KeyValue KEYS[] = {
   { "open",                     {   "o",         0,                   },  },  
   { "open_nv",                  {   "O",         0,                   },  },  
   { "open_nw",                  {   "wo",         0,                   },  },  
+  { "open_start_page",           {   "h",         GDK_CONTROL_MASK,    },  },  
   { "open_quickmark",           {   "b",         0,                   },  },  
   { "open_quickmark_nv",        {   "B",         0,                   },  },  
   { "open_quickmark_nw",        {   "wb",        0,                   },  },  

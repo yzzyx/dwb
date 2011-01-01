@@ -454,6 +454,17 @@ dwb_com_open(Arg *arg) {
   return true;
 } /*}}}*/
 
+/* dwb_com_open(Arg *arg) {{{*/
+gboolean  
+dwb_com_open_startpage(Arg *arg) {
+  if (!dwb.misc.startpage) 
+    return false;
+
+  Arg a = { .p = dwb.misc.startpage };
+  dwb_load_uri(&a);
+  return true;
+} /*}}}*/
+
 /* dwb_com_toggle_maximized {{{*/
 void 
 dwb_com_maximized_hide(View *v, View *no) {

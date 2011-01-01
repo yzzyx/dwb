@@ -112,6 +112,7 @@ static FunctionMap FMAP [] = {
   { { "open_quickmark",        "Quickmark",                         }, 0, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
   { { "open_quickmark_nv",     "Quickmark-new-view",                }, 0, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
   { { "open_quickmark_nw",     "Quickmark-new-window",              }, 0, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewWindow }, },
+  { { "open_start_page",       "Open startpage",                    }, 1, (Func)dwb_com_open_startpage,      "No startpage set",                AlwaysSM, },
   { { "push_master",           "Push to master area",               }, 1, (Func)dwb_com_push_master,         "No other view",                   AlwaysSM, },
   { { "reload",                "Reload",                            }, 1, (Func)dwb_com_reload,              NULL,                              AlwaysSM, },
   { { "remove_view",           "Close view",                        }, 1, (Func)dwb_com_remove_view,         NULL,                              AlwaysSM, },
@@ -1259,7 +1260,7 @@ dwb_load_uri(Arg *arg) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), arg->p);
     return;
   }
-  if (g_str_has_prefix(arg->p, "file://")) {
+  if (g_str_has_prefix(arg->p, "file://") || !strcmp(arg->p, "about:blank")) {
     webkit_web_view_load_uri(CURRENT_WEBVIEW(), arg->p);
     return;
   }
