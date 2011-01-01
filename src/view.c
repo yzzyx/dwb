@@ -302,7 +302,7 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     webkit_network_request_set_uri(request, "about:blank");
     return;
   }
-
+  
   if (!msg) 
     return;
 
