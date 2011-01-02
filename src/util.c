@@ -1,12 +1,21 @@
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <gtk/gtk.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <webkit/webkit.h>
-#include <gdk/gdkkeysyms.h> 
-#include "dwb.h"
+/*
+ * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
 #include "util.h"
 
 /* dwb_util_string_replace(const char *haystack, const char *needle, const char  *replace)      return: char * (alloc){{{*/

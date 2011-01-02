@@ -16,6 +16,9 @@ FLAGS += -pipe
 FLAGS += `pkg-config --cflags --libs $(LIBS)` 
 FLAGS +=--ansi
 FLAGS +=-std=c99
+FLAGS +=-D_POSIX_SOURCE
+FLAGS +=-D_BSD_SOURCE
+
 
 DFLAGS += -g -B
 
