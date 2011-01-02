@@ -164,7 +164,12 @@ static FunctionMap FMAP [] = {
   { { "entry_word_back",        "Move cursor back on word", },         0,  (Func)dwb_com_entry_word_back,              NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_back",     "Command history back", },             0,  (Func)dwb_com_entry_history_back,           NULL,        AlwaysSM,  { 0 }, true, }, 
   { { "entry_history_forward",  "Command history forward", },          0,  (Func)dwb_com_entry_history_forward,        NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "download_set_execute",   "Complete binaries", },                0, (Func)dwb_dl_set_execute,        NULL,        AlwaysSM,  { 0 }, true, }, 
+  { { "download_set_execute",   "Complete binaries", },                0, (Func)dwb_dl_set_execute,        NULL,       AlwaysSM,  { 0 }, true, }, 
+  { { "complete_history",       "Complete browsing history", },       0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_HISTORY }, true, }, 
+  { { "complete_bookmarks",     "Complete bookmarks", },              0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_BOOKMARK }, true, }, 
+  { { "complete_commands",      "Complete command history", },        0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_INPUT }, true, }, 
+  { { "complete_searchengines", "Complete searchengines", },          0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_SEARCH }, true, }, 
+  { { "complete_userscript",    "Complete userscripts", },            0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_USERSCRIPT }, true, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
   { { "scripts",               "Setting: scripts",                },   1, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-scripts" } },
@@ -615,6 +620,17 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+CompletionType 
+dwb_eval_completion_type(void) {
+  switch (dwb.state.mode) {
+    case SettingsMode:  return COMP_SETTINGS;
+    case KeyMode:       return COMP_KEY;
+    case CommandMode:   return COMP_COMMAND;
+    default:            return COMP_NONE;
+  }
+}
+
 /* dwb_clean_load_end(GList *) {{{*/
 void 
 dwb_clean_load_end(GList *gl) {

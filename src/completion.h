@@ -19,7 +19,7 @@ void dwb_comp_set_autcompletion(GList *, WebSettings *);
 void dwb_comp_autocomplete(GList *, GdkEventKey *e);
 void dwb_comp_eval_autocompletion(void);
 
-void dwb_comp_complete(int);
+void dwb_comp_complete(CompletionType, int);
 void dwb_comp_complete_download(int back);
 
 #endif

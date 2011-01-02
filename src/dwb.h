@@ -111,6 +111,17 @@ typedef void (*void_func)(void*);
 typedef void (*S_Func)(void *, WebSettings *);
 typedef void *(*Content_Func)(const char *);
 
+typedef unsigned int CompletionType;
+#define COMP_NONE         0x00
+#define COMP_BOOKMARK     0x01
+#define COMP_HISTORY      0x02
+#define COMP_SETTINGS     0x03
+#define COMP_KEY          0x04
+#define COMP_COMMAND      0x05
+#define COMP_USERSCRIPT   0x06
+#define COMP_INPUT        0x07
+#define COMP_SEARCH       0x08
+
 /* ENUMS {{{*/
 enum _Mode {
   NormalMode          = 1<<0,
@@ -129,9 +140,8 @@ enum _Mode {
   KeyMode             = 1<<13,
   DownloadGetPath     = 1<<14,
   SaveSession         = 1<<15,
-  BookmarksMode       = 1<<16,
-  UserscriptMode      = 1<<17,
 };
+
 
 enum _ShowMessage {
   NeverSM = 0, 
@@ -514,6 +524,7 @@ GList * dwb_keymap_add(GList *, KeyValue );
 
 void dwb_save_settings(void);
 gboolean dwb_save_files(gboolean);
+CompletionType dwb_eval_completion_type(void);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);

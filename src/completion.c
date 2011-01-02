@@ -258,18 +258,21 @@ dwb_comp_get_key_completion(gboolean entry) {
 
 /* dwb_comp_complete {{{*/
 void 
-dwb_comp_complete(int back) {
+dwb_comp_complete(CompletionType type, int back) {
   View *v = CURRENT_VIEW();
   if ( !(dwb.state.mode & CompletionMode) ) {
     v->compbox = gtk_vbox_new(true, 0);
     gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
-    switch (dwb.state.mode) {
-      case SettingsMode:    dwb.comps.completions = dwb_comp_get_settings_completion(); break;
-      case KeyMode:         dwb.comps.completions = dwb_comp_get_key_completion(true); break;
-      case CommandMode:     dwb.comps.completions = dwb_comp_get_key_completion(false); break;
-      case BookmarksMode:   dwb.comps.completions = dwb_comp_get_simple_completion(dwb.fc.bookmarks); break;
-      case UserscriptMode:  dwb.comps.completions = dwb_comp_get_simple_completion(dwb.misc.userscripts); break;
-      default:              dwb.comps.completions = dwb_comp_get_normal_completion(); break;
+    switch (type) {
+      case COMP_SETTINGS:    dwb.comps.completions = dwb_comp_get_settings_completion(); break;
+      case COMP_KEY:         dwb.comps.completions = dwb_comp_get_key_completion(true); break;
+      case COMP_COMMAND:     dwb.comps.completions = dwb_comp_get_key_completion(false); break;
+      case COMP_BOOKMARK:    dwb.comps.completions = dwb_comp_get_simple_completion(dwb.fc.bookmarks); break;
+      case COMP_HISTORY:     dwb.comps.completions = dwb_comp_get_simple_completion(dwb.fc.history); break;
+      case COMP_USERSCRIPT:  dwb.comps.completions = dwb_comp_get_simple_completion(dwb.misc.userscripts); break;
+      case COMP_INPUT:       dwb.comps.completions = dwb_comp_get_simple_completion(dwb.fc.commands); break;
+      case COMP_SEARCH:      dwb.comps.completions = dwb_comp_get_simple_completion(dwb.fc.se_completion); break;
+      default:               dwb.comps.completions = dwb_comp_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {
       return;

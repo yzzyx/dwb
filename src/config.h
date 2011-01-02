@@ -76,6 +76,7 @@ static KeyValue KEYS[] = {
   { "paste_primary_nv",         {   "PP",           0, }, }, 
   { "paste_nw",                 {   "wp",           0, }, }, 
   { "paste_primary_nw",         {   "wP",           0, }, }, 
+  // entry  shortcuts
   { "entry_delete_word",        {   "w",            GDK_CONTROL_MASK, }, }, 
   { "entry_delete_letter",      {   "h",            GDK_CONTROL_MASK, }, }, 
   { "entry_delete_line",        {   "u",            GDK_CONTROL_MASK, }, }, 
@@ -84,6 +85,12 @@ static KeyValue KEYS[] = {
   { "entry_history_forward",    {   "j",            GDK_CONTROL_MASK, }, }, 
   { "entry_history_back",       {   "k",            GDK_CONTROL_MASK, }, }, 
   { "download_set_execute",     {   "x",            GDK_CONTROL_MASK, }, }, 
+  { "complete_history",         {   "H",         GDK_CONTROL_MASK,     },  },  
+  { "complete_bookmarks",       {   "B",         GDK_CONTROL_MASK,     },  },  
+  { "complete_commands",        {   "I",         GDK_CONTROL_MASK,     },  },  
+  { "complete_searchengines",   {   "S",         GDK_CONTROL_MASK,     },  },  
+  { "complete_userscript",      {   "U",         GDK_CONTROL_MASK,     },  },  
+
   { "download_hint",            {   "gd",           0 }, },
   { "save_session",             {   "ZZ",           0 }, }, 
   { "save_named_session",       {   "gZZ",           0 }, }, 

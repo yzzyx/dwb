@@ -894,10 +894,21 @@ dwb_com_bookmarks(Arg *arg) {
   if (dwb.state.nv == OpenNormal)
     dwb.state.nv = arg->n;
   dwb_focus_entry();
-  dwb.state.mode = BookmarksMode;
-  dwb_comp_complete(0);
+  dwb_comp_complete(COMP_BOOKMARK, 0);
 
   return true;
+}/*}}}*/
+
+/* dwb_com_history{{{*/
+gboolean  
+dwb_com_complete_type(Arg *arg) {
+  if (!g_list_length(dwb.fc.history)) {
+    return false;
+  }
+  dwb_comp_complete(arg->n, 0);
+
+  return true;
+
 }/*}}}*/
 
 /* dwb_com_toggle_ugly {{{*/
@@ -1021,8 +1032,7 @@ dwb_com_execute_userscript(Arg *arg) {
   }
   else {
     dwb_focus_entry();
-    dwb.state.mode = UserscriptMode;
-    dwb_comp_complete(0);
+    dwb_comp_complete(COMP_USERSCRIPT, 0);
   }
 
   return true;

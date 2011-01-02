@@ -21,6 +21,7 @@ gboolean dwb_com_focus_input(Arg *);
 gboolean dwb_com_focus_next(Arg *);
 gboolean dwb_com_focus_nth_view(Arg *);
 gboolean dwb_com_focus_prev(Arg *);
+gboolean dwb_com_complete_type(Arg *);
 gboolean dwb_com_history_back(Arg *);
 gboolean dwb_com_history_forward(Arg *);
 gboolean dwb_com_new_window_or_view(Arg *);

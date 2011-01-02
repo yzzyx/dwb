@@ -452,14 +452,14 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       dwb_comp_clean_path_completion();
     }
   }
-  else if (mode & CompletionMode && e->keyval != GDK_Tab && e->keyval != GDK_ISO_Left_Tab && !e->is_modifier) {
+  else if (mode & CompletionMode && e->keyval != GDK_Tab && e->keyval != GDK_ISO_Left_Tab && !e->is_modifier && !CLEAN_STATE(e)) {
     dwb_comp_clean_completion();
   }
   else if (mode == FindMode) {
     return false;
   }
   else if (DWB_TAB_KEY(e)) {
-    dwb_comp_complete(e->state & GDK_SHIFT_MASK);
+    dwb_comp_complete(dwb_eval_completion_type(), e->state & GDK_SHIFT_MASK);
     return true;
   }
   if (dwb_eval_editing_key(e)) {
