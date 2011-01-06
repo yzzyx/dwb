@@ -1217,6 +1217,8 @@ dwb_grab_focus(GList *gl) {
   dwb_view_set_active_style(gl);
   dwb_focus_scroll(gl);
   dwb_update_status(gl);
+  
+  webkit_web_view_execute_script(WEBVIEW(gl), dwb.misc.scripts);
 }/*}}}*/
 
 /* dwb_new_window(Arg *arg) {{{*/

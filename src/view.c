@@ -102,7 +102,7 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
   else if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
-  else if (!(strcmp(message, "_dwb_input_mode_"))) {
+  else if (gl == dwb.state.fview && !(strcmp(message, "_dwb_input_mode_"))) {
     dwb_insert_mode(NULL);
   }
   if (!strcmp(message, "_dwb_no_input_")) {
