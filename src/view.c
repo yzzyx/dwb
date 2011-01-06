@@ -102,7 +102,7 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
   else if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
-  else if (!(strcmp(sourceid, "_dwb_input_"))) {
+  else if (!(strcmp(message, "_dwb_input_mode_"))) {
     dwb_insert_mode(NULL);
   }
   if (!strcmp(message, "_dwb_no_input_")) {
@@ -343,7 +343,8 @@ dwb_web_view_script_alert_cb(WebKitWebView *web, WebKitWebFrame *frame, char *me
 static void 
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
-  webkit_web_view_execute_script(web, dwb.misc.scripts);
+    webkit_web_view_execute_script(web, dwb.misc.systemscripts);
+    webkit_web_view_execute_script(web, dwb.misc.scripts);
 }/*}}}*/
 
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
@@ -384,6 +385,10 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         dwb_update_status(gl);
       dwb_prepend_navigation(gl, &dwb.fc.history);
       dwb_clean_load_end(gl);
+      // reload all user scripts, so the active element can automatically be
+      // detected. 
+      // TODO remove with new webkit version 
+      webkit_web_view_execute_script(web, dwb.misc.scripts);
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);

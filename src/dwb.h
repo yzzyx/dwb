@@ -415,6 +415,7 @@ struct _Gui {
 struct _Misc {
   const char *name;
   const char *prog_path;
+  char *systemscripts;
   char *scripts;
   const char *profile;
   const char *default_search;

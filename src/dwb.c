@@ -840,7 +840,7 @@ dwb_clean_buffer(GList *gl) {
 /* dwb_reload_scripts(GList *,  WebSettings  *s) {{{*/
 static void 
 dwb_reload_scripts(GList *gl, WebSettings *s) {
-  FREE(dwb.misc.scripts);
+  FREE(dwb.misc.systemscripts);
   dwb_init_scripts();
   dwb_com_reload(NULL);
 }/*}}}*/
@@ -2050,11 +2050,13 @@ dwb_init_scripts() {
   // init system scripts
   char *dir = NULL;
   dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
+  dwb.misc.scripts = g_strdup(buffer->str);
+  g_string_truncate(buffer, 0);
   if ( (dir = dwb_util_get_data_dir("scripts")) ) {
     dwb_util_get_directory_content(&buffer, dir);
     g_free(dir);
   }
-  dwb.misc.scripts = buffer->str;
+  dwb.misc.systemscripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/
 
