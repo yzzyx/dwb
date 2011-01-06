@@ -105,6 +105,9 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
   else if (gl == dwb.state.fview && !(strcmp(message, "_dwb_input_mode_"))) {
     dwb_insert_mode(NULL);
   }
+  else if (gl == dwb.state.fview && !(strcmp(message, "_dwb_normal_mode_"))) {
+    dwb_normal_mode(false);
+  }
   if (!strcmp(message, "_dwb_no_input_")) {
     dwb_set_error_message(gl, "No input found in current context");
   }

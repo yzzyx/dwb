@@ -1217,7 +1217,8 @@ dwb_grab_focus(GList *gl) {
   dwb_view_set_active_style(gl);
   dwb_focus_scroll(gl);
   dwb_update_status(gl);
-  
+ 
+  // TODO remove with new webkit version
   webkit_web_view_execute_script(WEBVIEW(gl), dwb.misc.scripts);
 }/*}}}*/
 
@@ -1490,10 +1491,17 @@ void
 dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
+  if (mode & NormalMode) {
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_blur()");
+  }
+
+  if (dwb.state.mode == NormalMode) 
+    return;
+
   if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_clear()");
   }
-  if (mode  == InsertMode) {
+  else if (mode  == InsertMode) {
     dwb_view_modify_style(dwb.state.fview, &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   }
@@ -1506,14 +1514,11 @@ dwb_normal_mode(gboolean clean) {
   if (mode & AutoComplete) {
     dwb_comp_clean_autocompletion();
   }
-
   dwb_focus_scroll(dwb.state.fview);
+
 
   if (clean) {
     dwb_clean_buffer(dwb.state.fview);
-  }
-  if (mode & NormalMode) {
-    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_blur()");
   }
 
   webkit_web_view_unmark_text_matches(CURRENT_WEBVIEW());
