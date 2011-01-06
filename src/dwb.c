@@ -1491,13 +1491,6 @@ void
 dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
-  if (mode & NormalMode) {
-    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_blur()");
-  }
-
-  if (dwb.state.mode == NormalMode) 
-    return;
-
   if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_clear()");
   }
@@ -1516,6 +1509,9 @@ dwb_normal_mode(gboolean clean) {
   }
   dwb_focus_scroll(dwb.state.fview);
 
+  if (mode & NormalMode) {
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_blur()");
+  }
 
   if (clean) {
     dwb_clean_buffer(dwb.state.fview);
