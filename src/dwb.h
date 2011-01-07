@@ -151,6 +151,11 @@ typedef unsigned int CompletionType;
 #define COMP_INPUT        0x07
 #define COMP_SEARCH       0x08
 
+typedef unsigned int TabBarVisible;
+#define HIDE_TB_NEVER     0x02
+#define HIDE_TB_ALWAYS    0x03
+#define HIDE_TB_TILED     0x05
+
 /* ENUMS {{{*/
 enum _Mode {
   NormalMode          = 1<<0,
@@ -320,6 +325,8 @@ struct _State {
   DownloadAction dl_action;
   char *download_command;
   char *mimetype_request;
+
+  TabBarVisible tabbar_visible;
 };
 
 struct _WebSettings {
@@ -527,6 +534,8 @@ void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
 char * dwb_execute_script(const char *, gboolean);
 void dwb_resize(double );
+void dwb_toggle_tabbar(void);
+
 void dwb_grab_focus(GList *);
 void dwb_source_remove(GList *);
 gboolean dwb_handle_mail(const char *uri);

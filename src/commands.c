@@ -511,6 +511,7 @@ dwb_com_toggle_maximized(Arg *arg) {
     g_list_foreach(dwb.state.views,  (GFunc)dwb_com_maximized_show, NULL);
   }
   dwb_resize(dwb.state.size);
+  dwb_toggle_tabbar();
 }/*}}}*/
 
 

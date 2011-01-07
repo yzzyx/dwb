@@ -39,8 +39,10 @@ static void dwb_set_content_block_regex(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_adblock(GList *, WebSettings *);
+static void dwb_set_hide_tabbar(GList *, WebSettings *);
 
 static void dwb_clean_buffer(GList *);
+static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 
 static gboolean dwb_command_mode(Arg *arg);
 static void dwb_reload_scripts(GList *,  WebSettings *);
@@ -264,6 +266,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
   { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
   { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
+  { { "hide-tabbar",                             "Hide tabbar (never, always, tiled)", },                      false, true,  Char,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar, },
 
   { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#53868b"         }, (S_Func) dwb_init_style, },
   { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
@@ -339,6 +342,13 @@ static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
   View *v = gl->data;
   v->status->adblocker = s->arg.b;
+}/*}}}*/
+
+/* dwb_set_dummy{{{*/
+static void
+dwb_set_hide_tabbar(GList *gl, WebSettings *s) {
+  dwb.state.tabbar_visible = dwb_eval_tabbar_visible(s->arg.p);
+  dwb_toggle_tabbar();
 }/*}}}*/
 
 /* dwb_set_startpage(GList *l, WebSettings *){{{*/
@@ -624,6 +634,34 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+static TabBarVisible 
+dwb_eval_tabbar_visible(const char *arg) {
+  if (!strcasecmp(arg, "never")) {
+    return HIDE_TB_NEVER;
+  }
+  else if (!strcasecmp(arg, "always")) {
+    return HIDE_TB_ALWAYS;
+  }
+  else if (!strcasecmp(arg, "tiled")) {
+    return HIDE_TB_TILED;
+  }
+  return 0;
+}
+void
+dwb_toggle_tabbar(void) {
+  gboolean visible = gtk_widget_get_visible(dwb.gui.topbox);
+  if (visible ) {
+    if (dwb.state.tabbar_visible != HIDE_TB_NEVER && 
+        (dwb.state.tabbar_visible == HIDE_TB_ALWAYS || (HIDE_TB_TILED && !(dwb.state.layout & Maximized)))) {
+      gtk_widget_hide(dwb.gui.topbox);
+    }
+  }
+  else if (dwb.state.tabbar_visible != HIDE_TB_ALWAYS && 
+      (dwb.state.tabbar_visible == HIDE_TB_NEVER || (HIDE_TB_TILED && (dwb.state.layout & Maximized)))) {
+      gtk_widget_show(dwb.gui.topbox);
+  }
+}
+/* dwb_eval_completion_type {{{*/
 CompletionType 
 dwb_eval_completion_type(void) {
   switch (dwb.state.mode) {
@@ -632,7 +670,7 @@ dwb_eval_completion_type(void) {
     case CommandMode:   return COMP_COMMAND;
     default:            return COMP_NONE;
   }
-}
+}/*}}}*/
 
 /* dwb_clean_load_end(GList *) {{{*/
 void 
@@ -2177,6 +2215,7 @@ dwb_init_gui() {
 
   gtk_widget_show(dwb.gui.vbox);
   gtk_widget_show(dwb.gui.window);
+
 } /*}}}*/
 
 /* dwb_init_file_content {{{*/
@@ -2315,6 +2354,7 @@ dwb_init_vars() {
   dwb.misc.factor = GET_DOUBLE("factor");
   dwb.misc.startpage = GET_CHAR("startpage");
   dwb.misc.content_block_regex = GET_CHAR("content-block-regex");
+  dwb.state.tabbar_visible = dwb_eval_tabbar_visible(GET_CHAR("hide-tabbar"));
 
   dwb.state.complete_history = GET_BOOL("complete-history");
   dwb.state.complete_bookmarks = GET_BOOL("complete-bookmarks");
@@ -2363,6 +2403,7 @@ static void dwb_init() {
   else {
     dwb_add_view(NULL);
   }
+  dwb_toggle_tabbar();
 } /*}}}*/ /*}}}*/
 
 /* FIFO {{{*/
