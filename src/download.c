@@ -151,7 +151,7 @@ dwb_dl_status_cb(WebKitDownload *download) {
     GList *list = dwb_dl_get_download_label(download);
     if (list) {
       DwbDownload *label = list->data;
-      if (label->action == Execute && status == WEBKIT_DOWNLOAD_STATUS_FINISHED) {
+      if (label->action == DL_ACTION_EXECUTE && status == WEBKIT_DOWNLOAD_STATUS_FINISHED) {
         dwb_dl_spawn(label);
       }
       gtk_widget_destroy(label->event);
@@ -229,7 +229,7 @@ dwb_dl_start() {
     filename = "dwb_download";
   }
 
-  if (dwb.state.dl_action == Execute) {
+  if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
     fullpath = g_build_filename("file:///tmp", filename, NULL);
   }
   else {
@@ -245,7 +245,7 @@ dwb_dl_start() {
     }
   }
 
-  if (external && dwb.state.dl_action == Download) {
+  if (external && dwb.state.dl_action == DL_ACTION_DOWNLOAD) {
     const char *uri = webkit_download_get_uri(dwb.state.download);
     command = dwb_get_download_command(uri, fullpath);
     if (!g_spawn_command_line_async(command, NULL)) {
@@ -265,7 +265,7 @@ dwb_dl_start() {
     webkit_download_start(dwb.state.download);
   }
   FREE(lastdir);
-  if (dwb.state.dl_action != Execute) {
+  if (dwb.state.dl_action != DL_ACTION_EXECUTE) {
     lastdir = g_strdup(path);
   }
 
@@ -302,11 +302,11 @@ void
 dwb_dl_get_path(GList *gl, WebKitDownload *d) {
   char *command;
   dwb_focus_entry();
-  dwb.state.mode = DownloadGetPath;
+  dwb.state.mode = DOWNLOAD_GET_PATH;
   dwb.state.download = d;
 
   if ( dwb.state.mimetype_request && (command = dwb_get_command_from_mimetype(dwb.state.mimetype_request)) ) {
-    dwb.state.dl_action = Execute;
+    dwb.state.dl_action = DL_ACTION_EXECUTE;
     dwb_dl_entry_set_spawn_command(command);
   }
   else {
@@ -317,13 +317,13 @@ dwb_dl_get_path(GList *gl, WebKitDownload *d) {
 /* dwb_dl_set_execute {{{*/
 void 
 dwb_dl_set_execute(Arg *arg) {
-  if (dwb.state.mode == DownloadGetPath) {
-    if (dwb.state.dl_action == Download) {
-      dwb.state.dl_action = Execute;
+  if (dwb.state.mode == DOWNLOAD_GET_PATH) {
+    if (dwb.state.dl_action == DL_ACTION_DOWNLOAD) {
+      dwb.state.dl_action = DL_ACTION_EXECUTE;
       dwb_dl_entry_set_spawn_command(NULL);
     }
     else {
-      dwb.state.dl_action = Download;
+      dwb.state.dl_action = DL_ACTION_DOWNLOAD;
       dwb_dl_entry_set_directory();
     }
   }

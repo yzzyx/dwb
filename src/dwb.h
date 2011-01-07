@@ -69,7 +69,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" onchange=\"get_value(this);\" %s>\n</div>\n"
 #define HTML_DIV_END "</div>\n"
 /*}}}*/
-#define INSERT_MODE "Insert Mode"
+#define INSERT "Insert Mode"
 
 #define NO_URL                      "No URL in current context"
 #define NO_HINTS                    "No Hints in current context"
@@ -84,7 +84,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 
 #define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
 #define CLEAN_SHIFT(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_LOCK_MASK))
-#define CLEAN_COMP_MODE(X)          (X & ~(CompletionMode) & ~(AutoComplete))
+#define CLEAN_COMP_MODE(X)          (X & ~(COMPLETION_MODE) & ~(AUTO_COMPLETE))
 
 #define GET_TEXT()                  (gtk_entry_get_text(GTK_ENTRY(dwb.gui.entry)))
 #define CURRENT_VIEW()              ((View*)dwb.state.fview->data)
@@ -156,84 +156,68 @@ typedef unsigned int TabBarVisible;
 #define HIDE_TB_ALWAYS    0x03
 #define HIDE_TB_TILED     0x05
 
-/* ENUMS {{{*/
-enum _Mode {
-  NormalMode          = 1<<0,
-  InsertMode          = 1<<1,
-  OpenMode            = 1<<2,
-  QuickmarkSave       = 1<<3,
-  QuickmarkOpen       = 1<<4, 
-  HintMode            = 1<<5,
-  FindMode            = 1<<6,
-  CompletionMode      = 1<<7,
-  AutoComplete        = 1<<8,
-  CommandMode         = 1<<9,
-  SearchFieldMode     = 1<<10,
-  SearchKeywordMode   = 1<<11,
-  SettingsMode        = 1<<12,
-  KeyMode             = 1<<13,
-  DownloadGetPath     = 1<<14,
-  SaveSession         = 1<<15,
-};
+typedef unsigned int Mode;
+#define NORMAL_MODE           1<<0
+#define INSERT_MODE           1<<1
+#define QUICK_MARK_SAVE       1<<3
+#define QUICK_MARK_OPEN       1<<4 
+#define HINT_MODE             1<<5
+#define FIND_MODE             1<<6
+#define COMPLETION_MODE       1<<7
+#define AUTO_COMPLETE         1<<8
+#define COMMAND_MODE          1<<9
+#define SEARCH_FIELD_MODE     1<<10
+#define SETTINGS_MODE         1<<12
+#define KEY_MODE              1<<13
+#define DOWNLOAD_GET_PATH     1<<14
+#define SAVE_SESSION          1<<15
 
 
-enum _ShowMessage {
-  NeverSM = 0, 
-  AlwaysSM, 
-  PostSM,
-};
+typedef unsigned int ShowMessage;
+#define NEVER_SM      0x00 
+#define ALWAYS_SM     0x01 
+#define POST_SM       0x02
 
-enum _Open {
-  OpenNormal = 0, 
-  OpenNewView,
-  OpenNewWindow,
-  OpenDownload,
-};
+typedef unsigned int Open;
+#define OPEN_NORMAL      0x00 
+#define OPEN_NEW_VIEW    0x01
+#define OPEN_NEW_WINDOW  0x02
+#define OPEN_DOWNLOAD    0x03
 
-enum _Layout {
-  NormalLayout = 0,
-  BottomStack = 1<<0, 
-  Maximized = 1<<1, 
-};
+typedef unsigned int Layout;
+#define NORMAL_LAYOUT    0
+#define BOTTOM_STACK     1<<0 
+#define MAXIMIZED        1<<1 
+
+typedef unsigned int DwbType;
+#define CHAR        0x01
+#define INTEGER     0x02
+#define DOUBLE      0x03
+#define BOOLEAN     0x04
+#define COLOR_CHAR  0x05
+
+typedef unsigned int SettingsScope;
+#define APPLY_GLOBAL    0x01
+#define APPLY_PER_VIEW  0x02
+
+typedef unsigned int DownloadAction;
+#define DL_ACTION_DOWNLOAD  0x01
+#define DL_ACTION_EXECUTE   0x02
 
 enum _Direction {
-  Up = GDK_SCROLL_UP,
-  Down = GDK_SCROLL_DOWN,
-  Left = GDK_SCROLL_LEFT, 
-  Right = GDK_SCROLL_RIGHT, 
-  HalfPageUp,
-  HalfPageDown,
-  PageUp,
-  PageDown, 
-  Top,
-  Bottom,
-};
-enum _DwbType {
-  Char, 
-  Integer,
-  Double,
-  Boolean, 
-  Pointer, 
-  ColorChar,
-};
-enum _SettingsScope {
-  Global,
-  PerView,
-};
-enum _DownloadAction  {
-  Download,
-  Execute,
-};
-typedef enum _DownloadAction DownloadAction;
+  SCROLL_UP             = GDK_SCROLL_UP,
+  SCROLL_DOWN           = GDK_SCROLL_DOWN,
+  SCROLL_LEFT           = GDK_SCROLL_LEFT, 
+  SCROLL_RIGHT          = GDK_SCROLL_RIGHT, 
+  SCROLL_HALF_PAGE_UP,
+  SCROLL_HALF_PAGE_DOWN,
+  SCROLL_PAGE_UP,
+  SCROLL_PAGE_DOWN, 
+  SCROLL_TOP,
+  SCROLL_BOTTOM,
+} Direction;
 /*}}}*/
 
-typedef enum _Mode Mode;
-typedef enum _Open Open;
-typedef enum _Layout Layout;
-typedef enum _Direction Direction;
-typedef enum _DwbType DwbType;
-typedef enum _SettingsScope SettingsScope;
-typedef enum _ShowMessage ShowMessage;
 
 /* STRUCTS {{{*/
 struct _Navigation {
@@ -440,7 +424,9 @@ struct _Misc {
   char *settings_border;
   int argc;
   char **argv;
-  gboolean single;
+
+  gboolean tabbed_browsing;
+
 
   char *startpage;
   char *download_com;

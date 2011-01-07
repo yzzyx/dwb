@@ -85,249 +85,250 @@ static char *restore = NULL;
 
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
-  { { "add_view",              "Add a new view",                    }, 1, (Func)dwb_add_view,                NULL,                              AlwaysSM,     { .p = NULL }, },
-  { { "allow_cookie",          "Cookie allowed",                    }, 0, (Func)dwb_com_allow_cookie,        "No cookie in current context",    PostSM, },
-  { { "bookmark",              "Bookmark current page",             }, 1, (Func)dwb_com_bookmark,            NO_URL,                            PostSM, },
-  { { "bookmarks",             "Bookmarks",                         }, 0, (Func)dwb_com_bookmarks,           "No Bookmarks",                    NeverSM,     { .n = OpenNormal }, }, 
-  { { "bookmarks_nv",          "Bookmarks new view",                }, 0, (Func)dwb_com_bookmarks,           "No Bookmarks",                    NeverSM,     { .n = OpenNewView }, },
-  { { "bookmarks_nw",          "Bookmarks new window",              }, 0, (Func)dwb_com_bookmarks,           "No Bookmarks",                    NeverSM,     { .n = OpenNewWindow}, }, 
-  { { "new_view",              "New view for next navigation",      }, 0, (Func)dwb_com_new_window_or_view,  NULL,                              NeverSM,     { .n = OpenNewView}, }, 
-  { { "new_window",            "New window for next navigation",    }, 0, (Func)dwb_com_new_window_or_view,  NULL,                              NeverSM,     { .n = OpenNewWindow}, }, 
-  { { "command_mode",          "Enter command mode",                }, 0, (Func)dwb_command_mode,            NULL,                              PostSM, },
-  { { "decrease_master",       "Decrease master area",              }, 1, (Func)dwb_com_resize_master,       "Cannot decrease further",         AlwaysSM,    { .n = 5 } },
-  { { "download_hint",         "Download via hints",                }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenDownload }, },
-  { { "find_backward",         "Find Backward ",                    }, 0, (Func)dwb_com_find,                NO_URL,                            NeverSM,     { .b = false }, },
-  { { "find_forward",          "Find Forward ",                     }, 0, (Func)dwb_com_find,                NO_URL,                            NeverSM,     { .b = true }, },
-  { { "find_next",             "Find next",                         }, 0, (Func)dwb_search,                  "No matches",                      AlwaysSM,     { .b = true }, },
-  { { "find_previous",         "Find previous",                     }, 0, (Func)dwb_search,                  "No matches",                      AlwaysSM,     { .b = false }, },
-  { { "focus_input",           "Focus input",                       }, 1, (Func)dwb_com_focus_input,        "No input found in current context",      AlwaysSM, },
-  { { "focus_next",            "Focus next view",                   }, 0, (Func)dwb_com_focus_next,          "No other view",                   AlwaysSM, },
-  { { "focus_prev",            "Focus previous view",               }, 0, (Func)dwb_com_focus_prev,          "No other view",                   AlwaysSM, },
-  { { "focus_nth_view",        "Focus nth view",                    }, 0, (Func)dwb_com_focus_nth_view,       "No such view",                   AlwaysSM,  { 0 } },
-  { { "hint_mode",             "Follow hints",                      }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNormal }, },
-  { { "hint_mode_nv",          "Follow hints (new view)",           }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewView }, },
-  { { "hint_mode_nw",          "Follow hints (new window)",         }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NeverSM,    { .n = OpenNewWindow }, },
-  { { "history_back",          "Go Back",                           }, 1, (Func)dwb_com_history_back,        "Beginning of History",            AlwaysSM, },
-  { { "history_forward",       "Go Forward",                        }, 1, (Func)dwb_com_history_forward,     "End of History",                  AlwaysSM, },
-  { { "increase_master",       "Increase master area",              }, 1, (Func)dwb_com_resize_master,       "Cannot increase further",         AlwaysSM,    { .n = -5 } },
-  { { "insert_mode",           "Insert Mode",                       }, 0, (Func)dwb_insert_mode,             NULL,                              AlwaysSM, },
-  { { "open",                  "Open",                              }, 1, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNormal,      .p = NULL } },
-  { { "open_nv",               "Viewopen",                          }, 1, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewView,     .p = NULL } },
-  { { "open_nw",               "Winopen",                           }, 1, (Func)dwb_com_open,                NULL,                              NeverSM,   { .n = OpenNewWindow,     .p = NULL } },
-  { { "open_quickmark",        "Quickmark",                         }, 0, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,   { .n = QuickmarkOpen, .i=OpenNormal }, },
-  { { "open_quickmark_nv",     "Quickmark-new-view",                }, 0, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewView }, },
-  { { "open_quickmark_nw",     "Quickmark-new-window",              }, 0, (Func)dwb_com_quickmark,           NULL,                              NeverSM,    { .n = QuickmarkOpen, .i=OpenNewWindow }, },
-  { { "open_start_page",       "Open startpage",                    }, 1, (Func)dwb_com_open_startpage,      "No startpage set",                AlwaysSM, },
-  { { "push_master",           "Push to master area",               }, 1, (Func)dwb_com_push_master,         "No other view",                   AlwaysSM, },
-  { { "reload",                "Reload",                            }, 1, (Func)dwb_com_reload,              NULL,                              AlwaysSM, },
-  { { "remove_view",           "Close view",                        }, 1, (Func)dwb_com_remove_view,         NULL,                              AlwaysSM, },
-  { { "save_quickmark",        "Save a quickmark for this page",    }, 0, (Func)dwb_com_quickmark,           NO_URL,                            NeverSM,    { .n = QuickmarkSave }, },
-  { { "save_search_field",     "Add a new searchengine",            }, 0, (Func)dwb_com_add_search_field,    "No input in current context",     PostSM, },
-  { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, (Func)dwb_com_scroll,              NULL,                              AlwaysSM,    { .n = Bottom }, },
-  { { "scroll_down",           "Scroll down",                       }, 0, (Func)dwb_com_scroll,              "Bottom of the page",              AlwaysSM,    { .n = Down, }, },
-  { { "scroll_left",           "Scroll left",                       }, 0, (Func)dwb_com_scroll,              "Left side of the page",           AlwaysSM,    { .n = Left }, },
-  { { "scroll_halfpage_down",  "Scroll one-half page down",         }, 0, (Func)dwb_com_scroll,              "Bottom of the page",              AlwaysSM,    { .n = HalfPageDown, }, },
-  { { "scroll_halfpage_up",    "Scroll one-half page up",           }, 0, (Func)dwb_com_scroll,              "Top of the page",                 AlwaysSM,    { .n = HalfPageUp, }, },
-  { { "scroll_page_down",      "Scroll one page down",              }, 0, (Func)dwb_com_scroll,              "Bottom of the page",              AlwaysSM,    { .n = PageDown, }, },
-  { { "scroll_page_up",        "Scroll one page up",                }, 0, (Func)dwb_com_scroll,              "Top of the page",                 AlwaysSM,    { .n = PageUp, }, },
-  { { "scroll_right",          "Scroll left",                       }, 0, (Func)dwb_com_scroll,              "Right side of the page",          AlwaysSM,    { .n = Right }, },
-  { { "scroll_top",            "Scroll to the top of the page",     }, 1, (Func)dwb_com_scroll,              NULL,                              AlwaysSM,    { .n = Top }, },
-  { { "scroll_up",             "Scroll up",                         }, 0, (Func)dwb_com_scroll,              "Top of the page",                 AlwaysSM,    { .n = Up, }, },
-  { { "set_global_setting",    "Set global property",               }, 0, (Func)dwb_com_set_setting,         NULL,                              NeverSM,    { .n = Global } },
-  { { "set_key",               "Set keybinding",                    }, 0, (Func)dwb_com_set_key,             NULL,                              NeverSM,    { 0 } },
-  { { "set_setting",           "Set property",                      }, 0, (Func)dwb_com_set_setting,         NULL,                              NeverSM,    { .n = PerView } },
-  { { "show_global_settings",  "Show global settings",              }, 1, (Func)dwb_com_show_settings,       NULL,                              AlwaysSM,    { .n = Global } },
-  { { "show_keys",             "Key configuration",                 }, 1, (Func)dwb_com_show_keys,           NULL,                              AlwaysSM, },
-  { { "show_settings",         "Settings",                          }, 1, (Func)dwb_com_show_settings,       NULL,                              AlwaysSM,    { .n = PerView } },
-  { { "toggle_bottomstack",    "Toggle bottomstack",                }, 1, (Func)dwb_com_set_orientation,     NULL,                              AlwaysSM, },
-  { { "toggle_encoding",       "Toggle Custom encoding",            }, 1, (Func)dwb_com_toggle_custom_encoding,    NULL,                        PostSM, },
-  { { "toggle_maximized",      "Toggle maximized",                  }, 1, (Func)dwb_com_toggle_maximized,    NULL,                              AlwaysSM, },
-  { { "view_source",           "View source",                       }, 1, (Func)dwb_com_view_source,         NULL,                              AlwaysSM, },
-  { { "zoom_in",               "Zoom in",                           }, 1, (Func)dwb_com_zoom_in,             "Cannot zoom in further",          AlwaysSM, },
-  { { "zoom_normal",           "Zoom 100%",                         }, 1, (Func)dwb_com_set_zoom_level,      NULL,                              AlwaysSM,    { .d = 1.0,   .p = NULL } },
-  { { "zoom_out",              "Zoom out",                          }, 1, (Func)dwb_com_zoom_out,            "Cannot zoom out further",         AlwaysSM, },
+  { { "add_view",              "Add a new view",                    }, 1, (Func)dwb_add_view,                NULL,                              ALWAYS_SM,     { .p = NULL }, },
+  { { "allow_cookie",          "Cookie allowed",                    }, 0, (Func)dwb_com_allow_cookie,        "No cookie in current context",    POST_SM, },
+  { { "bookmark",              "Bookmark current page",             }, 1, (Func)dwb_com_bookmark,            NO_URL,                            POST_SM, },
+  { { "bookmarks",             "Bookmarks",                         }, 0, (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
+  { { "bookmarks_nv",          "Bookmarks new view",                }, 0, (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
+  { { "bookmarks_nw",          "Bookmarks new window",              }, 0, (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
+  { { "new_view",              "New view for next navigation",      }, 0, (Func)dwb_com_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_VIEW}, }, 
+  { { "new_window",            "New window for next navigation",    }, 0, (Func)dwb_com_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
+  { { "command_mode",          "Enter command mode",                }, 0, (Func)dwb_command_mode,            NULL,                              POST_SM, },
+  { { "decrease_master",       "Decrease master area",              }, 1, (Func)dwb_com_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
+  { { "download_hint",         "Download via hints",                }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
+  { { "find_backward",         "Find Backward ",                    }, 0, (Func)dwb_com_find,                NO_URL,                            NEVER_SM,     { .b = false }, },
+  { { "find_forward",          "Find Forward ",                     }, 0, (Func)dwb_com_find,                NO_URL,                            NEVER_SM,     { .b = true }, },
+  { { "find_next",             "Find next",                         }, 0, (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = true }, },
+  { { "find_previous",         "Find previous",                     }, 0, (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = false }, },
+  { { "focus_input",           "Focus input",                       }, 1, (Func)dwb_com_focus_input,        "No input found in current context",      ALWAYS_SM, },
+  { { "focus_next",            "Focus next view",                   }, 0, (Func)dwb_com_focus_next,          "No other view",                   ALWAYS_SM, },
+  { { "focus_prev",            "Focus previous view",               }, 0, (Func)dwb_com_focus_prev,          "No other view",                   ALWAYS_SM, },
+  { { "focus_nth_view",        "Focus nth view",                    }, 0, (Func)dwb_com_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 } },
+  { { "hint_mode",             "Follow hints",                      }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL }, },
+  { { "hint_mode_nv",          "Follow hints (new view)",           }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW }, },
+  { { "hint_mode_nw",          "Follow hints (new window)",         }, 0, (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW }, },
+  { { "history_back",          "Go Back",                           }, 1, (Func)dwb_com_history_back,        "Beginning of History",            ALWAYS_SM, },
+  { { "history_forward",       "Go Forward",                        }, 1, (Func)dwb_com_history_forward,     "End of History",                  ALWAYS_SM, },
+  { { "increase_master",       "Increase master area",              }, 1, (Func)dwb_com_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
+  { { "insert_mode",           "Insert Mode",                       }, 0, (Func)dwb_insert_mode,             NULL,                              ALWAYS_SM, },
+  { { "open",                  "Open",                              }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
+  { { "open_nv",               "Viewopen",                          }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
+  { { "open_nw",               "Winopen",                           }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
+  { { "open_quickmark",        "Quickmark",                         }, 0, (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, },
+  { { "open_quickmark_nv",     "Quickmark-new-view",                }, 0, (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, },
+  { { "open_quickmark_nw",     "Quickmark-new-window",              }, 0, (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, },
+  { { "open_start_page",       "Open startpage",                    }, 1, (Func)dwb_com_open_startpage,      "No startpage set",                ALWAYS_SM, },
+  { { "push_master",           "Push to master area",               }, 1, (Func)dwb_com_push_master,         "No other view",                   ALWAYS_SM, },
+  { { "reload",                "Reload",                            }, 1, (Func)dwb_com_reload,              NULL,                              ALWAYS_SM, },
+  { { "remove_view",           "Close view",                        }, 1, (Func)dwb_com_remove_view,         NULL,                              ALWAYS_SM, },
+  { { "save_quickmark",        "Save a quickmark for this page",    }, 0, (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
+  { { "save_search_field",     "Add a new searchengine",            }, 0, (Func)dwb_com_add_search_field,    "No input in current context",     POST_SM, },
+  { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_BOTTOM }, },
+  { { "scroll_down",           "Scroll down",                       }, 0, (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_DOWN, }, },
+  { { "scroll_left",           "Scroll left",                       }, 0, (Func)dwb_com_scroll,              "Left side of the page",           ALWAYS_SM,    { .n = SCROLL_LEFT }, },
+  { { "scroll_halfpage_down",  "Scroll one-half page down",         }, 0, (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_DOWN, }, },
+  { { "scroll_halfpage_up",    "Scroll one-half page up",           }, 0, (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_UP, }, },
+  { { "scroll_page_down",      "Scroll one page down",              }, 0, (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_PAGE_DOWN, }, },
+  { { "scroll_page_up",        "Scroll one page up",                }, 0, (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_PAGE_UP, }, },
+  { { "scroll_right",          "Scroll left",                       }, 0, (Func)dwb_com_scroll,              "Right side of the page",          ALWAYS_SM,    { .n = SCROLL_RIGHT }, },
+  { { "scroll_top",            "Scroll to the top of the page",     }, 1, (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, },
+  { { "scroll_up",             "Scroll up",                         }, 0, (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, },
+  { { "set_global_setting",    "Set global property",               }, 0, (Func)dwb_com_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_GLOBAL } },
+  { { "set_key",               "Set keybinding",                    }, 0, (Func)dwb_com_set_key,             NULL,                              NEVER_SM,    { 0 } },
+  { { "set_setting",           "Set property",                      }, 0, (Func)dwb_com_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_PER_VIEW } },
+  { { "show_global_settings",  "Show global settings",              }, 1, (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_GLOBAL } },
+  { { "show_keys",             "Key configuration",                 }, 1, (Func)dwb_com_show_keys,           NULL,                              ALWAYS_SM, },
+  { { "show_settings",         "Settings",                          }, 1, (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_PER_VIEW } },
+  { { "toggle_bottomstack",    "Toggle bottomstack",                }, 1, (Func)dwb_com_set_orientation,     NULL,                              ALWAYS_SM, },
+  { { "toggle_encoding",       "Toggle Custom encoding",            }, 1, (Func)dwb_com_toggle_custom_encoding,    NULL,                        POST_SM, },
+  { { "toggle_maximized",      "Toggle maximized",                  }, 1, (Func)dwb_com_toggle_maximized,    NULL,                              ALWAYS_SM, },
+  { { "view_source",           "View source",                       }, 1, (Func)dwb_com_view_source,         NULL,                              ALWAYS_SM, },
+  { { "zoom_in",               "Zoom in",                           }, 1, (Func)dwb_com_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, },
+  { { "zoom_normal",           "Zoom 100%",                         }, 1, (Func)dwb_com_set_zoom_level,      NULL,                              ALWAYS_SM,    { .d = 1.0,   .p = NULL } },
+  { { "zoom_out",              "Zoom out",                          }, 1, (Func)dwb_com_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, },
   // yank and paste
-  { { "yank",                  "Yank",                              }, 1, (Func)dwb_com_yank,                 NO_URL,                 PostSM,  { .p = GDK_NONE } },
-  { { "yank_primary",          "Yank to Primary selection",         }, 1, (Func)dwb_com_yank,                 NO_URL,                 PostSM,  { .p = GDK_SELECTION_PRIMARY } },
-  { { "paste",                 "Paste",                             }, 1, (Func)dwb_com_paste,               "Clipboard is empty",    AlwaysSM, { .n = OpenNormal, .p = GDK_NONE } },
-  { { "paste_primary",         "Paste primary selection",           }, 1, (Func)dwb_com_paste,               "No primary selection",  AlwaysSM, { .n = OpenNormal, .p = GDK_SELECTION_PRIMARY } },
-  { { "paste_nv",              "Paste, new view",                   }, 1, (Func)dwb_com_paste,               "Clipboard is empty",    AlwaysSM, { .n = OpenNewView, .p = GDK_NONE } },
-  { { "paste_primary_nv",      "Paste primary selection, new view", }, 1, (Func)dwb_com_paste,               "No primary selection",  AlwaysSM, { .n = OpenNewView, .p = GDK_SELECTION_PRIMARY } },
-  { { "paste_nw",              "Paste, new window",                   }, 1, (Func)dwb_com_paste,             "Clipboard is empty",    AlwaysSM, { .n = OpenNewWindow, .p = GDK_NONE } },
-  { { "paste_primary_nw",      "Paste primary selection, new window", }, 1, (Func)dwb_com_paste,             "No primary selection",  AlwaysSM, { .n = OpenNewWindow, .p = GDK_SELECTION_PRIMARY } },
+  { { "yank",                  "Yank",                              }, 1, (Func)dwb_com_yank,                 NO_URL,                 POST_SM,  { .p = GDK_NONE } },
+  { { "yank_primary",          "Yank to Primary selection",         }, 1, (Func)dwb_com_yank,                 NO_URL,                 POST_SM,  { .p = GDK_SELECTION_PRIMARY } },
+  { { "paste",                 "Paste",                             }, 1, (Func)dwb_com_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_NONE } },
+  { { "paste_primary",         "Paste primary selection",           }, 1, (Func)dwb_com_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY } },
+  { { "paste_nv",              "Paste, new view",                   }, 1, (Func)dwb_com_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_NONE } },
+  { { "paste_primary_nv",      "Paste primary selection, new view", }, 1, (Func)dwb_com_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY } },
+  { { "paste_nw",              "Paste, new window",                   }, 1, (Func)dwb_com_paste,             "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_NONE } },
+  { { "paste_primary_nw",      "Paste primary selection, new window", }, 1, (Func)dwb_com_paste,             "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY } },
 
-  { { "save_session",          "Save current session", },              1, (Func)dwb_com_save_session,        NULL,                              AlwaysSM,  { .n = NormalMode } },
-  { { "save_named_session",    "Save current session with name", },    0, (Func)dwb_com_save_session,        NULL,                              PostSM,  { .n = SaveSession } },
-  { { "save",                  "Save all configuration files", },      1, (Func)dwb_com_save_files,        NULL,                              PostSM,  { .n = SaveSession } },
-  { { "undo",                  "Undo closing last tab", },             1, (Func)dwb_com_undo,              "No more closed views",                              PostSM },
+  { { "save_session",          "Save current session", },              1, (Func)dwb_com_save_session,        NULL,                              ALWAYS_SM,  { .n = NORMAL_MODE } },
+  { { "save_named_session",    "Save current session with name", },    0, (Func)dwb_com_save_session,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
+  { { "save",                  "Save all configuration files", },      1, (Func)dwb_com_save_files,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
+  { { "undo",                  "Undo closing last tab", },             1, (Func)dwb_com_undo,              "No more closed views",                              POST_SM },
 
   //Entry editing
-  { { "entry_delete_word",      "Delete word", },                      0,  (Func)dwb_com_entry_delete_word,            NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_delete_letter",    "Delete a single letter", },           0,  (Func)dwb_com_entry_delete_letter,          NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_delete_line",      "Delete to beginning of the line", },  0,  (Func)dwb_com_entry_delete_line,            NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_word_forward",     "Move cursor forward on word", },      0,  (Func)dwb_com_entry_word_forward,           NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_word_back",        "Move cursor back on word", },         0,  (Func)dwb_com_entry_word_back,              NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_history_back",     "Command history back", },             0,  (Func)dwb_com_entry_history_back,           NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "entry_history_forward",  "Command history forward", },          0,  (Func)dwb_com_entry_history_forward,        NULL,        AlwaysSM,  { 0 }, true, }, 
-  { { "download_set_execute",   "Complete binaries", },                0, (Func)dwb_dl_set_execute,        NULL,       AlwaysSM,  { 0 }, true, }, 
-  { { "complete_history",       "Complete browsing history", },       0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_HISTORY }, true, }, 
-  { { "complete_bookmarks",     "Complete bookmarks", },              0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_BOOKMARK }, true, }, 
-  { { "complete_commands",      "Complete command history", },        0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_INPUT }, true, }, 
-  { { "complete_searchengines", "Complete searchengines", },          0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_SEARCH }, true, }, 
-  { { "complete_userscript",    "Complete userscripts", },            0, (Func)dwb_com_complete_type,             NULL,     AlwaysSM,     { .n = COMP_USERSCRIPT }, true, }, 
+  { { "entry_delete_word",      "Delete word", },                      0,  (Func)dwb_com_entry_delete_word,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
+  { { "entry_delete_letter",    "Delete a single letter", },           0,  (Func)dwb_com_entry_delete_letter,          NULL,        ALWAYS_SM,  { 0 }, true, }, 
+  { { "entry_delete_line",      "Delete to beginning of the line", },  0,  (Func)dwb_com_entry_delete_line,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
+  { { "entry_word_forward",     "Move cursor forward on word", },      0,  (Func)dwb_com_entry_word_forward,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
+  { { "entry_word_back",        "Move cursor back on word", },         0,  (Func)dwb_com_entry_word_back,              NULL,        ALWAYS_SM,  { 0 }, true, }, 
+  { { "entry_history_back",     "Command history back", },             0,  (Func)dwb_com_entry_history_back,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
+  { { "entry_history_forward",  "Command history forward", },          0,  (Func)dwb_com_entry_history_forward,        NULL,        ALWAYS_SM,  { 0 }, true, }, 
+  { { "download_set_execute",   "Complete binaries", },                0, (Func)dwb_dl_set_execute,        NULL,       ALWAYS_SM,  { 0 }, true, }, 
+  { { "complete_history",       "Complete browsing history", },       0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_HISTORY }, true, }, 
+  { { "complete_bookmarks",     "Complete bookmarks", },              0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_BOOKMARK }, true, }, 
+  { { "complete_commands",      "Complete command history", },        0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_INPUT }, true, }, 
+  { { "complete_searchengines", "Complete searchengines", },          0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_SEARCH }, true, }, 
+  { { "complete_userscript",    "Complete userscripts", },            0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_USERSCRIPT }, true, }, 
 
-  { { "spell_checking",        "Setting: spell checking",         },   0, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-spell-checking" } },
-  { { "scripts",               "Setting: scripts",                },   1, (Func)dwb_com_toggle_property,     NULL,                              PostSM,    { .p = "enable-scripts" } },
-  { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-shrink-images" } },
-  { { "autoload_images",       "Toggle autoload images",          },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-load-images" } },
-  { { "autoresize_window",     "Toggle autoresize window",        },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "auto-resize-window" } },
-  { { "caret_browsing",        "Toggle caret browsing",           },   0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-caret-browsing" } },
-  { { "default_context_menu",  "Toggle enable default context menu",           }, 0, (Func)dwb_com_toggle_property,     NULL,       PostSM,    { .p = "enable-default-context-menu" } },
-  { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, (Func)dwb_com_toggle_property,     NULL,                  PostSM, { .p = "enable-file-acces-from-file-uris" } },
-  { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, (Func)dwb_com_toggle_property,  NULL,   PostSM, { .p = "enable-universal-file-acces-from-file-uris" } },
-  { { "java_applets",          "Toggle java applets",             }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-java-applets" } },
-  { { "plugins",               "Toggle plugins",                  }, 1, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-plugins" } },
-  { { "private_browsing",      "Toggle private browsing",         }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-private-browsing" } },
-  { { "page_cache",            "Toggle page cache",               }, 0, (Func)dwb_com_toggle_property,     NULL,                    PostSM,    { .p = "enable-page-cache" } },
-  { { "js_can_open_windows",   "Toggle Javascript can open windows automatically", }, 0, (Func)dwb_com_toggle_property,     NULL,   PostSM,    { .p = "javascript-can-open-windows-automatically" } },
-  { { "enforce_96_dpi",        "Toggle enforce a resolution of 96 dpi", },    0, (Func)dwb_com_toggle_property,     NULL,           PostSM,    { .p = "enforce-96-dpi" } },
-  { { "print_backgrounds",     "Toggle print backgrounds", },      0,    (Func)dwb_com_toggle_property,    NULL,                    PostSM,    { .p = "print-backgrounds" } },
-  { { "resizable_text_areas",  "Toggle resizable text areas", },   0,  (Func)dwb_com_toggle_property,      NULL,                    PostSM,    { .p = "resizable-text-areas" } },
-  { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   (Func)dwb_com_toggle_property,     NULL,              PostSM,    { .p = "tab-key-cycles-through-elements" } },
-  { { "proxy",                 "Toggle proxy",                    }, 1, (Func)dwb_com_toggle_proxy,        NULL,                    PostSM,    { 0 } },
-  { { "toggle_block_content",   "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_block_content, NULL,                  PostSM,    { 0 } }, 
-  { { "allow_content",         "Allow scripts for current domain in the current session" },  1, (Func) dwb_com_allow_content, NULL,              PostSM,    { 0 } }, 
-  { { "allow_plugins",         "Allow plugins for this domain" },      1, (Func) dwb_com_allow_plugins, NO_URL,              PostSM,    { 0 } }, 
-  { { "print",                 "Print page" },                         1, (Func) dwb_com_print, NULL,                             PostSM,    { 0 } }, 
-  { { "execute_userscript",    "Execute userscript" },                 1, (Func) dwb_com_execute_userscript, "No userscripts available",     NeverSM,    { 0 } }, 
+  { { "spell_checking",        "Setting: spell checking",         },   0, (Func)dwb_com_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
+  { { "scripts",               "Setting: scripts",                },   1, (Func)dwb_com_toggle_property,     NULL,                              POST_SM,    { .p = "enable-scripts" } },
+  { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-shrink-images" } },
+  { { "autoload_images",       "Toggle autoload images",          },   0, (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-load-images" } },
+  { { "autoresize_window",     "Toggle autoresize window",        },   0, (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-resize-window" } },
+  { { "caret_browsing",        "Toggle caret browsing",           },   0, (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-caret-browsing" } },
+  { { "default_context_menu",  "Toggle enable default context menu",           }, 0, (Func)dwb_com_toggle_property,     NULL,       POST_SM,    { .p = "enable-default-context-menu" } },
+  { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, (Func)dwb_com_toggle_property,     NULL,                  POST_SM, { .p = "enable-file-acces-from-file-uris" } },
+  { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, (Func)dwb_com_toggle_property,  NULL,   POST_SM, { .p = "enable-universal-file-acces-from-file-uris" } },
+  { { "java_applets",          "Toggle java applets",             }, 0, (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-java-applets" } },
+  { { "plugins",               "Toggle plugins",                  }, 1, (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-plugins" } },
+  { { "private_browsing",      "Toggle private browsing",         }, 0, (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-private-browsing" } },
+  { { "page_cache",            "Toggle page cache",               }, 0, (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-page-cache" } },
+  { { "js_can_open_windows",   "Toggle Javascript can open windows automatically", }, 0, (Func)dwb_com_toggle_property,     NULL,   POST_SM,    { .p = "javascript-can-open-windows-automatically" } },
+  { { "enforce_96_dpi",        "Toggle enforce a resolution of 96 dpi", },    0, (Func)dwb_com_toggle_property,     NULL,           POST_SM,    { .p = "enforce-96-dpi" } },
+  { { "print_backgrounds",     "Toggle print backgrounds", },      0,    (Func)dwb_com_toggle_property,    NULL,                    POST_SM,    { .p = "print-backgrounds" } },
+  { { "resizable_text_areas",  "Toggle resizable text areas", },   0,  (Func)dwb_com_toggle_property,      NULL,                    POST_SM,    { .p = "resizable-text-areas" } },
+  { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   (Func)dwb_com_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" } },
+  { { "proxy",                 "Toggle proxy",                    }, 1, (Func)dwb_com_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
+  { { "toggle_block_content",   "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_block_content, NULL,                  POST_SM,    { 0 } }, 
+  { { "allow_content",         "Allow scripts for current domain in the current session" },  1, (Func) dwb_com_allow_content, NULL,              POST_SM,    { 0 } }, 
+  { { "allow_plugins",         "Allow plugins for this domain" },      1, (Func) dwb_com_allow_plugins, NO_URL,              POST_SM,    { 0 } }, 
+  { { "print",                 "Print page" },                         1, (Func) dwb_com_print, NULL,                             POST_SM,    { 0 } }, 
+  { { "execute_userscript",    "Execute userscript" },                 1, (Func) dwb_com_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
 /* SETTINGS_ARRAY {{{*/
   // { name,                                     description,                                                  builtin, global, type,  argument,                  set-function
 static WebSettings DWB_SETTINGS[] = {
-  { { "auto-load-images",			                   "Autoload images", },                                         true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "auto-resize-window",			                 "Autoresize window", },                                       true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "auto-shrink-images",			                 "Autoshrink images", },                                       true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "cursive-font-family",			               "Cursive font family", },                                     true, false,  Char,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
-  { { "default-encoding",			                   "Default encoding", },                                        true, false,  Char,    { .p = NULL      }, (S_Func) dwb_webkit_setting, },
-  { { "default-font-family",			               "Default font family", },                                     true, false,  Char,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting, },
-  { { "default-font-size",			                 "Default font size", },                                       true, false,  Integer, { .i = 12                }, (S_Func) dwb_webkit_setting, },
-  { { "default-monospace-font-size",			       "Default monospace font size", },                             true, false,  Integer, { .i = 10                }, (S_Func) dwb_webkit_setting, },
-  { { "enable-caret-browsing",			             "Caret Browsing", },                                          true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "enable-default-context-menu",			       "Enable default context menu", },                             true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-developer-extras",			           "Enable developer extras",    },                              true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "enable-dom-paste",			                   "Enable DOM paste", },                                        true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "enable-file-access-from-file-uris",			 "File access from file uris", },                              true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-html5-database",			             "Enable HTML5-database" },                                    true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-html5-local-storage",			         "Enable HTML5 local storage", },                              true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-java-applet",			                 "Java Applets", },                                            true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-offline-web-application-cache",		 "Offline web application cache", },                           true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-page-cache",			                 "Page cache", },                                              true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "enable-plugins",			                     "Plugins", },                                                 true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-private-browsing",			           "Private Browsing", },                                        true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "enable-scripts",			                     "Script", },                                                  true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-site-specific-quirks",			       "Site specific quirks", },                                    true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "enable-spatial-navigation",			         "Spatial navigation", },                                      true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "enable-spell-checking",			             "Spell checking", },                                          true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "enable-universal-access-from-file-uris",	 "Universal access from file  uris", },                        true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enable-xss-auditor",			                 "XSS auditor", },                                             true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "enforce-96-dpi",			                     "Enforce 96 dpi", },                                          true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "fantasy-font-family",			               "Fantasy font family", },                                     true, false,  Char,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
-  { { "javascript-can-access-clipboard",			   "Javascript can access clipboard", },                         true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "javascript-can-open-windows-automatically", "Javascript can open windows automatically", },             true, false,  Boolean, { .b = false             }, (S_Func) dwb_webkit_setting, },
-  { { "minimum-font-size",			                 "Minimum font size", },                                       true, false,  Integer, { .i = 5                 }, (S_Func) dwb_webkit_setting, },
-  { { "minimum-logical-font-size",			         "Minimum logical font size", },                               true, false,  Integer, { .i = 5                 }, (S_Func) dwb_webkit_setting, },
-  { { "monospace-font-family",			             "Monospace font family", },                                   true, false,  Char,    { .p = "monospace"       }, (S_Func) dwb_webkit_setting, },
-  { { "print-backgrounds",			                 "Print backgrounds", },                                       true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "resizable-text-areas",			               "Resizable text areas", },                                    true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
-  { { "sans-serif-font-family",			             "Sans serif font family", },                                  true, false,  Char,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting, },
-  { { "serif-font-family",			                 "Serif font family", },                                       true, false,  Char,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
-  { { "spell-checking-languages",			           "Spell checking languages", },                                true, false,  Char,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
-  { { "tab-key-cycles-through-elements",			   "Tab cycles through elements in insert mode", },              true, false,  Boolean, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "auto-load-images",			                   "Autoload images", },                                         true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "auto-resize-window",			                 "Autoresize window", },                                       true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "auto-shrink-images",			                 "Autoshrink images", },                                       true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "cursive-font-family",			               "Cursive font family", },                                     true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
+  { { "default-encoding",			                   "Default encoding", },                                        true, false,  CHAR,    { .p = NULL      }, (S_Func) dwb_webkit_setting, },
+  { { "default-font-family",			               "Default font family", },                                     true, false,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting, },
+  { { "default-font-size",			                 "Default font size", },                                       true, false,  INTEGER, { .i = 12                }, (S_Func) dwb_webkit_setting, },
+  { { "default-monospace-font-size",			       "Default monospace font size", },                             true, false,  INTEGER, { .i = 10                }, (S_Func) dwb_webkit_setting, },
+  { { "enable-caret-browsing",			             "Caret Browsing", },                                          true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "enable-default-context-menu",			       "Enable default context menu", },                             true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-developer-extras",			           "Enable developer extras",    },                              true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "enable-dom-paste",			                   "Enable DOM paste", },                                        true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "enable-file-access-from-file-uris",			 "File access from file uris", },                              true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-html5-database",			             "Enable HTML5-database" },                                    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-html5-local-storage",			         "Enable HTML5 local storage", },                              true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-java-applet",			                 "Java Applets", },                                            true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-offline-web-application-cache",		 "Offline web application cache", },                           true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-page-cache",			                 "Page cache", },                                              true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "enable-plugins",			                     "Plugins", },                                                 true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-private-browsing",			           "Private Browsing", },                                        true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "enable-scripts",			                     "Script", },                                                  true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-site-specific-quirks",			       "Site specific quirks", },                                    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "enable-spatial-navigation",			         "Spatial navigation", },                                      true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "enable-spell-checking",			             "Spell checking", },                                          true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "enable-universal-access-from-file-uris",	 "Universal access from file  uris", },                        true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enable-xss-auditor",			                 "XSS auditor", },                                             true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "enforce-96-dpi",			                     "Enforce 96 dpi", },                                          true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "fantasy-font-family",			               "Fantasy font family", },                                     true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
+  { { "javascript-can-access-clipboard",			   "Javascript can access clipboard", },                         true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "javascript-can-open-windows-automatically", "Javascript can open windows automatically", },             true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+  { { "minimum-font-size",			                 "Minimum font size", },                                       true, false,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting, },
+  { { "minimum-logical-font-size",			         "Minimum logical font size", },                               true, false,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting, },
+  { { "monospace-font-family",			             "Monospace font family", },                                   true, false,  CHAR,    { .p = "monospace"       }, (S_Func) dwb_webkit_setting, },
+  { { "print-backgrounds",			                 "Print backgrounds", },                                       true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "resizable-text-areas",			               "Resizable text areas", },                                    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
+  { { "sans-serif-font-family",			             "Sans serif font family", },                                  true, false,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting, },
+  { { "serif-font-family",			                 "Serif font family", },                                       true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting, },
+  { { "spell-checking-languages",			           "Spell checking languages", },                                true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
+  { { "tab-key-cycles-through-elements",			   "Tab cycles through elements in insert mode", },              true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
 
-  { { "user-agent",			                         "User agent", },                                              true, false,  Char,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
-  { { "user-stylesheet-uri",			               "User stylesheet uri", },                                     true, false,  Char,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
-  { { "zoom-step",			                         "Zoom Step", },                                               true, false,  Double,  { .d = 0.1               }, (S_Func) dwb_webkit_setting, },
-  { { "custom-encoding",                         "Custom encoding", },                                         false, false, Char,    { .p = NULL           }, (S_Func) dwb_webview_property, },
-  { { "editable",                                "Content editable", },                                        false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
-  { { "full-content-zoom",                       "Full content zoom", },                                       false, false, Boolean, { .b = false             }, (S_Func) dwb_webview_property, },
-  { { "zoom-level",                              "Zoom level", },                                              false, false, Double,  { .d = 1.0               }, (S_Func) dwb_webview_property, },
-  { { "proxy",                                   "HTTP-proxy", },                                              false, true,  Boolean, { .b = false              },  (S_Func) dwb_set_proxy, },
-  { { "proxy-url",                               "HTTP-proxy url", },                                          false, true,  Char,    { .p = NULL              },   (S_Func) dwb_init_proxy, },
-  { { "cookies",                                  "All Cookies allowed", },                                     false, true,  Boolean, { .b = false             }, (S_Func) dwb_set_cookies, },
+  { { "user-agent",			                         "User agent", },                                              true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
+  { { "user-stylesheet-uri",			               "User stylesheet uri", },                                     true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
+  { { "zoom-step",			                         "Zoom Step", },                                               true, false,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting, },
+  { { "custom-encoding",                         "Custom encoding", },                                         false, false, CHAR,    { .p = NULL           }, (S_Func) dwb_webview_property, },
+  { { "editable",                                "Content editable", },                                        false, false, BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property, },
+  { { "full-content-zoom",                       "Full content zoom", },                                       false, false, BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property, },
+  { { "zoom-level",                              "Zoom level", },                                              false, false, DOUBLE,  { .d = 1.0               }, (S_Func) dwb_webview_property, },
+  { { "proxy",                                   "HTTP-proxy", },                                              false, true,  BOOLEAN, { .b = false              },  (S_Func) dwb_set_proxy, },
+  { { "proxy-url",                               "HTTP-proxy url", },                                          false, true,  CHAR,    { .p = NULL              },   (S_Func) dwb_init_proxy, },
+  { { "cookies",                                  "All Cookies allowed", },                                     false, true,  BOOLEAN, { .b = false             }, (S_Func) dwb_set_cookies, },
 
-  { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
-  { { "active-bg-color",                         "UI: Active view background", },                              false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
-  { { "normal-fg-color",                         "UI: Inactive view foreground", },                            false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
-  { { "normal-bg-color",                         "UI: Inactive view background", },                            false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
+  { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
+  { { "active-bg-color",                         "UI: Active view background", },                              false, true,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
+  { { "normal-fg-color",                         "UI: Inactive view foreground", },                            false, true,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
+  { { "normal-bg-color",                         "UI: Inactive view background", },                            false, true,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
 
-  { { "tab-active-fg-color",                     "UI: Active view tabforeground", },                           false, true,  ColorChar, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
-  { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  ColorChar, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
-  { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  ColorChar, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
-  { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  ColorChar, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
-  { { "hide-tabbar",                             "Hide tabbar (never, always, tiled)", },                      false, true,  Char,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar, },
+  { { "tab-active-fg-color",                     "UI: Active view tabforeground", },                           false, true,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
+  { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
+  { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
+  { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
+  { { "hide-tabbar",                             "Hide tabbar (never, always, tiled)", },                      false, true,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar, },
+  { { "tabbed-browsing",                         "Enable tabbed browsing", },                                  false, true,  CHAR,      { .b = true         },      (S_Func) dwb_set_dummy, },
 
-  { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  ColorChar, { .p = "#53868b"         }, (S_Func) dwb_init_style, },
-  { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
-  { { "normal-completion-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  ColorChar, { .p = "#eeeeee"         }, (S_Func) dwb_init_style, },
-  { { "normal-completion-bg-color",                    "UI: Completion inactive background", },                      false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
+  { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  COLOR_CHAR, { .p = "#53868b"         }, (S_Func) dwb_init_style, },
+  { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  COLOR_CHAR, { .p = "#000000"         }, (S_Func) dwb_init_style, },
+  { { "normal-completion-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  COLOR_CHAR, { .p = "#eeeeee"         }, (S_Func) dwb_init_style, },
+  { { "normal-completion-bg-color",                    "UI: Completion inactive background", },                      false, true,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style, },
 
-  { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  ColorChar, { .p = "#000000"         }, (S_Func) dwb_init_style, },
-  { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  ColorChar, { .p = "#dddddd"         }, (S_Func) dwb_init_style, },
-  { { "error-color",                             "UI: Error color", },                                         false, true,  ColorChar, { .p = "#ff0000"         }, (S_Func) dwb_init_style, },
+  { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  COLOR_CHAR, { .p = "#000000"         }, (S_Func) dwb_init_style, },
+  { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  COLOR_CHAR, { .p = "#dddddd"         }, (S_Func) dwb_init_style, },
+  { { "error-color",                             "UI: Error color", },                                         false, true,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style, },
 
-  { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  ColorChar, { .p = "#ffffff"         }, (S_Func) dwb_init_style, },
-  { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  ColorChar, { .p = "#151515"         }, (S_Func) dwb_init_style, },
-  { { "settings-border",                         "UI: Settings view border", },                                false, true,  Char,      { .p = "1px dotted black"}, (S_Func) dwb_init_style, },
+  { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style, },
+  { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style, },
+  { { "settings-border",                         "UI: Settings view border", },                                false, true,  CHAR,      { .p = "1px dotted black"}, (S_Func) dwb_init_style, },
  
-  { { "active-font-size",                        "UI: Active view fontsize", },                                false, true,  Integer, { .i = 12                },   (S_Func) dwb_reload_layout, },
-  { { "normal-font-size",                        "UI: Inactive view fontsize", },                              false, true,  Integer, { .i = 10                },   (S_Func) dwb_reload_layout, },
+  { { "active-font-size",                        "UI: Active view fontsize", },                                false, true,  INTEGER, { .i = 12                },   (S_Func) dwb_reload_layout, },
+  { { "normal-font-size",                        "UI: Inactive view fontsize", },                              false, true,  INTEGER, { .i = 10                },   (S_Func) dwb_reload_layout, },
   
-  { { "font",                                    "UI: Font", },                                                false, true,  Char, { .p = "monospace"          },   (S_Func) dwb_reload_layout, },
+  { { "font",                                    "UI: Font", },                                                false, true,  CHAR, { .p = "monospace"          },   (S_Func) dwb_reload_layout, },
    
-  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  Char, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts, },
-  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  Char, { .p = "letter"            },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  Char, { .p = "12px"              },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  Char, { .p = "normal"            },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  Char, { .p = "monospace"         },     (S_Func) dwb_reload_scripts, },
-  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  ColorChar, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  ColorChar, { .p = "#000088"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  ColorChar, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  ColorChar, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  Char, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
-  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  Double, { .d = 0.75         },          (S_Func) dwb_reload_scripts, },
-  { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  Boolean, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
-  { { "startpage",                               "Default homepage", },                                        false, true,  Char,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
-  { { "single-instance",                         "Single instance", },                                         false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
-  { { "save-session",                            "Autosave sessions", },                                       false, true,  Boolean,    { .b = false },          (S_Func)dwb_set_dummy, }, 
+  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts, },
+  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  CHAR, { .p = "12px"              },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  CHAR, { .p = "normal"            },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  CHAR, { .p = "monospace"         },     (S_Func) dwb_reload_scripts, },
+  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  COLOR_CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  COLOR_CHAR, { .p = "#000088"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  COLOR_CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  COLOR_CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  CHAR, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
+  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  DOUBLE, { .d = 0.75         },          (S_Func) dwb_reload_scripts, },
+  { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
+  { { "startpage",                               "Default homepage", },                                        false, true,  CHAR,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
+  { { "single-instance",                         "Single instance", },                                         false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
+  { { "save-session",                            "Autosave sessions", },                                       false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_dummy, }, 
   
-  { { "content-block-regex",   "Mimetypes that will be blocked", },     false, false,  Char,   { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" }, (S_Func) dwb_set_content_block_regex, }, 
-  { { "block-content",                        "Block ugly content", },                                        false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_content_block, }, 
-  { { "plugin-blocker",                       "Flashblocker", },                                              false, false,  Boolean,    { .b = false },        (S_Func) dwb_set_plugin_blocker, }, 
+  { { "content-block-regex",   "Mimetypes that will be blocked", },     false, false,  CHAR,   { .p = "(application|text)/(x-)?(shockwave-flash|javascript)" }, (S_Func) dwb_set_content_block_regex, }, 
+  { { "block-content",                        "Block ugly content", },                                        false, false,  BOOLEAN,    { .b = false },        (S_Func) dwb_set_content_block, }, 
+  { { "plugin-blocker",                       "Flashblocker", },                                              false, false,  BOOLEAN,    { .b = false },        (S_Func) dwb_set_plugin_blocker, }, 
 
   // downloads
-  { { "download-external-command",                        "Downloads: External download program", },                               false, true,  Char, 
+  { { "download-external-command",                        "Downloads: External download program", },                               false, true,  CHAR, 
               { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     (S_Func)dwb_set_dummy, },
-  { { "download-use-external-program",           "Downloads: Use external download program", },                           false, true,  Boolean, { .b = false         },    (S_Func)dwb_set_dummy, },
+  { { "download-use-external-program",           "Downloads: Use external download program", },                           false, true,  BOOLEAN, { .b = false         },    (S_Func)dwb_set_dummy, },
 
-  { { "complete-history",                        "Complete browsing history", },                              false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
-  { { "complete-bookmarks",                        "Complete bookmarks", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
-  { { "complete-searchengines",                   "Complete searchengines", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
-  { { "complete-commands",                        "Complete input history", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
-  { { "complete-userscripts",                        "Complete userscripts", },                                     false, true,  Boolean, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-history",                        "Complete browsing history", },                              false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-bookmarks",                        "Complete bookmarks", },                                     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-searchengines",                   "Complete searchengines", },                                     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-commands",                        "Complete input history", },                                     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-userscripts",                        "Complete userscripts", },                                     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
 
-  { { "use-fifo",                        "Create a fifo pipe for communication", },                            false, true,  Boolean, { .b = false         },     (S_Func)dwb_set_dummy },
+  { { "use-fifo",                        "Create a fifo pipe for communication", },                            false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_set_dummy },
     
-  { { "default-width",                           "Default width", },                                           false, true,  Integer, { .i = 800          }, (S_Func)dwb_set_dummy, },
-  { { "default-height",                          "Default height", },                                           false, true,  Integer, { .i = 600          }, (S_Func)dwb_set_dummy, },
-  { { "message-delay",                           "Message delay", },                                           false, true,  Integer, { .i = 2          }, (S_Func) dwb_set_message_delay, },
-  { { "history-length",                          "History length", },                                          false, true,  Integer, { .i = 500          }, (S_Func) dwb_set_history_length, },
-  { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  Integer, { .i = 30          }, (S_Func)dwb_set_dummy, },
-  { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  Double, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
-  { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  Char, { .p = "Normal Maximized" },  (S_Func)dwb_set_dummy, },
-  { { "mail-program",                            "Mail program", },                                            false, true,  Char, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy }, 
-  { { "adblocker",                               "Block advertisements via a filterlist", },                   false, false,  Boolean, { .b = false }, (S_Func)dwb_set_adblock }, 
+  { { "default-width",                           "Default width", },                                           false, true,  INTEGER, { .i = 800          }, (S_Func)dwb_set_dummy, },
+  { { "default-height",                          "Default height", },                                           false, true,  INTEGER, { .i = 600          }, (S_Func)dwb_set_dummy, },
+  { { "message-delay",                           "Message delay", },                                           false, true,  INTEGER, { .i = 2          }, (S_Func) dwb_set_message_delay, },
+  { { "history-length",                          "History length", },                                          false, true,  INTEGER, { .i = 500          }, (S_Func) dwb_set_history_length, },
+  { { "size",                                    "UI: Default tiling area size (in %)", },                     false, true,  INTEGER, { .i = 30          }, (S_Func)dwb_set_dummy, },
+  { { "factor",                                  "UI: Default Zoom factor of tiling area", },                  false, true,  DOUBLE, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
+  { { "layout",                                  "UI: Default layout (Normal, Bottomstack, Maximized)", },     false, true,  CHAR, { .p = "Normal MAXIMIZED" },  (S_Func)dwb_set_dummy, },
+  { { "mail-program",                            "Mail program", },                                            false, true,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy }, 
+  { { "adblocker",                               "Block advertisements via a filterlist", },                   false, false,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock }, 
 };/*}}}*/
 
 /* SETTINGS_FUNCTIONS{{{*/
@@ -420,10 +421,10 @@ static void
 dwb_webkit_setting(GList *gl, WebSettings *s) {
   WebKitWebSettings *settings = gl ? webkit_web_view_get_settings(WEBVIEW(gl)) : dwb.state.web_settings;
   switch (s->type) {
-    case Double:  g_object_set(settings, s->n.first, s->arg.d, NULL); break;
-    case Integer: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
-    case Boolean: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
-    case Char:    g_object_set(settings, s->n.first, !s->arg.p || !strcmp(s->arg.p, "null") ? NULL : (char*)s->arg.p  , NULL); break;
+    case DOUBLE:  g_object_set(settings, s->n.first, s->arg.d, NULL); break;
+    case INTEGER: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
+    case BOOLEAN: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
+    case CHAR:    g_object_set(settings, s->n.first, !s->arg.p || !strcmp(s->arg.p, "null") ? NULL : (char*)s->arg.p  , NULL); break;
     default: return;
   }
 }/*}}}*/
@@ -433,10 +434,10 @@ static void
 dwb_webview_property(GList *gl, WebSettings *s) {
   WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
   switch (s->type) {
-    case Double:  g_object_set(web, s->n.first, s->arg.d, NULL); break;
-    case Integer: g_object_set(web, s->n.first, s->arg.i, NULL); break;
-    case Boolean: g_object_set(web, s->n.first, s->arg.b, NULL); break;
-    case Char:    g_object_set(web, s->n.first, (char*)s->arg.p, NULL); break;
+    case DOUBLE:  g_object_set(web, s->n.first, s->arg.d, NULL); break;
+    case INTEGER: g_object_set(web, s->n.first, s->arg.i, NULL); break;
+    case BOOLEAN: g_object_set(web, s->n.first, s->arg.b, NULL); break;
+    case CHAR:    g_object_set(web, s->n.first, (char*)s->arg.p, NULL); break;
     default: return;
   }
 }/*}}}*//*}}}*/
@@ -463,24 +464,24 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     dwb_normal_mode(true);
     ret = false;
   }
-  else if (dwb.state.mode == InsertMode) {
+  else if (dwb.state.mode == INSERT_MODE) {
     if (CLEAN_STATE(e) & GDK_MODIFIER_MASK) {
       ret = dwb_eval_key(e);
     }
   }
-  else if (dwb.state.mode == QuickmarkSave) {
+  else if (dwb.state.mode == QUICK_MARK_SAVE) {
     if (key) {
       dwb_save_quickmark(key);
     }
     ret = true;
   }
-  else if (dwb.state.mode == QuickmarkOpen) {
+  else if (dwb.state.mode == QUICK_MARK_OPEN) {
     if (key) {
       dwb_open_quickmark(key);
     }
     ret = true;
   }
-  else if (gtk_widget_has_focus(dwb.gui.entry) || dwb.state.mode & CompletionMode) {
+  else if (gtk_widget_has_focus(dwb.gui.entry) || dwb.state.mode & COMPLETION_MODE) {
     ret = false;
   }
   else if (DWB_TAB_KEY(e)) {
@@ -488,7 +489,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = true;
   }
   else {
-    if (dwb.state.mode & AutoComplete) {
+    if (dwb.state.mode & AUTO_COMPLETE) {
       if (DWB_TAB_KEY(e)) {
         dwb_comp_autocomplete(NULL, e);
       }
@@ -652,12 +653,12 @@ dwb_toggle_tabbar(void) {
   gboolean visible = gtk_widget_get_visible(dwb.gui.topbox);
   if (visible ) {
     if (dwb.state.tabbar_visible != HIDE_TB_NEVER && 
-        (dwb.state.tabbar_visible == HIDE_TB_ALWAYS || (HIDE_TB_TILED && !(dwb.state.layout & Maximized)))) {
+        (dwb.state.tabbar_visible == HIDE_TB_ALWAYS || (HIDE_TB_TILED && !(dwb.state.layout & MAXIMIZED)))) {
       gtk_widget_hide(dwb.gui.topbox);
     }
   }
   else if (dwb.state.tabbar_visible != HIDE_TB_ALWAYS && 
-      (dwb.state.tabbar_visible == HIDE_TB_NEVER || (HIDE_TB_TILED && (dwb.state.layout & Maximized)))) {
+      (dwb.state.tabbar_visible == HIDE_TB_NEVER || (HIDE_TB_TILED && (dwb.state.layout & MAXIMIZED)))) {
       gtk_widget_show(dwb.gui.topbox);
   }
 }
@@ -665,9 +666,9 @@ dwb_toggle_tabbar(void) {
 CompletionType 
 dwb_eval_completion_type(void) {
   switch (dwb.state.mode) {
-    case SettingsMode:  return COMP_SETTINGS;
-    case KeyMode:       return COMP_KEY;
-    case CommandMode:   return COMP_COMMAND;
+    case SETTINGS_MODE:  return COMP_SETTINGS;
+    case KEY_MODE:       return COMP_KEY;
+    case COMMAND_MODE:   return COMP_COMMAND;
     default:            return COMP_NONE;
   }
 }/*}}}*/
@@ -858,7 +859,7 @@ dwb_handle_mail(const char *uri) {
 /* dwb_resize(double size) {{{*/
 void
 dwb_resize(double size) {
-  int fact = dwb.state.layout & BottomStack;
+  int fact = dwb.state.layout & BOTTOM_STACK;
 
   gtk_widget_set_size_request(dwb.gui.left,  (100 - size) * (fact^1),  (100 - size) *  fact);
   gtk_widget_set_size_request(dwb.gui.right, size * (fact^1), size * fact);
@@ -977,17 +978,17 @@ dwb_layout_from_char(const char *desc) {
   int i=0;
   Layout layout;
   while (token[i]) {
-    if (!(layout & BottomStack) && !g_ascii_strcasecmp(token[i], "normal")) {
-      layout |= NormalLayout;
+    if (!(layout & BOTTOM_STACK) && !g_ascii_strcasecmp(token[i], "normal")) {
+      layout |= NORMAL_LAYOUT;
     }
-    else if (!(layout & NormalLayout) && !g_ascii_strcasecmp(token[i], "bottomstack")) {
-      layout |= BottomStack;
+    else if (!(layout & NORMAL_LAYOUT) && !g_ascii_strcasecmp(token[i], "bottomstack")) {
+      layout |= BOTTOM_STACK;
     }
     else if (!g_ascii_strcasecmp(token[i], "maximized")) {
-      layout |= Maximized;
+      layout |= MAXIMIZED;
     }
     else {
-      layout = NormalLayout;
+      layout = NORMAL_LAYOUT;
     }
     i++;
   }
@@ -1070,7 +1071,7 @@ dwb_update_hints(GdkEventKey *e) {
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
       dwb.state.scriptlock = 1;
-      if (dwb.state.nv != OpenDownload) {
+      if (dwb.state.nv != OPEN_DOWNLOAD) {
         dwb_normal_mode(true);
       }
     }
@@ -1283,14 +1284,14 @@ dwb_load_uri(Arg *arg) {
     return;
   }
   /* new window ? */
-  if (dwb.state.nv == OpenNewWindow) {
-    dwb.state.nv = OpenNormal;
+  if (dwb.state.nv == OPEN_NEW_WINDOW) {
+    dwb.state.nv = OPEN_NORMAL;
     dwb_new_window(arg);
     return;
   }
   /*  new tab ?  */
-  else if (dwb.state.nv == OpenNewView) {
-    dwb.state.nv = OpenNormal;
+  else if (dwb.state.nv == OPEN_NEW_VIEW) {
+    dwb.state.nv = OPEN_NORMAL;
     dwb_add_view(arg);
     return;
   }
@@ -1355,7 +1356,7 @@ dwb_update_layout() {
   gboolean visible = gtk_widget_get_visible(dwb.gui.right);
   View *v;
 
-  if (! (dwb.state.layout & Maximized)) {
+  if (! (dwb.state.layout & MAXIMIZED)) {
     if (dwb.state.views->next) {
       if (!visible) {
         gtk_widget_show_all(dwb.gui.right);
@@ -1422,7 +1423,7 @@ dwb_eval_key(GdkEventKey *e) {
   }
   // don't show backspace in the buffer
   if (keyval == GDK_BackSpace ) {
-    if (dwb.state.mode & AutoComplete) {
+    if (dwb.state.mode & AUTO_COMPLETE) {
       dwb_comp_clean_autocompletion();
     }
     if (dwb.state.buffer && dwb.state.buffer->str ) {
@@ -1488,7 +1489,7 @@ dwb_eval_key(GdkEventKey *e) {
     }
   }
   // autocompletion
-  if (dwb.state.mode & AutoComplete) {
+  if (dwb.state.mode & AUTO_COMPLETE) {
     dwb_comp_clean_autocompletion();
   }
   if (coms && g_list_length(coms) > 0) {
@@ -1508,19 +1509,19 @@ static gboolean
 dwb_command_mode(Arg *arg) {
   dwb_set_normal_message(dwb.state.fview, false, ":");
   dwb_focus_entry();
-  dwb.state.mode = CommandMode;
+  dwb.state.mode = COMMAND_MODE;
   return true;
 }/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
 gboolean
 dwb_insert_mode(Arg *arg) {
-  if (dwb.state.mode == HintMode) {
-    dwb_set_normal_message(dwb.state.fview, true, INSERT_MODE);
+  if (dwb.state.mode == HINT_MODE) {
+    dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
   dwb_view_modify_style(dwb.state.fview, &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL, 0);
 
-  dwb.state.mode = InsertMode;
+  dwb.state.mode = INSERT_MODE;
   return true;
 }/*}}}*/
 
@@ -1529,25 +1530,25 @@ void
 dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
-  if (dwb.state.mode == HintMode || dwb.state.mode == SearchFieldMode) {
+  if (dwb.state.mode == HINT_MODE || dwb.state.mode == SEARCH_FIELD_MODE) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_clear()");
   }
-  else if (mode  == InsertMode) {
+  else if (mode  == INSERT_MODE) {
     dwb_view_modify_style(dwb.state.fview, &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   }
-  else if (mode == DownloadGetPath) {
+  else if (mode == DOWNLOAD_GET_PATH) {
     dwb_comp_clean_path_completion();
   }
-  if (mode & CompletionMode) {
+  if (mode & COMPLETION_MODE) {
     dwb_comp_clean_completion();
   }
-  if (mode & AutoComplete) {
+  if (mode & AUTO_COMPLETE) {
     dwb_comp_clean_autocompletion();
   }
   dwb_focus_scroll(dwb.state.fview);
 
-  if (mode & NormalMode) {
+  if (mode & NORMAL_MODE) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_blur()");
   }
 
@@ -1664,7 +1665,7 @@ dwb_get_scripts() {
             n = dwb_navigation_new(filename, line[1]);
             KeyMap *map = dwb_malloc(sizeof(KeyMap));
             Key key = dwb_str_to_key(line[1]);
-            FunctionMap fm = { { n->first, n->first }, FM_DONT_SAVE, (Func)dwb_execute_user_script, NULL, PostSM, { .p = path } };
+            FunctionMap fm = { { n->first, n->first }, FM_DONT_SAVE, (Func)dwb_execute_user_script, NULL, POST_SM, { .p = path } };
             FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
             *fmap = fm;
             map->map = fmap;
@@ -1698,13 +1699,13 @@ dwb_get_scripts() {
 /* dwb_clean_vars() {{{*/
 static void 
 dwb_clean_vars() {
-  dwb.state.mode = NormalMode;
+  dwb.state.mode = NORMAL_MODE;
   dwb.state.buffer = NULL;
   dwb.state.nummod = 0;
   dwb.state.nv = 0;
   dwb.state.scriptlock = 0;
   dwb.state.last_com_history = NULL;
-  dwb.state.dl_action = Download;
+  dwb.state.dl_action = DL_ACTION_DOWNLOAD;
 }/*}}}*/
 
 static void
@@ -1864,7 +1865,7 @@ dwb_save_files(gboolean end_session) {
   dwb_save_settings();
 
   // save session
-  if (end_session && GET_BOOL("save-session") && dwb.state.mode != SaveSession) {
+  if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
     dwb_session_save(NULL);
   }
 
@@ -2353,6 +2354,7 @@ dwb_init_vars() {
   dwb.misc.history_length = GET_INT("history-length");
   dwb.misc.factor = GET_DOUBLE("factor");
   dwb.misc.startpage = GET_CHAR("startpage");
+  dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
   dwb.misc.content_block_regex = GET_CHAR("content-block-regex");
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(GET_CHAR("hide-tabbar"));
 
@@ -2389,7 +2391,7 @@ static void dwb_init() {
   dwb_init_cookies();
   dwb_init_vars();
 
-  if (dwb.state.layout & BottomStack) {
+  if (dwb.state.layout & BOTTOM_STACK) {
     Arg a = { .n = dwb.state.layout };
     dwb_com_set_orientation(&a);
   }

@@ -25,7 +25,7 @@ dwb_com_simple_command(KeyMap *km) {
   Arg *arg = &km->map->arg;
   arg->e = NULL;
 
-  if (dwb.state.mode & AutoComplete) {
+  if (dwb.state.mode & AUTO_COMPLETE) {
     dwb_comp_clean_autocompletion();
   }
 
@@ -33,7 +33,7 @@ dwb_com_simple_command(KeyMap *km) {
     if (!km->map->hide) {
       dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
     }
-    else if (km->map->hide == AlwaysSM) {
+    else if (km->map->hide == ALWAYS_SM) {
       CLEAR_COMMAND_TEXT(dwb.state.fview);
       gtk_widget_hide(dwb.gui.entry);
     }
@@ -54,7 +54,7 @@ dwb_com_simple_command(KeyMap *km) {
 /* dwb_com_set_setting {{{*/
 gboolean 
 dwb_com_set_setting(Arg *arg) {
-  dwb.state.mode = SettingsMode;
+  dwb.state.mode = SETTINGS_MODE;
   dwb.state.setting_apply = arg->n;
   dwb_focus_entry();
   return true;
@@ -63,7 +63,7 @@ dwb_com_set_setting(Arg *arg) {
 /* dwb_com_set_key {{{*/
 gboolean 
 dwb_com_set_key(Arg *arg) {
-  dwb.state.mode = KeyMode;
+  dwb.state.mode = KEY_MODE;
   dwb_focus_entry();
   return true;
 }/*}}}*/
@@ -118,7 +118,7 @@ dwb_com_add_search_field(Arg *a) {
       return false;
     }
   }
-  dwb.state.mode = SearchFieldMode;
+  dwb.state.mode = SEARCH_FIELD_MODE;
   dwb_set_normal_message(dwb.state.fview, false, "Enter a Keyword for marked search:");
   dwb_focus_entry();
   FREE(value);
@@ -153,7 +153,7 @@ dwb_com_toggle_proxy(Arg *a) {
 gboolean  
 dwb_com_find(Arg *arg) { 
   View *v = CURRENT_VIEW();
-  dwb.state.mode = FindMode;
+  dwb.state.mode = FIND_MODE;
   dwb.state.forward_search = arg->b;
   if (v->status->search_string) {
     g_free(v->status->search_string);
@@ -180,12 +180,12 @@ dwb_com_resize_master(Arg *arg) {
 /* dwb_com_show_hints {{{*/
 gboolean
 dwb_com_show_hints(Arg *arg) {
-  if (dwb.state.nv == OpenNormal)
+  if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->n;
-  if (dwb.state.mode != HintMode) {
+  if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_show_hints()");
-    dwb.state.mode = HintMode;
+    dwb.state.mode = HINT_MODE;
     dwb_focus_entry();
   }
   return true;
@@ -227,7 +227,7 @@ dwb_com_show_settings(Arg *arg) {
   const char *setting_string;
 
   dwb.state.setting_apply = arg->n;
-  if ( dwb.state.setting_apply == Global ) {
+  if ( dwb.state.setting_apply == APPLY_GLOBAL ) {
     t = dwb.settings;
     setting_string = "Global Settings";
   }
@@ -246,10 +246,10 @@ dwb_com_show_settings(Arg *arg) {
   g_string_append(buffer, HTML_FORM_START);
   for (; l; l=l->next) {
     WebSettings *m = l->data;
-    if (!m->global || (m->global && dwb.state.setting_apply == Global)) {
+    if (!m->global || (m->global && dwb.state.setting_apply == APPLY_GLOBAL)) {
       g_string_append(buffer, HTML_DIV_START);
       g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->n.first, m->n.second);
-      if (m->type == Boolean) {
+      if (m->type == BOOLEAN) {
         const char *value = m->arg.b ? "checked" : "";
         g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->n.first, value);
       }
@@ -298,7 +298,7 @@ dwb_com_bookmark(Arg *arg) {
 /* dwb_com_quickmark(Arg *arg) {{{*/
 gboolean
 dwb_com_quickmark(Arg *arg) {
-  if (dwb.state.nv == OpenNormal)
+  if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->i;
   dwb.state.mode = arg->n;
   return true;
@@ -368,17 +368,17 @@ dwb_com_scroll(Arg *arg) {
 
   View *v = gl->data;
 
-  GtkAdjustment *a = arg->n == Left || arg->n == Right 
+  GtkAdjustment *a = arg->n == SCROLL_LEFT || arg->n == SCROLL_RIGHT 
     ? gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
     : gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
-  int sign = arg->n == Up || arg->n == PageUp || arg->n == HalfPageUp || arg->n == Left ? -1 : 1;
+  int sign = arg->n == SCROLL_UP || arg->n == SCROLL_PAGE_UP || arg->n == SCROLL_HALF_PAGE_UP || arg->n == SCROLL_LEFT ? -1 : 1;
 
   double value = gtk_adjustment_get_value(a);
 
   double inc;
-  if (arg->n == PageUp || arg->n == PageDown)
+  if (arg->n == SCROLL_PAGE_UP || arg->n == SCROLL_PAGE_DOWN)
     inc = gtk_adjustment_get_page_increment(a);
-  else if (arg->n == HalfPageUp || arg->n == HalfPageDown)
+  else if (arg->n == SCROLL_HALF_PAGE_UP || arg->n == SCROLL_HALF_PAGE_DOWN)
     inc = gtk_adjustment_get_page_increment(a) / 2;
   else
     inc = gtk_adjustment_get_step_increment(a);
@@ -386,8 +386,8 @@ dwb_com_scroll(Arg *arg) {
   double lower  = gtk_adjustment_get_lower(a);
   double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
   switch (arg->n) {
-    case  Top:      scroll = lower; break;
-    case  Bottom:   scroll = upper; break;
+    case  SCROLL_TOP:      scroll = lower; break;
+    case  SCROLL_BOTTOM:   scroll = upper; break;
     default:        scroll = value + sign * inc * NN(dwb.state.nummod); break;
   }
 
@@ -416,11 +416,11 @@ dwb_com_set_orientation(Arg *arg) {
     l = arg->n;
   }
   else {
-    dwb.state.layout ^= BottomStack;
+    dwb.state.layout ^= BOTTOM_STACK;
     l = dwb.state.layout;
   }
-  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.paned), l & BottomStack );
-  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.right), (l & BottomStack) ^ 1);
+  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.paned), l & BOTTOM_STACK );
+  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.right), (l & BOTTOM_STACK) ^ 1);
   dwb_resize(dwb.state.size);
   return true;
 }/*}}}*/
@@ -450,7 +450,7 @@ dwb_com_history_forward(Arg *arg) {
 /* dwb_com_open(Arg *arg) {{{*/
 gboolean  
 dwb_com_open(Arg *arg) {
-  if (dwb.state.nv == OpenNormal)
+  if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->n;
 
   if (arg && arg->p) {
@@ -493,8 +493,8 @@ dwb_com_maximized_show(View *v) {
 
 void 
 dwb_com_toggle_maximized(Arg *arg) {
-  dwb.state.layout ^= Maximized;
-  if (dwb.state.layout & Maximized) {
+  dwb.state.layout ^= MAXIMIZED;
+  if (dwb.state.layout & MAXIMIZED) {
     g_list_foreach(dwb.state.views,  (GFunc)dwb_com_maximized_hide, NULL);
     if  (dwb.state.views == dwb.state.fview) {
       gtk_widget_hide(dwb.gui.right);
@@ -566,8 +566,8 @@ dwb_com_remove_view(Arg *arg) {
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
 
-  /* Update Maximized layout */ 
-  if (dwb.state.layout & Maximized) {
+  /* Update MAXIMIZED layout */ 
+  if (dwb.state.layout & MAXIMIZED) {
     gtk_widget_show(CURRENT_VIEW()->vbox);
     if (dwb.state.fview == dwb.state.views) {
       gtk_widget_hide(dwb.gui.right);
@@ -624,7 +624,7 @@ dwb_com_push_master(Arg *arg) {
     dwb.state.views = g_list_concat(gl, dwb.state.views);
     dwb_grab_focus(dwb.state.views);
   }
-  if (dwb.state.layout & Maximized) {
+  if (dwb.state.layout & MAXIMIZED) {
     gtk_widget_show(dwb.gui.left);
     gtk_widget_hide(dwb.gui.right);
     gtk_widget_show(new->vbox);
@@ -643,7 +643,7 @@ dwb_com_focus_next(Arg *arg) {
     return false;
   }
   if (gl->next) {
-    if (dwb.state.layout & Maximized) {
+    if (dwb.state.layout & MAXIMIZED) {
       if (gl == dwb.state.views) {
         gtk_widget_hide(dwb.gui.left);
         gtk_widget_show(dwb.gui.right);
@@ -654,7 +654,7 @@ dwb_com_focus_next(Arg *arg) {
     dwb_focus(gl->next);
   }
   else {
-    if (dwb.state.layout & Maximized) {
+    if (dwb.state.layout & MAXIMIZED) {
       gtk_widget_hide(dwb.gui.right);
       gtk_widget_show(dwb.gui.left);
       gtk_widget_show(((View *)dwb.state.views->data)->vbox);
@@ -674,7 +674,7 @@ dwb_com_focus_prev(Arg *arg) {
   }
   if (gl == dwb.state.views) {
     GList *last = g_list_last(dwb.state.views);
-    if (dwb.state.layout & Maximized) {
+    if (dwb.state.layout & MAXIMIZED) {
       gtk_widget_hide(dwb.gui.left);
       gtk_widget_show(dwb.gui.right);
       gtk_widget_show(((View *)last->data)->vbox);
@@ -683,7 +683,7 @@ dwb_com_focus_prev(Arg *arg) {
     dwb_focus(last);
   }
   else {
-    if (dwb.state.layout & Maximized) {
+    if (dwb.state.layout & MAXIMIZED) {
       if (gl == dwb.state.views->next) {
         gtk_widget_hide(dwb.gui.right);
         gtk_widget_show(dwb.gui.left);
@@ -705,7 +705,7 @@ dwb_com_focus_nth_view(Arg *arg) {
   if (!l) 
     return false;
   if (l != dwb.state.fview) {
-    if (dwb.state.layout & Maximized) { 
+    if (dwb.state.layout & MAXIMIZED) { 
       if (l == dwb.state.views) {
         gtk_widget_hide(dwb.gui.right);
         gtk_widget_show(dwb.gui.left);
@@ -766,7 +766,7 @@ dwb_com_paste(Arg *arg) {
   char *text = NULL;
 
   if ( (text = gtk_clipboard_wait_for_text(clipboard)) ) {
-    if (dwb.state.nv == OpenNormal)
+    if (dwb.state.nv == OPEN_NORMAL)
       dwb.state.nv = arg->n;
     Arg a = { .p = text };
     dwb_load_uri(&a);
@@ -880,8 +880,8 @@ dwb_com_entry_history_back(Arg *a) {
 
 gboolean
 dwb_com_save_session(Arg *arg) {
-  if (arg->n == NormalMode) {
-    dwb.state.mode = SaveSession;
+  if (arg->n == NORMAL_MODE) {
+    dwb.state.mode = SAVE_SESSION;
     dwb_session_save(NULL);
     dwb_end();
   }
@@ -900,7 +900,7 @@ dwb_com_bookmarks(Arg *arg) {
   if (!g_list_length(dwb.fc.bookmarks)) {
     return false;
   }
-  if (dwb.state.nv == OpenNormal)
+  if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->n;
   dwb_focus_entry();
   dwb_comp_complete(COMP_BOOKMARK, 0);

@@ -168,7 +168,7 @@ dwb_comp_clean_completion() {
   gtk_widget_destroy(CURRENT_VIEW()->compbox);
   dwb.comps.completions = NULL;
   dwb.comps.active_comp = NULL;
-  dwb.state.mode &= ~CompletionMode;
+  dwb.state.mode &= ~COMPLETION_MODE;
 }/*}}}*/
 
 /* dwb_comp_show_completion(int back) {{{*/
@@ -223,14 +223,14 @@ dwb_comp_get_simple_completion(GList *gl) {
 /* dwb_completion_get_settings      return: GList *Completions{{{*/
 static GList *
 dwb_comp_get_settings_completion() {
-  GList *l = g_hash_table_get_values(dwb.state.setting_apply == Global ? dwb.settings : CURRENT_VIEW()->setting);
+  GList *l = g_hash_table_get_values(dwb.state.setting_apply == APPLY_GLOBAL ? dwb.settings : CURRENT_VIEW()->setting);
   l = g_list_sort(l, (GCompareFunc)dwb_util_web_settings_sort_first);
   const char *input = GET_TEXT();
   GList *list = NULL;
 
   for (; l; l=l->next) {
     WebSettings *s = l->data;
-    if (dwb.state.setting_apply == Global || !s->global) {
+    if (dwb.state.setting_apply == APPLY_GLOBAL || !s->global) {
       Navigation n = s->n;
       if (g_strrstr(n.first, input)) {
         char *value = dwb_util_arg_to_char(&s->arg, s->type);
@@ -272,7 +272,7 @@ dwb_comp_get_key_completion(gboolean entry) {
 void 
 dwb_comp_complete(CompletionType type, int back) {
   View *v = CURRENT_VIEW();
-  if ( !(dwb.state.mode & CompletionMode) ) {
+  if ( !(dwb.state.mode & COMPLETION_MODE) ) {
     v->compbox = gtk_vbox_new(true, 0);
     gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
     switch (type) {
@@ -290,7 +290,7 @@ dwb_comp_complete(CompletionType type, int back) {
       return;
     }
     dwb_comp_show_completion(back);
-    dwb.state.mode |= CompletionMode;
+    dwb.state.mode |= COMPLETION_MODE;
   }
   else if (dwb.comps.completions && dwb.comps.active_comp) {
     dwb.comps.active_comp = dwb_comp_update_completion(v->compbox, dwb.comps.completions, dwb.comps.active_comp, dwb.misc.max_c_items, back);
@@ -324,7 +324,7 @@ dwb_comp_clean_autocompletion() {
   gtk_widget_destroy(CURRENT_VIEW()->autocompletion);
   dwb.comps.auto_c = NULL;
   dwb.comps.active_auto_c = NULL;
-  dwb.state.mode &= ~AutoComplete;
+  dwb.state.mode &= ~AUTO_COMPLETE;
 
   View *v = CURRENT_VIEW();
   gtk_widget_show(v->entry);
@@ -370,8 +370,8 @@ dwb_comp_autocomplete(GList *gl, GdkEventKey *e) {
   }
   View *v = CURRENT_VIEW();
 
-  if (! (dwb.state.mode & AutoComplete) && gl) {
-    dwb.state.mode |= AutoComplete;
+  if (! (dwb.state.mode & AUTO_COMPLETE) && gl) {
+    dwb.state.mode |= AUTO_COMPLETE;
     dwb.comps.auto_c = dwb_comp_init_autocompletion(gl);
     dwb.comps.active_auto_c = g_list_first(dwb.comps.auto_c);
     dwb_comp_modify_completion_item(dwb.comps.active_auto_c->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
@@ -456,7 +456,7 @@ dwb_comp_init_path_completion(int back) {
   char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
   dwb.comps.path_completion = g_list_append(NULL, g_strdup(text));
-  if (dwb.state.dl_action == Execute && text[0] != '/') {
+  if (dwb.state.dl_action == DL_ACTION_EXECUTE && text[0] != '/') {
     GList *list = dwb_comp_get_binaries(NULL, text);
     list = g_list_sort(list, (GCompareFunc)strcmp);
     dwb.comps.path_completion = g_list_concat(dwb.comps.path_completion, list);

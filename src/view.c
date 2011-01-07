@@ -208,7 +208,7 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
 
   v->status->mimetype = g_strdup(mimetype);
 
-  if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OpenDownload) {
+  if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
     webkit_web_policy_decision_download(policy);
     return true;
@@ -241,25 +241,25 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     }
   }
 
-  if (dwb.state.nv == OpenNewView || dwb.state.nv == OpenNewWindow) {
-    if (dwb.state.nv == OpenNewView) {
-      dwb.state.nv = OpenNormal;
+  if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
+    if (dwb.state.nv == OPEN_NEW_VIEW) {
+      dwb.state.nv = OPEN_NORMAL;
       dwb_add_view(&a); 
     }
     else {
       dwb_new_window(&a);
     }
-    dwb.state.nv = OpenNormal;
+    dwb.state.nv = OPEN_NORMAL;
     return true;
   }
   const char *request_uri = webkit_network_request_get_uri(request);
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
   if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
-    if (dwb.state.mode == InsertMode) {
+    if (dwb.state.mode == INSERT_MODE) {
       dwb_normal_mode(true);
     }
-    if (dwb.state.mode == SearchFieldMode) {
+    if (dwb.state.mode == SEARCH_FIELD_MODE) {
       webkit_web_policy_decision_ignore(policy);
       dwb.state.search_engine = dwb.state.form_name && !g_strrstr(request_uri, HINT_SEARCH_SUBMIT) 
         ? g_strdup_printf("%s?%s=%s", request_uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
@@ -419,7 +419,7 @@ static gboolean
 dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
   Mode mode = dwb.state.mode;
 
-  if (mode == HintMode) {
+  if (mode == HINT_MODE) {
     if (DIGIT(e) || DWB_TAB_KEY(e)) {
       return true;
     }
@@ -427,7 +427,7 @@ dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
       return dwb_update_hints(e);
     }
   }
-  else if (mode == FindMode) {
+  else if (mode == FIND_MODE) {
     dwb_update_search(dwb.state.forward_search);
   }
   return false;
@@ -441,7 +441,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   if (e->keyval == GDK_BackSpace) {
     return false;
   }
-  if (mode == HintMode) {
+  if (mode == HINT_MODE) {
     if (DIGIT(e) || DWB_TAB_KEY(e)) {
       return dwb_update_hints(e);
     }
@@ -449,7 +449,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       return true;
     }
   }
-  else if (mode == SearchFieldMode) {
+  else if (mode == SEARCH_FIELD_MODE) {
     if (DWB_TAB_KEY(e)) {
       return dwb_update_hints(e);
     }
@@ -457,7 +457,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       return false;
     }
   }
-  else if (mode == DownloadGetPath) {
+  else if (mode == DOWNLOAD_GET_PATH) {
     if (DWB_TAB_KEY(e)) {
       dwb_comp_complete_download(e->state & GDK_SHIFT_MASK);
       return true;
@@ -466,10 +466,10 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       dwb_comp_clean_path_completion();
     }
   }
-  else if (mode & CompletionMode && e->keyval != GDK_Tab && e->keyval != GDK_ISO_Left_Tab && !e->is_modifier && !CLEAN_STATE(e)) {
+  else if (mode & COMPLETION_MODE && e->keyval != GDK_Tab && e->keyval != GDK_ISO_Left_Tab && !e->is_modifier && !CLEAN_STATE(e)) {
     dwb_comp_clean_completion();
   }
-  else if (mode == FindMode) {
+  else if (mode == FIND_MODE) {
     return false;
   }
   else if (DWB_TAB_KEY(e)) {
@@ -488,29 +488,29 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
   gboolean ret = false;
   Mode mode = dwb.state.mode;
 
-  if (mode == HintMode) {
+  if (mode == HINT_MODE) {
     ret = false;
   }
-  else if (mode == FindMode) {
+  else if (mode == FIND_MODE) {
     dwb_focus_scroll(dwb.state.fview);
     dwb_search(NULL);
   }
-  else if (mode == SearchFieldMode) {
+  else if (mode == SEARCH_FIELD_MODE) {
     dwb_submit_searchengine();
   }
-  else if (mode == SettingsMode) {
+  else if (mode == SETTINGS_MODE) {
     dwb_parse_setting(GET_TEXT());
   }
-  else if (mode == KeyMode) {
+  else if (mode == KEY_MODE) {
     dwb_parse_key_setting(GET_TEXT());
   }
-  else if (mode == CommandMode) {
+  else if (mode == COMMAND_MODE) {
     dwb_parse_command_line(GET_TEXT());
   }
-  else if (mode == DownloadGetPath) {
+  else if (mode == DOWNLOAD_GET_PATH) {
     dwb_dl_start();
   }
-  else if (mode == SaveSession) {
+  else if (mode == SAVE_SESSION) {
     dwb_session_save(GET_TEXT());
     dwb_end();
   }
@@ -750,7 +750,7 @@ dwb_view_new_reorder() {
     CLEAR_COMMAND_TEXT(dwb.state.views);
     gtk_widget_reparent(views->vbox, dwb.gui.right);
     gtk_box_reorder_child(GTK_BOX(dwb.gui.right), views->vbox, 0);
-    if (dwb.state.layout & Maximized) {
+    if (dwb.state.layout & MAXIMIZED) {
       gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
       if (dwb.state.fview != dwb.state.views) {
         gtk_widget_hide(dwb.gui.right);
@@ -791,13 +791,13 @@ dwb_parse_setting(const char *text) {
   Arg *a = NULL;
   char **token = g_strsplit(text, " ", 2);
 
-  GHashTable *t = dwb.state.setting_apply == Global ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
+  GHashTable *t = dwb.state.setting_apply == APPLY_GLOBAL ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
   if (token[0]) {
     if  ( (s = g_hash_table_lookup(t, token[0])) ) {
-      if ( (a = dwb_util_char_to_arg(token[1], s->type)) || (s->type == Char && a->p == NULL)) {
+      if ( (a = dwb_util_char_to_arg(token[1], s->type)) || (s->type == CHAR && a->p == NULL)) {
         s->arg = *a;
         dwb_apply_settings(s);
-        dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == Boolean ? ( s->arg.b ? "true" : "false") : token[1]);
+        dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : token[1]);
         dwb_save_settings();
       }
       else {
@@ -843,7 +843,7 @@ dwb_parse_key_setting(const char *text) {
 static void
 dwb_apply_settings(WebSettings *s) {
   WebSettings *new;
-  if (dwb.state.setting_apply == Global) {
+  if (dwb.state.setting_apply == APPLY_GLOBAL) {
     new = g_hash_table_lookup(dwb.settings, s->n.first);
     new->arg = s->arg;
     for (GList *l = dwb.state.views; l; l=l->next)  {

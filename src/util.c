@@ -124,15 +124,15 @@ Arg *
 dwb_util_char_to_arg(char *value, DwbType type) {
   errno = 0;
   Arg *ret = NULL;
-  if (type == Boolean && !value)  {
+  if (type == BOOLEAN && !value)  {
     Arg a =  { .b = false };
     ret = &a;
   }
-  else if (value || type == Char) {
+  else if (value || type == CHAR) {
     if (value) {
       g_strstrip(value);
       if (strlen(value) == 0) {
-        if (type == Char) {
+        if (type == CHAR) {
           Arg a = { .p = NULL };
           ret = &a;
           return ret;
@@ -140,7 +140,7 @@ dwb_util_char_to_arg(char *value, DwbType type) {
         return NULL;
       }
     }
-    if (type == Boolean) {
+    if (type == BOOLEAN) {
       if(!g_ascii_strcasecmp(value, "false") || !strcmp(value, "0")) {
         Arg a = { .b = false };
         ret = &a;
@@ -150,25 +150,25 @@ dwb_util_char_to_arg(char *value, DwbType type) {
         ret = &a;
       }
     }
-    else if (type == Integer) {
+    else if (type == INTEGER) {
       int n = strtol(value, NULL, 10);
       if (n != LONG_MAX &&  n != LONG_MIN && !errno ) {
         Arg a = { .i = n };
         ret = &a;
       }
     }
-    else if (type == Double) {
+    else if (type == DOUBLE) {
       double d;
       if ((d = g_strtod(value, NULL)) ) {
         Arg a = { .d = d };
         ret = &a;
       }
     }
-    else if (type == Char) {
+    else if (type == CHAR) {
       Arg a = { .p = !value || (value && !strcmp(value, "null")) ? NULL : g_strdup(value) };
       ret = &a;
     }
-    else if (type == ColorChar) {
+    else if (type == COLOR_CHAR) {
       int length = strlen(value);
       if (value[0] == '#' && (length == 4 || length == 7) && dwb_util_is_hex(&value[1])) {
         Arg a = { .p = g_strdup(value) };
@@ -182,19 +182,19 @@ dwb_util_char_to_arg(char *value, DwbType type) {
 char *
 dwb_util_arg_to_char(Arg *arg, DwbType type) {
   char *value = NULL;
-  if (type == Boolean) {
+  if (type == BOOLEAN) {
     if (arg->b) 
       value = g_strdup("true");
     else
       value = g_strdup("false");
   }
-  else if (type == Double) {
+  else if (type == DOUBLE) {
     value = g_strdup_printf("%.2f", arg->d);
   }
-  else if (type == Integer) {
+  else if (type == INTEGER) {
     value = g_strdup_printf("%d", arg->i);
   }
-  else if (type == Char || type == ColorChar) {
+  else if (type == CHAR || type == COLOR_CHAR) {
     if (arg->p) {
       char *tmp = (char*) arg->p;
       value = g_strdup_printf(tmp);
