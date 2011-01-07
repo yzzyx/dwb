@@ -29,7 +29,7 @@ static GList *allowed_plugins;
 static gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
 static gboolean dwb_web_view_close_web_view_cb(WebKitWebView *, GList *);
 static gboolean dwb_web_view_console_message_cb(WebKitWebView *, char *, int , char *, GList *);
-static GtkWidget * dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *);
+static WebKitWebView * dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *);
 static gboolean dwb_web_view_plugin_blocker_button_cb(GtkWidget *, GdkEventButton *, char *);
 static GtkWidget * dwb_web_view_create_plugin_widget_cb(WebKitWebView *, char *, char *, GHashTable *, GList *);
 static gboolean dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *);
@@ -115,10 +115,17 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
 }/*}}}*/
 
 /* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
-static GtkWidget * 
+static WebKitWebView * 
 dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
-  dwb_add_view(NULL); 
-  return ((View*)dwb.state.fview->data)->web;
+  if (dwb.misc.tabbed_browsing) {
+    dwb_add_view(NULL); 
+    return CURRENT_WEBVIEW();
+  }
+  else {
+    dwb.state.nv = OPEN_NEW_WINDOW;
+    return web;
+  }
+  // return ((View*)dwb.state.fview->data)->web;
 }/*}}}*/
 
 /* dwb_web_view_plugin_blocker_button_cb (GtkWidget *, GdkEventButton, char *uri) {{{*/
