@@ -267,7 +267,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
   { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
   { { "hide-tabbar",                             "Hide tabbar (never, always, tiled)", },                      false, true,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar, },
-  { { "tabbed-browsing",                         "Enable tabbed browsing", },                                  false, true,  CHAR,      { .b = true         },      (S_Func) dwb_set_dummy, },
+  { { "tabbed-browsing",                         "Enable tabbed browsing", },                                  false, true,  BOOLEAN,      { .b = true         },      (S_Func) dwb_set_dummy, },
 
   { { "active-completion-fg-color",                    "UI: Completion active foreground", },                        false, true,  COLOR_CHAR, { .p = "#53868b"         }, (S_Func) dwb_init_style, },
   { { "active-completion-bg-color",                    "UI: Completion active background", },                        false, true,  COLOR_CHAR, { .p = "#000000"         }, (S_Func) dwb_init_style, },
