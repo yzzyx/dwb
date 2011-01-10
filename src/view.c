@@ -82,6 +82,12 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     dwb_focus(gl);
   }
+  else if (e->button == 8) {
+    dwb_com_history_back(NULL);
+  }
+  else if (e->button == 9) {
+    dwb_com_history_forward(NULL);
+  }
   return ret;
 }/*}}}*/
 

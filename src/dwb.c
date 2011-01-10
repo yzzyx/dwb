@@ -2527,9 +2527,7 @@ int main(int argc, char *argv[]) {
 
   gtk_init(&argc, &argv);
 
-  if (!g_thread_supported()) {
-    g_thread_init(NULL);
-  }
+  g_thread_init(NULL);
   if (argc > 1) {
     for (int i=1; i<argc; i++) {
       if (argv[i][0] == '-') {
