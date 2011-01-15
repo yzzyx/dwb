@@ -17,6 +17,7 @@
  */
 
 #include "dwb.h"
+#include "soup.h"
 #include "completion.h"
 #include "commands.h"
 #include "view.h"
@@ -47,9 +48,7 @@ static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 static gboolean dwb_command_mode(Arg *arg);
 static void dwb_reload_scripts(GList *,  WebSettings *);
 static void dwb_reload_layout(GList *,  WebSettings *);
-static gboolean dwb_test_cookie_allowed(SoupCookie *);
 static char * dwb_test_userscript(const char *);
-static void dwb_save_cookies(void);
 
 static void dwb_open_channel(const char *);
 static void dwb_open_si_channel(void);
@@ -64,7 +63,6 @@ static void dwb_save_quickmark(const char *);
 static void dwb_open_quickmark(const char *);
 
 
-static void dwb_init_proxy(void);
 static void dwb_init_key_map(void);
 static void dwb_init_settings(void);
 static void dwb_init_style(void);
@@ -254,7 +252,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "full-content-zoom",                       "Full content zoom", },                                       false, false, BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property, },
   { { "zoom-level",                              "Zoom level", },                                              false, false, DOUBLE,  { .d = 1.0               }, (S_Func) dwb_webview_property, },
   { { "proxy",                                   "HTTP-proxy", },                                              false, true,  BOOLEAN, { .b = false              },  (S_Func) dwb_set_proxy, },
-  { { "proxy-url",                               "HTTP-proxy url", },                                          false, true,  CHAR,    { .p = NULL              },   (S_Func) dwb_init_proxy, },
+  { { "proxy-url",                               "HTTP-proxy url", },                                          false, true,  CHAR,    { .p = NULL              },   (S_Func) dwb_soup_init_proxy, },
   { { "cookies",                                  "All Cookies allowed", },                                     false, true,  BOOLEAN, { .b = false             }, (S_Func) dwb_set_cookies, },
 
   { { "active-fg-color",                         "UI: Active view foreground", },                              false, true,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
@@ -512,15 +510,6 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     return true;
   }
   return false;
-}/*}}}*/
-
-/* dwb_cookie_changed_cb {{{*/
-static void 
-dwb_cookie_changed_cb(SoupCookieJar *cookiejar, SoupCookie *old, SoupCookie *new) {
-  if (new) {
-    dwb.state.last_cookie = soup_cookie_copy(new);
-    dwb_save_cookies();
-  }
 }/*}}}*/
 
 /*}}}*/
@@ -996,31 +985,6 @@ dwb_layout_from_char(const char *desc) {
   return layout;
 }/*}}}*/
 
-/* dwb_test_cookie_allowed(const char *)     return:  gboolean{{{*/
-static gboolean 
-dwb_test_cookie_allowed(SoupCookie *cookie) {
-  for (GList *l = dwb.fc.cookies_allow; l; l=l->next) {
-    if (soup_cookie_domain_matches(cookie, l->data)) {
-      return true;
-    }
-  }
-  return false;
-}/*}}}*/
-
-/* dwb_save_cookies {{{*/
-static void 
-dwb_save_cookies() {
-  SoupCookieJar *jar; 
-
-  jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
-  for (GSList *l = soup_cookie_jar_all_cookies(dwb.state.cookiejar); l; l=l->next) {
-    if (dwb.state.cookies_allowed || dwb_test_cookie_allowed(l->data) ) {
-      soup_cookie_jar_add_cookie(jar, l->data);
-    }
-  }
-  g_object_unref(jar);
-}/*}}}*/
-
 /* dwb_web_settings_get_value(const char *id, void *value) {{{*/
 static Arg *  
 dwb_web_settings_get_value(const char *id) {
@@ -1300,9 +1264,9 @@ dwb_load_uri(Arg *arg) {
   GError *error = NULL;
 
   /* free cookie of last visited website */
-  if (dwb.state.last_cookie) {
-    soup_cookie_free(dwb.state.last_cookie); 
-    dwb.state.last_cookie = NULL;
+  if (dwb.state.last_cookies) {
+    soup_cookies_free(dwb.state.last_cookies); 
+    dwb.state.last_cookies = NULL;
   }
 
   g_strstrip(arg->p);
@@ -1954,21 +1918,6 @@ dwb_keymap_add(GList *gl, KeyValue key) {
 
 /* INIT {{{*/
 
-/* dwb_setup_cookies() {{{*/
-static void
-dwb_init_cookies() {
-  SoupCookieJar *jar;
-
-  dwb.state.cookiejar = soup_cookie_jar_new();
-  soup_session_add_feature(dwb.misc.soupsession, SOUP_SESSION_FEATURE(dwb.state.cookiejar));
-  jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
-  for (GSList *c = soup_cookie_jar_all_cookies(jar); c; c = c->next) {
-    soup_cookie_jar_add_cookie(dwb.state.cookiejar, c->data);
-  }
-  g_signal_connect(dwb.state.cookiejar, "changed", G_CALLBACK(dwb_cookie_changed_cb), NULL);
-  g_object_unref(jar);
-}/*}}}*/
-
 /* dwb_init_key_map() {{{*/
 static void 
 dwb_init_key_map() {
@@ -2330,23 +2279,6 @@ dwb_init_signals() {
   }
 }/*}}}*/
 
-/* dwb_init_proxy{{{*/
-static void 
-dwb_init_proxy() {
-  const char *proxy;
-  static char *newproxy;
-  gboolean use_proxy = GET_BOOL("proxy");
-  if ( !(proxy =  g_getenv("http_proxy")) && !(proxy =  GET_CHAR("proxy-url")) )
-    return;
-
-  if ( (use_proxy && dwb_util_test_connect(proxy)) || !use_proxy ) {
-    newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
-    dwb.misc.proxyuri = soup_uri_new(newproxy);
-    g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", use_proxy ? dwb.misc.proxyuri : NULL, NULL); 
-    FREE(newproxy);
-  }
-}/*}}}*/
-
 /* dwb_init_vars{{{*/
 static void 
 dwb_init_vars() {
@@ -2379,6 +2311,7 @@ static void dwb_init() {
   dwb.comps.active_comp = NULL;
   dwb.misc.max_c_items = MAX_COMPLETIONS;
   dwb.misc.userscripts = NULL;
+  dwb.state.last_cookies = NULL;
 
 
   dwb_init_key_map();
@@ -2387,8 +2320,8 @@ static void dwb_init() {
   dwb_init_gui();
 
   dwb.misc.soupsession = webkit_get_default_session();
-  dwb_init_proxy();
-  dwb_init_cookies();
+  dwb_soup_init_proxy(dwb.misc.soupsession);
+  dwb_soup_init_cookies(dwb.misc.soupsession);
   dwb_init_vars();
 
   if (dwb.state.layout & BOTTOM_STACK) {

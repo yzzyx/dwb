@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <libsoup/soup.h>
 #include <locale.h>
@@ -287,6 +288,7 @@ struct _State {
 
   SoupCookieJar *cookiejar;
   SoupCookie *last_cookie;
+  GSList *last_cookies;
   gboolean cookies_allowed;
 
   gboolean complete_history;
