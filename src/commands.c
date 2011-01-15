@@ -282,8 +282,9 @@ dwb_com_allow_cookie(Arg *arg) {
         dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, g_strdup(domain));
         count++;
       }
+      dwb_soup_save_cookie(c);
     }
-    dwb_soup_save_cookies(dwb.state.last_cookies);
+    //dwb_soup_save_cookies(dwb.state.last_cookies);
     dwb.state.last_cookies = NULL;
     dwb_set_normal_message(dwb.state.fview, true, "Allowed Cookies and added %d domains.", count);
     return true;

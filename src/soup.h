@@ -22,7 +22,7 @@
 #include "dwb.h"
 #include "util.h"
 
-void dwb_soup_save_cookies(GSList *);
+void dwb_soup_save_cookie(SoupCookie *);
 void dwb_soup_init_cookies(SoupSession *);
 void dwb_soup_init_proxy(SoupSession *);
 

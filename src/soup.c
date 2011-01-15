@@ -20,16 +20,10 @@
 
 /* dwb_soup_save_cookies(cookies) {{{*/
 void 
-dwb_soup_save_cookies(GSList *cookies) {
-  int fd = open(dwb.files.cookies, O_RDONLY);
-  flock(fd, LOCK_EX);
+dwb_soup_save_cookie(SoupCookie *cookie) {
   SoupCookieJar *jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
-  for (GSList *l = cookies; l; l=l->next) {
-      soup_cookie_jar_add_cookie(jar, l->data);
-  }
+  soup_cookie_jar_add_cookie(jar, cookie);
   g_object_unref(jar);
-  flock(fd, LOCK_EX);
-  close(fd);
 }/*}}}*/
 
 /* dwb_test_cookie_allowed(const char *)     return:  gboolean{{{*/
@@ -54,7 +48,7 @@ dwb_soup_got_headers_cb(SoupMessage *message) {
   for (GSList *l = soup_cookies_from_response(message); l; l=l->next) {
     SoupCookie *c = l->data;
     if (dwb.state.cookies_allowed || dwb_soup_test_cookie_allowed(c)) {
-      soup_cookie_jar_add_cookie(jar, c);
+      dwb_soup_save_cookie(c);
     }
     else {
       dwb.state.last_cookies = g_slist_append(dwb.state.last_cookies, soup_cookie_copy(c));
