@@ -1315,6 +1315,7 @@ dwb_load_uri(Arg *arg) {
 
   if (dwb.state.type == HTML_STRING) {
     webkit_web_view_load_string(CURRENT_WEBVIEW(), arg->p, NULL, NULL, "about:blank");
+    dwb.state.type = 0;
     return;
   }
   if ( (uri = dwb_test_userscript(arg->p)) ) {
@@ -1709,6 +1710,7 @@ dwb_clean_vars() {
   dwb.state.buffer = NULL;
   dwb.state.nummod = 0;
   dwb.state.nv = 0;
+  dwb.state.type = 0;
   dwb.state.scriptlock = 0;
   dwb.state.last_com_history = NULL;
   dwb.state.dl_action = DL_ACTION_DOWNLOAD;
