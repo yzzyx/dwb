@@ -110,6 +110,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define GET_DOUBLE(prop)            (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.d)
 /*}}}*/
 
+
 /* TYPES {{{*/
 
 typedef struct _Arg Arg;
@@ -195,6 +196,7 @@ typedef unsigned int DwbType;
 #define DOUBLE      0x03
 #define BOOLEAN     0x04
 #define COLOR_CHAR  0x05
+#define HTML_STRING 0x06
 
 typedef unsigned int SettingsScope;
 #define APPLY_GLOBAL    0x01
@@ -279,6 +281,7 @@ struct _State {
   GString *buffer;
   int nummod;
   Open nv;
+  DwbType type;
   guint scriptlock;
   int size;
   GHashTable *settings_hash;

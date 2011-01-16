@@ -111,6 +111,8 @@ static FunctionMap FMAP [] = {
   { { "history_forward",       "Go Forward",                        }, 1, (Func)dwb_com_history_forward,     "End of History",                  ALWAYS_SM, },
   { { "increase_master",       "Increase master area",              }, 1, (Func)dwb_com_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
   { { "insert_mode",           "Insert Mode",                       }, 0, (Func)dwb_insert_mode,             NULL,                              ALWAYS_SM, },
+  { { "load_html",             "Load html",                         }, 1, (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
+  { { "load_html_nv",          "Load html new view",                }, 1, (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL } },
   { { "open",                  "Open",                              }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
   { { "open_nv",               "Viewopen",                          }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
   { { "open_nw",               "Winopen",                           }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
@@ -1311,6 +1313,10 @@ dwb_load_uri(Arg *arg) {
     return;
   }
 
+  if (dwb.state.type == HTML_STRING) {
+    webkit_web_view_load_string(CURRENT_WEBVIEW(), arg->p, NULL, NULL, "about:blank");
+    return;
+  }
   if ( (uri = dwb_test_userscript(arg->p)) ) {
     Arg a = { .p = uri };
     dwb_execute_user_script(&a);

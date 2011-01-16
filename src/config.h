@@ -121,4 +121,6 @@ static KeyValue KEYS[] = {
   { "execute_userscript",       {   "eu",           0 }, },  
   { "allow_plugins",             {   "ap",           0 }, },  
   { "print",                    {   "p",            GDK_CONTROL_MASK | GDK_MOD1_MASK }, }, 
+  { "load_html",                    {   NULL,         0 }, }, 
+  { "load_html_nv",                    {   NULL,         0 }, }, 
 };

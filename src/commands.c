@@ -453,6 +453,8 @@ dwb_com_open(Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->n;
 
+  dwb.state.type = arg->i;
+
   if (arg && arg->p) {
     dwb_load_uri(arg);
   }
