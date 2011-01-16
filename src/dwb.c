@@ -1635,7 +1635,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, char *filename) 
 void
 dwb_execute_user_script(Arg *a) {
   GError *error = NULL;
-  char *argv[3] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), NULL } ;
+  char *argv[4] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), (char *)dwb.misc.profile, NULL } ;
   int std_out;
   if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &std_out, NULL, &error)) {
     GIOChannel *channel = g_io_channel_unix_new(std_out);
