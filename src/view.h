@@ -27,6 +27,8 @@
 #include "session.h"
 
 GList * dwb_add_view(Arg *);
+void dwb_view_remove(void);
+gboolean dwb_view_push_master(Arg *);
 GList * dwb_add_view_new_with_webview(void);
 void dwb_view_set_active_style(GList *);
 void dwb_view_set_normal_style(GList *);

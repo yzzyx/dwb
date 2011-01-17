@@ -136,7 +136,7 @@ typedef struct _ViewStatus ViewStatus;
 typedef struct _WebSettings WebSettings;
 /*}}}*/
 typedef gboolean (*Command_f)(void*);
-typedef gboolean (*Func)(void*);
+typedef gboolean (*Func)(void *, void*);
 typedef void (*void_func)(void*);
 typedef void (*S_Func)(void *, WebSettings *);
 typedef void *(*Content_Func)(const char *);

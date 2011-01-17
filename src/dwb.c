@@ -85,7 +85,7 @@ static char *restore = NULL;
 
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
-  { { "add_view",              "Add a new view",                    }, 1, (Func)dwb_add_view,                NULL,                              ALWAYS_SM,     { .p = NULL }, },
+  { { "add_view",              "Add a new view",                    }, 1, (Func)dwb_com_add_view,            NULL,                              ALWAYS_SM,     { .p = NULL }, },
   { { "allow_cookie",          "Cookie allowed",                    }, 0, (Func)dwb_com_allow_cookie,        "No cookie in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, (Func)dwb_com_bookmark,            NO_URL,                            POST_SM, },
   { { "bookmarks",             "Bookmarks",                         }, 0, (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
@@ -883,7 +883,8 @@ static void
 dwb_reload_scripts(GList *gl, WebSettings *s) {
   FREE(dwb.misc.systemscripts);
   dwb_init_scripts();
-  dwb_com_reload(NULL);
+  //dwb_com_reload(NULL, NULL);
+  webkit_web_view_reload(WEBVIEW(gl));
 }/*}}}*/
 
 /* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
@@ -1405,7 +1406,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
     KeyMap *km = l->data;
     if (km->map->entry) {
       if (!strcmp(key, km->key) && CLEAN_STATE(e) == km->mod) {
-        km->map->func(&km->map->arg);
+        km->map->func(&km, &km->map->arg);
         ret = true;
         break;
       }
@@ -2401,7 +2402,7 @@ static void dwb_init() {
 
   if (dwb.state.layout & BOTTOM_STACK) {
     Arg a = { .n = dwb.state.layout };
-    dwb_com_set_orientation(&a);
+    dwb_com_set_orientation(NULL, &a);
   }
   if (restore && dwb_session_restore(restore));
   else if (dwb.misc.argc > 0) {
@@ -2434,7 +2435,7 @@ dwb_parse_command_line(const char *line) {
         m->map->arg.p = token[1];
       }
       if (gtk_widget_has_focus(dwb.gui.entry) && m->map->entry) {
-        m->map->func(&m->map->arg);
+        m->map->func(&m, &m->map->arg);
       }
       else {
         dwb_com_simple_command(m);
