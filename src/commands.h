@@ -25,6 +25,7 @@
 #include "util.h"
 #include "view.h"
 #include "session.h"
+#include "soup.h"
 
 void dwb_com_simple_command(KeyMap *km);
 gboolean dwb_com_add_search_field(KeyMap *, Arg *);

@@ -269,6 +269,7 @@ dwb_com_show_settings(KeyMap *km, Arg *arg) {
   g_string_append(buffer, HTML_BODY_END);
   dwb_web_view_add_history_item(dwb.state.fview);
 
+  puts(buffer->str);
   webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, SETTINGS);
   g_string_free(buffer, true);
   return true;
@@ -277,11 +278,22 @@ dwb_com_show_settings(KeyMap *km, Arg *arg) {
 /* dwb_com_allow_cookie {{{*/
 gboolean
 dwb_com_allow_cookie(KeyMap *km, Arg *arg) {
-  if (dwb.state.last_cookie) {
-    char *domain = (char*)soup_cookie_get_domain(dwb.state.last_cookie);
-    dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, domain);
-    soup_cookie_jar_add_cookie(dwb.state.cookiejar, dwb.state.last_cookie);
-    dwb_set_normal_message(dwb.state.fview, true, "Saved cookie and allowed domain: %s", domain);
+  if (dwb.state.last_cookies) {
+    int count = 0;
+    GString *buffer = g_string_new(NULL);
+    for (GSList *l = dwb.state.last_cookies; l; l=l->next) {
+      SoupCookie *c = l->data;
+      const char *domain = soup_cookie_get_domain(c);
+      if ( ! dwb.fc.cookies_allow || ! g_list_find_custom(dwb.fc.cookies_allow, domain, (GCompareFunc) strcmp) ) {
+        dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, g_strdup(domain));
+        g_string_append_printf(buffer, "%s ", domain);
+        count++;
+      }
+    }
+    dwb_soup_save_cookies(dwb.state.last_cookies);
+    dwb.state.last_cookies = NULL;
+    dwb_set_normal_message(dwb.state.fview, true, "Allowed domain%s: %s", count == 1 ? "" : "s", buffer->str);
+    g_string_free(buffer, true);
     return true;
   }
   return false;

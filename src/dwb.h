@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <libsoup/soup.h>
 #include <locale.h>
@@ -46,9 +47,11 @@
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
   body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center; }\n\
+  table { border-spacing:0px; }\n\
+  th { border:thin solid black; }\n \
 .line { border: %s; vertical-align: middle; }\n \
 .text { float: left; font-variant: normal; font-size: 16;}\n \
-.key { text-align: right;  font-size: 12; }\n \
+.key { text-align: center;  font-size: 12; }\n \
 .active { background-color: #660000; }\n \
 h2 { font-variant: small-caps; }\n \
 .alignCenter { margin-left: 25%%; width: 50%%; }\n \
@@ -64,7 +67,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define HTML_FORM_END "</form>\n</div>\n"
 #define HTML_DIV_START "<div class=\"line\">\n"
 #define HTML_DIV_KEYS_TEXT "<div class=\"text\">%s: <span style=\"text-align:block; font-style:oblique; font-size:12;\">%s</span></div>\n "
-#define HTML_DIV_KEYS_VALUE "<div class=\"key\">\n <input onchange=\"get_value(this)\" id=\"%s\" value=\"%s %s\"/>\n</div>\n"
+#define HTML_DIV_KEYS_VALUE "<th><div class=\"key\">\n <input onchange=\"get_value(this)\" id=\"%s\" value=\"%s %s\"/>\n</div></th>\n"
 #define HTML_DIV_SETTINGS_VALUE "<div class=\"key\">\n <input onchange=\"get_value(this);\" id=\"%s\" value=\"%s\"/>\n</div>\n"
 #define HTML_DIV_SETTINGS_CHECKBOX "<div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" onchange=\"get_value(this);\" %s>\n</div>\n"
 #define HTML_DIV_END "</div>\n"
@@ -290,6 +293,7 @@ struct _State {
 
   SoupCookieJar *cookiejar;
   SoupCookie *last_cookie;
+  GSList *last_cookies;
   gboolean cookies_allowed;
 
   gboolean complete_history;
