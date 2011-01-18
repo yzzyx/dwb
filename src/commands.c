@@ -203,13 +203,14 @@ dwb_com_show_keys(KeyMap *km, Arg *arg) {
   g_string_append_printf(buffer, SETTINGS_VIEW, dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
   g_string_append_printf(buffer, HTML_H2, "Keyboard Configuration", dwb.misc.profile);
 
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_first);
   g_string_append(buffer, HTML_BODY_START);
   g_string_append(buffer, HTML_FORM_START);
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
     Navigation n = m->map->n;
     g_string_append(buffer, HTML_DIV_START);
-    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.first, n.second);
+    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.first);
     g_string_append_printf(buffer, HTML_DIV_KEYS_VALUE, n.first, dwb_modmask_to_string(m->mod), m->key ? m->key : "");
     g_string_append(buffer, HTML_DIV_END);
   }
@@ -252,7 +253,7 @@ dwb_com_show_settings(KeyMap *km, Arg *arg) {
     WebSettings *m = l->data;
     if (!m->global || (m->global && dwb.state.setting_apply == APPLY_GLOBAL)) {
       g_string_append(buffer, HTML_DIV_START);
-      g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->n.first, m->n.second);
+      g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->n.first);
       if (m->type == BOOLEAN) {
         const char *value = m->arg.b ? "checked" : "";
         g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->n.first, value);
