@@ -599,9 +599,6 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     g_string_append(string, js_items);
     FREE(js_items);
   }
-  if (! dwb.state.cookies_allowed && dwb.state.last_cookies) {
-    g_string_append_printf(string, " [c:%d]", g_slist_length(dwb.state.last_cookies));
-  }
 
   gboolean back = webkit_web_view_can_go_back(WEBKIT_WEB_VIEW(v->web));
   gboolean forward = webkit_web_view_can_go_forward(WEBKIT_WEB_VIEW(v->web));
