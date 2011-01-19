@@ -341,7 +341,6 @@ static void
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
     webkit_web_view_execute_script(web, dwb.misc.systemscripts);
-    webkit_web_view_execute_script(web, dwb.misc.scripts);
 }/*}}}*/
 
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
