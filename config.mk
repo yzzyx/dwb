@@ -1,5 +1,5 @@
 NAME=dwb
-VERSION=0.0.16
+VERSION=0.0.17
 DISTDIR=$(NAME)-$(VERSION)
 DOCDIR=doc
 SRCDIR=src
@@ -24,7 +24,7 @@ DFLAGS += -g -B
 
 
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
-SOURCE = $(wildcard $(SRCDIR)/*.c)
+SOURCE = $(wildcard $(SRCDIR)/*.c) 
 HDR = $(SOURCE:%.c=%.h) 
 TARGET = $(NAME)
 DTARGET=$(TARGET)_d

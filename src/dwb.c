@@ -1646,6 +1646,7 @@ dwb_get_scripts() {
   GList *gl = NULL;
   Navigation *n = NULL;
 
+  // TODO get saved shorcuts
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
       char *path = g_build_filename(dwb.files.userscripts, filename, NULL);
