@@ -560,4 +560,5 @@ CompletionType dwb_eval_completion_type(void);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
+gboolean dwb_block_ad(GList *gl, const char *);
 #endif

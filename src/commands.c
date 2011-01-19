@@ -294,6 +294,7 @@ dwb_com_allow_cookie(KeyMap *km, Arg *arg) {
     dwb.state.last_cookies = NULL;
     dwb_set_normal_message(dwb.state.fview, true, "Allowed domain%s: %s", count == 1 ? "" : "s", buffer->str);
     g_string_free(buffer, true);
+    dwb_update_status_text(dwb.state.fview, NULL);
     return true;
   }
   return false;

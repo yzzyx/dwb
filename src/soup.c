@@ -43,6 +43,12 @@ dwb_soup_test_cookie_allowed(SoupCookie *cookie) {
   return false;
 }/*}}}*/
 
+/* dwb_soup_cookie_compare(SoupCookie *, SoupCookie *) {{{*/
+int 
+dwb_soup_cookie_compare(SoupCookie *a, SoupCookie *b) {
+  return ! soup_cookie_equal(a, b);
+}/*}}}*/
+
 static void 
 dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new, gpointer *p) {
   int fd = open(dwb.files.cookies, 0);
@@ -55,7 +61,7 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
     if (dwb.state.cookies_allowed || dwb_soup_test_cookie_allowed(new)) {
       soup_cookie_jar_add_cookie(j, soup_cookie_copy(new));
     }
-    else {
+    else if (! g_slist_find_custom(dwb.state.last_cookies, new, (GCompareFunc)dwb_soup_cookie_compare ) && ! dwb_block_ad(dwb.state.fview, soup_cookie_get_domain(new))){
       dwb.state.last_cookies = g_slist_append(dwb.state.last_cookies, soup_cookie_copy(new));
     }
   }

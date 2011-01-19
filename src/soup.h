@@ -22,6 +22,7 @@
 #include "dwb.h"
 #include "util.h"
 
+void dwb_soup_cookies_set_accept_policy(Arg *);
 void dwb_soup_save_cookies(GSList *);
 void dwb_soup_init_cookies(SoupSession *);
 void dwb_soup_init_proxy(SoupSession *);

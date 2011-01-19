@@ -294,25 +294,6 @@ dwb_web_view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   return false;
 }/*}}}*/
 
-static gboolean 
-dwb_block_ad(GList *gl, WebKitNetworkRequest *request) {
-  if (!VIEW(gl)->status->adblocker) 
-    return false;
-
-  const char *uri = webkit_network_request_get_uri(request);
-
-  for (GList *l = dwb.fc.adblock; l; l=l->next) {
-    char *data = l->data;
-    if (data[0] == '@') {
-      if (g_regex_match_simple(data + 1, uri, 0, 0) )
-        return true;
-    }
-    else if (strstr(uri, data)) {
-      return true;
-    }
-  }
-  return false;
-}
 /* dwb_web_view_resource_request_cb{{{*/
 static void 
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
@@ -320,7 +301,7 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitNetworkResponse *response, GList *gl) {
   SoupMessage *msg = webkit_network_request_get_message(request);
 
-  if (dwb_block_ad(gl, request)) {
+  if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
     webkit_network_request_set_uri(request, "about:blank");
     return;
   }
