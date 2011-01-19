@@ -1308,7 +1308,7 @@ dwb_load_uri(Arg *arg) {
   }
   if ( (uri = dwb_test_userscript(arg->p)) ) {
     Arg a = { .p = uri };
-    dwb_execute_user_script(&a);
+    dwb_execute_user_script(NULL, &a);
     g_free(uri);
     return;
   }
@@ -1622,7 +1622,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, char *filename) 
 }/*}}}*/
 /* dwb_execute_user_script(Arg *a) {{{*/
 void
-dwb_execute_user_script(Arg *a) {
+dwb_execute_user_script(KeyMap *km, Arg *a) {
   GError *error = NULL;
   char *argv[4] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), (char *)dwb.misc.profile, NULL } ;
   int std_out;

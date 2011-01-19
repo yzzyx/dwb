@@ -502,7 +502,7 @@ gboolean dwb_insert_mode(Arg *);
 void dwb_normal_mode(gboolean);
 
 void dwb_load_uri(Arg *);
-void dwb_execute_user_script(Arg *a);
+void dwb_execute_user_script(KeyMap *km, Arg *a);
 
 void dwb_focus_entry(void);
 void dwb_focus_scroll(GList *);
