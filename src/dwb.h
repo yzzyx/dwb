@@ -46,15 +46,16 @@
 
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
-  body { background-color: %s; color: %s; font: fantasy; font-size:16; font-weight: bold; text-align:center; }\n\
+  body { background-color: %s; color: %s; text-align:center; }\n\
   table { border-spacing:0px; }\n\
   th { border:%s; }\n \
-.line { vertical-align: middle; }\n \
-.text { float: left; font-variant: normal; font-size: 16;}\n \
-.key { text-align: center;  font-size: 12; }\n \
-.active { background-color: #660000; }\n \
-h2 { font-variant: small-caps; }\n \
-.alignCenter { margin-left: 25%%; width: 50%%; }\n \
+  .line { vertical-align: middle; }\n \
+  .text { float: left; font: normal 12px helvetica; }\n \
+  .key { text-align: center;  font-size: 12; }\n \
+  .active { background-color: #660000; }\n \
+  h2 { font: bold 16px verdana; font-variant: small-caps; }\n \
+  .alignCenter { margin-left: 25%%; width: 50%%; }\n \
+  input { font:normal 12px helvetica;  }\
 </style>\n \
 <script type=\"text/javascript\">\n  \
 function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); } \

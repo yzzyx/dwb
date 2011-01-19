@@ -270,7 +270,6 @@ dwb_com_show_settings(KeyMap *km, Arg *arg) {
   g_string_append(buffer, HTML_BODY_END);
   dwb_web_view_add_history_item(dwb.state.fview);
 
-  puts(buffer->str);
   webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, SETTINGS);
   g_string_free(buffer, true);
   return true;
