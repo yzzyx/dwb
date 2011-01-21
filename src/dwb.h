@@ -210,6 +210,33 @@ typedef unsigned int DownloadAction;
 #define DL_ACTION_DOWNLOAD  0x01
 #define DL_ACTION_EXECUTE   0x02
 
+enum Signal {
+  SIG_FIRST = 0, 
+  SIG_BUTTON_PRESS,
+  SIG_CLOSE_WEB_VIEW, 
+  SIG_CONSOLE_MESSAGE,
+  SIG_CREATE_WEB_VIEW,
+  SIG_CREATE_PLUGIN_WIDGET,
+  SIG_DOWNLOAD_REQUESTED,
+  SIG_ENTER_NOTIFY,
+  SIG_HOVERING_OVER_LINK, 
+  SIG_MIME_TYPE,
+  SIG_NAVIGATION,
+  SIG_NEW_WINDOW,
+  SIG_RESOURCE_REQUEST,
+  SIG_WINDOW_OBJECT,
+  SIG_LOAD_STATUS,
+  SIG_TITLE,
+  SIG_SCROLL,
+  SIG_VALUE_CHANGED,
+  SIG_ENTRY_KEY_PRESS,
+  SIG_ENTRY_KEY_RELEASE,
+  SIG_ENTRY_ACTIVATE,
+  SIG_TAB_BUTTON_PRESS, 
+  
+  SIG_LAST,
+};
+
 enum _Direction {
   SCROLL_UP             = GDK_SCROLL_UP,
   SCROLL_DOWN           = GDK_SCROLL_DOWN,
@@ -343,6 +370,7 @@ struct _ViewStatus {
   gboolean plugin_blocker;
   gboolean adblocker;
   Plugin *plugins;
+  gulong signals[SIG_LAST];
 };
 struct _Plugin {
   char *uri;

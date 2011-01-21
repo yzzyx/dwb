@@ -363,6 +363,12 @@ static void
 dwb_set_plugin_blocker(GList *l, WebSettings *s) {
   View *v = l->data;
   v->status->plugin_blocker = s->arg.b;
+  if (s->arg.b) {
+    v->status->signals[SIG_CREATE_PLUGIN_WIDGET] = g_signal_connect(v->web, "create-plugin-widget", G_CALLBACK(dwb_web_view_create_plugin_widget_cb), l);
+  }
+  else {
+    g_signal_handler_disconnect(v->web, v->status->signals[SIG_CREATE_PLUGIN_WIDGET]);
+  }
 }/*}}}*/
 
 /* dwb_set_content_block_regex(GList *l, WebSettings *){{{*/
