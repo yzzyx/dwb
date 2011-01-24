@@ -33,24 +33,12 @@ uninstall-data:
 	@$(RM) -r $(DESTDIR)$(DATADIR)/$(NAME)
 
 distclean: clean
-	@echo "Creating tarball."
 
 snapshot: 
 	@$(MAKE) dist DISTDIR=$(NAME)-$(BUILDDATE)
 
 dist: distclean
-	@mkdir -p $(DISTDIR)
-	@cp Makefile README gpl-3.0.txt config.mk $(DISTDIR)
-	@mkdir -p $(DISTDIR)/$(DOCDIR)
-	@cp $(DOCDIR)/dwb.1 $(DISTDIR)/$(DOCDIR)
-	@mkdir -p $(DISTDIR)/$(SHAREDIR)
-	@cp -r $ $(SHAREDIR)/hints.js $(DISTDIR)/$(SHAREDIR)
-	@mkdir -p $(DISTDIR)/$(SRCDIR)
-	@cp -r $ $(SOURCE) $(HDR) $(SRCDIR)/Makefile $(SRCDIR)/config.h $(SRCDIR)/icon.xpm $(DISTDIR)/$(SRCDIR)
-	@mkdir -p $(DISTDIR)/$(EXAMPLEDIR)
-	@cp -r $(EXAMPLES) $(DISTDIR)/$(EXAMPLEDIR)
-	@tar cfz $(DISTDIR).tar.gz $(DISTDIR)
-	@rm -rf  $(DISTDIR)
-
+	@echo "Creating tarball."
+	@hg archive -t tgz $(DISTDIR).tar.gz
 
 .PHONY: clean all install uninstall dist  distclean
