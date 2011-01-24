@@ -226,6 +226,7 @@ enum Signal {
   SIG_RESOURCE_REQUEST,
   SIG_WINDOW_OBJECT,
   SIG_LOAD_STATUS,
+  SIG_PROGRESS,
   SIG_TITLE,
   SIG_SCROLL,
   SIG_VALUE_CHANGED,
@@ -371,6 +372,7 @@ struct _ViewStatus {
   gboolean adblocker;
   Plugin *plugins;
   gulong signals[SIG_LAST];
+  int progress;
 };
 struct _Plugin {
   char *uri;

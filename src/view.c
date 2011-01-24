@@ -353,13 +353,20 @@ static void
 dwb_web_view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
+static void 
+dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
+  View *v = gl->data;
+  v->status->progress = webkit_web_view_get_progress(web) * 100;
+  if (v->status->progress == 100) {
+    v->status->progress = 0;
+  }
+  dwb_update_status(gl);
+}
 
 /* dwb_web_view_load_status_cb {{{*/
 static void 
 dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
-  double progress = webkit_web_view_get_progress(web);
-  char *text = NULL;
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
@@ -368,8 +375,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_COMMITTED: 
       break;
     case WEBKIT_LOAD_FINISHED:
-      if (dwb.state.fview)
-        dwb_update_status(gl);
+      dwb_update_status(gl);
       dwb_prepend_navigation(gl, &dwb.fc.history);
       dwb_clean_load_end(gl);
       // reload all user scripts, so the active element can automatically be
@@ -381,10 +387,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       dwb_clean_load_end(gl);
       break;
     default:
-      text = g_strdup_printf("loading [%d%%]", (int)(progress * 100));
-      dwb_set_status_bar_text(VIEW(gl)->rstatus, text, NULL, NULL); 
-      gtk_window_set_title(GTK_WINDOW(dwb.gui.window), text);
-      FREE(text);
       break;
   }
 }/*}}}*/
@@ -591,6 +593,7 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_WINDOW_OBJECT]         = g_signal_connect(v->web, "window-object-cleared",                 G_CALLBACK(dwb_web_view_window_object_cleared_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
+  v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                   G_CALLBACK(dwb_web_view_progress_cb), gl);
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
@@ -632,6 +635,7 @@ dwb_view_create_web_view(GList *gl) {
   status->current_host = NULL;
   status->custom_encoding = false;
   status->plugins = NULL;
+  status->progress = 0;
   v->status = status;
 
   v->vbox = gtk_vbox_new(false, 0);

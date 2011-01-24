@@ -600,6 +600,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
   const char *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   GString *string = g_string_new(uri);
 
+
   if (v->status->block) {
     char *js_items = v->status->block_current ? g_strdup_printf(" [%d]", v->status->items_blocked) : g_strdup(" [a]");
     g_string_append(string, js_items);
@@ -623,7 +624,16 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     g_string_append(string, position);
     FREE(position);
   }
-
+  if (v->status->progress != 0) {
+    int length = 20 * v->status->progress / 100;
+    char bar[length + 1];
+    memset(bar, '=', length-1);
+    bar[length-1] = '>';
+    bar[length] = '\0';
+    char *progress = g_strdup_printf(" [%-20s]", bar);
+    g_string_append(string, progress);
+    FREE(progress);
+  }
   dwb_set_status_bar_text(VIEW(gl)->rstatus, string->str, NULL, NULL);
   g_string_free(string, true);
 }/*}}}*/
@@ -1231,7 +1241,14 @@ dwb_update_status(GList *gl) {
   }
 
   if (gl == dwb.state.fview) {
-    gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title);
+    if (v->status->progress != 0) {
+      char *text = g_strdup_printf("[%d%%] %s", v->status->progress, title);
+      gtk_window_set_title(GTK_WINDOW(dwb.gui.window), text);
+      g_free(text);
+    }
+    else {
+      gtk_window_set_title(GTK_WINDOW(dwb.gui.window), title);
+    }
   }
   dwb_tab_label_set_text(gl, title);
 
