@@ -35,6 +35,9 @@ uninstall-data:
 distclean: clean
 	@echo "Creating tarball."
 
+snapshot: 
+	@$(MAKE) dist DISTDIR=$(NAME)-$(BUILDDATE)
+
 dist: distclean
 	@mkdir -p $(DISTDIR)
 	@cp Makefile README gpl-3.0.txt config.mk $(DISTDIR)

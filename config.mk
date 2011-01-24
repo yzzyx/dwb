@@ -37,6 +37,8 @@ MANFILE=$(NAME).1
 MAKE=make --no-print-directory
 
 
+BUILDDATE=`date +%Y.%m.%d`
+
 #directories
 PREFIX=/usr/
 
