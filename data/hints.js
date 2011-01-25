@@ -178,7 +178,7 @@ function dwb_get_element(e, offset) {
     leftoff += offset[0];
     topoff += offset[1];
   }
-  if (e instanceof HTMLIFrameElement) {
+  if (e instanceof HTMLIFrameElement || e instanceof HTMLFrameElement) {
     var res = e.contentDocument.body.querySelectorAll(hint_types);
     var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
     for (var i=0; i < res.length; i++) {

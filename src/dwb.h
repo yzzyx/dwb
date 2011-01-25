@@ -553,7 +553,7 @@ void dwb_prepend_navigation_with_argument(GList **, const char *, const char *);
 
 Navigation * dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *);
 gboolean dwb_update_hints(GdkEventKey *);
-gboolean dwb_search(Arg *);
+gboolean dwb_search(KeyMap *, Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
 char * dwb_execute_script(const char *, gboolean);

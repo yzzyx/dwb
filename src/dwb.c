@@ -1608,19 +1608,18 @@ dwb_update_search(gboolean forward) {
 
 /* dwb_search {{{*/
 gboolean
-dwb_search(Arg *arg) {
+dwb_search(KeyMap *km, Arg *arg) {
   View *v = CURRENT_VIEW();
   gboolean forward = dwb.state.forward_search;
   if (arg) {
-    dwb_update_search(arg->b);
     if (!arg->b) {
       forward = !dwb.state.forward_search;
     }
+    dwb_update_search(forward);
   }
   if (v->status->search_string) {
     webkit_web_view_search_text(WEBKIT_WEB_VIEW(v->web), v->status->search_string, false, forward, true);
   }
-  dwb_normal_mode(false);
   return true;
 }/*}}}*/
 
