@@ -9,18 +9,21 @@ var lastinput;
 var styles;
 var form_hints = "//form";
 var hints = "//a | //area | //textarea | //select | //link | //input | //button | //frame | //iframe | //*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href]";
+var hint_types = 'a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link], *[onmouseup], *[onmouseover] *[oncommand]';
+
 var styles = null;
 
-function DwbHint(element, id) {
+function DwbHint(element, offset) {
   this.element = element;
   this.rect = element.getBoundingClientRect();
+  this.offset = offset;
 
   function create_span(element) {
     var span = document.createElement("span");
-    var leftpos = Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
-    var toppos = Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
+    var leftpos = offset[0] + Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
+    var toppos = offset[1] + Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
     span.style.position = "absolute";
-    span.style.left = leftpos + "px";
+    span.style.left = leftpos  + "px";
     span.style.top = toppos + "px";
     return span;
   }
@@ -115,15 +118,15 @@ DwbLetterHint.prototype.matchText = function(input) {
 }
 
 
-function DwbLetterHint(element) {
+function DwbLetterHint(element, offset) {
   this.constructor = DwbHint;
-  this.constructor(element);
+  this.constructor(element, offset);
 }
 DwbLetterHint.prototype = new DwbHint();
 
-function DwbNumberHint(element) {
+function DwbNumberHint(element, offset) {
   this.constructor = DwbHint;
-  this.constructor(element);
+  this.constructor(element, offset);
 }
 DwbNumberHint.prototype = new DwbHint();
 
@@ -167,6 +170,29 @@ function dwb_get_visibility(e) {
   return true;
 }
 
+function dwb_get_element(e, offset) {
+  var leftoff = 0;
+  var topoff = 0;
+  var letter = hint_style.toLowerCase() == "letter";
+  if (offset) {
+    leftoff += offset[0];
+    topoff += offset[1];
+  }
+  if (e instanceof HTMLIFrameElement) {
+    var res = e.contentDocument.body.querySelectorAll(hint_types);
+    var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
+    for (var i=0; i < res.length; i++) {
+      dwb_get_element(res[i], off);
+    }
+  }
+  else {
+    if (dwb_get_visibility(e)) {
+      var off = [ leftoff, topoff ];
+      var element = letter ? new DwbLetterHint(e, off) : new DwbNumberHint(e, off);
+      elements.push(element);
+    }
+  }
+}
 
 function dwb_show_hints(w) {
   if (!w) {
@@ -176,22 +202,16 @@ function dwb_show_hints(w) {
 
   document.activeElement.blur();
 
-  var res = doc.body.querySelectorAll('a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe');
+  var res = doc.body.querySelectorAll(hint_types);
 
   var hints = document.createElement("div");
   hints.id = "dwb_hints";
 
   dwb_create_stylesheet();
 
-  var letter = hint_style.toLowerCase() == "letter";
-
   for (var i=0; i<res.length; i++) {
-    if (dwb_get_visibility(res[i])) {
-      var e = letter ? new DwbLetterHint(res[i], i) : new DwbNumberHint(res[i], i);
-      elements.push(e);
-    }
+    dwb_get_element(res[i]);
   };
-  //elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
   for (var i=0; i<elements.length; i++) {
     if (res[i] == elements[i]) {
       continue;
@@ -267,11 +287,15 @@ function dwb_clear() {
 
 function evaluate(element) {
   var ret;
+  var type;
+  var tagname;
   var e = element.element;
-  var type = e.type.toLowerCase();
-  var  tagname = e.tagName.toLowerCase();
+  if (e.type) 
+    type = e.type.toLowerCase();
+  if (e.tagname)
+    tagname = e.tagName.toLowerCase();
 
-  if (tagname == "input" || tagname == "textarea" ) {
+  if (tagname && (tagname == "input" || tagname == "textarea") ) {
     if (type == "radio" || type == "checkbox") {
       e.focus();
       dwb_click_element(element);
