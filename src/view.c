@@ -633,7 +633,6 @@ dwb_view_create_web_view(GList *gl) {
   status->search_string = NULL;
   status->downloads = NULL;
   status->current_host = NULL;
-  status->custom_encoding = false;
   status->plugins = NULL;
   status->progress = 0;
   v->status = status;
