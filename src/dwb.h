@@ -366,7 +366,6 @@ struct _ViewStatus {
   int items_blocked;
   gboolean block;
   gboolean block_current;
-  gboolean custom_encoding;
   char *mimetype;
   gboolean plugin_blocker;
   gboolean adblocker;

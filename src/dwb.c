@@ -140,7 +140,6 @@ static FunctionMap FMAP [] = {
   { { "show_keys",             "Key configuration",                 }, 1, (Func)dwb_com_show_keys,           NULL,                              ALWAYS_SM, },
   { { "show_settings",         "Settings",                          }, 1, (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_PER_VIEW } },
   { { "toggle_bottomstack",    "Toggle bottomstack",                }, 1, (Func)dwb_com_set_orientation,     NULL,                              ALWAYS_SM, },
-  { { "toggle_encoding",       "Toggle Custom encoding",            }, 1, (Func)dwb_com_toggle_custom_encoding,    NULL,                        POST_SM, },
   { { "toggle_maximized",      "Toggle maximized",                  }, 1, (Func)dwb_com_toggle_maximized,    NULL,                              ALWAYS_SM, },
   { { "view_source",           "View source",                       }, 1, (Func)dwb_com_view_source,         NULL,                              ALWAYS_SM, },
   { { "zoom_in",               "Zoom in",                           }, 1, (Func)dwb_com_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, },

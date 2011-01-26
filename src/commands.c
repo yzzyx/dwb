@@ -72,30 +72,6 @@ dwb_com_set_key(KeyMap *km, Arg *arg) {
   return true;
 }/*}}}*/
 
-/* dwb_com_toggle_custom_encoding {{{*/
-gboolean 
-dwb_com_toggle_custom_encoding(KeyMap *km, Arg *arg) {
-  View *v = CURRENT_VIEW();
-  WebKitWebView *web = CURRENT_WEBVIEW();
-  char *ce = GET_CHAR("custom-encoding");
-
-  if (!ce) 
-    return false;
-
-  v->status->custom_encoding = !v->status->custom_encoding;
-
-  if (v->status->custom_encoding) {
-    webkit_web_view_set_custom_encoding(web, ce);
-    dwb_set_normal_message(dwb.state.fview, true, "Using encoding: %s", ce);
-  }
-  else {
-    webkit_web_view_set_custom_encoding(web, NULL);
-    ce = (char*)webkit_web_view_get_encoding(web);
-    dwb_set_normal_message(dwb.state.fview, true, "Using default encoding: %s", ce);
-  }
-  return true;
-}/*}}}*/
-
 /* dwb_com_focus_input {{{*/
 gboolean
 dwb_com_focus_input(KeyMap *km, Arg *a) {

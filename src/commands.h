@@ -70,7 +70,6 @@ gboolean dwb_com_show_hints(KeyMap *, Arg *);
 gboolean dwb_com_show_keys(KeyMap *, Arg *);
 gboolean dwb_com_show_settings(KeyMap *, Arg *);
 gboolean dwb_com_toggle_block_content(KeyMap *, Arg *a);
-gboolean dwb_com_toggle_custom_encoding(KeyMap *, Arg *);
 gboolean dwb_com_toggle_property(KeyMap *, Arg *); 
 gboolean dwb_com_toggle_proxy(KeyMap *, Arg *); 
 gboolean dwb_com_undo(KeyMap *, Arg *);
