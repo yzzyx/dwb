@@ -70,7 +70,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define HTML_DIV_KEYS_TEXT "<th width=100%%><div class=\"text\">%s</div>\n</th> "
 #define HTML_DIV_KEYS_VALUE "<th><div class=\"key\">\n <input onchange=\"get_value(this)\" id=\"%s\" value=\"%s %s\"/>\n</div></th>\n"
 #define HTML_DIV_SETTINGS_VALUE "<th><div class=\"key\">\n <input onchange=\"get_value(this);\" id=\"%s\" value=\"%s\"/>\n</div>\n</th>"
-#define HTML_DIV_SETTINGS_CHECKBOX "<th><div class=\"key\"\n <input id=\"%s\" type=\"checkbox\" onchange=\"get_value(this);\" %s>\n</div>\n</th>"
+#define HTML_DIV_SETTINGS_CHECKBOX "<th><div class=\"key\">\n <input id=\"%s\" type=\"checkbox\" onchange=\"get_value(this);\" %s>\n</div>\n</th>"
 #define HTML_DIV_END "</tr>\n"
 /*}}}*/
 #define INSERT "Insert Mode"
