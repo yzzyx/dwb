@@ -8,7 +8,6 @@ var lastpos = 0;
 var lastinput;
 var styles;
 var form_hints = "//form";
-var hints = "//a | //area | //textarea | //select | //link | //input | //button | //frame | //iframe | //*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href]";
 var hint_types = 'a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link], *[onmouseup], *[onmouseover] *[oncommand]';
 
 var styles = null;
@@ -122,13 +121,11 @@ function DwbLetterHint(element, offset) {
   this.constructor = DwbHint;
   this.constructor(element, offset);
 }
-DwbLetterHint.prototype = new DwbHint();
 
 function DwbNumberHint(element, offset) {
   this.constructor = DwbHint;
   this.constructor(element, offset);
 }
-DwbNumberHint.prototype = new DwbHint();
 
 function dwb_click_element(e) {
   var mouseEvent = document.createEvent("MouseEvent");
@@ -170,47 +167,40 @@ function dwb_get_visibility(e) {
   return true;
 }
 
-function dwb_get_element(e, offset) {
+function dwb_get_element(e, offset, constructor) {
   var leftoff = 0;
   var topoff = 0;
-  var letter = hint_style.toLowerCase() == "letter";
   if (offset) {
     leftoff += offset[0];
     topoff += offset[1];
   }
-  if (e instanceof HTMLIFrameElement || e instanceof HTMLFrameElement) {
+  if ( (e instanceof HTMLIFrameElement || e instanceof HTMLFrameElement) && e.contentDocument) {
     var res = e.contentDocument.body.querySelectorAll(hint_types);
     var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
     for (var i=0; i < res.length; i++) {
-      dwb_get_element(res[i], off);
+      dwb_get_element(res[i], off, constructor);
     }
   }
   else {
     if (dwb_get_visibility(e)) {
       var off = [ leftoff, topoff ];
-      var element = letter ? new DwbLetterHint(e, off) : new DwbNumberHint(e, off);
+      var element = new constructor(e, off);
       elements.push(element);
     }
   }
 }
 
-function dwb_show_hints(w) {
-  if (!w) {
-    w = window;
-  }
-  var doc = w.document;
-
+function dwb_show_hints() {
   document.activeElement.blur();
-
-  var res = doc.body.querySelectorAll(hint_types);
 
   var hints = document.createElement("div");
   hints.id = "dwb_hints";
 
   dwb_create_stylesheet();
 
+  var res = document.body.querySelectorAll(hint_types);
   for (var i=0; i<res.length; i++) {
-    dwb_get_element(res[i]);
+    dwb_get_element(res[i], null, hint_style.toLowerCase() == "letter" ? DwbLetterHint : DwbNumberHint);
   };
   for (var i=0; i<elements.length; i++) {
     if (res[i] == elements[i]) {
@@ -223,7 +213,7 @@ function dwb_show_hints(w) {
   }
   active_arr = elements;
   
-  document.getElementsByTagName("body")[0].appendChild(hints);
+  document.body.appendChild(hints);
 }
 
 function dwb_update_hints(input) {
