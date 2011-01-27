@@ -387,3 +387,4 @@ function dwb_focus_input() {
 function dwb_blur() {
   document.activeElement.blur();
 }
+dwb_clear();
