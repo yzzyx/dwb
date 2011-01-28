@@ -422,23 +422,21 @@ dwb_com_set_orientation(KeyMap *km, Arg *arg) {
 /* History {{{*/
 gboolean 
 dwb_com_history_back(KeyMap *km, Arg *arg) {
-  gboolean ret = false;
   WebKitWebView *w = CURRENT_WEBVIEW();
-  if (webkit_web_view_can_go_back(w)) {
-    webkit_web_view_go_back(w);
-    ret = true;
-  }
-  return ret;
+  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
+  int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
+  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
+  webkit_web_view_go_to_back_forward_item(w, item);
+  return n;
 }
 gboolean 
 dwb_com_history_forward(KeyMap *km, Arg *arg) {
-  gboolean ret = false;
   WebKitWebView *w = CURRENT_WEBVIEW();
-  if (webkit_web_view_can_go_forward(w)) {
-    webkit_web_view_go_forward(w);
-    ret = true;
-  }
-  return ret;
+  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
+  int n = MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
+  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
+  webkit_web_view_go_to_back_forward_item(w, item);
+  return n;
 }/*}}}*/
 
 /* dwb_com_open(KeyMap *km, Arg *arg) {{{*/

@@ -112,6 +112,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define GET_BOOL(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.b)
 #define GET_INT(prop)               (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.i)
 #define GET_DOUBLE(prop)            (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.d)
+#define NUMMOD                      (dwb.state.nummod < 1 ? 1 : dwb.state.nummod)
 /*}}}*/
 
 
