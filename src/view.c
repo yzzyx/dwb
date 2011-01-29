@@ -66,7 +66,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
     char *clipboard = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
     g_strstrip(clipboard);
-    Arg a = { .p = clipboard };
+    Arg a = { .p = clipboard, .b = true };
     if (e->button == 3) {
       dwb_load_uri(&a);
       ret = true;
@@ -81,10 +81,10 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     dwb_focus(gl);
   }
   else if (e->button == 8) {
-    webkit_web_view_go_back(web);
+    dwb_history_back();
   }
   else if (e->button == 9) {
-    webkit_web_view_go_forward(web);
+    dwb_history_forward();
   }
   return ret;
 }/*}}}*/
@@ -242,7 +242,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   char *uri = (char *) webkit_network_request_get_uri(request);
   int button = webkit_web_navigation_action_get_button(action);
 
-  Arg a = { .p = uri };
+  Arg a = { .p = uri, .b = true };
 
   if (button != -1) {
     if (button == 2) {
@@ -251,7 +251,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
         return true;
     }
   }
-
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
     if (dwb.state.nv == OPEN_NEW_VIEW) {
       dwb.state.nv = OPEN_NORMAL;
@@ -263,18 +262,23 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     dwb.state.nv = OPEN_NORMAL;
     return true;
   }
-  const char *request_uri = webkit_network_request_get_uri(request);
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
+  const char *path;
 
+  if (reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED && (path = dwb_check_directory(uri))) {
+    dwb_load_uri(&a);
+    webkit_web_policy_decision_ignore(policy);
+    return true;
+  }
   if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
     if (dwb.state.mode == INSERT_MODE) {
       dwb_normal_mode(true);
     }
     if (dwb.state.mode == SEARCH_FIELD_MODE) {
       webkit_web_policy_decision_ignore(policy);
-      dwb.state.search_engine = dwb.state.form_name && !g_strrstr(request_uri, HINT_SEARCH_SUBMIT) 
-        ? g_strdup_printf("%s?%s=%s", request_uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
-        : g_strdup(request_uri);
+      dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, HINT_SEARCH_SUBMIT) 
+        ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
+        : g_strdup(uri);
       dwb_save_searchengine();
       return true;
     }
@@ -443,7 +447,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       return false;
     }
   }
-  else if (mode == DOWNLOAD_GET_PATH) {
+  else if (mode == DOWNLOAD_GET_PATH || mode & COMPLETE_PATH) {
     if (DWB_TAB_KEY(e)) {
       dwb_comp_complete_download(e->state & GDK_SHIFT_MASK);
       return true;
@@ -501,7 +505,7 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
     dwb_end();
   }
   else {
-    Arg a = { .n = 0, .p = (char*)GET_TEXT() };
+    Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
     dwb_load_uri(&a);
     dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
     dwb_normal_mode(true);
@@ -874,10 +878,11 @@ dwb_add_view(Arg *arg) {
 
   dwb_update_layout();
   if (arg && arg->p) {
+    arg->b = true;
     dwb_load_uri(arg);
   }
   else if (strcmp("about:blank", dwb.misc.startpage)) {
-    Arg a = { .p = dwb.misc.startpage }; 
+    Arg a = { .p = dwb.misc.startpage, .b = true }; 
     dwb_load_uri(&a);
   }
   return dwb.state.views;

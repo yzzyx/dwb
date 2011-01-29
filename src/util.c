@@ -453,3 +453,9 @@ dwb_util_domain_from_uri(const char *uri) {
   return ret;
 }/*}}}*/
 
+/* dwb_util_domain_from_uri (char *uri)      return: char* {{{*/
+int
+dwb_util_compare_path(const char *a, const char *b) {
+  return strcmp(g_strrstr(a, "/"), g_strrstr(b, "/"));
+}/*}}}*/
+

@@ -216,9 +216,24 @@ dwb_dl_start() {
   const char *path = GET_TEXT();
   char *fullpath;
   const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
+  const char *uri = webkit_download_get_uri(dwb.state.download);
   char *command = NULL;
   gboolean external = GET_BOOL("download-use-external-program");
   
+  if (g_str_has_prefix(uri, "file://") && g_file_test(uri + 7, G_FILE_TEST_EXISTS)) {
+    GError *error = NULL;
+    char *command = g_strconcat(path, " ", uri + 7, NULL);
+    char **argv = g_strsplit(command, " ", -1);
+    if (! g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &error) ) {
+      fprintf(stderr, "Couldn't open %s with %s : %s\n", uri + 7, path, error->message);
+      g_clear_error(&error);
+    }
+    dwb_dl_set_mimetype(path);
+    g_strfreev(argv);
+    g_free(command);
+
+    return;
+  }
   if (path[0] != '/') {
     dwb_set_error_message(dwb.state.fview, "A full path must be specified");
     dwb_normal_mode(false);
@@ -246,7 +261,6 @@ dwb_dl_start() {
   }
 
   if (external && dwb.state.dl_action == DL_ACTION_DOWNLOAD) {
-    const char *uri = webkit_download_get_uri(dwb.state.download);
     command = dwb_get_download_command(uri, fullpath);
     if (!g_spawn_command_line_async(command, NULL)) {
       dwb_set_error_message(dwb.state.fview, "Cannot spawn download program");
@@ -300,12 +314,18 @@ dwb_dl_entry_set_spawn_command(const char *command) {
 /* dwb_dl_get_path {{{*/
 void 
 dwb_dl_get_path(GList *gl, WebKitDownload *d) {
-  char *command;
+  const char *uri = webkit_download_get_uri(d) + 7;
+
+  if (g_file_test(uri,  G_FILE_TEST_IS_EXECUTABLE)) {
+    g_spawn_command_line_async(uri, NULL);
+    return;
+  }
+
+  char *command = NULL;
   dwb_focus_entry();
   dwb.state.mode = DOWNLOAD_GET_PATH;
   dwb.state.download = d;
-
-  if ( dwb.state.mimetype_request && (command = dwb_get_command_from_mimetype(dwb.state.mimetype_request)) ) {
+  if ( (dwb.state.mimetype_request && (command = dwb_get_command_from_mimetype(dwb.state.mimetype_request))) ||  g_file_test(uri, G_FILE_TEST_EXISTS)) {
     dwb.state.dl_action = DL_ACTION_EXECUTE;
     dwb_dl_entry_set_spawn_command(command);
   }
@@ -315,6 +335,7 @@ dwb_dl_get_path(GList *gl, WebKitDownload *d) {
 }/*}}}*/
 
 /* dwb_dl_set_execute {{{*/
+// TODO complete path should not be in download.c
 void 
 dwb_dl_set_execute(Arg *arg) {
   if (dwb.state.mode == DOWNLOAD_GET_PATH) {
@@ -326,5 +347,12 @@ dwb_dl_set_execute(Arg *arg) {
       dwb.state.dl_action = DL_ACTION_DOWNLOAD;
       dwb_dl_entry_set_directory();
     }
+  }
+  else {
+    if (!strlen(GET_TEXT()))
+      dwb_entry_set_text(g_get_current_dir());
+    dwb.state.mode |= COMPLETE_PATH;
+    // TODO complete path
+    dwb_comp_complete_download(false);
   }
 }/*}}}*/

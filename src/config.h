@@ -123,4 +123,5 @@ static KeyValue KEYS[] = {
   { "print",                    {   "p",            GDK_CONTROL_MASK | GDK_MOD1_MASK }, }, 
   { "load_html",                    {   NULL,         0 }, }, 
   { "load_html_nv",                    {   NULL,         0 }, }, 
+  { "toggle_hidden_files",          {   "g.",         0 }, }, 
 };

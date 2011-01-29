@@ -81,4 +81,5 @@ gboolean dwb_create_hints(Arg *);
 void dwb_com_remove_view(KeyMap *, Arg *);
 void dwb_com_set_zoom_level(KeyMap *, Arg *);
 void dwb_com_toggle_maximized(KeyMap *, Arg *);
+gboolean dwb_com_toggle_hidden_files(KeyMap *, Arg *);
 #endif

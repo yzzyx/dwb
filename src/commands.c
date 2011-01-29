@@ -301,14 +301,21 @@ dwb_com_quickmark(KeyMap *km, Arg *arg) {
 gboolean
 dwb_com_reload(KeyMap *km, Arg *arg) {
   WebKitWebView *web = WEBVIEW_FROM_ARG(arg);
-  webkit_web_view_reload(web);
+  char *path;
+  webkit_web_view_get_uri(web);
+  if ( (path = (char *)dwb_check_directory(webkit_web_view_get_uri(web))) ) {
+    Arg a = { .p = path, .b = false };
+    dwb_load_uri(&a);
+  }
+  else {
+    webkit_web_view_reload(web);
+  }
   return true;
 }/*}}}*/
 
 /* dwb_com_view_source(Arg) {{{*/
 gboolean
 dwb_com_view_source(KeyMap *km, Arg *arg) {
-  //WebKitWebView *web = WEBVIEW_FROM_ARG(arg);
   WebKitWebView *web = CURRENT_WEBVIEW();
   webkit_web_view_set_view_source_mode(web, !webkit_web_view_get_view_source_mode(web));
   webkit_web_view_reload(web);
@@ -422,21 +429,11 @@ dwb_com_set_orientation(KeyMap *km, Arg *arg) {
 /* History {{{*/
 gboolean 
 dwb_com_history_back(KeyMap *km, Arg *arg) {
-  WebKitWebView *w = CURRENT_WEBVIEW();
-  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
-  int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
-  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
-  webkit_web_view_go_to_back_forward_item(w, item);
-  return n;
+  return dwb_history_back();
 }
 gboolean 
 dwb_com_history_forward(KeyMap *km, Arg *arg) {
-  WebKitWebView *w = CURRENT_WEBVIEW();
-  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
-  int n = MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
-  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
-  webkit_web_view_go_to_back_forward_item(w, item);
-  return n;
+  return dwb_history_forward();
 }/*}}}*/
 
 /* dwb_com_open(KeyMap *km, Arg *arg) {{{*/
@@ -462,7 +459,7 @@ dwb_com_open_startpage(KeyMap *km, Arg *arg) {
   if (!dwb.misc.startpage) 
     return false;
 
-  Arg a = { .p = dwb.misc.startpage };
+  Arg a = { .p = dwb.misc.startpage, .b = true };
   dwb_load_uri(&a);
   return true;
 } /*}}}*/
@@ -654,7 +651,7 @@ dwb_com_paste(KeyMap *km, Arg *arg) {
   if ( (text = gtk_clipboard_wait_for_text(clipboard)) ) {
     if (dwb.state.nv == OPEN_NORMAL)
       dwb.state.nv = arg->n;
-    Arg a = { .p = text };
+    Arg a = { .p = text, .b = false };
     dwb_load_uri(&a);
     g_free(text);
     return true;
@@ -930,5 +927,13 @@ dwb_com_execute_userscript(KeyMap *km, Arg *arg) {
     dwb_comp_complete(COMP_USERSCRIPT, 0);
   }
 
+  return true;
+}/*}}}*/
+
+/* dwb_com_toggle_hidden_files {{{*/
+gboolean
+dwb_com_toggle_hidden_files(KeyMap *km, Arg *arg) {
+  dwb.state.hidden_files = !dwb.state.hidden_files;
+  dwb_com_reload(km, arg);
   return true;
 }/*}}}*/
