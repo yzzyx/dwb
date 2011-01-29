@@ -277,13 +277,9 @@ function dwb_clear() {
 
 function evaluate(element) {
   var ret;
-  var type;
-  var tagname;
   var e = element.element;
-  if (e.type) 
-    type = e.type.toLowerCase();
-  if (e.tagname)
-    tagname = e.tagName.toLowerCase();
+  var type = e.type.toLowerCase();
+  var tagname = e.tagName.toLowerCase();
 
   if (tagname && (tagname == "input" || tagname == "textarea") ) {
     if (type == "radio" || type == "checkbox") {
