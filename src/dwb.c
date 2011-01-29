@@ -69,6 +69,7 @@ static void dwb_init_style(void);
 static void dwb_init_scripts(void);
 static void dwb_init_gui(void);
 static void dwb_init_vars(void);
+static void dwb_init_icons(void);
 
 static Navigation * dwb_get_search_completion(const char *text);
 
@@ -195,6 +196,7 @@ static FunctionMap FMAP [] = {
   { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   (Func)dwb_com_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    }, 1, (Func)dwb_com_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
   { { "toggle_block_content",   "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_block_content, NULL,                  POST_SM,    { 0 } }, 
+  { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, (Func) dwb_com_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
   { { "allow_content",         "Allow scripts for current domain in the current session" },  1, (Func) dwb_com_allow_content, NULL,              POST_SM,    { 0 } }, 
   { { "allow_plugins",         "Allow plugins for this domain" },      1, (Func) dwb_com_allow_plugins, NO_URL,              POST_SM,    { 0 } }, 
   { { "print",                 "Print page" },                         1, (Func) dwb_com_print, NULL,                             POST_SM,    { 0 } }, 
@@ -640,7 +642,43 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+/* dwb_history_back {{{*/
+int
+dwb_history_back() {
+  WebKitWebView *w = CURRENT_WEBVIEW();
+  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
+  int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
+  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
+  char *uri = (char *)webkit_web_history_item_get_uri(item);
+  if (g_str_has_prefix(uri, "file://")) {
+    Arg a = { .p = uri, .b = false };
+    webkit_web_back_forward_list_go_to_item(bf_list, item);
+    dwb_load_uri(&a);
+  }
+  else {
+    webkit_web_view_go_to_back_forward_item(w, item);
+  }
+  return n;
+}/*}}}*/
 
+/* dwb_history_forward{{{*/
+int
+dwb_history_forward() {
+  WebKitWebView *w = CURRENT_WEBVIEW();
+  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
+  int n = MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
+  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
+  char *uri = (char *)webkit_web_history_item_get_uri(item);
+  if (g_str_has_prefix(uri, "file://")) {
+    Arg a = { .p = uri, .b = false };
+    webkit_web_back_forward_list_go_to_item(bf_list, item);
+    dwb_load_uri(&a);
+  }
+  else {
+    webkit_web_view_go_to_back_forward_item(w, item);
+  }
+  return n;
+}/*}}}*/
 
 gboolean 
 dwb_block_ad(GList *gl, const char *uri) {
@@ -1200,7 +1238,7 @@ dwb_open_quickmark(const char *key) {
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
-      Arg a = { .p = q->nav->first };
+      Arg a = { .p = q->nav->first, .b = true };
       dwb_load_uri(&a);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
       dwb_normal_mode(false);
@@ -1287,10 +1325,21 @@ dwb_new_window(Arg *arg) {
   g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
 }/*}}}*/
 
+const char *
+dwb_check_directory(const char *path) {
+  if (g_str_has_prefix(path, "file://")) 
+    path += *(path + 8) == '/' ? 8 : 7;
+  if (! g_file_test(path, G_FILE_TEST_IS_DIR)) 
+    return NULL;
+
+  return path;
+}
+
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(Arg *arg) {
   g_strstrip(arg->p);
+  const char *path;
 
   if (!arg || !arg->p || !strlen(arg->p)) {
     return;
@@ -1319,25 +1368,83 @@ dwb_load_uri(Arg *arg) {
 
   g_strstrip(arg->p);
 
+  /* Check if uri is a mailto:-address */
   if (dwb_handle_mail(arg->p)) {
     return;
   }
 
+  /* Check if uri is a html-string */
   if (dwb.state.type == HTML_STRING) {
     webkit_web_view_load_string(CURRENT_WEBVIEW(), arg->p, NULL, NULL, "about:blank");
     dwb.state.type = 0;
     return;
   }
+  /* Check if uri is a userscript */
   if ( (uri = dwb_test_userscript(arg->p)) ) {
     Arg a = { .p = uri };
     dwb_execute_user_script(NULL, &a);
     g_free(uri);
     return;
   }
+  /* Check if uri is a javascript snippet */
   if (g_str_has_prefix(arg->p, "javascript:")) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), arg->p);
     return;
   }
+  /* Check if uri is a directory */
+  if ( (path = dwb_check_directory(arg->p)) ) {
+    GString *buffer = g_string_new(NULL);
+    GDir *dir = NULL;
+    GError *error = NULL;
+    char dest[STRING_LENGTH]; 
+    memcpy(dest, path, sizeof path);
+    if (! (dir = g_dir_open(path, 0, &error))) {
+      fprintf(stderr, "dwb error: %s\n", error->message);
+      g_clear_error(&error);
+      return;
+    }
+    const char *filename;
+    char *fullpath;
+    GSList *content = NULL;
+    while ( (filename = g_dir_read_name(dir)) ) {
+      char *fullpath = g_build_filename(path, filename, NULL);
+      content = g_slist_prepend(content, fullpath);
+    }
+    content = g_slist_sort(content, (GCompareFunc)dwb_util_compare_path);
+    g_dir_close(dir);
+
+    if (strcmp(path, "/")) 
+      g_string_append_printf(buffer, "<h3>%s</h3><img src=%s/><a href=%s>..</a></br>", path, dwb.files.dir_icon, dirname(dest));
+    for (GSList *l = content; l; l=l->next) {
+      fullpath = l->data;
+      filename = g_strrstr(fullpath, "/") + 1;
+      if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
+        continue;
+      if (g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
+        g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, fullpath, filename);
+      }
+      else if (g_file_test(fullpath, G_FILE_TEST_IS_EXECUTABLE)) {
+        g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, fullpath, filename);
+      }
+      else {
+        g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, fullpath, filename);
+      }
+      FREE(l->data);
+    }
+    g_slist_free(content);
+    fullpath = g_str_has_prefix(arg->p, "file://") ? g_strdup(arg->p) : g_strdup_printf("file:///%s", path);
+    /* add a history item */
+    if (arg->b) {
+      WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(CURRENT_WEBVIEW());
+      WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
+      webkit_web_back_forward_list_add_item(bf_list, item);
+    }
+    webkit_web_view_load_string(CURRENT_WEBVIEW(), buffer->str, NULL, NULL, fullpath);
+    g_string_free(buffer, true);
+    FREE(fullpath);
+    return;
+  }
+  /* Check if uri is a regular file */
   if (g_str_has_prefix(arg->p, "file://") || !strcmp(arg->p, "about:blank")) {
     webkit_web_view_load_uri(CURRENT_WEBVIEW(), arg->p);
     return;
@@ -1357,6 +1464,7 @@ dwb_load_uri(Arg *arg) {
       }
     }
   }
+  /* Check if searchengine is needed and load uri */
   else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
     uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://") 
       ? g_strdup(arg->p)
@@ -2277,6 +2385,15 @@ dwb_init_files() {
   dwb.files.plugins_allow = g_build_filename(profile_path, "plugins.allow",      NULL);
   dwb.files.adblock       = g_build_filename(path, "adblock",      NULL);
 
+  char *icondir = g_build_filename(path, "icons", NULL);
+  if (! g_file_test(icondir, G_FILE_TEST_IS_DIR) ) {
+    g_mkdir_with_parents(icondir, 0755);
+  }
+  dwb.files.dir_icon  = g_build_filename(icondir, "directory.png", NULL);
+  dwb.files.file_icon = g_build_filename(icondir, "file.png", NULL);
+  dwb.files.exec_icon = g_build_filename(icondir, "exec.png", NULL);
+  g_free(icondir);
+
   if (!g_file_test(dwb.files.scriptdir, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(dwb.files.scriptdir, 0755);
   }
@@ -2355,8 +2472,26 @@ dwb_init_vars() {
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }/*}}}*/
 
+static void
+dwb_init_icons() {
+  GdkPixbuf *pb;
+
+  pb = gtk_widget_render_icon(dwb.gui.window, "gtk-directory", -1, NULL);
+  gdk_pixbuf_save(pb, dwb.files.dir_icon, "png", NULL, NULL);
+  g_object_unref(pb);
+
+  pb = gtk_widget_render_icon(dwb.gui.window, "gtk-file", -1, NULL);
+  gdk_pixbuf_save(pb, dwb.files.file_icon, "png", NULL, NULL);
+  g_object_unref(pb);
+
+  pb = gtk_widget_render_icon(dwb.gui.window, "gtk-execute", -1, NULL);
+  gdk_pixbuf_save(pb, dwb.files.exec_icon, "png", NULL, NULL);
+  g_object_unref(pb);
+}
+
 /* dwb_init() {{{*/
-static void dwb_init() {
+static void 
+dwb_init() {
   dwb_clean_vars();
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
@@ -2372,6 +2507,7 @@ static void dwb_init() {
   dwb_init_style();
   dwb_init_scripts();
   dwb_init_gui();
+  dwb_init_icons();
 
   dwb.misc.soupsession = webkit_get_default_session();
   dwb_soup_init_proxy(dwb.misc.soupsession);

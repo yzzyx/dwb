@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <libgen.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <libsoup/soup.h>
@@ -43,6 +44,7 @@
 #define NEW_INSTANCE 2
 
 #define STRING_LENGTH 1024
+#define BUFFER_LENGTH 256
 
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
 #define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
@@ -177,6 +179,7 @@ typedef unsigned int Mode;
 #define KEY_MODE              1<<13
 #define DOWNLOAD_GET_PATH     1<<14
 #define SAVE_SESSION          1<<15
+#define COMPLETE_PATH         1<<16
 
 
 typedef unsigned int ShowMessage;
@@ -332,6 +335,7 @@ struct _State {
   gboolean complete_commands;
   gboolean complete_userscripts;
 
+  gboolean hidden_files;
   gboolean view_in_background;
 
   Layout layout;
@@ -491,6 +495,9 @@ struct _Files {
   const char *userscripts;
   const char *plugins_allow;
   const char *adblock;
+  const char *dir_icon;
+  const char *file_icon;
+  const char *exec_icon;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -559,6 +566,8 @@ void dwb_save_searchengine(void);
 char * dwb_execute_script(const char *, gboolean);
 void dwb_resize(double );
 void dwb_toggle_tabbar(void);
+int dwb_history_back(void);
+int dwb_history_forward(void);
 
 void dwb_grab_focus(GList *);
 void dwb_source_remove(GList *);
@@ -592,4 +601,5 @@ CompletionType dwb_eval_completion_type(void);
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
 gboolean dwb_block_ad(GList *gl, const char *);
+const char * dwb_check_directory(const char *);
 #endif

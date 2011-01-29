@@ -72,4 +72,5 @@ void * dwb_malloc(size_t);
 void dwb_free(void *);
 
 char * dwb_util_domain_from_uri(const char *);
+int dwb_util_compare_path(const char *, const char *);
 #endif
