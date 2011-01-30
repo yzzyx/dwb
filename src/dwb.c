@@ -1022,7 +1022,7 @@ dwb_save_searchengine(void) {
   g_strstrip(text);
   if (text && strlen(text) > 0) {
     dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
-    dwb_set_normal_message(dwb.state.fview, true, "Search saved");
+    dwb_set_normal_message(dwb.state.fview, true, "Searchengine saved");
     if (dwb.state.search_engine) {
       if (!dwb.misc.default_search) {
         dwb.misc.default_search = dwb.state.search_engine;

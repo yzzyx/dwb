@@ -19,8 +19,10 @@ function DwbHint(element, offset) {
 
   function create_span(element) {
     var span = document.createElement("span");
-    var leftpos = offset[0] + Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
-    var toppos = offset[1] + Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
+    if (offset) {
+      var leftpos = offset[0] + Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
+      var toppos = offset[1] + Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
+    }
     span.style.position = "absolute";
     span.style.left = leftpos  + "px";
     span.style.top = toppos + "px";
