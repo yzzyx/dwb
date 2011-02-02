@@ -348,11 +348,4 @@ dwb_dl_set_execute(Arg *arg) {
       dwb_dl_entry_set_directory();
     }
   }
-  else {
-    if (!strlen(GET_TEXT()))
-      dwb_entry_set_text(g_get_current_dir());
-    dwb.state.mode |= COMPLETE_PATH;
-    // TODO complete path
-    dwb_comp_complete_download(false);
-  }
 }/*}}}*/

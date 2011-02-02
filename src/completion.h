@@ -42,6 +42,6 @@ void dwb_comp_autocomplete(GList *, GdkEventKey *e);
 void dwb_comp_eval_autocompletion(void);
 
 void dwb_comp_complete(CompletionType, int);
-void dwb_comp_complete_download(int back);
+void dwb_comp_complete_path(int back);
 
 #endif
