@@ -1709,6 +1709,7 @@ dwb_update_search(gboolean forward) {
   }
   else {
     dwb_set_error_message(dwb.state.fview, "[0 matches]");
+    dwb_normal_mode(false);
     return false;
   }
   return true;
