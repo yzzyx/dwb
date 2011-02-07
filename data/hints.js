@@ -328,7 +328,8 @@ function dwb_add_searchengine() {
   for (var i=0; i<res.length; i++) {
     var els = res[i].elements;
     for (var j=0; j<els.length; j++) {
-      if (dwb_get_visibility(els[j]) && els[j].type == "text") {
+      console.log(els[j].type);
+      if (dwb_get_visibility(els[j]) && (els[j].type == "text" || els[j].type == "search")) {
         var e = new DwbLetterHint(els[j]);
         elements.push(e);
         e.element.setAttribute('dwb_highlight', 'hint_normal');
