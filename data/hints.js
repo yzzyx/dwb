@@ -197,12 +197,13 @@ function dwb_show_hints() {
 
   var hints = document.createElement("div");
   hints.id = "dwb_hints";
+  var constructor = hint_style.toLowerCase() == "letter" ? DwbLetterHint : DwbNumberHint;
 
   dwb_create_stylesheet();
 
   var res = document.body.querySelectorAll(hint_types);
   for (var i=0; i<res.length; i++) {
-    dwb_get_element(res[i], null, hint_style.toLowerCase() == "letter" ? DwbLetterHint : DwbNumberHint);
+    dwb_get_element(res[i], null, constructor);
   };
   for (var i=0; i<elements.length; i++) {
     if (res[i] == elements[i]) {
@@ -272,7 +273,8 @@ function dwb_clear() {
     }
   }
   var hints = document.getElementById("dwb_hints");
-  hints.parentNode.removeChild(hints);
+  if (hints) 
+    hints.parentNode.removeChild(hints);
   elements = [];
   active_arr = [];
 }
