@@ -15,7 +15,9 @@ var styles = null;
 function DwbHint(element, offset) {
   this.element = element;
   this.rect = element.getBoundingClientRect();
-  this.offset = offset;
+  if (!offset) {
+    offset = [ 0, 0 ];
+  }
 
   function create_span(element) {
     var span = document.createElement("span");
