@@ -123,7 +123,7 @@ static WebKitWebView *
 dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
   if (dwb.misc.tabbed_browsing) {
     // TODO background
-    GList *gl = dwb_add_view(NULL, dwb.state.background_tabs); 
+    GList *gl = dwb_add_view(NULL, false); 
     return WEBVIEW(gl);
   }
   else {
