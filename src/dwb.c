@@ -655,6 +655,10 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 int
 dwb_history_back() {
   WebKitWebView *w = CURRENT_WEBVIEW();
+
+  if (!webkit_web_view_can_go_back(w)) 
+    return 0;
+
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
   int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
@@ -674,6 +678,10 @@ dwb_history_back() {
 int
 dwb_history_forward() {
   WebKitWebView *w = CURRENT_WEBVIEW();
+
+  if (!webkit_web_view_can_go_forward(w))
+    return 0;
+
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
   int n = MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
