@@ -21,8 +21,10 @@ function DwbHint(element, offset) {
 
   function create_span(element) {
     var span = document.createElement("span");
-    var leftpos = offset[0] + Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
-    var toppos = offset[1] + Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
+    if (offset) {
+      var leftpos = offset[0] + Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
+      var toppos = offset[1] + Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
+    }
     span.style.position = "absolute";
     span.style.left = leftpos  + "px";
     span.style.top = toppos + "px";
@@ -328,7 +330,6 @@ function dwb_add_searchengine() {
   for (var i=0; i<res.length; i++) {
     var els = res[i].elements;
     for (var j=0; j<els.length; j++) {
-      console.log(els[j].type);
       if (dwb_get_visibility(els[j]) && (els[j].type == "text" || els[j].type == "search")) {
         var e = new DwbLetterHint(els[j]);
         elements.push(e);

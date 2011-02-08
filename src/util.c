@@ -459,3 +459,20 @@ dwb_util_compare_path(const char *a, const char *b) {
   return strcmp(g_strrstr(a, "/"), g_strrstr(b, "/"));
 }/*}}}*/
 
+/* dwb_util_basename(const char *path)       return: char * {{{*/
+/* Sligtly different implementation of basename, doesn't modify the pointer,
+ * returns pointer to the basename or NULL, if there is no basename
+ */
+/* dwb_comp_get_path(GList *, char *)        return GList* */
+char *
+dwb_util_basename(const char *path) {
+  int l = strlen(path);
+  if (path[l-1] == '/')
+    return NULL;
+
+  char *ret = strrchr(path, '/');
+  if (ret && l > 1) {
+    ret++;
+  }
+  return ret;
+}/*}}}*/

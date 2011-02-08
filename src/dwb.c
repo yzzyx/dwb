@@ -177,6 +177,7 @@ static FunctionMap FMAP [] = {
   { { "complete_commands",      "Complete command history", },        0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_INPUT }, true, }, 
   { { "complete_searchengines", "Complete searchengines", },          0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_SEARCH }, true, }, 
   { { "complete_userscript",    "Complete userscripts", },            0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_USERSCRIPT }, true, }, 
+  { { "complete_path",          "Complete local file path", },        0, (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, (Func)dwb_com_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
   { { "scripts",               "Setting: scripts",                },   1, (Func)dwb_com_toggle_property,     NULL,                              POST_SM,    { .p = "enable-scripts" } },
@@ -886,7 +887,7 @@ dwb_entry_position_word_back(int position) {
     return position;
   }
   int old = position;
-  while (isalnum(text[position-1]) ) {
+  while (IS_WORD_CHAR(text[position-1]) ) {
     --position;
   }
   while (isblank(text[position-1])) {
@@ -904,7 +905,7 @@ dwb_entry_position_word_forward(int position) {
   char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
   int old = position;
-  while ( isalnum(text[++position]) );
+  while ( IS_WORD_CHAR(text[++position]) );
   while ( isblank(text[++position]) );
   if (old == position) {
     position++;
@@ -1030,7 +1031,7 @@ dwb_save_searchengine(void) {
   g_strstrip(text);
   if (text && strlen(text) > 0) {
     dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
-    dwb_set_normal_message(dwb.state.fview, true, "Search saved");
+    dwb_set_normal_message(dwb.state.fview, true, "Searchengine saved");
     if (dwb.state.search_engine) {
       if (!dwb.misc.default_search) {
         dwb.misc.default_search = dwb.state.search_engine;

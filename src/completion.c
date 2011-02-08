@@ -168,7 +168,7 @@ dwb_comp_clean_completion() {
   gtk_widget_destroy(CURRENT_VIEW()->compbox);
   dwb.comps.completions = NULL;
   dwb.comps.active_comp = NULL;
-  dwb.state.mode &= ~COMPLETION_MODE;
+  dwb.state.mode &= ~(COMPLETION_MODE|COMPLETE_PATH);
 }/*}}}*/
 
 /* dwb_comp_show_completion(int back) {{{*/
@@ -268,10 +268,17 @@ dwb_comp_get_key_completion(gboolean entry) {
   return list;
 }/*}}}*/
 
+static void 
+dwb_comp_path(void) {
+  dwb.state.mode |= COMPLETE_PATH;
+  dwb_comp_complete_path(false);
+}
+
 /* dwb_comp_complete {{{*/
 void 
 dwb_comp_complete(CompletionType type, int back) {
   View *v = CURRENT_VIEW();
+  dwb.state.mode &= ~(COMPLETE_PATH | AUTO_COMPLETE);
   if ( !(dwb.state.mode & COMPLETION_MODE) ) {
     v->compbox = gtk_vbox_new(true, 0);
     gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
@@ -284,6 +291,7 @@ dwb_comp_complete(CompletionType type, int back) {
       case COMP_USERSCRIPT:  dwb.comps.completions = dwb_comp_get_simple_completion(dwb.misc.userscripts); break;
       case COMP_INPUT:       dwb.comps.completions = dwb_comp_get_simple_completion(dwb.fc.commands); break;
       case COMP_SEARCH:      dwb.comps.completions = dwb_comp_get_simple_completion(dwb.fc.se_completion); break;
+      case COMP_PATH:        dwb_comp_path(); return;
       default:               dwb.comps.completions = dwb_comp_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {
@@ -387,11 +395,13 @@ dwb_comp_autocomplete(GList *gl, GdkEventKey *e) {
 void 
 dwb_comp_clean_path_completion() {
   if (dwb.comps.path_completion) {
-    for (GList *l = dwb.comps.path_completion; l; l=l->next) {
-      FREE(l->data);
+    for (GList *l = g_list_first(dwb.comps.path_completion); l; l=l->next) {
+      char *data = l->data;
+      FREE(data);
     }
     g_list_free(dwb.comps.path_completion);
-    dwb.comps.path_completion = dwb.comps.active_path = NULL;
+    dwb.comps.path_completion = NULL;
+    dwb.comps.active_path = NULL;
   }
 }/*}}}*/
 
@@ -417,31 +427,47 @@ dwb_comp_get_binaries(GList *list, char *text) {
   }
   return list;
 }/* }}} */
-/* dwb_comp_get_path(GList *, char *)        return GList* */
+
 static GList *
 dwb_comp_get_path(GList *list, char *text) {
-  char *path = "/";
-  char *last = "";
-  if (text && strlen(text)) {
-    char *tmp = strrchr(text, '/'); 
-    tmp++;
-    last = g_strdup(tmp);
-    memset(tmp, '\0', sizeof(tmp));
-    path = text;
-  }
-
   GDir *dir;
+  char d_tmp[BUFFER_LENGTH];
+  strcpy(d_tmp, text);
+  char *d_name = dirname(d_tmp);
+  char *b_name = dwb_util_basename(text);
+  char *d_current = g_get_current_dir();
   const char *filename;
+  char path[BUFFER_LENGTH];
 
+  if (!strlen(text)) {
+    list = g_list_prepend(list, g_strconcat(d_current, "/", NULL));
+    return list;
+  }
+  else if (!strcmp(d_name, ".")) {
+    dwb_comp_complete(0, 0);
+    return NULL;
+  }
+  else if (g_file_test(text, G_FILE_TEST_IS_DIR)) {
+    strcpy(path, text);
+    char path_last = path[strlen(path) - 1];
+    if (path_last != '/' && path_last != '.') {
+      return g_list_prepend(list, g_strconcat(path, "/", NULL));
+    }
+  }
+  else if (g_file_test(d_name, G_FILE_TEST_IS_DIR)) {
+    strcpy(path, d_name);
+  }
   if ( (dir = g_dir_open(path, 'r', NULL)) ) {
     while ( (filename = g_dir_read_name(dir)) ) {
-      // ignore hidden files
-      if (!strlen(last) && filename[0] == '.') 
-        continue;
-      if (g_str_has_prefix(filename, last)) {
+      if ( ( !b_name && filename[0] != '.') || (b_name && g_str_has_prefix(filename, b_name))) {
         char *newpath = g_build_filename(path, filename, NULL);
-        char *store = g_strconcat(newpath, g_file_test(newpath, G_FILE_TEST_IS_DIR) ? "/" : "", NULL);
-        list = g_list_prepend(list, store);
+        char *store = g_strconcat(newpath, "/" , NULL);
+        if (g_file_test(store, G_FILE_TEST_IS_DIR)) {
+          list = g_list_prepend(list, store);
+        }
+        else {
+          free(store);
+        }
         FREE(newpath);
       }
     }
@@ -450,28 +476,31 @@ dwb_comp_get_path(GList *list, char *text) {
   return list;
 }/*}}}*/
 
+
 /* dwb_comp_init_path_completion {{{*/
 static void
 dwb_comp_init_path_completion(int back) { 
   char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
-  dwb.comps.path_completion = g_list_append(NULL, g_strdup(text));
+  dwb.comps.path_completion = dwb.comps.active_path = g_list_append(NULL, g_strdup(text));
   if (dwb.state.dl_action == DL_ACTION_EXECUTE && text[0] != '/') {
     GList *list = dwb_comp_get_binaries(NULL, text);
     list = g_list_sort(list, (GCompareFunc)strcmp);
     dwb.comps.path_completion = g_list_concat(dwb.comps.path_completion, list);
   }
   else  {
-    if (text[0] == '/') {
-      dwb.comps.path_completion = dwb_comp_get_path(dwb.comps.path_completion, text);
-      dwb.comps.path_completion = g_list_sort(dwb.comps.path_completion, (GCompareFunc)strcmp);
-    }
+    dwb.comps.path_completion = dwb_comp_get_path(dwb.comps.path_completion, text);
+    dwb.comps.path_completion = g_list_sort(dwb.comps.path_completion, (GCompareFunc)strcmp);
+  }
+  if (g_list_length(dwb.comps.path_completion) == 1) {
+    dwb_comp_clean_path_completion();
+    return;
   }
   if (dwb.comps.path_completion) {
     if (back) {
       dwb.comps.active_path = g_list_last(dwb.comps.path_completion);
     }
-    else {
+    else if (dwb.comps.path_completion->next) {
       dwb.comps.active_path = dwb.comps.path_completion->next;
     }
   }
@@ -479,19 +508,19 @@ dwb_comp_init_path_completion(int back) {
 
 /* dwb_comp_complete_download{{{*/
 void
-dwb_comp_complete_download(int back) {
+dwb_comp_complete_path(int back) {
   if (! dwb.comps.path_completion ) {
-    dwb_comp_init_path_completion(back);
+    dwb_comp_init_path_completion(0);
   }
   else if (back) {
-    if (dwb.comps.active_path && !(dwb.comps.active_path = dwb.comps.active_path->prev) ) {
+    if (dwb.comps.path_completion && dwb.comps.active_path && !(dwb.comps.active_path = dwb.comps.active_path->prev) ) {
       dwb.comps.active_path = g_list_last(dwb.comps.path_completion);
     }
   }
   else if (dwb.comps.active_path && !(dwb.comps.active_path = dwb.comps.active_path->next) ) {
-    dwb.comps.active_path = dwb.comps.path_completion;
+    dwb.comps.active_path = g_list_first(dwb.comps.path_completion);
   }
-  if (dwb.comps.active_path) {
+  if (dwb.comps.active_path && dwb.comps.active_path->data) {
     dwb_entry_set_text(dwb.comps.active_path->data);
   }
 }/*}}}*/

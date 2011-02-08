@@ -30,6 +30,7 @@
 #include <libsoup/soup.h>
 #include <locale.h>
 #include <stdarg.h>
+#include <dirent.h>
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
 #include <JavaScriptCore/JavaScript.h>
@@ -109,6 +110,8 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 
 #define DWB_TAB_KEY(e)              (e->keyval == GDK_Tab || e->keyval == GDK_ISO_Left_Tab)
 
+#define IS_WORD_CHAR(c)             (isalnum(c) || (c == '_')) 
+
 // Settings
 #define GET_CHAR(prop)              ((char*)(((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.p))
 #define GET_BOOL(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.b)
@@ -158,6 +161,7 @@ typedef unsigned int CompletionType;
 #define COMP_USERSCRIPT   0x06
 #define COMP_INPUT        0x07
 #define COMP_SEARCH       0x08
+#define COMP_PATH         0x09
 
 typedef unsigned int TabBarVisible;
 #define HIDE_TB_NEVER     0x02

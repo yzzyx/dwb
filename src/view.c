@@ -428,10 +428,11 @@ static gboolean
 dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
   gboolean ret = false;
-  if (e->keyval == GDK_BackSpace) {
+  gboolean complete = (mode == DOWNLOAD_GET_PATH || mode & COMPLETE_PATH);
+  if (e->keyval == GDK_BackSpace && !complete) {
     return false;
   }
-  if (mode == HINT_MODE) {
+  else if (mode == HINT_MODE) {
     if (DIGIT(e) || DWB_TAB_KEY(e)) {
       return dwb_update_hints(e);
     }
@@ -447,9 +448,9 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       return false;
     }
   }
-  else if (mode == DOWNLOAD_GET_PATH || mode & COMPLETE_PATH) {
+  else if (!e->is_modifier && complete) {
     if (DWB_TAB_KEY(e)) {
-      dwb_comp_complete_download(e->state & GDK_SHIFT_MASK);
+      dwb_comp_complete_path(e->state & GDK_SHIFT_MASK);
       return true;
     }
     else {

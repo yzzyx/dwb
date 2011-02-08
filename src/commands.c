@@ -943,3 +943,4 @@ dwb_com_toggle_hidden_files(KeyMap *km, Arg *arg) {
   dwb_com_reload(km, arg);
   return true;
 }/*}}}*/
+
