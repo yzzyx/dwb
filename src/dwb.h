@@ -323,6 +323,7 @@ struct _State {
   GHashTable *settings_hash;
   SettingsScope setting_apply;
   gboolean forward_search;
+  gboolean background_tabs;
 
   SoupCookieJar *cookiejar;
   SoupCookie *last_cookie;
@@ -538,7 +539,7 @@ Dwb dwb;
 gboolean dwb_insert_mode(Arg *);
 void dwb_normal_mode(gboolean);
 
-void dwb_load_uri(Arg *);
+void dwb_load_uri(GList *gl, Arg *);
 void dwb_execute_user_script(KeyMap *km, Arg *a);
 
 void dwb_focus_entry(void);
@@ -552,7 +553,7 @@ void dwb_set_status_text(GList *, const char *, GdkColor *,  PangoFontDescriptio
 void dwb_set_status_bar_text(GtkWidget *, const char *, GdkColor *,  PangoFontDescription *);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
-void dwb_update_layout(void);
+void dwb_update_layout(gboolean);
 void dwb_focus(GList *gl);
 
 gboolean dwb_prepend_navigation(GList *, GList **);

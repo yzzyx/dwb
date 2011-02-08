@@ -101,7 +101,8 @@ dwb_session_restore(const char *name) {
     if (line[0] && line[1] && line[2]) {
       int current = strtol(line[0], NULL, 10);
       if (current <= last) {
-        dwb_add_view(NULL);
+        // TODO dwb_add_view background
+        dwb_add_view(NULL, false);
         web = CURRENT_WEBVIEW();
         bf_list = webkit_web_back_forward_list_new_with_web_view(web);
         if (lastweb) {
@@ -123,7 +124,8 @@ dwb_session_restore(const char *name) {
   gtk_widget_show_all(dwb.gui.window);
 
   if (!dwb.state.views) 
-    dwb_add_view(NULL);
+    // TODO dwb_add_view background
+    dwb_add_view(NULL, false);
 
   if (dwb.state.layout & MAXIMIZED && dwb.state.views) {
     gtk_widget_hide(dwb.gui.right);
@@ -131,7 +133,7 @@ dwb_session_restore(const char *name) {
       gtk_widget_hide(((View*)l->data)->vbox);
     }
   }
-  dwb_update_layout();
+  dwb_update_layout(false);
   return true;
 }/*}}}*/
 

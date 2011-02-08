@@ -68,11 +68,13 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     g_strstrip(clipboard);
     Arg a = { .p = clipboard, .b = true };
     if (e->button == 3) {
-      dwb_load_uri(&a);
+      // TODO background
+      dwb_load_uri(NULL, &a);
       ret = true;
     }
     else if (e->button == 2) {
-      dwb_add_view(&a);
+      // TODO background
+      dwb_add_view(&a, false);
       ret = true;
     }
     FREE(clipboard);
@@ -122,7 +124,8 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
 static WebKitWebView * 
 dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
   if (dwb.misc.tabbed_browsing) {
-    dwb_add_view(NULL); 
+    // TODO background
+    dwb_add_view(NULL, false); 
     return CURRENT_WEBVIEW();
   }
   else {
@@ -246,7 +249,8 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 
   if (button != -1) {
     if (button == 2) {
-        dwb_add_view(&a);
+      // TODO  background
+        dwb_add_view(&a, false);
         webkit_web_policy_decision_ignore(policy);
         return true;
     }
@@ -254,7 +258,8 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
     if (dwb.state.nv == OPEN_NEW_VIEW) {
       dwb.state.nv = OPEN_NORMAL;
-      dwb_add_view(&a); 
+      // TODO background
+      dwb_add_view(&a, false); 
     }
     else {
       dwb_new_window(&a);
@@ -266,7 +271,8 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   const char *path;
 
   if (reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED && (path = dwb_check_directory(uri))) {
-    dwb_load_uri(&a);
+    // TODO background
+    dwb_load_uri(NULL, &a);
     webkit_web_policy_decision_ignore(policy);
     return true;
   }
@@ -374,7 +380,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
-      dwb_view_clean_vars(gl);
+      dwb_view_clean_vars(VIEW(gl));
       break;
     case WEBKIT_LOAD_COMMITTED: 
       break;
@@ -506,7 +512,8 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
   }
   else {
     Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
-    dwb_load_uri(&a);
+    // TODO background
+    dwb_load_uri(NULL, &a);
     dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
     dwb_normal_mode(true);
   }
@@ -542,8 +549,7 @@ dwb_web_view_add_history_item(GList *gl) {
 
 /* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
-dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {
-  View *v = gl->data;
+dwb_view_modify_style(View *v, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {
   if (fg) {
     gtk_widget_modify_fg(v->rstatus, GTK_STATE_NORMAL, fg);
     gtk_widget_modify_fg(v->lstatus, GTK_STATE_NORMAL, fg);
@@ -568,14 +574,14 @@ dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, Gd
 
 /* dwb_view_set_active_style (GList *) {{{*/
 void 
-dwb_view_set_active_style(GList *gl) {
-  dwb_view_modify_style(gl, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_bold, dwb.font.active_size);
+dwb_view_set_active_style(View *v) {
+  dwb_view_modify_style(v, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_bold, dwb.font.active_size);
 }/*}}}*/
 
 /* dwb_view_set_normal_style {{{*/
 void 
-dwb_view_set_normal_style(GList *gl) {
-  dwb_view_modify_style(gl, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_bold, dwb.font.normal_size);
+dwb_view_set_normal_style(View *v) {
+  dwb_view_modify_style(v, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_bold, dwb.font.normal_size);
 }/*}}}*/
 
 /* dwb_web_view_init_signals(View *v) {{{*/
@@ -612,9 +618,7 @@ dwb_web_view_init_signals(GList *gl) {
 
 /* dwb_view_clean_vars(GList *){{{*/
 void
-dwb_view_clean_vars(GList *gl) {
-  View *v = gl->data;
-
+dwb_view_clean_vars(View *v) {
   for (Plugin *p = v->status->plugins; p; p=p->next) {
     g_free(p->uri);
     g_free(p);
@@ -630,13 +634,15 @@ dwb_view_clean_vars(GList *gl) {
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/
 static GList * 
-dwb_view_create_web_view(GList *gl) {
+dwb_view_create_web_view(GList *gl, gboolean background) {
   View *v = g_malloc(sizeof(View));
+  GList *tmp;
 
   ViewStatus *status = g_malloc(sizeof(ViewStatus));
   status->search_string = NULL;
   status->downloads = NULL;
   status->current_host = NULL;
+  status->mimetype = NULL;
   status->plugins = NULL;
   status->progress = 0;
   v->status = status;
@@ -699,12 +705,10 @@ dwb_view_create_web_view(GList *gl) {
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel);
   gtk_widget_modify_font(v->tablabel, dwb.font.fd_normal);
 
-  gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
-
   gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
   gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);
 
-  gtk_box_pack_start(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0);
+  gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
   
   // Show
   gtk_widget_show(v->vbox);
@@ -717,18 +721,37 @@ dwb_view_create_web_view(GList *gl) {
   gtk_widget_show_all(v->scroll);
   gtk_widget_show_all(v->tabevent);
 
-  gl = g_list_prepend(gl, v);
-  dwb_web_view_init_signals(gl);
+  int position;
+  if (background 
+      && dwb.state.views
+      && (position = g_list_position(dwb.state.views, dwb.state.fview) > -1) ) {
+    gl = g_list_append(gl, v);
+    gtk_box_pack_start(GTK_BOX(dwb.gui.right), v->vbox, true, true, 0);
+    gtk_box_reorder_child(GTK_BOX(dwb.gui.right), v->vbox, -1);
+    gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, 0);
+    dwb_view_set_normal_style(v);
+    dwb_view_set_active_style(CURRENT_VIEW());
+    tmp = g_list_last(gl);
+    if (dwb.state.layout & MAXIMIZED) 
+      gtk_widget_hide(v->vbox);
+  }
+  else {
+    gtk_box_pack_start(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0);
+    gl = tmp = g_list_prepend(gl, v);
+    dwb_focus(gl);
+  }
+
+  dwb_web_view_init_signals(tmp);
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
   // apply settings
   v->setting = dwb_get_default_settings();
   for (GList *l = g_hash_table_get_values(v->setting); l; l=l->next) {
     WebSettings *s = l->data;
     if (!s->builtin && !s->global) {
-      s->func(gl, s);
+      s->func(tmp, s);
     }
   }
-  dwb_view_clean_vars(gl);
+  dwb_view_clean_vars(v);
   return gl;
 } /*}}}*/
 
@@ -749,7 +772,7 @@ dwb_view_push_master(Arg *arg) {
       return false;
     }
     CLEAR_COMMAND_TEXT(dwb.state.views);
-    dwb_view_set_normal_style(dwb.state.fview);
+    dwb_view_set_normal_style(CURRENT_VIEW());
   }
   else {
     gl = dwb.state.fview;
@@ -782,7 +805,8 @@ dwb_view_push_master(Arg *arg) {
     gtk_widget_hide(old->vbox);
   }
   gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), new->tabevent, -1);
-  dwb_update_layout();
+  // TODO background
+  dwb_update_layout(false);
   return true;
 }/*}}}*/
 
@@ -849,11 +873,14 @@ dwb_view_remove() {
       gtk_widget_hide(dwb.gui.left);
     }
   }
-  dwb_update_layout();
+  // TODO background
+  dwb_update_layout(false);
 }/*}}}*/
 
 void 
-dwb_view_new_reorder() {
+dwb_view_new_reorder(gboolean background) {
+  if (background)
+    return;
   if (dwb.state.views) {
     View *views = dwb.state.views->data;
     CLEAR_COMMAND_TEXT(dwb.state.views);
@@ -871,28 +898,39 @@ dwb_view_new_reorder() {
 
 /* dwb_add_view(Arg *arg)               return: View *{{{*/
 GList *  
-dwb_add_view(Arg *arg) {
-  dwb_view_new_reorder();
-  dwb.state.views = dwb_view_create_web_view(dwb.state.views);
-  dwb_focus(dwb.state.views);
+dwb_add_view(Arg *arg, gboolean background) {
+  GList *tmp = NULL;
 
-  dwb_update_layout();
+  // TODO echter check
+  background = dwb.state.background_tabs;
+  dwb_view_new_reorder(background);
+  // TODO dwb_add_view background
+  dwb.state.views = dwb_view_create_web_view(dwb.state.views, background);
+  if (background) {
+    // TODO entry bekommt keinen fokus
+    // Schrift ist komisch klein
+    // Uebergabe von Argumenten an das neue view.
+    //tmp = g_list_last()<++>
+   
+  }
+  else {
+    dwb_focus(dwb.state.views);
+  }
+
+  dwb_update_layout(background);
   if (arg && arg->p) {
     arg->b = true;
-    dwb_load_uri(arg);
+    // TODO background
+    dwb_load_uri(NULL, arg);
   }
   else if (strcmp("about:blank", dwb.misc.startpage)) {
     Arg a = { .p = dwb.misc.startpage, .b = true }; 
-    dwb_load_uri(&a);
+    // TODO background
+    dwb_load_uri(NULL, &a);
   }
   return dwb.state.views;
 } /*}}}*/
 
-GList *
-dwb_add_view_new_with_webview(void) {
-  dwb_view_new_reorder();
-  return NULL;
-}
 
 /* dwb_parse_setting(const char *){{{*/
 void
@@ -957,7 +995,7 @@ dwb_apply_settings(WebSettings *s) {
     new = g_hash_table_lookup(dwb.settings, s->n.first);
     new->arg = s->arg;
     for (GList *l = dwb.state.views; l; l=l->next)  {
-      WebSettings *new =  g_hash_table_lookup((((View*)l->data)->setting), s->n.first);
+      WebSettings *new =  g_hash_table_lookup(VIEW(l)->setting, s->n.first);
       new->arg = s->arg;
       if (s->func) {
         s->func(l, s);

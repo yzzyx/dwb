@@ -52,7 +52,8 @@ dwb_com_simple_command(KeyMap *km) {
 /* dwb_com_add_view(KeyMap *, Arg *) {{{*/
 void 
 dwb_com_add_view(KeyMap *km, Arg *arg) {
-  dwb_add_view(arg);
+  // TODO dwb_add_view background
+  dwb_add_view(arg, false);
 }/*}}}*/
 
 /* dwb_com_set_setting {{{*/
@@ -305,7 +306,8 @@ dwb_com_reload(KeyMap *km, Arg *arg) {
   webkit_web_view_get_uri(web);
   if ( (path = (char *)dwb_check_directory(webkit_web_view_get_uri(web))) ) {
     Arg a = { .p = path, .b = false };
-    dwb_load_uri(&a);
+    // TODO background
+    dwb_load_uri(NULL, &a);
   }
   else {
     webkit_web_view_reload(web);
@@ -445,7 +447,8 @@ dwb_com_open(KeyMap *km, Arg *arg) {
   dwb.state.type = arg->i;
 
   if (arg && arg->p) {
-    dwb_load_uri(arg);
+    // TODO background
+    dwb_load_uri(NULL, arg);
   }
   else {
     dwb_focus_entry();
@@ -460,7 +463,8 @@ dwb_com_open_startpage(KeyMap *km, Arg *arg) {
     return false;
 
   Arg a = { .p = dwb.misc.startpage, .b = true };
-  dwb_load_uri(&a);
+  // TODO background
+  dwb_load_uri(NULL, &a);
   return true;
 } /*}}}*/
 
@@ -652,7 +656,8 @@ dwb_com_paste(KeyMap *km, Arg *arg) {
     if (dwb.state.nv == OPEN_NORMAL)
       dwb.state.nv = arg->n;
     Arg a = { .p = text, .b = false };
-    dwb_load_uri(&a);
+    // TODO background
+    dwb_load_uri(NULL, &a);
     g_free(text);
     return true;
   }
@@ -880,7 +885,8 @@ dwb_com_save_files(KeyMap *km, Arg *arg) {
 gboolean
 dwb_com_undo(KeyMap *km, Arg *arg) {
   if (dwb.state.undo_list) {
-    WebKitWebView *web = WEBVIEW(dwb_add_view(NULL));
+    // TODO dwb_add_view background
+    WebKitWebView *web = WEBVIEW(dwb_add_view(NULL, false));
     WebKitWebBackForwardList *bflist = webkit_web_back_forward_list_new_with_web_view(web);
     for (GList *l = dwb.state.undo_list->data; l; l=l->next) {
       Navigation *n = l->data;
