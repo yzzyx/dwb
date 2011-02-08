@@ -103,6 +103,8 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 
 #define CURRENT_HOST()            (webkit_security_origin_get_host(webkit_web_frame_get_security_origin(webkit_web_view_get_main_frame(CURRENT_WEBVIEW()))))
 
+#define IS_WORD_CHAR(c)           (isalnum(c) || ((c) == '_')) 
+
 #define FREE(X)                     if ((X)) g_free((X))
 #define DIGIT(X)   (X->keyval >= GDK_0 && X->keyval <= GDK_9)
 #define ALPHA(X)    ((X->keyval >= GDK_A && X->keyval <= GDK_Z) ||  (X->keyval >= GDK_a && X->keyval <= GDK_z) || X->keyval == GDK_space)

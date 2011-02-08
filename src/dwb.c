@@ -878,7 +878,7 @@ dwb_entry_position_word_back(int position) {
     return position;
   }
   int old = position;
-  while (isalnum(text[position-1]) ) {
+  while (IS_WORD_CHAR(text[position-1]) ) {
     --position;
   }
   while (isblank(text[position-1])) {
@@ -896,7 +896,7 @@ dwb_entry_position_word_forward(int position) {
   char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
   int old = position;
-  while ( isalnum(text[++position]) );
+  while ( IS_WORD_CHAR(text[++position]) );
   while ( isblank(text[++position]) );
   if (old == position) {
     position++;
