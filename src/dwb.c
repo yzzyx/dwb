@@ -661,7 +661,6 @@ dwb_history_back() {
   if (g_str_has_prefix(uri, "file://")) {
     Arg a = { .p = uri, .b = false };
     webkit_web_back_forward_list_go_to_item(bf_list, item);
-    // TODO background
     dwb_load_uri(NULL, &a);
   }
   else {
@@ -681,7 +680,6 @@ dwb_history_forward() {
   if (g_str_has_prefix(uri, "file://")) {
     Arg a = { .p = uri, .b = false };
     webkit_web_back_forward_list_go_to_item(bf_list, item);
-    // TODO background
     dwb_load_uri(NULL, &a);
   }
   else {
@@ -1250,7 +1248,6 @@ dwb_open_quickmark(const char *key) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
       Arg a = { .p = q->nav->first, .b = true };
-      // TODO background
       dwb_load_uri(NULL, &a);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
       dwb_normal_mode(false);
@@ -1366,7 +1363,6 @@ dwb_load_uri(GList *gl, Arg *arg) {
   /*  new tab ?  */
   else if (dwb.state.nv == OPEN_NEW_VIEW) {
     dwb.state.nv = OPEN_NORMAL;
-    // TODO dwb_add_view background
     dwb_add_view(arg, false);
     return;
   }
@@ -1793,7 +1789,7 @@ dwb_get_scripts() {
   GList *gl = NULL;
   Navigation *n = NULL;
 
-  // TODO get saved shorcuts
+  // TODO get saved shortcuts
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
       char *path = g_build_filename(dwb.files.userscripts, filename, NULL);
@@ -2484,6 +2480,7 @@ dwb_init_vars() {
   dwb.state.complete_searchengines = GET_BOOL("complete-searchengines");
   dwb.state.complete_commands = GET_BOOL("complete-commands");
   dwb.state.complete_userscripts = GET_BOOL("complete-userscripts");
+  dwb.state.background_tabs = GET_BOOL("background-tabs");
 
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
@@ -2540,12 +2537,10 @@ dwb_init() {
   else if (dwb.misc.argc > 0) {
     for (int i=0; i<dwb.misc.argc; i++) {
       Arg a = { .p = dwb.misc.argv[i] };
-      // TODO dwb_add_view background
       dwb_add_view(&a, false);
     }
   }
   else {
-    // TODO dwb_add_view background
     dwb_add_view(NULL, false);
   }
   dwb_toggle_tabbar();

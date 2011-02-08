@@ -101,7 +101,6 @@ dwb_session_restore(const char *name) {
     if (line[0] && line[1] && line[2]) {
       int current = strtol(line[0], NULL, 10);
       if (current <= last) {
-        // TODO dwb_add_view background
         dwb_add_view(NULL, false);
         web = CURRENT_WEBVIEW();
         bf_list = webkit_web_back_forward_list_new_with_web_view(web);
@@ -124,7 +123,6 @@ dwb_session_restore(const char *name) {
   gtk_widget_show_all(dwb.gui.window);
 
   if (!dwb.state.views) 
-    // TODO dwb_add_view background
     dwb_add_view(NULL, false);
 
   if (dwb.state.layout & MAXIMIZED && dwb.state.views) {

@@ -68,13 +68,11 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     g_strstrip(clipboard);
     Arg a = { .p = clipboard, .b = true };
     if (e->button == 3) {
-      // TODO background
       dwb_load_uri(NULL, &a);
       ret = true;
     }
     else if (e->button == 2) {
-      // TODO background
-      dwb_add_view(&a, false);
+      dwb_add_view(&a, dwb.state.background_tabs);
       ret = true;
     }
     FREE(clipboard);
@@ -125,14 +123,13 @@ static WebKitWebView *
 dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
   if (dwb.misc.tabbed_browsing) {
     // TODO background
-    dwb_add_view(NULL, false); 
-    return CURRENT_WEBVIEW();
+    GList *gl = dwb_add_view(NULL, dwb.state.background_tabs); 
+    return WEBVIEW(gl);
   }
   else {
     dwb.state.nv = OPEN_NEW_WINDOW;
     return web;
   }
-  // return ((View*)dwb.state.fview->data)->web;
 }/*}}}*/
 
 /* dwb_web_view_plugin_blocker_button_cb (GtkWidget *, GdkEventButton, char *uri) {{{*/
@@ -249,8 +246,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 
   if (button != -1) {
     if (button == 2) {
-      // TODO  background
-        dwb_add_view(&a, false);
+        dwb_add_view(&a, dwb.state.background_tabs);
         webkit_web_policy_decision_ignore(policy);
         return true;
     }
@@ -258,8 +254,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
     if (dwb.state.nv == OPEN_NEW_VIEW) {
       dwb.state.nv = OPEN_NORMAL;
-      // TODO background
-      dwb_add_view(&a, false); 
+      dwb_add_view(&a, dwb.state.background_tabs); 
     }
     else {
       dwb_new_window(&a);
@@ -271,7 +266,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   const char *path;
 
   if (reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED && (path = dwb_check_directory(uri))) {
-    // TODO background
     dwb_load_uri(NULL, &a);
     webkit_web_policy_decision_ignore(policy);
     return true;
@@ -512,7 +506,6 @@ dwb_view_entry_activate_cb(GtkEntry* entry) {
   }
   else {
     Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
-    // TODO background
     dwb_load_uri(NULL, &a);
     dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
     dwb_normal_mode(true);
@@ -805,7 +798,6 @@ dwb_view_push_master(Arg *arg) {
     gtk_widget_hide(old->vbox);
   }
   gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), new->tabevent, -1);
-  // TODO background
   dwb_update_layout(false);
   return true;
 }/*}}}*/
@@ -873,7 +865,6 @@ dwb_view_remove() {
       gtk_widget_hide(dwb.gui.left);
     }
   }
-  // TODO background
   dwb_update_layout(false);
 }/*}}}*/
 
@@ -899,19 +890,12 @@ dwb_view_new_reorder(gboolean background) {
 /* dwb_add_view(Arg *arg)               return: View *{{{*/
 GList *  
 dwb_add_view(Arg *arg, gboolean background) {
-  GList *tmp = NULL;
+  GList *ret = NULL;
 
-  // TODO echter check
-  background = dwb.state.background_tabs;
   dwb_view_new_reorder(background);
-  // TODO dwb_add_view background
-  dwb.state.views = dwb_view_create_web_view(dwb.state.views, background);
+  dwb.state.views = ret = dwb_view_create_web_view(dwb.state.views, background);
   if (background) {
-    // TODO entry bekommt keinen fokus
-    // Schrift ist komisch klein
-    // Uebergabe von Argumenten an das neue view.
-    //tmp = g_list_last()<++>
-   
+    ret = g_list_last(dwb.state.views);
   }
   else {
     dwb_focus(dwb.state.views);
@@ -920,15 +904,13 @@ dwb_add_view(Arg *arg, gboolean background) {
   dwb_update_layout(background);
   if (arg && arg->p) {
     arg->b = true;
-    // TODO background
-    dwb_load_uri(NULL, arg);
+    dwb_load_uri(ret, arg);
   }
   else if (strcmp("about:blank", dwb.misc.startpage)) {
     Arg a = { .p = dwb.misc.startpage, .b = true }; 
-    // TODO background
-    dwb_load_uri(NULL, &a);
+    dwb_load_uri(ret, &a);
   }
-  return dwb.state.views;
+  return ret;
 } /*}}}*/
 
 
