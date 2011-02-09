@@ -145,12 +145,8 @@ function dwb_create_stylesheet() {
   document.getElementsByTagName('head')[0].appendChild(styles);
 
   var style = document.styleSheets[document.styleSheets.length - 1];
-  style.insertRule('a[dwb_highlight=hint_normal] { background: ' + hint_normal_color + ' } ', 0);
-  style.insertRule('a[dwb_highlight=hint_normal] { outline: 1px solid ' + hint_normal_color + ' } ', 0);
-  style.insertRule('input[dwb_highlight=hint_normal] { outline: 1px solid ' + hint_normal_color + '  } ', 0);
-  style.insertRule('a[dwb_highlight=hint_active] { background: ' + hint_active_color + '  } ', 0);
-  style.insertRule('a[dwb_highlight=hint_active] { border: 2px solid ' + hint_active_color + '  } ', 0);
-  style.insertRule('input[dwb_highlight=hint_active] { outline: 2px solid ' + hint_active_color + '  } ', 0);
+  style.insertRule('*[dwb_highlight=hint_normal] { background: ' + hint_normal_color + ' !important; } ', 0);
+  style.insertRule('*[dwb_highlight=hint_active] { background: ' + hint_active_color + ' !important } ', 0);
 }
 
 function dwb_get_visibility(e) {
