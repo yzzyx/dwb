@@ -36,7 +36,18 @@
 #include <JavaScriptCore/JavaScript.h>
 #include <gdk/gdkkeysyms.h> 
 
+#ifndef NAME
 #define NAME "dwb"
+#endif
+#ifndef REAL_NAME
+#define REAL_NAME NAME
+#endif
+#ifndef VERSION
+#define VERSION "0.0.18"
+#endif
+#ifndef COPYRIGHT
+#define COPYRIGHT "© 2010-2011 Stefan Bolte"
+#endif
 /* SETTINGS MAKROS {{{*/
 #define KEY_SETTINGS "Dwb Key Settings"
 #define SETTINGS "Dwb Settings"

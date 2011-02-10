@@ -2665,7 +2665,7 @@ dwb_init_fifo(int single) {
 /*}}}*/
 
 int main(int argc, char *argv[]) {
-  dwb.misc.name = NAME;
+  dwb.misc.name = REAL_NAME;
   dwb.misc.profile = "default";
   dwb.misc.argc = 0;
   dwb.misc.prog_path = argv[0];
@@ -2694,6 +2694,10 @@ int main(int argc, char *argv[]) {
           else {
             restore = argv[++i];
           }
+        }
+        else if (argv[i][1] == 'v') {
+          printf("%s %s, %s\n", NAME, VERSION, COPYRIGHT);
+          return 0;
         }
       }
       else {

@@ -35,7 +35,7 @@ uninstall-data:
 distclean: clean
 
 snapshot: 
-	@$(MAKE) dist DISTDIR=$(NAME)-$(BUILDDATE)
+	@$(MAKE) dist DISTDIR=$(REAL_NAME)-$(BUILDDATE)
 
 dist: distclean
 	@echo "Creating tarball."

@@ -1,11 +1,17 @@
-NAME=dwb
-VERSION=0.0.17
-DISTDIR=$(NAME)-$(VERSION)
+REAL_NAME=dwb
+REAL_VERSION=0.0.17
+COPYRIGHT="© 2011 Stefan Bolte"
+DISTDIR=$(REAL_NAME)-$(REAL_VERSION)
 DOCDIR=doc
 SRCDIR=src
 SHAREDIR=data
 EXAMPLEDIR=examples
 
+
+HG_VERSION=$(shell hg id -n 2>/dev/null)
+
+VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo "$(REAL_VERSION)"; fi)
+NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REAL_NAME)"; fi)
 
 LIBS  += gtk+-2.0
 LIBS  += webkit-1.0
@@ -14,10 +20,14 @@ FLAGS += -pedantic
 FLAGS += -Wall 
 FLAGS += -pipe
 FLAGS += `pkg-config --cflags --libs $(LIBS)` 
-FLAGS +=--ansi
-FLAGS +=-std=c99
-FLAGS +=-D_POSIX_SOURCE
-FLAGS +=-D_BSD_SOURCE
+FLAGS += --ansi
+FLAGS += -std=c99
+FLAGS += -D_POSIX_SOURCE
+FLAGS += -D_BSD_SOURCE
+FLAGS += -DNAME=\"$(NAME)\" 
+FLAGS += -DVERSION=\"$(VERSION)\" 
+FLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
+FLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
 
 
 DFLAGS += -g -B
@@ -26,13 +36,13 @@ DFLAGS += -g -B
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
 SOURCE = $(wildcard $(SRCDIR)/*.c) 
 HDR = $(SOURCE:%.c=%.h) 
-TARGET = $(NAME)
+TARGET = $(REAL_NAME)
 DTARGET=$(TARGET)_d
 
 EXAMPLES += $(EXAMPLEDIR)/ext_editor.sh 
 EXAMPLES += $(EXAMPLEDIR)/formfiller.sh
 
-MANFILE=$(NAME).1
+MANFILE=$(REAL_NAME).1
 
 MAKE=make --no-print-directory
 
