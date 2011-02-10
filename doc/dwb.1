@@ -3,21 +3,24 @@
 dwb \- dynamic web browser
 .SH SYNOPSIS
 .B dwb
-[ -p profile ] [ -r [sessionname] ] [ -n ] [ <urls> ] 
+[ options ] [ <urls> ] 
 .SH DESCRIPTION
 dwb is a small webbrowser based on webkit and GTK which aimes to be mostly
 keyboard-driven. 
 
 .SH COMMAND LINE ARGUMENTS
 .TP
-.B \-p
-Specify a profile
+.B \-p <profile>
+Specify a profile.
 .TP
-.B \-r
-Restore session <sessionname> or defaultsession, if sessionname is omitted.
+.B \-r <sessionname>
+Restore session <sessionname> or the default session, if sessionname is omitted.
 .TP
 .B \-n
-New instance, overrides property "single-instance"
+New instance, overrides property "single-instance".
+.TP
+.B \-v
+Show version information and exit.
 .TP
 .B <urls>
 URLs loaded on startup.
