@@ -17,8 +17,8 @@ install-man:
 	@install -Dm 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
 
 install-data: 
-	@echo "Installing $(SHAREDIR)/hints.js to $(subst //,/,$(DESTDIR)$(DATADIR)/$(NAME)/scripts)"
-	@install -Dm 644 $(SHAREDIR)/hints.js $(DESTDIR)$(DATADIR)/$(NAME)/scripts/hints.js
+	@echo "Installing $(SHAREDIR)/hints.js to $(subst //,/,$(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts)"
+	@install -Dm 644 $(SHAREDIR)/hints.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js
 
 uninstall: uninstall-man uninstall-data
 	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"
@@ -29,13 +29,13 @@ uninstall-man:
 	@$(RM) $(DESTDIR)$(MAN1DIR)$(MANFILE)
 
 uninstall-data: 
-	@echo "Removing $(subst //,/,$(DESTDIR)$(DATADIR)/$(NAME))"
-	@$(RM) -r $(DESTDIR)$(DATADIR)/$(NAME)
+	@echo "Removing $(subst //,/,$(DESTDIR)$(DATADIR)/$(REAL_NAME))"
+	@$(RM) -r $(DESTDIR)$(DATADIR)/$(REAL_NAME)
 
 distclean: clean
 
 snapshot: 
-	@$(MAKE) dist DISTDIR=$(REAL_NAME)-$(BUILDDATE)
+	@$(MAKE) dist DISTDIR=$(REAL_NAME)-$(BUILDDATE) 
 
 dist: distclean
 	@echo "Creating tarball."
