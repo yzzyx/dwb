@@ -2211,6 +2211,12 @@ dwb_init_scripts() {
   GString *buffer = g_string_new(NULL);
 
   setlocale(LC_NUMERIC, "C");
+  // user scripts
+  dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
+  dwb.misc.scripts = g_strdup(buffer->str);
+  g_string_truncate(buffer, 0);
+
+  // systemscript
   g_string_append_printf(buffer, "hint_letter_seq = '%s';\n",       GET_CHAR("hint-letter-seq"));
   g_string_append_printf(buffer, "hint_font_size = '%s';\n",        GET_CHAR("hint-font-size"));
   g_string_append_printf(buffer, "hint_font_weight = '%s';\n",      GET_CHAR("hint-font-weight"));
@@ -2223,16 +2229,13 @@ dwb_init_scripts() {
   g_string_append_printf(buffer, "hint_border = '%s';\n",           GET_CHAR("hint-border"));
   g_string_append_printf(buffer, "hint_opacity = %f;\n",            GET_DOUBLE("hint-opacity"));
 
-  // init system scripts
   char *dir = NULL;
-  dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
-  dwb.misc.scripts = g_strdup(buffer->str);
-  g_string_truncate(buffer, 0);
   if ( (dir = dwb_util_get_data_dir("scripts")) ) {
     dwb_util_get_directory_content(&buffer, dir);
     g_free(dir);
   }
   dwb.misc.systemscripts = buffer->str;
+  puts(buffer->str);
   g_string_free(buffer, false);
 }/*}}}*/
 
