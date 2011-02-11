@@ -2235,7 +2235,6 @@ dwb_init_scripts() {
     g_free(dir);
   }
   dwb.misc.systemscripts = buffer->str;
-  puts(buffer->str);
   g_string_free(buffer, false);
 }/*}}}*/
 
