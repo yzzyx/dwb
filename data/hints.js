@@ -8,13 +8,14 @@ var lastpos = 0;
 var lastinput;
 var styles;
 var form_hints = "//form";
-var hint_types = 'a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link], *[onmouseup], *[onmouseover] *[oncommand]';
+var hint_types = 'a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]';
 
 var styles = null;
 
-function DwbHint(element, offset) {
+function DwbHint(element, win, offset) {
   this.element = element;
   this.rect = element.getBoundingClientRect();
+  this.win = win;
   if (!offset) {
     offset = [ 0, 0 ];
   }
@@ -121,20 +122,29 @@ DwbLetterHint.prototype.matchText = function(input) {
 }
 
 
-function DwbLetterHint(element, offset) {
+function DwbLetterHint(element, win, offset) {
   this.constructor = DwbHint;
-  this.constructor(element, offset);
+  this.constructor(element, win, offset);
 }
 
-function DwbNumberHint(element, offset) {
+function DwbNumberHint(element, win, offset) {
   this.constructor = DwbHint;
-  this.constructor(element, offset);
+  this.constructor(element, win, offset);
 }
 
-function dwb_click_element(e) {
+function dwb_click_element(element) {
   var mouseEvent = document.createEvent("MouseEvent");
-  mouseEvent.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-  e.element.dispatchEvent(mouseEvent);
+  var e = element.element;
+  if (e.hasAttribute("onclick")) 
+    mouseEvent.initMouseEvent("click", true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  else if (e.hasAttribute("onmousedown")) 
+    mouseEvent.initMouseEvent("mousedown", true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  else { // do both if we cannot evaluate the kind of event
+    mouseEvent.initMouseEvent("mousedown", true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    e.dispatchEvent(mouseEvent);
+    mouseEvent.initMouseEvent("click", true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  }
+  e.dispatchEvent(mouseEvent);
   dwb_clear();
 }
 function dwb_create_stylesheet() {
@@ -167,7 +177,7 @@ function dwb_get_visibility(e) {
   return true;
 }
 
-function dwb_get_element(e, offset, constructor) {
+function dwb_get_element(win, e, offset, constructor) {
   var leftoff = 0;
   var topoff = 0;
   if (offset) {
@@ -178,13 +188,13 @@ function dwb_get_element(e, offset, constructor) {
     var res = e.contentDocument.body.querySelectorAll(hint_types);
     var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
     for (var i=0; i < res.length; i++) {
-      dwb_get_element(res[i], off, constructor);
+      dwb_get_element(e, res[i], off, constructor);
     }
   }
   else {
     if (dwb_get_visibility(e)) {
       var off = [ leftoff, topoff ];
-      var element = new constructor(e, off);
+      var element = new constructor(e, win, off);
       elements.push(element);
     }
   }
@@ -201,7 +211,7 @@ function dwb_show_hints() {
 
   var res = document.body.querySelectorAll(hint_types);
   for (var i=0; i<res.length; i++) {
-    dwb_get_element(res[i], null, constructor);
+    dwb_get_element(window, res[i], null, constructor);
   };
   for (var i=0; i<elements.length; i++) {
     if (res[i] == elements[i]) {
@@ -278,9 +288,10 @@ function dwb_clear() {
 }
 
 function evaluate(element) {
-  var ret;
+  var ret, type;
   var e = element.element;
-  var type = e.type.toLowerCase();
+  if (e.type) 
+   type = e.type.toLowerCase();
   var tagname = e.tagName.toLowerCase();
 
   if (tagname && (tagname == "input" || tagname == "textarea") ) {
