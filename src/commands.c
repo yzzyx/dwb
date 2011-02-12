@@ -263,6 +263,7 @@ dwb_com_allow_cookie(KeyMap *km, Arg *arg) {
       const char *domain = soup_cookie_get_domain(c);
       if ( ! dwb.fc.cookies_allow || ! g_list_find_custom(dwb.fc.cookies_allow, domain, (GCompareFunc) strcmp) ) {
         dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, g_strdup(domain));
+        dwb_util_file_add(dwb.files.cookies_allow, domain, true, -1);
         g_string_append_printf(buffer, "%s ", domain);
         count++;
       }
@@ -280,13 +281,14 @@ dwb_com_allow_cookie(KeyMap *km, Arg *arg) {
 /* dwb_com_bookmark {{{*/
 gboolean 
 dwb_com_bookmark(KeyMap *km, Arg *arg) {
-  gboolean noerror;
+  gboolean noerror = false;
   if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) ) {
-    dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)dwb_util_navigation_sort_first);
+    dwb_util_file_add_navigation(dwb.files.bookmarks, dwb.fc.bookmarks->data, true, -1);
+    dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)dwb_util_navigation_compare_first);
     dwb_set_normal_message(dwb.state.fview, true, "Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
   }
     
-  return dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks);
+  return noerror;
 }/*}}}*/
 
 /* dwb_com_quickmark(KeyMap *km, Arg *arg) {{{*/
@@ -943,4 +945,3 @@ dwb_com_toggle_hidden_files(KeyMap *km, Arg *arg) {
   dwb_com_reload(km, arg);
   return true;
 }/*}}}*/
-

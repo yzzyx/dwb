@@ -37,7 +37,8 @@ char * dwb_util_arg_to_char(Arg *, DwbType );
 Arg * dwb_util_char_to_arg(char *, DwbType );
 
 // sort 
-int dwb_util_navigation_sort_first(Navigation *, Navigation *);
+int dwb_util_navigation_compare_first(Navigation *, Navigation *);
+
 int dwb_util_keymap_sort_first(KeyMap *, KeyMap *);
 int dwb_util_keymap_sort_second(KeyMap *, KeyMap *);
 int dwb_util_web_settings_sort_second(WebSettings *, WebSettings *);
@@ -47,7 +48,7 @@ int dwb_util_web_settings_sort_first(WebSettings *, WebSettings *);
 void dwb_util_get_directory_content(GString **, const char *);
 GList * dwb_util_get_directory_entries(const char *path, const char *);
 char * dwb_util_get_file_content(const char *);
-void dwb_util_set_file_content(const char *, const char *);
+gboolean dwb_util_set_file_content(const char *, const char *);
 char * dwb_util_build_path(void);
 char * dwb_util_get_data_dir(const char *);
 
@@ -74,4 +75,8 @@ void dwb_free(void *);
 char * dwb_util_domain_from_uri(const char *);
 int dwb_util_compare_path(const char *, const char *);
 char * dwb_util_basename(const char *);
+
+gboolean dwb_util_file_add(const char *filename, const char *text, int, int);
+gboolean dwb_util_file_add_navigation(const char *, const Navigation *, int, int);
+
 #endif

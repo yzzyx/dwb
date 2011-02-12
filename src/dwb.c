@@ -319,9 +319,9 @@ static WebSettings DWB_SETTINGS[] = {
 
   { { "complete-history",                        "Complete browsing history", },                              false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
   { { "complete-bookmarks",                        "Complete bookmarks", },                                     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
-  { { "complete-searchengines",                   "Complete searchengines", },                                     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-searchengines",                   "Complete searchengines", },                                     false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars, },
   { { "complete-commands",                        "Complete input history", },                                     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
-  { { "complete-userscripts",                        "Complete userscripts", },                                     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars, },
+  { { "complete-userscripts",                        "Complete userscripts", },                                     false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars, },
 
   { { "use-fifo",                        "Create a fifo pipe for communication", },                            false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_set_dummy },
     
@@ -343,14 +343,14 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
   return;
 }/*}}}*/
 
-/* dwb_set_dummy{{{*/
+/* dwb_set_hide_tabbar{{{*/
 static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
   View *v = gl->data;
   v->status->adblocker = s->arg.b;
 }/*}}}*/
 
-/* dwb_set_dummy{{{*/
+/* dwb_set_hide_tabbar{{{*/
 static void
 dwb_set_hide_tabbar(GList *gl, WebSettings *s) {
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(s->arg.p);
@@ -1039,6 +1039,7 @@ dwb_save_searchengine(void) {
   g_strstrip(text);
   if (text && strlen(text) > 0) {
     dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
+    dwb_util_file_add_navigation(dwb.files.searchengines, g_list_last(dwb.fc.searchengines)->data, true, -1);
     dwb_set_normal_message(dwb.state.fview, true, "Searchengine saved");
     if (dwb.state.search_engine) {
       if (!dwb.misc.default_search) {
@@ -1054,7 +1055,6 @@ dwb_save_searchengine(void) {
     dwb_set_error_message(dwb.state.fview, "No keyword specified, aborting.");
   }
   g_free(text);
-
 }/*}}}*/
 
 /* dwb_layout_from_char {{{*/
@@ -1241,6 +1241,9 @@ dwb_save_quickmark(const char *key) {
       }
     }
     dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_quickmark_new(uri, title, key));
+    char *text = g_strdup_printf("%s %s %s", key, uri, title);
+    dwb_util_file_add(dwb.files.quickmarks, text, true, -1);
+    g_free(text);
     dwb_normal_mode(false);
 
     dwb_set_normal_message(dwb.state.fview, true, "Added quickmark: %s - %s", key, uri);
@@ -1895,19 +1898,6 @@ dwb_clean_up() {
   return true;
 }/*}}}*/
 
-/* dwb_save_navigation_fc{{{*/
-static void 
-dwb_save_navigation_fc(GList *fc, const char *filename, int length) {
-  GString *string = g_string_new(NULL);
-  int i=0;
-  for (GList *l = fc; l && (length<0 || i<length) ; l=l->next, i++)  {
-    Navigation *n = l->data;
-    g_string_append_printf(string, "%s %s\n", n->first, n->second);
-  }
-  dwb_util_set_file_content(filename, string->str);
-  g_string_free(string, true);
-}/*}}}*/
-
 /* dwb_save_simple_file(GList *, const char *){{{*/
 static void
 dwb_save_simple_file(GList *fc, const char *filename) {
@@ -1985,25 +1975,8 @@ dwb_save_settings() {
 /* dwb_save_files() {{{*/
 gboolean 
 dwb_save_files(gboolean end_session) {
-  dwb_save_navigation_fc(dwb.fc.bookmarks, dwb.files.bookmarks, -1);
-  if (!GET_BOOL("enable-private-browsing")) {
-    dwb_save_navigation_fc(dwb.fc.history, dwb.files.history, dwb.misc.history_length);
-  }
-  dwb_save_navigation_fc(dwb.fc.searchengines, dwb.files.searchengines, -1);
-  dwb_save_navigation_fc(dwb.fc.mimetypes, dwb.files.mimetypes, -1);
-
-  // quickmarks
-  GString *quickmarks = g_string_new(NULL); 
-  for (GList *l = dwb.fc.quickmarks; l; l=l->next)  {
-    Quickmark *q = l->data;
-    Navigation n = *(q->nav);
-    g_string_append_printf(quickmarks, "%s %s %s\n", q->key, n.first, n.second);
-  }
-  dwb_util_set_file_content(dwb.files.quickmarks, quickmarks->str);
-  g_string_free(quickmarks, true);
-
   // cookie allow
-  dwb_save_simple_file(dwb.fc.cookies_allow, dwb.files.cookies_allow);
+  // TODO save files in different instances
   dwb_save_simple_file(dwb.fc.content_block_allow, dwb.files.content_block_allow);
   dwb_save_simple_file(dwb.fc.plugins_allow, dwb.files.plugins_allow);
 
@@ -2017,7 +1990,6 @@ dwb_save_files(gboolean end_session) {
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
     dwb_session_save(NULL);
   }
-
   return true;
 }
 /* }}} */
@@ -2484,6 +2456,7 @@ dwb_init_vars() {
   dwb.misc.startpage = GET_CHAR("startpage");
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
   dwb.misc.content_block_regex = GET_CHAR("content-block-regex");
+  dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(GET_CHAR("hide-tabbar"));
 
   dwb.state.complete_history = GET_BOOL("complete-history");

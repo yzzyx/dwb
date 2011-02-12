@@ -205,7 +205,7 @@ dwb_util_arg_to_char(Arg *arg, DwbType type) {
 
 /* dwb_util_navigation_sort_first {{{*/
 int
-dwb_util_navigation_sort_first(Navigation *a, Navigation *b) {
+dwb_util_navigation_compare_first(Navigation *a, Navigation *b) {
   return (strcmp(b->first, b->first));
 }/*}}}*/
 /* dwb_util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
@@ -294,13 +294,15 @@ dwb_util_get_file_content(const char *filename) {
   return content;
 }/*}}}*/
 /* dwb_util_set_file_content(const char *filename, const char *content) {{{*/
-void
+gboolean
 dwb_util_set_file_content(const char *filename, const char *content) {
   GError *error = NULL;
   if (!g_file_set_contents(filename, content, -1, &error)) {
     fprintf(stderr, "Cannot save %s : %s", filename, error->message);
     g_clear_error(&error);
+    return false;
   }
+  return true;
 }/*}}}*/
 /* dwb_util_build_path()       return: char * (alloc) {{{*/
 char *
@@ -476,3 +478,43 @@ dwb_util_basename(const char *path) {
   }
   return ret;
 }/*}}}*/
+
+gboolean
+dwb_util_file_add(const char *filename, const char *text, int append, int max) {
+  if (!text)
+    return false;
+
+  FILE *file;
+  char buffer[STRING_LENGTH];
+  GString *content = g_string_new(NULL);
+
+  if (!append) 
+    g_string_append_printf(content, "%s\n", text);
+
+  gboolean ret;
+  if ( (file = fopen(filename, "r")) ) {
+    for (int i=0; fgets(buffer, sizeof buffer, file) &&  (max < 0 || i < max-1); i++ ) {
+      if (STRCMP_FIRST_WORD(text, buffer) && STRCMP_SKIP_NEWLINE(text, buffer) ) {
+        g_string_append(content, buffer);
+      }
+    }
+    fclose(file);
+  }
+  else {
+    fprintf(stderr, "Cannot open file %s\n", filename);
+    ret = false;
+  }
+  if (append)
+    g_string_append_printf(content, "%s\n", text);
+  ret = dwb_util_set_file_content(filename, content->str);
+  g_string_free(content, true);
+  return ret;
+}
+gboolean 
+dwb_util_file_add_navigation(const char *filename, const Navigation *n, int append, int max) {
+  gboolean  ret;
+  char *text = g_strdup_printf("%s %s", n->first, n->second);
+  ret = dwb_util_file_add(filename, text, append, max);
+  g_free(text);
+  return ret;
+}

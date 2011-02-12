@@ -116,6 +116,10 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define CURRENT_HOST()            (webkit_security_origin_get_host(webkit_web_frame_get_security_origin(webkit_web_view_get_main_frame(CURRENT_WEBVIEW()))))
 
 #define IS_WORD_CHAR(c)           (isalnum(c) || ((c) == '_')) 
+// compare string a and b, without newline in string b
+
+#define STRCMP_SKIP_NEWLINE(a, b)   (strncmp((a), (b), strstr((b), "\n") - (b)))
+#define STRCMP_FIRST_WORD(a, b)     (strncmp((a), (b), MAX(strstr((a), " ") - a, strstr((b), " ") - b)))
 
 #define FREE(X)                     if ((X)) g_free((X))
 #define DIGIT(X)   (X->keyval >= GDK_0 && X->keyval <= GDK_9)
@@ -228,6 +232,10 @@ typedef unsigned int SettingsScope;
 typedef unsigned int DownloadAction;
 #define DL_ACTION_DOWNLOAD  0x01
 #define DL_ACTION_EXECUTE   0x02
+
+#define APPEND  0x01
+#define PREPEND 0x02
+
 
 enum Signal {
   SIG_FIRST = 0, 
@@ -485,6 +493,7 @@ struct _Misc {
   char **argv;
 
   gboolean tabbed_browsing;
+  gboolean private_browsing;
 
 
   char *startpage;

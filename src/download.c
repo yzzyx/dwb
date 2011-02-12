@@ -16,7 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "completion.h"
+#include "download.h"
 
 typedef struct _DwbDownload {
   GtkWidget *event;
@@ -111,17 +111,15 @@ dwb_dl_progress_cb(WebKitDownload *download) {
 /* dwb_dl_set_mimetype(const char *) {{{*/
 static void
 dwb_dl_set_mimetype(const char *command) {
+  GList *list = NULL;
   if (dwb.state.mimetype_request) {
-    for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
-      Navigation *n = l->data;
-      if (!strcmp(dwb.state.mimetype_request, n->first)) {
-        FREE(n->second);
-        n->second = g_strdup(command);
-        return;
-      }
-    }
     Navigation *n = dwb_navigation_new(dwb.state.mimetype_request, command);
+    if ( (list = g_list_find_custom(dwb.fc.mimetypes, n, (GCompareFunc)dwb_util_navigation_compare_first))) {
+      g_free(list->data);
+      dwb.fc.mimetypes = g_list_delete_link(dwb.fc.mimetypes, list);
+    }
     dwb.fc.mimetypes = g_list_prepend(dwb.fc.mimetypes, n);
+    dwb_util_file_add_navigation(dwb.files.mimetypes, n, true, -1);
   }
 }/*}}}*/
 
