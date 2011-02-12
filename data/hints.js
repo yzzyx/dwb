@@ -132,19 +132,20 @@ function DwbNumberHint(element, win, offset) {
   this.constructor(element, win, offset);
 }
 
-function dwb_click_element(element) {
-  var mouseEvent = document.createEvent("MouseEvent");
+function dwb_mouse_event(element, ev) {
   var e = element.element;
-  if (e.hasAttribute("onclick")) 
-    mouseEvent.initMouseEvent("click", true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-  else if (e.hasAttribute("onmousedown")) 
-    mouseEvent.initMouseEvent("mousedown", true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-  else { // do both if we cannot evaluate the kind of event
-    mouseEvent.initMouseEvent("mousedown", true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-    e.dispatchEvent(mouseEvent);
-    mouseEvent.initMouseEvent("click", true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-  }
+  var mouseEvent = document.createEvent("MouseEvent");
+  mouseEvent.initMouseEvent(ev, true, true, element.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
   e.dispatchEvent(mouseEvent);
+}
+function dwb_click_element(element, ev) {
+  if (ev) {
+    dwb_mouse_event(element, ev);
+  }
+  else { // both events, if no event is given
+    dwb_mouse_event(element, "click");
+    dwb_mouse_event(element, "mousedown");
+  }
   dwb_clear();
 }
 function dwb_create_stylesheet() {
@@ -297,11 +298,11 @@ function evaluate(element) {
   if (tagname && (tagname == "input" || tagname == "textarea") ) {
     if (type == "radio" || type == "checkbox") {
       e.focus();
-      dwb_click_element(element);
+      dwb_click_element(element, "click");
       ret = "_dwb_check_";
     }
     else if (type == "submit" || type == "reset" || type  == "button") {
-      dwb_click_element(element);
+      dwb_click_element(element, "click");
       ret = "_dwb_click_";
     }
     else {
@@ -310,8 +311,14 @@ function evaluate(element) {
     }
   }
   else {
-    dwb_click_element(element);
-    return "_dwb_click_";
+    if (tagname == "a" || e.hasAttribute("onclick")) 
+      dwb_click_element(element, "click");
+    else if (e.hasAttribute("onmousedown")) 
+      dwb_click_element(element, "mousedown");
+    else {
+      dwb_click_element(element);
+    }
+    ret = "_dwb_click_";
   }
   return ret;
 }
