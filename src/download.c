@@ -131,7 +131,7 @@ dwb_dl_spawn(DwbDownload *dl) {
   char *command = g_strconcat(dl->path, " ", filename + 7, NULL);
 
   char **argv = g_strsplit(command, " ", -1);
-  if (! g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &error) ) {
+  if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error) ) {
     fprintf(stderr, "Couldn't open %s with %s : %s\n", filename + 7, dl->path, error->message);
     g_clear_error(&error);
   }
@@ -220,9 +220,10 @@ dwb_dl_start() {
   
   if (g_str_has_prefix(uri, "file://") && g_file_test(uri + 7, G_FILE_TEST_EXISTS)) {
     GError *error = NULL;
+    puts(path);
     char *command = g_strconcat(path, " ", uri + 7, NULL);
     char **argv = g_strsplit(command, " ", -1);
-    if (! g_spawn_async(NULL, argv, NULL, 0, NULL, NULL, NULL, &error) ) {
+    if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error) ) {
       fprintf(stderr, "Couldn't open %s with %s : %s\n", uri + 7, path, error->message);
       g_clear_error(&error);
     }
@@ -230,11 +231,6 @@ dwb_dl_start() {
     g_strfreev(argv);
     g_free(command);
 
-    return;
-  }
-  if (path[0] != '/') {
-    dwb_set_error_message(dwb.state.fview, "A full path must be specified");
-    dwb_normal_mode(false);
     return;
   }
 

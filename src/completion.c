@@ -418,13 +418,13 @@ dwb_comp_get_binaries(GList *list, char *text) {
     if ( (dir = g_dir_open(path, 'r', NULL)) ) {
       while ( (filename = g_dir_read_name(dir))) {
         if (g_str_has_prefix(filename, text)) {
-          char *store = g_build_filename(path, filename, NULL);
-          list = g_list_prepend(list, store);
+          list = g_list_prepend(list, g_strdup(filename));
         }
       }
       g_dir_close(dir);
     }
   }
+  g_strfreev(paths);
   return list;
 }/* }}} */
 
@@ -483,7 +483,7 @@ dwb_comp_init_path_completion(int back) {
   char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
 
   dwb.comps.path_completion = dwb.comps.active_path = g_list_append(NULL, g_strdup(text));
-  if (dwb.state.dl_action == DL_ACTION_EXECUTE && text[0] != '/') {
+  if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
     GList *list = dwb_comp_get_binaries(NULL, text);
     list = g_list_sort(list, (GCompareFunc)strcmp);
     dwb.comps.path_completion = g_list_concat(dwb.comps.path_completion, list);

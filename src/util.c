@@ -410,13 +410,11 @@ gboolean
 dwb_true() {
   return true;
 }/*}}}*/
-
 /* dwb_return(const char *)     return char * (alloc) {{{*/
 char *
 dwb_return(const char *ret) {
   return ret && strlen(ret) > 0 ? g_strdup(ret) : NULL;
 }/*}}}*/
-
 /* dwb_malloc(size_t size)         return: void* {{{*/
 void *
 dwb_malloc(size_t size) {
@@ -428,12 +426,12 @@ dwb_malloc(size_t size) {
   }
   return r;
 }/*}}}*/
-
+/*dwb_free(void *p) {{{*/
 void 
 dwb_free(void *p) {
   if (p) 
     g_free(p);
-}
+}/*}}}*/
 
 /* dwb_util_domain_from_uri (char *uri)      return: char* {{{*/
 char *
@@ -455,7 +453,7 @@ dwb_util_domain_from_uri(const char *uri) {
   return ret;
 }/*}}}*/
 
-/* dwb_util_domain_from_uri (char *uri)      return: char* {{{*/
+/* dwb_util_compare_path(char *uri)      return: char* {{{*/
 int
 dwb_util_compare_path(const char *a, const char *b) {
   return strcmp(g_strrstr(a, "/"), g_strrstr(b, "/"));
@@ -479,6 +477,7 @@ dwb_util_basename(const char *path) {
   return ret;
 }/*}}}*/
 
+/* dwb_util_file_add(const char *filename, const char *text, int append, int max){{{*/
 gboolean
 dwb_util_file_add(const char *filename, const char *text, int append, int max) {
   if (!text)
@@ -517,4 +516,4 @@ dwb_util_file_add_navigation(const char *filename, const Navigation *n, int appe
   ret = dwb_util_file_add(filename, text, append, max);
   g_free(text);
   return ret;
-}
+}/*}}}*/
