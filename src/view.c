@@ -21,6 +21,7 @@
 static void dwb_parse_setting(const char *);
 static void dwb_parse_key_setting(const char *);
 static void dwb_apply_settings(WebSettings *);
+static void dwb_view_ssl_state(GList *);
 
 static char *lasturi;
 static GList *allowed_plugins;
@@ -205,10 +206,10 @@ static void
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl) {
   View *v = VIEW(gl);
   if (uri) {
-    dwb_set_status_bar_text(v->rstatus, uri, NULL, NULL);
+    dwb_set_status_bar_text(v->urilabel, uri, &dwb.color.active_fg, NULL);
   }
   else {
-    dwb_update_status_text(gl, NULL);
+    dwb_update_uri(gl);
   }
 }/*}}}*/
 
@@ -377,6 +378,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       dwb_view_clean_vars(VIEW(gl));
       break;
     case WEBKIT_LOAD_COMMITTED: 
+      dwb_view_ssl_state(gl);
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
@@ -561,6 +563,7 @@ dwb_view_modify_style(View *v, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkC
   if (fd) {
     pango_font_description_set_absolute_size(fd, fontsize * PANGO_SCALE);
     gtk_widget_modify_font(v->rstatus, fd);
+    gtk_widget_modify_font(v->urilabel, fd);
     gtk_widget_modify_font(v->lstatus, fd);
     gtk_widget_modify_font(v->tablabel, fd);
   }
@@ -661,18 +664,24 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   GtkWidget *status_hbox;
   v->statusbox = gtk_event_box_new();
   v->lstatus = gtk_label_new(NULL);
+  v->urilabel = gtk_label_new(NULL);
   v->rstatus = gtk_label_new(NULL);
 
   gtk_misc_set_alignment(GTK_MISC(v->lstatus), 0.0, 0.5);
+  gtk_misc_set_alignment(GTK_MISC(v->urilabel), 1.0, 0.5);
   gtk_misc_set_alignment(GTK_MISC(v->rstatus), 1.0, 0.5);
   gtk_label_set_use_markup(GTK_LABEL(v->lstatus), true);
+  gtk_label_set_use_markup(GTK_LABEL(v->urilabel), true);
   gtk_label_set_use_markup(GTK_LABEL(v->rstatus), true);
-  gtk_label_set_ellipsize(GTK_LABEL(v->rstatus), PANGO_ELLIPSIZE_MIDDLE);
+  gtk_label_set_ellipsize(GTK_LABEL(v->urilabel), PANGO_ELLIPSIZE_MIDDLE);
+
+  gtk_widget_modify_fg(v->urilabel, GTK_STATE_NORMAL, &dwb.color.active_fg);
 
   status_hbox = gtk_hbox_new(false, 2);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->lstatus, false, false, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->entry, true, true, 0);
-  gtk_box_pack_start(GTK_BOX(status_hbox), v->rstatus, true, true, 0);
+  gtk_box_pack_start(GTK_BOX(status_hbox), v->urilabel, true, true, 0);
+  gtk_box_pack_start(GTK_BOX(status_hbox), v->rstatus, false, false, 0);
   gtk_container_add(GTK_CONTAINER(v->statusbox), status_hbox);
 
   gtk_box_pack_end(GTK_BOX(v->bottombox), v->statusbox, false, false, 0);
@@ -709,6 +718,7 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   gtk_widget_show(v->vbox);
   gtk_widget_show(v->lstatus);
   gtk_widget_show(v->entry);
+  gtk_widget_show(v->urilabel);
   gtk_widget_show(v->rstatus);
   gtk_widget_show(status_hbox);
   gtk_widget_show(v->statusbox);
@@ -870,7 +880,7 @@ dwb_view_remove() {
   dwb_update_layout(false);
 }/*}}}*/
 
-void 
+static void 
 dwb_view_new_reorder(gboolean background) {
   if (background)
     return;
@@ -888,6 +898,27 @@ dwb_view_new_reorder(gboolean background) {
     }
   }
 }
+/* dwb_view_ssl_state (GList *gl) {{{*/
+static void
+dwb_view_ssl_state(GList *gl) {
+  View *v = VIEW(gl);
+  SslState ssl = SSL_NONE;
+
+  const char *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
+  if (uri && g_str_has_prefix(uri, "https")) {
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
+    WebKitNetworkResponse *response = webkit_web_frame_get_network_response(frame);
+    SoupMessage *msg = webkit_network_response_get_message(response);
+    if (msg) {
+      ssl = soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED 
+        ? SSL_TRUSTED 
+        : SSL_UNTRUSTED;
+    }
+  }
+  v->status->ssl = ssl;
+  dwb_update_uri(gl);
+}/*}}}*/
+
 
 /* dwb_add_view(Arg *arg)               return: View *{{{*/
 GList *  

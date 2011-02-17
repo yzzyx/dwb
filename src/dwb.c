@@ -279,8 +279,10 @@ static WebSettings DWB_SETTINGS[] = {
   { { "normal-completion-fg-color",                    "UI: Completion inactive foreground", },                      false, true,  COLOR_CHAR, { .p = "#eeeeee"         }, (S_Func) dwb_init_style, },
   { { "normal-completion-bg-color",                    "UI: Completion inactive background", },                      false, true,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style, },
 
-  { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  COLOR_CHAR, { .p = "#000000"         }, (S_Func) dwb_init_style, },
-  { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  COLOR_CHAR, { .p = "#dddddd"         }, (S_Func) dwb_init_style, },
+  { { "ssl-trusted-color",                         "UI: Color for https, trusted certificate", },                 false, true,  COLOR_CHAR, { .p = "#00ff00"         }, (S_Func) dwb_init_style, },
+  { { "ssl-untrusted-color",                       "UI: Color for https, untrusted certificate", },                 false, true,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style, },
+  { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style, },
+  { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  COLOR_CHAR, { .p = "#303030"         }, (S_Func) dwb_init_style, },
   { { "error-color",                             "UI: Error color", },                                         false, true,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style, },
 
   { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style, },
@@ -598,6 +600,25 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
 
+void 
+dwb_update_uri(GList *gl) {
+  View *v = VIEW(gl);
+  if (!gl)
+    gl = dwb.state.fview;
+
+  WebKitWebView *wv = WEBVIEW(gl);
+  const char *uri = webkit_web_view_get_uri(wv);
+  GdkColor *uricolor;
+  if (v->status->ssl == SSL_TRUSTED) 
+    uricolor = &dwb.color.ssl_trusted;
+  else if (v->status->ssl == SSL_UNTRUSTED) 
+    uricolor = &dwb.color.ssl_untrusted;
+  else 
+    uricolor = gl == dwb.state.fview ? &dwb.color.active_fg : &dwb.color.normal_fg;
+
+  dwb_set_status_bar_text(v->urilabel, uri, uricolor, NULL);
+}
+
 /* dwb_update_status_text(GList *gl) {{{*/
 void 
 dwb_update_status_text(GList *gl, GtkAdjustment *a) {
@@ -606,10 +627,8 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
   if (!a) {
     a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
   }
-
-  const char *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
-  GString *string = g_string_new(uri);
-
+  dwb_update_uri(gl);
+  GString *string = g_string_new(NULL);
 
   if (v->status->block) {
     char *js_items = v->status->block_current ? g_strdup_printf(" [%d]", v->status->items_blocked) : g_strdup(" [a]");
@@ -644,13 +663,14 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     g_string_append(string, progress);
     FREE(progress);
   }
-  dwb_set_status_bar_text(VIEW(gl)->rstatus, string->str, NULL, NULL);
+  dwb_set_status_bar_text(v->rstatus, string->str, NULL, NULL);
   g_string_free(string, true);
 }/*}}}*/
 
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
 /* dwb_history_back {{{*/
 int
 dwb_history_back() {
@@ -2233,6 +2253,10 @@ dwb_init_style() {
   //Downloads
   gdk_color_parse("#ffffff", &dwb.color.download_fg);
   gdk_color_parse("#000000", &dwb.color.download_bg);
+
+  //SSL 
+  gdk_color_parse(GET_CHAR("ssl-trusted-color"),   &dwb.color.ssl_trusted);
+  gdk_color_parse(GET_CHAR("ssl-untrusted-color"), &dwb.color.ssl_untrusted);
 
   gdk_color_parse(GET_CHAR("active-completion-bg-color"), &dwb.color.active_c_bg);
   gdk_color_parse(GET_CHAR("active-completion-fg-color"), &dwb.color.active_c_fg);

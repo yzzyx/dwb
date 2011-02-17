@@ -278,6 +278,13 @@ enum _Direction {
   SCROLL_TOP,
   SCROLL_BOTTOM,
 } Direction;
+
+typedef enum {
+  SSL_NONE,
+  SSL_TRUSTED, 
+  SSL_UNTRUSTED,
+} SslState;
+
 /*}}}*/
 
 
@@ -402,6 +409,7 @@ struct _ViewStatus {
   Plugin *plugins;
   gulong signals[SIG_LAST];
   int progress;
+  SslState ssl;
 };
 struct _Plugin {
   char *uri;
@@ -414,6 +422,7 @@ struct _View {
   GtkWidget *tabevent;
   GtkWidget *tablabel;
   GtkWidget *statusbox;
+  GtkWidget *urilabel;
   GtkWidget *rstatus;
   GtkWidget *lstatus;
   GtkWidget *scroll; 
@@ -430,6 +439,8 @@ struct _Color {
   GdkColor active_bg;
   GdkColor normal_fg;
   GdkColor normal_bg;
+  GdkColor ssl_trusted;
+  GdkColor ssl_untrusted;
   GdkColor tab_active_fg;
   GdkColor tab_active_bg;
   GdkColor tab_normal_fg;
@@ -628,4 +639,6 @@ void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
 gboolean dwb_block_ad(GList *gl, const char *);
 const char * dwb_check_directory(const char *);
+void dwb_update_uri(GList *);
+void dwb_ssl_state(GList *);
 #endif
