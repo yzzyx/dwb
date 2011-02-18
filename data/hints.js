@@ -2,19 +2,19 @@ var elements = [];
 var active_arr = [];
 var hints;
 var overlays;
+var overlays;
 var active;
 var last_active;
 var lastpos = 0;
 var lastinput;
 var styles;
 var form_hints = "//form";
-var hint_types = 'a, area, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]';
+var hint_types = 'a, img, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]';
 
 var styles = null;
 
 function DwbHint(element, win, offset) {
   this.element = element;
-  this.rect = element.getBoundingClientRect();
   this.win = win;
   if (!offset) {
     offset = [ 0, 0 ];
@@ -22,9 +22,17 @@ function DwbHint(element, win, offset) {
 
   function create_span(element) {
     var span = document.createElement("span");
-    if (offset) {
-      var leftpos = offset[0] + Math.max((element.rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
-      var toppos = offset[1] + Math.max((element.rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
+    var rect;
+    var leftpos, toppos;
+    if (element instanceof HTMLAreaElement) {
+      var coords = element.coords.split(",");
+      var leftpos = offset[0] + document.defaultView.scrollX + parseInt(coords[0]);
+      var toppos = offset[1] + document.defaultView.scrollY + parseInt(coords[1]);
+    }
+    else {
+      rect = element.getBoundingClientRect();
+      leftpos = offset[0] + Math.max((rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
+      toppos = offset[1] + Math.max((rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
     }
     span.style.position = "absolute";
     span.style.left = leftpos  + "px";
@@ -46,7 +54,7 @@ function DwbHint(element, win, offset) {
     return hint;
   }
 
-  this.hint = create_hint(this);
+  this.hint = create_hint(element);
 }
 //DwbNumberHint
 DwbNumberHint.prototype.getTextHint = function (i, length) {
@@ -162,7 +170,7 @@ function dwb_create_stylesheet() {
 
 function dwb_get_visibility(e) {
   var style = document.defaultView.getComputedStyle(e, null);
-  if (style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none") {
+  if ((style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none" ) ) {
       return false;
   }
   var rects = e.getClientRects()[0];
@@ -189,6 +197,15 @@ function dwb_get_element(win, e, offset, constructor) {
     for (var i=0; i < res.length; i++) {
       dwb_get_element(e, res[i], off, constructor);
     }
+  }
+  else if (e instanceof HTMLImageElement && e.useMap) {
+    var areas = e.parentNode.getElementsByTagName("area");
+    var r = e.getBoundingClientRect();
+    for (var i=0; i<areas.length; i++) {
+      var element = new constructor(areas[i], win, [leftoff + r.left, topoff + r.top]);
+      elements.push(element);
+    }
+
   }
   else {
     if (dwb_get_visibility(e)) {
@@ -354,7 +371,6 @@ function dwb_add_searchengine() {
   if (!elements.length) {
     return "_dwb_no_hints_";
   }
-  elements.sort( function(a,b) { return a.rect.top - b.rect.top; });
   for (var i=0; i<elements.length; i++) {
     elements[i].getTextHint(i, elements.length);
     elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
