@@ -173,8 +173,6 @@ function dwb_get_visibility(e) {
   if (!r || r.top > height || r.bottom < 0 || r.left > width ||  r.right < 0 || !rects) {
     return false;
   }
-
-  var style = document.defaultView.getComputedStyle(e, null);
   return true;
 }
 

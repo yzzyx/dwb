@@ -165,7 +165,8 @@ dwb_com_show_hints(KeyMap *km, Arg *arg) {
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_show_hints()");
+    //webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_show_hints()");
+    dwb_dom_show_hints();
     dwb.state.mode = HINT_MODE;
     dwb_focus_entry();
   }
