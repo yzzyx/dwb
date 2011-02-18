@@ -187,6 +187,7 @@ function dwb_get_visibility(e) {
 function dwb_get_element(win, e, offset, constructor) {
   var leftoff = 0;
   var topoff = 0;
+  console.log(e.tagName);
   if (offset) {
     leftoff += offset[0];
     topoff += offset[1];
@@ -198,7 +199,9 @@ function dwb_get_element(win, e, offset, constructor) {
       dwb_get_element(e, res[i], off, constructor);
     }
   }
-  else if (e instanceof HTMLImageElement && e.useMap) {
+  else if (e instanceof HTMLImageElement) {
+    if (!e.useMap) 
+      return;
     var areas = e.parentNode.getElementsByTagName("area");
     var r = e.getBoundingClientRect();
     for (var i=0; i<areas.length; i++) {
