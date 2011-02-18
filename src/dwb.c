@@ -1776,23 +1776,40 @@ dwb_search(KeyMap *km, Arg *arg) {
 
 /* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
 static gboolean
-dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, char *filename) {
+dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_channel) {
   GError *error = NULL;
   char *line;
 
   while (g_io_channel_read_line(channel, &line, NULL, NULL, &error) == G_IO_STATUS_NORMAL) {
-    dwb_parse_command_line(g_strchomp(line));
+    if (g_str_has_prefix(line, "javascript:")) {
+      char *value = dwb_execute_script(line + 11, true);
+      if (value) {
+        g_io_channel_write_chars(out_channel, value, -1, NULL, NULL);
+        g_io_channel_write_chars(out_channel, "\n", 1, NULL, NULL);
+        g_free(value);
+      }
+    }
+    else if (!strcmp(line, "close\n")) {
+      g_io_channel_shutdown(channel, true, NULL);
+      FREE(line);
+      break;
+    }
+    else {
+      dwb_parse_command_line(g_strchomp(line));
+    }
+    g_io_channel_flush(out_channel, NULL);
     FREE(line);
   }
   if (error) {
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
   }
 
-  g_io_channel_shutdown(channel, true, NULL);
+  //g_io_channel_shutdown(channel, true, NULL);
   g_clear_error(&error);
 
   return false;
 }/*}}}*/
+
 /* dwb_execute_user_script(Arg *a) {{{*/
 void
 dwb_execute_user_script(KeyMap *km, Arg *a) {
@@ -1801,9 +1818,11 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   snprintf(nummod, 64, "%d", NUMMOD);
   char *argv[5] = { a->p, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), (char *)dwb.misc.profile, nummod, NULL } ;
   int std_out;
-  if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &std_out, NULL, &error)) {
+  int std_in;
+  if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &std_in, &std_out, NULL, &error)) {
     GIOChannel *channel = g_io_channel_unix_new(std_out);
-    g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, NULL);
+    GIOChannel *out_channel = g_io_channel_unix_new(std_in);
+    g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, out_channel);
     dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->p);
   }
   else {

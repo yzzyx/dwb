@@ -23,6 +23,6 @@ while read; do
     test ${SUBMIT} != 0 && COMMAND+="${NAME}.form.submit();"
   fi
 done < "${CONTENT_FILE}"
-echo "open ${COMMAND}"
+printf "open ${COMMAND}\nclose\n"
 
 # vim: tw=0
