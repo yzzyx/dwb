@@ -337,6 +337,7 @@ static void
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
     webkit_web_view_execute_script(web, dwb.misc.systemscripts);
+    webkit_web_view_execute_script(web, dwb.misc.scripts);
 }/*}}}*/
 
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
@@ -388,7 +389,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       // reload all user scripts, so the active element can automatically be
       // detected. 
       // TODO remove with new webkit version 
-      webkit_web_view_execute_script(web, dwb.misc.scripts);
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);
@@ -819,8 +819,7 @@ void
 dwb_view_remove() {
   GList *gl = NULL;
   if (!dwb.state.views->next) {
-    dwb_end();
-    exit(EXIT_SUCCESS);
+    return;
   }
   if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
