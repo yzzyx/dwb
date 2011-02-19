@@ -161,11 +161,11 @@ function dwb_create_stylesheet() {
     return;
   styles = document.createElement("style");
   styles.type = "text/css";
-  document.getElementsByTagName('head')[0].appendChild(styles);
+  document.head.appendChild(styles);
 
   var style = document.styleSheets[document.styleSheets.length - 1];
-  style.insertRule('*[dwb_highlight=hint_normal] { background: ' + hint_normal_color + ' !important; } ', 0);
-  style.insertRule('*[dwb_highlight=hint_active] { background: ' + hint_active_color + ' !important } ', 0);
+  style.insertRule('*[dwb_highlight=hint_normal] { background: ' + hint_normal_color + ' !important; color: #000000 !important; } ', 0);
+  style.insertRule('*[dwb_highlight=hint_active] { background: ' + hint_active_color + ' !important; color: #000000 !important; } ', 0);
 }
 
 function dwb_get_visibility(e) {
@@ -207,7 +207,6 @@ function dwb_get_element(win, e, offset, constructor) {
       var element = new constructor(areas[i], win, [leftoff + r.left, topoff + r.top]);
       elements.push(element);
     }
-
   }
   else {
     if (dwb_get_visibility(e)) {
