@@ -187,7 +187,6 @@ function dwb_get_visibility(e) {
 function dwb_get_element(win, e, offset, constructor) {
   var leftoff = 0;
   var topoff = 0;
-  console.log(e.tagName);
   if (offset) {
     leftoff += offset[0];
     topoff += offset[1];
