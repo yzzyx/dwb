@@ -13,6 +13,7 @@ include ../config.mk
 all: $(TARGET) 
 
 $(TARGET): $(OBJ) $(HDR)
+	@echo "$(CC) $@"
 	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
 
 debug: 

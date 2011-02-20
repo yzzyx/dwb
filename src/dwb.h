@@ -245,7 +245,6 @@ enum Signal {
   SIG_CREATE_WEB_VIEW,
   SIG_CREATE_PLUGIN_WIDGET,
   SIG_DOWNLOAD_REQUESTED,
-  SIG_ENTER_NOTIFY,
   SIG_HOVERING_OVER_LINK, 
   SIG_MIME_TYPE,
   SIG_NAVIGATION,
@@ -430,7 +429,6 @@ struct _View {
   GtkWidget *autocompletion;
   GtkWidget *compbox;
   GtkWidget *bottombox;
-  View *next;
   ViewStatus *status;
   GHashTable *setting;
 };

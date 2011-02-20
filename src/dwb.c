@@ -1642,16 +1642,16 @@ dwb_eval_key(GdkEventKey *e) {
     if (km->map->entry) {
       continue;
     }
-    gsize l = strlen(km->key);
-    if (!km->key || !l) {
+    gsize kl = strlen(km->key);
+    if (!km->key || !kl) {
       continue;
     }
     if (dwb.comps.autocompletion && g_str_has_prefix(km->key, buf) && CLEAN_STATE(e) == km->mod) {
       coms = g_list_append(coms, km);
     }
-    if (!strcmp(&buf[length - l], km->key) && (CLEAN_STATE(e) == km->mod)) {
-      if  (!longest || l > longest) {
-        longest = l;
+    if (!strcmp(&buf[length - kl], km->key) && (CLEAN_STATE(e) == km->mod)) {
+      if  (!longest || kl > longest) {
+        longest = kl;
         tmp = km;
       }
       ret = true;

@@ -36,17 +36,14 @@ static gboolean dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownlo
 static WebKitWebView * dwb_web_view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList *);
 static void dwb_web_view_hovering_over_link_cb(WebKitWebView *, char *, char *, GList *);
 static gboolean dwb_web_view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, char *, WebKitWebPolicyDecision *, GList *);
-static gboolean dwb_web_view_enter_notify_cb(GtkWidget *, GdkEventCrossing *, GList *);
 static gboolean dwb_web_view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
 static gboolean dwb_web_view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
 static void dwb_web_view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
 static void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *);
 static gboolean dwb_web_view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
-static void dwb_web_view_populate_popup_cb(WebKitWebView *, GtkMenu *, GList *);
 static gboolean dwb_web_view_value_changed_cb(GtkAdjustment *, GList *);
 static void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
 static void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
-static void dwb_web_view_realize_cb(GtkWidget *, GList *);
 static gboolean dwb_view_entry_keyrelease_cb(GtkWidget *, GdkEventKey *);
 static gboolean dwb_view_entry_keypress_cb(GtkWidget *, GdkEventKey *);
 static gboolean dwb_view_entry_activate_cb(GtkEntry *);
@@ -136,10 +133,6 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
     return web;
   }
 }/*}}}*/
-
-static void
-dwb_web_view_populate_popup_cb(WebKitWebView *wv, GtkMenu *menu, GList *gl) {
-}
 
 /* dwb_web_view_plugin_blocker_button_cb (GtkWidget *, GdkEventButton, char *uri) {{{*/
 static gboolean 
@@ -234,13 +227,6 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
     return true;
   }
   return  false;
-}/*}}}*/
-
-/* dwb_web_view_enter_notify_cb(GtkWidget *, GdkEventCrossing *, GList *){{{*/
-static gboolean 
-dwb_web_view_enter_notify_cb(GtkWidget *web, GdkEventCrossing *e, GList *gl) {
-  dwb_focus(gl);
-  return false;
 }/*}}}*/
 
 /* dwb_web_view_navigation_policy_cb {{{*/
@@ -404,14 +390,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     default:
       break;
   }
-}/*}}}*/
-
-/* dwb_web_view_realize_cb {{{*/
-static void
-dwb_web_view_realize_cb(GtkWidget *widget, GList *gl) {
-  GdkWindow *window = gtk_widget_get_window(widget);
-  GdkEventMask events = gdk_window_get_events(window);
-  gdk_window_set_events(window, events | GDK_ENTER_NOTIFY_MASK);
 }/*}}}*/
 
 // Entry
@@ -612,7 +590,6 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                   G_CALLBACK(dwb_web_view_progress_cb), gl);
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
-                                                  //g_signal_connect(v->web, "populate-popup",                          G_CALLBACK(dwb_web_view_populate_popup_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
 
   v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
@@ -620,7 +597,6 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(dwb_view_entry_activate_cb), NULL);
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(dwb_view_tab_button_press_cb), gl);
-  v->status->signals[SIG_ENTER_NOTIFY]          = g_signal_connect(v->web,    "enter-notify-event",                   G_CALLBACK(dwb_web_view_enter_notify_cb), gl);
 } /*}}}*/
 
 /* dwb_view_clean_vars(GList *){{{*/
@@ -656,7 +632,6 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
 
   v->vbox = gtk_vbox_new(false, 0);
   v->web = webkit_web_view_new();
-  g_signal_connect(v->web, "realize", G_CALLBACK(dwb_web_view_realize_cb), gl);
 
   // Entry
   v->entry = gtk_entry_new();
