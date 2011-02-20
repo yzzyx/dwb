@@ -893,8 +893,8 @@ dwb_entry_set_text(const char *text) {
 /* dwb_focus_entry() {{{*/
 void 
 dwb_focus_entry() {
-  gtk_widget_grab_focus(dwb.gui.entry);
   gtk_widget_show(dwb.gui.entry);
+  gtk_widget_grab_focus(dwb.gui.entry);
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
 }/*}}}*/
 
@@ -1636,6 +1636,7 @@ dwb_eval_key(GdkEventKey *e) {
   KeyMap *tmp = NULL;
   GList *coms = NULL;
 
+  // TODO l
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
     if (km->map->entry) {

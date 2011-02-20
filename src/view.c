@@ -42,6 +42,7 @@ static gboolean dwb_web_view_new_window_policy_cb(WebKitWebView *, WebKitWebFram
 static void dwb_web_view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
 static void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *);
 static gboolean dwb_web_view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
+static void dwb_web_view_populate_popup_cb(WebKitWebView *, GtkMenu *, GList *);
 static gboolean dwb_web_view_value_changed_cb(GtkAdjustment *, GList *);
 static void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
 static void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
@@ -81,6 +82,10 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     dwb_focus(gl);
   }
+  else if (e->button == 3 && e->state & GDK_BUTTON1_MASK) {
+    // no popup if button 1 is presssed
+    ret = true;
+  }
   else if (e->button == 8) {
     dwb_history_back();
   }
@@ -89,7 +94,6 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
   return ret;
 }/*}}}*/
-
 /* dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/
 static gboolean 
 dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
@@ -132,6 +136,10 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
     return web;
   }
 }/*}}}*/
+
+static void
+dwb_web_view_populate_popup_cb(WebKitWebView *wv, GtkMenu *menu, GList *gl) {
+}
 
 /* dwb_web_view_plugin_blocker_button_cb (GtkWidget *, GdkEventButton, char *uri) {{{*/
 static gboolean 
@@ -604,6 +612,7 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                   G_CALLBACK(dwb_web_view_progress_cb), gl);
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
+                                                  //g_signal_connect(v->web, "populate-popup",                          G_CALLBACK(dwb_web_view_populate_popup_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
 
   v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
