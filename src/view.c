@@ -93,13 +93,18 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
 }/*}}}*/
 static gboolean
 dwb_web_view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
-  WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
   char *uri =  NULL;
-  if (e->button == 2) {
+  WebKitHitTestResultContext context;
+
+  WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
+  g_object_get(result, "context", &context, NULL);
+  if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
     g_object_get(result, "link-uri", &uri, NULL);
-    Arg a = { .p = uri, .b = true };
-    dwb_add_view(&a, dwb.state.background_tabs);
-    return true;
+    if (e->button == 2) {
+      Arg a = { .p = uri, .b = true };
+      dwb_add_view(&a, dwb.state.background_tabs);
+      return true;
+    }
   }
   return false;
 }
