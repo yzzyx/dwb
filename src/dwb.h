@@ -240,6 +240,7 @@ typedef unsigned int DownloadAction;
 enum Signal {
   SIG_FIRST = 0, 
   SIG_BUTTON_PRESS,
+  SIG_BUTTON_RELEASE,
   SIG_CLOSE_WEB_VIEW, 
   SIG_CONSOLE_MESSAGE,
   SIG_CREATE_WEB_VIEW,
