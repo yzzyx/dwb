@@ -9,16 +9,18 @@ clean:
 	@$(MAKE) clean -C $(SRCDIR)
 
 install: all install-man install-data 
-	@echo "Installing $(TARGET) to $(subst //,/,$(DESTDIR)$(BINDIR))"
+	@echo "Installing $(TARGET) to $(DESTDIR)$(BINDIR)/$(TARGET)"
 	@install -Dm 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 
 install-man: 
-	@echo "Installing manpage to $(subst //,/,$(DESTDIR)$(MAN1DIR))"
+	@echo "Installing manpage to $(DESTDIR)$(MAN1DIR)"
 	@install -Dm 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
 
 install-data: 
-	@echo "Installing $(SHAREDIR)/hints.js to $(subst //,/,$(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts)"
+	@echo "Installing $(SHAREDIR)/hints.js to $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js"
 	@install -Dm 644 $(SHAREDIR)/hints.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js
+	@echo "Installing $(SHAREDIR)/selection.js to $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/selection.js"
+	@install -Dm 644 $(SHAREDIR)/selection.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/selection.js
 
 uninstall: uninstall-man uninstall-data
 	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"

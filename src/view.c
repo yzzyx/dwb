@@ -46,7 +46,7 @@ static void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
 static void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
 static gboolean dwb_view_entry_keyrelease_cb(GtkWidget *, GdkEventKey *);
 static gboolean dwb_view_entry_keypress_cb(GtkWidget *, GdkEventKey *);
-static gboolean dwb_view_entry_activate_cb(GtkEntry *);
+static gboolean dwb_view_entry_activate_cb(GtkEntry *, GList *);
 static gboolean dwb_view_tab_button_press_cb(GtkWidget *, GdkEventButton *, GList *);
 
 /* WEB_VIEW_CALL_BACKS {{{*/
@@ -464,7 +464,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 static gboolean 
-dwb_view_entry_activate_cb(GtkEntry* entry) {
+dwb_view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   gboolean ret = false;
   Mode mode = dwb.state.mode;
 
@@ -594,7 +594,7 @@ dwb_web_view_init_signals(GList *gl) {
 
   v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
   v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(dwb_view_entry_keyrelease_cb), NULL);
-  v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(dwb_view_entry_activate_cb), NULL);
+  v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(dwb_view_entry_activate_cb), gl);
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(dwb_view_tab_button_press_cb), gl);
 } /*}}}*/

@@ -50,7 +50,7 @@ MAKE=make --no-print-directory
 BUILDDATE=`date +%Y.%m.%d`
 
 #directories
-PREFIX=/usr/
+PREFIX=/usr
 
 BINDIR=$(PREFIX)/bin
 

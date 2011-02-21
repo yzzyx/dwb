@@ -476,7 +476,7 @@ dwb_set_content_block(GList *gl, WebSettings *s) {
 static gboolean 
 dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
-
+  
   char *key = dwb_util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_Escape) {
     dwb_normal_mode(true);
@@ -501,6 +501,9 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   }
   else if (gtk_widget_has_focus(dwb.gui.entry) || dwb.state.mode & COMPLETION_MODE) {
     ret = false;
+  }
+  else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_Return) {
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "DwbSelection.followSelection()");
   }
   else if (DWB_TAB_KEY(e)) {
     dwb_comp_autocomplete(dwb.keymap, e);
