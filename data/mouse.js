@@ -81,6 +81,7 @@ function MouseAutoScrollObj() {
   const SIZE = 16;
   const OFFSET = 5;
   var doc;
+  Math.sign = function(x) { return x >=0 ? 1  : -1; }
   const MouseAutoScroll = {
     _span : null,
     _x : 0,
@@ -113,8 +114,6 @@ function MouseAutoScrollObj() {
           var t = scrollY < 0 && window.pageYOffset == 0;
           var offX = Math.abs(scrollX) < OFFSET;
           var offY = Math.abs(scrollY) < OFFSET;
-          console.log(doc.documentElement.scrollWidth);
-          console.log(doc.documentElement.scrollHeight);
           if ( MouseAutoScroll._timerId != 0 
             && (( b && r ) || ( b && l) || ( b && offX ) 
             || ( t && r ) || ( t && l) || ( t && offX ) 
@@ -122,7 +121,8 @@ function MouseAutoScrollObj() {
             MouseAutoScroll.stopTimer();
             return;
           }
-          window.scrollBy(scrollX, scrollY);
+          window.scrollBy(scrollX - Math.sign(scrollX) * OFFSET, 
+              scrollY - Math.sign(scrollY) * OFFSET);
         }
       },
     mouseMove : 
@@ -135,8 +135,8 @@ function MouseAutoScrollObj() {
     init : 
       function (ev) {
         doc = ev.target.ownerDocument;
-        if (window.innerHeight >= doc.documentElement.offsetHeight 
-            && window.innerWidth >= doc.documentElement.offsetWidth) {
+        if (window.innerHeight >= doc.documentElement.scrollHeight 
+            && window.innerWidth >= doc.documentElement.scrollWidth) {
           return;
         }
         var span = doc.createElement("span");

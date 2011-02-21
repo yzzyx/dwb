@@ -1720,11 +1720,9 @@ dwb_normal_mode(gboolean clean) {
   if (mode & NORMAL_MODE) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_blur()");
   }
-
   if (clean) {
     dwb_clean_buffer(dwb.state.fview);
   }
-
   webkit_web_view_unmark_text_matches(CURRENT_WEBVIEW());
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
