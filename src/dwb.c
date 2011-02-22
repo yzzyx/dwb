@@ -1035,6 +1035,7 @@ dwb_get_search_engine(const char *uri) {
     if (!ret) {
       ret = dwb_get_search_engine_uri(dwb.misc.default_search, uri);
     }
+    g_strfreev(token);
   }
   return ret;
 }/*}}}*/
