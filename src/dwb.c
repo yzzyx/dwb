@@ -575,7 +575,7 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
   
   va_start(arg_list, text);
   char message[STRING_LENGTH];
-  vsprintf(message, text, arg_list);
+  vsnprintf(message, STRING_LENGTH - 1, text, arg_list);
   va_end(arg_list);
 
   dwb_set_status_bar_text(v->lstatus, message, &dwb.color.active_fg, dwb.font.fd_bold);
@@ -593,7 +593,7 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
 
   va_start(arg_list, error);
   char message[STRING_LENGTH];
-  vsprintf(message, error, arg_list);
+  vsnprintf(message, STRING_LENGTH - 1, error, arg_list);
   va_end(arg_list);
 
   dwb_source_remove(gl);

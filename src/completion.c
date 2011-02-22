@@ -432,7 +432,7 @@ static GList *
 dwb_comp_get_path(GList *list, char *text) {
   GDir *dir;
   char d_tmp[BUFFER_LENGTH];
-  strcpy(d_tmp, text);
+  strncpy(d_tmp, text, BUFFER_LENGTH - 1);
   char *d_name = dirname(d_tmp);
   char *b_name = dwb_util_basename(text);
   char *d_current = g_get_current_dir();
@@ -448,14 +448,14 @@ dwb_comp_get_path(GList *list, char *text) {
     return NULL;
   }
   else if (g_file_test(text, G_FILE_TEST_IS_DIR)) {
-    strcpy(path, text);
+    strncpy(path, text, BUFFER_LENGTH - 1);
     char path_last = path[strlen(path) - 1];
     if (path_last != '/' && path_last != '.') {
       return g_list_prepend(list, g_strconcat(path, "/", NULL));
     }
   }
   else if (g_file_test(d_name, G_FILE_TEST_IS_DIR)) {
-    strcpy(path, d_name);
+    strncpy(path, d_name, BUFFER_LENGTH - 1);
   }
   if ( (dir = g_dir_open(path, 'r', NULL)) ) {
     while ( (filename = g_dir_read_name(dir)) ) {
