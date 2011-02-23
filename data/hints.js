@@ -187,8 +187,8 @@ function dwb_create_stylesheet() {
 
   var style = document.styleSheets[document.styleSheets.length - 1];
 
-  style.insertRule('*[dwb_highlight=hint_normal] { background: ' + dwb_hex_to_rgb(hint_normal_color) + ' !important; color: #000000 !important; } ', 0);
-  style.insertRule('*[dwb_highlight=hint_active] { background: ' + dwb_hex_to_rgb(hint_active_color) + ' !important; color: #000000 !important; } ', 0);
+  style.insertRule('*[dwb_highlight=hint_normal] { background: ' + dwb_hex_to_rgb(hint_normal_color) + ' !important; } ', 0);
+  style.insertRule('*[dwb_highlight=hint_active] { background: ' + dwb_hex_to_rgb(hint_active_color) + ' !important; } ', 0);
 }
 
 function dwb_get_visibility(e) {
