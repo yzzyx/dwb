@@ -59,7 +59,7 @@
 #define BUFFER_LENGTH 256
 
 // SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
-#define SETTINGS_VIEW "<head>\n<style type=\"text/css\">\n \
+#define SETTINGS_VIEW "<head>\n<title>%s</title><style type=\"text/css\">\n \
   body { background-color: %s; color: %s; text-align:center; }\n\
   table { border-spacing:0px; }\n\
   th { border:%s; }\n \

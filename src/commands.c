@@ -177,7 +177,7 @@ gboolean
 dwb_com_show_keys(KeyMap *km, Arg *arg) {
   View *v = dwb.state.fview->data;
   GString *buffer = g_string_new(NULL);
-  g_string_append_printf(buffer, SETTINGS_VIEW, dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
+  g_string_append_printf(buffer, SETTINGS_VIEW, "dwb - Keyboard configuration", dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
   g_string_append_printf(buffer, HTML_H2, "Keyboard Configuration", dwb.misc.profile);
 
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_first);
@@ -221,7 +221,7 @@ dwb_com_show_settings(KeyMap *km, Arg *arg) {
   GList *l = g_hash_table_get_values(t);
   l = g_list_sort(l, (GCompareFunc)dwb_util_web_settings_sort_first);
 
-  g_string_append_printf(buffer, SETTINGS_VIEW, dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
+  g_string_append_printf(buffer, SETTINGS_VIEW, "dwb - Settings", dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
   g_string_append_printf(buffer, HTML_H2, setting_string, dwb.misc.profile);
 
   g_string_append(buffer, HTML_BODY_START);
