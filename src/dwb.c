@@ -48,7 +48,6 @@ static void dwb_clean_buffer(GList *);
 static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 
 static gboolean dwb_command_mode(Arg *arg);
-static void dwb_reload_scripts(GList *,  WebSettings *);
 static void dwb_reload_layout(GList *,  WebSettings *);
 static char * dwb_test_userscript(const char *);
 
@@ -294,17 +293,17 @@ static WebSettings DWB_SETTINGS[] = {
   
   { { "font",                                    "UI: Font", },                                                false, true,  CHAR, { .p = "monospace"          },   (S_Func) dwb_reload_layout, },
    
-  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts, },
-  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  CHAR, { .p = "12px"              },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  CHAR, { .p = "normal"            },     (S_Func) dwb_reload_scripts, },
-  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  CHAR, { .p = "monospace"         },     (S_Func) dwb_reload_scripts, },
-  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  COLOR_CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  COLOR_CHAR, { .p = "#000088"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  COLOR_CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  COLOR_CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  CHAR, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
-  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  DOUBLE, { .d = 0.75         },          (S_Func) dwb_reload_scripts, },
+  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_init_vars, },
+  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_init_vars, },
+  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  CHAR, { .p = "12px"              },     (S_Func) dwb_init_vars, },
+  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  CHAR, { .p = "normal"            },     (S_Func) dwb_init_vars, },
+  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  CHAR, { .p = "monospace"         },     (S_Func) dwb_init_vars, },
+  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  COLOR_CHAR, { .p = "#ffffff"      },     (S_Func) dwb_init_vars, },
+  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  COLOR_CHAR, { .p = "#000088"      },     (S_Func) dwb_init_vars, },
+  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  COLOR_CHAR, { .p = "#00ff00"      },     (S_Func) dwb_init_vars, },
+  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  COLOR_CHAR, { .p = "#ffff99"      },     (S_Func) dwb_init_vars, },
+  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  CHAR, { .p = "2px dashed #000000"    }, (S_Func) dwb_init_vars, },
+  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  DOUBLE, { .d = 0.65         },          (S_Func) dwb_init_vars, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  CHAR,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
   { { "single-instance",                         "Single instance", },                                         false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
@@ -982,15 +981,6 @@ dwb_clean_buffer(GList *gl) {
     dwb.state.buffer = NULL;
   }
   CLEAR_COMMAND_TEXT(gl);
-}/*}}}*/
-
-/* dwb_reload_scripts(GList *,  WebSettings  *s) {{{*/
-static void 
-dwb_reload_scripts(GList *gl, WebSettings *s) {
-  FREE(dwb.misc.systemscripts);
-  dwb_init_scripts();
-  //dwb_com_reload(NULL, NULL);
-  webkit_web_view_reload(WEBVIEW(gl));
 }/*}}}*/
 
 /* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
@@ -2231,18 +2221,6 @@ dwb_init_scripts() {
   g_string_truncate(buffer, 0);
 
   // systemscript
-  g_string_append_printf(buffer, "hint_letter_seq = '%s';\n",       GET_CHAR("hint-letter-seq"));
-  g_string_append_printf(buffer, "hint_font_size = '%s';\n",        GET_CHAR("hint-font-size"));
-  g_string_append_printf(buffer, "hint_font_weight = '%s';\n",      GET_CHAR("hint-font-weight"));
-  g_string_append_printf(buffer, "hint_font_family = '%s';\n",      GET_CHAR("hint-font-family"));
-  g_string_append_printf(buffer, "hint_style = '%s';\n",            GET_CHAR("hint-style"));
-  g_string_append_printf(buffer, "hint_fg_color = '%s';\n",         GET_CHAR("hint-fg-color"));
-  g_string_append_printf(buffer, "hint_bg_color = '%s';\n",         GET_CHAR("hint-bg-color"));
-  g_string_append_printf(buffer, "hint_active_color = '%s';\n",     GET_CHAR("hint-active-color"));
-  g_string_append_printf(buffer, "hint_normal_color = '%s';\n",     GET_CHAR("hint-normal-color"));
-  g_string_append_printf(buffer, "hint_border = '%s';\n",           GET_CHAR("hint-border"));
-  g_string_append_printf(buffer, "hint_opacity = %f;\n",            GET_DOUBLE("hint-opacity"));
-
   char *dir = NULL;
   if ( (dir = dwb_util_get_data_dir("scripts")) ) {
     dwb_util_get_directory_content(&buffer, dir);
@@ -2515,6 +2493,19 @@ dwb_init_vars() {
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
+  JavaScript js;
+  js.letter_seq   = GET_CHAR("hint-letter-seq");
+  js.font_size    = GET_CHAR("hint-font-size");
+  js.font_weight  = GET_CHAR("hint-font-weight");
+  js.font_family  = GET_CHAR("hint-font-family");
+  js.style        = GET_CHAR("hint-style");
+  js.fg_color     = GET_CHAR("hint-fg-color");
+  js.bg_color     = GET_CHAR("hint-bg-color");
+  js.active_color = GET_CHAR("hint-active-color");
+  js.normal_color = GET_CHAR("hint-normal-color");
+  js.border       = GET_CHAR("hint-border");
+  js.opacity      = GET_DOUBLE("hint-opacity");
+  dwb.js = js;
 }/*}}}*/
 
 static void

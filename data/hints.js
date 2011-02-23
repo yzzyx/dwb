@@ -1,3 +1,6 @@
+var hint_letter_seq, hint_font_size, hint_font_weight, hint_font_family,
+    hint_style, hint_fg_color, hint_bg_color, hint_active_color,
+    hint_normal_color, hint_border, hint_opacity;
 var elements = [];
 var active_arr = [];
 var hints;
@@ -156,6 +159,25 @@ function dwb_click_element(element, ev) {
   }
   dwb_clear();
 }
+function dwb_hex_to_rgb(color) {
+  var rgb;
+  if (color[0] !== '#')
+    return color;
+  if (color.length == 4) {
+    rgb = /#([0-9a-f])([0-9a-f])([0-9a-f])/i.exec(color);
+    for (var i=1; i<=3; i++) {
+      var v = parseInt("0x" + rgb[i])+1;
+      rgb[i] = v*v-1;
+    }
+  }
+  else {
+    rgb  = /#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(color);
+    for (var i=1; i<=3; i++) {
+      rgb[i] = parseInt("0x" + rgb[i]);
+    }
+  }
+  return "rgba(" + rgb.slice(1) + "," +  hint_opacity + ")";
+}
 function dwb_create_stylesheet() {
   if (styles)
     return;
@@ -164,8 +186,9 @@ function dwb_create_stylesheet() {
   document.head.appendChild(styles);
 
   var style = document.styleSheets[document.styleSheets.length - 1];
-  style.insertRule('*[dwb_highlight=hint_normal] { background: ' + hint_normal_color + ' !important; color: #000000 !important; } ', 0);
-  style.insertRule('*[dwb_highlight=hint_active] { background: ' + hint_active_color + ' !important; color: #000000 !important; } ', 0);
+
+  style.insertRule('*[dwb_highlight=hint_normal] { background: ' + dwb_hex_to_rgb(hint_normal_color) + ' !important; color: #000000 !important; } ', 0);
+  style.insertRule('*[dwb_highlight=hint_active] { background: ' + dwb_hex_to_rgb(hint_active_color) + ' !important; color: #000000 !important; } ', 0);
 }
 
 function dwb_get_visibility(e) {
@@ -353,6 +376,21 @@ function dwb_focus_prev() {
   active = active_arr[newpos];
   dwb_set_active(active);
   lastpos = newpos;
+}
+function dwb_func_with_args(command, letter_seq, font_size, font_weight, font_family, style,
+    fg_color, bg_color, active_color, normal_color, border,  opacity) {
+  hint_letter_seq  = letter_seq;
+  hint_font_size = font_size;
+  hint_font_weight = font_weight;
+  hint_font_family = font_family;
+  hint_style =  style;
+  hint_fg_color    = fg_color;
+  hint_bg_color    = bg_color;
+  hint_active_color = active_color;
+  hint_normal_color = normal_color;
+  hint_border = border;
+  hint_opacity = opacity;
+  command();
 }
 function dwb_add_searchengine() {
   dwb_create_stylesheet();

@@ -159,6 +159,7 @@ typedef struct _State State;
 typedef struct _View View;
 typedef struct _ViewStatus ViewStatus;
 typedef struct _WebSettings WebSettings;
+typedef struct _JavaScript JavaScript;
 /*}}}*/
 typedef gboolean (*Command_f)(void*);
 typedef gboolean (*Func)(void *, void*);
@@ -551,6 +552,19 @@ struct _FileContent {
   GList *plugins_allow;
   GList *adblock;
 };
+struct _JavaScript {
+  const char *letter_seq;
+  const char *font_size;
+  const char *font_weight;
+  const char *font_family;
+  const char *style;
+  const char *fg_color;
+  const char *bg_color;
+  const char *active_color;
+  const char *normal_color;
+  const char *border;
+  double opacity;
+};
 
 struct _Dwb {
   Gui gui;
@@ -563,6 +577,7 @@ struct _Dwb {
   GHashTable *settings;
   Files files;
   FileContent fc;
+  JavaScript js;
 };
 
 /*}}}*/
