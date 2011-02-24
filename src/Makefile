@@ -10,7 +10,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
-	@$(CC) $(LDFLAGS) $(OBJ) -o $(TARGET) 
+	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
 
 -include $(OBJ:.o=.d)
 
