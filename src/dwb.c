@@ -42,6 +42,7 @@ static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_adblock(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
+static void dwb_reload_scripts(GList *, WebSettings *);
 
 
 static void dwb_clean_buffer(GList *);
@@ -293,17 +294,17 @@ static WebSettings DWB_SETTINGS[] = {
   
   { { "font",                                    "UI: Font", },                                                false, true,  CHAR, { .p = "monospace"          },   (S_Func) dwb_reload_layout, },
    
-  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_init_vars, },
-  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_init_vars, },
-  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  CHAR, { .p = "12px"              },     (S_Func) dwb_init_vars, },
-  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  CHAR, { .p = "normal"            },     (S_Func) dwb_init_vars, },
-  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  CHAR, { .p = "monospace"         },     (S_Func) dwb_init_vars, },
-  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  COLOR_CHAR, { .p = "#ffffff"      },     (S_Func) dwb_init_vars, },
-  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  COLOR_CHAR, { .p = "#000088"      },     (S_Func) dwb_init_vars, },
-  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  COLOR_CHAR, { .p = "#00ff00"      },     (S_Func) dwb_init_vars, },
-  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  COLOR_CHAR, { .p = "#ffff99"      },     (S_Func) dwb_init_vars, },
-  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  CHAR, { .p = "2px dashed #000000"    }, (S_Func) dwb_init_vars, },
-  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  DOUBLE, { .d = 0.65         },          (S_Func) dwb_init_vars, },
+  { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts, },
+  { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  CHAR, { .p = "12px"              },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  CHAR, { .p = "normal"            },     (S_Func) dwb_reload_scripts, },
+  { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  CHAR, { .p = "monospace"         },     (S_Func) dwb_reload_scripts, },
+  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  COLOR_CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  COLOR_CHAR, { .p = "#000088"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  COLOR_CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  COLOR_CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  CHAR, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
+  { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  DOUBLE, { .d = 0.65         },          (S_Func) dwb_reload_scripts, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "Default homepage", },                                        false, true,  CHAR,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
   { { "single-instance",                         "Single instance", },                                         false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
@@ -400,6 +401,7 @@ void
 dwb_set_cookies(GList *l, WebSettings *s) {
   dwb.state.cookies_allowed = s->arg.b;
 }/*}}}*/
+
 /* dwb_set_background_tab (GList *, WebSettings *s) {{{*/
 void 
 dwb_set_background_tab(GList *l, WebSettings *s) {
@@ -457,7 +459,7 @@ dwb_webview_property(GList *gl, WebSettings *s) {
     case CHAR:    g_object_set(web, s->n.first, (char*)s->arg.p, NULL); break;
     default: return;
   }
-}/*}}}*//*}}}*/
+}/*}}}*/
 
 /* dwb_set_content_block{{{*/
 static void
@@ -466,6 +468,13 @@ dwb_set_content_block(GList *gl, WebSettings *s) {
 
   v->status->block = s->arg.b;
 }/*}}}*/
+
+/*dwb_reload_scripts {{{  */
+static void 
+dwb_reload_scripts(GList *gl, WebSettings *s) {
+  FREE(dwb.misc.scripts);
+  dwb_init_scripts();
+} /*}}}*//*}}}*/
 /*}}}*/
 
 
@@ -2214,16 +2223,26 @@ dwb_init_scripts() {
   setlocale(LC_NUMERIC, "C");
   // user scripts
   dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
-  dwb.misc.scripts = g_strdup(buffer->str);
-  g_string_truncate(buffer, 0);
 
-  // systemscript
+  // systemscripts
   char *dir = NULL;
   if ( (dir = dwb_util_get_data_dir("scripts")) ) {
     dwb_util_get_directory_content(&buffer, dir);
     g_free(dir);
   }
-  dwb.misc.systemscripts = buffer->str;
+  g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\");", 
+      GET_CHAR("hint-letter-seq"),
+      GET_CHAR("hint-font-size"),
+      GET_CHAR("hint-font-weight"), 
+      GET_CHAR("hint-font-family"), 
+      GET_CHAR("hint-style"), 
+      GET_CHAR("hint-fg-color"), 
+      GET_CHAR("hint-bg-color"), 
+      GET_CHAR("hint-active-color"), 
+      GET_CHAR("hint-normal-color"), 
+      GET_CHAR("hint-border"), 
+      GET_DOUBLE("hint-opacity"));
+  dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/
 
@@ -2490,19 +2509,6 @@ dwb_init_vars() {
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
-  JavaScript js;
-  js.letter_seq   = GET_CHAR("hint-letter-seq");
-  js.font_size    = GET_CHAR("hint-font-size");
-  js.font_weight  = GET_CHAR("hint-font-weight");
-  js.font_family  = GET_CHAR("hint-font-family");
-  js.style        = GET_CHAR("hint-style");
-  js.fg_color     = GET_CHAR("hint-fg-color");
-  js.bg_color     = GET_CHAR("hint-bg-color");
-  js.active_color = GET_CHAR("hint-active-color");
-  js.normal_color = GET_CHAR("hint-normal-color");
-  js.border       = GET_CHAR("hint-border");
-  js.opacity      = GET_DOUBLE("hint-opacity");
-  dwb.js = js;
 }/*}}}*/
 
 static void
@@ -2538,9 +2544,9 @@ dwb_init() {
 
   dwb_init_key_map();
   dwb_init_style();
-  dwb_init_scripts();
   dwb_init_gui();
   dwb_init_icons();
+  dwb_init_scripts();
 
   dwb.misc.soupsession = webkit_get_default_session();
   dwb_soup_init_proxy(dwb.misc.soupsession);
