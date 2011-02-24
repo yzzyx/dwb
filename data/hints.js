@@ -312,7 +312,7 @@ const DwbHintObj = {
           array.push(e);
         }
         else {
-          e.hint.style.visibility = 'visibility';
+          e.hint.style.visibility = 'hidden';
           e.element.removeAttribute('dwb_highlight');
         }
       }
