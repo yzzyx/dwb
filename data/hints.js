@@ -263,6 +263,9 @@ const DwbHintObj = {
       var me = DwbHintObj;
       document.activeElement.blur();
 
+      if (!me._styles)
+        me.createStyleSheet();
+
       var hints = document.createElement("div");
       hints.id = "dwb_hints";
       var constructor = me._style.toLowerCase() == "letter" ? me.letterHint : me.numberHint;
