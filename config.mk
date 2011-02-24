@@ -19,7 +19,7 @@ LIBS  += webkit-1.0
 FLAGS += -pedantic
 FLAGS += -Wall 
 FLAGS += -pipe
-FLAGS += `pkg-config --cflags --libs $(LIBS)` 
+FLAGS += `pkg-config --cflags $(LIBS)` 
 FLAGS += --ansi
 FLAGS += -std=c99
 FLAGS += -D_POSIX_SOURCE
@@ -28,6 +28,8 @@ FLAGS += -DNAME=\"$(NAME)\"
 FLAGS += -DVERSION=\"$(VERSION)\" 
 FLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
 FLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
+
+LDFLAGS += `pkg-config --libs $(LIBS)` 
 
 
 DFLAGS += -g -B

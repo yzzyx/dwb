@@ -17,22 +17,6 @@
  */
 
 #include "commands.h"
-static inline char *
-dwb_com_js_with_args(const char *command) {
-  return g_strdup_printf("dwb_func_with_args(%s, \"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\")", 
-      command, 
-      dwb.js.letter_seq, 
-      dwb.js.font_size, 
-      dwb.js.font_weight, 
-      dwb.js.font_family, 
-      dwb.js.style, 
-      dwb.js.fg_color, 
-      dwb.js.bg_color, 
-      dwb.js.active_color, 
-      dwb.js.normal_color, 
-      dwb.js.border, 
-      dwb.js.opacity);
-}
 
 /* dwb_com_simple_command(keyMap *km) {{{*/
 void 
@@ -95,7 +79,7 @@ dwb_com_focus_input(KeyMap *km, Arg *a) {
   char *value;
   gboolean ret = true;
 
-  value = dwb_execute_script("dwb_focus_input()", true);
+  value = dwb_execute_script("DwbHintObj.focusInput()", true);
   if (value && !strcmp(value, "_dwb_no_input_")) {
     ret = false;
   }
@@ -109,8 +93,7 @@ gboolean
 dwb_com_add_search_field(KeyMap *km, Arg *a) {
   char *value;
   gboolean ret = true;
-  char *command = dwb_com_js_with_args("dwb_add_searchengine");
-  value = dwb_execute_script(command, true);
+  value = dwb_execute_script("DwbHintObj.addSearchEngine()", true);
   if (value) {
     if (!strcmp(value, "_dwb_no_hints_")) {
       return false;
@@ -120,7 +103,6 @@ dwb_com_add_search_field(KeyMap *km, Arg *a) {
   dwb_set_normal_message(dwb.state.fview, false, "Enter a Keyword for marked search:");
   dwb_focus_entry();
   FREE(value);
-  FREE(command);
   return ret;
 
 }/*}}}*/
@@ -183,11 +165,9 @@ dwb_com_show_hints(KeyMap *km, Arg *arg) {
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    char *command = dwb_com_js_with_args("dwb_show_hints");
-    webkit_web_view_execute_script(CURRENT_WEBVIEW(), command);
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.showHints()");
     dwb.state.mode = HINT_MODE;
     dwb_focus_entry();
-    g_free(command);
   }
   return true;
 }/*}}}*/

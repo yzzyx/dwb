@@ -6,15 +6,19 @@ include ../config.mk
 # FLAGS+=-DGDK_DISABLE_DEPRECATED
 # FLAGS+=-DGSEAL_ENABLE
 
-%.o: %.c $(HDR)
-	@echo "${CC} $<"
-	@$(CC) $(FLAGS) $(DEBUG) -c -o $@ $<
-
 all: $(TARGET) 
 
-$(TARGET): $(OBJ) $(HDR)
+$(TARGET): $(OBJ)
 	@echo "$(CC) $@"
-	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
+	@$(CC) $(LDFLAGS) $(OBJ) -o $(TARGET) 
+
+-include $(OBJ:.o=.d)
+
+%.o: %.c 
+	@echo "${CC} $<"
+	@$(CC) $(FLAGS) $(DEBUG) -c -o $@ $<
+	@$(CC) $(FLAGS) -MM $*.c > $*.d
+
 
 debug: 
 	@$(MAKE) -B DEBUG=$(DFLAGS) TARGET=$(DTARGET)
@@ -24,8 +28,9 @@ cgdb: debug
 
 clean:
 	@echo Cleaning
-	@$(RM) $(OBJ)
+	@$(RM) *.o 
 	@$(RM) $(TARGET)
 	@$(RM) $(DTARGET)
+	@$(RM) *.d
 
 .PHONY: clean all

@@ -339,8 +339,22 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
 static void 
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
-    webkit_web_view_execute_script(web, dwb.misc.systemscripts);
-    webkit_web_view_execute_script(web, dwb.misc.scripts);
+  char *command = g_strdup_printf("%s;%s;DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\")", 
+      dwb.misc.systemscripts,
+      dwb.misc.scripts,
+      dwb.js.letter_seq, 
+      dwb.js.font_size, 
+      dwb.js.font_weight, 
+      dwb.js.font_family, 
+      dwb.js.style, 
+      dwb.js.fg_color, 
+      dwb.js.bg_color, 
+      dwb.js.active_color, 
+      dwb.js.normal_color, 
+      dwb.js.border, 
+      dwb.js.opacity);
+  webkit_web_view_execute_script(web, command);
+  g_free(command);
 }/*}}}*/
 
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/

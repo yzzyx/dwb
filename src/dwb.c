@@ -1033,7 +1033,7 @@ dwb_get_search_engine(const char *uri) {
 /* dwb_submit_searchengine {{{*/
 void 
 dwb_submit_searchengine(void) {
-  char *com = g_strdup_printf("dwb_submit_searchengine(\"%s\")", HINT_SEARCH_SUBMIT);
+  char *com = g_strdup_printf("DwbHintObj.submitSearchEngine(\"%s\")", HINT_SEARCH_SUBMIT);
   char *value = dwb_execute_script(com, true);
   if (value) {
     dwb.state.form_name = value;
@@ -1110,26 +1110,26 @@ dwb_update_hints(GdkEventKey *e) {
   char *com = NULL;
 
   if (e->keyval == GDK_Return) {
-    com = g_strdup("dwb_get_active()");
+    com = g_strdup("DwbHintObj.followActive()");
   }
   else if (DIGIT(e)) {
     dwb.state.nummod = MIN(10*dwb.state.nummod + e->keyval - GDK_0, 314159);
     char *text = g_strdup_printf("hint number: %d", dwb.state.nummod);
     dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, text, &dwb.color.active_fg, dwb.font.fd_normal);
 
-    com = g_strdup_printf("dwb_update_hints(\"%d\")", dwb.state.nummod);
+    com = g_strdup_printf("DwbHintObj.updateHints(\"%d\")", dwb.state.nummod);
     FREE(text);
   }
   else if (DWB_TAB_KEY(e)) {
     if (e->state & GDK_SHIFT_MASK) {
-      com = g_strdup("dwb_focus_prev()");
+      com = g_strdup("DwbHintObj.focusPrev()");
     }
     else {
-      com = g_strdup("dwb_focus_next()");
+      com = g_strdup("DwbHintObj.focusNext()");
     }
   }
   else {
-    com = g_strdup_printf("dwb_update_hints(\"%s\")", GET_TEXT());
+    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\")", GET_TEXT());
   }
   if (com) {
     buffer = dwb_execute_script(com, true);
@@ -1141,7 +1141,7 @@ dwb_update_hints(GdkEventKey *e) {
       dwb_normal_mode(false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
-      webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_clear()");
+      //webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_clear()");
       dwb_insert_mode(NULL);
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
@@ -1694,7 +1694,7 @@ dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
   if (dwb.state.mode == HINT_MODE || dwb.state.mode == SEARCH_FIELD_MODE) {
-    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_clear()");
+    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.clear()");
   }
   else if (mode  == INSERT_MODE) {
     dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
@@ -1711,9 +1711,6 @@ dwb_normal_mode(gboolean clean) {
   }
   dwb_focus_scroll(dwb.state.fview);
 
-  if (mode & NORMAL_MODE) {
-    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "dwb_blur()");
-  }
   if (clean) {
     dwb_clean_buffer(dwb.state.fview);
   }

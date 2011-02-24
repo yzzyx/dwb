@@ -22,6 +22,7 @@
 #include "dwb.h"
 #include "util.h"
 
+
 void dwb_dl_get_path(GList *, WebKitDownload *);
 void dwb_dl_start(void);
 
