@@ -114,9 +114,12 @@ static FunctionMap FMAP [] = {
   { { "insert_mode",           "Insert Mode",                       }, 0, (Func)dwb_insert_mode,             NULL,                              ALWAYS_SM, },
   { { "load_html",             "Load html",                         }, 1, (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
   { { "load_html_nv",          "Load html new view",                }, 1, (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL } },
-  { { "open",                  "Open",                              }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
-  { { "open_nv",               "Viewopen",                          }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
-  { { "open_nw",               "Winopen",                           }, 1, (Func)dwb_com_open,                NULL,                              NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
+  { { "open",                  "open",                              }, 1, (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
+  { { "Open",                  "Open",                              }, 0, (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL | SET_URL, .p = NULL } },
+  { { "open_nv",               "viewopen",                          }, 1, (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
+  { { "Open_nv",               "Viewopen",                          }, 0, (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL } },
+  { { "open_nw",               "winopen",                           }, 1, (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
+  { { "Open_nw",               "Winopen",                           }, 0, (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL } },
   { { "open_quickmark",        "Quickmark",                         }, 0, (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, },
   { { "open_quickmark_nv",     "Quickmark-new-view",                }, 0, (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, },
   { { "open_quickmark_nw",     "Quickmark-new-window",              }, 0, (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, },
@@ -1883,7 +1886,7 @@ dwb_clean_vars() {
   dwb.state.mode = NORMAL_MODE;
   dwb.state.buffer = NULL;
   dwb.state.nummod = 0;
-  dwb.state.nv = 0;
+  dwb.state.nv = OPEN_NORMAL;
   dwb.state.type = 0;
   dwb.state.scriptlock = 0;
   dwb.state.last_com_history = NULL;

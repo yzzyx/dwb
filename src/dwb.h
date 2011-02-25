@@ -113,6 +113,8 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
 #define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL)
 
+#define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
+
 #define CURRENT_HOST()            (webkit_security_origin_get_host(webkit_web_frame_get_security_origin(webkit_web_view_get_main_frame(CURRENT_WEBVIEW()))))
 
 #define IS_WORD_CHAR(c)           (isalnum(c) || ((c) == '_')) 
@@ -206,11 +208,6 @@ typedef unsigned int ShowMessage;
 #define ALWAYS_SM     0x01 
 #define POST_SM       0x02
 
-typedef unsigned int Open;
-#define OPEN_NORMAL      0x00 
-#define OPEN_NEW_VIEW    0x01
-#define OPEN_NEW_WINDOW  0x02
-#define OPEN_DOWNLOAD    0x03
 
 typedef unsigned int Layout;
 #define NORMAL_LAYOUT    0
@@ -236,6 +233,13 @@ typedef unsigned int DownloadAction;
 #define APPEND  0x01
 #define PREPEND 0x02
 
+typedef enum {
+  OPEN_NORMAL      = 1<<0, 
+  OPEN_NEW_VIEW    = 1<<1, 
+  OPEN_NEW_WINDOW  = 1<<2, 
+  OPEN_DOWNLOAD    = 1<<3, 
+  SET_URL          = 1<<4, 
+} Open;
 
 enum Signal {
   SIG_FIRST = 0, 

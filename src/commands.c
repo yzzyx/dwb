@@ -443,8 +443,8 @@ dwb_com_history_forward(KeyMap *km, Arg *arg) {
 /* dwb_com_open(KeyMap *km, Arg *arg) {{{*/
 gboolean  
 dwb_com_open(KeyMap *km, Arg *arg) {
-  if (dwb.state.nv == OPEN_NORMAL)
-    dwb.state.nv = arg->n;
+  if (dwb.state.nv & OPEN_NORMAL)
+    dwb.state.nv = arg->n & ~SET_URL;
 
   dwb.state.type = arg->i;
 
@@ -454,6 +454,8 @@ dwb_com_open(KeyMap *km, Arg *arg) {
   }
   else {
     dwb_focus_entry();
+    if (arg->n & SET_URL)
+      dwb_entry_set_text(CURRENT_URL());
   }
   return true;
 } /*}}}*/
