@@ -30,7 +30,7 @@ static KeyValue KEYS[] = {
   { "find_backward",            {   "?",         0,                   },  },  
   { "focus_next",               {   "J",         0,                   },  },  
   { "focus_prev",               {   "K",         0,                   },  },  
-  { "focus_nth_view",           {   "gv",        0,                   },  },  
+  { "focus_nth_view",           {   "T",         0,                   },  },  
   { "hint_mode",                {   "f",         0,                   },  },  
   { "hint_mode_nv",             {   "F",         0,                   },  },  
   { "hint_mode_nw",             {   "wf",         0,                   },  },  
