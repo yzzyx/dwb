@@ -1,3 +1,4 @@
+String.prototype.isInt = function() { return !isNaN(parseInt(this)); }
 const DwbHintObj = {
   _letterSeq : "FDSARTGBVECWXQYIOPMNHZULKJ",
   _fontSize : "12px",
@@ -80,6 +81,9 @@ const DwbHintObj = {
       }
 
       this.betterMatch = function(input) {
+        if (input.isInt()) {
+          return 0;
+        }
         var bestposition = 37;
         var ret = 0;
         for (var i=0; i<me._activeArr.length; i++) {
@@ -101,14 +105,12 @@ const DwbHintObj = {
       }
       this.matchText = function(input) {
         var ret = false;
-        if (parseInt(input) == input) {
-          text_content = this.hint.textContent;
+        if (input.isInt()) {
+          var regEx = new RegExp('^' + input);
+          return regEx.test(this.hint.textContent);
         }
         else {
-          text_content = this.element.textContent.toLowerCase();
-        }
-        if (text_content.match(input)) {
-          return true;
+          return this.element.textContent.toLowerCase().match(input);
         }
       }
     },
@@ -201,8 +203,8 @@ const DwbHintObj = {
 
       var style = document.styleSheets[document.styleSheets.length - 1];
 
-      style.insertRule('*[dwb_highlight=hint_normal] { background: ' + me.hexToRgb(me._normalColor) + ' !important; } ', 0);
-      style.insertRule('*[dwb_highlight=hint_active] { background: ' + me.hexToRgb(me._activeColor) + ' !important; } ', 0);
+      style.insertRule('*[dwb_highlight=hint_normal] { background: ' + me._normalColor + ' !important; } ', 0);
+      style.insertRule('*[dwb_highlight=hint_active] { background: ' + me._activeColor + ' !important; } ', 0);
     },
 
   getVisibility :
@@ -257,7 +259,6 @@ const DwbHintObj = {
         }
       }
     },
-
   showHints : 
     function () {
       var me = DwbHintObj;
@@ -268,7 +269,7 @@ const DwbHintObj = {
 
       var hints = document.createElement("div");
       hints.id = "dwb_hints";
-      var constructor = me._style.toLowerCase() == "letter" ? me.letterHint : me.numberHint;
+      var constructor = me._style == "letter" ? me.letterHint : me.numberHint;
 
       var res = document.body.querySelectorAll(me._hintTypes);
       for (var i=0; i<res.length; i++) {
@@ -287,7 +288,6 @@ const DwbHintObj = {
       me._activeArr = me._elements;
       document.body.appendChild(hints);
     }, 
-
   updateHints :
     function updateHints(input) {
       var me = DwbHintObj;
@@ -309,6 +309,14 @@ const DwbHintObj = {
         return;
       }
       me._lastInput = input;
+      if (me._style == "number" && input) {
+        if (input[input.length-1].isInt()) {
+          input = input.match(/[0-9]+/g).join("");
+        }
+        else {
+          input = input.match(/[^0-9]+/g).join("");
+        }
+      }
       for (var i=0; i<me._activeArr.length; i++) {
         var e = me._activeArr[i];
         if (e.matchText(input)) {
@@ -355,7 +363,6 @@ const DwbHintObj = {
       me._elements = [];
       me._activeArr = [];
     },
-
   evaluate :
     function (e) {
       me = DwbHintObj;
@@ -435,70 +442,69 @@ const DwbHintObj = {
       me._hintOpacity = opacity;
       command();
     }, 
-    addSearchEngine : 
-      function () {
-        var me = DwbHintObj;
-        var hints = document.createElement("div");
-        var res = document.body.querySelectorAll("form");
+  addSearchEngine : 
+    function () {
+      var me = DwbHintObj;
+      var hints = document.createElement("div");
+      var res = document.body.querySelectorAll("form");
 
+      for (var i=0; i<res.length; i++) {
+        var els = res[i].elements;
+        for (var j=0; j<els.length; j++) {
+          if (me.getVisibility(els[j]) && (els[j].type == "text" || els[j].type == "search")) {
+            var e = new me.letterHint(els[j], window);
+            me._elements.push(e);
+            e.element.setAttribute('dwb_highlight', 'hint_normal');
+          }
+        }
+      }
+      if (!me._elements.length) {
+        return "_dwb_no_hints_";
+      }
+      for (var i=0; i<me._elements.length; i++) {
+        me._elements[i].getTextHint(i, me._elements.length);
+        me._elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
+      }
+      document.body.appendChild(hints); 
+      me.setActive(me._elements[0]);
+      me._activeArr = me._elements;
+    },
+  submitSearchEngine :
+    function (string) {
+      var e = DwbHintObj.getActive();
+      e.value = string;
+      e.form.submit();
+      e.value = "";
+      if (e.form.method.toLowerCase() == 'post') {
+        return e.name;
+      }
+      return NULL;
+    },
+  focusInput : 
+    function dwb_focus_input() {
+      var me = DwbHintObj;
+      var res = document.body.querySelectorAll('input[type=text], input[type=password], textarea');
+      if (res.length == 0) {
+        return "_dwb_no_input_";
+      }
+      styles = document.styleSheets[0];
+      styles.insertRule('input:focus { outline: 2px solid #1793d1; }', 0);
+      if (!me._activeInput) {
+        me._activeInput = res[0];
+      }
+      else {
         for (var i=0; i<res.length; i++) {
-          var els = res[i].elements;
-          for (var j=0; j<els.length; j++) {
-            if (me.getVisibility(els[j]) && (els[j].type == "text" || els[j].type == "search")) {
-              var e = new me.letterHint(els[j], window);
-              me._elements.push(e);
-              e.element.setAttribute('dwb_highlight', 'hint_normal');
+          if (res[i] == me._activeInput) {
+            if (!(me._activeInput = res[i+1])) {
+              me._activeInput = res[0];
             }
+            break;
           }
         }
-        if (!me._elements.length) {
-          return "_dwb_no_hints_";
-        }
-        for (var i=0; i<me._elements.length; i++) {
-          me._elements[i].getTextHint(i, me._elements.length);
-          me._elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
-        }
-        document.body.appendChild(hints); 
-        me.setActive(me._elements[0]);
-        me._activeArr = me._elements;
-      },
-    submitSearchEngine :
-        function (string) {
-          var e = DwbHintObj.getActive();
-          e.value = string;
-          e.form.submit();
-          e.value = "";
-          if (e.form.method.toLowerCase() == 'post') {
-            return e.name;
-          }
-          return NULL;
-        },
-
-    focusInput : 
-      function dwb_focus_input() {
-        var me = DwbHintObj;
-        var res = document.body.querySelectorAll('input[type=text], input[type=password], textarea');
-        if (res.length == 0) {
-          return "_dwb_no_input_";
-        }
-        styles = document.styleSheets[0];
-        styles.insertRule('input:focus { outline: 2px solid #1793d1; }', 0);
-        if (!me._activeInput) {
-          me._activeInput = res[0];
-        }
-        else {
-          for (var i=0; i<res.length; i++) {
-            if (res[i] == me._activeInput) {
-              if (!(me._activeInput = res[i+1])) {
-                me._activeInput = res[0];
-              }
-              break;
-            }
-          }
-        }
-        me._activeInput.focus();
-      },
-   init: 
+      }
+      me._activeInput.focus();
+    },
+  init: 
     function (letter_seq, font_size, font_weight, font_family, style,
         fg_color, bg_color, active_color, normal_color, border,  opacity) {
       var me = DwbHintObj;
@@ -506,14 +512,13 @@ const DwbHintObj = {
       me._fontSize = font_size;
       me._fontWeight = font_weight;
       me._fontFamily = font_family;
-      me._style =  style;
+      me._style =  style.toLowerCase();
       me._fgColor    = fg_color;
       me._bgColor    = bg_color;
-      me._activeColor = active_color;
-      me._normalColor = normal_color;
+      me._activeColor = me.hexToRgb(active_color);
+      me._normalColor = me.hexToRgb(normal_color);
       me._hintBorder = border;
       me._hintOpacity = opacity;
     }, 
-    
 }
 window.addEventListener('load', DwbHintObj.onLoad, false);

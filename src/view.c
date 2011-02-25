@@ -91,6 +91,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
   return ret;
 }/*}}}*/
+/* dwb_web_view_button_press_cb {{{*/
 static gboolean
 dwb_web_view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   char *uri =  NULL;
@@ -107,7 +108,8 @@ dwb_web_view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
     }
   }
   return false;
-}
+}/*}}}*/
+
 /* dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/
 static gboolean 
 dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
@@ -407,7 +409,7 @@ dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
 
   if (mode == HINT_MODE) {
-    if (DIGIT(e) || DWB_TAB_KEY(e)) {
+    if (DWB_TAB_KEY(e)) {
       return true;
     }
     else {
@@ -430,11 +432,8 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     return false;
   }
   else if (mode == HINT_MODE) {
-    if (DIGIT(e) || DWB_TAB_KEY(e)) {
+    if (DWB_TAB_KEY(e)) {
       return dwb_update_hints(e);
-    }
-    else if  (e->keyval == GDK_Return) {
-      return true;
     }
   }
   else if (mode == SEARCH_FIELD_MODE) {

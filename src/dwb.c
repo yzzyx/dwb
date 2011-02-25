@@ -1121,14 +1121,6 @@ dwb_update_hints(GdkEventKey *e) {
   if (e->keyval == GDK_Return) {
     com = g_strdup("DwbHintObj.followActive()");
   }
-  else if (DIGIT(e)) {
-    dwb.state.nummod = MIN(10*dwb.state.nummod + e->keyval - GDK_0, 314159);
-    char *text = g_strdup_printf("hint number: %d", dwb.state.nummod);
-    dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, text, &dwb.color.active_fg, dwb.font.fd_normal);
-
-    com = g_strdup_printf("DwbHintObj.updateHints(\"%d\")", dwb.state.nummod);
-    FREE(text);
-  }
   else if (DWB_TAB_KEY(e)) {
     if (e->state & GDK_SHIFT_MASK) {
       com = g_strdup("DwbHintObj.focusPrev()");
