@@ -488,7 +488,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
   
   char *key = dwb_util_keyval_to_char(e->keyval);
-  if (e->keyval == GDK_Escape) {
+  if (e->keyval == GDK_KEY_Escape) {
     dwb_normal_mode(true);
     ret = false;
   }
@@ -512,7 +512,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   else if (gtk_widget_has_focus(dwb.gui.entry) || dwb.state.mode & COMPLETION_MODE) {
     ret = false;
   }
-  else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_Return) {
+  else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_KEY_Return) {
     webkit_web_view_execute_script(CURRENT_WEBVIEW(), "DwbSelection.followSelection()");
   }
   else if (DWB_TAB_KEY(e)) {
@@ -524,7 +524,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
       if (DWB_TAB_KEY(e)) {
         dwb_comp_autocomplete(NULL, e);
       }
-      else if (e->keyval == GDK_Return) {
+      else if (e->keyval == GDK_KEY_Return) {
         dwb_comp_eval_autocompletion();
         return true;
       }
@@ -1120,7 +1120,7 @@ dwb_update_hints(GdkEventKey *e) {
   char *buffer = NULL;
   char *com = NULL;
 
-  if (e->keyval == GDK_Return) {
+  if (e->keyval == GDK_KEY_Return) {
     com = g_strdup("DwbHintObj.followActive()");
   }
   else if (DWB_TAB_KEY(e)) {
@@ -1587,7 +1587,7 @@ dwb_eval_key(GdkEventKey *e) {
     return false;
   }
   // don't show backspace in the buffer
-  if (keyval == GDK_BackSpace ) {
+  if (keyval == GDK_KEY_BackSpace ) {
     if (dwb.state.mode & AUTO_COMPLETE) {
       dwb_comp_clean_autocompletion();
     }
@@ -1616,10 +1616,10 @@ dwb_eval_key(GdkEventKey *e) {
   // nummod 
   if (DIGIT(e)) {
     if (isdigit(old[strlen(old)-1])) {
-      dwb.state.nummod = MIN(10*dwb.state.nummod + e->keyval - GDK_0, 314159);
+      dwb.state.nummod = MIN(10*dwb.state.nummod + e->keyval - GDK_KEY_0, 314159);
     }
     else {
-      dwb.state.nummod = e->keyval - GDK_0;
+      dwb.state.nummod = e->keyval - GDK_KEY_0;
     }
   }
   g_string_append(dwb.state.buffer, key);

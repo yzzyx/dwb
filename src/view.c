@@ -428,7 +428,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
   gboolean ret = false;
   gboolean complete = (mode == DOWNLOAD_GET_PATH || mode & COMPLETE_PATH);
-  if (e->keyval == GDK_BackSpace && !complete) {
+  if (e->keyval == GDK_KEY_BackSpace && !complete) {
     return false;
   }
   else if (mode == HINT_MODE) {
@@ -440,7 +440,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     if (DWB_TAB_KEY(e)) {
       return dwb_update_hints(e);
     }
-    else if (e->keyval == GDK_Return) {
+    else if (e->keyval == GDK_KEY_Return) {
       return false;
     }
   }
@@ -453,7 +453,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       dwb_comp_clean_path_completion();
     }
   }
-  else if (mode & COMPLETION_MODE && e->keyval != GDK_Tab && e->keyval != GDK_ISO_Left_Tab && !e->is_modifier && !CLEAN_STATE(e)) {
+  else if (mode & COMPLETION_MODE && !DWB_TAB_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
     dwb_comp_clean_completion();
   }
   else if (mode == FIND_MODE) {

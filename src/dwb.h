@@ -124,10 +124,10 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define STRCMP_FIRST_WORD(a, b)     (strncmp((a), (b), MAX(strstr((a), " ") - a, strstr((b), " ") - b)))
 
 #define FREE(X)                     if ((X)) g_free((X))
-#define DIGIT(X)   (X->keyval >= GDK_0 && X->keyval <= GDK_9)
-#define ALPHA(X)    ((X->keyval >= GDK_A && X->keyval <= GDK_Z) ||  (X->keyval >= GDK_a && X->keyval <= GDK_z) || X->keyval == GDK_space)
 
-#define DWB_TAB_KEY(e)              (e->keyval == GDK_Tab || e->keyval == GDK_ISO_Left_Tab)
+#define ALPHA(X)    ((X->keyval >= GDK_KEY_A && X->keyval <= GDK_KEY_Z) ||  (X->keyval >= GDK_KEY_a && X->keyval <= GDK_KEY_z) || X->keyval == GDK_KEY_space)
+#define DIGIT(X)   (X->keyval >= GDK_KEY_0 && X->keyval <= GDK_KEY_9)
+#define DWB_TAB_KEY(e)              (e->keyval == GDK_KEY_Tab || e->keyval == GDK_KEY_ISO_Left_Tab)
 
 // Settings
 #define GET_CHAR(prop)              ((char*)(((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.p))
