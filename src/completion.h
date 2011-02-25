@@ -23,6 +23,8 @@
 #include "commands.h"
 #include "util.h"
 
+#define COMP_EVENT_BOX(X)    (((Completion*)((X)->data))->event)
+
 typedef struct _Completion Completion;
 
 struct _Completion {

@@ -118,9 +118,12 @@ dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, int max,
     }
     else {
       if (position == items || position  == 1) {
-        gtk_widget_hide_all(box);
-        gtk_widget_show(box);
         int i = 0;
+        for (GList *l = g_list_last(comps); l && i<max; l=l->prev) {
+          gtk_widget_hide(COMP_EVENT_BOX(l));
+        }
+        gtk_widget_show(box);
+        i = 0;
         for (GList *l = g_list_first(comps); l && i<max ;l=l->next, i++) {
           gtk_widget_show_all(((Completion*)l->data)->event);
         }
@@ -139,9 +142,12 @@ dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, int max,
     }
     else {
       if (position == 1) {
-        gtk_widget_hide_all(box);
-        gtk_widget_show(box);
         int i = 0;
+        for (GList *l = g_list_first(comps); l && i<max; l=l->next, i++) {
+          gtk_widget_hide(COMP_EVENT_BOX(l));
+        }
+        gtk_widget_show(box);
+        i = 0;
         for (GList *l = g_list_last(comps); l && i<max ;l=l->prev, i++) {
           c = l->data;
           gtk_widget_show_all(c->event);

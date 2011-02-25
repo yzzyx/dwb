@@ -79,7 +79,6 @@ static void dwb_clean_vars(void);
 //static gboolean dwb_end(void);
 /*}}}*/
 
-static GdkNativeWindow embed = 0;
 static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 static int MAX_COMPLETIONS = 11;
 static char *restore = NULL;
@@ -2306,13 +2305,8 @@ dwb_init_style() {
 static void 
 dwb_init_gui() {
   // Window
-  if (embed) {
-    dwb.gui.window = gtk_plug_new(embed);
-  } 
-  else {
-    dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, dwb.misc.name);
-  }
+  dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, dwb.misc.name);
   // Icon
   GdkPixbuf *icon_pixbuf = gdk_pixbuf_new_from_xpm_data(icon);
   gtk_window_set_icon(GTK_WINDOW(dwb.gui.window), icon_pixbuf);
