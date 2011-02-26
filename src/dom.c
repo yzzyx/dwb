@@ -93,8 +93,15 @@ dwb_dom_create_hint(Node *node) {
   node_append_child(span, content, NULL);
   node_append_child(hints, span, NULL);
   node_append_child(body, hints, NULL);
-  int leftpos = webkit_dom_element_get_client_left(node);
-  int toppos = webkit_dom_element_get_client_left(node);
+  int leftpos = 0;
+  int toppos = 0;
+  for (Node *n = node; n; n = webkit_dom_element_get_offset_parent(n)) {
+    leftpos += webkit_dom_element_get_offset_left(WEBKIT_DOM_ELEMENT(n));
+    toppos += webkit_dom_element_get_offset_top(WEBKIT_DOM_ELEMENT(n));
+    //printf("%d\n", leftpos);
+  }
+  //int leftpos = webkit_dom_element_get_client_left(node);
+  //int toppos = webkit_dom_element_get_client_left(node);
   Style *s = webkit_dom_element_get_style(span);
 
   style_set_property(s, "position", "absolute");
@@ -112,6 +119,7 @@ dwb_dom_show_hints() {
   window     = get_window(document);
   hints = document_create_element("div", NULL);
   NodeList *nodes    = document_query_selector_all("a, input", NULL);
+  puts("node");
   for (int i=0; i<webkit_dom_node_list_get_length(nodes); i++) {
     Node *node = node_list_item(nodes, i);
     if (dwb_dom_get_visible(node) ) {
