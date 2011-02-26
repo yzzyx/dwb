@@ -234,14 +234,8 @@ const DwbHintObj = {
         leftoff += offset[0];
         topoff += offset[1];
       }
-      if ( (e instanceof HTMLIFrameElement || e instanceof HTMLFrameElement) && e.contentDocument) {
-        var res = e.contentDocument.body.querySelectorAll(me._hintTypes);
-        var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
-        for (var i=0; i < res.length; i++) {
-          me.getElement(e, res[i], off, constructor);
-        }
-      }
-      else if (e instanceof HTMLImageElement) {
+      if (e instanceof HTMLImageElement) {
+      //if (e instanceof HTMLImageElement) {
         if (!e.useMap) 
           return;
         var areas = e.parentNode.getElementsByTagName("area");
@@ -251,11 +245,20 @@ const DwbHintObj = {
           me._elements.push(element);
         }
       }
-      else {
-        if (r = me.getVisibility(e)) {
-          var off = [ leftoff, topoff ];
-          var element = new constructor(e, win, off, r);
-          me._elements.push(element);
+      if (r = me.getVisibility(e)) {
+        if ( (e instanceof HTMLIFrameElement || e instanceof HTMLFrameElement) && e.contentDocument) {
+          var res = e.contentDocument.body.querySelectorAll(me._hintTypes);
+          var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
+          for (var i=0; i < res.length; i++) {
+            me.getElement(e, res[i], off, constructor);
+          }
+        }
+        else {
+          if (r = me.getVisibility(e)) {
+            var off = [ leftoff, topoff ];
+            var element = new constructor(e, win, off, r);
+            me._elements.push(element);
+          }
         }
       }
     },
