@@ -459,6 +459,7 @@ struct _Color {
   GdkColor download_bg;
   char *settings_bg_color;
   char *settings_fg_color;
+  char *tab_number_color;
 };
 struct _Font {
   PangoFontDescription *fd_normal;

@@ -273,6 +273,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "tab-active-bg-color",                     "UI: Active view tabbackground", },                           false, true,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout, },
   { { "tab-normal-fg-color",                     "UI: Inactive view tabforeground", },                         false, true,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout, },
   { { "tab-normal-bg-color",                     "UI: Inactive view tabbackground", },                         false, true,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout, },
+  { { "tab-number-color",                        "UI: Color of the number in the tab", },                      false, true,  COLOR_CHAR, { .p = "#7ac5cd"         },    (S_Func) dwb_reload_layout, },
   { { "hide-tabbar",                             "Hide tabbar (never, always, tiled)", },                      false, true,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar, },
   { { "tabbed-browsing",                         "Enable tabbed browsing", },                                  false, true,  BOOLEAN,      { .b = true         },      (S_Func) dwb_set_dummy, },
 
@@ -1292,8 +1293,11 @@ static void
 dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-  char *escaped = g_strdup_printf("%d : %s", g_list_position(dwb.state.views, gl), uri ? uri : "about:blank");
-  gtk_label_set_text(GTK_LABEL(v->tablabel), escaped);
+  char *escaped = g_markup_printf_escaped("[<span foreground=\"%s\">%d</span>] %s", 
+      dwb.color.tab_number_color, 
+      g_list_position(dwb.state.views, gl), 
+      uri ? uri : "about:blank");
+  gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
 
   FREE(escaped);
 }/*}}}*/
@@ -2277,6 +2281,8 @@ dwb_init_style() {
 
   dwb.color.settings_fg_color = GET_CHAR("settings-fg-color");
   dwb.color.settings_bg_color = GET_CHAR("settings-bg-color");
+
+  dwb.color.tab_number_color = GET_CHAR("tab-number-color");
 
   // Fonts
   int active_font_size = GET_INT("active-font-size");

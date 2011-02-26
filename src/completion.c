@@ -343,6 +343,7 @@ dwb_comp_clean_autocompletion() {
   View *v = CURRENT_VIEW();
   gtk_widget_show(v->entry);
   gtk_widget_show(v->rstatus);
+  gtk_widget_show(v->urilabel);
 
 }/*}}}*/
 
@@ -372,6 +373,7 @@ dwb_comp_init_autocompletion(GList *gl) {
   gtk_box_pack_start(GTK_BOX(hbox), v->autocompletion, true,  true, 10);
   gtk_widget_hide(v->entry);
   gtk_widget_hide(v->rstatus);
+  gtk_widget_hide(v->urilabel);
   gtk_widget_show(v->autocompletion);
   return ret;
 }/*}}}*/
