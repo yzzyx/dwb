@@ -363,6 +363,8 @@ static void
 dwb_web_view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
+
+/* dwb_web_view_progress_cb {{{*/
 static void 
 dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   View *v = gl->data;
@@ -371,7 +373,7 @@ dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     v->status->progress = 0;
   }
   dwb_update_status(gl);
-}
+}/*}}}*/
 
 /* dwb_web_view_load_status_cb {{{*/
 static void 

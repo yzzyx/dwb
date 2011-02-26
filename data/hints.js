@@ -235,7 +235,6 @@ const DwbHintObj = {
         topoff += offset[1];
       }
       if (e instanceof HTMLImageElement) {
-      //if (e instanceof HTMLImageElement) {
         if (!e.useMap) 
           return;
         var areas = e.parentNode.getElementsByTagName("area");
@@ -368,7 +367,7 @@ const DwbHintObj = {
     },
   evaluate :
     function (e) {
-      me = DwbHintObj;
+      var me = DwbHintObj;
       var ret, type;
       if (e.type) 
         type = e.type.toLowerCase();
@@ -405,7 +404,6 @@ const DwbHintObj = {
   getActive :
     function () {
       return document.querySelector('*[dwb_highlight=hint_active]');
-      return DwbHintObj.evaluate(active);
     },
   followActive :
     function () {
@@ -428,23 +426,6 @@ const DwbHintObj = {
       me.setActive(active);
       me._lastPosition = newpos;
     },
-  funcWithArgs : 
-    function funcWithArgs(command, letter_seq, font_size, font_weight, font_family, style,
-        fg_color, bg_color, active_color, normal_color, border,  opacity) {
-      var me = DwbHintObj;
-      me._letterSeq  = letter_seq;
-      me._fontSize = font_size;
-      me._fontWeight = font_weight;
-      me._fontFamily = font_family;
-      me._style =  style;
-      me._fgColor    = fg_color;
-      me._bgColor    = bg_color;
-      me._activeColor = active_color;
-      me._normalColor = normal_color;
-      me._hintBorder = border;
-      me._hintOpacity = opacity;
-      command();
-    }, 
   addSearchEngine : 
     function () {
       var me = DwbHintObj;

@@ -449,7 +449,6 @@ dwb_com_open(KeyMap *km, Arg *arg) {
   dwb.state.type = arg->i;
 
   if (arg && arg->p) {
-    // TODO background
     dwb_load_uri(NULL, arg);
   }
   else {
@@ -467,7 +466,6 @@ dwb_com_open_startpage(KeyMap *km, Arg *arg) {
     return false;
 
   Arg a = { .p = dwb.misc.startpage, .b = true };
-  // TODO background
   dwb_load_uri(NULL, &a);
   return true;
 } /*}}}*/
