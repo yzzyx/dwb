@@ -233,6 +233,8 @@ typedef unsigned int DownloadAction;
 #define APPEND  0x01
 #define PREPEND 0x02
 
+#define NO_ERROR  -1
+
 typedef enum {
   OPEN_NORMAL      = 1<<0, 
   OPEN_NEW_VIEW    = 1<<1, 

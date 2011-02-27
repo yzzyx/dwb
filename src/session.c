@@ -144,16 +144,14 @@ dwb_session_save(const char *name) {
   GString *buffer = g_string_new(NULL);
   g_string_append_printf(buffer, "g:%s\n", name);
 
-  int view=0;
-  for (GList *l = g_list_last(dwb.state.views); l; l=l->prev, view++) {
+  for (GList *l = g_list_last(dwb.state.views); l; l=l->prev) {
     WebKitWebView *web = WEBVIEW(l);
     WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
     for (int i= -webkit_web_back_forward_list_get_back_length(bf_list); i<=webkit_web_back_forward_list_get_forward_length(bf_list); i++) {
       WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, i);
       if (item) {
-        const char *uri = webkit_web_history_item_get_uri(item);
-        const char *title = webkit_web_history_item_get_title(item);
-        g_string_append_printf(buffer, "%d %s %s\n", i, uri, title);
+        g_string_append_printf(buffer, "%d %s %s\n", 
+            i, webkit_web_history_item_get_uri(item), webkit_web_history_item_get_title(item));
       }
     }
   }
@@ -172,6 +170,5 @@ dwb_session_save(const char *name) {
   }
   dwb_util_set_file_content(dwb.files.session, buffer->str);
   g_string_free(buffer, true);
-  //dwb_exit();
   return true;
 }/*}}}*/

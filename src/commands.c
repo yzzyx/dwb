@@ -24,12 +24,13 @@ dwb_com_simple_command(KeyMap *km) {
   gboolean (*func)(void *, void *) = km->map->func;
   Arg *arg = &km->map->arg;
   arg->e = NULL;
+  int ret;
 
   if (dwb.state.mode & AUTO_COMPLETE) {
     dwb_comp_clean_autocompletion();
   }
 
-  if (func(km, arg)) {
+  if ((ret = func(km, arg)) > 0) {
     if (!km->map->hide) {
       dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
     }
@@ -38,7 +39,7 @@ dwb_com_simple_command(KeyMap *km) {
       gtk_widget_hide(dwb.gui.entry);
     }
   }
-  else {
+  else if (ret != NO_ERROR) {
     dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
   }
   dwb.state.nummod = 0;
@@ -768,12 +769,13 @@ dwb_com_entry_history_back(KeyMap *km, Arg *a) {
   return  true;
 }/*}}}*/
 
-gboolean
+int
 dwb_com_save_session(KeyMap *km, Arg *arg) {
   if (arg->n == NORMAL_MODE) {
     dwb.state.mode = SAVE_SESSION;
     dwb_session_save(NULL);
     dwb_end();
+    return NO_ERROR;
   }
   else {
     dwb.state.mode = arg->n;
