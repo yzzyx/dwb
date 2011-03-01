@@ -80,8 +80,7 @@ dwb_com_focus_input(KeyMap *km, Arg *a) {
   char *value;
   gboolean ret = true;
 
-  value = dwb_execute_script("DwbHintObj.focusInput()", true);
-  if (value && !strcmp(value, "_dwb_no_input_")) {
+  if (dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.focusInput()", &value) && !strcmp(value, "_dwb_no_input_")) {
     ret = false;
   }
   FREE(value);
@@ -94,8 +93,7 @@ gboolean
 dwb_com_add_search_field(KeyMap *km, Arg *a) {
   char *value;
   gboolean ret = true;
-  value = dwb_execute_script("DwbHintObj.addSearchEngine()", true);
-  if (value) {
+  if (dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.addSearchEngine()", &value) ) {
     if (!strcmp(value, "_dwb_no_hints_")) {
       return false;
     }
@@ -166,7 +164,7 @@ dwb_com_show_hints(KeyMap *km, Arg *arg) {
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    webkit_web_view_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.showHints()");
+    dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.showHints()", NULL);
     dwb.state.mode = HINT_MODE;
     dwb_focus_entry();
   }
@@ -196,6 +194,9 @@ dwb_com_show_keys(KeyMap *km, Arg *arg) {
   g_string_append(buffer, HTML_BODY_END);
   dwb_web_view_add_history_item(dwb.state.fview);
 
+  if (v->status->scripts  & SCRIPTS_BLOCKED) {
+    g_object_set(webkit_web_view_get_settings(CURRENT_WEBVIEW()), "enable-scripts", true, NULL);
+  }
   webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, KEY_SETTINGS);
   g_string_free(buffer, true);
   return true;
@@ -248,6 +249,9 @@ dwb_com_show_settings(KeyMap *km, Arg *arg) {
   g_string_append(buffer, HTML_BODY_END);
   dwb_web_view_add_history_item(dwb.state.fview);
 
+  if (v->status->scripts  & SCRIPTS_BLOCKED) {
+    g_object_set(webkit_web_view_get_settings(CURRENT_WEBVIEW()), "enable-scripts", true, NULL);
+  }
   webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, SETTINGS);
   g_string_free(buffer, true);
   return true;
@@ -812,59 +816,28 @@ dwb_com_complete_type(KeyMap *km, Arg *arg) {
 
 }/*}}}*/
 
-/* dwb_com_toggle_ugly {{{*/
-void
-dwb_com_toggle_ugly(GList **fc, const char *desc) {
-  WebKitWebView *web = CURRENT_WEBVIEW();
-  const char *uri = webkit_web_view_get_uri(web);
-  char *host = dwb_get_host(uri);
-  GList *block;
-  if (host) {
-    if ( (block = dwb_get_host_blocked(*fc, host)) ) {
-      *fc = g_list_delete_link(*fc, block);
-      dwb_set_normal_message(dwb.state.fview, true, "%s blocked for domain %s", desc, host);
-    }
-    else {
-      *fc = g_list_prepend(*fc, host);
-      dwb_set_normal_message(dwb.state.fview, true, "%s allowed for domain %s", desc, host);
-    }
-    webkit_web_view_reload(web);
-  }
-}/*}}}*/
-
-/* dwb_com_toggle_block_content{{{*/
-gboolean
-dwb_com_toggle_block_content(KeyMap *km, Arg *arg) {
-  dwb_com_toggle_ugly(&dwb.fc.content_block_allow, "Content");
-  return true;
-}/*}}}*/
-
-/* dwb_com_allow_content (){{{*/
+/* dwb_com_toggle_scripts */
 gboolean 
-dwb_com_allow_content(KeyMap *km, Arg *arg) {
-  dwb_com_toggle_ugly(&dwb.fc.content_allow, "Content");
-  return true;
-}/*}}}*/
-
-/* dwb_com_allow_plugins (Arg *){{{*/
-gboolean 
-dwb_com_allow_plugins(KeyMap *km, Arg *arg) {
-  const char *host = CURRENT_HOST();
-  GList *list = NULL;
-
-  if (!host || !strlen(host)) {
-    return false;
+dwb_com_toggle_scripts(KeyMap *km, Arg *arg) {
+  char *host = NULL;
+  const char *block;
+  if (arg->n == ALLOW_HOST) {
+    host = dwb_get_host(CURRENT_WEBVIEW());
+    block = host;
   }
-  if ( (list = g_list_find_custom(dwb.fc.plugins_allow, host, (GCompareFunc)strcmp)) ) {
-    g_free(list->data);
-    dwb.fc.plugins_allow = g_list_remove_link(dwb.fc.plugins_allow, list);
-    dwb_set_normal_message(dwb.state.fview, true, "Plugins blocked on %s", host);
+  else if (arg->n == ALLOW_URI) {
+    block = webkit_web_view_get_uri(CURRENT_WEBVIEW());
   }
-  else {
-    dwb.fc.plugins_allow = g_list_prepend(dwb.fc.plugins_allow, g_strdup(host));
-    dwb_set_normal_message(dwb.state.fview, true, "Plugins allowed on %s", host);
+  else if (arg->p) {
+    block = arg->p;
   }
-  webkit_web_view_reload(CURRENT_WEBVIEW());
+  if (block) {
+    gboolean allowed = dwb_toggle_allowed(dwb.files.scripts_allow, block);
+    dwb_set_normal_message(dwb.state.fview, true, "Scripts %s for %s", allowed ? "allowed" : "blocked", block);
+  }
+  else 
+    CLEAR_COMMAND_TEXT(dwb.state.fview);
+  FREE(host);
   return true;
 }/*}}}*/
 

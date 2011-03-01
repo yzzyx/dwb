@@ -23,15 +23,12 @@ static void dwb_parse_key_setting(const char *);
 static void dwb_apply_settings(WebSettings *);
 static void dwb_view_ssl_state(GList *);
 
-static char *lasturi;
-static GList *allowed_plugins;
 
 // CALLBACKS
 static gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
 static gboolean dwb_web_view_close_web_view_cb(WebKitWebView *, GList *);
 static gboolean dwb_web_view_console_message_cb(WebKitWebView *, char *, int , char *, GList *);
 static WebKitWebView * dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *);
-static gboolean dwb_web_view_plugin_blocker_button_cb(GtkWidget *, GdkEventButton *, char *);
 static gboolean dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *);
 static WebKitWebView * dwb_web_view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList *);
 static void dwb_web_view_hovering_over_link_cb(WebKitWebView *, char *, char *, GList *);
@@ -153,55 +150,6 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
   }
 }/*}}}*/
 
-/* dwb_web_view_plugin_blocker_button_cb (GtkWidget *, GdkEventButton, char *uri) {{{*/
-static gboolean 
-dwb_web_view_plugin_blocker_button_cb(GtkWidget *widget, GdkEventButton *e, char *uri) {
-  allowed_plugins = g_list_prepend(allowed_plugins, g_strdup(uri));
-  GtkWidget *parent = gtk_widget_get_parent(widget);
-  gtk_container_remove(GTK_CONTAINER(parent), widget);
-  gtk_widget_destroy(widget);
-  webkit_web_view_reload(CURRENT_WEBVIEW());
-  return true;
-}/*}}}*/
-
-/* dwb_web_view_create_plugin_widget_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
-GtkWidget * 
-dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *t, GList *gl) {
-  GtkWidget *event_box = NULL;
-  View *v = gl->data;
-  const char *host = CURRENT_HOST();
-
-  for (GList *l = allowed_plugins; l; l=l->next) {
-    if (!strcmp(uri, l->data)) {
-      return NULL;
-    }
-  }
-  if (v->status->plugin_blocker && host && !g_list_find_custom(dwb.fc.plugins_allow, host, (GCompareFunc)strcmp) ) {
-    lasturi = g_strdup(uri);
-
-    // save all pluginuris so they can be freed since an allocated string has to be passed to g_signal_connect
-    Plugin *p = malloc(sizeof(Plugin));
-    p->uri = lasturi;
-    p->next = v->status->plugins;
-    v->status->plugins = p;
-
-    event_box = gtk_event_box_new();
-    GtkWidget *label = gtk_label_new("Plugin blocked");
-    gtk_container_add(GTK_CONTAINER(event_box), label);
-    g_signal_connect(G_OBJECT(event_box), "button-press-event", G_CALLBACK(dwb_web_view_plugin_blocker_button_cb), lasturi);
-
-    gtk_widget_modify_fg(label, GTK_STATE_NORMAL, &dwb.color.active_fg);
-    gtk_widget_modify_bg(event_box, GTK_STATE_NORMAL, &dwb.color.active_bg);
-    PangoFontDescription *fd = dwb.font.fd_bold;
-    pango_font_description_set_absolute_size(fd, dwb.font.active_size * PANGO_SCALE);
-    gtk_widget_modify_font(label, fd);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.0);
-
-    gtk_widget_show_all(event_box);
-  }
-  return event_box;
-}/*}}}*/
-
 /* dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
 static gboolean 
 dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
@@ -316,32 +264,13 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
   
   if (!msg) 
     return;
-
-  static SoupBuffer buffer;
-  SoupContentSniffer *sniffer = soup_content_sniffer_new();
-  View *v = gl->data;
-
-  if (v && v->status) {
-    const char *content_type = soup_content_sniffer_sniff(sniffer, msg, &buffer, NULL);
-    if (!v->status->current_host) {
-      SoupURI *uri = soup_message_get_uri(msg);
-      v->status->current_host = g_strdup(uri->host);
-      v->status->block_current = 
-        !dwb_get_host_blocked(dwb.fc.content_block_allow, v->status->current_host) && !dwb_get_host_blocked(dwb.fc.content_allow, v->status->current_host) 
-        ? true : false;
-    }
-    if (v->status->block && v->status->block_current && g_regex_match_simple(dwb.misc.content_block_regex, content_type, 0, 0)) {
-      webkit_network_request_set_uri(request, "about:blank");
-      v->status->items_blocked++;
-    }
-  }
 }/*}}}*/
 
 /* dwb_web_view_window_object_cleared_cb {{{*/
 static void 
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
-  webkit_web_view_execute_script(web, dwb.misc.scripts);
+  // TODO possibly not needed
 }/*}}}*/
 
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
@@ -375,16 +304,39 @@ dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
 
+// window-object-cleared is emmited in receivedFirstData which emits load-status
+// commited, so we don't connect to window-object-cleared but to
+// load_status_after instead
+static void 
+dwb_web_view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
+  WebKitLoadStatus status = webkit_web_view_get_load_status(web);
+  if (status == WEBKIT_LOAD_COMMITTED) {
+    dwb_execute_script(web, dwb.misc.scripts, NULL);
+  }
+}
 /* dwb_web_view_load_status_cb {{{*/
+
 static void 
 dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
+  View *v = VIEW(gl);
+  char *host =  NULL;
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
-      dwb_view_clean_vars(VIEW(gl));
+      if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
+        g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
+        v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
+      }
       break;
     case WEBKIT_LOAD_COMMITTED: 
+      if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
+          && (host = dwb_get_host(web)) 
+          && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, webkit_web_view_get_uri(web)))) {
+        g_object_set(webkit_web_view_get_settings(web), "enable-scripts", true, NULL);
+        v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
+      }
+      FREE(host);
       dwb_view_ssl_state(gl);
       break;
     case WEBKIT_LOAD_FINISHED:
@@ -392,9 +344,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       if (dwb_prepend_navigation(gl, &dwb.fc.history) && !dwb.misc.private_browsing)
         dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       dwb_clean_load_end(gl);
-      // reload all user scripts, so the active element can automatically be
-      // detected. 
-      // TODO remove with new webkit version 
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);
@@ -587,7 +536,6 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_CLOSE_WEB_VIEW]        = g_signal_connect(v->web, "close-web-view",                        G_CALLBACK(dwb_web_view_close_web_view_cb), gl);
   v->status->signals[SIG_CONSOLE_MESSAGE]       = g_signal_connect(v->web, "console-message",                       G_CALLBACK(dwb_web_view_console_message_cb), gl);
   v->status->signals[SIG_CREATE_WEB_VIEW]       = g_signal_connect(v->web, "create-web-view",                       G_CALLBACK(dwb_web_view_create_web_view_cb), gl);
-  v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(dwb_web_view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_DOWNLOAD_REQUESTED]    = g_signal_connect(v->web, "download-requested",                    G_CALLBACK(dwb_web_view_download_requested_cb), gl);
   v->status->signals[SIG_HOVERING_OVER_LINK]    = g_signal_connect(v->web, "hovering-over-link",                    G_CALLBACK(dwb_web_view_hovering_over_link_cb), gl);
   v->status->signals[SIG_MIME_TYPE]             = g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(dwb_web_view_mime_type_policy_cb), gl);
@@ -597,7 +545,8 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_WINDOW_OBJECT]         = g_signal_connect(v->web, "window-object-cleared",                 G_CALLBACK(dwb_web_view_window_object_cleared_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
-  v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                   G_CALLBACK(dwb_web_view_progress_cb), gl);
+  v->status->signals[SIG_LOAD_STATUS_AFTER]     = g_signal_connect_after(v->web, "notify::load-status",             G_CALLBACK(dwb_web_view_load_status_after_cb), gl);
+  v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                      G_CALLBACK(dwb_web_view_progress_cb), gl);
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
@@ -609,21 +558,6 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(dwb_view_tab_button_press_cb), gl);
 } /*}}}*/
 
-/* dwb_view_clean_vars(GList *){{{*/
-void
-dwb_view_clean_vars(View *v) {
-  for (Plugin *p = v->status->plugins; p; p=p->next) {
-    g_free(p->uri);
-    g_free(p);
-  }
-  v->status->plugins = NULL;
-
-  v->status->items_blocked = 0;
-  if (v->status->current_host) {
-    g_free(v->status->current_host); 
-    v->status->current_host = NULL;
-  }
-}/*}}}*/
 
 /* dwb_view_create_web_view(View *v)         return: GList * {{{*/
 static GList * 
@@ -634,9 +568,7 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   ViewStatus *status = g_malloc(sizeof(ViewStatus));
   status->search_string = NULL;
   status->downloads = NULL;
-  status->current_host = NULL;
   status->mimetype = NULL;
-  status->plugins = NULL;
   status->progress = 0;
   v->status = status;
 
@@ -750,7 +682,6 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
       s->func(tmp, s);
     }
   }
-  dwb_view_clean_vars(v);
   return gl;
 } /*}}}*/
 

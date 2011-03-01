@@ -30,9 +30,7 @@
 void dwb_com_simple_command(KeyMap *km);
 gboolean dwb_com_add_search_field(KeyMap *, Arg *);
 void dwb_com_add_view(KeyMap *, Arg *);
-gboolean dwb_com_allow_content(KeyMap *, Arg *a);
 gboolean dwb_com_allow_cookie(KeyMap *, Arg *);
-gboolean dwb_com_allow_plugins(KeyMap *, Arg *a);
 gboolean dwb_com_bookmark(KeyMap *, Arg *);
 gboolean dwb_com_bookmarks(KeyMap *, Arg *);
 gboolean dwb_com_entry_delete_letter(KeyMap *, Arg *);
@@ -69,7 +67,7 @@ gboolean dwb_com_set_setting(KeyMap *, Arg *);
 gboolean dwb_com_show_hints(KeyMap *, Arg *);
 gboolean dwb_com_show_keys(KeyMap *, Arg *);
 gboolean dwb_com_show_settings(KeyMap *, Arg *);
-gboolean dwb_com_toggle_block_content(KeyMap *, Arg *a);
+gboolean dwb_com_toggle_scripts(KeyMap *, Arg *a);
 gboolean dwb_com_toggle_property(KeyMap *, Arg *); 
 gboolean dwb_com_toggle_proxy(KeyMap *, Arg *); 
 gboolean dwb_com_undo(KeyMap *, Arg *);

@@ -306,17 +306,12 @@ Toggle proxy (command
 .BR proxy ).
 .TP
 .BR ts
-Toggle block ugly content (e.g. javascript, flash) for current domain (command
-.BR toggle_block_content ).
+Toggle scripts for current host (command
+.BR toggle_scripts_host ).
 .TP
-.BR as
-Allow/forbid ugly content (e.g. javascript, flash) for current domain only for
-the current session(command
-.BR allow_content ).
-.TP
-.BR ap
-Allow/forbid plugins for current domain (command
-.BR allow_plugins ).
+.BR tS
+Toggle scripts for current uri (command
+.BR toggle_scripts_uri ).
 .TP
 .BR V
 Next navigation action will be opened in a new view.
@@ -473,18 +468,6 @@ default value:
 Automatically shrink standalone images to fit. Possible values: true/false, 
 default value:
 .IR true .
-.TP
-.BR block-content
-Whether to block content by mime-type defined by content-block-regex. Possible
-values: true/false, 
-default value:
-.IR false .
-.TP
-.BR content-block-regex
-A regular expression that describes mimetypes, that should be blocked. Possible
-values: a regular expression.
-default value:
-.IR (application|text)/(x-)?(shockwave-flash|javascript) .
 .TP
 .BR cursive-font-family
 Default cursive font family used to display text. Possible values: a font description or 
@@ -684,13 +667,6 @@ NULL,
 default value:
 .IR monospace .
 .TP
-.BR plugin-blocker
-Replace plugins with a clickable widget. Clicking the widget enables the plugin
-for the current session.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
 .BR print-backgrounds
 Whether background images should be printed. 
 Possible values: true/false,
@@ -820,7 +796,13 @@ default value:
 Whether to complete searchengines with tab-completion. Possible values:
 true/false,
 default value:
-.IR true .
+.IR false .
+.TP 
+.BR complete-userscripts
+Whether to complete userscripts with tab-completion. Possible values:
+true/false,
+default value:
+.IR false .
 .TP 
 .BR cookies
 Whether to allow all cookies. Possible values: true/false,
@@ -1106,10 +1088,10 @@ default value:
 .SH FILES
 .SS Scripts
 Javascript userscripts can be stored in 
-.IR ~/config/dwb/scripts .
+.IR ~/.config/dwb/scripts .
 .SS Userscripts
 Userscripts can be stored in 
-.IR ~/config/dwb/userscripts .
+.IR ~/.config/dwb/userscripts .
 The first argument of the script will be the current url, the second argument is
 the profile. The keybinding for
 the script must be defined in the script itself in a commented line of the form

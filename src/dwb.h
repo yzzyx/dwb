@@ -115,7 +115,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 
-#define CURRENT_HOST()            (webkit_security_origin_get_host(webkit_web_frame_get_security_origin(webkit_web_view_get_main_frame(CURRENT_WEBVIEW()))))
+#define FOO                         puts("bar");
 
 #define IS_WORD_CHAR(c)           (isalnum(c) || ((c) == '_')) 
 // compare string a and b, without newline in string b
@@ -154,7 +154,6 @@ typedef struct _KeyMap KeyMap;
 typedef struct _KeyValue KeyValue;
 typedef struct _Misc Misc;
 typedef struct _Navigation Navigation;
-typedef struct _Plugin Plugin;
 typedef struct _Quickmark Quickmark;
 typedef struct _Settings Settings;
 typedef struct _State State;
@@ -235,6 +234,15 @@ typedef unsigned int DownloadAction;
 
 #define NO_ERROR  -1
 
+#define ALLOW_HOST  0x01
+#define ALLOW_URI    0x02
+
+typedef enum {
+  SCRIPTS_ALLOWED           = 1<<0,
+  SCRIPTS_BLOCKED           = 1<<1,
+  SCRIPTS_ALLOWED_TEMPORARY = 1<<2,
+} ScriptState;
+
 typedef enum {
   OPEN_NORMAL      = 1<<0, 
   OPEN_NEW_VIEW    = 1<<1, 
@@ -250,7 +258,6 @@ enum Signal {
   SIG_CLOSE_WEB_VIEW, 
   SIG_CONSOLE_MESSAGE,
   SIG_CREATE_WEB_VIEW,
-  SIG_CREATE_PLUGIN_WIDGET,
   SIG_DOWNLOAD_REQUESTED,
   SIG_HOVERING_OVER_LINK, 
   SIG_MIME_TYPE,
@@ -259,6 +266,7 @@ enum Signal {
   SIG_RESOURCE_REQUEST,
   SIG_WINDOW_OBJECT,
   SIG_LOAD_STATUS,
+  SIG_LOAD_STATUS_AFTER,
   SIG_PROGRESS,
   SIG_TITLE,
   SIG_SCROLL,
@@ -405,21 +413,12 @@ struct _ViewStatus {
   gboolean add_history;
   char *search_string;
   GList *downloads;
-  char *current_host;
-  int items_blocked;
-  gboolean block;
-  gboolean block_current;
   char *mimetype;
-  gboolean plugin_blocker;
   gboolean adblocker;
-  Plugin *plugins;
   gulong signals[SIG_LAST];
   int progress;
   SslState ssl;
-};
-struct _Plugin {
-  char *uri;
-  Plugin *next;
+  ScriptState scripts;
 };
 
 struct _View {
@@ -514,12 +513,9 @@ struct _Misc {
 
   char *startpage;
   char *download_com;
-
-  char *content_block_regex;
 };
 struct _Files {
   const char *bookmarks;
-  const char *content_block_allow;
   const char *cookies;
   const char *cookies_allow;
   const char *download_path;
@@ -535,11 +531,11 @@ struct _Files {
   const char *stylesheet;
   const char *unifile;
   const char *userscripts;
-  const char *plugins_allow;
   const char *adblock;
   const char *dir_icon;
   const char *file_icon;
   const char *exec_icon;
+  const char *scripts_allow;
 };
 struct _FileContent {
   GList *bookmarks;
@@ -552,9 +548,6 @@ struct _FileContent {
   GList *cookies_allow;
   GList *commands;
   GList *mimetypes;
-  GList *content_block_allow;
-  GList *content_allow;
-  GList *plugins_allow;
   GList *adblock;
 };
 
@@ -605,7 +598,7 @@ gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(KeyMap *, Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
-char * dwb_execute_script(const char *, gboolean);
+gboolean dwb_execute_script(WebKitWebView *, const char *, char **);
 void dwb_resize(double );
 void dwb_toggle_tabbar(void);
 int dwb_history_back(void);
@@ -628,9 +621,6 @@ gboolean dwb_eval_editing_key(GdkEventKey *);
 void dwb_parse_command_line(const char *);
 GHashTable * dwb_get_default_settings(void);
 
-char * dwb_get_host(const char *uri);
-GList * dwb_get_host_blocked(GList *, char *host);
-
 gboolean dwb_end(void);
 Key dwb_str_to_key(char *);
 
@@ -645,5 +635,8 @@ void dwb_clean_load_end(GList *);
 gboolean dwb_block_ad(GList *gl, const char *);
 const char * dwb_check_directory(const char *);
 void dwb_update_uri(GList *);
-void dwb_ssl_state(GList *);
+gboolean dwb_get_allowed(const char *, const char *);
+gboolean dwb_toggle_allowed(const char *, const char *);
+char * dwb_get_host(WebKitWebView *);
+
 #endif
