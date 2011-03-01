@@ -111,7 +111,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define CURRENT_WEBVIEW()           (WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web))
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
-#define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL)
+#define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL, false)
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 
@@ -588,7 +588,7 @@ gboolean dwb_update_search(gboolean forward);
 void dwb_set_normal_message(GList *, gboolean, const char *, ...);
 void dwb_set_error_message(GList *, const char *, ...);
 void dwb_set_status_text(GList *, const char *, GdkColor *,  PangoFontDescription *);
-void dwb_set_status_bar_text(GtkWidget *, const char *, GdkColor *,  PangoFontDescription *);
+void dwb_set_status_bar_text(GtkWidget *, const char *, GdkColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
 void dwb_update_layout(gboolean);

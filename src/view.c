@@ -174,7 +174,7 @@ static void
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl) {
   View *v = VIEW(gl);
   if (uri) {
-    dwb_set_status_bar_text(v->urilabel, uri, &dwb.color.active_fg, NULL);
+    dwb_set_status_bar_text(v->urilabel, uri, &dwb.color.active_fg, NULL, false);
   }
   else {
     dwb_update_uri(gl);
@@ -343,6 +343,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
+      dwb_execute_script(web, "DwbHintObj.createStyleSheet()", NULL);
       if (dwb_prepend_navigation(gl, &dwb.fc.history) && !dwb.misc.private_browsing)
         dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       dwb_clean_load_end(gl);

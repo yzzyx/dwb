@@ -19,11 +19,6 @@ const DwbHintObj = {
   _activeInput : null,
   _hintTypes : 'a, img, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]',
 
-  onLoad : 
-    function(ev) {
-      var me = DwbHintObj;
-      me.createStyleSheet();
-    },
   hint : 
     function (element, win, offset, rect) {
       var me = DwbHintObj;
@@ -266,8 +261,7 @@ const DwbHintObj = {
       var me = DwbHintObj;
       document.activeElement.blur();
 
-      if (!me._styles)
-        me.createStyleSheet();
+      me.createStyleSheet();
 
       var hints = document.createElement("div");
       hints.id = "dwb_hints";
@@ -429,6 +423,7 @@ const DwbHintObj = {
   addSearchEngine : 
     function () {
       var me = DwbHintObj;
+      me.createStyleSheet();
       var hints = document.createElement("div");
       var res = document.body.querySelectorAll("form");
 
@@ -505,4 +500,3 @@ const DwbHintObj = {
       me._hintOpacity = opacity;
     }, 
 }
-window.addEventListener('load', DwbHintObj.onLoad, false);

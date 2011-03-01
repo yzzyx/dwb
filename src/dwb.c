@@ -533,11 +533,14 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
-dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
-  if (text) {
+dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd, gboolean markup) {
+  if (markup) {
     char *escaped =  g_markup_escape_text(text, -1);
     gtk_label_set_markup(GTK_LABEL(label), text);
     free(escaped);
+  }
+  else {
+    gtk_label_set_text(GTK_LABEL(label), text);
   }
   if (fg) {
     gtk_widget_modify_fg(label, GTK_STATE_NORMAL, fg);
@@ -573,7 +576,7 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
   vsnprintf(message, STRING_LENGTH - 1, text, arg_list);
   va_end(arg_list);
 
-  dwb_set_status_bar_text(v->lstatus, message, &dwb.color.active_fg, dwb.font.fd_bold);
+  dwb_set_status_bar_text(v->lstatus, message, &dwb.color.active_fg, dwb.font.fd_bold, false);
 
   dwb_source_remove(gl);
   if (hide) {
@@ -593,7 +596,7 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
 
   dwb_source_remove(gl);
 
-  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.error, dwb.font.fd_bold);
+  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.error, dwb.font.fd_bold, false);
   VIEW(gl)->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
@@ -614,7 +617,7 @@ dwb_update_uri(GList *gl) {
   else 
     uricolor = gl == dwb.state.fview ? &dwb.color.active_fg : &dwb.color.normal_fg;
 
-  dwb_set_status_bar_text(v->urilabel, uri, uricolor, NULL);
+  dwb_set_status_bar_text(v->urilabel, uri, uricolor, NULL, false);
 }
 
 /* dwb_update_status_text(GList *gl) {{{*/
@@ -658,7 +661,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     g_string_append(string, progress);
     FREE(progress);
   }
-  dwb_set_status_bar_text(v->rstatus, string->str, NULL, NULL);
+  dwb_set_status_bar_text(v->rstatus, string->str, NULL, NULL, true);
   g_string_free(string, true);
 }/*}}}*/
 
@@ -1199,7 +1202,7 @@ dwb_execute_script(WebKitWebView *web, const char *com, char **ret) {
   WebKitWebFrame *frame =  webkit_web_view_get_main_frame(web);
   JSContextRef context = webkit_web_frame_get_global_context(frame);
   JSStringRef text = JSStringCreateWithUTF8CString(com);
-  eval_ret = JSEvaluateScript(context, text, NULL, NULL, 0, NULL);
+  eval_ret = JSEvaluateScript(context, text, JSContextGetGlobalObject(context), NULL, 0, NULL);
   JSStringRelease(text);
 
   if (eval_ret) {
@@ -1616,7 +1619,7 @@ dwb_eval_key(GdkEventKey *e) {
     if (dwb.state.buffer && dwb.state.buffer->str ) {
       if (dwb.state.buffer->len) {
         g_string_erase(dwb.state.buffer, dwb.state.buffer->len - 1, 1);
-        dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_normal);
+        dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_normal, false);
       }
       ret = false;
     }
@@ -1646,7 +1649,7 @@ dwb_eval_key(GdkEventKey *e) {
   }
   g_string_append(dwb.state.buffer, key);
   if (ALPHA(e) || DIGIT(e)) {
-    dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_normal);
+    dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_normal, false);
   }
 
   const char *buf = dwb.state.buffer->str;
