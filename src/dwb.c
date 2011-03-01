@@ -197,8 +197,11 @@ static FunctionMap FMAP [] = {
   { { "print_backgrounds",     "Toggle print backgrounds", },      0,    (Func)dwb_com_toggle_property,    NULL,                    POST_SM,    { .p = "print-backgrounds" } },
   { { "resizable_text_areas",  "Toggle resizable text areas", },   0,  (Func)dwb_com_toggle_property,      NULL,                    POST_SM,    { .p = "resizable-text-areas" } },
   { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   (Func)dwb_com_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" } },
-  { { "proxy",                 "Toggle proxy",                    }, 1, (Func)dwb_com_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
-  { { "toggle_scripts_host", "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
+  { { "proxy",                 "Toggle proxy",                    },        1,     (Func)dwb_com_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
+  { { "toggle_scripts_host", "Toggle block content for current domain" },   1, (Func) dwb_com_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
+  { { "toggle_scripts_uri",    "Toggle block content for current domain" }, 1, (Func) dwb_com_toggle_scripts, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
+  { { "toggle_scripts_host_tmp", "Toggle block content for current domain for this session" },  1, (Func) dwb_com_toggle_scripts, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
+  { { "toggle_scripts_uri_tmp", "Toggle block content for current domain for this session" },   1, (Func) dwb_com_toggle_scripts, NULL,       POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
   { { "toggle_scripts_uri",    "Toggle block content for current domain" },  1, (Func) dwb_com_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_URI } }, 
   { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, (Func) dwb_com_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
   { { "print",                 "Print page" },                         1, (Func) dwb_com_print, NULL,                             POST_SM,    { 0 } }, 
@@ -531,8 +534,11 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd) {
-  gtk_label_set_text(GTK_LABEL(label), text);
-
+  if (text) {
+    char *escaped =  g_markup_escape_text(text, -1);
+    gtk_label_set_markup(GTK_LABEL(label), text);
+    free(escaped);
+  }
   if (fg) {
     gtk_widget_modify_fg(label, GTK_STATE_NORMAL, fg);
   }
@@ -624,7 +630,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
   gboolean back = webkit_web_view_can_go_back(WEBKIT_WEB_VIEW(v->web));
   gboolean forward = webkit_web_view_can_go_forward(WEBKIT_WEB_VIEW(v->web));
-  const char *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : "";
+  const char *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : " ";
   g_string_append(string, bof);
 
   if (a) {
@@ -632,12 +638,15 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
     double value = gtk_adjustment_get_value(a); 
     char *position = 
-      upper == lower ? g_strdup(" [all]") : 
-      value == lower ? g_strdup(" [top]") : 
-      value == upper ? g_strdup(" [bot]") : 
-      g_strdup_printf(" [%02d%%]", (int)(value * 100/upper));
+      upper == lower ? g_strdup("[all]") : 
+      value == lower ? g_strdup("[top]") : 
+      value == upper ? g_strdup("[bot]") : 
+      g_strdup_printf("[%02d%%]", (int)(value * 100/upper));
     g_string_append(string, position);
     FREE(position);
+  }
+  if (v->status->scripts & SCRIPTS_BLOCKED) {
+    g_string_append(string, v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY ? "[S]" : "[<s>S</s>]");
   }
   if (v->status->progress != 0) {
     int length = 20 * v->status->progress / 100;
@@ -1190,7 +1199,7 @@ dwb_execute_script(WebKitWebView *web, const char *com, char **ret) {
   WebKitWebFrame *frame =  webkit_web_view_get_main_frame(web);
   JSContextRef context = webkit_web_frame_get_global_context(frame);
   JSStringRef text = JSStringCreateWithUTF8CString(com);
-  eval_ret = JSEvaluateScript(context, text, JSContextGetGlobalObject(context), NULL, 0, NULL);
+  eval_ret = JSEvaluateScript(context, text, NULL, NULL, 0, NULL);
   JSStringRelease(text);
 
   if (eval_ret) {
@@ -2427,6 +2436,7 @@ dwb_init_files() {
   dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files.searchengines, (Content_Func)dwb_get_search_completion);
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
+  dwb.fc.tmp_scripts = NULL;
 
   if (g_list_last(dwb.fc.searchengines)) 
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;

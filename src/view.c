@@ -321,6 +321,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   View *v = VIEW(gl);
   char *host =  NULL;
+  const char *uri = webkit_web_view_get_uri(web);
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
@@ -332,7 +333,8 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_COMMITTED: 
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
           && (host = dwb_get_host(web)) 
-          && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, webkit_web_view_get_uri(web)))) {
+          && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
+              || g_list_find_custom(dwb.fc.tmp_scripts, host, (GCompareFunc)strcmp) || g_list_find_custom(dwb.fc.tmp_scripts, uri, (GCompareFunc)strcmp)) ) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", true, NULL);
         v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
       }

@@ -821,19 +821,35 @@ gboolean
 dwb_com_toggle_scripts(KeyMap *km, Arg *arg) {
   char *host = NULL;
   const char *block;
-  if (arg->n == ALLOW_HOST) {
+  gboolean allowed;
+  if (arg->n & ALLOW_HOST) {
     host = dwb_get_host(CURRENT_WEBVIEW());
     block = host;
   }
-  else if (arg->n == ALLOW_URI) {
+  else if (arg->n & ALLOW_URI) {
     block = webkit_web_view_get_uri(CURRENT_WEBVIEW());
   }
   else if (arg->p) {
     block = arg->p;
   }
   if (block) {
-    gboolean allowed = dwb_toggle_allowed(dwb.files.scripts_allow, block);
-    dwb_set_normal_message(dwb.state.fview, true, "Scripts %s for %s", allowed ? "allowed" : "blocked", block);
+    if (arg->n & ALLOW_TMP) {
+      GList *l;
+      if ( (l = g_list_find_custom(dwb.fc.tmp_scripts, block, (GCompareFunc)strcmp)) ) {
+        free(l->data);
+        dwb.fc.tmp_scripts = g_list_delete_link(dwb.fc.tmp_scripts, l);
+        allowed = false;
+      }
+      else {
+        dwb.fc.tmp_scripts = g_list_prepend(dwb.fc.tmp_scripts, g_strdup(block));
+        allowed = true;
+      }
+      dwb_set_normal_message(dwb.state.fview, true, "Scripts temporarily %s for %s", allowed ? "allowed" : "blocked", block);
+    }
+    else {
+      allowed = dwb_toggle_allowed(dwb.files.scripts_allow, block);
+      dwb_set_normal_message(dwb.state.fview, true, "Scripts %s for %s", allowed ? "allowed" : "blocked", block);
+    }
   }
   else 
     CLEAR_COMMAND_TEXT(dwb.state.fview);

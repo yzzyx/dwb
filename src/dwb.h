@@ -234,8 +234,11 @@ typedef unsigned int DownloadAction;
 
 #define NO_ERROR  -1
 
-#define ALLOW_HOST  0x01
-#define ALLOW_URI    0x02
+typedef enum {
+  ALLOW_HOST  = 1<<0,
+  ALLOW_URI   = 1<<1,
+  ALLOW_TMP   = 1<<2,
+} ScriptAllow;
 
 typedef enum {
   SCRIPTS_ALLOWED           = 1<<0,
@@ -549,6 +552,7 @@ struct _FileContent {
   GList *commands;
   GList *mimetypes;
   GList *adblock;
+  GList *tmp_scripts;
 };
 
 struct _Dwb {
