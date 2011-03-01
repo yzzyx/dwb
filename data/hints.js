@@ -21,7 +21,7 @@ const DwbHintObj = {
 
   hint : 
     function (element, win, offset, rect) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       this.element = element;
       this.win = win;
       if (!offset) {
@@ -65,7 +65,7 @@ const DwbHintObj = {
 
   numberHint : 
     function (element, win, offset, rect) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       this.constructor = me.hint;
       this.constructor(element, win, offset, rect);
 
@@ -112,7 +112,7 @@ const DwbHintObj = {
 
   letterHint : 
     function (element, win, offset, rect) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       this.constructor = me.hint;
       this.constructor(element, win, offset, rect);
 
@@ -156,7 +156,7 @@ const DwbHintObj = {
     },
   clickElement : 
     function (element, ev) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       if (ev) {
         me.mouseEvent(element, ev);
       }
@@ -168,7 +168,7 @@ const DwbHintObj = {
     },
   hexToRgb : 
     function (color) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       var rgb;
       if (color[0] !== '#')
         return color;
@@ -189,7 +189,7 @@ const DwbHintObj = {
     },
   createStyleSheet : 
     function () {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       if (me._styles)
         return;
       me._styles = document.createElement("style");
@@ -221,7 +221,7 @@ const DwbHintObj = {
 
   getElement : 
     function (win, e, offset, constructor) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       var leftoff = 0;
       var topoff = 0;
       var r;
@@ -240,11 +240,14 @@ const DwbHintObj = {
         }
       }
       if (r = me.getVisibility(e)) {
-        if ( (e instanceof HTMLIFrameElement || e instanceof HTMLFrameElement) && e.contentDocument) {
-          var res = e.contentDocument.body.querySelectorAll(me._hintTypes);
-          var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
-          for (var i=0; i < res.length; i++) {
-            me.getElement(e, res[i], off, constructor);
+        if ( (e instanceof HTMLIFrameElement || e instanceof HTMLFrameElement)) {
+          const doc = e.contentDocument ? e.contentDocument : e.contentWindow.document;
+          if (doc) {
+            var res = doc.body.querySelectorAll(me._hintTypes);
+            var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
+            for (var i=0; i < res.length; i++) {
+              me.getElement(e, res[i], off, constructor);
+            }
           }
         }
         else {
@@ -258,10 +261,14 @@ const DwbHintObj = {
     },
   showHints : 
     function () {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       document.activeElement.blur();
 
       me.createStyleSheet();
+      var frames = window.frames;
+      for (var i=0; i<frames.length; i++) {
+        console.log("show :" + frames[i].contentDocument);
+      }
 
       var hints = document.createElement("div");
       hints.id = "dwb_hints";
@@ -286,7 +293,7 @@ const DwbHintObj = {
     }, 
   updateHints :
     function updateHints(input) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       var array = [];
       var text_content;
       var keep = false;
@@ -347,7 +354,7 @@ const DwbHintObj = {
     },
   clear : 
     function () {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       if (me._elements) {
         for (var i=0; i<me._elements.length; i++) {
           me._elements[i].element.removeAttribute('dwb_highlight');
@@ -361,7 +368,7 @@ const DwbHintObj = {
     },
   evaluate :
     function (e) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       var ret, type;
       if (e.type) 
         type = e.type.toLowerCase();
@@ -406,7 +413,7 @@ const DwbHintObj = {
 
   focusNext :
     function () {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       var newpos = me._lastPosition == me._activeArr.length-1 ? 0 : me._lastPosition + 1;
       active = me._activeArr[newpos];
       me.setActive(active);
@@ -414,7 +421,7 @@ const DwbHintObj = {
     },
   focusPrev : 
     function () {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       var newpos = me._lastPosition == 0 ? me._activeArr.length-1 : me._lastPosition - 1;
       active = me._activeArr[newpos];
       me.setActive(active);
@@ -422,7 +429,7 @@ const DwbHintObj = {
     },
   addSearchEngine : 
     function () {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       me.createStyleSheet();
       var hints = document.createElement("div");
       var res = document.body.querySelectorAll("form");
@@ -461,7 +468,7 @@ const DwbHintObj = {
     },
   focusInput : 
     function dwb_focus_input() {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       var res = document.body.querySelectorAll('input[type=text], input[type=password], textarea');
       if (res.length == 0) {
         return "_dwb_no_input_";
@@ -486,7 +493,7 @@ const DwbHintObj = {
   init: 
     function (letter_seq, font_size, font_weight, font_family, style,
         fg_color, bg_color, active_color, normal_color, border,  opacity) {
-      var me = DwbHintObj;
+      const me = DwbHintObj;
       me._letterSeq  = letter_seq;
       me._fontSize = font_size;
       me._fontWeight = font_weight;

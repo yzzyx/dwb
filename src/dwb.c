@@ -288,6 +288,8 @@ static WebSettings DWB_SETTINGS[] = {
   { { "insertmode-fg-color",                         "UI: Insertmode foreground", },                               false, true,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style, },
   { { "insertmode-bg-color",                         "UI: Insertmode background", },                               false, true,  COLOR_CHAR, { .p = "#303030"         }, (S_Func) dwb_init_style, },
   { { "error-color",                             "UI: Error color", },                                         false, true,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style, },
+  { { "status-allowed-color",                        "UI: Color of allowed elements in the statusbar", },           false, true,  COLOR_CHAR, { .p = "#00ff00"       },    (S_Func) dwb_reload_layout, },
+  { { "status-blocked-color",                        "UI: Color of blocked elements in the statusbar", },           false, true,  COLOR_CHAR, { .p = "#ffffff"       },    (S_Func) dwb_reload_layout, },
 
   { { "settings-fg-color",                       "UI: Settings view foreground", },                            false, true,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style, },
   { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style, },
@@ -649,7 +651,10 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     FREE(position);
   }
   if (v->status->scripts & SCRIPTS_BLOCKED) {
-    g_string_append(string, v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY ? "[S]" : "[<s>S</s>]");
+    const char *format = v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY 
+      ? "[<span foreground='%s'>S</span>]"
+      : "[<span foreground='%s'><s>S</s></span>]";
+    g_string_append_printf(string, format,  v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY ? dwb.color.allow_color : dwb.color.block_color);
   }
   if (v->status->progress != 0) {
     int length = 20 * v->status->progress / 100;
@@ -2283,6 +2288,8 @@ dwb_init_style() {
   dwb.color.settings_bg_color = GET_CHAR("settings-bg-color");
 
   dwb.color.tab_number_color = GET_CHAR("tab-number-color");
+  dwb.color.allow_color = GET_CHAR("status-allowed-color");
+  dwb.color.block_color = GET_CHAR("status-blocked-color");
 
   // Fonts
   int active_font_size = GET_INT("active-font-size");

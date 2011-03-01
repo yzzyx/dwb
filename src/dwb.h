@@ -464,6 +464,8 @@ struct _Color {
   char *settings_bg_color;
   char *settings_fg_color;
   char *tab_number_color;
+  char *allow_color;
+  char *block_color;
 };
 struct _Font {
   PangoFontDescription *fd_normal;

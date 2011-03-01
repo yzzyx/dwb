@@ -133,7 +133,7 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
   if (!strcmp(message, "_dwb_no_input_")) {
     dwb_set_error_message(gl, "No input found in current context");
   }
-  return true;
+  return false;
 }/*}}}*/
 
 /* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
