@@ -232,7 +232,8 @@ const DwbHintObj = {
       if (e instanceof HTMLImageElement) {
         if (!e.useMap) 
           return;
-        var areas = e.parentNode.getElementsByTagName("area");
+        var area = document.getElementById(e.useMap.slice(1));
+        var areas = area.getElementsByTagName("area");
         var r = e.getBoundingClientRect();
         for (var i=0; i<areas.length; i++) {
           var element = new constructor(areas[i], win, [leftoff + r.left, topoff + r.top], r);
@@ -265,10 +266,6 @@ const DwbHintObj = {
       document.activeElement.blur();
 
       me.createStyleSheet();
-      var frames = window.frames;
-      for (var i=0; i<frames.length; i++) {
-        console.log("show :" + frames[i].contentDocument);
-      }
 
       var hints = document.createElement("div");
       hints.id = "dwb_hints";

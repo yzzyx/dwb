@@ -255,15 +255,11 @@ static void
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
-  SoupMessage *msg = webkit_network_request_get_message(request);
 
   if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
     webkit_network_request_set_uri(request, "about:blank");
     return;
   }
-  
-  if (!msg) 
-    return;
 }/*}}}*/
 
 /* dwb_web_view_window_object_cleared_cb {{{*/
