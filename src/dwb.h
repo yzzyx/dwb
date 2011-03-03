@@ -294,6 +294,7 @@ enum _Direction {
   SCROLL_PAGE_DOWN, 
   SCROLL_TOP,
   SCROLL_BOTTOM,
+  SCROLL_PERCENT,
 } Direction;
 
 typedef enum {

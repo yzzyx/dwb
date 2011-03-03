@@ -398,6 +398,7 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
   switch (arg->n) {
     case  SCROLL_TOP:      scroll = lower; break;
     case  SCROLL_BOTTOM:   scroll = upper; break;
+    case  SCROLL_PERCENT:  scroll = upper * dwb.state.nummod / 100; break;
     default:        scroll = value + sign * inc * NN(dwb.state.nummod); break;
   }
 

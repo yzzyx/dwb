@@ -53,6 +53,7 @@ static KeyValue KEYS[] = {
   { "reload",                   {   "r",         0,                   },  },  
   { "remove_view",              {   "d",         0,                   },  },  
   { "save_quickmark",           {   "m",         0,                   },  },  
+  { "scroll_percent",           {   "%",         0,                   },  },  
   { "scroll_bottom",            {   "G",         0,                   },  },  
   { "scroll_down",              {   "j",         0,                   },  },  
   { "scroll_left",              {   "h",         0,                   },  },  

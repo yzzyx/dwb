@@ -126,6 +126,7 @@ static FunctionMap FMAP [] = {
   { { "remove_view",           "Close view",                        }, 1, (Func)dwb_com_remove_view,         NULL,                              ALWAYS_SM, },
   { { "save_quickmark",        "Save a quickmark for this page",    }, 0, (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
   { { "save_search_field",     "Add a new searchengine",            }, 0, (Func)dwb_com_add_search_field,    "No input in current context",     POST_SM, },
+  { { "scroll_percent",        "Scroll to percentage",              }, 1, (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_PERCENT }, },
   { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_BOTTOM }, },
   { { "scroll_down",           "Scroll down",                       }, 0, (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_DOWN, }, },
   { { "scroll_left",           "Scroll left",                       }, 0, (Func)dwb_com_scroll,              "Left side of the page",           ALWAYS_SM,    { .n = SCROLL_LEFT }, },
@@ -646,7 +647,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
       upper == lower ? g_strdup("[all]") : 
       value == lower ? g_strdup("[top]") : 
       value == upper ? g_strdup("[bot]") : 
-      g_strdup_printf("[%02d%%]", (int)(value * 100/upper));
+      g_strdup_printf("[%02d%%]", (int)(value * 100/upper + 0.5));
     g_string_append(string, position);
     FREE(position);
   }
