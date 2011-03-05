@@ -296,20 +296,20 @@ static WebSettings DWB_SETTINGS[] = {
   { { "settings-bg-color",                       "UI: Settings view background", },                            false, true,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style, },
   { { "settings-border",                         "UI: Settings view border", },                                false, true,  CHAR,      { .p = "1px dotted black"}, (S_Func) dwb_init_style, },
  
-  { { "active-font-size",                        "UI: Active view fontsize", },                                false, true,  INTEGER, { .i = 12                },   (S_Func) dwb_reload_layout, },
-  { { "normal-font-size",                        "UI: Inactive view fontsize", },                              false, true,  INTEGER, { .i = 10                },   (S_Func) dwb_reload_layout, },
-  
-  { { "font",                                    "UI: Font", },                                                false, true,  CHAR, { .p = "monospace"          },   (S_Func) dwb_reload_layout, },
+  { { "font",                                    "UI: Default font", },                                       false, true,  CHAR, { .p = "monospace 8"          },   (S_Func) dwb_reload_layout, },
+  { { "font-inactive",                           "UI: Font of views without focus", },                  false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout, },
+  { { "font-entry",                              "UI: Font of the addressbar", },                            false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout, },
+  { { "font-completion",                         "UI: Font for tab-completion", },                            false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout, },
    
   { { "hint-letter-seq",                       "Hints: Letter sequence for letter hints", },             false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts, },
   { { "hint-style",                              "Hints: Hintstyle (letter or number)", },                     false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts, },
   { { "hint-font-size",                          "Hints: Font size", },                                        false, true,  CHAR, { .p = "12px"              },     (S_Func) dwb_reload_scripts, },
   { { "hint-font-weight",                        "Hints: Font weight", },                                      false, true,  CHAR, { .p = "normal"            },     (S_Func) dwb_reload_scripts, },
   { { "hint-font-family",                        "Hints: Font family", },                                      false, true,  CHAR, { .p = "monospace"         },     (S_Func) dwb_reload_scripts, },
-  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  COLOR_CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  COLOR_CHAR, { .p = "#000088"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  COLOR_CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts, },
-  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  COLOR_CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-fg-color",                           "Hints: Foreground color", },                                 false, true,  CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-bg-color",                           "Hints: Background color", },                                 false, true,  CHAR, { .p = "#000088"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-active-color",                       "Hints: Active link color", },                                false, true,  CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts, },
+  { { "hint-normal-color",                       "Hints: Inactive link color", },                              false, true,  CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts, },
   { { "hint-border",                             "Hints: Hint Border", },                                      false, true,  CHAR, { .p = "2px dashed #000000"    }, (S_Func) dwb_reload_scripts, },
   { { "hint-opacity",                            "Hints: Hint Opacity", },                                     false, true,  DOUBLE, { .d = 0.65         },          (S_Func) dwb_reload_scripts, },
   { { "auto-completion",                         "Show possible keystrokes", },                                false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
@@ -579,7 +579,7 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
   vsnprintf(message, STRING_LENGTH - 1, text, arg_list);
   va_end(arg_list);
 
-  dwb_set_status_bar_text(v->lstatus, message, &dwb.color.active_fg, dwb.font.fd_bold, false);
+  dwb_set_status_bar_text(v->lstatus, message, &dwb.color.active_fg, dwb.font.fd_active, false);
 
   dwb_source_remove(gl);
   if (hide) {
@@ -599,7 +599,7 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
 
   dwb_source_remove(gl);
 
-  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.error, dwb.font.fd_bold, false);
+  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.error, dwb.font.fd_active, false);
   VIEW(gl)->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
@@ -658,14 +658,14 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     g_string_append_printf(string, format,  v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY ? dwb.color.allow_color : dwb.color.block_color);
   }
   if (v->status->progress != 0) {
-    int length = 20 * v->status->progress / 100;
-    char bar[length + 1];
-    memset(bar, '=', length-1);
-    bar[length-1] = '>';
-    bar[length] = '\0';
-    char *progress = g_strdup_printf(" [%-20s]", bar);
-    g_string_append(string, progress);
-    FREE(progress);
+    wchar_t buffer[PBAR_LENGTH + 1] = { 0 };
+    wchar_t cbuffer[PBAR_LENGTH] = { 0 };
+    int length = PBAR_LENGTH * v->status->progress / 100;
+    wmemset(buffer, 0x2588, length - 1);
+    buffer[length] = 0x258f - (int)((v->status->progress % 10) / 10.0*8);
+    wmemset(cbuffer, 0x2581, PBAR_LENGTH-length-1);
+    cbuffer[PBAR_LENGTH - length] = '\0';
+    g_string_append_printf(string, "\u2595%ls%ls\u258f", buffer, cbuffer);
   }
   dwb_set_status_bar_text(v->rstatus, string->str, NULL, NULL, true);
   g_string_free(string, true);
@@ -1035,13 +1035,16 @@ dwb_clean_buffer(GList *gl) {
 static void 
 dwb_reload_layout(GList *gl, WebSettings *s) {
   dwb_init_style();
+  View *v;
   for (GList *l = dwb.state.views; l; l=l->next) {
+    v = VIEW(l);
     if (l == dwb.state.fview) {
-      dwb_view_set_active_style(VIEW(l));
+      dwb_view_set_active_style(v);
     }
     else {
-      dwb_view_set_normal_style(VIEW(l));
+      dwb_view_set_normal_style(v);
     }
+    gtk_widget_modify_font(v->entry, dwb.font.fd_entry);
   }
 }/*}}}*/
 
@@ -1625,7 +1628,7 @@ dwb_eval_key(GdkEventKey *e) {
     if (dwb.state.buffer && dwb.state.buffer->str ) {
       if (dwb.state.buffer->len) {
         g_string_erase(dwb.state.buffer, dwb.state.buffer->len - 1, 1);
-        dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_normal, false);
+        dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_active, false);
       }
       ret = false;
     }
@@ -1655,7 +1658,7 @@ dwb_eval_key(GdkEventKey *e) {
   }
   g_string_append(dwb.state.buffer, key);
   if (ALPHA(e) || DIGIT(e)) {
-    dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_normal, false);
+    dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_active, false);
   }
 
   const char *buf = dwb.state.buffer->str;
@@ -1664,7 +1667,6 @@ dwb_eval_key(GdkEventKey *e) {
   KeyMap *tmp = NULL;
   GList *coms = NULL;
 
-  // TODO l
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
     if (km->map->entry) {
@@ -1716,7 +1718,7 @@ dwb_insert_mode(Arg *arg) {
   if (dwb.state.mode == HINT_MODE) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
-  dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL, 0);
+  dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
 
   dwb.state.mode = INSERT_MODE;
   return true;
@@ -1731,7 +1733,7 @@ dwb_normal_mode(gboolean clean) {
     dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.clear()", NULL);
   }
   else if (mode  == INSERT_MODE) {
-    dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL, 0);
+    dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   }
   else if (mode == DOWNLOAD_GET_PATH) {
@@ -2292,26 +2294,16 @@ dwb_init_style() {
   dwb.color.allow_color = GET_CHAR("status-allowed-color");
   dwb.color.block_color = GET_CHAR("status-blocked-color");
 
-  // Fonts
-  int active_font_size = GET_INT("active-font-size");
-  int normal_font_size = GET_INT("normal-font-size");
+
   char *font = GET_CHAR("font");
+  dwb.font.fd_active = pango_font_description_from_string(font);
+  char *f;
+#define SET_FONT(var, prop) f = GET_CHAR(prop); var = pango_font_description_from_string(f ? f : font)
+  SET_FONT(dwb.font.fd_inactive, "font-inactive");
+  SET_FONT(dwb.font.fd_entry, "font-entry");
+  SET_FONT(dwb.font.fd_completion, "font-completion");
+#undef SET_FONT
 
-  dwb.font.fd_normal = pango_font_description_from_string(font);
-  dwb.font.fd_bold = pango_font_description_from_string(font);
-  dwb.font.fd_oblique = pango_font_description_from_string(font);
-
-  pango_font_description_set_absolute_size(dwb.font.fd_normal, active_font_size * PANGO_SCALE);
-  pango_font_description_set_absolute_size(dwb.font.fd_bold, active_font_size * PANGO_SCALE);
-  pango_font_description_set_absolute_size(dwb.font.fd_oblique, active_font_size * PANGO_SCALE);
-
-  pango_font_description_set_weight(dwb.font.fd_normal, PANGO_WEIGHT_NORMAL);
-  pango_font_description_set_weight(dwb.font.fd_bold, PANGO_WEIGHT_BOLD);
-  pango_font_description_set_style(dwb.font.fd_oblique, PANGO_STYLE_OBLIQUE);
-
-  // Fontsizes
-  dwb.font.active_size = active_font_size;
-  dwb.font.normal_size = normal_font_size;
   dwb.misc.settings_border = GET_CHAR("settings-border");
 } /*}}}*/
 

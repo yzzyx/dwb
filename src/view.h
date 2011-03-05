@@ -32,7 +32,7 @@ gboolean dwb_view_push_master(Arg *);
 GList * dwb_add_view_new_with_webview(void);
 void dwb_view_set_active_style(View *);
 void dwb_view_set_normal_style(View *);
-void dwb_view_modify_style(View *, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize);
+void dwb_view_modify_style(View *, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd);
 void dwb_web_view_add_history_item(GList *gl);
 
 GtkWidget * dwb_web_view_create_plugin_widget_cb(WebKitWebView *, char *, char *, GHashTable *, GList *);

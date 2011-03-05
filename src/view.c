@@ -489,7 +489,7 @@ dwb_web_view_add_history_item(GList *gl) {
 
 /* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
-dwb_view_modify_style(View *v, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {
+dwb_view_modify_style(View *v, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd) {
   if (fg) {
     gtk_widget_modify_fg(v->rstatus, GTK_STATE_NORMAL, fg);
     gtk_widget_modify_fg(v->lstatus, GTK_STATE_NORMAL, fg);
@@ -504,25 +504,23 @@ dwb_view_modify_style(View *v, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkC
   if (tabbg)
     gtk_widget_modify_bg(v->tabevent, GTK_STATE_NORMAL, tabbg);
   if (fd) {
-    pango_font_description_set_absolute_size(fd, fontsize * PANGO_SCALE);
     gtk_widget_modify_font(v->rstatus, fd);
     gtk_widget_modify_font(v->urilabel, fd);
     gtk_widget_modify_font(v->lstatus, fd);
     gtk_widget_modify_font(v->tablabel, fd);
   }
-
 } /*}}}*/
 
 /* dwb_view_set_active_style (GList *) {{{*/
 void 
 dwb_view_set_active_style(View *v) {
-  dwb_view_modify_style(v, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_bold, dwb.font.active_size);
+  dwb_view_modify_style(v, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_active);
 }/*}}}*/
 
 /* dwb_view_set_normal_style {{{*/
 void 
 dwb_view_set_normal_style(View *v) {
-  dwb_view_modify_style(v, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_bold, dwb.font.normal_size);
+  dwb_view_modify_style(v, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_inactive);
 }/*}}}*/
 
 /* dwb_web_view_init_signals(View *v) {{{*/
@@ -578,7 +576,7 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   v->entry = gtk_entry_new();
   gtk_entry_set_inner_border(GTK_ENTRY(v->entry), NULL);
 
-  gtk_widget_modify_font(v->entry, dwb.font.fd_normal);
+  gtk_widget_modify_font(v->entry, dwb.font.fd_entry);
   gtk_entry_set_has_frame(GTK_ENTRY(v->entry), false);
   gtk_entry_set_inner_border(GTK_ENTRY(v->entry), false);
 
@@ -632,7 +630,7 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   gtk_label_set_ellipsize(GTK_LABEL(v->tablabel), PANGO_ELLIPSIZE_END);
 
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel);
-  gtk_widget_modify_font(v->tablabel, dwb.font.fd_normal);
+  gtk_widget_modify_font(v->tablabel, dwb.font.fd_inactive);
 
   gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
   gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);

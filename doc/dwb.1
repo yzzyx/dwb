@@ -777,12 +777,6 @@ The foreground color of the focused view. Possible values: an rgb color-string.
 default value:
 .IR #ffffff .
 .TP 
-.BR active-font-size
-The font size in the statusbar of the focused view. Possible values: fontsize
-(integer),
-default value:
-.IR 12 .
-.TP 
 .BR auto-completion
 Whether possible keystrokes should be shown. (Shift-) Tab cycles through keystrokes.
 Possible values: true/false,
@@ -872,10 +866,25 @@ default value:
 .IR 0.3 .
 .TP 
 .BR font
-The font used in the statusbar and tabs. Possible values: a font description
+The font used for the ui. Possible values: a font description
 string,
 default value:
-.IR monospace .
+.I monospace 8.
+.TP 
+.BR font-completion
+The font used for tabcompletion. Possible values: a font description
+string,
+default value: 
+.TP 
+.BR font-entry
+The font used for the address bar. Possible values: a font description
+string,
+default value: 
+.TP 
+.BR font-inactive
+The font used for inactive views. Possible values: a font description
+string,
+default value: 
 .TP 
 .BR hide-tabbar
 Hide the tabbar. Possible values: always, never, tiled. 
@@ -1004,12 +1013,6 @@ Save the session when dwb is closed and restore the last saved session when
 invoking dwb. Possible values: true/false,
 default value:
 .IR false .
-.TP 
-.BR normal-font-size
-The font size in the statusbar of a not focused view. Possible values: fontsize
-(integer),
-default value:
-.IR 10 .
 .TP 
 .BR proxy
 Whether to use a HTTP-proxy. Possible values: true/false,

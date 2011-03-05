@@ -199,8 +199,8 @@ dwb_dl_add_progress_label(GList *gl, const char *filename) {
   gtk_widget_modify_fg(l->llabel, GTK_STATE_NORMAL, &dwb.color.download_fg);
   gtk_widget_modify_fg(l->rlabel, GTK_STATE_NORMAL, &dwb.color.download_fg);
   gtk_widget_modify_bg(l->event, GTK_STATE_NORMAL, &dwb.color.download_bg);
-  gtk_widget_modify_font(l->llabel, dwb.font.fd_bold);
-  gtk_widget_modify_font(l->rlabel, dwb.font.fd_bold);
+  gtk_widget_modify_font(l->llabel, dwb.font.fd_active);
+  gtk_widget_modify_font(l->rlabel, dwb.font.fd_active);
 
   l->download = dwb.state.download;
 

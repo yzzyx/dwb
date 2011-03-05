@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <wchar.h>
 #include <libgen.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -55,6 +56,7 @@
 #define SINGLE_INSTANCE 1
 #define NEW_INSTANCE 2
 
+#define PBAR_LENGTH   20
 #define STRING_LENGTH 1024
 #define BUFFER_LENGTH 256
 
@@ -469,11 +471,10 @@ struct _Color {
   char *block_color;
 };
 struct _Font {
-  PangoFontDescription *fd_normal;
-  PangoFontDescription *fd_bold;
-  PangoFontDescription *fd_oblique;
-  int active_size;
-  int normal_size;
+  PangoFontDescription *fd_active;
+  PangoFontDescription *fd_inactive;
+  PangoFontDescription *fd_entry;
+  PangoFontDescription *fd_completion;
 };
 struct _Setting {
   gboolean inc_search;
@@ -543,6 +544,12 @@ struct _Files {
   const char *exec_icon;
   const char *scripts_allow;
 };
+// TODO implement plugins blocker, script blocker with File struct
+typedef struct _File {
+  unsigned long int mod;
+  char *filename; 
+  GList *content;
+} File;
 struct _FileContent {
   GList *bookmarks;
   GList *history;
@@ -556,6 +563,7 @@ struct _FileContent {
   GList *mimetypes;
   GList *adblock;
   GList *tmp_scripts;
+  GList *scripts_allow;
 };
 
 struct _Dwb {

@@ -31,9 +31,9 @@ dwb_comp_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, Pango
   gtk_widget_modify_fg(c->rlabel, GTK_STATE_NORMAL, fg);
   gtk_widget_modify_fg(c->mlabel, GTK_STATE_NORMAL, fg);
   gtk_widget_modify_bg(c->event, GTK_STATE_NORMAL, bg);
-  gtk_widget_modify_font(c->llabel, fd);
-  gtk_widget_modify_font(c->mlabel, fd);
-  gtk_widget_modify_font(c->rlabel, dwb.font.fd_oblique);
+  gtk_widget_modify_font(c->llabel, dwb.font.fd_completion);
+  gtk_widget_modify_font(c->mlabel, dwb.font.fd_completion);
+  gtk_widget_modify_font(c->rlabel, dwb.font.fd_completion);
 }/*}}}*/
 
 /* dwb_comp_get_completion_item(Navigation *)      return: Completion * {{{*/
@@ -60,7 +60,7 @@ dwb_comp_get_completion_item(Navigation *n, void *data, const char *value) {
   gtk_misc_set_alignment(GTK_MISC(c->mlabel), 1.0, 0.5);
   gtk_misc_set_alignment(GTK_MISC(c->rlabel), 1.0, 0.5);
 
-  dwb_comp_modify_completion_item(c, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_normal);
+  dwb_comp_modify_completion_item(c, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_inactive);
 
   gtk_container_add(GTK_CONTAINER(c->event), hbox);
   return c;
@@ -155,8 +155,8 @@ dwb_comp_update_completion(GtkWidget *box, GList *comps, GList *active, int max,
       }
     }
   }
-  dwb_comp_modify_completion_item(old->data, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_normal);
-  dwb_comp_modify_completion_item(new->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
+  dwb_comp_modify_completion_item(old->data, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_inactive);
+  dwb_comp_modify_completion_item(new->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_active);
   active = new;
   dwb_comp_set_entry_text(active->data);
   return active;
@@ -193,7 +193,7 @@ dwb_comp_show_completion(int back) {
       gtk_widget_show_all(((Completion*)l->data)->event);
     }
   }
-  dwb_comp_modify_completion_item(dwb.comps.active_comp->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
+  dwb_comp_modify_completion_item(dwb.comps.active_comp->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_active);
   dwb_comp_set_entry_text(dwb.comps.active_comp->data);
   gtk_widget_show(CURRENT_VIEW()->compbox);
 
@@ -390,7 +390,7 @@ dwb_comp_autocomplete(GList *gl, GdkEventKey *e) {
     dwb.state.mode |= AUTO_COMPLETE;
     dwb.comps.auto_c = dwb_comp_init_autocompletion(gl);
     dwb.comps.active_auto_c = g_list_first(dwb.comps.auto_c);
-    dwb_comp_modify_completion_item(dwb.comps.active_auto_c->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_bold);
+    dwb_comp_modify_completion_item(dwb.comps.active_auto_c->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_active);
   }
   else if (e) {
     dwb.comps.active_auto_c = dwb_comp_update_completion(v->autocompletion, dwb.comps.auto_c, dwb.comps.active_auto_c, 5, e->state & GDK_SHIFT_MASK);
