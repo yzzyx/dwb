@@ -33,6 +33,7 @@ static void dwb_webkit_setting(GList *, WebSettings *);
 static void dwb_webview_property(GList *, WebSettings *);
 void dwb_set_background_tab(GList *, WebSettings *);
 static void dwb_set_scripts(GList *, WebSettings *);
+static void dwb_set_user_agent(GList *, WebSettings *);
 static void dwb_set_cookies(GList *, WebSettings *);
 static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_startpage(GList *, WebSettings *);
@@ -254,7 +255,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "spell-checking-languages",			           "Spell checking languages", },                                true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
   { { "tab-key-cycles-through-elements",			   "Tab cycles through elements in insert mode", },              true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
 
-  { { "user-agent",			                         "User agent", },                                              true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
+  { { "user-agent",			                         "User agent", },                                              false, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_agent, },
   { { "user-stylesheet-uri",			               "User stylesheet uri", },                                     true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting, },
   { { "zoom-step",			                         "Zoom Step", },                                               true, false,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting, },
   { { "custom-encoding",                         "Custom encoding", },                                         false, false, CHAR,    { .p = NULL           }, (S_Func) dwb_webview_property, },
@@ -428,6 +429,16 @@ dwb_set_scripts(GList *gl, WebSettings *s) {
     v->status->scripts = SCRIPTS_ALLOWED;
   else 
     v->status->scripts = SCRIPTS_BLOCKED;
+}
+void
+dwb_set_user_agent(GList *gl, WebSettings *s) {
+  char *ua = s->arg.p;
+  if (! ua) {
+    char *current_ua;
+    g_object_get(dwb.state.web_settings, "user-agent", &current_ua, NULL);
+    s->arg.p = g_strdup_printf("%s %s/%s", current_ua, NAME, VERSION);
+  }
+  dwb_webkit_setting(gl, s);
 }
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
