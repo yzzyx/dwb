@@ -18,6 +18,13 @@
 
 #include "commands.h"
 
+static int inline dwb_floor(double x) { 
+  return x >= 0 ? (int) x : (int) x - 1;
+}
+static int inline modulo(int x, int y) {
+  return x - dwb_floor((double)x/y)  * y;
+}
+
 /* dwb_com_simple_command(keyMap *km) {{{*/
 void 
 dwb_com_simple_command(KeyMap *km) {
@@ -530,64 +537,27 @@ dwb_com_push_master(KeyMap *km, Arg *arg) {
   return dwb_view_push_master(arg);
 }/*}}}*/
 
-/* dwb_com_focus_next(KeyMap *km, Arg *arg) {{{*/
+/* dwb_com_focus(KeyMap *km, Arg *arg) {{{*/
 gboolean 
-dwb_com_focus_next(KeyMap *km, Arg *arg) {
-  GList *gl = dwb.state.fview;
+dwb_com_focus(KeyMap *km, Arg *arg) {
+  int pos = modulo(g_list_position(dwb.state.views, dwb.state.fview) + NUMMOD * arg->n, g_list_length(dwb.state.views));
+  GList *g = g_list_nth(dwb.state.views, pos);
   if (!dwb.state.views->next) {
     return false;
   }
-  if (gl->next) {
-    if (dwb.state.layout & MAXIMIZED) {
-      if (gl == dwb.state.views) {
-        gtk_widget_hide(dwb.gui.left);
-        gtk_widget_show(dwb.gui.right);
-      }
-      gtk_widget_show(((View *)gl->next->data)->vbox);
-      gtk_widget_hide(((View *)gl->data)->vbox);
-    }
-    dwb_focus(gl->next);
-  }
-  else {
-    if (dwb.state.layout & MAXIMIZED) {
+  if (dwb.state.layout & MAXIMIZED) {
+    if (g == dwb.state.views) {
       gtk_widget_hide(dwb.gui.right);
       gtk_widget_show(dwb.gui.left);
-      gtk_widget_show(((View *)dwb.state.views->data)->vbox);
-      gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_focus(g_list_first(dwb.state.views));
-  }
-  return true;
-}/*}}}*/
-
-/* dwb_com_focus_prev(KeyMap *km, Arg *arg) {{{*/
-gboolean 
-dwb_com_focus_prev(KeyMap *km, Arg *arg) {
-  GList *gl = dwb.state.fview;
-  if (!dwb.state.views->next) {
-    return false;
-  }
-  if (gl == dwb.state.views) {
-    GList *last = g_list_last(dwb.state.views);
-    if (dwb.state.layout & MAXIMIZED) {
+    else if (dwb.state.fview == dwb.state.views) {
       gtk_widget_hide(dwb.gui.left);
       gtk_widget_show(dwb.gui.right);
-      gtk_widget_show(((View *)last->data)->vbox);
-      gtk_widget_hide(((View *)gl->data)->vbox);
     }
-    dwb_focus(last);
+    gtk_widget_show(((View *)g->data)->vbox);
+    gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
   }
-  else {
-    if (dwb.state.layout & MAXIMIZED) {
-      if (gl == dwb.state.views->next) {
-        gtk_widget_hide(dwb.gui.right);
-        gtk_widget_show(dwb.gui.left);
-      }
-      gtk_widget_show(((View *)gl->prev->data)->vbox);
-      gtk_widget_hide(((View *)gl->data)->vbox);
-    }
-    dwb_focus(gl->prev);
-  }
+  dwb_focus(g);
   return true;
 }/*}}}*/
 
