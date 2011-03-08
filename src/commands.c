@@ -888,7 +888,7 @@ dwb_com_execute_userscript(KeyMap *km, Arg *arg) {
 
   if (arg->p) {
     char *path = g_build_filename(dwb.files.userscripts, arg->p, NULL);
-    Arg a = { .p = path };
+    Arg a = { .arg = path };
     dwb_execute_user_script(km, &a);
     g_free(path);
   }

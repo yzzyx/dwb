@@ -133,7 +133,7 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
   if (!strcmp(message, "_dwb_no_input_")) {
     dwb_set_error_message(gl, "No input found in current context");
   }
-  return true;
+  return false;
 }/*}}}*/
 
 /* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
@@ -202,7 +202,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     WebKitWebPolicyDecision *policy, GList *gl) {
 
   char *uri = (char *) webkit_network_request_get_uri(request);
-
+  
   Arg a = { .p = uri, .b = true };
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
     if (dwb.state.nv == OPEN_NEW_VIEW) {
@@ -326,11 +326,15 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
       }
       break;
+    case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
+      // TODO use this state for adblocker
+      break;
     case WEBKIT_LOAD_COMMITTED: 
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
-          && (host = dwb_get_host(web)) 
+          && (((host = dwb_get_host(web)) 
           && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
-              || g_list_find_custom(dwb.fc.tmp_scripts, host, (GCompareFunc)strcmp) || g_list_find_custom(dwb.fc.tmp_scripts, uri, (GCompareFunc)strcmp)) ) {
+              || g_list_find_custom(dwb.fc.tmp_scripts, host, (GCompareFunc)strcmp) || g_list_find_custom(dwb.fc.tmp_scripts, uri, (GCompareFunc)strcmp)))
+          || !strcmp(uri, "dwb://"))) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", true, NULL);
         v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
       }

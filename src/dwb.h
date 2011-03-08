@@ -318,6 +318,7 @@ struct _Arg {
   int i;
   double d;
   gpointer p;
+  gpointer arg;
   gboolean b;
   char *e;
 };

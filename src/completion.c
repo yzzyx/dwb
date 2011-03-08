@@ -48,7 +48,6 @@ dwb_comp_get_completion_item(Navigation *n, void *data, const char *value) {
   c->data = data;
   GtkWidget *hbox = gtk_hbox_new(value ? true : false, 0);
 
-
   gtk_box_pack_start(GTK_BOX(hbox), c->llabel, true, true, 5);
   gtk_box_pack_start(GTK_BOX(hbox), c->mlabel, value ? true : false , true, 5);
   gtk_box_pack_start(GTK_BOX(hbox), c->rlabel, true, true, 5);
@@ -72,7 +71,14 @@ dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings, void
   Navigation *n;
   const char *input = GET_TEXT();
   Match_Func func = word_beginnings ? (Match_Func)g_str_has_prefix : (Match_Func)g_strrstr;
-
+  // TODO groupline
+#if 0
+  GtkWidget *ev = gtk_event_box_new();
+  GtkLabel *label = gtk_label_new(value);
+  gtk_container_add(GTK_CONTAINER(ev), label);
+  gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), ev, false, false, 0);
+  gtk_widget_show_all(ev);
+#endif
   for (GList *l = gl; l; l=l->next) {
     n = l->data;
     if (func(n->first, input) || (!word_beginnings && n->second && func(n->second, input))) {

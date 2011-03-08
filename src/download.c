@@ -220,7 +220,6 @@ dwb_dl_start() {
   
   if (g_str_has_prefix(uri, "file://") && g_file_test(uri + 7, G_FILE_TEST_EXISTS)) {
     GError *error = NULL;
-    puts(path);
     char *command = g_strconcat(path, " ", uri + 7, NULL);
     char **argv = g_strsplit(command, " ", -1);
     if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error) ) {
