@@ -38,6 +38,7 @@ Arg * dwb_util_char_to_arg(char *, DwbType );
 
 // sort 
 int dwb_util_navigation_compare_first(Navigation *, Navigation *);
+int dwb_util_navigation_compare_second(Navigation *, Navigation *);
 
 int dwb_util_keymap_sort_first(KeyMap *, KeyMap *);
 int dwb_util_keymap_sort_second(KeyMap *, KeyMap *);
@@ -51,6 +52,7 @@ char * dwb_util_get_file_content(const char *);
 gboolean dwb_util_set_file_content(const char *, const char *);
 char * dwb_util_build_path(void);
 char * dwb_util_get_data_dir(const char *);
+char * dwb_util_get_data_file(const char *);
 
 // navigation
 Navigation * dwb_navigation_new_from_line(const char *);

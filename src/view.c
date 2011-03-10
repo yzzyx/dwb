@@ -17,6 +17,7 @@
  */
 
 #include "view.h"
+#include "html.h"
 
 static void dwb_parse_setting(const char *);
 static void dwb_parse_key_setting(const char *);
@@ -203,6 +204,10 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 
   char *uri = (char *) webkit_network_request_get_uri(request);
   
+  if (g_str_has_prefix(uri, "dwb://")) {
+    dwb_html_load(web, uri);
+    return true;
+  }
   Arg a = { .p = uri, .b = true };
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
     if (dwb.state.nv == OPEN_NEW_VIEW) {
@@ -865,8 +870,10 @@ dwb_add_view(Arg *arg, gboolean background) {
     dwb_load_uri(ret, arg);
   }
   else if (strcmp("about:blank", dwb.misc.startpage)) {
-    Arg a = { .p = dwb.misc.startpage, .b = true }; 
+    char *page = g_strdup(dwb.misc.startpage);
+    Arg a = { .p = page, .b = true }; 
     dwb_load_uri(ret, &a);
+    g_free(page);
   }
   return ret;
 } /*}}}*/

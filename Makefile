@@ -21,6 +21,7 @@ install-data:
 	@install -Dm 644 $(SHAREDIR)/hints.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js
 	@echo "Installing $(SHAREDIR)/selection.js to $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/selection.js"
 	@install -Dm 644 $(SHAREDIR)/selection.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/selection.js
+	install -Dm 644 $(LIBDIR)/info.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/info.html
 
 uninstall: uninstall-man uninstall-data
 	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"

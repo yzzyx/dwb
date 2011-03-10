@@ -6,6 +6,7 @@ DOCDIR=doc
 SRCDIR=src
 SHAREDIR=data
 EXAMPLEDIR=examples
+LIBDIR=lib
 
 
 HG_VERSION=$(shell hg id -n 2>/dev/null)
@@ -55,6 +56,7 @@ BINDIR=$(PREFIX)/bin
 
 DATAROOTDIR=$(PREFIX)/share
 DATADIR=$(DATAROOTDIR)
+
 
 MANDIR=$(DATAROOTDIR)/man
 MAN1DIR=$(MANDIR)/man1
