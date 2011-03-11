@@ -61,7 +61,7 @@ dwb_html_quickmarks(WebKitWebView *wv, HtmlTable *table) {
   GString *panels = g_string_new(NULL);
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
     Quickmark *q = gl->data;
-    g_string_append_printf(panels, "<div class='dwb_line%d'><div class=qm>%s</div><div><a href='%s'>%s</a></div></div>\n", i, q->key, q->nav->first, q->nav->second);
+    g_string_append_printf(panels, "<div class='dwb_line%d'><div class=dwb_qm>%s</div><div><a href='%s'>%s</a></div></div>\n", i, q->key, q->nav->first, q->nav->second);
   }
   dwb_html_load_page(wv, table, panels->str);
   g_string_free(panels, true);
