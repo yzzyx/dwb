@@ -482,8 +482,13 @@ static gboolean
 dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
   if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     Arg a = { .p = gl };
-    dwb_focus(gl);
-    dwb_view_push_master(&a);
+    if ((dwb.state.layout & MAXIMIZED) ) {
+      dwb_focus_view(gl);
+    }
+    else {
+      dwb_focus(gl);
+      dwb_view_push_master(&a);
+    }
     return true;
   }
   return false;

@@ -654,5 +654,6 @@ void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);
 char * dwb_get_host(WebKitWebView *);
+void dwb_focus_view(GList *);
 
 #endif

@@ -914,6 +914,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+/* dwb_get_host(WebKitWebView *) {{{*/
 char *
 dwb_get_host(WebKitWebView *web) {
   char *host = NULL;
@@ -934,6 +935,25 @@ dwb_get_host(WebKitWebView *web) {
   }
   return host;
 #endif
+}/*}}}*/
+
+void
+dwb_focus_view(GList *gl) {
+  if (gl != dwb.state.fview) {
+    if (dwb.state.layout & MAXIMIZED) { 
+      if (gl == dwb.state.views) {
+        gtk_widget_hide(dwb.gui.right);
+        gtk_widget_show(dwb.gui.left);
+      }
+      else {
+        gtk_widget_hide(dwb.gui.left);
+        gtk_widget_show(dwb.gui.right);
+      }
+      gtk_widget_show(((View *)gl->data)->vbox);
+      gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
+    }
+    dwb_focus(gl);
+  }
 }
 
 /* dwb_get_allowed(const char *filename, const char *data) {{{*/

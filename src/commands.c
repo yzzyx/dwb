@@ -569,21 +569,7 @@ dwb_com_focus_nth_view(KeyMap *km, Arg *arg) {
   GList *l = g_list_nth(dwb.state.views, dwb.state.nummod);
   if (!l) 
     return false;
-  if (l != dwb.state.fview) {
-    if (dwb.state.layout & MAXIMIZED) { 
-      if (l == dwb.state.views) {
-        gtk_widget_hide(dwb.gui.right);
-        gtk_widget_show(dwb.gui.left);
-      }
-      else {
-        gtk_widget_hide(dwb.gui.left);
-        gtk_widget_show(dwb.gui.right);
-      }
-      gtk_widget_show(((View *)l->data)->vbox);
-      gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
-    }
-    dwb_focus(l);
-  }
+  dwb_focus_view(l);
   return true;
 }/*}}}*/
 
