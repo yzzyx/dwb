@@ -202,6 +202,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     WebKitWebPolicyDecision *policy, GList *gl) {
 
   char *uri = (char *) webkit_network_request_get_uri(request);
+  gboolean ret = false;
   
   Arg a = { .p = uri, .b = true };
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
@@ -236,10 +237,20 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
       return true;
     }
   }
-  if (dwb_handle_mail(uri)) 
-    return true;
 
-  return false;
+  char *scheme = g_uri_parse_scheme(uri);
+  if (scheme) {
+    if (!strcmp(scheme, "mailto")) {
+      dwb_spawn(gl, "mail-client", uri);
+      ret = true;
+    }
+    if (!strcmp(scheme, "ftp")) {
+      dwb_spawn(gl, "ftp-client", uri);
+      ret = true;
+    }
+    g_free(scheme);
+  }
+  return ret;
 }/*}}}*/
 
 /* dwb_web_view_new_window_policy_cb {{{*/

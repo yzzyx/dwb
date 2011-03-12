@@ -622,7 +622,7 @@ int dwb_history_forward(void);
 
 void dwb_grab_focus(GList *);
 void dwb_source_remove(GList *);
-gboolean dwb_handle_mail(const char *uri);
+gboolean dwb_spawn(GList *, const char *, const char *uri);
 
 int dwb_entry_position_word_back(int position);
 int dwb_entry_position_word_forward(int position);

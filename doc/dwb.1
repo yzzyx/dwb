@@ -886,6 +886,12 @@ The font used for inactive views. Possible values: a font description
 string,
 default value: 
 .TP 
+.BR ftp-client
+Program to open ftp://. 
+.IR dwb_uri
+will be replaced with the ftp-url. Default value: 
+.IR xterm\ -e\ ncftp\ 'dwb_uri' .
+.TP 
 .BR hide-tabbar
 Hide the tabbar. Possible values: always, never, tiled. 
 default value:
@@ -973,11 +979,11 @@ Bottomstack Maximized / Maximized (same as Normal Maximized),
 default value:
 .IR Normal\ Maximized .
 .TP
-.BR mail-program
+.BR mail-client
 The email program that is used for mailto:-urls. 
 .IR dwb_uri
 will be replaced with the mail-url. Default value: 
-.IR 'xterm\ -e\ mutt\ 'dwb_uri'"
+.IR xterm\ -e\ mutt\ 'dwb_uri'.
 .TP 
 .BR message-delay
 The duration messages are shown. Possible values: duration in seconds (integer),

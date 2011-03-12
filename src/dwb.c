@@ -563,8 +563,10 @@ static WebSettings DWB_SETTINGS[] = {
     false, true,  DOUBLE, { .d = 0.3          }, (S_Func)dwb_set_dummy, },
   { { "layout",                                  "The default layout (Normal, Bottomstack, Maximized)", },     
     false, true,  CHAR, { .p = "Normal MAXIMIZED" },  (S_Func)dwb_set_dummy, },
-  { { "mail-program",                            "Program used for mailto:-urls", },                                            
+  { { "mail-client",                            "Program used for mailto:-urls", },                                            
     false, true,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy }, 
+  { { "ftp-client",                            "Program used for ftp", },                                            
+    false, true,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy }, 
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
     false, false,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock }, 
 };/*}}}*/
@@ -1230,22 +1232,20 @@ dwb_entry_position_word_forward(int position) {
 
 /* dwb_handle_mail(const char *uri)        return: true if it is a mail-address{{{*/
 gboolean 
-dwb_handle_mail(const char *uri) {
-  if (g_str_has_prefix(uri, "mailto:")) {
+dwb_spawn(GList *gl, const char *prop, const char *uri) {
+  //if (g_str_has_prefix(uri, "mailto:")) {
     const char *program;
     char *command;
-    if ( !(program = GET_CHAR("mail-program")) ) {
+    if ( (program = GET_CHAR(prop)) && (command = dwb_util_string_replace(program, "dwb_uri", uri)) ) {
+      g_spawn_command_line_async(command, NULL);
+      free(command);
       return true;
     }
-    if ( !(command = dwb_util_string_replace(program, "dwb_uri", uri))) {
-      return true;
+    else {
+      dwb_set_error_message(gl, "Cannot open %s", uri);
+      return false;
     }
-
-    g_spawn_command_line_async(command, NULL);
-    free(command);
-    return true;
-  }
-  return false;
+  //}
 }/*}}}*/
 
 /* dwb_resize(double size) {{{*/
@@ -1647,6 +1647,7 @@ dwb_check_directory(const char *path) {
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(GList *gl, Arg *arg) {
+  // TODO parse scheme
   g_strstrip(arg->p);
   const char *path;
   WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
@@ -1677,11 +1678,6 @@ dwb_load_uri(GList *gl, Arg *arg) {
   }
 
   g_strstrip(arg->p);
-
-  /* Check if uri is a mailto:-address */
-  if (dwb_handle_mail(arg->p)) {
-    return;
-  }
 
   /* Check if uri is a html-string */
   if (dwb.state.type == HTML_STRING) {
@@ -1780,8 +1776,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
       ? g_strdup(arg->p)
       : g_strdup_printf("http://%s", (char*)arg->p);
   }
-    /* load uri */
-  webkit_web_view_load_uri(web, uri);
+  webkit_web_view_load_uri(web, arg->p);
   FREE(uri);
 }/*}}}*/
 
