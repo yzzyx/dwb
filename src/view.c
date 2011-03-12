@@ -250,7 +250,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     }
     g_free(scheme);
   }
-  return ret;
+  return false;
 }/*}}}*/
 
 /* dwb_web_view_new_window_policy_cb {{{*/

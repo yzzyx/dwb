@@ -1776,7 +1776,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
       ? g_strdup(arg->p)
       : g_strdup_printf("http://%s", (char*)arg->p);
   }
-  webkit_web_view_load_uri(web, arg->p);
+  webkit_web_view_load_uri(web, uri);
   FREE(uri);
 }/*}}}*/
 
