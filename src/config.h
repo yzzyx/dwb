@@ -67,7 +67,7 @@ static KeyValue KEYS[] = {
   { "show_keys",                {   "Sk",         0,                  },  },  
   { "show_settings",            {   "Ss",         0,                  },  },  
   { "show_global_settings",     {   "Sgs",        0,                  },  },  
-  { "toggle_bottomstack",       {   "B",          0,                  },  },  
+  { "toggle_bottomstack",       {   "tb",         0,  },  },  
   { "toggle_maximized",         {   "gm",         0,                  },  },  
   { "view_source",              {   "gf",         0,                  },  },  
   { "zoom_in",                  {   "zi",         0,                  },  },  
