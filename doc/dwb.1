@@ -1014,12 +1014,6 @@ color-string,
 default value:
 .IR #cccccc .
 .TP 
-.BR save-session
-Save the session when dwb is closed and restore the last saved session when
-invoking dwb. Possible values: true/false,
-default value:
-.IR false .
-.TP 
 .BR proxy
 Whether to use a HTTP-proxy. Possible values: true/false,
 default value:
@@ -1030,6 +1024,18 @@ The proxy-url, can also be set via the http_proxy environment variable. Possible
 values: an url string,
 default value:
 .IR NULL .
+.TP 
+.BR save-session
+Save the session when dwb is closed and restore the last saved session when
+invoking dwb. Possible values: true/false,
+default value:
+.IR false .
+.TP 
+.BR scroll-step
+The step-increment in pixels for scrolling. If set to a value lower or equal 0,
+the default step-increment will be used.
+default value: 
+.IR 0.0 .
 .TP 
 .BR settings-bg-color
 The background color of a the settings view. Possible values: an rgb

@@ -158,8 +158,9 @@ dwb_util_char_to_arg(char *value, DwbType type) {
       }
     }
     else if (type == DOUBLE) {
-      double d;
-      if ((d = g_strtod(value, NULL)) ) {
+      char *end = NULL;
+      double d = g_strtod(value, &end);
+      if (! *end) {
         Arg a = { .d = d };
         ret = &a;
       }

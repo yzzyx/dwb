@@ -398,7 +398,7 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
   else if (arg->n == SCROLL_HALF_PAGE_UP || arg->n == SCROLL_HALF_PAGE_DOWN)
     inc = gtk_adjustment_get_page_increment(a) / 2;
   else
-    inc = gtk_adjustment_get_step_increment(a);
+    inc = dwb.misc.scroll_step > 0 ? dwb.misc.scroll_step : gtk_adjustment_get_step_increment(a);
 
   double lower  = gtk_adjustment_get_lower(a);
   double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;

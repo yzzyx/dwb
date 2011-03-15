@@ -431,6 +431,8 @@ static WebSettings DWB_SETTINGS[] = {
     false, true,  BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars, },
   { { "background-tabs",			                     "Whether to open tabs in background", },                                 
     false, true,  BOOLEAN,    { .b = false         }, (S_Func) dwb_set_background_tab, },
+  { { "scroll-step",			                     "Whether to open tabs in background", },                                 
+    false, true,  DOUBLE,    { .d = 0         }, (S_Func) dwb_init_vars, },
 
   { { "active-fg-color",                         "Foreground color of the active view", },                              
     false, true,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout, },
@@ -2736,6 +2738,7 @@ dwb_init_vars() {
   dwb.misc.startpage = GET_CHAR("startpage");
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
   dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
+  dwb.misc.scroll_step = GET_DOUBLE("scroll-step");
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(GET_CHAR("hide-tabbar"));
   dwb.state.cookies_allowed = GET_BOOL("cookies");
 

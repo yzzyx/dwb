@@ -518,6 +518,7 @@ struct _Misc {
   gboolean tabbed_browsing;
   gboolean private_browsing;
 
+  double scroll_step;
 
   char *startpage;
   char *download_com;
