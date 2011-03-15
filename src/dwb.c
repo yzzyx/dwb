@@ -34,7 +34,6 @@ static void dwb_webview_property(GList *, WebSettings *);
 void dwb_set_background_tab(GList *, WebSettings *);
 static void dwb_set_scripts(GList *, WebSettings *);
 static void dwb_set_user_agent(GList *, WebSettings *);
-static void dwb_set_cookies(GList *, WebSettings *);
 static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_startpage(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
@@ -429,7 +428,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "proxy-url",                               "The HTTP-proxy url", },                                          
     false, true,  CHAR,    { .p = NULL              },   (S_Func) dwb_soup_init_proxy, },
   { { "cookies",                                  "Whether to allow all cookies", },                                     
-    false, true,  BOOLEAN, { .b = false             }, (S_Func) dwb_set_cookies, },
+    false, true,  BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars, },
   { { "background-tabs",			                     "Whether to open tabs in background", },                                 
     false, true,  BOOLEAN,    { .b = false         }, (S_Func) dwb_set_background_tab, },
 
@@ -608,12 +607,6 @@ dwb_set_message_delay(GList *l, WebSettings *s) {
 static void 
 dwb_set_history_length(GList *l, WebSettings *s) {
   dwb.misc.history_length = s->arg.i;
-}/*}}}*/
-
-/* dwb_set_cookies (GList *, WebSettings *s) {{{*/
-void 
-dwb_set_cookies(GList *l, WebSettings *s) {
-  dwb.state.cookies_allowed = s->arg.b;
 }/*}}}*/
 
 /* dwb_set_background_tab (GList *, WebSettings *s) {{{*/
@@ -929,7 +922,6 @@ dwb_get_host(WebKitWebView *web) {
   // this sometimes segfaults
   const char *host = NULL;
   WebKitSecurityOrigin *origin = webkit_web_frame_get_security_origin(webkit_web_view_get_main_frame(web));
-  puts(webkit_web_frame_get_uri(webkit_web_view_get_main_frame(web)));
   if (origin) {
     host = webkit_security_origin_get_host(origin);
   }
@@ -2745,6 +2737,7 @@ dwb_init_vars() {
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
   dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(GET_CHAR("hide-tabbar"));
+  dwb.state.cookies_allowed = GET_BOOL("cookies");
 
   dwb.state.complete_history = GET_BOOL("complete-history");
   dwb.state.complete_bookmarks = GET_BOOL("complete-bookmarks");
