@@ -2,37 +2,51 @@
 #include "html.h"
 #include "util.h"
 
+#define INFO_FILE "info.html"
+#define SETTINGS_FILE "settings.html"
+#define HEAD_FILE "head.html"
+
 typedef struct _HtmlTable HtmlTable;
 
 struct _HtmlTable {
   const char *uri;
   const char *title;
-  const char *state;
+  const char *file;
+  int type;
   void (*func)(WebKitWebView *, HtmlTable *);
 };
 
 void dwb_html_bookmarks(WebKitWebView *, HtmlTable *);
 void dwb_html_history(WebKitWebView *, HtmlTable *);
 void dwb_html_quickmarks(WebKitWebView *, HtmlTable *);
+void dwb_html_settings(WebKitWebView *, HtmlTable *);
 
 static HtmlTable table[] = {
-  { "dwb://bookmarks",  "Bookmarks",  "aiii",   dwb_html_bookmarks },
-  { "dwb://quickmarks", "Quickmarks",    "iaii",   dwb_html_quickmarks },
-  { "dwb://history",    "History", "iiai",   dwb_html_history },
-  { "dwb://settings",    "Settings", "iiia",   dwb_html_history },
+  { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, dwb_html_bookmarks },
+  { "dwb://quickmarks", "Quickmarks",   INFO_FILE,      0, dwb_html_quickmarks },
+  { "dwb://history",    "History",      INFO_FILE,      0, dwb_html_history },
+  { "dwb://settings",   "Settings",     SETTINGS_FILE,  0, dwb_html_settings },
 };
 
 void
 dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
-  char *filecontent, *content;
-  char *path = dwb_util_get_data_file("info.html");
-  if (path) {
-    g_file_get_contents(path, &filecontent, NULL, NULL);
-    content = g_strdup_printf(filecontent, t->title, t->state[0], t->state[1], t->state[2], t->state[3], panel);
-    webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content, t->uri, "about:blank");
-    g_free(content);
+  char *filecontent;
+  GString *content = g_string_new(NULL);
+  char *path = dwb_util_get_data_file(t->file);
+  char *headpath = dwb_util_get_data_file(HEAD_FILE);
+  if (path && headpath) {
+    /* load head */
+    g_file_get_contents(headpath, &filecontent, NULL, NULL);
+    g_string_append_printf(content, filecontent, t->title);
     g_free(filecontent);
-    g_free(path);
+    FREE(headpath);
+    /* load content */
+    g_file_get_contents(path, &filecontent, NULL, NULL);
+    g_string_append_printf(content, filecontent, panel);
+    webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, t->uri, "about:blank");
+    g_string_free(content, true);
+    g_free(filecontent);
+    FREE(path);
   }
 }
 void
@@ -54,6 +68,10 @@ dwb_html_bookmarks(WebKitWebView *wv, HtmlTable *table) {
 void
 dwb_html_history(WebKitWebView *wv, HtmlTable *table) {
   dwb_html_navigation(wv, dwb.fc.history, table);
+}
+void
+dwb_html_settings(WebKitWebView *wv, HtmlTable *table) {
+  dwb_html_load_page(wv, table, "blub");
 }
 void
 dwb_html_quickmarks(WebKitWebView *wv, HtmlTable *table) {

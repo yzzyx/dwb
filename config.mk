@@ -8,7 +8,6 @@ SHAREDIR=data
 EXAMPLEDIR=examples
 LIBDIR=lib
 
-
 HG_VERSION=$(shell hg id -n 2>/dev/null)
 
 VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo "$(REAL_VERSION)"; fi)
