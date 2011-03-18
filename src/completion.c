@@ -453,7 +453,7 @@ dwb_comp_get_path(GList *list, char *text) {
   const char *filename;
   char path[BUFFER_LENGTH];
 
-  if (!strlen(text)) {
+  if (! *text ) {
     list = g_list_prepend(list, g_strconcat(d_current, "/", NULL));
     return list;
   }

@@ -598,12 +598,10 @@ dwb_com_yank(KeyMap *km, Arg *arg) {
     text = g_strdup(webkit_web_view_get_uri(w));
     message = text;
   }
-  if (text) {
-    if (strlen(text)) {
-      gtk_clipboard_set_text(old, text, -1);
-      dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", message);
-      ret = true;
-    }
+  if (*text) {
+    gtk_clipboard_set_text(old, text, -1);
+    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", message);
+    ret = true;
     g_free(text);
   }
   return ret;
