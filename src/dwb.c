@@ -2095,7 +2095,7 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
     GIOChannel *channel = g_io_channel_unix_new(std_out);
     GIOChannel *out_channel = g_io_channel_unix_new(std_in);
     g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, out_channel);
-    dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->p);
+    dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->arg);
   }
   else {
     fprintf(stderr, "Cannot execute %s: %s\n", (char*)a->p, error->message);
