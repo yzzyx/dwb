@@ -233,6 +233,8 @@ const DwbHintObj = {
         if (!e.useMap) 
           return;
         var area = document.getElementById(e.useMap.slice(1));
+        if (!area)
+          return;
         var areas = area.getElementsByTagName("area");
         var r = e.getBoundingClientRect();
         for (var i=0; i<areas.length; i++) {
