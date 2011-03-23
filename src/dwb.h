@@ -262,6 +262,7 @@ enum Signal {
   SIG_BUTTON_RELEASE,
   SIG_CLOSE_WEB_VIEW, 
   SIG_CONSOLE_MESSAGE,
+  SIG_CREATE_PLUGIN,
   SIG_CREATE_WEB_VIEW,
   SIG_DOWNLOAD_REQUESTED,
   SIG_HOVERING_OVER_LINK, 
@@ -360,7 +361,6 @@ struct _Completions {
   GList *path_completion;
   GList *active_path;
 };
-
 struct _State {
   GList *views;
   GList *fview;
