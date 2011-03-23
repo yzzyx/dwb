@@ -87,7 +87,7 @@ dwb_com_focus_input(KeyMap *km, Arg *a) {
   char *value;
   gboolean ret = true;
 
-  if (dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.focusInput()", &value) && !strcmp(value, "_dwb_no_input_")) {
+  if ((value = dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.focusInput()", true)) && !strcmp(value, "_dwb_no_input_")) {
     ret = false;
   }
   FREE(value);
@@ -100,7 +100,7 @@ gboolean
 dwb_com_add_search_field(KeyMap *km, Arg *a) {
   char *value;
   gboolean ret = true;
-  if (dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.addSearchEngine()", &value) ) {
+  if ( (value = dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.addSearchEngine()", true)) ) {
     if (!strcmp(value, "_dwb_no_hints_")) {
       return false;
     }
@@ -171,7 +171,7 @@ dwb_com_show_hints(KeyMap *km, Arg *arg) {
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.showHints()", NULL);
+    dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.showHints()", false);
     dwb.state.mode = HINT_MODE;
     dwb_focus_entry();
   }

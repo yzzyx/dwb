@@ -15,7 +15,7 @@ dwb_plugins_create_cb(WebKitWebView *wv, char *mimetype, char *uri, GHashTable *
     id = g_hash_table_lookup(param, "id");
     command = g_strdup_printf("DwbPlugin.remove('%s', '%s', '%s')", id, string->str, mimetype);
     g_string_free(string, true);
-    dwb_execute_script(wv, command, &value);
+    value = dwb_execute_script(wv, command, true);
     g_free(command);
     if (!value || strcmp(value, "__dwb__blocked__")) {
       ret = gtk_event_box_new();

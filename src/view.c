@@ -240,12 +240,21 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 
   char *scheme = g_uri_parse_scheme(uri);
   if (scheme) {
-    if (!strcmp(scheme, "mailto")) {
+    if (!strcmp(scheme, "plugin")) {
+      webkit_web_policy_decision_ignore(policy);
+      char *command = g_strdup_printf("DwbPlugin.click('%s')", uri+7);
+      dwb_execute_script(web, command, false);
+      g_free(command);
+      return true;
+    }
+    else if (!strcmp(scheme, "mailto")) {
       dwb_spawn(gl, "mail-client", uri);
+      webkit_web_policy_decision_ignore(policy);
       ret = true;
     }
-    if (!strcmp(scheme, "ftp")) {
+    else if (!strcmp(scheme, "ftp")) {
       dwb_spawn(gl, "ftp-client", uri);
+      webkit_web_policy_decision_ignore(policy);
       ret = true;
     }
     g_free(scheme);
@@ -318,7 +327,7 @@ static void
 dwb_web_view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   if (status == WEBKIT_LOAD_COMMITTED) {
-    dwb_execute_script(web, dwb.misc.scripts, NULL);
+    dwb_execute_script(web, dwb.misc.scripts, false);
   }
 }
 /* dwb_web_view_load_status_cb {{{*/
@@ -354,7 +363,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
-      dwb_execute_script(web, "DwbHintObj.createStyleSheet()", NULL);
+      dwb_execute_script(web, "DwbHintObj.createStyleSheet()", false);
       if (dwb_prepend_navigation(gl, &dwb.fc.history) && !dwb.misc.private_browsing)
         dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       dwb_clean_load_end(gl);

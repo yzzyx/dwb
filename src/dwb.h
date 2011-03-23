@@ -615,7 +615,7 @@ gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(KeyMap *, Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
-gboolean dwb_execute_script(WebKitWebView *, const char *, char **);
+char * dwb_execute_script(WebKitWebView *, const char *, gboolean);
 void dwb_resize(double );
 void dwb_toggle_tabbar(void);
 int dwb_history_back(void);
