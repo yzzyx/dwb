@@ -1483,9 +1483,10 @@ dwb_execute_script(WebKitWebView *web, const char *com, char **ret) {
     if (ret) {
       JSStringRef string = JSValueToStringCopy(context, eval_ret, NULL);
       length = JSStringGetMaximumUTF8CStringSize(string);
-      *ret = g_new(char, length);
+      *ret = g_new(char, length+1);
       JSStringGetUTF8CString(string, *ret, length);
       JSStringRelease(string);
+      memset(*ret+length, '\0', 1);
     }
     return true;
   }
