@@ -243,7 +243,7 @@ const DwbHintObj = {
         }
       }
       if (r = me.getVisibility(e)) {
-        if ( (e instanceof HTMLIFrameElement || e instanceof HTMLFrameElement)) {
+        if ( (e instanceof HTMLFrameElement)) {
           const doc = e.contentDocument ? e.contentDocument : e.contentWindow.document;
           if (doc) {
             var res = doc.body.querySelectorAll(me._hintTypes);
