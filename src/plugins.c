@@ -3,21 +3,34 @@
 typedef struct {
   GList *gl;
   char *id;
+  GtkWidget *plugin;
 } Plugin;
 static void 
 dwb_plugins_get_embed_values(char *key, char *value, GString **gl) {
   g_string_append_printf(*gl, " %s=\"%s\" ", key, value);
 }
 
-void
-show(GtkWidget *plugin, Plugin *p) {
+static gboolean
+dwb_plugins_remove(Plugin *p) {
   GtkAllocation a;
-  gtk_widget_get_allocation(plugin, &a);
-  char *command = g_strdup_printf("DwbPlugin.remove('%s', '%d', '%d', '%d', '%d');", p->id, a.x, a.y, a.width, a.height);
-  dwb_execute_script(WEBVIEW(p->gl), command, false);
-  g_free(p->id);
-  g_free(p);
-  gtk_widget_destroy(plugin);
+  gtk_widget_get_allocation(p->plugin, &a);
+  if (a.x != -1 && a.y != -1) {
+    gtk_widget_destroy(p->plugin);
+    char *command = g_strdup_printf("DwbPlugin.remove('%s', '%d', '%d', '%d', '%d');", p->id, a.x, a.y, a.width, a.height);
+    dwb_execute_script(WEBVIEW(p->gl), command, false);
+    g_free(p->id);
+    g_free(p);
+    return false;
+  }
+  return  true;
+}
+static void
+dwb_plugins_realize_cb(GtkWidget *plugin, Plugin *p) {
+  GtkAdjustment *adj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(VIEW(p->gl)->scroll));
+  double value = gtk_adjustment_get_value(adj);
+  gtk_adjustment_set_value(adj, value + 1);
+  gtk_adjustment_set_value(adj, value - 1);
+  g_timeout_add(20, (GSourceFunc)dwb_plugins_remove, p); 
 }
 
 GtkWidget *
@@ -36,7 +49,8 @@ dwb_plugins_create_cb(WebKitWebView *wv, char *mimetype, char *uri, GHashTable *
     value = dwb_execute_script(wv, command, true);
     if (!value || strcmp(value, "__dwb__blocked__")) {
       ret = gtk_event_box_new();
-      g_signal_connect_after(ret, "show", G_CALLBACK(show), p);
+      p->plugin = ret;
+      g_signal_connect_after(ret, "realize", G_CALLBACK(dwb_plugins_realize_cb), p);
     }
     g_string_free(string, true);
     FREE(value);

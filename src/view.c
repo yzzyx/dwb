@@ -276,12 +276,6 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
 
-#if 0
-  if (request)
-    printf("response %s\n", webkit_network_request_get_uri(request));
-  if (response)
-    printf("request %s\n", webkit_network_response_get_uri(response));
-#endif
   if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
     webkit_network_request_set_uri(request, "about:blank");
     return;
