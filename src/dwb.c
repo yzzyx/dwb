@@ -42,6 +42,7 @@ static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_adblock(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
+static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 
 
@@ -373,7 +374,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "enable-plugins",			                     "Whether to enable plugins", },                                                 
     true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting, },
   { { "enable-private-browsing",			           "Whether to enable private browsing mode", },                                        
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting, },
+    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_set_private_browsing, },
   { { "enable-scripts",			                     "Enable embedded scripting languages", },                                                  
     false, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_set_scripts, },
   { { "enable-site-specific-quirks",			       "Enable site-specific compatibility workarounds", },                                    
@@ -589,13 +590,18 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
   View *v = gl->data;
   v->status->adblocker = s->arg.b;
 }/*}}}*/
+static void
+dwb_set_private_browsing(GList *gl, WebSettings *s) {
+  dwb.misc.private_browsing = s->arg.b;
+  dwb_webkit_setting(gl, s);
+}/*}}}*/
 
 static void 
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = VIEW(gl);
   if (s->arg.b) 
     v->status->signals[SIG_CREATE_PLUGIN] = g_signal_connect(v->web, "create-plugin-widget", G_CALLBACK(dwb_plugins_create_cb), gl);
-  else 
+  else if (v->status->signals[SIG_CREATE_PLUGIN])
     g_signal_handler_disconnect(v->web, v->status->signals[SIG_CREATE_PLUGIN]);
 }
 
