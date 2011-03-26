@@ -577,32 +577,15 @@ dwb_com_focus_nth_view(KeyMap *km, Arg *arg) {
 /* dwb_com_yank {{{*/
 gboolean
 dwb_com_yank(KeyMap *km, Arg *arg) {
-  WebKitWebView *w = CURRENT_WEBVIEW();
-
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
-  GtkClipboard *old = gtk_clipboard_get(atom);
-
-  char *text = NULL;
-  char buffer[STRING_LENGTH];
-  char *message = buffer;
-
+  GtkClipboard *clipboard = gtk_clipboard_get(atom);
   gboolean ret = false;
+  const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
 
-  if (webkit_web_view_has_selection(w)) {
-    webkit_web_view_copy_clipboard(w);
-    GtkClipboard *new = gtk_clipboard_get(GDK_NONE);
-    text = gtk_clipboard_wait_for_text(new);
-    message = "selection";
-  }
-  else {
-    text = g_strdup(webkit_web_view_get_uri(w));
-    message = text;
-  }
-  if (*text) {
-    gtk_clipboard_set_text(old, text, -1);
-    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", message);
+  gtk_clipboard_set_text(clipboard, uri, -1);
+  if (*uri) {
+    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", uri);
     ret = true;
-    g_free(text);
   }
   return ret;
 }/*}}}*/

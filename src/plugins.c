@@ -18,6 +18,7 @@ dwb_plugins_remove(Plugin *p) {
     gtk_widget_destroy(p->plugin);
     char *command = g_strdup_printf("DwbPlugin.remove('%s', '%d', '%d', '%d', '%d');", p->id, a.x, a.y, a.width, a.height);
     dwb_execute_script(WEBVIEW(p->gl), command, false);
+    g_free(command);
     g_free(p->id);
     g_free(p);
     return false;
