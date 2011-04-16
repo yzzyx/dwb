@@ -724,7 +724,7 @@ dwb_reload_scripts(GList *gl, WebSettings *s) {
 static gboolean 
 dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
-  
+
   char *key = dwb_util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_KEY_Escape) {
     dwb_normal_mode(true);
@@ -2600,6 +2600,17 @@ dwb_init_gui() {
   dwb.gui.paned = gtk_hpaned_new();
   dwb.gui.left = gtk_vbox_new(true, 0);
   dwb.gui.right = gtk_vbox_new(true, 1);
+
+
+#if 0
+  GtkWidget *web = webkit_web_view_new();
+  WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(web));
+  dwb.misc.global_ctx = webkit_web_frame_get_global_context(frame);
+  char *content;
+  g_file_get_contents("./script.js", &content, NULL, NULL);
+  JSStringRef script = JSStringCreateWithUTF8CString(content);
+  JSEvaluateScript(dwb.misc.global_ctx, script, JSContextGetGlobalObject(dwb.misc.global_ctx), NULL, 0, NULL);
+#endif 
 
   // Paned
   GtkWidget *paned_event = gtk_event_box_new(); 

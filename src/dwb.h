@@ -275,6 +275,7 @@ enum Signal {
   SIG_LOAD_STATUS_AFTER,
   SIG_PROGRESS,
   SIG_TITLE,
+  SIG_URI,
   SIG_SCROLL,
   SIG_VALUE_CHANGED,
   SIG_ENTRY_KEY_PRESS,
@@ -523,6 +524,7 @@ struct _Misc {
 
   char *startpage;
   char *download_com;
+  JSContextRef global_ctx;
 };
 struct _Files {
   const char *bookmarks;

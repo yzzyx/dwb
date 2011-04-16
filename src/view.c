@@ -40,6 +40,7 @@ static void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFram
 static gboolean dwb_web_view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
 static gboolean dwb_web_view_value_changed_cb(GtkAdjustment *, GList *);
 static void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
+static void dwb_web_view_uri_cb(WebKitWebView *, GParamSpec *, GList *);
 static void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
 static gboolean dwb_view_entry_keyrelease_cb(GtkWidget *, GdkEventKey *);
 static gboolean dwb_view_entry_keypress_cb(GtkWidget *, GdkEventKey *);
@@ -245,7 +246,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
       char *command = g_strdup_printf("DwbPlugin.click('%s')", uri+7);
       dwb_execute_script(web, command, false);
       g_free(command);
-      return true;
+      ret = true;
     }
     else if (!strcmp(scheme, "mailto")) {
       dwb_spawn(gl, "mail-client", uri);
@@ -259,7 +260,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     }
     g_free(scheme);
   }
-  return false;
+  return ret;
 }/*}}}*/
 
 /* dwb_web_view_new_window_policy_cb {{{*/
@@ -307,6 +308,12 @@ dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {
 static void 
 dwb_web_view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
+}/*}}}*/
+
+/* dwb_web_view_title_cb {{{*/
+static void 
+dwb_web_view_uri_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
+  dwb_update_uri(gl);
 }/*}}}*/
 
 /* dwb_web_view_progress_cb {{{*/
@@ -359,7 +366,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
       }
       FREE(host);
-      dwb_view_ssl_state(gl);
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
@@ -367,6 +373,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       if (dwb_prepend_navigation(gl, &dwb.fc.history) && !dwb.misc.private_browsing)
         dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       dwb_clean_load_end(gl);
+      dwb_view_ssl_state(gl);
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);
@@ -446,11 +453,10 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 static gboolean 
 dwb_view_entry_activate_cb(GtkEntry* entry, GList *gl) {
-  gboolean ret = false;
   Mode mode = dwb.state.mode;
 
   if (mode == HINT_MODE) {
-    ret = false;
+    return false;
   }
   else if (mode == FIND_MODE) {
     dwb_focus_scroll(dwb.state.fview);
@@ -574,6 +580,7 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_LOAD_STATUS_AFTER]     = g_signal_connect_after(v->web, "notify::load-status",             G_CALLBACK(dwb_web_view_load_status_after_cb), gl);
   v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                      G_CALLBACK(dwb_web_view_progress_cb), gl);
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
+  v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(dwb_web_view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
 
@@ -596,6 +603,8 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   status->downloads = NULL;
   status->mimetype = NULL;
   status->progress = 0;
+  for (int i=0; i<SIG_LAST; i++) 
+    status->signals[i] = 0;
   v->status = status;
 
   v->vbox = gtk_vbox_new(false, 0);
@@ -857,8 +866,9 @@ dwb_view_ssl_state(GList *gl) {
   const char *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   if (uri && g_str_has_prefix(uri, "https")) {
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
-    WebKitNetworkResponse *response = webkit_web_frame_get_network_response(frame);
-    SoupMessage *msg = webkit_network_response_get_message(response);
+    WebKitWebDataSource *ds = webkit_web_frame_get_data_source(frame);
+    WebKitNetworkRequest *request = webkit_web_data_source_get_request(ds);
+    SoupMessage *msg = webkit_network_request_get_message(request);
     if (msg) {
       ssl = soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED 
         ? SSL_TRUSTED 
