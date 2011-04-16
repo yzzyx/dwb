@@ -325,6 +325,7 @@ dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     v->status->progress = 0;
   }
   dwb_update_status(gl);
+  dwb_view_ssl_state(gl);
 }/*}}}*/
 
 // window-object-cleared is emmited in receivedFirstData which emits load-status
@@ -373,7 +374,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       if (dwb_prepend_navigation(gl, &dwb.fc.history) && !dwb.misc.private_browsing)
         dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       dwb_clean_load_end(gl);
-      dwb_view_ssl_state(gl);
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);
