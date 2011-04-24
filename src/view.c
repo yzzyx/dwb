@@ -112,7 +112,7 @@ dwb_web_view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
 static gboolean 
 dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
   Arg a = { .p = gl };
-  dwb_com_remove_view(NULL, &a);
+  dwb_view_remove(&a);
   return true;
 }/*}}}*/
 
@@ -776,18 +776,21 @@ dwb_view_push_master(Arg *arg) {
 
 /* dwb_view_remove (void) {{{*/
 void
-dwb_view_remove() {
+dwb_view_remove(Arg *a) {
   GList *gl = NULL;
   if (!dwb.state.views->next) {
     return;
   }
-  if (dwb.state.nummod) {
+  if (a) {
+    gl = a->p;
+  }
+  else if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
   }
   else {
     gl = dwb.state.fview;
     if ( !(dwb.state.fview = dwb.state.fview->next) ) {
-      dwb.state.fview = dwb.state.views;
+      dwb.state.fview = g_list_last(dwb.state.views)->prev;
       gtk_widget_show_all(dwb.gui.topbox);
     }
   }

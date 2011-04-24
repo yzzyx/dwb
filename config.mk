@@ -15,6 +15,8 @@ NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REA
 
 LIBS  += gtk+-2.0
 LIBS  += webkit-1.0
+#LIBS  += gtk+-3.0
+#LIBS  += webkitgtk-3.0
 #LIBS  += json-glib-1.0
 
 FLAGS += -pedantic

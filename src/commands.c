@@ -528,7 +528,7 @@ dwb_com_toggle_maximized(KeyMap *km, Arg *arg) {
 /* dwb_com_remove_view(KeyMap *km, Arg *arg) {{{*/
 void 
 dwb_com_remove_view(KeyMap *km, Arg *arg) {
-  dwb_view_remove();
+  dwb_view_remove(NULL);
 }/*}}}*/
 
 /* dwb_com_push_master {{{*/
