@@ -429,6 +429,7 @@ struct _ViewStatus {
   int progress;
   SslState ssl;
   ScriptState scripts;
+  int tab_height;
 };
 
 struct _View {
@@ -528,6 +529,7 @@ struct _Misc {
   char *startpage;
   char *download_com;
   JSContextRef global_ctx;
+  int tab_height;
 };
 struct _Files {
   const char *bookmarks;

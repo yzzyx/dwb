@@ -19,7 +19,7 @@ LIBS  += webkit-1.0
 #LIBS  += webkitgtk-3.0
 #LIBS  += json-glib-1.0
 
-FLAGS += -pedantic
+#FLAGS += -pedantic
 FLAGS += -Wall 
 FLAGS += -pipe
 FLAGS += `pkg-config --cflags --libs $(LIBS)` 
