@@ -266,6 +266,7 @@ enum Signal {
   SIG_CREATE_WEB_VIEW,
   SIG_DOWNLOAD_REQUESTED,
   SIG_HOVERING_OVER_LINK, 
+  SIG_ICON_LOADED, 
   SIG_MIME_TYPE,
   SIG_NAVIGATION,
   SIG_NEW_WINDOW,
@@ -434,6 +435,8 @@ struct _View {
   GtkWidget *vbox;
   GtkWidget *web;
   GtkWidget *tabevent;
+  GtkWidget *tabbox;
+  GtkWidget *tabicon;
   GtkWidget *tablabel;
   GtkWidget *statusbox;
   GtkWidget *urilabel;
