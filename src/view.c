@@ -22,7 +22,9 @@ static void dwb_parse_setting(const char *);
 static void dwb_parse_key_setting(const char *);
 static void dwb_apply_settings(WebSettings *);
 static void dwb_view_ssl_state(GList *);
+#if WEBKIT_CHECK_VERSION(1, 4, 0)
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
+#endif
 
 
 // CALLBACKS
@@ -305,6 +307,7 @@ dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {
   return false;
 }/* }}} */
 
+#if WEBKIT_CHECK_VERSION(1, 4, 0)
 /* dwb_web_view_icon_loaded(GtkAdjustment *a, GList *gl) {{{ */
 void 
 dwb_web_view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
@@ -318,6 +321,7 @@ dwb_web_view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
     gtk_image_set_from_pixbuf(GTK_IMAGE(v->tabicon), rescale);
   }
 }/* }}} */
+#endif
 
 /* dwb_web_view_title_cb {{{*/
 static void 
@@ -598,7 +602,9 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(dwb_web_view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
+#if WEBKIT_CHECK_VERSION(1, 4, 0)
   v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(dwb_web_view_icon_loaded), gl);
+#endif
 
   v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
   v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(dwb_view_entry_keyrelease_cb), NULL);
@@ -678,8 +684,6 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   // Tabbar
   v->tabevent = gtk_event_box_new();
   v->tabbox = gtk_hbox_new(false, 1);
-  GdkPixbuf *pb = gdk_pixbuf_new_from_xpm_data(dummy_icon);
-  v->tabicon = gtk_image_new_from_pixbuf(pb);
   v->tablabel = gtk_label_new(NULL);
 
   gtk_label_set_use_markup(GTK_LABEL(v->tablabel), true);
@@ -688,7 +692,13 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   gtk_label_set_ellipsize(GTK_LABEL(v->tablabel), PANGO_ELLIPSIZE_END);
 
   gtk_box_pack_end(GTK_BOX(v->tabbox), v->tablabel, true, true, 0);
+
+#if WEBKIT_CHECK_VERSION(1, 4, 0)
+  GdkPixbuf *pb = gdk_pixbuf_new_from_xpm_data(dummy_icon);
+  v->tabicon = gtk_image_new_from_pixbuf(pb);
   gtk_box_pack_end(GTK_BOX(v->tabbox), v->tabicon, false, false, 0);
+#endif
+
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tabbox);
 
   //gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel);

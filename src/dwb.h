@@ -266,7 +266,9 @@ enum Signal {
   SIG_CREATE_WEB_VIEW,
   SIG_DOWNLOAD_REQUESTED,
   SIG_HOVERING_OVER_LINK, 
+#if WEBKIT_CHECK_VERSION(1, 4, 0)
   SIG_ICON_LOADED, 
+#endif
   SIG_MIME_TYPE,
   SIG_NAVIGATION,
   SIG_NEW_WINDOW,
@@ -437,7 +439,9 @@ struct _View {
   GtkWidget *web;
   GtkWidget *tabevent;
   GtkWidget *tabbox;
+#if WEBKIT_CHECK_VERSION(1, 4, 0)
   GtkWidget *tabicon;
+#endif
   GtkWidget *tablabel;
   GtkWidget *statusbox;
   GtkWidget *urilabel;

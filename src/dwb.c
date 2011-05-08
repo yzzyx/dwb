@@ -2803,12 +2803,13 @@ dwb_init_icons() {
   g_object_unref(pb);
 }
 
-
+#if WEBKIT_CHECK_VERSION(1, 4, 0)
 static void 
 dwb_tab_size_cb(GtkWidget *w, GtkAllocation *a, GList *gl) {
   dwb.misc.tab_height = a->height;
   g_signal_handlers_disconnect_by_func(w, dwb_tab_size_cb, NULL);
 }
+#endif
 
 /* dwb_init() {{{*/
 static void 
@@ -2849,7 +2850,9 @@ dwb_init() {
   else {
     dwb_add_view(NULL, false);
   }
+#if WEBKIT_CHECK_VERSION(1, 4, 0)
   g_signal_connect(VIEW(dwb.state.fview)->tablabel, "size-allocate", G_CALLBACK(dwb_tab_size_cb), NULL);
+#endif
   dwb_toggle_tabbar();
 } /*}}}*/ /*}}}*/
 
