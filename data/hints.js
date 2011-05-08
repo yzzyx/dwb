@@ -19,6 +19,16 @@ const DwbHintObj = {
   _activeInput : null,
   _hintTypes : 'a, img, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]',
 
+
+  createElement: 
+    function(tagname) {
+      element = document.createElement(tagname);
+      if (!element.style) {
+        var namespace = document.getElementsByTagName('html')[0].getAttribute('xmlns') || "http://www.w3.org/1999/xhtml";
+        element = document.createElementNS(namespace, tagname);
+      }
+      return element;
+    },
   hint : 
     function (element, win, offset, rect) {
       const me = DwbHintObj;
@@ -29,7 +39,7 @@ const DwbHintObj = {
       }
 
       function create_span(element) {
-        var span = document.createElement("span");
+        var span = me.createElement("span");
         var leftpos, toppos;
         if (element instanceof HTMLAreaElement) {
           var coords = element.coords.split(",");
@@ -192,7 +202,7 @@ const DwbHintObj = {
       const me = DwbHintObj;
       if (me._styles)
         return;
-      me._styles = document.createElement("style");
+      me._styles = me.createElement("style");
       me._styles.type = "text/css";
       document.head.appendChild(me._styles);
 
@@ -254,22 +264,21 @@ const DwbHintObj = {
           }
         }
         else {
-          if (r = me.getVisibility(e)) {
-            var off = [ leftoff, topoff ];
-            var element = new constructor(e, win, off, r);
-            me._elements.push(element);
-          }
+          var off = [ leftoff, topoff ];
+          var element = new constructor(e, win, off, r);
+          me._elements.push(element);
         }
       }
     },
   showHints : 
     function () {
       const me = DwbHintObj;
-      document.activeElement.blur();
+      if (document.activeElement) 
+        document.activeElement.blur();
 
       me.createStyleSheet();
 
-      var hints = document.createElement("div");
+      var hints = me.createElement("div");
       hints.id = "dwb_hints";
       var constructor = me._style == "letter" ? me.letterHint : me.numberHint;
 
@@ -430,7 +439,7 @@ const DwbHintObj = {
     function () {
       const me = DwbHintObj;
       me.createStyleSheet();
-      var hints = document.createElement("div");
+      var hints = me.createElement("div");
       var res = document.body.querySelectorAll("form");
 
       for (var i=0; i<res.length; i++) {
