@@ -207,7 +207,12 @@ dwb_util_arg_to_char(Arg *arg, DwbType type) {
 /* dwb_util_navigation_sort_first {{{*/
 int
 dwb_util_navigation_compare_first(Navigation *a, Navigation *b) {
-  return (strcmp(b->first, b->first));
+  return (strcmp(a->first, b->first));
+}/*}}}*/
+/* dwb_util_navigation_sort_first {{{*/
+int
+dwb_util_navigation_compare_second(Navigation *a, Navigation *b) {
+  return (strcmp(a->second, b->second));
 }/*}}}*/
 /* dwb_util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
 int
@@ -332,6 +337,16 @@ dwb_util_get_data_dir(const char *dir) {
   }
   return NULL;
 }/*}}}*/
+char *
+dwb_util_get_data_file(const char *filename) {
+  char *path = dwb_util_get_data_dir("lib");
+  char *ret = g_build_filename(path, filename, NULL);
+  g_free(path);
+  if (g_file_test(ret, G_FILE_TEST_EXISTS)) {
+    return ret;
+  }
+  return NULL;
+}
 
 /* NAVIGATION {{{*/
 /* dwb_navigation_new(const char *uri, const char *title) {{{*/

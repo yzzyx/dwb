@@ -27,6 +27,7 @@
 #include "config.h"
 #include "plugins.h"
 #include "icon.xpm"
+#include "html.h"
 
 
 /* DECLARATIONS {{{*/
@@ -526,7 +527,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "auto-completion",                         "Show possible shortcuts", },                                
     false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_comp_set_autcompletion, },
   { { "startpage",                               "The default homepage", },                                        
-    false, true,  CHAR,    { .p = "about:blank" },        (S_Func)dwb_set_startpage, }, 
+    false, true,  CHAR,    { .p = "dwb://bookmarks" },        (S_Func)dwb_set_startpage, }, 
   { { "single-instance",                         "Whether to have only on instance", },                                         
     false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_single_instance, }, 
   { { "save-session",                            "Whether to automatically save sessions", },                                       
@@ -1804,6 +1805,9 @@ dwb_load_uri(GList *gl, Arg *arg) {
         FREE(path);
       }
     }
+  }
+  else if (g_str_has_prefix(arg->p, "dwb://") && dwb_html_load(web, arg->p)) {
+    return;
   }
   /* Check if searchengine is needed and load uri */
   else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
