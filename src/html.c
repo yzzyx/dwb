@@ -25,7 +25,7 @@ static HtmlTable table[] = {
   { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, dwb_html_bookmarks },
   { "dwb://quickmarks", "Quickmarks",   INFO_FILE,      0, dwb_html_quickmarks },
   { "dwb://history",    "History",      INFO_FILE,      0, dwb_html_history },
-  { "dwb://settings",   "Settings",     SETTINGS_FILE,  0, dwb_html_settings },
+  //{ "dwb://settings",   "Settings",     SETTINGS_FILE,  0, dwb_html_settings },
 };
 
 void
