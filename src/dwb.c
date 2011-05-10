@@ -245,6 +245,8 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_save_files,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
   { { "undo",                  "Undo closing last tab", },             1, 
     (Func)dwb_com_undo,              "No more closed views",                              POST_SM },
+  { { "web_inspector",         "Open the webinspector", },             1, 
+    (Func)dwb_com_web_inspector,              "Enable developer extras for the webinspector",                              POST_SM },
 
   //Entry editing
   { { "entry_delete_word",      "Delete word", },                      0,  

@@ -746,7 +746,6 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
     gl = tmp = g_list_prepend(gl, v);
     dwb_focus(gl);
   }
-
   dwb_web_view_init_signals(tmp);
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
   // apply settings

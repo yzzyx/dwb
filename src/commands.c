@@ -847,6 +847,15 @@ dwb_com_print(KeyMap *km, Arg *arg) {
   return false;
 }/*}}}*/
 
+gboolean
+dwb_com_web_inspector(KeyMap *km, Arg *arg) {
+  if (GET_BOOL("enable-developer-extras")) {
+    webkit_web_inspector_show(webkit_web_view_get_inspector(CURRENT_WEBVIEW()));
+    return true;
+  }
+  return false;
+}
+
 /* dwb_com_execute_userscript (Arg *) {{{*/
 gboolean
 dwb_com_execute_userscript(KeyMap *km, Arg *arg) {
