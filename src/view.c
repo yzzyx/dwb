@@ -78,7 +78,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     }
     FREE(clipboard);
   }
-  else if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
+  else if (e->button == 1 && e->type == GDK_BUTTON_PRESS && WEBVIEW(gl) != CURRENT_WEBVIEW()) {
     dwb_focus(gl);
   }
   else if (e->button == 3 && e->state & GDK_BUTTON1_MASK) {
@@ -744,7 +744,7 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   else {
     gtk_box_pack_start(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0);
     gl = tmp = g_list_prepend(gl, v);
-    dwb_focus(gl);
+    //dwb_focus(gl);
   }
   dwb_web_view_init_signals(tmp);
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
