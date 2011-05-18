@@ -1429,11 +1429,12 @@ dwb_web_settings_get_value(const char *id) {
 }/*}}}*/
 
 /* update_hints {{{*/
-void
+gboolean
 dwb_update_hints(GdkEventKey *e) {
   char *buffer = NULL;
   char *com = NULL;
-  char input[BUFFER_LENGTH];
+  char input[BUFFER_LENGTH] = { 0 }, *val;
+  gboolean ret = false;
 
   if (e->keyval == GDK_KEY_Return) {
     com = g_strdup("DwbHintObj.followActive()");
@@ -1445,11 +1446,14 @@ dwb_update_hints(GdkEventKey *e) {
     else {
       com = g_strdup("DwbHintObj.focusNext()");
     }
+    ret = true;
+  }
+  else if (e->is_modifier) {
+    return false;
   }
   else {
-    char *val = dwb_util_keyval_to_char(e->keyval);
+    val = dwb_util_keyval_to_char(e->keyval);
     snprintf(input, BUFFER_LENGTH - 1, "%s%s", GET_TEXT(), val ? val : "");
-    puts(GET_TEXT());
     com = g_strdup_printf("DwbHintObj.updateHints(\"%s\")", input);
     FREE(val);
   }
@@ -1476,6 +1480,7 @@ dwb_update_hints(GdkEventKey *e) {
     }
     FREE(buffer);
   }
+  return ret;
 }/*}}}*/
 
 /* dwb_execute_script {{{*/

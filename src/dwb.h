@@ -117,7 +117,7 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 
-#define FOO                         puts("bar");
+#define FOO                         puts("bar")
 
 #define IS_WORD_CHAR(c)           (isalnum(c) || ((c) == '_')) 
 // compare string a and b, without newline in string b
@@ -623,7 +623,7 @@ gboolean dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const char *, const char *);
 
 Navigation * dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *);
-void dwb_update_hints(GdkEventKey *);
+gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(KeyMap *, Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);

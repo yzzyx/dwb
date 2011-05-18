@@ -302,7 +302,6 @@ const DwbHintObj = {
     }, 
   updateHints :
     function updateHints(input) {
-      console.log("hallo");
       const me = DwbHintObj;
       var array = [];
       var text_content;
