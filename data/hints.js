@@ -39,7 +39,7 @@ const DwbHintObj = {
       }
 
       function create_span(element) {
-        var span = me.createElement("span");
+        var span = me.createElement("div");
         var leftpos, toppos;
         if (element instanceof HTMLAreaElement) {
           var coords = element.coords.split(",");
@@ -253,7 +253,7 @@ const DwbHintObj = {
         }
       }
       if (r = me.getVisibility(e)) {
-        if ( (e instanceof HTMLFrameElement)) {
+        if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
           const doc = e.contentDocument ? e.contentDocument : e.contentWindow.document;
           if (doc) {
             var res = doc.body.querySelectorAll(me._hintTypes);
@@ -297,10 +297,12 @@ const DwbHintObj = {
         e.hint.style.visibility = 'visible';
       }
       me._activeArr = me._elements;
+      me.setActive(me._elements[0]);
       document.body.appendChild(hints);
     }, 
   updateHints :
     function updateHints(input) {
+      console.log("hallo");
       const me = DwbHintObj;
       var array = [];
       var text_content;

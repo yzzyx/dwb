@@ -1429,10 +1429,11 @@ dwb_web_settings_get_value(const char *id) {
 }/*}}}*/
 
 /* update_hints {{{*/
-gboolean
+void
 dwb_update_hints(GdkEventKey *e) {
   char *buffer = NULL;
   char *com = NULL;
+  char input[BUFFER_LENGTH];
 
   if (e->keyval == GDK_KEY_Return) {
     com = g_strdup("DwbHintObj.followActive()");
@@ -1446,7 +1447,11 @@ dwb_update_hints(GdkEventKey *e) {
     }
   }
   else {
-    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\")", GET_TEXT());
+    char *val = dwb_util_keyval_to_char(e->keyval);
+    snprintf(input, BUFFER_LENGTH - 1, "%s%s", GET_TEXT(), val ? val : "");
+    puts(GET_TEXT());
+    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\")", input);
+    FREE(val);
   }
   if (com) {
     buffer = dwb_execute_script(CURRENT_WEBVIEW(), com, true);
@@ -1471,8 +1476,6 @@ dwb_update_hints(GdkEventKey *e) {
     }
     FREE(buffer);
   }
-
-  return true;
 }/*}}}*/
 
 /* dwb_execute_script {{{*/
@@ -1946,7 +1949,7 @@ dwb_eval_key(GdkEventKey *e) {
       continue;
     }
     gsize kl = strlen(km->key);
-    if (!km->key || !kl) {
+    if (!km->key || !kl ) {
       continue;
     }
     if (dwb.comps.autocompletion && g_str_has_prefix(km->key, buf) && CLEAN_STATE(e) == km->mod) {

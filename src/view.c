@@ -409,19 +409,10 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 
 // Entry
 /* dwb_entry_keyrelease_cb {{{*/
+/* TODO remove this callback handle it in entry_keypress_cb */
 static gboolean 
 dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
-  Mode mode = dwb.state.mode;
-
-  if (mode == HINT_MODE) {
-    if (DWB_TAB_KEY(e)) {
-      return true;
-    }
-    else {
-      return dwb_update_hints(e);
-    }
-  }
-  else if (mode == FIND_MODE) {
+  if (dwb.state.mode == FIND_MODE) {
     dwb_update_search(dwb.state.forward_search);
   }
   return false;
@@ -437,13 +428,13 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     return false;
   }
   else if (mode == HINT_MODE) {
-    if (DWB_TAB_KEY(e)) {
-      return dwb_update_hints(e);
-    }
+    dwb_update_hints(e);
+    return false;
   }
   else if (mode == SEARCH_FIELD_MODE) {
     if (DWB_TAB_KEY(e)) {
-      return dwb_update_hints(e);
+      dwb_update_hints(e);
+      return true;
     }
     else if (e->keyval == GDK_KEY_Return) {
       return false;
