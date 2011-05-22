@@ -545,6 +545,11 @@ Whether right-clicks open a context menu. Possible values: true/false,
 default value:
 .IR false .
 .TP
+.BR enable-dns-prefetching
+Whether webkit prefetches domain names. 
+default value:
+.IR true .
+.TP
 .BR enable-developer-extras
 Whether the web-inspector should be enabled. Possible values: true/false,
 default value:
@@ -552,6 +557,13 @@ default value:
 .TP
 .BR enable-dom-paste
 Whether enable DOM-paste. Possible values: true/false,
+default value:
+.IR false .
+.TP
+.BR enable-frame-flattening
+Whether to enable the Frame Flattening. With this setting each subframe is expanded
+to its contents, which will flatten all the frames to become one scrollable page.
+Whether file uris can be accessed. Possible values: true/false, 
 default value:
 .IR false .
 .TP

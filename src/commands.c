@@ -381,6 +381,7 @@ gboolean
 dwb_com_scroll(KeyMap *km, Arg *arg) {
   gboolean ret = true;
   double scroll;
+  GtkAllocation alloc;
   GList *gl = arg->p ? arg->p : dwb.state.fview;
 
   View *v = gl->data;
@@ -393,10 +394,20 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
   double value = gtk_adjustment_get_value(a);
 
   double inc;
-  if (arg->n == SCROLL_PAGE_UP || arg->n == SCROLL_PAGE_DOWN)
+  if (arg->n == SCROLL_PAGE_UP || arg->n == SCROLL_PAGE_DOWN) {
     inc = gtk_adjustment_get_page_increment(a);
-  else if (arg->n == SCROLL_HALF_PAGE_UP || arg->n == SCROLL_HALF_PAGE_DOWN)
+    if (inc == 0) {
+      gtk_widget_get_allocation(GTK_WIDGET(CURRENT_WEBVIEW()), &alloc);
+      inc = alloc.height;
+    }
+  }
+  else if (arg->n == SCROLL_HALF_PAGE_UP || arg->n == SCROLL_HALF_PAGE_DOWN) {
     inc = gtk_adjustment_get_page_increment(a) / 2;
+    if (inc == 0) {
+      gtk_widget_get_allocation(GTK_WIDGET(CURRENT_WEBVIEW()), &alloc);
+      inc = alloc.height / 2;
+    }
+  }
   else
     inc = dwb.misc.scroll_step > 0 ? dwb.misc.scroll_step : gtk_adjustment_get_step_increment(a);
 
@@ -410,8 +421,30 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
   }
 
   scroll = scroll < lower ? lower : scroll > upper ? upper : scroll;
-  if (scroll == value) 
-    ret = false;
+  if (scroll == value) {
+
+    /* Scroll also if  frame-flattening is enabled 
+     * this is just a workaround since scrolling is disfunctional if 
+     * enable-frame-flattening is set */
+    if (value == 0 ) {
+      int x, y;
+      if (arg->n == SCROLL_LEFT || arg->n == SCROLL_RIGHT) {
+        x = sign * inc;
+        y = 0;
+      }
+      else {
+        x = 0; 
+        y = sign * inc;
+      }
+      char *command = g_strdup_printf("window.scrollBy(%d, %d)", x, y);
+      dwb_execute_script(CURRENT_WEBVIEW(), command, false);
+      g_free(command);
+      return false;
+    }
+    else {
+      ret = false;
+    }
+  }
   else {
     gtk_adjustment_set_value(a, scroll);
   }

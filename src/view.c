@@ -302,7 +302,12 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
 static gboolean
 dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
   dwb_update_status_text(gl, NULL);
-  return  false;
+  if (GET_BOOL("enable-frame-flattening")) {
+    Arg a = { .n = e->direction };
+    dwb_com_scroll(NULL, &a);
+    return true;
+  }
+  return false;
 }/*}}}*/
 
 /* dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {{{ */
