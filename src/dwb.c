@@ -1138,6 +1138,7 @@ dwb_clean_load_end(GList *gl) {
 }/*}}}*/
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
+/* TODO sqlite */
 Navigation *
 dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   Navigation *n = NULL;
@@ -1786,6 +1787,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
     g_slist_free(content);
     fullpath = g_str_has_prefix(arg->p, "file://") ? g_strdup(arg->p) : g_strdup_printf("file:///%s", path);
     /* add a history item */
+    /* TODO sqlite */
     if (arg->b) {
       WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
       WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
@@ -2229,6 +2231,7 @@ dwb_clean_up() {
   g_hash_table_remove_all(dwb.settings);
 
   dwb_free_list(dwb.fc.bookmarks, (void_func)dwb_navigation_free);
+  /*  TODO sqlite */
   dwb_free_list(dwb.fc.history, (void_func)dwb_navigation_free);
   dwb_free_list(dwb.fc.searchengines, (void_func)dwb_navigation_free);
   dwb_free_list(dwb.fc.se_completion, (void_func)dwb_navigation_free);
@@ -2989,7 +2992,6 @@ int main(int argc, char *argv[]) {
 
   gtk_init(&argc, &argv);
 
-  g_thread_init(NULL);
   if (argc > 1) {
     for (int i=1; i<argc; i++) {
       if (argv[i][0] == '-') {

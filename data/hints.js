@@ -39,7 +39,7 @@ const DwbHintObj = {
       }
 
       function create_span(element) {
-        var span = me.createElement("div");
+        var span = me.createElement("span");
         var leftpos, toppos;
         if (element instanceof HTMLAreaElement) {
           var coords = element.coords.split(",");
@@ -67,6 +67,7 @@ const DwbHintObj = {
         hint.style.zIndex = 20000;
         hint.style.visibility = 'visible';
         hint.name = "dwb_hint";
+
         return hint;
       }
 
@@ -273,6 +274,11 @@ const DwbHintObj = {
   showHints : 
     function () {
       const me = DwbHintObj;
+      //var worker = new Worker("thread1.js");
+      //var bb = new BlobBuilder();
+      //console.log(window.webkitURL.createObjectURL(bb.getBlob()));
+      console.log(s);
+
       if (document.activeElement) 
         document.activeElement.blur();
 
