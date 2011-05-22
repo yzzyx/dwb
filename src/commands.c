@@ -411,6 +411,11 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
   else
     inc = dwb.misc.scroll_step > 0 ? dwb.misc.scroll_step : gtk_adjustment_get_step_increment(a);
 
+  /* if gtk_get_step_increment fails and dwb.misc.scroll_step is 0 use a default
+   * value */
+  if (inc == 0) 
+    inc = 40;
+
   double lower  = gtk_adjustment_get_lower(a);
   double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
   switch (arg->n) {
