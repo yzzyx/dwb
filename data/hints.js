@@ -274,11 +274,6 @@ const DwbHintObj = {
   showHints : 
     function () {
       const me = DwbHintObj;
-      //var worker = new Worker("thread1.js");
-      //var bb = new BlobBuilder();
-      //console.log(window.webkitURL.createObjectURL(bb.getBlob()));
-      console.log(s);
-
       if (document.activeElement) 
         document.activeElement.blur();
 
