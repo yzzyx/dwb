@@ -1139,6 +1139,7 @@ dwb_clean_load_end(GList *gl) {
     g_free(v->status->mimetype);
     v->status->mimetype = NULL;
   }
+  dwb_normal_mode(false);
 }/*}}}*/
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
@@ -1232,6 +1233,8 @@ dwb_focus_entry() {
 /* dwb_focus_scroll (GList *){{{*/
 void
 dwb_focus_scroll(GList *gl) {
+  if (gl == NULL)
+    return;
   View *v = gl->data;
   gtk_widget_grab_focus(v->web);
   gtk_widget_hide(dwb.gui.entry);
@@ -2015,6 +2018,8 @@ dwb_insert_mode(Arg *arg) {
 void 
 dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
+  if (mode == NORMAL_MODE)
+    return;
 
   if (dwb.state.mode == HINT_MODE || dwb.state.mode == SEARCH_FIELD_MODE) {
     dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.clear()", false);
