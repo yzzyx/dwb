@@ -382,6 +382,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
       }
+      dwb_normal_mode(false);
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       // TODO use this state for adblocker
