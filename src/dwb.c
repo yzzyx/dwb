@@ -2017,8 +2017,6 @@ dwb_insert_mode(Arg *arg) {
 void 
 dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
-  if (mode == NORMAL_MODE)
-    return;
 
   if (dwb.state.mode == HINT_MODE || dwb.state.mode == SEARCH_FIELD_MODE) {
     dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.clear()", false);
