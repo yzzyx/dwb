@@ -1701,8 +1701,9 @@ dwb_check_directory(const char *path) {
 void 
 dwb_load_uri(GList *gl, Arg *arg) {
   // TODO parse scheme
-  g_strstrip(arg->p);
   const char *path;
+  if (arg->p != NULL && strlen(arg->p) > 0)
+    g_strstrip(arg->p);
   WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
 
   if (!arg || !arg->p || !strlen(arg->p)) {
