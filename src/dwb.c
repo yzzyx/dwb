@@ -739,7 +739,8 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   }
   else if (dwb.state.mode == INSERT_MODE) {
     if (CLEAN_STATE(e) & GDK_MODIFIER_MASK) {
-      ret = dwb_eval_key(e);
+      dwb_eval_key(e);
+      ret = false;
     }
   }
   else if (dwb.state.mode == QUICK_MARK_SAVE) {
