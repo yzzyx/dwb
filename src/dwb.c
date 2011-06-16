@@ -1901,6 +1901,16 @@ dwb_eval_editing_key(GdkEventKey *e) {
   return ret;
 }/*}}}*/
 
+/* dwb_clean_buffer() {{{*/
+void 
+dwb_clean_key_buffer() {
+  dwb.state.nummod = 0;
+  if (dwb.state.buffer) {
+    g_string_free(dwb.state.buffer, true);
+    dwb.state.buffer = NULL;
+  }
+}/*}}}*/
+
 /* dwb_eval_key(GdkEventKey *e) {{{*/
 static gboolean
 dwb_eval_key(GdkEventKey *e) {
@@ -1935,8 +1945,6 @@ dwb_eval_key(GdkEventKey *e) {
   if (!key) {
     return false;
   }
-
-
   if (!old) {
     dwb.state.buffer = g_string_new(NULL);
     old = dwb.state.buffer->str;
@@ -1956,7 +1964,6 @@ dwb_eval_key(GdkEventKey *e) {
   }
 
   const char *buf = dwb.state.buffer->str;
-  int length = dwb.state.buffer->len;
   int longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
@@ -1970,13 +1977,13 @@ dwb_eval_key(GdkEventKey *e) {
     if (!km->key || !kl ) {
       continue;
     }
-    if (dwb.comps.autocompletion && g_str_has_prefix(km->key, buf) && CLEAN_STATE(e) == km->mod) {
-      coms = g_list_append(coms, km);
-    }
-    if (!strcmp(&buf[length - kl], km->key) && (CLEAN_STATE(e) == km->mod)) {
+    if (g_str_has_prefix(km->key, buf) && (CLEAN_STATE(e) == km->mod) ) {
       if  (!longest || kl > longest) {
         longest = kl;
         tmp = km;
+      }
+      if (dwb.comps.autocompletion) {
+        coms = g_list_append(coms, km);
       }
       ret = true;
     }
@@ -1989,8 +1996,13 @@ dwb_eval_key(GdkEventKey *e) {
     dwb_comp_autocomplete(coms, NULL);
     ret = true;
   }
-  if (tmp) {
+  if (tmp && dwb.state.buffer->len == longest) {
     dwb_com_simple_command(tmp);
+  }
+  PRINT_DEBUG("longest match: %d", longest);
+  if (longest == 0) {
+    dwb_clean_key_buffer();
+    CLEAR_COMMAND_TEXT(dwb.state.fview);
   }
   FREE(key);
   return ret;

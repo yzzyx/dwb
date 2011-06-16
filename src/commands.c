@@ -49,11 +49,7 @@ dwb_com_simple_command(KeyMap *km) {
   else if (ret != NO_ERROR) {
     dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
   }
-  dwb.state.nummod = 0;
-  if (dwb.state.buffer) {
-    g_string_free(dwb.state.buffer, true);
-    dwb.state.buffer = NULL;
-  }
+  dwb_clean_key_buffer();
 }/*}}}*/
 
 /* COMMANDS {{{*/
