@@ -1498,7 +1498,10 @@ dwb_execute_script(WebKitWebView *web, const char *com, gboolean ret) {
   size_t length;
   char *retval;
 
-  WebKitWebFrame *frame =  webkit_web_view_get_main_frame(web);
+  WebKitWebFrame *frame =  webkit_web_view_get_focused_frame(web);
+  if (frame == NULL) 
+    frame = webkit_web_view_get_main_frame(web);
+
   JSContextRef context = webkit_web_frame_get_global_context(frame);
   JSStringRef text = JSStringCreateWithUTF8CString(com);
   eval_ret = JSEvaluateScript(context, text, JSContextGetGlobalObject(context), NULL, 0, NULL);

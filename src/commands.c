@@ -414,14 +414,18 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
     inc = dwb.misc.scroll_step > 0 ? dwb.misc.scroll_step : gtk_adjustment_get_step_increment(a);
 
   PRINT_DEBUG("scroll increment %f", inc);
-  PRINT_DEBUG("adjustment %p", a);
   /* if gtk_get_step_increment fails and dwb.misc.scroll_step is 0 use a default
    * value */
-  if (inc == 0) 
+  if (inc == 0) {
     inc = 40;
+  }
 
   double lower  = gtk_adjustment_get_lower(a);
   double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
+
+  PRINT_DEBUG("Scroll lower %f", lower);
+  PRINT_DEBUG("Scroll upper %f", upper);
+
   switch (arg->n) {
     case  SCROLL_TOP:      scroll = lower; break;
     case  SCROLL_BOTTOM:   scroll = upper; break;
@@ -445,15 +449,9 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
         x = 0; 
         y = sign * inc;
       }
-#if WEBKIT_CHECK_VERSION(1, 4, 0) 
-      WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
-      WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
-      webkit_dom_dom_window_scroll_by(win, x, y);
-#else 
       char *command = g_strdup_printf("window.scrollBy(%d, %d)", x, y);
       dwb_execute_script(CURRENT_WEBVIEW(), command, false);
       g_free(command);
-#endif
       return false;
     }
     else {

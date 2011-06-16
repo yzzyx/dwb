@@ -29,7 +29,7 @@ debug: $(DTARGET)
 
 $(DTARGET): $(DOBJ) 
 	@echo "$(CC) $@"
-	@$(CC) $(DFLAGS) $(DOBJ) -o $(TARGET) 
+	@$(CC) $(DFLAGS) $(DOBJ) -o $(DTARGET) 
 
 cgdb: debug
 	cgdb $(DTARGET)

@@ -301,6 +301,7 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
 static gboolean
 dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
+  PRINT_DEBUG("%p", e);
   dwb_update_status_text(gl, NULL);
   if (GET_BOOL("enable-frame-flattening")) {
     Arg a = { .n = e->direction };
