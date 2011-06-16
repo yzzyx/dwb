@@ -137,6 +137,12 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define GET_INT(prop)               (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.i)
 #define GET_DOUBLE(prop)            (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.d)
 #define NUMMOD                      (dwb.state.nummod < 1 ? 1 : dwb.state.nummod)
+
+#ifdef DWB_DEBUG
+#define PRINT_DEBUG(message, ...)  fprintf(stderr, "in %s:%d:%s(): " message "\n", __FILE__, __LINE__, __func__,__VA_ARGS__)
+#else 
+#define PRINT_DEBUG(message, ...) 
+#endif
 /*}}}*/
 
 

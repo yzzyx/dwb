@@ -13,22 +13,31 @@ $(TARGET): $(OBJ)
 	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
 
 -include $(OBJ:.o=.d)
+-include $(DOBJ:.do=.dd)
 
 %.o: %.c 
 	@echo "${CC} $<"
-	@$(CC) $(FLAGS) $(DEBUG) -c -o $@ $<
+	@$(CC) $(FLAGS) -c -o $@ $<
 #	@$(CC) $(FLAGS) -MM $*.c > $*.d
 
 
-debug: 
-	@$(MAKE) -B DEBUG=$(DFLAGS) TARGET=$(DTARGET)
+debug: $(DTARGET)
+
+%.do: %.c
+	@echo "${CC} $<"
+	@$(CC) $(DFLAGS) -c -o $@ $<
+
+$(DTARGET): $(DOBJ) 
+	@echo "$(CC) $@"
+	@$(CC) $(DFLAGS) $(DOBJ) -o $(TARGET) 
 
 cgdb: debug
 	cgdb $(DTARGET)
 
 clean:
 	@echo Cleaning
-	@$(RM) *.o 
+	@$(RM) *.o  
+	@$(RM) *.do  
 	@$(RM) $(TARGET)
 	@$(RM) $(DTARGET)
 	@$(RM) *.d

@@ -32,10 +32,13 @@ FLAGS += -DVERSION=\"$(VERSION)\"
 FLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
 FLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
 
-DFLAGS += -g -B
+DFLAGS += $(FLAGS)
+DFLAGS += -DDWB_DEBUG
+DFLAGS += -g 
 
 
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
+DOBJ = $(patsubst %.c, %.do, $(wildcard *.c))
 SOURCE = $(wildcard $(SRCDIR)/*.c) 
 HDR = $(SOURCE:%.c=%.h) 
 TARGET = $(REAL_NAME)

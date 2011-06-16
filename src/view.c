@@ -583,6 +583,7 @@ dwb_view_set_normal_style(View *v) {
   dwb_view_modify_style(v, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_inactive);
 }/*}}}*/
 
+
 /* dwb_web_view_init_signals(View *v) {{{*/
 static void
 dwb_web_view_init_signals(GList *gl) {
