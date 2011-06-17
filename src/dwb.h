@@ -139,7 +139,8 @@ function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console
 #define NUMMOD                      (dwb.state.nummod < 1 ? 1 : dwb.state.nummod)
 
 #ifdef DWB_DEBUG
-#define PRINT_DEBUG(message, ...)  fprintf(stderr, "in %s:%d:%s(): " message "\n", __FILE__, __LINE__, __func__,__VA_ARGS__)
+#define PRINT_DEBUG(message, ...) fprintf(stderr, "in %s:%d:%s(): " message "\n", __FILE__, __LINE__, __func__,##__VA_ARGS__)  \
+
 #else 
 #define PRINT_DEBUG(message, ...) 
 #endif
@@ -291,7 +292,7 @@ enum Signal {
   SIG_ENTRY_KEY_RELEASE,
   SIG_ENTRY_ACTIVATE,
   SIG_TAB_BUTTON_PRESS, 
-  SIG_POPUPLATE_POPUP, 
+  SIG_POPULATE_POPUP, 
   
   SIG_LAST,
 };
@@ -438,6 +439,7 @@ struct _ViewStatus {
   SslState ssl;
   ScriptState scripts;
   int tab_height;
+  char *hover_uri;
 };
 
 struct _View {

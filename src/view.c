@@ -179,11 +179,15 @@ static void
 dwb_web_view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl) {
   View *v = VIEW(gl);
   if (uri) {
+    VIEW(gl)->status->hover_uri = g_strdup(uri);
     dwb_set_status_bar_text(v->urilabel, uri, &dwb.color.active_fg, NULL, false);
   }
   else {
+    FREE(VIEW(gl)->status->hover_uri);
+    VIEW(gl)->status->hover_uri = NULL;
     dwb_update_uri(gl);
   }
+
 }/*}}}*/
 
 /* dwb_web_view_mime_type_policy_cb {{{*/
@@ -358,6 +362,38 @@ dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_view_ssl_state(gl);
 }/*}}}*/
 
+static void 
+dwb_view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
+  GtkAction *a = gtk_activatable_get_related_action(GTK_ACTIVATABLE(menu));
+  const char *name = gtk_action_get_name(a);
+  PRINT_DEBUG("popup action: %s", name);
+  /* 
+   * context-menu-action-2000       open link
+   * context-menu-action-1          open link in window
+   * context-menu-action-2          download linked file
+   * context-menu-action-3          copy link location
+   * context-menu-action-13         reload
+   * context-menu-action-10         back
+   * context-menu-action-11         forward
+   * context-menu-action-12         stop
+   * 
+   * */
+  if (!strcmp(name, "context-menu-action-3")) { /* copy link location */
+    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+    gtk_clipboard_set_text(clipboard, VIEW(gl)->status->hover_uri, -1);
+  }
+}
+
+static void 
+dwb_view_popup_hide_cb(GtkMenu *menu, GList *gl) {
+  GtkWidget *a = gtk_menu_get_active(menu);
+  g_signal_connect(a, "activate", G_CALLBACK(dwb_view_popup_activate_cb), gl);
+}
+
+static void 
+dwb_web_view_populate_popup_cb(WebKitWebView *web, GtkMenu *menu, GList *gl) {
+  g_signal_connect(menu, "hide", G_CALLBACK(dwb_view_popup_hide_cb), gl);
+}
 // window-object-cleared is emmited in receivedFirstData which emits load-status
 // commited, so we don't connect to window-object-cleared but to
 // load_status_after instead
@@ -604,6 +640,7 @@ dwb_web_view_init_signals(GList *gl) {
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
   v->status->signals[SIG_LOAD_STATUS_AFTER]     = g_signal_connect_after(v->web, "notify::load-status",             G_CALLBACK(dwb_web_view_load_status_after_cb), gl);
+  v->status->signals[SIG_POPULATE_POPUP]        = g_signal_connect(v->web, "populate-popup",                        G_CALLBACK(dwb_web_view_populate_popup_cb), gl);
   v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                      G_CALLBACK(dwb_web_view_progress_cb), gl);
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(dwb_web_view_uri_cb), gl);
@@ -631,6 +668,7 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   status->search_string = NULL;
   status->downloads = NULL;
   status->mimetype = NULL;
+  status->hover_uri = NULL;
   status->progress = 0;
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
