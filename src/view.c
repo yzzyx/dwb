@@ -362,11 +362,9 @@ dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_view_ssl_state(gl);
 }/*}}}*/
 
-static void 
+static void
 dwb_view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
-  GtkAction *a = gtk_activatable_get_related_action(GTK_ACTIVATABLE(menu));
-  const char *name = gtk_action_get_name(a);
-  PRINT_DEBUG("popup action: %s", name);
+  PRINT_DEBUG("hover_uri: %s", VIEW(gl)->status->hover_uri);
   /* 
    * context-menu-action-2000       open link
    * context-menu-action-1          open link in window
@@ -378,6 +376,10 @@ dwb_view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
    * context-menu-action-12         stop
    * 
    * */
+
+  GtkAction *a      = gtk_activatable_get_related_action(GTK_ACTIVATABLE(menu));
+  const char *name  = gtk_action_get_name(a);
+  PRINT_DEBUG("action name: %s", name);
   if (!strcmp(name, "context-menu-action-3")) { /* copy link location */
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
     gtk_clipboard_set_text(clipboard, VIEW(gl)->status->hover_uri, -1);
@@ -385,14 +387,11 @@ dwb_view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
 }
 
 static void 
-dwb_view_popup_hide_cb(GtkMenu *menu, GList *gl) {
-  GtkWidget *a = gtk_menu_get_active(menu);
-  g_signal_connect(a, "activate", G_CALLBACK(dwb_view_popup_activate_cb), gl);
-}
-
-static void 
 dwb_web_view_populate_popup_cb(WebKitWebView *web, GtkMenu *menu, GList *gl) {
-  g_signal_connect(menu, "hide", G_CALLBACK(dwb_view_popup_hide_cb), gl);
+  GList *items = gtk_container_get_children(GTK_CONTAINER(menu));
+  for (GList *l = items; l; l=l->next) {
+    g_signal_connect(l->data, "activate", G_CALLBACK(dwb_view_popup_activate_cb), gl);
+  }
 }
 // window-object-cleared is emmited in receivedFirstData which emits load-status
 // commited, so we don't connect to window-object-cleared but to
