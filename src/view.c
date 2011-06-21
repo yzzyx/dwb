@@ -861,6 +861,12 @@ dwb_view_remove(Arg *a) {
   }
   if (a) {
     gl = a->p;
+    if (gl == dwb.state.fview) {
+      if ( !(dwb.state.fview = dwb.state.fview->next) ) {
+        dwb.state.fview = g_list_last(dwb.state.views)->prev;
+        gtk_widget_show_all(dwb.gui.topbox);
+      }
+    }
   }
   else if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
