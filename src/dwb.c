@@ -2311,6 +2311,7 @@ dwb_save_settings() {
   GError *error = NULL;
   char *content;
   gsize size;
+  setlocale(LC_NUMERIC, "C");
 
   if (!g_key_file_load_from_file(keyfile, dwb.files.settings, G_KEY_FILE_KEEP_COMMENTS, &error)) {
     fprintf(stderr, "No settingsfile found, creating a new file.\n");
