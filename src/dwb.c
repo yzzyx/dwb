@@ -1140,6 +1140,9 @@ dwb_clean_load_end(GList *gl) {
     g_free(v->status->mimetype);
     v->status->mimetype = NULL;
   }
+  if (dwb.state.mode != NORMAL_MODE) {  
+    dwb_normal_mode(false);
+  }
 }/*}}}*/
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
