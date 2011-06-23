@@ -25,7 +25,6 @@
 #include "download.h"
 #include "session.h"
 #include "config.h"
-#include "plugins.h"
 #include "icon.xpm"
 #include "html.h"
 
@@ -41,7 +40,6 @@ static void dwb_set_startpage(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_adblock(GList *, WebSettings *);
-static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
@@ -580,8 +578,6 @@ static WebSettings DWB_SETTINGS[] = {
     false, true,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy }, 
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
     false, false,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock }, 
-  { { "plugin-blocker",                          "Whether to block flash plugins and replace it with a clickable element", },                   
-    false, false,  BOOLEAN, { .b = false }, (S_Func)dwb_set_plugin_blocker }, 
 };/*}}}*/
 
 /* SETTINGS_FUNCTIONS{{{*/
@@ -602,15 +598,6 @@ dwb_set_private_browsing(GList *gl, WebSettings *s) {
   dwb.misc.private_browsing = s->arg.b;
   dwb_webkit_setting(gl, s);
 }/*}}}*/
-
-static void 
-dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
-  View *v = VIEW(gl);
-  if (s->arg.b) 
-    v->status->signals[SIG_CREATE_PLUGIN] = g_signal_connect(v->web, "create-plugin-widget", G_CALLBACK(dwb_plugins_create_cb), gl);
-  else if (v->status->signals[SIG_CREATE_PLUGIN])
-    g_signal_handler_disconnect(v->web, v->status->signals[SIG_CREATE_PLUGIN]);
-}
 
 /* dwb_set_hide_tabbar{{{*/
 static void
