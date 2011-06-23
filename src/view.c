@@ -141,6 +141,12 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
   return true;
 }/*}}}*/
 
+GtkWidget * 
+dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mimetype, char *uri, GHashTable *param, GList *gl) {
+  PRINT_DEBUG("mimetype: %s uri: %s", mimetype, uri);
+  return NULL;
+}
+
 /* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
 static WebKitWebView * 
 dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
@@ -644,6 +650,7 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(dwb_web_view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
+  v->status->signals[SIG_CREATE_PLUGIN]         = g_signal_connect(v->web,      "create-plugin-widget",                  G_CALLBACK(dwb_web_view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
   v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(dwb_web_view_icon_loaded), gl);
@@ -746,7 +753,7 @@ dwb_view_create_web_view(GList *gl, gboolean background) {
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tabbox);
 
   //gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel);
-
+  //
   gtk_widget_modify_font(v->tablabel, dwb.font.fd_inactive);
 
   gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
