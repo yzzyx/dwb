@@ -527,6 +527,7 @@ dwb_view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   else if (mode == FIND_MODE) {
     dwb_focus_scroll(dwb.state.fview);
     dwb_search(NULL, NULL);
+    dwb_normal_mode(true);
   }
   else if (mode == SEARCH_FIELD_MODE) {
     dwb_submit_searchengine();
