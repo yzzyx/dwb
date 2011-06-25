@@ -143,29 +143,29 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
   { { "load_html_nv",          "Load html new view",                }, 1, 
     (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL } },
-  { { "open",                  "open",                              }, 1, 
+  { { "open",                  "Open url",                              }, 1, 
     (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
-  { { "Open",                  "Open",                              }, 0, 
+  { { "Open",                  "Open url, use current url",                              }, 0, 
     (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL | SET_URL, .p = NULL } },
-  { { "open_nv",               "viewopen",                          }, 1, 
+  { { "open_nv",               "Open url in a new tab",                          }, 1, 
     (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
-  { { "Open_nv",               "Viewopen",                          }, 0, 
+  { { "Open_nv",               "Open in a new tab, use current url",                          }, 0, 
     (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL } },
-  { { "open_nw",               "winopen",                           }, 1, 
+  { { "open_nw",               "Open in a new window",                           }, 1, 
     (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
-  { { "Open_nw",               "Winopen",                           }, 0, 
+  { { "Open_nw",               "Open in a new window, use current url",                           }, 0, 
     (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL } },
-  { { "open_quickmark",        "Quickmark",                         }, 0, 
+  { { "open_quickmark",        "Open a quickmark",                         }, 0, 
     (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, },
-  { { "open_quickmark_nv",     "Quickmark-new-view",                }, 0, 
+  { { "open_quickmark_nv",     "Open a quickmark in a new tab",                }, 0, 
     (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, },
-  { { "open_quickmark_nw",     "Quickmark-new-window",              }, 0, 
+  { { "open_quickmark_nw",     "Open a quickmark in a new window",              }, 0, 
     (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, },
   { { "open_start_page",       "Open startpage",                    }, 1, 
     (Func)dwb_com_open_startpage,      "No startpage set",                ALWAYS_SM, },
   { { "push_master",           "Push to master area",               }, 1, 
     (Func)dwb_com_push_master,         "No other view",                   ALWAYS_SM, },
-  { { "reload",                "Reload",                            }, 1, 
+  { { "reload",                "Reload current page",                            }, 1, 
     (Func)dwb_com_reload,              NULL,                              ALWAYS_SM, },
   { { "remove_view",           "Close view",                        }, 1, 
     (Func)dwb_com_remove_view,         NULL,                              ALWAYS_SM, },
@@ -205,7 +205,7 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_GLOBAL } },
   { { "show_keys",             "Key configuration",                 }, 1, 
     (Func)dwb_com_show_keys,           NULL,                              ALWAYS_SM, },
-  { { "show_settings",         "Settings",                          }, 1, 
+  { { "show_settings",         "Settings configuration",                          }, 1, 
     (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_PER_VIEW } },
   { { "toggle_bottomstack",    "Toggle bottomstack",                }, 1, 
     (Func)dwb_com_set_orientation,     NULL,                              ALWAYS_SM, },
@@ -215,26 +215,26 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_view_source,         NULL,                              ALWAYS_SM, },
   { { "zoom_in",               "Zoom in",                           }, 1, 
     (Func)dwb_com_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, },
-  { { "zoom_normal",           "Zoom 100%",                         }, 1, 
+  { { "zoom_normal",           "Zoom to 100%",                         }, 1, 
     (Func)dwb_com_set_zoom_level,      NULL,                              ALWAYS_SM,    { .d = 1.0,   .p = NULL } },
   { { "zoom_out",              "Zoom out",                          }, 1, 
     (Func)dwb_com_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, },
   // yank and paste
-  { { "yank",                  "Yank",                              }, 1, 
+  { { "yank",                  "Yank current url",                              }, 1, 
     (Func)dwb_com_yank,                 NO_URL,                 POST_SM,  { .p = GDK_NONE } },
-  { { "yank_primary",          "Yank to Primary selection",         }, 1, 
+  { { "yank_primary",          "Yank current url to Primary selection",         }, 1, 
     (Func)dwb_com_yank,                 NO_URL,                 POST_SM,  { .p = GDK_SELECTION_PRIMARY } },
-  { { "paste",                 "Paste",                             }, 1, 
+  { { "paste",                 "Open url from clipboard",                             }, 1, 
     (Func)dwb_com_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_NONE } },
-  { { "paste_primary",         "Paste primary selection",           }, 1, 
+  { { "paste_primary",         "Open url from primary selection",           }, 1, 
     (Func)dwb_com_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY } },
-  { { "paste_nv",              "Paste, new view",                   }, 1, 
+  { { "paste_nv",              "Open url from clipboard in a new tab",                   }, 1, 
     (Func)dwb_com_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_NONE } },
-  { { "paste_primary_nv",      "Paste primary selection, new view", }, 1, 
+  { { "paste_primary_nv",      "Open url from primary selection in a new window", }, 1, 
     (Func)dwb_com_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY } },
-  { { "paste_nw",              "Paste, new window",                   }, 1, 
+  { { "paste_nw",              "Open url from clipboard in a new window",                   }, 1, 
     (Func)dwb_com_paste,             "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_NONE } },
-  { { "paste_primary_nw",      "Paste primary selection, new window", }, 1, 
+  { { "paste_primary_nw",      "Open url from primary selection in a new window", }, 1, 
     (Func)dwb_com_paste,             "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY } },
 
   { { "save_session",          "Save current session", },              1, 
@@ -249,21 +249,21 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_web_inspector,              "Enable developer extras for the webinspector",                              POST_SM },
 
   //Entry editing
-  { { "entry_delete_word",      "Delete word", },                      0,  
+  { { "entry_delete_word",      "Command line: Delete word in", },                      0,  
     (Func)dwb_com_entry_delete_word,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
-  { { "entry_delete_letter",    "Delete a single letter", },           0,  
+  { { "entry_delete_letter",    "Command line: Delete a single letter", },           0,  
     (Func)dwb_com_entry_delete_letter,          NULL,        ALWAYS_SM,  { 0 }, true, }, 
-  { { "entry_delete_line",      "Delete to beginning of the line", },  0,  
+  { { "entry_delete_line",      "Command line: Delete to beginning of the line", },  0,  
     (Func)dwb_com_entry_delete_line,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
-  { { "entry_word_forward",     "Move cursor forward on word", },      0,  
+  { { "entry_word_forward",     "Command line: Move cursor forward on word", },      0,  
     (Func)dwb_com_entry_word_forward,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
-  { { "entry_word_back",        "Move cursor back on word", },         0,  
+  { { "entry_word_back",        "Command line: Move cursor back on word", },         0,  
     (Func)dwb_com_entry_word_back,              NULL,        ALWAYS_SM,  { 0 }, true, }, 
-  { { "entry_history_back",     "Command history back", },             0,  
+  { { "entry_history_back",     "Command line: Command history back", },             0,  
     (Func)dwb_com_entry_history_back,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
-  { { "entry_history_forward",  "Command history forward", },          0,  
+  { { "entry_history_forward",  "Command line: Command history forward", },          0,  
     (Func)dwb_com_entry_history_forward,        NULL,        ALWAYS_SM,  { 0 }, true, }, 
-  { { "download_set_execute",   "Complete binaries", },                0, 
+  { { "download_set_execute",   "Downloads: toggle between spawning application/download path", },                0, 
     (Func)dwb_dl_set_execute,        NULL,       ALWAYS_SM,  { 0 }, true, }, 
   { { "complete_history",       "Complete browsing history", },       0, 
     (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_HISTORY }, true, }, 
@@ -328,7 +328,7 @@ static FunctionMap FMAP [] = {
     (Func) dwb_com_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_URI } }, 
   { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, 
     (Func) dwb_com_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
-  { { "print",                 "Print page" },                         1, 
+  { { "print",                 "Print current page" },                         1, 
     (Func) dwb_com_print, NULL,                             POST_SM,    { 0 } }, 
   { { "execute_userscript",    "Execute userscript" },                 1, 
     (Func) dwb_com_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
@@ -935,6 +935,27 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+/* dwb_set_key(const char *prop, char *val) {{{*/
+void
+dwb_set_key(const char *prop, char *val) {
+  KeyValue value;
+
+  value.id = g_strdup(prop);
+  if (val)
+    value.key = dwb_str_to_key(val); 
+  else {
+    Key key = { NULL, 0 };
+    value.key = key;
+  }
+
+  dwb_set_normal_message(dwb.state.fview, true, "Saved key for command %s: %s", prop, val ? val : "");
+
+  dwb.keymap = dwb_keymap_add(dwb.keymap, value);
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+
+  dwb_normal_mode(false);
+}/*}}}*/
 
 /* dwb_get_host(WebKitWebView *) {{{*/
 char *

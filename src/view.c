@@ -123,10 +123,7 @@ dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 /* dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
 static gboolean 
 dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
-  if (!strcmp(sourceid, KEY_SETTINGS)) {
-    dwb_parse_key_setting(message);
-  }
-  else if (!(strcmp(sourceid, SETTINGS))) {
+  if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
   else if (gl == dwb.state.fview && !(strcmp(message, "_dwb_input_mode_"))) {
@@ -1031,24 +1028,8 @@ void
 dwb_parse_key_setting(const char *text) {
   KeyValue value;
   char **token = g_strsplit(text, " ", 2);
-
-  value.id = g_strdup(token[0]);
-
-  if (token[1]) {
-    value.key = dwb_str_to_key(token[1]); 
-  }
-  else {
-    Key key = { NULL, 0 };
-    value.key = key;
-  }
-
-  dwb_set_normal_message(dwb.state.fview, true, "Saved key for command %s: %s", token[0], token[1] ? token[1] : "");
-
-  dwb.keymap = dwb_keymap_add(dwb.keymap, value);
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
-
+  dwb_set_key(token[0], token[1]);
   g_strfreev(token);
-  dwb_normal_mode(false);
 }/*}}}*/
 
 /* dwb_apply_settings(WebSettings *s) {{{*/

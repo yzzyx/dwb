@@ -686,5 +686,6 @@ gboolean dwb_toggle_allowed(const char *, const char *);
 char * dwb_get_host(WebKitWebView *);
 void dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
+void dwb_set_key(const char *, char *);
 
 #endif

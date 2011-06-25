@@ -35,8 +35,13 @@ void
 dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
   char *filecontent;
   GString *content = g_string_new(NULL);
+#if 0
   char *path = dwb_util_get_data_file(t->file);
   char *headpath = dwb_util_get_data_file(HEAD_FILE);
+#else
+  char *path = g_strdup("../lib/info.html");
+  char *headpath = g_strdup("../lib/head.html");
+#endif
   if (path && headpath) {
     /* load head */
     g_file_get_contents(headpath, &filecontent, NULL, NULL);
@@ -45,7 +50,8 @@ dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     FREE(headpath);
     /* load content */
     g_file_get_contents(path, &filecontent, NULL, NULL);
-    g_string_append_printf(content, filecontent, panel);
+    if (panel) 
+      g_string_append_printf(content, filecontent, panel);
     webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, t->uri, "about:blank");
     g_string_free(content, true);
     g_free(filecontent);
@@ -76,22 +82,56 @@ void
 dwb_html_settings(WebKitWebView *wv, HtmlTable *table) {
   //dwb_html_load_page(wv, table, "blub");
 }
+
+gboolean
+key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
+  char *value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
+  char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
+  dwb_set_key(id, value);
+  return true;
+}
 void 
 dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
-  PRINT_DEBUG("url: %s", webkit_web_view_get_uri(wv));
+  KeyMap *km;
+  Navigation n;
+  WebKitDOMElement *input;
+
   if (webkit_web_view_get_load_status(wv) == WEBKIT_LOAD_FINISHED) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-    WebKitDOMElement *panel = webkit_dom_document_get_element_by_id(doc, "panel");
-    if (panel)
-      puts(webkit_dom_element_get_attribute(panel, "innerHTML"));
+    for (GList *l = dwb.keymap; l; l=l->next) {
+      km = l->data; 
+      n = km->map->n;
+      input = webkit_dom_document_get_element_by_id(doc, n.first);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(key_changed_cb), false, wv);
+    }
     g_signal_handlers_disconnect_by_func(wv, dwb_html_keys_load_cb, table);
   }
 
 }
 void
 dwb_html_keys(WebKitWebView *wv, HtmlTable *table) {
+  GString *buffer = g_string_new(NULL);
+  int i = 0;
+  KeyMap *km;
+  Navigation n;
+  for (GList *l = dwb.keymap; l; l=l->next, i++, i%=2) {
+    km = l->data; 
+    n = km->map->n;
+    g_string_append_printf(buffer, 
+        "<div class='dwb_line%d'>\
+            <div class='dwb_attr'>%s</div>\
+            <div style='float:right;'>\
+              <label class='dwb_desc' for='%s'>%s</lable>\
+              <input id='%s' type='text' value='%s %s'>\
+            </div>\
+            <div style='clear:both;'></div>\
+          </div>", i, n.second, n.first, n.first, n.first, dwb_modmask_to_string(km->mod), km->key ? km->key : "");
+
+  }
+  PRINT_DEBUG("%s", buffer->str);
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(dwb_html_keys_load_cb), table);
-  dwb_html_load_page(wv, table, "blaljlkfds");
+  dwb_html_load_page(wv, table, buffer->str);
+  g_string_free(buffer, true);
 }
 void
 dwb_html_quickmarks(WebKitWebView *wv, HtmlTable *table) {
