@@ -50,7 +50,7 @@
 #define COPYRIGHT "© 2010-2011 Stefan Bolte"
 #endif
 /* SETTINGS MAKROS {{{*/
-#define KEY_SETTINGS "Dwb Key Settings"
+#define KEY_SETTINGS "xwb://keys"
 #define SETTINGS "Dwb Settings"
 
 #define SINGLE_INSTANCE 1
@@ -176,70 +176,79 @@ typedef void (*void_func)(void*);
 typedef void (*S_Func)(void *, WebSettings *);
 typedef void *(*Content_Func)(const char *);
 
-typedef unsigned int CompletionType;
-#define COMP_NONE         0x00
-#define COMP_BOOKMARK     0x01
-#define COMP_HISTORY      0x02
-#define COMP_SETTINGS     0x03
-#define COMP_KEY          0x04
-#define COMP_COMMAND      0x05
-#define COMP_USERSCRIPT   0x06
-#define COMP_INPUT        0x07
-#define COMP_SEARCH       0x08
-#define COMP_PATH         0x09
+typedef enum  {
+  COMP_NONE         = 0x00,
+  COMP_BOOKMARK     = 0x01,
+  COMP_HISTORY      = 0x02,
+  COMP_SETTINGS     = 0x03,
+  COMP_KEY          = 0x04,
+  COMP_COMMAND      = 0x05,
+  COMP_USERSCRIPT   = 0x06,
+  COMP_INPUT        = 0x07,
+  COMP_SEARCH       = 0x08,
+  COMP_PATH         = 0x09,
+} CompletionType;
 
-typedef unsigned int TabBarVisible;
-#define HIDE_TB_NEVER     0x02
-#define HIDE_TB_ALWAYS    0x03
-#define HIDE_TB_TILED     0x05
+typedef enum {
+  HIDE_TB_NEVER     = 0x02,
+  HIDE_TB_ALWAYS    = 0x03,
+  HIDE_TB_TILED     = 0x05,
+} TabBarVisible;
 
-typedef unsigned int Mode;
-#define NORMAL_MODE           1<<0
-#define INSERT_MODE           1<<1
-#define QUICK_MARK_SAVE       1<<3
-#define QUICK_MARK_OPEN       1<<4 
-#define HINT_MODE             1<<5
-#define FIND_MODE             1<<6
-#define COMPLETION_MODE       1<<7
-#define AUTO_COMPLETE         1<<8
-#define COMMAND_MODE          1<<9
-#define SEARCH_FIELD_MODE     1<<10
-#define SETTINGS_MODE         1<<12
-#define KEY_MODE              1<<13
-#define DOWNLOAD_GET_PATH     1<<14
-#define SAVE_SESSION          1<<15
-#define COMPLETE_PATH         1<<16
-
-
-typedef unsigned int ShowMessage;
-#define NEVER_SM      0x00 
-#define ALWAYS_SM     0x01 
-#define POST_SM       0x02
+typedef enum {
+  NORMAL_MODE           = 1<<0,
+  INSERT_MODE           = 1<<1,
+  QUICK_MARK_SAVE       = 1<<3,
+  QUICK_MARK_OPEN       = 1<<4 ,
+  HINT_MODE             = 1<<5,
+  FIND_MODE             = 1<<6,
+  COMPLETION_MODE       = 1<<7,
+  AUTO_COMPLETE         = 1<<8,
+  COMMAND_MODE          = 1<<9,
+  SEARCH_FIELD_MODE     = 1<<10,
+  SETTINGS_MODE         = 1<<12,
+  KEY_MODE              = 1<<13,
+  DOWNLOAD_GET_PATH     = 1<<14,
+  SAVE_SESSION          = 1<<15,
+  COMPLETE_PATH         = 1<<16,
+} Mode;
 
 
-typedef unsigned int Layout;
-#define NORMAL_LAYOUT    0
-#define BOTTOM_STACK     1<<0 
-#define MAXIMIZED        1<<1 
+typedef enum {
+  NEVER_SM      = 0x00,
+  ALWAYS_SM     = 0x01,
+  POST_SM       = 0x02,
+} ShowMessage;
 
-typedef unsigned int DwbType;
-#define CHAR        0x01
-#define INTEGER     0x02
-#define DOUBLE      0x03
-#define BOOLEAN     0x04
-#define COLOR_CHAR  0x05
-#define HTML_STRING 0x06
 
-typedef unsigned int SettingsScope;
-#define APPLY_GLOBAL    0x01
-#define APPLY_PER_VIEW  0x02
+typedef enum { 
+  NORMAL_LAYOUT    = 0,
+  BOTTOM_STACK     = 1<<0 ,
+  MAXIMIZED        = 1<<1 ,
+} Layout;
 
-typedef unsigned int DownloadAction;
-#define DL_ACTION_DOWNLOAD  0x01
-#define DL_ACTION_EXECUTE   0x02
+typedef enum { 
+  CHAR        = 0x01,
+  INTEGER     = 0x02,
+  DOUBLE      = 0x03,
+  BOOLEAN     = 0x04,
+  COLOR_CHAR  = 0x05,
+  HTML_STRING = 0x06,
+} DwbType;
+
+typedef enum {
+  APPLY_GLOBAL    = 0x01,
+  APPLY_PER_VIEW  = 0x02,
+} SettingsScope;
+
+typedef enum { 
+  DL_ACTION_DOWNLOAD  = 0x01,
+  DL_ACTION_EXECUTE   = 0x02,
+} DownloadAction;
+
 
 #define APPEND  0x01
-#define PREPEND 0x02
+#define PREPEND  0x02
 
 #define NO_ERROR  -1
 
@@ -677,5 +686,6 @@ gboolean dwb_toggle_allowed(const char *, const char *);
 char * dwb_get_host(WebKitWebView *);
 void dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
+void dwb_set_key(const char *, char *);
 
 #endif

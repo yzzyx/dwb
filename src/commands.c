@@ -177,31 +177,7 @@ dwb_com_show_hints(KeyMap *km, Arg *arg) {
 /* dwb_com_show_keys(KeyMap *km, Arg *arg){{{*/
 gboolean 
 dwb_com_show_keys(KeyMap *km, Arg *arg) {
-  View *v = dwb.state.fview->data;
-  GString *buffer = g_string_new(NULL);
-  g_string_append_printf(buffer, SETTINGS_VIEW, "dwb - Keyboard configuration", dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
-  g_string_append_printf(buffer, HTML_H2, "Keyboard Configuration", dwb.misc.profile);
-
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_first);
-  g_string_append(buffer, HTML_BODY_START);
-  g_string_append(buffer, HTML_FORM_START);
-  for (GList *l = dwb.keymap; l; l=l->next) {
-    KeyMap *m = l->data;
-    Navigation n = m->map->n;
-    g_string_append(buffer, HTML_DIV_START);
-    g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, n.first);
-    g_string_append_printf(buffer, HTML_DIV_KEYS_VALUE, n.first, dwb_modmask_to_string(m->mod), m->key ? m->key : "");
-    g_string_append(buffer, HTML_DIV_END);
-  }
-  g_string_append(buffer, HTML_FORM_END);
-  g_string_append(buffer, HTML_BODY_END);
-  dwb_web_view_add_history_item(dwb.state.fview);
-
-  if (v->status->scripts  & SCRIPTS_BLOCKED) {
-    g_object_set(webkit_web_view_get_settings(CURRENT_WEBVIEW()), "enable-scripts", true, NULL);
-  }
-  webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, KEY_SETTINGS);
-  g_string_free(buffer, true);
+  dwb_html_load(CURRENT_WEBVIEW(), "dwb://keys");
   return true;
 }/*}}}*/
 
