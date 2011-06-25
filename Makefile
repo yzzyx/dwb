@@ -17,7 +17,6 @@ install-man:
 install-data: 
 	install -Dm 644 $(SHAREDIR)/hints.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js
 	install -Dm 644 $(SHAREDIR)/selection.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/selection.js
-	install -Dm 644 $(SHAREDIR)/plugins.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/plugins.js
 	install -Dm 644 $(LIBDIR)/info.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/info.html
 	install -Dm 644 $(LIBDIR)/head.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/head.html
 

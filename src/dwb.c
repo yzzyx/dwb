@@ -1148,7 +1148,7 @@ dwb_clean_load_end(GList *gl) {
     g_free(v->status->mimetype);
     v->status->mimetype = NULL;
   }
-  if (dwb.state.mode != NORMAL_MODE) {  
+  if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {  
     dwb_normal_mode(false);
   }
 }/*}}}*/
