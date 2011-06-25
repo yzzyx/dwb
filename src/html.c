@@ -123,7 +123,6 @@ dwb_html_keys(WebKitWebView *wv, HtmlTable *table) {
           </div>", i, n.second, n.first, n.first, n.first, dwb_modmask_to_string(km->mod), km->key ? km->key : "");
 
   }
-  PRINT_DEBUG("%s", buffer->str);
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(dwb_html_keys_load_cb), table);
   dwb_html_load_page(wv, table, buffer->str);
   g_string_free(buffer, true);

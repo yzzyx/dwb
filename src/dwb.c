@@ -1724,6 +1724,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
   if (!arg || !arg->p || !strlen(arg->p)) {
     return;
   }
+
   /* new window ? */
   if (dwb.state.nv == OPEN_NEW_WINDOW) {
     dwb.state.nv = OPEN_NORMAL;
@@ -1840,11 +1841,13 @@ dwb_load_uri(GList *gl, Arg *arg) {
       }
     }
   }
-  else if (g_str_has_prefix(arg->p, "dwb://") && dwb_html_load(web, arg->p)) {
+  else if (g_str_has_prefix(arg->p, "dwb://")) {
+    webkit_web_view_load_uri(web, arg->p);
     return;
   }
   /* Check if searchengine is needed and load uri */
-  else if ( !(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
+
+  else if (!(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
     uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://") 
       ? g_strdup(arg->p)
       : g_strdup_printf("http://%s", (char*)arg->p);
