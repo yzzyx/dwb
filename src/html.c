@@ -27,7 +27,7 @@ static HtmlTable table[] = {
   { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, dwb_html_bookmarks },
   { "dwb://quickmarks", "Quickmarks",   INFO_FILE,      0, dwb_html_quickmarks },
   { "dwb://history",    "History",      INFO_FILE,      0, dwb_html_history },
-  { "dwb://keys",       "Keys",         KEY_FILE,        0, dwb_html_keys },
+  { "dwb://keys",       "Keys",         INFO_FILE,        0, dwb_html_keys },
   //{ "dwb://settings",   "Settings",     SETTINGS_FILE,  0, dwb_html_settings },
 };
 
@@ -35,13 +35,8 @@ void
 dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
   char *filecontent;
   GString *content = g_string_new(NULL);
-#if 0
   char *path = dwb_util_get_data_file(t->file);
   char *headpath = dwb_util_get_data_file(HEAD_FILE);
-#else
-  char *path = g_strdup("../lib/info.html");
-  char *headpath = g_strdup("../lib/head.html");
-#endif
   if (path && headpath) {
     /* load head */
     g_file_get_contents(headpath, &filecontent, NULL, NULL);
