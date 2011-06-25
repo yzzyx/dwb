@@ -20,7 +20,6 @@
 #include "html.h"
 
 static void dwb_parse_setting(const char *);
-static void dwb_parse_key_setting(const char *);
 static void dwb_apply_settings(WebSettings *);
 static void dwb_view_ssl_state(GList *);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
@@ -248,16 +247,10 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     }
   }
 
+  /* mailto, ftp */
   char *scheme = g_uri_parse_scheme(uri);
   if (scheme) {
-    if (!strcmp(scheme, "plugin")) {
-      webkit_web_policy_decision_ignore(policy);
-      char *command = g_strdup_printf("DwbPlugin.click('%s')", uri+7);
-      dwb_execute_script(web, command, false);
-      g_free(command);
-      ret = true;
-    }
-    else if (!strcmp(scheme, "mailto")) {
+    if (!strcmp(scheme, "mailto")) {
       dwb_spawn(gl, "mail-client", uri);
       webkit_web_policy_decision_ignore(policy);
       ret = true;
@@ -526,7 +519,8 @@ dwb_view_entry_activate_cb(GtkEntry* entry, GList *gl) {
     dwb_parse_setting(GET_TEXT());
   }
   else if (mode == KEY_MODE) {
-    dwb_parse_key_setting(GET_TEXT());
+    char **token = g_strsplit(GET_TEXT(), " ", 2);
+    dwb_set_key(token[0], token[1]);
   }
   else if (mode == COMMAND_MODE) {
     dwb_parse_command_line(GET_TEXT());
@@ -1021,15 +1015,6 @@ dwb_parse_setting(const char *text) {
 
   g_strfreev(token);
 
-}/*}}}*/
-
-/* dwb_parse_key_setting(const char  *text) {{{*/
-void
-dwb_parse_key_setting(const char *text) {
-  KeyValue value;
-  char **token = g_strsplit(text, " ", 2);
-  dwb_set_key(token[0], token[1]);
-  g_strfreev(token);
 }/*}}}*/
 
 /* dwb_apply_settings(WebSettings *s) {{{*/
