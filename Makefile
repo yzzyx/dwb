@@ -20,6 +20,7 @@ install-data:
 	install -Dm 644 $(LIBDIR)/info.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/info.html
 	install -Dm 644 $(LIBDIR)/head.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/head.html
 	install -Dm 644 $(LIBDIR)/settings.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/settings.html
+	install -Dm 644 $(LIBDIR)/keys.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/keys.html
 
 uninstall: uninstall-man uninstall-data
 	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"

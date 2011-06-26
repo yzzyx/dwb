@@ -139,6 +139,7 @@ dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   KeyMap *km;
   Navigation n;
   WebKitDOMElement *input;
+  char *mod, *value;
 
   if (webkit_web_view_get_load_status(wv) == WEBKIT_LOAD_FINISHED) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
@@ -146,7 +147,14 @@ dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
       km = l->data; 
       n = km->map->n;
       input = webkit_dom_document_get_element_by_id(doc, n.first);
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(dwb_html_key_changed_cb), false, wv);
+      if (input != NULL) {
+        mod = dwb_modmask_to_string(km->mod);
+        value = g_strdup_printf("%s %s", mod, km->key ? km->key : "");
+        webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(input), value);
+        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(dwb_html_key_changed_cb), false, wv);
+        FREE(mod);
+        g_free(value);
+      }
     }
     g_signal_handlers_disconnect_by_func(wv, dwb_html_keys_load_cb, table);
   }
@@ -154,27 +162,13 @@ dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
 }
 void
 dwb_html_keys(WebKitWebView *wv, HtmlTable *table) {
-  GString *buffer = g_string_new(NULL);
-  int i = 0;
-  KeyMap *km;
-  Navigation n;
-  for (GList *l = dwb.keymap; l; l=l->next, i++, i%=2) {
-    km = l->data; 
-    n = km->map->n;
-    g_string_append_printf(buffer, 
-        "<div class='dwb_line%d'>\
-            <div class='dwb_attr'>%s</div>\
-            <div style='float:right;'>\
-              <label class='dwb_desc' for='%s'>%s</label>\
-              <input id='%s' type='text' value='%s %s'>\
-            </div>\
-            <div style='clear:both;'></div>\
-          </div>", i, n.second, n.first, n.first, n.first, dwb_modmask_to_string(km->mod), km->key ? km->key : "");
-
-  }
+  char *content;
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(dwb_html_keys_load_cb), table);
-  dwb_html_load_page(wv, table, buffer->str);
-  g_string_free(buffer, true);
+  char *path = dwb_util_get_data_file(KEY_FILE);
+  g_file_get_contents(path, &content, NULL, NULL);
+  dwb_html_load_page(wv, table, content);
+  g_free(path);
+  g_free(content);
 }
 void
 dwb_html_quickmarks(WebKitWebView *wv, HtmlTable *table) {

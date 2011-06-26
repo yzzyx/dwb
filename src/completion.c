@@ -270,11 +270,13 @@ dwb_comp_get_key_completion(gboolean entry) {
     }
     Navigation n = m->map->n;
     if (g_str_has_prefix(n.first, input)) {
-      char *value = g_strdup_printf("%s %s", dwb_modmask_to_string(m->mod), m->key);
+      char *mod = dwb_modmask_to_string(m->mod);
+      char *value = g_strdup_printf("%s %s", mod, m->key);
       Completion *c = dwb_comp_get_completion_item(&n, m, value);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       list = g_list_append(list, c);
       FREE(value);
+      g_free(mod);
     }
   }
   return list;
