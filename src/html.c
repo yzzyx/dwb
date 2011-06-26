@@ -37,6 +37,7 @@ dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
   GString *content = g_string_new(NULL);
   char *path = dwb_util_get_data_file(t->file);
   char *headpath = dwb_util_get_data_file(HEAD_FILE);
+
   if (path && headpath) {
     /* load head */
     g_file_get_contents(headpath, &filecontent, NULL, NULL);
