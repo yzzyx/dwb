@@ -1606,7 +1606,7 @@ gboolean
 dwb_prepend_navigation(GList *gl, GList **fc) {
   WebKitWebView *w = WEBVIEW(gl);
   const char *uri = webkit_web_view_get_uri(w);
-  if (uri && strlen(uri) > 0 && strcmp(uri, SETTINGS) && strcmp(uri, KEY_SETTINGS)) {
+  if (uri && strlen(uri) > 0) {
     const char *title = webkit_web_view_get_title(w);
     dwb_prepend_navigation_with_argument(fc, uri, title);
     return true;
