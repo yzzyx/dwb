@@ -32,6 +32,7 @@
     .dwb_sbutton { float: right; }
     .dwb_button { float:left; }
     #bar a:hover { color: #fff; }
+    #bar a:focus { color: #fff; }
     #bar a {
       color: #909090;
       text-decoration: none;
@@ -122,6 +123,14 @@
       color: #333;
       text-decoration: none;
     }
+    a.setting_button:visited {
+      color: #ffffff;
+      text-decoration: none;
+    }
+    a.setting_button:focus {
+      color: #000;
+      text-decoration: none;
+    }
     .dwb_settings_headline {
       position: relative;
       font: bold 13px helvetica;
@@ -133,6 +142,7 @@
       color: #fff;
       padding-left: 10px;
       padding-top: 68;
+      -webkit-user-select: none;
     }
   </style>
 </head><!--}}}-->
