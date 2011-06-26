@@ -19,8 +19,6 @@
 #include "view.h"
 #include "html.h"
 
-static void dwb_parse_setting(const char *);
-static void dwb_apply_settings(WebSettings *);
 static void dwb_view_ssl_state(GList *);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
@@ -122,10 +120,12 @@ dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 /* dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
 static gboolean 
 dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
+#if 0
   if (!(strcmp(sourceid, SETTINGS))) {
     dwb_parse_setting(message);
   }
-  else if (gl == dwb.state.fview && !(strcmp(message, "_dwb_input_mode_"))) {
+#endif
+  if (gl == dwb.state.fview && !(strcmp(message, "_dwb_input_mode_"))) {
     dwb_insert_mode(NULL);
   }
   else if (gl == dwb.state.fview && !(strcmp(message, "_dwb_normal_mode_"))) {
@@ -522,12 +522,13 @@ dwb_view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   else if (mode == SEARCH_FIELD_MODE) {
     dwb_submit_searchengine();
   }
-  else if (mode == SETTINGS_MODE) {
-    dwb_parse_setting(GET_TEXT());
-  }
-  else if (mode == KEY_MODE) {
+  else if (mode == SETTINGS_MODE || mode == KEY_MODE) {
     char **token = g_strsplit(GET_TEXT(), " ", 2);
-    dwb_set_key(token[0], token[1]);
+    if  (mode == KEY_MODE) 
+      dwb_set_key(token[0], token[1]);
+    else 
+      dwb_set_setting(token[0], token[1]);
+    g_strfreev(token);
   }
   else if (mode == COMMAND_MODE) {
     dwb_parse_command_line(GET_TEXT());
@@ -993,58 +994,5 @@ dwb_add_view(Arg *arg, gboolean background) {
   }
   return ret;
 } /*}}}*/
-
-
-/* dwb_parse_setting(const char *){{{*/
-void
-dwb_parse_setting(const char *text) {
-  WebSettings *s;
-  Arg *a = NULL;
-  char **token = g_strsplit(text, " ", 2);
-
-  GHashTable *t = dwb.state.setting_apply == APPLY_GLOBAL ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
-  if (token[0]) {
-    if  ( (s = g_hash_table_lookup(t, token[0])) ) {
-      if ( (a = dwb_util_char_to_arg(token[1], s->type)) || (s->type == CHAR && a->p == NULL)) {
-        s->arg = *a;
-        dwb_apply_settings(s);
-        dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : token[1]);
-        dwb_save_settings();
-      }
-      else {
-        dwb_set_error_message(dwb.state.fview, "No valid value.");
-      }
-    }
-    else {
-      dwb_set_error_message(dwb.state.fview, "No such setting: %s", token[0]);
-    }
-  }
-  dwb_normal_mode(false);
-
-  g_strfreev(token);
-
-}/*}}}*/
-
-/* dwb_apply_settings(WebSettings *s) {{{*/
-static void
-dwb_apply_settings(WebSettings *s) {
-  WebSettings *new;
-  if (dwb.state.setting_apply == APPLY_GLOBAL) {
-    new = g_hash_table_lookup(dwb.settings, s->n.first);
-    new->arg = s->arg;
-    for (GList *l = dwb.state.views; l; l=l->next)  {
-      WebSettings *new =  g_hash_table_lookup(VIEW(l)->setting, s->n.first);
-      new->arg = s->arg;
-      if (s->func) {
-        s->func(l, s);
-      }
-    }
-  }
-  else {
-    s->func(dwb.state.fview, s);
-  }
-  dwb_normal_mode(false);
-
-}/*}}}*/
 
 /*}}}*/

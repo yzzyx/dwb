@@ -49,10 +49,6 @@
 #ifndef COPYRIGHT
 #define COPYRIGHT "© 2010-2011 Stefan Bolte"
 #endif
-/* SETTINGS MAKROS {{{*/
-#define KEY_SETTINGS "xwb://keys"
-#define SETTINGS "Dwb Settings"
-
 #define SINGLE_INSTANCE 1
 #define NEW_INSTANCE 2
 
@@ -60,35 +56,6 @@
 #define STRING_LENGTH 1024
 #define BUFFER_LENGTH 256
 
-// SETTTINGS_VIEW %s: bg-color  %s: fg-color %s: border
-#define SETTINGS_VIEW "<head>\n<title>%s</title><style type=\"text/css\">\n \
-  body { background-color: %s; color: %s; text-align:center; }\n\
-  table { border-spacing:0px; }\n\
-  th { border:%s; }\n \
-  .line { vertical-align: middle; }\n \
-  .text { float: left; font: normal 12px helvetica; }\n \
-  .key { text-align: center;  font-size: 12; }\n \
-  .active { background-color: #660000; }\n \
-  h2 { font: bold 16px verdana; font-variant: small-caps; }\n \
-  .alignCenter { margin-left: 25%%; width: 50%%; }\n \
-  input { font:normal 12px helvetica;  }\
-</style>\n \
-<script type=\"text/javascript\">\n  \
-function get_value(e) { value = e.value ? e.id + \" \" + e.value : e.id; console.log(value); e.blur(); } \
-</script>\n<noscript>Enable scripts to add settings!</noscript>\n</head>\n"
-#define HTML_H2  "<h2>%s -- Profile: %s</h2>"
-
-#define HTML_BODY_START "<body>\n"
-#define HTML_BODY_END "</body>\n"
-#define HTML_FORM_START "<form onsubmit=\"return false\">\n<table width=100%; style=\"border:thin solid black\">"
-#define HTML_FORM_END "</form>\n</table>\n</div>\n"
-#define HTML_DIV_START "<tr>\n"
-#define HTML_DIV_KEYS_TEXT "<th width=100%%><div class=\"text\">%s</div>\n</th> "
-#define HTML_DIV_KEYS_VALUE "<th><div class=\"key\">\n <input onchange=\"get_value(this)\" id=\"%s\" value=\"%s %s\"/>\n</div></th>\n"
-#define HTML_DIV_SETTINGS_VALUE "<th><div class=\"key\">\n <input onchange=\"get_value(this);\" id=\"%s\" value=\"%s\"/>\n</div>\n</th>"
-#define HTML_DIV_SETTINGS_CHECKBOX "<th><div class=\"key\">\n <input id=\"%s\" type=\"checkbox\" onchange=\"get_value(this);\" %s>\n</div>\n</th>"
-#define HTML_DIV_END "</tr>\n"
-/*}}}*/
 #define INSERT "Insert Mode"
 
 #define NO_URL                      "No URL in current context"
@@ -687,5 +654,6 @@ char * dwb_get_host(WebKitWebView *);
 void dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
 void dwb_set_key(const char *, char *);
+void dwb_set_setting(const char *, char *value);
 
 #endif

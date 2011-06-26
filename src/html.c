@@ -27,8 +27,8 @@ static HtmlTable table[] = {
   { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, dwb_html_bookmarks },
   { "dwb://quickmarks", "Quickmarks",   INFO_FILE,      0, dwb_html_quickmarks },
   { "dwb://history",    "History",      INFO_FILE,      0, dwb_html_history },
-  { "dwb://keys",       "Keys",         INFO_FILE,        0, dwb_html_keys },
-  //{ "dwb://settings",   "Settings",     SETTINGS_FILE,  0, dwb_html_settings },
+  { "dwb://keys",       "Keys",         INFO_FILE,      0, dwb_html_keys },
+  { "dwb://settings",   "Settings",     INFO_FILE,      0, dwb_html_settings },
 };
 
 void
@@ -47,7 +47,7 @@ dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     g_file_get_contents(path, &filecontent, NULL, NULL);
     if (panel) 
       g_string_append_printf(content, filecontent, panel);
-    webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, t->uri, "about:blank");
+    webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, t->uri, t->uri);
     g_string_free(content, true);
     g_free(filecontent);
     FREE(path);
@@ -73,13 +73,61 @@ void
 dwb_html_history(WebKitWebView *wv, HtmlTable *table) {
   dwb_html_navigation(wv, dwb.fc.history, table);
 }
+gboolean
+dwb_html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
+  char buffer[10];
+  memset(buffer, '\0', 10);
+  char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(el));
+  char *value = 0;
+  char *type = webkit_dom_element_get_attribute(el, "type");
+  PRINT_DEBUG("id: %s value: %s wv: %s", id, value, type);
+  if (!strcmp(type, "checkbox")) {
+    if (webkit_dom_html_input_element_get_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(el)) ) 
+      strcpy(buffer, "true");
+    else 
+      strcpy(buffer, "false");
+    value = buffer;
+  }
+  else 
+    value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
+  dwb.state.setting_apply = APPLY_GLOBAL;
+  dwb_set_setting(id, value);
+  return true;
+}
+void
+dwb_html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
+  char *value = dwb_util_arg_to_char(&s->arg, s->type);
+  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+  WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, key);
+  PRINT_DEBUG("%s %s", key, value);
+  if (s->type == BOOLEAN) 
+    webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), s->arg.b);
+  else if (value) {
+    webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value);
+    g_free(value);
+  }
+  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(dwb_html_settings_changed_cb), false, wv);
+}
+void 
+dwb_html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
+  if (webkit_web_view_get_load_status(wv) == WEBKIT_LOAD_FINISHED) {
+    g_hash_table_foreach(dwb.settings, (GHFunc)dwb_html_settings_fill, wv);
+    g_signal_handlers_disconnect_by_func(wv, dwb_html_settings_load_cb, table);
+  }
+}
 void
 dwb_html_settings(WebKitWebView *wv, HtmlTable *table) {
-  //dwb_html_load_page(wv, table, "blub");
+  char *content;
+  g_signal_connect(wv, "notify::load-status", G_CALLBACK(dwb_html_settings_load_cb), table);
+  char *path = dwb_util_get_data_file(SETTINGS_FILE);
+  g_file_get_contents(path, &content, NULL, NULL);
+  dwb_html_load_page(wv, table, content);
+  g_free(path);
+  g_free(content);
 }
 
-gboolean
-key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
+static gboolean
+dwb_html_key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
   char *value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
   dwb_set_key(id, value);
@@ -97,7 +145,7 @@ dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
       km = l->data; 
       n = km->map->n;
       input = webkit_dom_document_get_element_by_id(doc, n.first);
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(key_changed_cb), false, wv);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(dwb_html_key_changed_cb), false, wv);
     }
     g_signal_handlers_disconnect_by_func(wv, dwb_html_keys_load_cb, table);
   }
@@ -116,7 +164,7 @@ dwb_html_keys(WebKitWebView *wv, HtmlTable *table) {
         "<div class='dwb_line%d'>\
             <div class='dwb_attr'>%s</div>\
             <div style='float:right;'>\
-              <label class='dwb_desc' for='%s'>%s</lable>\
+              <label class='dwb_desc' for='%s'>%s</label>\
               <input id='%s' type='text' value='%s %s'>\
             </div>\
             <div style='clear:both;'></div>\

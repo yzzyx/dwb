@@ -19,6 +19,7 @@ install-data:
 	install -Dm 644 $(SHAREDIR)/selection.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/selection.js
 	install -Dm 644 $(LIBDIR)/info.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/info.html
 	install -Dm 644 $(LIBDIR)/head.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/head.html
+	install -Dm 644 $(LIBDIR)/settings.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/settings.html
 
 uninstall: uninstall-man uninstall-data
 	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"

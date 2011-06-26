@@ -184,55 +184,8 @@ dwb_com_show_keys(KeyMap *km, Arg *arg) {
 /* dwb_com_show_settings(KeyMap *km, Arg *a) {{{*/
 gboolean
 dwb_com_show_settings(KeyMap *km, Arg *arg) {
-  View *v = dwb.state.fview->data;
-  GString *buffer = g_string_new(NULL);
-  GHashTable *t;
-  const char *setting_string;
-
-  dwb.state.setting_apply = arg->n;
-  if ( dwb.state.setting_apply == APPLY_GLOBAL ) {
-    t = dwb.settings;
-    setting_string = "Global Settings";
-  }
-  else {
-    t = v->setting;
-    setting_string = "Settings";
-  }
-
-  GList *l = g_hash_table_get_values(t);
-  l = g_list_sort(l, (GCompareFunc)dwb_util_web_settings_sort_first);
-
-  g_string_append_printf(buffer, SETTINGS_VIEW, "dwb - Settings", dwb.color.settings_bg_color, dwb.color.settings_fg_color, dwb.misc.settings_border);
-  g_string_append_printf(buffer, HTML_H2, setting_string, dwb.misc.profile);
-
-  g_string_append(buffer, HTML_BODY_START);
-  g_string_append(buffer, HTML_FORM_START);
-  for (; l; l=l->next) {
-    WebSettings *m = l->data;
-    if (!m->global || (m->global && dwb.state.setting_apply == APPLY_GLOBAL)) {
-      g_string_append(buffer, HTML_DIV_START);
-      g_string_append_printf(buffer, HTML_DIV_KEYS_TEXT, m->n.first);
-      if (m->type == BOOLEAN) {
-        const char *value = m->arg.b ? "checked" : "";
-        g_string_append_printf(buffer, HTML_DIV_SETTINGS_CHECKBOX, m->n.first, value);
-      }
-      else {
-        char *value = dwb_util_arg_to_char(&m->arg, m->type);
-        g_string_append_printf(buffer, HTML_DIV_SETTINGS_VALUE, m->n.first, value ? value : "");
-      }
-      g_string_append(buffer, HTML_DIV_END);
-    }
-  }
-  g_list_free(l);
-  g_string_append(buffer, HTML_FORM_END);
-  g_string_append(buffer, HTML_BODY_END);
-  dwb_web_view_add_history_item(dwb.state.fview);
-
-  if (v->status->scripts  & SCRIPTS_BLOCKED) {
-    g_object_set(webkit_web_view_get_settings(CURRENT_WEBVIEW()), "enable-scripts", true, NULL);
-  }
-  webkit_web_view_load_string(WEBKIT_WEB_VIEW(v->web), buffer->str, "text/html", NULL, SETTINGS);
-  g_string_free(buffer, true);
+  dwb.state.setting_apply = APPLY_GLOBAL;
+  dwb_html_load(CURRENT_WEBVIEW(), "dwb://settings");
   return true;
 }/*}}}*/
 
