@@ -31,6 +31,7 @@ static HtmlTable table[] = {
   { "dwb://settings",   "Settings",     INFO_FILE,      0, dwb_html_settings },
 };
 
+static char current_uri[BUFFER_LENGTH];
 void
 dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
   char *filecontent;
@@ -48,7 +49,7 @@ dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     g_file_get_contents(path, &filecontent, NULL, NULL);
     if (panel) 
       g_string_append_printf(content, filecontent, panel);
-    webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, t->uri, t->uri);
+    webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, current_uri, current_uri);
     g_string_free(content, true);
     g_free(filecontent);
     FREE(path);
@@ -185,7 +186,8 @@ dwb_html_quickmarks(WebKitWebView *wv, HtmlTable *table) {
 gboolean 
 dwb_html_load(WebKitWebView *wv, const char *uri) {
   for (int i=0; i<LENGTH(table); i++) {
-    if (!strcmp(table[i].uri, uri)) {
+    if (!strncmp(table[i].uri, uri, strlen(table[i].uri))) {
+      strncpy(current_uri, uri, BUFFER_LENGTH - 1);
       table[i].func(wv, &table[i]);
       return true;
     }
