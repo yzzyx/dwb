@@ -159,7 +159,6 @@ dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
     }
     g_signal_handlers_disconnect_by_func(wv, dwb_html_keys_load_cb, table);
   }
-
 }
 void
 dwb_html_keys(WebKitWebView *wv, HtmlTable *table) {
