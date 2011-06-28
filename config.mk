@@ -4,9 +4,10 @@ COPYRIGHT="© 2011 Stefan Bolte"
 DISTDIR=$(REAL_NAME)-$(REAL_VERSION)
 DOCDIR=doc
 SRCDIR=src
-SHAREDIR=data
+JSDIR=data
 EXAMPLEDIR=examples
 LIBDIR=lib
+SHAREDIR=share
 
 HG_VERSION=$(shell hg id -n 2>/dev/null)
 

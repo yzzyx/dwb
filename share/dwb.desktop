@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=dwb
+Comment=Small and fast webkit browser 
+Exec=dwb %u
+Icon=dwb
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;

@@ -244,6 +244,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
       dwb_normal_mode(true);
     }
     if (dwb.state.mode == SEARCH_FIELD_MODE) {
+      PRINT_DEBUG("searchfields navigation request: %s", uri);
       webkit_web_policy_decision_ignore(policy);
       dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, HINT_SEARCH_SUBMIT) 
         ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
