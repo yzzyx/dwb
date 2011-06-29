@@ -216,7 +216,7 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   gboolean ret = false;
   
   if (g_str_has_prefix(uri, "dwb://")) {
-    dwb_html_load(web, uri);
+    dwb_html_load(gl, uri);
     return true;
   }
   Arg a = { .p = uri, .b = true };

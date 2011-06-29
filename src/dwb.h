@@ -655,5 +655,6 @@ void dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
 void dwb_set_key(const char *, char *);
 void dwb_set_setting(const char *, char *value);
+gboolean dwb_open_startpage(GList *);
 
 #endif

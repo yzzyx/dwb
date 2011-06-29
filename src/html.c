@@ -14,14 +14,15 @@ struct _HtmlTable {
   const char *title;
   const char *file;
   int type;
-  void (*func)(WebKitWebView *, HtmlTable *);
+  void (*func)(GList *, HtmlTable *);
 };
 
-void dwb_html_bookmarks(WebKitWebView *, HtmlTable *);
-void dwb_html_history(WebKitWebView *, HtmlTable *);
-void dwb_html_quickmarks(WebKitWebView *, HtmlTable *);
-void dwb_html_settings(WebKitWebView *, HtmlTable *);
-void dwb_html_keys(WebKitWebView *, HtmlTable *);
+void dwb_html_bookmarks(GList *, HtmlTable *);
+void dwb_html_history(GList *, HtmlTable *);
+void dwb_html_quickmarks(GList *, HtmlTable *);
+void dwb_html_settings(GList *, HtmlTable *);
+void dwb_html_startpage(GList *, HtmlTable *);
+void dwb_html_keys(GList *, HtmlTable *);
 
 static HtmlTable table[] = {
   { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, dwb_html_bookmarks },
@@ -29,6 +30,7 @@ static HtmlTable table[] = {
   { "dwb://history",    "History",      INFO_FILE,      0, dwb_html_history },
   { "dwb://keys",       "Keys",         INFO_FILE,      0, dwb_html_keys },
   { "dwb://settings",   "Settings",     INFO_FILE,      0, dwb_html_settings },
+  { "dwb://startpage",   NULL,           NULL,           0, dwb_html_startpage },
 };
 
 static char current_uri[BUFFER_LENGTH];
@@ -56,24 +58,24 @@ dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
   }
 }
 void
-dwb_html_navigation(WebKitWebView *wv, GList *gl, HtmlTable *table) {
+dwb_html_navigation(GList *gl, GList *data, HtmlTable *table) {
   int i=0;
   GString *panels = g_string_new(NULL);
-  for (GList *l = gl; l; l=l->next, i++, i%=2) {
+  for (GList *l = data; l; l=l->next, i++, i%=2) {
     Navigation *n = l->data;
     g_string_append_printf(panels, "<div class='dwb_line%d'><div><a href='%s'>%s</a></div></div>\n", i, n->first, n->second);
   }
-  dwb_html_load_page(wv, table, panels->str);
+  dwb_html_load_page(WEBVIEW(gl), table, panels->str);
   g_string_free(panels, true);
 }
 void
-dwb_html_bookmarks(WebKitWebView *wv, HtmlTable *table) {
+dwb_html_bookmarks(GList *gl, HtmlTable *table) {
   dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)dwb_util_navigation_compare_second);
-  dwb_html_navigation(wv, dwb.fc.bookmarks, table);
+  dwb_html_navigation(gl, dwb.fc.bookmarks, table);
 }
 void
-dwb_html_history(WebKitWebView *wv, HtmlTable *table) {
-  dwb_html_navigation(wv, dwb.fc.history, table);
+dwb_html_history(GList *gl, HtmlTable *table) {
+  dwb_html_navigation(gl, dwb.fc.history, table);
 }
 gboolean
 dwb_html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
@@ -118,8 +120,9 @@ dwb_html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   }
 }
 void
-dwb_html_settings(WebKitWebView *wv, HtmlTable *table) {
+dwb_html_settings(GList *gl, HtmlTable *table) {
   char *content;
+  WebKitWebView *wv = WEBVIEW(gl);
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(dwb_html_settings_load_cb), table);
   char *path = dwb_util_get_data_file(SETTINGS_FILE);
   g_file_get_contents(path, &content, NULL, NULL);
@@ -161,8 +164,9 @@ dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   }
 }
 void
-dwb_html_keys(WebKitWebView *wv, HtmlTable *table) {
+dwb_html_keys(GList *gl, HtmlTable *table) {
   char *content;
+  WebKitWebView *wv = WEBVIEW(gl);
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(dwb_html_keys_load_cb), table);
   char *path = dwb_util_get_data_file(KEY_FILE);
   g_file_get_contents(path, &content, NULL, NULL);
@@ -171,23 +175,27 @@ dwb_html_keys(WebKitWebView *wv, HtmlTable *table) {
   g_free(content);
 }
 void
-dwb_html_quickmarks(WebKitWebView *wv, HtmlTable *table) {
+dwb_html_quickmarks(GList *gl, HtmlTable *table) {
   int i=0;
   GString *panels = g_string_new(NULL);
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
     Quickmark *q = gl->data;
     g_string_append_printf(panels, "<div class='dwb_line%d'><div class=dwb_qm>%s</div><div><a href='%s'>%s</a></div></div>\n", i, q->key, q->nav->first, q->nav->second);
   }
-  dwb_html_load_page(wv, table, panels->str);
+  dwb_html_load_page(WEBVIEW(gl), table, panels->str);
   g_string_free(panels, true);
+}
+void
+dwb_html_startpage(GList *gl, HtmlTable *table) {
+  dwb_open_startpage(gl);
 }
 
 gboolean 
-dwb_html_load(WebKitWebView *wv, const char *uri) {
+dwb_html_load(GList *gl, const char *uri) {
   for (int i=0; i<LENGTH(table); i++) {
     if (!strncmp(table[i].uri, uri, strlen(table[i].uri))) {
       strncpy(current_uri, uri, BUFFER_LENGTH - 1);
-      table[i].func(wv, &table[i]);
+      table[i].func(gl, &table[i]);
       return true;
     }
   }

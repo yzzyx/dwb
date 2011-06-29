@@ -177,7 +177,7 @@ dwb_com_show_hints(KeyMap *km, Arg *arg) {
 /* dwb_com_show_keys(KeyMap *km, Arg *arg){{{*/
 gboolean 
 dwb_com_show_keys(KeyMap *km, Arg *arg) {
-  dwb_html_load(CURRENT_WEBVIEW(), "dwb://keys");
+  dwb_html_load(dwb.state.fview, "dwb://keys");
   return true;
 }/*}}}*/
 
@@ -185,7 +185,7 @@ dwb_com_show_keys(KeyMap *km, Arg *arg) {
 gboolean
 dwb_com_show_settings(KeyMap *km, Arg *arg) {
   dwb.state.setting_apply = APPLY_GLOBAL;
-  dwb_html_load(CURRENT_WEBVIEW(), "dwb://settings");
+  dwb_html_load(dwb.state.fview, "dwb://settings");
   return true;
 }/*}}}*/
 
@@ -446,12 +446,7 @@ dwb_com_open(KeyMap *km, Arg *arg) {
 /* dwb_com_open(KeyMap *km, Arg *arg) {{{*/
 gboolean  
 dwb_com_open_startpage(KeyMap *km, Arg *arg) {
-  if (!dwb.misc.startpage) 
-    return false;
-
-  Arg a = { .p = dwb.misc.startpage, .b = true };
-  dwb_load_uri(NULL, &a);
-  return true;
+  return dwb_open_startpage(NULL);
 } /*}}}*/
 
 /* dwb_com_toggle_maximized {{{*/

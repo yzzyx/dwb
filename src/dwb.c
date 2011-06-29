@@ -917,6 +917,17 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+gboolean
+dwb_open_startpage(GList *gl) {
+  if (!dwb.misc.startpage) 
+    return false;
+  if (gl == NULL) 
+    gl = dwb.state.fview;
+
+  Arg a = { .p = dwb.misc.startpage, .b = true };
+  dwb_load_uri(gl, &a);
+}
+
 /* dwb_apply_settings(WebSettings *s) {{{*/
 static void
 dwb_apply_settings(WebSettings *s) {
