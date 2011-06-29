@@ -43,12 +43,12 @@ dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
 
   if (path && headpath) {
     /* load head */
-    g_file_get_contents(path, &filecontent, NULL, NULL);
+    g_file_get_contents(headpath, &filecontent, NULL, NULL);
     g_string_append_printf(content, filecontent, t->title);
     g_free(filecontent);
     FREE(headpath);
     /* load content */
-    g_file_get_contents(headpath, &filecontent, NULL, NULL);
+    g_file_get_contents(path, &filecontent, NULL, NULL);
     if (panel) 
       g_string_append_printf(content, filecontent, panel);
     webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, current_uri, current_uri);
