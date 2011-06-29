@@ -2017,6 +2017,8 @@ dwb_eval_key(GdkEventKey *e) {
   KeyMap *tmp = NULL;
   GList *coms = NULL;
 
+  PRINT_DEBUG("buffer: %s key: %s", buf, key);
+
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
     if (km->map->entry) {

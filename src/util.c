@@ -108,15 +108,12 @@ dwb_util_keyval_to_char(guint keyval) {
   if ( (unichar = gdk_keyval_to_unicode(keyval)) ) {
     if ( (length = g_unichar_to_utf8(unichar, key)) ) {
       memset(&key[length], '\0', 6-length); 
+      return key;
     }
   }
-  if (length && isprint(key[0])) {
-    return key;
-  }
-  else {
-    FREE(key);
-    return NULL;
-  }
+  FREE(key);
+  return NULL;
+  //}
 }/*}}}*/
 
 /* dwb_util_char_to_arg(char *value, DwbType type)    return: Arg*{{{*/
