@@ -926,6 +926,7 @@ dwb_open_startpage(GList *gl) {
 
   Arg a = { .p = dwb.misc.startpage, .b = true };
   dwb_load_uri(gl, &a);
+  return true;
 }
 
 /* dwb_apply_settings(WebSettings *s) {{{*/
