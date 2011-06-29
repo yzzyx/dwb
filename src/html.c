@@ -43,12 +43,12 @@ dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
 
   if (path && headpath) {
     /* load head */
-    g_file_get_contents(headpath, &filecontent, NULL, NULL);
+    g_file_get_contents(path, &filecontent, NULL, NULL);
     g_string_append_printf(content, filecontent, t->title);
     g_free(filecontent);
     FREE(headpath);
     /* load content */
-    g_file_get_contents(path, &filecontent, NULL, NULL);
+    g_file_get_contents(headpath, &filecontent, NULL, NULL);
     if (panel) 
       g_string_append_printf(content, filecontent, panel);
     webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, current_uri, current_uri);
@@ -60,7 +60,7 @@ dwb_html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
 void
 dwb_html_navigation(GList *gl, GList *data, HtmlTable *table) {
   int i=0;
-  GString *panels = g_string_new(NULL);
+  GString *panels = g_string_new("<div class='setting_bar' ></div>");
   for (GList *l = data; l; l=l->next, i++, i%=2) {
     Navigation *n = l->data;
     g_string_append_printf(panels, "<div class='dwb_line%d'><div><a href='%s'>%s</a></div></div>\n", i, n->first, n->second);
@@ -177,7 +177,7 @@ dwb_html_keys(GList *gl, HtmlTable *table) {
 void
 dwb_html_quickmarks(GList *gl, HtmlTable *table) {
   int i=0;
-  GString *panels = g_string_new(NULL);
+  GString *panels = g_string_new("<div class='setting_bar' ></div>");
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
     Quickmark *q = gl->data;
     g_string_append_printf(panels, "<div class='dwb_line%d'><div class=dwb_qm>%s</div><div><a href='%s'>%s</a></div></div>\n", i, q->key, q->nav->first, q->nav->second);
