@@ -2018,6 +2018,7 @@ dwb_eval_key(GdkEventKey *e) {
     else {
       dwb.state.nummod = e->keyval - GDK_KEY_0;
     }
+    return false;
   }
   g_string_append(dwb.state.buffer, key);
   if (ALPHA(e) || DIGIT(e)) {
