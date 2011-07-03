@@ -131,6 +131,8 @@ dwb_session_restore(const char *name) {
       gtk_widget_hide(((View*)l->data)->vbox);
     }
   }
+  dwb_unfocus();
+  dwb_focus(dwb.state.views);
   dwb_update_layout(false);
   return true;
 }/*}}}*/

@@ -843,24 +843,17 @@ dwb_view_remove(Arg *a) {
   if (!dwb.state.views->next) {
     return;
   }
-  if (a) {
-    gl = a->p;
+  if (a || dwb.state.nummod == 0) {
+    gl = a ? a->p : dwb.state.fview;
     if (gl == dwb.state.fview) {
-      if ( !(dwb.state.fview = dwb.state.fview->next) ) {
-        dwb.state.fview = g_list_last(dwb.state.views)->prev;
+      if ( !(dwb.state.fview = dwb.state.fview->prev) ) {
+        dwb.state.fview = g_list_first(dwb.state.views)->next;
         gtk_widget_show_all(dwb.gui.topbox);
       }
     }
   }
   else if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
-  }
-  else {
-    gl = dwb.state.fview;
-    if ( !(dwb.state.fview = dwb.state.fview->next) ) {
-      dwb.state.fview = g_list_last(dwb.state.views)->prev;
-      gtk_widget_show_all(dwb.gui.topbox);
-    }
   }
   View *v = gl->data;
   if (gl == dwb.state.views) {
@@ -946,7 +939,7 @@ dwb_add_view(Arg *arg, gboolean background) {
     gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
     gtk_box_insert(GTK_BOX(dwb.gui.right), v->vbox, true, true, 0, p-1);
     dwb.state.views = g_list_insert(dwb.state.views, v, p);
-    ret = g_list_nth(dwb.state.views, p);
+    ret = dwb.state.fview->next;
 
     if (background) {
       dwb_view_set_normal_style(v);
@@ -958,6 +951,8 @@ dwb_add_view(Arg *arg, gboolean background) {
         gtk_widget_hide(dwb.gui.left);
         gtk_widget_show(dwb.gui.right);
       }
+      dwb_unfocus();
+      dwb_focus(ret);
     }
   }
   else {
@@ -972,10 +967,10 @@ dwb_add_view(Arg *arg, gboolean background) {
     gtk_box_insert(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0, 0);
     dwb.state.views = g_list_prepend(dwb.state.views, v);
     ret = dwb.state.views;
-  }
-  if (!background)  {
     dwb_unfocus();
     dwb_focus(ret);
+  }
+  if (!background)  {
   }
 
   dwb_web_view_init_signals(ret);
