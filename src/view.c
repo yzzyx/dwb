@@ -195,6 +195,7 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
 
   v->status->mimetype = g_strdup(mimetype);
 
+  PRINT_DEBUG("%s", mimetype);
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
     webkit_web_policy_decision_download(policy);
@@ -210,6 +211,8 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
 
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
+
+  PRINT_DEBUG("request uri : %s", uri);
   
   if (g_str_has_prefix(uri, "dwb://")) {
     dwb_html_load(gl, uri);
@@ -357,6 +360,8 @@ dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 
 static void
 dwb_view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
+  GtkAction *a = NULL;
+  const char *name;
   PRINT_DEBUG("hover_uri: %s", VIEW(gl)->status->hover_uri);
   /* 
    * context-menu-action-2000       open link
@@ -370,8 +375,10 @@ dwb_view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
    * 
    * */
 
-  GtkAction *a      = gtk_activatable_get_related_action(GTK_ACTIVATABLE(menu));
-  const char *name  = gtk_action_get_name(a);
+  a = gtk_activatable_get_related_action(GTK_ACTIVATABLE(menu));
+  if (a == NULL) 
+    return;
+  name  = gtk_action_get_name(a);
   PRINT_DEBUG("action name: %s", name);
   if (!strcmp(name, "context-menu-action-3")) { /* copy link location */
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
