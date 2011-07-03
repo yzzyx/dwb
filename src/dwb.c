@@ -1029,6 +1029,7 @@ dwb_focus_view(GList *gl) {
       gtk_widget_show(((View *)gl->data)->vbox);
       gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
     }
+    dwb_unfocus();
     dwb_focus(gl);
   }
 }/*}}}*/
@@ -1245,18 +1246,13 @@ dwb_open_si_channel() {
 
 /* dwb_focus(GList *gl) {{{*/
 void 
-dwb_focus(GList *gl) {
-  GList *tmp = NULL;
-
+dwb_unfocus() {
   if (dwb.state.fview) {
-    tmp = dwb.state.fview;
+    dwb_view_set_normal_style(VIEW(dwb.state.fview));
+    dwb_source_remove(dwb.state.fview);
+    CLEAR_COMMAND_TEXT(dwb.state.fview);
+    dwb.state.fview = NULL;
   }
-  if (tmp) {
-    dwb_view_set_normal_style(VIEW(tmp));
-    dwb_source_remove(tmp);
-    CLEAR_COMMAND_TEXT(tmp);
-  }
-  dwb_grab_focus(gl);
 } /*}}}*/
 
 /* dwb_get_default_settings()         return: GHashTable {{{*/
@@ -1719,9 +1715,9 @@ dwb_update_status(GList *gl) {
   FREE(filename);
 }/*}}}*/
 
-/* dwb_grab_focus(GList *gl) {{{*/
+/* dwb_focus(GList *gl) {{{*/
 void 
-dwb_grab_focus(GList *gl) {
+dwb_focus(GList *gl) {
   View *v = gl->data;
 
   if (dwb.gui.entry) {

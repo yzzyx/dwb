@@ -601,7 +601,7 @@ void dwb_set_status_bar_text(GtkWidget *, const char *, GdkColor *,  PangoFontDe
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
 void dwb_update_layout(gboolean);
-void dwb_focus(GList *gl);
+void dwb_unfocus(void);
 
 gboolean dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const char *, const char *);
@@ -617,7 +617,7 @@ void dwb_toggle_tabbar(void);
 int dwb_history_back(void);
 int dwb_history_forward(void);
 
-void dwb_grab_focus(GList *);
+void dwb_focus(GList *);
 void dwb_source_remove(GList *);
 gboolean dwb_spawn(GList *, const char *, const char *uri);
 

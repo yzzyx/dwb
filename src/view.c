@@ -76,6 +76,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     FREE(clipboard);
   }
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS && WEBVIEW(gl) != CURRENT_WEBVIEW()) {
+    dwb_unfocus();
     dwb_focus(gl);
   }
   else if (e->button == 3 && e->state & GDK_BUTTON1_MASK) {
@@ -561,6 +562,7 @@ dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) 
       dwb_focus_view(gl);
     }
     else {
+      dwb_unfocus();
       dwb_focus(gl);
       dwb_view_push_master(&a);
     }
@@ -840,7 +842,7 @@ dwb_view_push_master(Arg *arg) {
     gtk_box_reorder_child(GTK_BOX(dwb.gui.right), old->vbox, 0);
     dwb.state.views = g_list_remove_link(dwb.state.views, gl);
     dwb.state.views = g_list_concat(gl, dwb.state.views);
-    dwb_grab_focus(dwb.state.views);
+    dwb_focus(dwb.state.views);
   }
   if (dwb.state.layout & MAXIMIZED) {
     gtk_widget_show(dwb.gui.left);
@@ -902,7 +904,7 @@ dwb_view_remove(Arg *a) {
   gtk_widget_destroy(v->scroll);
   gtk_widget_destroy(v->vbox);
   dwb.gui.entry = NULL;
-  dwb_grab_focus(dwb.state.fview);
+  dwb_focus(dwb.state.fview);
   gtk_container_remove(GTK_CONTAINER(dwb.gui.topbox), v->tabevent);
 
   /*  clean up */ 
@@ -979,6 +981,7 @@ dwb_add_view(Arg *arg, gboolean background) {
     ret = g_list_last(dwb.state.views);
   }
   else {
+    dwb_unfocus();
     dwb_focus(dwb.state.views);
   }
 
