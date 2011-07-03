@@ -506,25 +506,13 @@ dwb_com_push_master(KeyMap *km, Arg *arg) {
 /* dwb_com_focus(KeyMap *km, Arg *arg) {{{*/
 gboolean 
 dwb_com_focus(KeyMap *km, Arg *arg) {
-  int pos = modulo(g_list_position(dwb.state.views, dwb.state.fview) + NUMMOD * arg->n, g_list_length(dwb.state.views));
-  GList *g = g_list_nth(dwb.state.views, pos);
-  if (!dwb.state.views->next) {
-    return false;
+  if (dwb.state.views->next) {
+    int pos = modulo(g_list_position(dwb.state.views, dwb.state.fview) + NUMMOD * arg->n, g_list_length(dwb.state.views));
+    GList *g = g_list_nth(dwb.state.views, pos);
+    dwb_focus_view(g);
+    return true;
   }
-  if (dwb.state.layout & MAXIMIZED) {
-    if (g == dwb.state.views) {
-      gtk_widget_hide(dwb.gui.right);
-      gtk_widget_show(dwb.gui.left);
-    }
-    else if (dwb.state.fview == dwb.state.views) {
-      gtk_widget_hide(dwb.gui.left);
-      gtk_widget_show(dwb.gui.right);
-    }
-    gtk_widget_show(((View *)g->data)->vbox);
-    gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
-  }
-  dwb_focus(g);
-  return true;
+  return false;
 }/*}}}*/
 
 /* dwb_com_focus_view{{{*/

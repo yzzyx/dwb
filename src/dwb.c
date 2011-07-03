@@ -1243,7 +1243,7 @@ dwb_open_si_channel() {
   dwb_open_channel(dwb.files.unifile);
 }/*}}}*/
 
-/* dwb_com_focus(GList *gl) {{{*/
+/* dwb_focus(GList *gl) {{{*/
 void 
 dwb_focus(GList *gl) {
   GList *tmp = NULL;
