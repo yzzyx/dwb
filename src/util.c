@@ -522,6 +522,7 @@ dwb_util_file_add(const char *filename, const char *text, int append, int max) {
   g_string_free(content, true);
   return ret;
 }
+
 gboolean 
 dwb_util_file_add_navigation(const char *filename, const Navigation *n, int append, int max) {
   gboolean  ret;
@@ -530,3 +531,9 @@ dwb_util_file_add_navigation(const char *filename, const Navigation *n, int appe
   g_free(text);
   return ret;
 }/*}}}*/
+
+void
+gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gint padding, int position) {
+  gtk_box_pack_start(box, child, expand, fill, padding);
+  gtk_box_reorder_child(box, child, position);
+}

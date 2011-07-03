@@ -1911,7 +1911,7 @@ dwb_update_layout(gboolean background) {
         gtk_widget_show_all(dwb.gui.right);
         gtk_widget_hide(((View*)dwb.state.views->next->data)->entry);
       }
-      w = background ? WEBVIEW(g_list_last(dwb.state.views)) : WEBVIEW(dwb.state.views->next);
+      w = WEBVIEW(dwb.state.views->next);
       if (dwb.misc.factor != 1.0) {
         webkit_web_view_set_zoom_level(w, dwb.misc.factor);
       }
