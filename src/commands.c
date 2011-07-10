@@ -835,5 +835,11 @@ gboolean
 dwb_com_toggle_hidden_files(KeyMap *km, Arg *arg) {
   dwb.state.hidden_files = !dwb.state.hidden_files;
   dwb_com_reload(km, arg);
-  return true;
+  return -1;
 }/*}}}*/
+
+gboolean
+dwb_com_quit(KeyMap *km, Arg *arg) {
+  dwb_end();
+  return NO_ERROR;
+}

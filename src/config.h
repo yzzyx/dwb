@@ -130,4 +130,5 @@ static KeyValue KEYS[] = {
   { "load_html_nv",                    {   NULL,         0 }, }, 
   { "toggle_hidden_files",          {   "g.",         0 }, }, 
   { "complete_path",          {   "p",         GDK_CONTROL_MASK }, }, 
+  { "quit",                   {   "q",         GDK_CONTROL_MASK }, }, 
 };

@@ -163,6 +163,8 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_open_startpage,      "No startpage set",                ALWAYS_SM, },
   { { "push_master",           "Push to master area",               }, 1, 
     (Func)dwb_com_push_master,         "No other view",                   ALWAYS_SM, },
+  { { "quit",           "Quit dwb",               }, 1, 
+    (Func)dwb_com_quit,         NULL,                   ALWAYS_SM, },
   { { "reload",                "Reload current page",                            }, 1, 
     (Func)dwb_com_reload,              NULL,                              ALWAYS_SM, },
   { { "remove_view",           "Close view",                        }, 1, 
@@ -1133,6 +1135,7 @@ dwb_block_ad(GList *gl, const char *uri) {
   if (!VIEW(gl)->status->adblocker) 
     return false;
 
+  PRINT_DEBUG("%s", uri);
   for (GList *l = dwb.fc.adblock; l; l=l->next) {
     char *data = l->data;
     if (data[0] == '@') {

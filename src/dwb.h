@@ -217,7 +217,8 @@ typedef enum {
 #define APPEND  0x01
 #define PREPEND  0x02
 
-#define NO_ERROR  -1
+#define NO_ERROR 0 
+#define ERROR -1
 
 typedef enum {
   ALLOW_HOST  = 1<<0,
@@ -634,7 +635,7 @@ gboolean dwb_eval_editing_key(GdkEventKey *);
 void dwb_parse_command_line(const char *);
 GHashTable * dwb_get_default_settings(void);
 
-gboolean dwb_end(void);
+int dwb_end(void);
 Key dwb_str_to_key(char *);
 
 GList * dwb_keymap_add(GList *, KeyValue );
