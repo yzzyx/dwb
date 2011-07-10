@@ -2119,19 +2119,28 @@ dwb_normal_mode(gboolean clean) {
   if (clean) {
     dwb_clean_buffer(dwb.state.fview);
   }
-  webkit_web_view_unmark_text_matches(CURRENT_WEBVIEW());
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   dwb_clean_vars();
 }/*}}}*/
 
+gboolean
+dwb_highlight_search() {
+  WebKitWebView *web = CURRENT_WEBVIEW();
+  int matches;
+  webkit_web_view_unmark_text_matches(web);
+  if ( (matches = webkit_web_view_mark_text_matches(web, CURRENT_VIEW()->status->search_string, false, 0)) ) {
+    dwb_set_normal_message(dwb.state.fview, false, "[%d matches]", matches);
+    webkit_web_view_set_highlight_text_matches(web, true);
+    return true;
+  }
+  return false;
+}
 /* dwb_update_search(gboolean ) {{{*/
 gboolean 
 dwb_update_search(gboolean forward) {
   View *v = CURRENT_VIEW();
-  WebKitWebView *web = CURRENT_WEBVIEW();
   const char *text = GET_TEXT();
-  int matches;
   if (strlen(text) > 0) {
     FREE(v->status->search_string);
     v->status->search_string =  g_strdup(text);
@@ -2139,12 +2148,7 @@ dwb_update_search(gboolean forward) {
   if (!v->status->search_string) {
     return false;
   }
-  webkit_web_view_unmark_text_matches(web);
-  if ( (matches = webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0)) ) {
-    dwb_set_normal_message(dwb.state.fview, false, "[%d matches]", matches);
-    webkit_web_view_set_highlight_text_matches(web, true);
-  }
-  else {
+  if (! dwb_highlight_search()) {
     dwb_set_error_message(dwb.state.fview, "[0 matches]");
     dwb_normal_mode(false);
     return false;
@@ -2161,7 +2165,7 @@ dwb_search(KeyMap *km, Arg *arg) {
     if (!arg->b) {
       forward = !dwb.state.forward_search;
     }
-    dwb_update_search(forward);
+    dwb_highlight_search();
   }
   if (v->status->search_string) {
     webkit_web_view_search_text(WEBKIT_WEB_VIEW(v->web), v->status->search_string, false, forward, true);
