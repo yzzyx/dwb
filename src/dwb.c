@@ -2130,7 +2130,7 @@ dwb_highlight_search() {
   int matches;
   webkit_web_view_unmark_text_matches(web);
   if ( (matches = webkit_web_view_mark_text_matches(web, CURRENT_VIEW()->status->search_string, false, 0)) ) {
-    dwb_set_normal_message(dwb.state.fview, false, "[%d matches]", matches);
+    dwb_set_normal_message(dwb.state.fview, false, "[%3d hits] ", matches);
     webkit_web_view_set_highlight_text_matches(web, true);
     return true;
   }
@@ -2149,8 +2149,7 @@ dwb_update_search(gboolean forward) {
     return false;
   }
   if (! dwb_highlight_search()) {
-    dwb_set_error_message(dwb.state.fview, "[0 matches]");
-    dwb_normal_mode(false);
+    dwb_set_status_bar_text(CURRENT_VIEW()->lstatus, "[  0 hits] ", &dwb.color.error, dwb.font.fd_active, false);
     return false;
   }
   return true;
