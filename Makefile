@@ -21,6 +21,7 @@ install-data:
 	install -Dm 644 $(LIBDIR)/head.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/head.html
 	install -Dm 644 $(LIBDIR)/settings.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/settings.html
 	install -Dm 644 $(LIBDIR)/keys.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/keys.html
+	install -Dm 644 $(LIBDIR)/$(PLUGIN_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(PLUGIN_FILE)
 	install -Dm 644 $(SHAREDIR)/dwb.png $(DESTDIR)$(DATADIR)/pixmaps/dwb.png
 	install -Dm 644 $(SHAREDIR)/dwb.desktop $(DESTDIR)$(DATADIR)/applications/dwb.desktop
 

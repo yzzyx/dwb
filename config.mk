@@ -9,6 +9,10 @@ EXAMPLEDIR=examples
 LIBDIR=lib
 SHAREDIR=share
 
+# VARIOUS FILES
+PLUGIN_FILE=pluginblocker.asc
+
+
 HG_VERSION=$(shell hg id -n 2>/dev/null)
 
 VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo "$(REAL_VERSION)"; fi)
@@ -32,6 +36,7 @@ FLAGS += -DNAME=\"$(NAME)\"
 FLAGS += -DVERSION=\"$(VERSION)\" 
 FLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
 FLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
+FLAGS += -DPLUGIN_FILE=\"$(PLUGIN_FILE)\"
 
 DFLAGS += $(FLAGS)
 DFLAGS += -DDWB_DEBUG

@@ -18,6 +18,7 @@
 
 #include "view.h"
 #include "html.h"
+#include "plugins.h"
 
 static void dwb_view_ssl_state(GList *);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
@@ -423,6 +424,8 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       // TODO use this state for adblocker
       break;
     case WEBKIT_LOAD_COMMITTED: 
+      // TODO
+
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
           && (((host = dwb_get_host(web)) 
           && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
@@ -694,6 +697,11 @@ dwb_view_create_web_view() {
   status->mimetype = NULL;
   status->hover_uri = NULL;
   status->progress = 0;
+
+  Plugins *plugins = g_malloc(sizeof(Plugins));
+  plugins->elements = NULL;
+  plugins->allowed = NULL;
+
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
   v->status = status;
@@ -939,6 +947,8 @@ dwb_add_view(Arg *arg, gboolean background) {
   GList *ret = NULL;
 
   View *v = dwb_view_create_web_view();
+  //g_signal_emit_by_name(dwb.instance, "new-view");
+  //dwb_plugins_blocker_connect(v->web);
   if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
     PRINT_DEBUG("position :%d", p);
@@ -977,8 +987,8 @@ dwb_add_view(Arg *arg, gboolean background) {
     dwb_unfocus();
     dwb_focus(ret);
   }
-  if (!background)  {
-  }
+
+
 
   dwb_web_view_init_signals(ret);
   dwb_web_view_init_settings(ret);
