@@ -271,8 +271,9 @@ enum Signal {
   SIG_ENTRY_KEY_RELEASE,
   SIG_ENTRY_ACTIVATE,
   SIG_TAB_BUTTON_PRESS, 
-  SIG_PLUGIN_BLOCKER,
   SIG_POPULATE_POPUP, 
+  SIG_PLUGINS_LOAD,
+  SIG_PLUGINS_FRAME_LOAD,
   SIG_LAST,
 };
 
@@ -420,11 +421,7 @@ struct _ViewStatus {
   int tab_height;
   char *hover_uri;
   gboolean plugin_blocker;
-};
-struct _Plugins {
-  GSList *elements;
-  GSList *allowed;
-  gpointer data;
+  GSList  *allowed_plugins;
 };
 
 struct _View {
@@ -447,7 +444,6 @@ struct _View {
   GtkWidget *bottombox;
   ViewStatus *status;
   GHashTable *setting;
-  Plugins *plugins;
 };
 struct _Color {
   GdkColor active_fg;

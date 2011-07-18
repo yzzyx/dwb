@@ -696,11 +696,8 @@ dwb_view_create_web_view() {
   status->downloads = NULL;
   status->mimetype = NULL;
   status->hover_uri = NULL;
+  status->allowed_plugins = NULL;
   status->progress = 0;
-
-  Plugins *plugins = g_malloc(sizeof(Plugins));
-  plugins->elements = NULL;
-  plugins->allowed = NULL;
 
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
@@ -947,8 +944,6 @@ dwb_add_view(Arg *arg, gboolean background) {
   GList *ret = NULL;
 
   View *v = dwb_view_create_web_view();
-  //g_signal_emit_by_name(dwb.instance, "new-view");
-  //dwb_plugins_blocker_connect(v->web);
   if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
     PRINT_DEBUG("position :%d", p);
