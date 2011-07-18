@@ -202,8 +202,8 @@ const DwbHintObj = {
       const me = DwbHintObj;
 
       var style = document.styleSheets[document.styleSheets.length - 1];
-      style.insertRule('*[dwb_highlight=hint_normal] { background: ' + me._normalColor + ' !important; } ', 0);
-      style.insertRule('*[dwb_highlight=hint_active] { background: ' + me._activeColor + ' !important; } ', 0);
+      style.insertRule('*[dwb_highlight=hint_normal] { background-color: ' + me._normalColor + ' !important; } ', 0);
+      style.insertRule('*[dwb_highlight=hint_active] { background-color: ' + me._activeColor + ' !important; } ', 0);
     },
 
   getVisibility :
