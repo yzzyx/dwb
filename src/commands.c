@@ -83,7 +83,7 @@ dwb_com_focus_input(KeyMap *km, Arg *a) {
   char *value;
   gboolean ret = true;
 
-  if ((value = dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.focusInput()", true)) && !strcmp(value, "_dwb_no_input_")) {
+  if ((value = dwb_execute_script(MAIN_FRAME(), "DwbHintObj.focusInput()", true)) && !strcmp(value, "_dwb_no_input_")) {
     ret = false;
   }
   FREE(value);
@@ -96,7 +96,7 @@ gboolean
 dwb_com_add_search_field(KeyMap *km, Arg *a) {
   char *value;
   gboolean ret = true;
-  if ( (value = dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.addSearchEngine()", true)) ) {
+  if ( (value = dwb_execute_script(MAIN_FRAME(), "DwbHintObj.addSearchEngine()", true)) ) {
     if (!strcmp(value, "_dwb_no_hints_")) {
       return false;
     }
@@ -167,7 +167,7 @@ dwb_com_show_hints(KeyMap *km, Arg *arg) {
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.showHints()", false);
+    dwb_execute_script(MAIN_FRAME(), "DwbHintObj.showHints()", false);
     dwb.state.mode = HINT_MODE;
     dwb_focus_entry();
   }
@@ -375,7 +375,7 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
         y = sign * inc;
       }
       char *command = g_strdup_printf("window.scrollBy(%d, %d)", x, y);
-      dwb_execute_script(CURRENT_WEBVIEW(), command, false);
+      dwb_execute_script(FOCUSED_FRAME(), command, false);
       g_free(command);
       return false;
     }

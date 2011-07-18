@@ -396,7 +396,7 @@ static void
 dwb_web_view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   if (status == WEBKIT_LOAD_COMMITTED) {
-    dwb_execute_script(web, dwb.misc.scripts, false);
+    dwb_execute_script(MAIN_FRAME(), dwb.misc.scripts, false);
   }
 }
 /* dwb_web_view_load_status_cb {{{*/
@@ -433,7 +433,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
-      dwb_execute_script(web, "DwbHintObj.createStyleSheet()", false);
+      dwb_execute_script(MAIN_FRAME(), "DwbHintObj.createStyleSheet()", false);
       /* TODO sqlite */
       if (!dwb.misc.private_browsing && dwb_prepend_navigation(gl, &dwb.fc.history))
         dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);

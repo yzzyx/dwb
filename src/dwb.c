@@ -756,7 +756,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = false;
   }
   else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_KEY_Return) {
-    dwb_execute_script(CURRENT_WEBVIEW(), "DwbSelection.followSelection()", false);
+    dwb_execute_script(MAIN_FRAME(), "DwbSelection.followSelection()", false);
   }
   else if (DWB_TAB_KEY(e)) {
     dwb_comp_autocomplete(dwb.keymap, e);
@@ -1439,7 +1439,7 @@ void
 dwb_submit_searchengine(void) {
   char *com = g_strdup_printf("DwbHintObj.submitSearchEngine(\"%s\")", HINT_SEARCH_SUBMIT);
   char *value;
-  if ( (value = dwb_execute_script(CURRENT_WEBVIEW(), com, true))) {
+  if ( (value = dwb_execute_script(MAIN_FRAME(), com, true))) {
     dwb.state.form_name = value;
   }
   FREE(com);
@@ -1537,7 +1537,7 @@ dwb_update_hints(GdkEventKey *e) {
     FREE(val);
   }
   if (com) {
-    buffer = dwb_execute_script(CURRENT_WEBVIEW(), com, true);
+    buffer = dwb_execute_script(MAIN_FRAME(), com, true);
     g_free(com);
   }
   if (buffer) { 
@@ -1564,14 +1564,10 @@ dwb_update_hints(GdkEventKey *e) {
 
 /* dwb_execute_script {{{*/
 char *
-dwb_execute_script(WebKitWebView *web, const char *com, gboolean ret) {
+dwb_execute_script(WebKitWebFrame *frame, const char *com, gboolean ret) {
   JSValueRef eval_ret;
   size_t length;
   char *retval;
-
-  WebKitWebFrame *frame =  webkit_web_view_get_focused_frame(web);
-  if (frame == NULL) 
-    frame = webkit_web_view_get_main_frame(web);
 
   JSContextRef context = webkit_web_frame_get_global_context(frame);
   JSStringRef text = JSStringCreateWithUTF8CString(com);
@@ -1824,7 +1820,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
   }
   /* Check if uri is a javascript snippet */
   if (g_str_has_prefix(arg->p, "javascript:")) {
-    dwb_execute_script(web, arg->p, false);
+    dwb_execute_script(webkit_web_view_get_main_frame(web), arg->p, false);
     return;
   }
   /* Check if uri is a directory */
@@ -2114,7 +2110,7 @@ dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
   if (dwb.state.mode == HINT_MODE || dwb.state.mode == SEARCH_FIELD_MODE) {
-    dwb_execute_script(CURRENT_WEBVIEW(), "DwbHintObj.clear()", false);
+    dwb_execute_script(MAIN_FRAME(), "DwbHintObj.clear()", false);
   }
   else if (mode  == INSERT_MODE) {
     dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
@@ -2196,7 +2192,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
   while (g_io_channel_read_line(channel, &line, NULL, NULL, &error) == G_IO_STATUS_NORMAL) {
     if (g_str_has_prefix(line, "javascript:")) {
       char *value; 
-      if ( ( value = dwb_execute_script(CURRENT_WEBVIEW(), line + 11, true))) {
+      if ( ( value = dwb_execute_script(MAIN_FRAME(), line + 11, true))) {
         g_io_channel_write_chars(out_channel, value, -1, NULL, NULL);
         g_io_channel_write_chars(out_channel, "\n", 1, NULL, NULL);
         g_free(value);

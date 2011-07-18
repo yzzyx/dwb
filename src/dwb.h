@@ -79,6 +79,8 @@
 #define VIEW(X)                     ((View*)X->data)
 #define WEBVIEW(X)                  (WEBKIT_WEB_VIEW(((View*)X->data)->web))
 #define CURRENT_WEBVIEW()           (WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web))
+#define MAIN_FRAME()                (webkit_web_view_get_main_frame(CURRENT_WEBVIEW()))  
+#define FOCUSED_FRAME()             (webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()))  
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
 #define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL, false)
@@ -624,7 +626,7 @@ gboolean dwb_update_hints(GdkEventKey *);
 gboolean dwb_search(KeyMap *, Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
-char * dwb_execute_script(WebKitWebView *, const char *, gboolean);
+char * dwb_execute_script(WebKitWebFrame *, const char *, gboolean);
 void dwb_resize(double );
 void dwb_toggle_tabbar(void);
 int dwb_history_back(void);
