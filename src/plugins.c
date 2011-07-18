@@ -60,6 +60,7 @@ dwb_plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList
       && ! g_slist_find(ALLOWED(gl), element) ) {
     webkit_dom_event_prevent_default(event);
     webkit_dom_event_stop_propagation(event);
+    webkit_dom_element_set_attribute(element, "style", "displaye:none!important", NULL);
 
     dwb_plugins_create_click_element(element, gl);
   }
@@ -110,6 +111,7 @@ void
 dwb_plugins_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
   g_signal_connect(frame, "load-committed", G_CALLBACK(dwb_plugins_frame_load_committed_cb), gl);
 }
+
 void 
 dwb_plugin_blocker_connect(GList *gl) {
   VIEW(gl)->status->signals[SIG_PLUGINS_LOAD] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(dwb_plugins_load_status_cb), gl);
