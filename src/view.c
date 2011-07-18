@@ -196,7 +196,6 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
 
   v->status->mimetype = g_strdup(mimetype);
 
-  PRINT_DEBUG("%s", mimetype);
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
     webkit_web_policy_decision_download(policy);
@@ -213,8 +212,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
-  PRINT_DEBUG("request uri : %s", uri);
-  
   if (g_str_has_prefix(uri, "dwb://")) {
     dwb_html_load(gl, uri);
     return true;
@@ -285,7 +282,6 @@ static void
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
-
   if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
     webkit_network_request_set_uri(request, "about:blank");
     return;
@@ -302,7 +298,6 @@ dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame,
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
 static gboolean
 dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
-  PRINT_DEBUG("%p", e);
   dwb_update_status_text(gl, NULL);
   if (GET_BOOL("enable-frame-flattening")) {
     Arg a = { .n = e->direction };
@@ -687,17 +682,15 @@ dwb_web_view_init_signals(GList *gl) {
 static View * 
 dwb_view_create_web_view() {
   View *v = g_malloc(sizeof(View));
-#if 0
-  GList *tmp;
-#endif
 
-  ViewStatus *status = g_malloc(sizeof(ViewStatus));
+  ViewStatus *status = dwb_malloc(sizeof(ViewStatus));
   status->search_string = NULL;
   status->downloads = NULL;
   status->mimetype = NULL;
   status->hover_uri = NULL;
-  status->allowed_plugins = NULL;
   status->progress = 0;
+  status->allowed_plugins = NULL;
+
 
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;

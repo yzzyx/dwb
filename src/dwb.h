@@ -272,8 +272,12 @@ enum Signal {
   SIG_ENTRY_ACTIVATE,
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
+
   SIG_PLUGINS_LOAD,
   SIG_PLUGINS_FRAME_LOAD,
+  SIG_PLUGINS_CREATE_WIDGET,
+  SIG_PLUGINS_LAST,
+
   SIG_LAST,
 };
 
@@ -421,7 +425,7 @@ struct _ViewStatus {
   int tab_height;
   char *hover_uri;
   gboolean plugin_blocker;
-  GSList  *allowed_plugins;
+  GSList *allowed_plugins;
 };
 
 struct _View {
