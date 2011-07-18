@@ -13,6 +13,9 @@ dwb_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) {
   WebKitDOMNode *parent = webkit_dom_node_get_parent_node(el);
   webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
   webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(e), NULL);
+  char *display = g_strdup_printf("display:%s;", (char*)g_object_get_data(G_OBJECT(e), "dwb-plugin-display"));
+  webkit_dom_element_set_attribute(e, "style", display, NULL);
+  g_free(display);
 }
 
 static void
@@ -28,6 +31,7 @@ dwb_plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     char *height = webkit_dom_css_style_declaration_get_property_value(style, "height");
     char *top = webkit_dom_css_style_declaration_get_property_value(style, "top");
     char *left = webkit_dom_css_style_declaration_get_property_value(style, "left");
+    char *display = webkit_dom_css_style_declaration_get_property_value(style, "display");
     int w, h;
     if (sscanf(width, "%dpx", &w) == 1 && w<48) 
       width = PLUGIN_IMAGE_SIZE;
@@ -42,8 +46,11 @@ dwb_plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
 
     webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
     webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(div), NULL);
+    // at least hide element if default behaviour cannot be prevented
+    webkit_dom_element_set_attribute(element, "style", "display:none!important", NULL);
 
     g_object_set_data((gpointer)div, "dwb-plugin-element", element);
+    g_object_set_data((gpointer)element, "dwb-plugin-display", display);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(div), "click", G_CALLBACK(dwb_onclick_cb), false, gl);
 
     g_free(new_style);
@@ -60,7 +67,6 @@ dwb_plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList
       && ! g_slist_find(ALLOWED(gl), element) ) {
     webkit_dom_event_prevent_default(event);
     webkit_dom_event_stop_propagation(event);
-    webkit_dom_element_set_attribute(element, "style", "displaye:none!important", NULL);
 
     dwb_plugins_create_click_element(element, gl);
   }
