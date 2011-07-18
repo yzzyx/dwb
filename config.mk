@@ -20,6 +20,11 @@ LIBS  += webkit-1.0
 #LIBS  += webkitgtk-3.0
 #LIBS  += json-glib-1.0
 
+INFO_FILE=info.html
+SETTINGS_FILE=settings.html
+HEAD_FILE=head.html
+KEY_FILE=keys.html
+
 #FLAGS += -pedantic
 FLAGS += -Wall 
 FLAGS += -pipe
@@ -32,6 +37,11 @@ FLAGS += -DNAME=\"$(NAME)\"
 FLAGS += -DVERSION=\"$(VERSION)\" 
 FLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
 FLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
+
+FLAGS += -DINFO_FILE=\"$(INFO_FILE)\"
+FLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
+FLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
+FLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
 
 DFLAGS += $(FLAGS)
 DFLAGS += -DDWB_DEBUG

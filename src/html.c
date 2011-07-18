@@ -2,10 +2,12 @@
 #include "html.h"
 #include "util.h"
 
+#if 0
 #define INFO_FILE "info.html"
 #define SETTINGS_FILE "settings.html"
 #define HEAD_FILE "head.html"
 #define KEY_FILE "keys.html"
+#endif
 
 typedef struct _HtmlTable HtmlTable;
 

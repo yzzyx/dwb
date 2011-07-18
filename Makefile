@@ -17,10 +17,10 @@ install-man:
 install-data: 
 	install -Dm 644 $(JSDIR)/hints.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js
 	install -Dm 644 $(JSDIR)/selection.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/selection.js
-	install -Dm 644 $(LIBDIR)/info.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/info.html
-	install -Dm 644 $(LIBDIR)/head.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/head.html
-	install -Dm 644 $(LIBDIR)/settings.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/settings.html
-	install -Dm 644 $(LIBDIR)/keys.html $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/keys.html
+	install -Dm 644 $(LIBDIR)/$(INFO_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(INFO_FILE)
+	install -Dm 644 $(LIBDIR)/$(HEAD_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(HEAD_FILE)
+	install -Dm 644 $(LIBDIR)/$(SETTINGS_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(SETTINGS_FILE)
+	install -Dm 644 $(LIBDIR)/$(KEY_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(KEY_FILE)
 	install -Dm 644 $(SHAREDIR)/dwb.png $(DESTDIR)$(DATADIR)/pixmaps/dwb.png
 	install -Dm 644 $(SHAREDIR)/dwb.desktop $(DESTDIR)$(DATADIR)/applications/dwb.desktop
 
