@@ -13,7 +13,6 @@ const DwbHintObj = {
   _hintOpacity : 0.65,
   _elements : [], 
   _activeArr : [], 
-  _styles : null,
   _lastInput : null,
   _lastPosition : 0,
   _activeInput : null,
@@ -201,14 +200,8 @@ const DwbHintObj = {
   createStyleSheet : 
     function () {
       const me = DwbHintObj;
-      if (me._styles)
-        return;
-      me._styles = me.createElement("style");
-      me._styles.type = "text/css";
-      document.head.appendChild(me._styles);
 
       var style = document.styleSheets[document.styleSheets.length - 1];
-
       style.insertRule('*[dwb_highlight=hint_normal] { background: ' + me._normalColor + ' !important; } ', 0);
       style.insertRule('*[dwb_highlight=hint_active] { background: ' + me._activeColor + ' !important; } ', 0);
     },

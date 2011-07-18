@@ -27,6 +27,7 @@
 #include "config.h"
 #include "icon.xpm"
 #include "html.h"
+#include "plugins.h"
 
 
 /* DECLARATIONS {{{*/
@@ -39,6 +40,7 @@ static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_startpage(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
+static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_adblock(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
@@ -574,6 +576,8 @@ static WebSettings DWB_SETTINGS[] = {
     false, true,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy,   }, 
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
     false, false,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
+  { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
+    false, false,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
 };/*}}}*/
 
 /* SETTINGS_FUNCTIONS{{{*/
@@ -583,6 +587,16 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
   return;
 }/*}}}*/
 
+/* dwb_set_adblock {{{*/
+static void
+dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
+  View *v = gl->data;
+  v->status->plugin_blocker = s->arg.b;
+  if (s->arg.b) 
+    dwb_plugin_blocker_init();
+  else 
+    dwb_plugin_blocker_uninit();
+}/*}}}*/
 /* dwb_set_adblock {{{*/
 static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
@@ -2030,6 +2044,7 @@ dwb_eval_key(GdkEventKey *e) {
   GList *coms = NULL;
 
   PRINT_DEBUG("buffer: %s key: %s", buf, key);
+  PRINT_DEBUG("%d", e->state);
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
@@ -2447,6 +2462,21 @@ dwb_str_to_key(char *str) {
     }
     else if (!g_ascii_strcasecmp(string[i], "Mod4")) {
       key.mod |= GDK_MOD4_MASK;
+    }
+    else if (!g_ascii_strcasecmp(string[i], "Button1")) {
+      key.mod |= GDK_BUTTON1_MASK;
+    }
+    else if (!g_ascii_strcasecmp(string[i], "Button2")) {
+      key.mod |= GDK_BUTTON2_MASK;
+    }
+    else if (!g_ascii_strcasecmp(string[i], "Button3")) {
+      key.mod |= GDK_BUTTON3_MASK;
+    }
+    else if (!g_ascii_strcasecmp(string[i], "Button4")) {
+      key.mod |= GDK_BUTTON4_MASK;
+    }
+    else if (!g_ascii_strcasecmp(string[i], "Button5")) {
+      key.mod |= GDK_BUTTON5_MASK;
     }
     else {
       g_string_append(buffer, string[i]);
@@ -2927,6 +2957,9 @@ dwb_init() {
   dwb.misc.userscripts = NULL;
   dwb.state.last_cookies = NULL;
 
+  char *path = dwb_util_get_data_file(PLUGIN_FILE);
+  dwb.misc.pbbackground = dwb_util_get_file_content(path);
+
 
   dwb_init_key_map();
   dwb_init_style();
@@ -2938,6 +2971,7 @@ dwb_init() {
   dwb_soup_init_proxy(dwb.misc.soupsession);
   dwb_soup_init_cookies(dwb.misc.soupsession);
   dwb_init_vars();
+
 
   if (dwb.state.layout & BOTTOM_STACK) {
     Arg a = { .n = dwb.state.layout };

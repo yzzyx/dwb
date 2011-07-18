@@ -18,6 +18,7 @@
 
 #include "view.h"
 #include "html.h"
+#include "plugins.h"
 
 static void dwb_view_ssl_state(GList *);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
@@ -423,6 +424,8 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       // TODO use this state for adblocker
       break;
     case WEBKIT_LOAD_COMMITTED: 
+      // TODO
+
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
           && (((host = dwb_get_host(web)) 
           && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
@@ -693,7 +696,9 @@ dwb_view_create_web_view() {
   status->downloads = NULL;
   status->mimetype = NULL;
   status->hover_uri = NULL;
+  status->allowed_plugins = NULL;
   status->progress = 0;
+
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
   v->status = status;
@@ -977,8 +982,8 @@ dwb_add_view(Arg *arg, gboolean background) {
     dwb_unfocus();
     dwb_focus(ret);
   }
-  if (!background)  {
-  }
+
+
 
   dwb_web_view_init_signals(ret);
   dwb_web_view_init_settings(ret);

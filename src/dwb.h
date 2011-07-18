@@ -69,7 +69,8 @@
 #define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X)) 
 #define NN(X)       ( ((X) == 0) ? 1 : (X) )
 
-#define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
+//#define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
+#define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
 #define CLEAN_SHIFT(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_LOCK_MASK))
 #define CLEAN_COMP_MODE(X)          (X & ~(COMPLETION_MODE) & ~(AUTO_COMPLETE))
 
@@ -130,6 +131,7 @@ typedef struct _KeyMap KeyMap;
 typedef struct _KeyValue KeyValue;
 typedef struct _Misc Misc;
 typedef struct _Navigation Navigation;
+typedef struct _Plugins Plugins;
 typedef struct _Quickmark Quickmark;
 typedef struct _Settings Settings;
 typedef struct _State State;
@@ -270,7 +272,8 @@ enum Signal {
   SIG_ENTRY_ACTIVATE,
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
-  
+  SIG_PLUGINS_LOAD,
+  SIG_PLUGINS_FRAME_LOAD,
   SIG_LAST,
 };
 
@@ -417,6 +420,8 @@ struct _ViewStatus {
   ScriptState scripts;
   int tab_height;
   char *hover_uri;
+  gboolean plugin_blocker;
+  GSList  *allowed_plugins;
 };
 
 struct _View {
@@ -519,6 +524,8 @@ struct _Misc {
   char *download_com;
   JSContextRef global_ctx;
   int tab_height;
+
+  char *pbbackground;
 };
 struct _Files {
   const char *bookmarks;
@@ -576,6 +583,7 @@ struct _Dwb {
   GHashTable *settings;
   Files files;
   FileContent fc;
+  gpointer *instance;
 };
 
 /*}}}*/

@@ -724,7 +724,7 @@ dwb_com_toggle_scripts(KeyMap *km, Arg *arg) {
   else if (arg->p) {
     block = arg->p;
   }
-  if (block) {
+  if (block != NULL) {
     if (arg->n & ALLOW_TMP) {
       GList *l;
       if ( (l = g_list_find_custom(dwb.fc.tmp_scripts, block, (GCompareFunc)strcmp)) ) {
