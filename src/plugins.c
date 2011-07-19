@@ -14,12 +14,15 @@ dwb_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) {
   WebKitDOMNode *parent = webkit_dom_node_get_parent_node(el);
   webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
   webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(e), NULL);
-  char *display = g_strdup_printf("display:%s;", (char*)g_object_get_data(G_OBJECT(e), "dwb-plugin-display"));
-  webkit_dom_element_set_attribute(e, "style", display, NULL);
-  g_free(display);
+  char *display_value = (char*)g_object_get_data(G_OBJECT(e), "dwb-plugin-display");
+  if (display_value != NULL) {
+    char *display = g_strdup_printf("display:%s;", display_value);
+    webkit_dom_element_set_attribute(e, "style", display, NULL);
+    g_free(display);
+  }
 }
 
-static void
+static char *
 dwb_plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
   WebKitDOMNode *parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(element));
 
@@ -50,14 +53,14 @@ dwb_plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
     webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(div), NULL);
     // at least hide element if default behaviour cannot be prevented
-    webkit_dom_element_set_attribute(element, "style", "display:none!important", NULL);
 
     g_object_set_data((gpointer)div, "dwb-plugin-element", element);
-    g_object_set_data((gpointer)element, "dwb-plugin-display", display);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(div), "click", G_CALLBACK(dwb_onclick_cb), false, gl);
 
     g_free(new_style);
+    return display;
   }
+  return NULL;
 }
 static gboolean
 dwb_plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl) {
@@ -100,9 +103,6 @@ dwb_plugins_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
 
 void
 dwb_plugins_frame_load_status_cb(WebKitWebFrame *frame, GList *gl) {
-  if (webkit_web_frame_get_load_status(frame) != WEBKIT_LOAD_COMMITTED)
-    return;
-
   WebKitWebView *wv = webkit_web_frame_get_web_view(frame);
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   const char *src = webkit_web_frame_get_uri(frame);
@@ -122,7 +122,7 @@ dwb_plugins_frame_load_status_cb(WebKitWebFrame *frame, GList *gl) {
 }
 void
 dwb_plugins_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  g_signal_connect(frame, "notify::load-status", G_CALLBACK(dwb_plugins_frame_load_status_cb), gl);
+  g_signal_connect(frame, "load-committed", G_CALLBACK(dwb_plugins_frame_load_status_cb), gl);
 }
 
 WebKitDOMElement *
@@ -165,7 +165,9 @@ dwb_plugins_create_plugin_widget_cb(WebKitWebView *wv, char *mimetype, char *uri
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   WebKitDOMElement *element;
   if ( (element = dwb_plugins_find_in_frames(doc, uri)) != NULL && !g_slist_find(ALLOWED(gl), element)) {
-    dwb_plugins_create_click_element(element, gl);
+    char *display = dwb_plugins_create_click_element(element, gl);
+    webkit_dom_element_set_attribute(element, "style", "display:none!important", NULL);
+    g_object_set_data((gpointer)element, "dwb-plugin-display", display);
   }
   return NULL;
 }
