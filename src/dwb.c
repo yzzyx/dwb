@@ -45,6 +45,7 @@ static void dwb_set_adblock(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
+static void dwb_follow_selection(void);
 
 
 static void dwb_clean_buffer(GList *);
@@ -756,7 +757,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = false;
   }
   else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_KEY_Return) {
-    dwb_execute_script(MAIN_FRAME(), "DwbSelection.followSelection()", false);
+    dwb_follow_selection();
   }
   else if (DWB_TAB_KEY(e)) {
     dwb_comp_autocomplete(dwb.keymap, e);
@@ -933,6 +934,25 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+/* dwb_follow_selection() {{{*/
+static void 
+dwb_follow_selection() {
+  char *href = NULL;
+  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
+  WebKitDOMDOMWindow *window = webkit_dom_document_get_default_view(doc);
+  WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(window);
+  WebKitDOMRange *range = webkit_dom_dom_selection_get_range_at(selection, 0, NULL);
+  WebKitDOMNode *n = webkit_dom_range_get_start_container(range, NULL);
+
+  for (; n != WEBKIT_DOM_NODE(webkit_dom_document_get_document_element(doc)) && href == NULL; n = webkit_dom_node_get_parent_node(n)) {
+    if (WEBKIT_DOM_IS_HTML_ANCHOR_ELEMENT(n)) {
+      href = webkit_dom_html_anchor_element_get_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(n));
+      webkit_web_view_load_uri(CURRENT_WEBVIEW(), href);
+    }
+  }
+}/*}}}*/
+
+/* dwb_open_startpage(GList *) {{{*/
 gboolean
 dwb_open_startpage(GList *gl) {
   if (!dwb.misc.startpage) 
@@ -943,7 +963,7 @@ dwb_open_startpage(GList *gl) {
   Arg a = { .p = dwb.misc.startpage, .b = true };
   dwb_load_uri(gl, &a);
   return true;
-}
+}/*}}}*/
 
 /* dwb_apply_settings(WebSettings *s) {{{*/
 static void
