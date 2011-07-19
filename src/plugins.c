@@ -173,26 +173,12 @@ dwb_plugin_blocker_connect(GList *gl) {
   VIEW(gl)->status->signals[SIG_PLUGINS_CREATE_WIDGET] = g_signal_connect(WEBVIEW(gl), "create-plugin-widget", G_CALLBACK(dwb_plugins_create_plugin_widget_cb), gl);
 }
 
-void
-dwb_plugin_blocker_init() {
-  for (GList *l = dwb.state.views; l; l=l->next) {
-    dwb_plugin_blocker_connect(l);
-  }
-}
-
-static void 
-dwb_plugins_disconnect(GList *gl) {
+void 
+dwb_plugin_blocker_disconnect(GList *gl) {
   for (int i=SIG_PLUGINS_LOAD; i<SIG_PLUGINS_LAST; i++) {
     if (VIEW(gl)->status->signals[i] > 0)  {
       g_signal_handler_disconnect(WEBVIEW(gl), VIEW(gl)->status->signals[i]);
       VIEW(gl)->status->signals[i] = 0;
     }
-  }
-}
-void
-dwb_plugin_blocker_uninit() {
-  for (GList *l = dwb.state.views; l; l=l->next) {
-    dwb_plugins_disconnect(l);
-    dwb_plugins_remove_all(l);
   }
 }

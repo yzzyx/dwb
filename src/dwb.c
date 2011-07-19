@@ -594,9 +594,9 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
   v->status->plugin_blocker = s->arg.b;
   if (s->arg.b) 
-    dwb_plugin_blocker_init();
+    dwb_plugin_blocker_connect(gl);
   else 
-    dwb_plugin_blocker_uninit();
+    dwb_plugin_blocker_disconnect(gl);
 }/*}}}*/
 /* dwb_set_adblock {{{*/
 static void

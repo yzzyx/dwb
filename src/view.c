@@ -980,6 +980,7 @@ dwb_add_view(Arg *arg, gboolean background) {
 
   dwb_web_view_init_signals(ret);
   dwb_web_view_init_settings(ret);
+  //dwb_hints_init();
 
   dwb_update_layout(background);
   if (arg && arg->p) {
