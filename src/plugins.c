@@ -99,7 +99,10 @@ dwb_plugins_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
 }
 
 void
-dwb_plugins_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
+dwb_plugins_frame_load_status_cb(WebKitWebFrame *frame, GList *gl) {
+  if (webkit_web_frame_get_load_status(frame) != WEBKIT_LOAD_COMMITTED)
+    return;
+
   WebKitWebView *wv = webkit_web_frame_get_web_view(frame);
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   const char *src = webkit_web_frame_get_uri(frame);
@@ -119,7 +122,7 @@ dwb_plugins_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
 }
 void
 dwb_plugins_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  g_signal_connect(frame, "load-committed", G_CALLBACK(dwb_plugins_frame_load_committed_cb), gl);
+  g_signal_connect(frame, "notify::load-status", G_CALLBACK(dwb_plugins_frame_load_status_cb), gl);
 }
 
 WebKitDOMElement *
