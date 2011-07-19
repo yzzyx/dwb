@@ -56,6 +56,9 @@ dwb_util_test_connect(const char *uri) {
   int s; 
   int ret = 1;
 
+  char *scheme = strstr(uri, "://");
+  if (scheme != NULL)
+    uri = scheme + 3;
   char **token = g_strsplit(uri, ":", 2);
   if (token[0] && token[1]) {
     char *host = !strcmp(token[0], "localhost") ? "127.0.0.1" : token[0];
