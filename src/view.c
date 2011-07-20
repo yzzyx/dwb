@@ -396,7 +396,7 @@ static void
 dwb_web_view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   if (status == WEBKIT_LOAD_COMMITTED) {
-    dwb_execute_script(MAIN_FRAME(), dwb.misc.scripts, false);
+    dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
   }
 }
 /* dwb_web_view_load_status_cb {{{*/
