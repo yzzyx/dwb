@@ -16,6 +16,7 @@ const DwbHintObj = {
   _lastInput : null,
   _lastPosition : 0,
   _activeInput : null,
+  _styles : 0,
   _hintTypes : 'a, img, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]',
 
 
@@ -200,6 +201,9 @@ const DwbHintObj = {
   createStyleSheet : 
     function () {
       const me = DwbHintObj;
+      if (me._styles != 0)
+        return;
+      me._styles = 1;
 
       var style = document.styleSheets[document.styleSheets.length - 1];
       style.insertRule('*[dwb_highlight=hint_normal] { background-color: ' + me._normalColor + ' !important; } ', 0);
