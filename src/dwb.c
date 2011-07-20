@@ -938,13 +938,20 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 static void 
 dwb_follow_selection() {
   char *href = NULL;
+  WebKitDOMNode *n = NULL;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
   WebKitDOMDOMWindow *window = webkit_dom_document_get_default_view(doc);
   WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(window);
+  if (selection == NULL)  
+    return;
   WebKitDOMRange *range = webkit_dom_dom_selection_get_range_at(selection, 0, NULL);
-  WebKitDOMNode *n = webkit_dom_range_get_start_container(range, NULL);
+  if (range == NULL) 
+    return;
 
-  for (; n != WEBKIT_DOM_NODE(webkit_dom_document_get_document_element(doc)) && href == NULL; n = webkit_dom_node_get_parent_node(n)) {
+  for (n = webkit_dom_range_get_start_container(range, NULL); 
+      n && n != WEBKIT_DOM_NODE(webkit_dom_document_get_document_element(doc)) && href == NULL; 
+      n = webkit_dom_node_get_parent_node(n)) 
+  {
     if (WEBKIT_DOM_IS_HTML_ANCHOR_ELEMENT(n)) {
       href = webkit_dom_html_anchor_element_get_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(n));
       webkit_web_view_load_uri(CURRENT_WEBVIEW(), href);
