@@ -507,7 +507,7 @@ struct _Misc {
   const char *profile;
   const char *default_search;
   SoupSession *soupsession;
-  SoupURI *proxyuri;
+  char *proxyuri;
 
   GIOChannel *si_channel;
   GList *userscripts;

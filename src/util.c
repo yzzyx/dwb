@@ -49,35 +49,6 @@ dwb_util_is_hex(const char *string) {
   FREE(loc);
   return ret;
 }/*}}}*/
-/* dwb_util_test_connect(const char *uri)      return: int {{{*/
-int
-dwb_util_test_connect(const char *uri) {
-  struct sockaddr_in addr;
-  int s; 
-  int ret = 1;
-
-  char *scheme = strstr(uri, "://");
-  if (scheme != NULL)
-    uri = scheme + 3;
-  char **token = g_strsplit(uri, ":", 2);
-  if (token[0] && token[1]) {
-    char *host = !strcmp(token[0], "localhost") ? "127.0.0.1" : token[0];
-    int port = strtol(token[1], NULL, 10);
-
-    s = socket(AF_INET, SOCK_STREAM, 0);
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(host);
-    if ( (ret = connect(s, (struct sockaddr*)&addr, sizeof(addr))) ) {
-      fprintf(stderr, "Cannot connect to %s\n",  uri);
-    }
-  }
-
-  shutdown(s, SHUT_RDWR);
-  g_strfreev(token);
-
-  return (!ret);
-}/*}}}*/
 
 /* dwb_util_modmask_to_char(guint modmask)      return char*{{{*/
 char *

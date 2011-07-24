@@ -194,6 +194,10 @@ static gboolean
 dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
   View *v = gl->data;
 
+  /* Prevents from segfault if proxy is set */
+  if ( !mimetype || strlen(mimetype) == 0 )
+    return false;
+
   v->status->mimetype = g_strdup(mimetype);
 
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OPEN_DOWNLOAD) {

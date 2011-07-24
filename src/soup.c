@@ -87,17 +87,17 @@ dwb_soup_init_cookies(SoupSession *s) {
 
 /* dwb_init_proxy{{{*/
 void 
-dwb_soup_init_proxy(SoupSession *s) {
+dwb_soup_init_proxy() {
   const char *proxy;
-  static char *newproxy;
   gboolean use_proxy = GET_BOOL("proxy");
   if ( !(proxy =  g_getenv("http_proxy")) && !(proxy =  GET_CHAR("proxy-url")) )
     return;
 
-  if ( (use_proxy && dwb_util_test_connect(proxy)) || !use_proxy ) {
-    newproxy = g_strrstr(proxy, "http://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
-    dwb.misc.proxyuri = soup_uri_new(newproxy);
-    g_object_set(G_OBJECT(s), "proxy-uri", use_proxy ? dwb.misc.proxyuri : NULL, NULL); 
-    FREE(newproxy);
-  }
+  if (dwb.misc.proxyuri)
+    g_free(dwb.misc.proxyuri);
+
+  dwb.misc.proxyuri = g_strrstr(proxy, "://") ? g_strdup(proxy) : g_strdup_printf("http://%s", proxy);
+  SoupURI *uri = soup_uri_new(dwb.misc.proxyuri);
+  g_object_set(dwb.misc.soupsession, "proxy-uri", use_proxy ? uri : NULL, NULL); 
+  soup_uri_free(uri);
 }/*}}}*/

@@ -659,12 +659,16 @@ dwb_set_single_instance(GList *l, WebSettings *s) {
 /* dwb_set_proxy{{{*/
 void
 dwb_set_proxy(GList *l, WebSettings *s) {
-  SoupURI *uri = NULL;
 
-  if (s->arg.b) { 
-    uri = dwb.misc.proxyuri;
+  //g_object_get(dwb.misc.soupsession, "proxy-uri", &uri, NULL);
+  if (s->arg.b) {
+    SoupURI *uri = soup_uri_new(dwb.misc.proxyuri);
+    g_object_set(dwb.misc.soupsession, "proxy-uri", uri, NULL);
+    soup_uri_free(uri);
   }
-  g_object_set(G_OBJECT(dwb.misc.soupsession), "proxy-uri", uri, NULL);
+  else  {
+    g_object_set(dwb.misc.soupsession, "proxy-uri", NULL, NULL);
+  }
   dwb_set_normal_message(dwb.state.fview, true, "Set setting proxy: %s", s->arg.b ? "true" : "false");
 }/*}}}*/
 
@@ -2980,6 +2984,7 @@ dwb_init() {
   dwb.misc.max_c_items = MAX_COMPLETIONS;
   dwb.misc.userscripts = NULL;
   dwb.state.last_cookies = NULL;
+  dwb.misc.proxyuri = NULL;
 
   char *path = dwb_util_get_data_file(PLUGIN_FILE);
   dwb.misc.pbbackground = dwb_util_get_file_content(path);
@@ -2992,7 +2997,7 @@ dwb_init() {
   dwb_init_scripts();
 
   dwb.misc.soupsession = webkit_get_default_session();
-  dwb_soup_init_proxy(dwb.misc.soupsession);
+  dwb_soup_init_proxy();
   dwb_soup_init_cookies(dwb.misc.soupsession);
   dwb_init_vars();
 
