@@ -2048,12 +2048,13 @@ dwb_eval_key(GdkEventKey *e) {
   }
   // nummod 
   if (DIGIT(e)) {
-    if (isdigit(old[strlen(old)-1])) {
+    if (dwb.state.nummod) {
       dwb.state.nummod = MIN(10*dwb.state.nummod + e->keyval - GDK_KEY_0, 314159);
     }
     else {
       dwb.state.nummod = e->keyval - GDK_KEY_0;
     }
+    PRINT_DEBUG("nummod: %d", dwb.state.nummod);
     return false;
   }
   g_string_append(dwb.state.buffer, key);
