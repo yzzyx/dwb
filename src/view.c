@@ -240,11 +240,11 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     webkit_web_policy_decision_ignore(policy);
     return true;
   }
-  if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
+  else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
     if (dwb.state.mode == INSERT_MODE) {
       dwb_normal_mode(true);
     }
-    if (dwb.state.mode == SEARCH_FIELD_MODE) {
+    else if (dwb.state.mode == SEARCH_FIELD_MODE) {
       PRINT_DEBUG("searchfields navigation request: %s", uri);
       webkit_web_policy_decision_ignore(policy);
       dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, HINT_SEARCH_SUBMIT) 
@@ -355,7 +355,6 @@ dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     v->status->progress = 0;
   }
   dwb_update_status(gl);
-  dwb_view_ssl_state(gl);
 }/*}}}*/
 
 static void
@@ -436,6 +435,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       FREE(host);
       break;
     case WEBKIT_LOAD_FINISHED:
+      dwb_view_ssl_state(gl);
       dwb_update_status(gl);
       dwb_execute_script(MAIN_FRAME(), "DwbHintObj.createStyleSheet()", false);
       /* TODO sqlite */

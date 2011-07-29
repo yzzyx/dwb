@@ -63,6 +63,12 @@
 
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
+#ifndef true
+#define true 1
+#endif
+#ifndef false 
+#define false 0
+#endif
 
 /* MAKROS {{{*/ 
 #define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
