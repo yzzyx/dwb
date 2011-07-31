@@ -68,6 +68,10 @@ dwb_modmask_to_string(guint modmask) {
       mod[i] = "Mod4";
       modmask ^= GDK_MOD4_MASK;
     }
+    else if (modmask & GDK_SHIFT_MASK) {
+      mod[i] = "Shift";
+      modmask ^= GDK_SHIFT_MASK;
+    }
   }
   mod[i] = NULL; 
   char *line = g_strjoinv(" ", mod);

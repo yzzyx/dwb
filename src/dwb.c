@@ -2018,6 +2018,7 @@ dwb_eval_key(GdkEventKey *e) {
   gboolean ret = false;
   const char *old = dwb.state.buffer ? dwb.state.buffer->str : NULL;
   int keyval = e->keyval;
+  unsigned int mod_mask;
 
   if (dwb.state.scriptlock) {
     return true;
@@ -2043,7 +2044,13 @@ dwb_eval_key(GdkEventKey *e) {
     return ret;
   }
   char *key = dwb_util_keyval_to_char(keyval);
-  if (!key) {
+  if (key) {
+    mod_mask = CLEAN_STATE(e);
+  }
+  else if ( (key = g_strdup(gdk_keyval_name(keyval)))) {
+    mod_mask = CLEAN_STATE_WITH_SHIFT(e);
+  }
+  else {
     return false;
   }
   if (!old) {
@@ -2083,7 +2090,7 @@ dwb_eval_key(GdkEventKey *e) {
     if (!km->key || !kl ) {
       continue;
     }
-    if (g_str_has_prefix(km->key, buf) && (CLEAN_STATE(e) == km->mod) ) {
+    if (g_str_has_prefix(km->key, buf) && (mod_mask == km->mod) ) {
       if  (!longest || kl > longest) {
         longest = kl;
         tmp = km;
@@ -2505,6 +2512,9 @@ dwb_str_to_key(char *str) {
     }
     else if (!g_ascii_strcasecmp(string[i], "Button5")) {
       key.mod |= GDK_BUTTON5_MASK;
+    }
+    else if (!g_ascii_strcasecmp(string[i], "Shift")) {
+      key.mod |= GDK_SHIFT_MASK;
     }
     else {
       g_string_append(buffer, string[i]);
