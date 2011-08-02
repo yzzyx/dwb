@@ -1,10 +1,9 @@
 String.prototype.isInt = function() { return !isNaN(parseInt(this)); }
 DwbHintObj = (function() {
-  var _hints = null;
   _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
-  _fontSize = "12px";
-  _fontWeight = "normal";
-  _fontFamily = "monospace";
+  _font = "bold 10px monospace";
+  //_fontWeight = "normal";
+  //_fontFamily = "monospace";
   _style = "letter";
   _fgColor = "#ffffff";
   _bgColor = "#000088";
@@ -19,6 +18,7 @@ DwbHintObj = (function() {
   _activeInput = null;
   _styles = 0;
   _hintTypes = "a, img, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]";
+  _styleSheet = null;
 
   const __newHint = function (element, win, offset, rect) {
       this.element = element;
@@ -46,17 +46,7 @@ DwbHintObj = (function() {
       }
       function create_hint(element) {
         var hint = create_span(element);
-        hint.style.fontSize = _fontSize;
-        hint.style.fontWeight = _fontWeight;
-        hint.style.fontFamily = _fontFamily;
-        hint.style.color = _fgColor;
-        hint.style.background = _bgColor;
-        hint.style.opacity = _hintOpacity;
-        hint.style.border = _hintBorder;
-        hint.style.zIndex = 20000;
-        hint.style.visibility = 'visible';
-        hint.name = "dwb_hint";
-
+        hint.setAttribute("class", "dwb_hint");
         return hint;
       }
 
@@ -195,20 +185,65 @@ DwbHintObj = (function() {
     return "rgba(" + rgb.slice(1) + "," +  _hintOpacity + ")";
   }
   const __createStyleSheet = function() {
-    if (_styles != 0)
+    if (_styleSheet != null)
       return;
-    _styles = 1;
-    var style = document.styleSheets[document.styleSheets.length - 1];
-    style.insertRule('*[dwb_highlight=hint_normal] { background-color: ' + _normalColor + ' !important; } ', 0);
-    style.insertRule('*[dwb_highlight=hint_active] { background-color: ' + _activeColor + ' !important; } ', 0);
+    _styleSheet = __createElement("style");
+    _styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important; }";
+    _styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important; } ";
+    _styleSheet.innerHTML += ".dwb_hint { " +
+      "background:" + _bgColor  + ";" + 
+      "color:" + _fgColor + ";" + 
+      "border:" + _hintBorder + ";" + 
+      "font:" + _font + ";" + 
+      "opacity: " + _hintOpacity + "; z-index:20000;}";
+    document.head.appendChild(_styleSheet);
   }
-  const __showHints = function () {
+  const __getElement = function (win, e, offset, constructor) {
+    var leftoff = 0;
+    var topoff = 0;
+    var r;
+    if (offset) {
+      leftoff += offset[0];
+      topoff += offset[1];
+    }
+    if (e instanceof HTMLImageElement) {
+      if (!e.useMap) 
+        return;
+      var area = document.getElementById(e.useMap.slice(1));
+      if (!area)
+        return;
+      var areas = area.getElementsByTagName("area");
+      var r = e.getBoundingClientRect();
+      for (var i=0; i<areas.length; i++) {
+        var element = new constructor(areas[i], win, [leftoff + r.left, topoff + r.top], r);
+        _elements.push(element);
+      }
+    }
+    if (r = __getVisibility(e)) {
+      if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
+        const doc = e.contentDocument ? e.contentDocument : e.contentWindow.document;
+        if (doc) {
+          var res = doc.body.querySelectorAll(_hintTypes);
+          var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
+          for (var i=0; i < res.length; i++) {
+            __getElement(e, res[i], off, constructor);
+          }
+        }
+      }
+      else {
+        var off = [ leftoff, topoff ];
+        var element = new constructor(e, win, off, r);
+        _elements.push(element);
+      }
+    }
+  }
+  const __showHints = function (doc) {
     if (document.activeElement) 
       document.activeElement.blur();
 
     __createStyleSheet();
 
-    _hints = document.createDocumentFragment();
+    var hints = document.createDocumentFragment();
     var constructor = _style == "letter" ? __letterHint : __numberHint;
 
     var res = document.body.querySelectorAll(_hintTypes); 
@@ -220,14 +255,14 @@ DwbHintObj = (function() {
         continue;
       }
       var e = _elements[i];
-      _hints.appendChild(e.hint);
+      hints.appendChild(e.hint);
       e.getTextHint(i, _elements.length);
       e.element.setAttribute('dwb_highlight', 'hint_normal');
       e.hint.style.visibility = 'visible';
     }
     _activeArr = _elements;
     __setActive(_elements[0]);
-    document.body.appendChild(_hints);
+    document.body.appendChild(hints);
   }
   const __updateHints = function(input) {
     var array = [];
@@ -235,7 +270,7 @@ DwbHintObj = (function() {
     var keep = false;
     if (!_activeArr.length) {
       __clear();
-      __showHints();
+      __showHints(null);
     }
     if (input) {
       input = input.toLowerCase();
@@ -243,7 +278,7 @@ DwbHintObj = (function() {
     if (_lastInput && (_lastInput.length > input.length)) {
       __clear();
       _lastInput = input;
-      __showHints();
+      __showHints(null);
       __updateHints(input);
       return;
     }
@@ -295,45 +330,6 @@ DwbHintObj = (function() {
     }
     return r;
   }
-  const __getElement = function (win, e, offset, constructor) {
-    var leftoff = 0;
-    var topoff = 0;
-    var r;
-    if (offset) {
-      leftoff += offset[0];
-      topoff += offset[1];
-    }
-    if (e instanceof HTMLImageElement) {
-      if (!e.useMap) 
-        return;
-      var area = document.getElementById(e.useMap.slice(1));
-      if (!area)
-        return;
-      var areas = area.getElementsByTagName("area");
-      var r = e.getBoundingClientRect();
-      for (var i=0; i<areas.length; i++) {
-        var element = new constructor(areas[i], win, [leftoff + r.left, topoff + r.top], r);
-        _elements.push(element);
-      }
-    }
-    if (r = __getVisibility(e)) {
-      if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
-        const doc = e.contentDocument ? e.contentDocument : e.contentWindow.document;
-        if (doc) {
-          var res = doc.body.querySelectorAll(_hintTypes);
-          var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
-          for (var i=0; i < res.length; i++) {
-            __getElement(e, res[i], off, constructor);
-          }
-        }
-      }
-      else {
-        var off = [ leftoff, topoff ];
-        var element = new constructor(e, win, off, r);
-        _elements.push(element);
-      }
-    }
-  }
   const __clear = function() {
     if (_elements) {
       for (var i=0; i<_elements.length; i++) {
@@ -341,8 +337,6 @@ DwbHintObj = (function() {
         document.body.removeChild(_elements[i].hint);
       }
     }
-    if (_hints) 
-      _hints = null;
     _elements = [];
     _activeArr = [];
   }
@@ -459,12 +453,12 @@ DwbHintObj = (function() {
     },
   showHints : 
     function() {
-      __showHints();
+      __showHints(null);
     },
 
   updateHints :
     function (input) {
-      __updateHints(input);
+      return __updateHints(input);
     },
   clear : 
     function () {
@@ -493,14 +487,13 @@ DwbHintObj = (function() {
     },
   focusInput : 
     function () {
+      __focusInput();
     },
   init: 
-    function (letter_seq, font_size, font_weight, font_family, style,
+    function (letter_seq, font, style,
         fg_color, bg_color, active_color, normal_color, border,  opacity) {
       _letterSeq  = letter_seq;
-      _fontSize = font_size;
-      _fontWeight = font_weight;
-      _fontFamily = font_family;
+      _font = font;
       _style =  style.toLowerCase();
       _fgColor    = fg_color;
       _bgColor    = bg_color;

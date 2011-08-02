@@ -509,12 +509,8 @@ static WebSettings DWB_SETTINGS[] = {
     false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
   { { "hint-style",                              "Whether to use 'letter' or 'number' hints", },                     
     false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
-  { { "hint-font-size",                          "Font size of hints", },                                        
-    false, true,  CHAR, { .p = "10px"              },     (S_Func) dwb_reload_scripts,  },
-  { { "hint-font-weight",                        "Font weight of hints", },                                      
-    false, true,  CHAR, { .p = "bold"            },     (S_Func) dwb_reload_scripts,  },
-  { { "hint-font-family",                        "Font family of hints", },                                      
-    false, true,  CHAR, { .p = "monospace"        },     (S_Func) dwb_reload_scripts,  },
+  { { "hint-font",                          "Font size of hints", },                                        
+    false, true,  CHAR, { .p = "bold 10px monospace"             },     (S_Func) dwb_reload_scripts,  },
   { { "hint-fg-color",                           "Foreground color of hints", },                                 
     false, true,  CHAR, { .p = "#000000"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-bg-color",                           "Background color of hints", },                                 
@@ -2681,11 +2677,9 @@ dwb_init_scripts() {
     dwb_util_get_directory_content(&buffer, dir);
     g_free(dir);
   }
-  g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\");", 
+  g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\");", 
       GET_CHAR("hint-letter-seq"),
-      GET_CHAR("hint-font-size"),
-      GET_CHAR("hint-font-weight"), 
-      GET_CHAR("hint-font-family"), 
+      GET_CHAR("hint-font"),
       GET_CHAR("hint-style"), 
       GET_CHAR("hint-fg-color"), 
       GET_CHAR("hint-bg-color"), 
