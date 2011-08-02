@@ -437,7 +437,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_FINISHED:
       dwb_view_ssl_state(gl);
       dwb_update_status(gl);
-      dwb_execute_script(MAIN_FRAME(), "DwbHintObj.createStyleSheet()", false);
       /* TODO sqlite */
       if (!dwb.misc.private_browsing && dwb_prepend_navigation(gl, &dwb.fc.history))
         dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);

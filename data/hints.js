@@ -2,8 +2,6 @@ String.prototype.isInt = function() { return !isNaN(parseInt(this)); }
 DwbHintObj = (function() {
   _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
   _font = "bold 10px monospace";
-  //_fontWeight = "normal";
-  //_fontFamily = "monospace";
   _style = "letter";
   _fgColor = "#ffffff";
   _bgColor = "#000088";
@@ -17,40 +15,19 @@ DwbHintObj = (function() {
   _lastPosition = 0;
   _activeInput = null;
   _styles = 0;
-  _hintTypes = "a, img, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]";
+  _hintTypes = "a, map, img, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]";
   _styleSheet = null;
 
-  const __newHint = function (element, win, offset, rect) {
+  const __newHint = function(element, win, rect) {
       this.element = element;
       this.win = win;
-      if (!offset) {
-        offset = [ 0, 0 ];
-      }
 
-      function create_span(element) {
-        var span = __createElement("span");
-        var leftpos, toppos;
-        if (element instanceof HTMLAreaElement) {
-          var coords = element.coords.split(",");
-          var leftpos = offset[0] + document.defaultView.scrollX + parseInt(coords[0]);
-          var toppos = offset[1] + document.defaultView.scrollY + parseInt(coords[1]);
-        }
-        else if (rect) {
-          leftpos = offset[0] + Math.max((rect.left + document.defaultView.scrollX), document.defaultView.scrollX) ;
-          toppos = offset[1] + Math.max((rect.top + document.defaultView.scrollY), document.defaultView.scrollY) ;
-        }
-        span.style.position = "absolute";
-        span.style.left = leftpos  + "px";
-        span.style.top = toppos + "px";
-        return span;
-      }
-      function create_hint(element) {
-        var hint = create_span(element);
-        hint.setAttribute("class", "dwb_hint");
-        return hint;
-      }
-
-      this.hint = create_hint(element);
+      var leftpos, toppos;
+      var hint = __createElement("div");
+      hint.style.left = Math.max((rect.left + win.scrollX), win.scrollX) + "px"; 
+      hint.style.top = Math.max((rect.top + win.scrollY), win.scrollY) + "px";
+      hint.setAttribute("class", "dwb_hint");
+      this.hint = hint;
     }
   const __createElement = function(tagname) {
     element = document.createElement(tagname);
@@ -60,9 +37,9 @@ DwbHintObj = (function() {
     }
     return element;
   }
-  var __numberHint = function (element, win, offset, rect) {
+  const __numberHint = function (element, win, rect) {
     this.constructor = __newHint;
-    this.constructor(element, win, offset, rect);
+    this.constructor(element, win, rect);
 
     this.getTextHint = function (i, length) {
       start = length <=10 ? 1 : length <= 100 ? 10 : 100;
@@ -104,9 +81,9 @@ DwbHintObj = (function() {
       }
     }
   };
-  const __letterHint = function (element, win, offset, rect) {
+  const __letterHint = function (element, win, rect) {
     this.constructor = __newHint;
-    this.constructor(element, win, offset, rect);
+    this.constructor(element, win, rect);
 
     this.betterMatch = function(input) {
       return 0;
@@ -184,85 +161,73 @@ DwbHintObj = (function() {
     }
     return "rgba(" + rgb.slice(1) + "," +  _hintOpacity + ")";
   }
-  const __createStyleSheet = function() {
-    if (_styleSheet != null)
+  const __createStyleSheet = function(doc) {
+    if (doc.querySelector("[dwb_stylesheet='true']"))
       return;
-    _styleSheet = __createElement("style");
-    _styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important; }";
-    _styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important; } ";
-    _styleSheet.innerHTML += ".dwb_hint { " +
+    styleSheet = __createElement("style");
+    styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important; }";
+    styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important; } ";
+    styleSheet.innerHTML += ".dwb_hint { " +
+      "position:absolute; z-index:20000;" +
       "background:" + _bgColor  + ";" + 
       "color:" + _fgColor + ";" + 
       "border:" + _hintBorder + ";" + 
       "font:" + _font + ";" + 
-      "opacity: " + _hintOpacity + "; z-index:20000;}";
-    document.head.appendChild(_styleSheet);
+      "opacity: " + _hintOpacity + "; }";
+    styleSheet.setAttribute("dwb_stylesheet", "true");
+    doc.head.appendChild(styleSheet);
   }
-  const __getElement = function (win, e, offset, constructor) {
-    var leftoff = 0;
-    var topoff = 0;
-    var r;
-    if (offset) {
-      leftoff += offset[0];
-      topoff += offset[1];
-    }
-    if (e instanceof HTMLImageElement) {
-      if (!e.useMap) 
-        return;
-      var area = document.getElementById(e.useMap.slice(1));
-      if (!area)
-        return;
-      var areas = area.getElementsByTagName("area");
-      var r = e.getBoundingClientRect();
-      for (var i=0; i<areas.length; i++) {
-        var element = new constructor(areas[i], win, [leftoff + r.left, topoff + r.top], r);
-        _elements.push(element);
-      }
-    }
-    if (r = __getVisibility(e)) {
+  const __createHints = function(win, constructor) {
+    var doc = win.document;
+    var res = doc.body.querySelectorAll(_hintTypes); 
+    var e, r;
+    __createStyleSheet(doc);
+    var hints = doc.createDocumentFragment();
+    for (var i=0;i < res.length; i++) {
+      e = res[i];
+      if ((r = __getVisibility(e, win)) == null) 
+        continue;
       if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
-        const doc = e.contentDocument ? e.contentDocument : e.contentWindow.document;
-        if (doc) {
-          var res = doc.body.querySelectorAll(_hintTypes);
-          var off = [ leftoff + e.offsetLeft, topoff + e.offsetTop ];
-          for (var i=0; i < res.length; i++) {
-            __getElement(e, res[i], off, constructor);
-          }
-        }
+        __createHints(e.contentWindow, constructor);
       }
+      //else if (e instanceof HTMLMapElement) {
+      //  try {
+      //    var areas = e.getElementsByTagName("area");
+      //    for (var j=0; j<areas.length; j++) {
+      //      var coords = areas[j].coords.split(",");
+      //      r.left += parseInt(coords[0]);
+      //      r.top += parseInt(coords[1]);
+      //      var rect = { left : r.left + parseInt(coords[0]), top : r.top + parseInt(coords[1]) };
+      //      var element = new constructor(areas[i], win, rect);
+      //      _elements.push(element);
+      //      hints.appendChild(element.hint);
+      //    }
+      //  }
+      //  catch(exception) {
+      //    console.error(exception);
+      //  }
+      //}
       else {
-        var off = [ leftoff, topoff ];
-        var element = new constructor(e, win, off, r);
+        var element = new constructor(e, win, r);
         _elements.push(element);
+        hints.appendChild(element.hint);
+        e.setAttribute('dwb_highlight', 'hint_normal');
       }
     }
+    doc.body.appendChild(hints);
+
   }
-  const __showHints = function (doc) {
+  const __showHints = function () {
     if (document.activeElement) 
       document.activeElement.blur();
 
-    __createStyleSheet();
-
-    var hints = document.createDocumentFragment();
     var constructor = _style == "letter" ? __letterHint : __numberHint;
-
-    var res = document.body.querySelectorAll(_hintTypes); 
-    for (var i=0; i<res.length; i++) {
-      __getElement(window, res[i], null, constructor);
-    };
+    __createHints(window, constructor);
     for (var i=0; i<_elements.length; i++) {
-      if (res[i] == _elements[i]) {
-        continue;
-      }
-      var e = _elements[i];
-      hints.appendChild(e.hint);
-      e.getTextHint(i, _elements.length);
-      e.element.setAttribute('dwb_highlight', 'hint_normal');
-      e.hint.style.visibility = 'visible';
+      _elements[i].getTextHint(i, _elements.length);
     }
     _activeArr = _elements;
     __setActive(_elements[0]);
-    document.body.appendChild(hints);
   }
   const __updateHints = function(input) {
     var array = [];
@@ -270,7 +235,7 @@ DwbHintObj = (function() {
     var keep = false;
     if (!_activeArr.length) {
       __clear();
-      __showHints(null);
+      __showHints();
     }
     if (input) {
       input = input.toLowerCase();
@@ -278,7 +243,7 @@ DwbHintObj = (function() {
     if (_lastInput && (_lastInput.length > input.length)) {
       __clear();
       _lastInput = input;
-      __showHints(null);
+      __showHints();
       __updateHints(input);
       return;
     }
@@ -315,7 +280,7 @@ DwbHintObj = (function() {
       __setActive(array[_lastPosition]);
     }
   }
-  const __getVisibility = function (e) {
+  const __getVisibility = function (e, win) {
     var style = document.defaultView.getComputedStyle(e, null);
     if ((style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none" ) ) {
       return null;
@@ -334,7 +299,7 @@ DwbHintObj = (function() {
     if (_elements) {
       for (var i=0; i<_elements.length; i++) {
         _elements[i].element.removeAttribute('dwb_highlight');
-        document.body.removeChild(_elements[i].hint);
+        _elements[i].hint.parentNode.removeChild(_elements[i].hint);
       }
     }
     _elements = [];
@@ -394,7 +359,7 @@ DwbHintObj = (function() {
     for (var i=0; i<res.length; i++) {
       var els = res[i].elements;
       for (var j=0; j<els.length; j++) {
-        if (__getVisibility(els[j]) && (els[j].type == "text" || els[j].type == "search")) {
+        if (__getVisibility(els[j], window) && (els[j].type == "text" || els[j].type == "search")) {
           var e = new __letterHint(els[j], window);
           _elements.push(e);
           e.element.setAttribute('dwb_highlight', 'hint_normal');
@@ -444,63 +409,67 @@ DwbHintObj = (function() {
     }
     _activeInput.focus();
   }
+  const __init = function (letter_seq, font, style,
+          fg_color, bg_color, active_color, normal_color, border,  opacity) {
+        _letterSeq  = letter_seq;
+        _font = font;
+        _style =  style.toLowerCase();
+        _fgColor    = fg_color;
+        _bgColor    = bg_color;
+        _activeColor = __hexToRgb(active_color);
+        _normalColor = __hexToRgb(normal_color);
+        _hintBorder = border;
+        _hintOpacity = opacity;
+  }
 
 
   return {
-  createStyleSheet : 
-    function () {
-      __createStyleSheet();
-    },
-  showHints : 
-    function() {
-      __showHints(null);
-    },
+    createStyleSheet : 
+      function () {
+        __createStyleSheet();
+      },
+    showHints : 
+      function() {
+        __showHints();
+      },
 
-  updateHints :
-    function (input) {
-      return __updateHints(input);
-    },
-  clear : 
-    function () {
-      __clear();
-    },
-  followActive :
-    function () {
-      return __evaluate(__getActive());
-    },
+    updateHints :
+      function (input) {
+        return __updateHints(input);
+      },
+    clear : 
+      function () {
+        __clear();
+      },
+    followActive :
+      function () {
+        return __evaluate(__getActive());
+      },
 
-  focusNext :
-    function () {
-      __focusNext();
-    },
-  focusPrev : 
-    function () {
-      __focusPrev();
-    },
-  addSearchEngine : 
-    function () {
-      __addSearchEngine();
-    },
-  submitSearchEngine :
-    function (string) {
-      __submitSearchEngine(string);
-    },
-  focusInput : 
-    function () {
-      __focusInput();
-    },
-  init: 
-    function (letter_seq, font, style,
-        fg_color, bg_color, active_color, normal_color, border,  opacity) {
-      _letterSeq  = letter_seq;
-      _font = font;
-      _style =  style.toLowerCase();
-      _fgColor    = fg_color;
-      _bgColor    = bg_color;
-      _activeColor = __hexToRgb(active_color);
-      _normalColor = __hexToRgb(normal_color);
-      _hintBorder = border;
-      _hintOpacity = opacity;
-    }, 
+    focusNext :
+      function () {
+        __focusNext();
+      },
+    focusPrev : 
+      function () {
+        __focusPrev();
+      },
+    addSearchEngine : 
+      function () {
+        __addSearchEngine();
+      },
+    submitSearchEngine :
+      function (string) {
+        __submitSearchEngine(string);
+      },
+    focusInput : 
+      function () {
+        __focusInput();
+      },
+    init: 
+      function (letter_seq, font, style,
+          fg_color, bg_color, active_color, normal_color, border,  opacity) {
+        __init(letter_seq, font, style, fg_color, bg_color, active_color, normal_color, border,  opacity); 
+      }, 
   }
 })();
