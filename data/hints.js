@@ -18,6 +18,7 @@ const DwbHintObj = {
   _activeInput : null,
   _styles : 0,
   _hintTypes : 'a, img, textarea, select, link, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown], *[role=link]',
+  _hints : null,
 
 
   createElement: 
@@ -276,8 +277,7 @@ const DwbHintObj = {
 
       me.createStyleSheet();
 
-      var hints = me.createElement("div");
-      hints.id = "dwb_hints";
+      me._hints = document.createDocumentFragment();
       var constructor = me._style == "letter" ? me.letterHint : me.numberHint;
 
       var res = document.body.querySelectorAll(me._hintTypes);
@@ -289,14 +289,14 @@ const DwbHintObj = {
           continue;
         }
         var e = me._elements[i];
-        hints.appendChild(e.hint);
+        me._hints.appendChild(e.hint);
         e.getTextHint(i, me._elements.length);
         e.element.setAttribute('dwb_highlight', 'hint_normal');
         e.hint.style.visibility = 'visible';
       }
       me._activeArr = me._elements;
       me.setActive(me._elements[0]);
-      document.body.appendChild(hints);
+      document.body.appendChild(me._hints);
     }, 
   updateHints :
     function updateHints(input) {
@@ -365,11 +365,11 @@ const DwbHintObj = {
       if (me._elements) {
         for (var i=0; i<me._elements.length; i++) {
           me._elements[i].element.removeAttribute('dwb_highlight');
+          document.body.removeChild(me._elements[i].hint);
         }
       }
-      var hints = document.getElementById("dwb_hints");
-      if (hints) 
-        hints.parentNode.removeChild(hints);
+      if (me._hints) 
+        me._hints = null;
       me._elements = [];
       me._activeArr = [];
     },
