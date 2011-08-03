@@ -225,8 +225,7 @@ DwbHintObj = (function() {
     if (document.activeElement) 
       document.activeElement.blur();
 
-    var constructor = _style == "letter" ? __letterHint : __numberHint;
-    __createHints(window, constructor);
+    __createHints(window, _style == "letter" ? __letterHint : __numberHint);
     for (var i=0; i<_elements.length; i++) {
       _elements[i].getTextHint(i, _elements.length);
     }
@@ -235,8 +234,6 @@ DwbHintObj = (function() {
   }
   const __updateHints = function(input) {
     var array = [];
-    var text_content;
-    var keep = false;
     if (!_activeArr.length) {
       __clear();
       __showHints();
@@ -285,16 +282,15 @@ DwbHintObj = (function() {
     }
   }
   const __getVisibility = function (e, win) {
-    var style = document.defaultView.getComputedStyle(e, null);
+    var style = win.getComputedStyle(e, null);
     if ((style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none" ) ) {
       return null;
     }
-    var rects = e.getClientRects()[0];
     var r = e.getBoundingClientRect();
 
     var height = window.innerHeight ? window.innerHeight : document.body.offsetHeight;
     var width = window.innerWidth ? window.innerWidth : document.body.offsetWidth;
-    if (!r || r.top > height || r.bottom < 0 || r.left > width ||  r.right < 0 || !rects) {
+    if (!r || r.top > height || r.bottom < 0 || r.left > width ||  r.right < 0 || !e.getClientRects()[0]) {
       return null;
     }
     return r;
