@@ -162,7 +162,7 @@ DwbHintObj = (function() {
     return "rgba(" + rgb.slice(1) + "," +  _hintOpacity + ")";
   }
   const __createStyleSheet = function(doc) {
-    if (doc.querySelector("[dwb_stylesheet='true']"))
+    if (doc.querySelector("[dwb_stylesheet='37']"))
       return;
     styleSheet = __createElement("style");
     styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important; }";
@@ -174,7 +174,7 @@ DwbHintObj = (function() {
       "border:" + _hintBorder + ";" + 
       "font:" + _font + ";" + 
       "opacity: " + _hintOpacity + "; }";
-    styleSheet.setAttribute("dwb_stylesheet", "true");
+    styleSheet.setAttribute("dwb_stylesheet", "37");
     doc.head.appendChild(styleSheet);
   }
   const __createHints = function(win, constructor) {
@@ -352,7 +352,7 @@ DwbHintObj = (function() {
     _lastPosition = newpos;
   }
   const __addSearchEngine = function() {
-    __createStyleSheet();
+    __createStyleSheet(document);
     var hints = __createElement("div");
     var res = document.body.querySelectorAll("form");
 
@@ -424,15 +424,10 @@ DwbHintObj = (function() {
 
 
   return {
-    createStyleSheet : 
-      function () {
-        __createStyleSheet();
-      },
     showHints : 
       function() {
         __showHints();
       },
-
     updateHints :
       function (input) {
         return __updateHints(input);
