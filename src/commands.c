@@ -843,3 +843,11 @@ dwb_com_quit(KeyMap *km, Arg *arg) {
   dwb_end();
   return NO_ERROR;
 }
+gboolean
+dwb_com_reload_scripts(KeyMap *km, Arg *arg) {
+  dwb_init_scripts();
+  for (GList *l = dwb.state.views; l; l=l->next) {
+    webkit_web_view_reload(WEBVIEW(l));
+  }
+  return true;
+}

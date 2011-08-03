@@ -15,7 +15,7 @@ DwbHintObj = (function() {
   _lastPosition = 0;
   _activeInput = null;
   _styles = 0;
-  _hintTypes = "a, map, img, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]";
+  _hintTypes = "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]";
   _styleSheet = null;
 
   const __newHint = function(element, win, rect) {

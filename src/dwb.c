@@ -71,7 +71,6 @@ static void dwb_open_quickmark(const char *);
 static void dwb_init_key_map(void);
 static void dwb_init_settings(void);
 static void dwb_init_style(void);
-static void dwb_init_scripts(void);
 static void dwb_init_gui(void);
 static void dwb_init_vars(void);
 static void dwb_init_icons(void);
@@ -250,6 +249,8 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_undo,              "No more closed views",                              POST_SM },
   { { "web_inspector",         "Open the webinspector", },             1, 
     (Func)dwb_com_web_inspector,              "Enable developer extras for the webinspector",                              POST_SM },
+  { { "reload_scripts",         "Reload scripts", },             1, 
+    (Func)dwb_com_reload_scripts,              NULL,                              ALWAYS_SM },
 
   //Entry editing
   { { "entry_delete_word",      "Command line: Delete word in", },                      0,  
@@ -717,7 +718,6 @@ dwb_webview_property(GList *gl, WebSettings *s) {
 /*dwb_reload_scripts {{{  */
 static void 
 dwb_reload_scripts(GList *gl, WebSettings *s) {
-  FREE(dwb.misc.scripts);
   dwb_init_scripts();
 } /*}}}*//*}}}*/
 /*}}}*/
@@ -2663,8 +2663,9 @@ dwb_init_settings() {
 }/*}}}*/
 
 /* dwb_init_scripts{{{*/
-static void 
+void 
 dwb_init_scripts() {
+  FREE(dwb.misc.scripts);
   GString *buffer = g_string_new(NULL);
 
   setlocale(LC_NUMERIC, "C");
@@ -2989,6 +2990,7 @@ dwb_init() {
   dwb.misc.userscripts = NULL;
   dwb.state.last_cookies = NULL;
   dwb.misc.proxyuri = NULL;
+  dwb.misc.scripts = NULL;
 
   char *path = dwb_util_get_data_file(PLUGIN_FILE);
   dwb.misc.pbbackground = dwb_util_get_file_content(path);

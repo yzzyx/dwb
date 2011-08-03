@@ -83,6 +83,7 @@ static KeyValue KEYS[] = {
   { "private_browsing",         {   NULL,           0,                  },  },
   { "scripts",                  {   NULL,           0,                  },  },
   { "spell_checking",           {   NULL,           0,                  },  },
+  { "reload_scripts",           {   NULL,           0,                  },  },
   { "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
   { "toggle_encoding",          {   "te" ,           0,  },  },
   { "focus_input",              {   "gi",           0, }, }, 
