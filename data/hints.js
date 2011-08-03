@@ -19,16 +19,16 @@ DwbHintObj = (function() {
   _styleSheet = null;
 
   const __newHint = function(element, win, rect) {
-      this.element = element;
-      this.win = win;
+    this.element = element;
+    this.win = win;
+    var leftpos, toppos;
+    var hint = __createElement("div");
+    hint.style.top = Math.max((rect.top + win.scrollY), win.scrollY) + "px";
+    hint.style.left = Math.max((rect.left + win.scrollX), win.scrollX) + "px"; 
 
-      var leftpos, toppos;
-      var hint = __createElement("div");
-      hint.style.left = Math.max((rect.left + win.scrollX), win.scrollX) + "px"; 
-      hint.style.top = Math.max((rect.top + win.scrollY), win.scrollY) + "px";
-      hint.setAttribute("class", "dwb_hint");
-      this.hint = hint;
-    }
+    hint.setAttribute("class", "dwb_hint");
+    this.hint = hint;
+  }
   const __createElement = function(tagname) {
     element = document.createElement(tagname);
     if (!element.style) {
@@ -178,44 +178,48 @@ DwbHintObj = (function() {
     doc.head.appendChild(styleSheet);
   }
   const __createHints = function(win, constructor) {
-    var doc = win.document;
-    var res = doc.body.querySelectorAll(_hintTypes); 
-    var e, r;
-    __createStyleSheet(doc);
-    var hints = doc.createDocumentFragment();
-    for (var i=0;i < res.length; i++) {
-      e = res[i];
-      if ((r = __getVisibility(e, win)) == null) 
-        continue;
-      if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
-        __createHints(e.contentWindow, constructor);
+    try {
+      var doc = win.document;
+      var res = doc.body.querySelectorAll(_hintTypes); 
+      var e, r;
+      __createStyleSheet(doc);
+      var hints = doc.createDocumentFragment();
+      for (var i=0;i < res.length; i++) {
+        e = res[i];
+        if ((r = __getVisibility(e, win)) == null) 
+          continue;
+        if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
+          __createHints(e.contentWindow, constructor);
+        }
+        //else if (e instanceof HTMLMapElement) {
+        //  try {
+        //    var areas = e.getElementsByTagName("area");
+        //    for (var j=0; j<areas.length; j++) {
+        //      var coords = areas[j].coords.split(",");
+        //      r.left += parseInt(coords[0]);
+        //      r.top += parseInt(coords[1]);
+        //      var rect = { left : r.left + parseInt(coords[0]), top : r.top + parseInt(coords[1]) };
+        //      var element = new constructor(areas[i], win, rect);
+        //      _elements.push(element);
+        //      hints.appendChild(element.hint);
+        //    }
+        //  }
+        //  catch(exception) {
+        //    console.error(exception);
+        //  }
+        //}
+        else {
+          var element = new constructor(e, win, r);
+          _elements.push(element);
+          hints.appendChild(element.hint);
+          e.setAttribute('dwb_highlight', 'hint_normal');
+        }
       }
-      //else if (e instanceof HTMLMapElement) {
-      //  try {
-      //    var areas = e.getElementsByTagName("area");
-      //    for (var j=0; j<areas.length; j++) {
-      //      var coords = areas[j].coords.split(",");
-      //      r.left += parseInt(coords[0]);
-      //      r.top += parseInt(coords[1]);
-      //      var rect = { left : r.left + parseInt(coords[0]), top : r.top + parseInt(coords[1]) };
-      //      var element = new constructor(areas[i], win, rect);
-      //      _elements.push(element);
-      //      hints.appendChild(element.hint);
-      //    }
-      //  }
-      //  catch(exception) {
-      //    console.error(exception);
-      //  }
-      //}
-      else {
-        var element = new constructor(e, win, r);
-        _elements.push(element);
-        hints.appendChild(element.hint);
-        e.setAttribute('dwb_highlight', 'hint_normal');
-      }
+      doc.body.appendChild(hints);
     }
-    doc.body.appendChild(hints);
-
+    catch(exc) {
+      console.error(exc);
+    }
   }
   const __showHints = function () {
     if (document.activeElement) 
