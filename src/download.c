@@ -267,7 +267,7 @@ dwb_dl_start() {
     gtk_widget_show_all(dwb.gui.downloadbar);
     downloads = g_list_prepend(downloads, active);
     g_signal_connect(active->event, "button-press-event", G_CALLBACK(dwb_dl_button_press_cb), downloads);
-    g_signal_connect(dwb.state.download, "notify::progress", G_CALLBACK(dwb_dl_progress_cb), NULL);
+    g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(dwb_dl_progress_cb), NULL);
     g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(dwb_dl_status_cb), NULL);
     webkit_download_start(dwb.state.download);
   }
