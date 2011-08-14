@@ -92,7 +92,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
     dwb_insert_mode(NULL);
   }
-  else if (e->state & GDK_CONTROL_MASK) {
+  else if (e->state & GDK_CONTROL_MASK && e->button == 1) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
     WebKitDOMRange *range = webkit_dom_document_caret_range_from_point(doc, e->x, e->y);
     WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(webkit_dom_document_get_default_view(doc));
