@@ -27,6 +27,8 @@ static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
 
 
 // CALLBACKS
+static gboolean dwb_view_caret_release_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other);
+static gboolean dwb_view_caret_motion_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other);
 static gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
 static gboolean dwb_web_view_close_web_view_cb(WebKitWebView *, GList *);
 static gboolean dwb_web_view_console_message_cb(WebKitWebView *, char *, int , char *, GList *);
@@ -52,6 +54,34 @@ static gboolean dwb_view_tab_button_press_cb(GtkWidget *, GdkEventButton *, GLis
 /* WEB_VIEW_CALL_BACKS {{{*/
 
 /* dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
+void 
+dwb_view_link_select(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
+  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
+  WebKitDOMRange *range = webkit_dom_document_caret_range_from_point(doc, e->x, e->y);
+  WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(webkit_dom_document_get_default_view(doc));
+
+  int start, end;
+  start = webkit_dom_range_get_start_offset(other, NULL);
+  end = webkit_dom_range_get_end_offset(range, NULL);
+  WebKitDOMNode *node = webkit_dom_range_get_start_container(other, NULL);
+  WebKitDOMNode *thisnode = webkit_dom_range_get_start_container(range, NULL);
+  if (start < end) 
+    webkit_dom_dom_selection_set_base_and_extent(selection, node, start, thisnode, end, NULL);
+  else 
+    webkit_dom_dom_selection_set_base_and_extent(selection, thisnode, end, node, start, NULL);
+}
+static gboolean
+dwb_view_caret_motion_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
+  dwb_view_link_select(web, e, other);
+  return false;
+}
+static gboolean
+dwb_view_caret_release_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
+  dwb_view_link_select(web, e, other);
+  g_signal_handlers_disconnect_by_func(web, dwb_view_caret_release_cb, other);
+  g_signal_handlers_disconnect_by_func(web, dwb_view_caret_motion_cb, other);
+  return false;
+}
 static gboolean
 dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
@@ -61,6 +91,16 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
     dwb_insert_mode(NULL);
+  }
+  else if (e->state & GDK_CONTROL_MASK) {
+    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
+    WebKitDOMRange *range = webkit_dom_document_caret_range_from_point(doc, e->x, e->y);
+    WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(webkit_dom_document_get_default_view(doc));
+    webkit_dom_dom_selection_remove_all_ranges(selection);
+    webkit_dom_dom_selection_add_range(selection, range);
+    g_signal_connect(web, "button-release-event", G_CALLBACK(dwb_view_caret_release_cb), range);
+    g_signal_connect(web, "motion-notify-event", G_CALLBACK(dwb_view_caret_motion_cb), range);
+    ret = true; 
   }
   else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
     char *clipboard = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
