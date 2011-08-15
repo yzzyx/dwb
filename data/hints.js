@@ -363,7 +363,6 @@ DwbHintObj = (function() {
         if ((r = __getVisibility(els[j], window) != null) && (els[j].type == "text" || els[j].type == "search")) {
           var e = new __letterHint(els[j], window, r);
           _elements.push(e);
-          console.log(els[j].name + " " + __getVisibility(els[j], window));
           e.element.setAttribute('dwb_highlight', 'hint_normal');
         }
       }
