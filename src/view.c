@@ -923,10 +923,12 @@ dwb_view_remove(Arg *a) {
   }
   dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
 
-  /* Destroy widget */
+  /* Favicon */ 
   GdkPixbuf *pb;
   if ( (pb = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
     gdk_pixbuf_unref(pb);
+
+  /* Destroy widget */
   gtk_widget_destroy(v->web);
   gtk_widget_destroy(v->scroll);
   gtk_widget_destroy(v->vbox);

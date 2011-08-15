@@ -355,13 +355,15 @@ DwbHintObj = (function() {
     __createStyleSheet(document);
     var hints = __createElement("div");
     var res = document.body.querySelectorAll("form");
+    var r;
 
     for (var i=0; i<res.length; i++) {
       var els = res[i].elements;
       for (var j=0; j<els.length; j++) {
-        if (__getVisibility(els[j], window) && (els[j].type == "text" || els[j].type == "search")) {
-          var e = new __letterHint(els[j], window);
+        if ((r = __getVisibility(els[j], window) != null) && (els[j].type == "text" || els[j].type == "search")) {
+          var e = new __letterHint(els[j], window, r);
           _elements.push(e);
+          console.log(els[j].name + " " + __getVisibility(els[j], window));
           e.element.setAttribute('dwb_highlight', 'hint_normal');
         }
       }
@@ -382,6 +384,7 @@ DwbHintObj = (function() {
     e.value = string;
     e.form.submit();
     e.value = "";
+    __clear();
     if (e.form.method.toLowerCase() == 'post') {
       return e.name;
     }
