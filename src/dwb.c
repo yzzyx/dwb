@@ -85,6 +85,7 @@ static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGS
 static int MAX_COMPLETIONS = 11;
 static char *restore = NULL;
 
+
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
   { { "add_view",              "Add a new view",                    }, 1, 
@@ -2851,7 +2852,7 @@ dwb_init_files() {
   dwb.files.history       = g_build_filename(profile_path, "history",       NULL);
   dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);
   dwb.files.quickmarks    = g_build_filename(profile_path, "quickmarks",    NULL);
-  dwb.files.session       = g_build_filename(path, "session",       NULL);
+  dwb.files.session       = g_build_filename(profile_path, "session",       NULL);
   dwb.files.searchengines = g_build_filename(path, "searchengines", NULL);
   dwb.files.keys          = g_build_filename(path, "keys",          NULL);
   dwb.files.scriptdir     = g_build_filename(path, "scripts",      NULL);
@@ -3137,13 +3138,16 @@ dwb_init_fifo(int single) {
 }/*}}}*/
 /*}}}*/
 
-int main(int argc, char *argv[]) {
+int 
+main(int argc, char *argv[]) {
   dwb.misc.name = REAL_NAME;
   dwb.misc.profile = "default";
   dwb.misc.argc = 0;
   dwb.misc.prog_path = argv[0];
   int last = 0;
   int single = 0;
+  int argr = argc;
+ 
 
   gtk_init(&argc, &argv);
 
@@ -3152,19 +3156,24 @@ int main(int argc, char *argv[]) {
       if (argv[i][0] == '-') {
         if (argv[i][1] == 'l') {
           dwb_session_list();
+          argr--;
         }
         else if (argv[i][1] == 'p' && argv[i++]) {
           dwb.misc.profile = argv[i];
+          argr -= 2;
         }
         else if (argv[i][1] == 'n') {
           single = NEW_INSTANCE;
+          argr -=1;
         }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
             restore = "default";
+            argr--;
           }
           else {
             restore = argv[++i];
+            argr +=2;
           }
         }
         else if (argv[i][1] == 'v') {
@@ -3180,7 +3189,7 @@ int main(int argc, char *argv[]) {
   }
   dwb_init_files();
   dwb_init_settings();
-  if (GET_BOOL("save-session") && argc == 1 && !restore) {
+  if (GET_BOOL("save-session") && argr == 1 && !restore) {
     restore = "default";
   }
 
