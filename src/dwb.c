@@ -3173,7 +3173,7 @@ main(int argc, char *argv[]) {
           }
           else {
             restore = argv[++i];
-            argr +=2;
+            argr -=2;
           }
         }
         else if (argv[i][1] == 'v') {
