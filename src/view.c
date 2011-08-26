@@ -810,7 +810,14 @@ dwb_view_create_web_view() {
 #if _HAS_GTK3
   gtk_window_set_has_resize_grip(GTK_WINDOW(dwb.gui.window), false);
   GtkCssProvider *provider = gtk_css_provider_get_default();
-  gtk_css_provider_load_from_data(provider, "GtkScrollbar { -GtkRange-slider-width: 0; -GtkRange-trough-border: 0; }", -1, NULL);
+  gtk_css_provider_load_from_data(provider, 
+      "GtkScrollbar { \
+        -GtkRange-slider-width: 0; \
+        -GtkRange-trough-border: 0; \
+        }\
+        GtkScrolledWindow {\
+          -GtkScrolledWindow-scrollbar-spacing : 0;\
+        }", -1, NULL);
 #else
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
