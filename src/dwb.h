@@ -63,11 +63,19 @@
 
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
+#define _HAS_GTK3  GTK_CHECK_VERSION(3, 0, 0)
+
 #ifndef true
 #define true 1
 #endif
 #ifndef false 
 #define false 0
+#endif
+
+#if _HAS_GTK3 
+#define DwbColor          GdkRGBA
+#else 
+#define DwbColor          GdkColor
 #endif
 
 /* MAKROS {{{*/ 
@@ -459,25 +467,25 @@ struct _View {
   GHashTable *setting;
 };
 struct _Color {
-  GdkColor active_fg;
-  GdkColor active_bg;
-  GdkColor normal_fg;
-  GdkColor normal_bg;
-  GdkColor ssl_trusted;
-  GdkColor ssl_untrusted;
-  GdkColor tab_active_fg;
-  GdkColor tab_active_bg;
-  GdkColor tab_normal_fg;
-  GdkColor tab_normal_bg;
-  GdkColor insert_bg;
-  GdkColor insert_fg;
-  GdkColor error;
-  GdkColor active_c_fg;
-  GdkColor active_c_bg;
-  GdkColor normal_c_fg;
-  GdkColor normal_c_bg;
-  GdkColor download_fg;
-  GdkColor download_bg;
+  DwbColor active_fg;
+  DwbColor active_bg;
+  DwbColor normal_fg;
+  DwbColor normal_bg;
+  DwbColor ssl_trusted;
+  DwbColor ssl_untrusted;
+  DwbColor tab_active_fg;
+  DwbColor tab_active_bg;
+  DwbColor tab_normal_fg;
+  DwbColor tab_normal_bg;
+  DwbColor insert_bg;
+  DwbColor insert_fg;
+  DwbColor error;
+  DwbColor active_c_fg;
+  DwbColor active_c_bg;
+  DwbColor normal_c_fg;
+  DwbColor normal_c_bg;
+  DwbColor download_fg;
+  DwbColor download_bg;
   char *settings_bg_color;
   char *settings_fg_color;
   char *tab_number_color;
@@ -618,8 +626,8 @@ gboolean dwb_update_search(gboolean forward);
 
 void dwb_set_normal_message(GList *, gboolean, const char *, ...);
 void dwb_set_error_message(GList *, const char *, ...);
-void dwb_set_status_text(GList *, const char *, GdkColor *,  PangoFontDescription *);
-void dwb_set_status_bar_text(GtkWidget *, const char *, GdkColor *,  PangoFontDescription *, gboolean);
+void dwb_set_status_text(GList *, const char *, DwbColor *,  PangoFontDescription *);
+void dwb_set_status_bar_text(GtkWidget *, const char *, DwbColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
 void dwb_update_layout(gboolean);

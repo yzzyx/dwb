@@ -18,10 +18,20 @@ HG_VERSION=$(shell hg id -n 2>/dev/null)
 VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo "$(REAL_VERSION)"; fi)
 NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REAL_NAME)"; fi)
 
+##ifeq (${GTK}, 3)
+##LIBS  += gtk+-3.0
+##LIBS  += webkitgtk-3.0
+##else
+##LIBS  += gtk+-2.0
+##LIBS  += webkit-1.0
+##endif
+ifeq (${GTK}, 3)
+LIBS  += gtk+-3.0
+LIBS  += webkitgtk-3.0
+else
 LIBS  += gtk+-2.0
 LIBS  += webkit-1.0
-#LIBS  += gtk+-3.0
-#LIBS  += webkitgtk-3.0
+endif
 #LIBS  += json-glib-1.0
 
 INFO_FILE=info.html

@@ -796,7 +796,7 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
-dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  PangoFontDescription *fd, gboolean markup) {
+dwb_set_status_bar_text(GtkWidget *label, const char *text, DwbColor *fg,  PangoFontDescription *fd, gboolean markup) {
   if (markup) {
     char *escaped =  g_markup_escape_text(text, -1);
     gtk_label_set_markup(GTK_LABEL(label), text);
@@ -806,10 +806,18 @@ dwb_set_status_bar_text(GtkWidget *label, const char *text, GdkColor *fg,  Pango
     gtk_label_set_text(GTK_LABEL(label), text);
   }
   if (fg) {
+#if _HAS_GTK3
+    gtk_widget_override_color(label, GTK_STATE_NORMAL, fg);
+#else 
     gtk_widget_modify_fg(label, GTK_STATE_NORMAL, fg);
+#endif
   }
   if (fd) {
+#if _HAS_GTK3
+    gtk_widget_override_font(label, fd);
+#else
     gtk_widget_modify_font(label, fd);
+#endif
   }
 }/*}}}*/
 
@@ -872,7 +880,7 @@ dwb_update_uri(GList *gl) {
 
   WebKitWebView *wv = WEBVIEW(gl);
   const char *uri = webkit_web_view_get_uri(wv);
-  GdkColor *uricolor;
+  DwbColor *uricolor;
   if (v->status->ssl == SSL_TRUSTED) 
     uricolor = &dwb.color.ssl_trusted;
   else if (v->status->ssl == SSL_UNTRUSTED) 
@@ -2697,6 +2705,38 @@ dwb_init_scripts() {
 static void
 dwb_init_style() {
   // Colors 
+#if _HAS_GTK3
+  // Statusbar
+  gdk_rgba_parse(&dwb.color.active_fg, GET_CHAR("active-fg-color"));
+  gdk_rgba_parse(&dwb.color.active_bg, GET_CHAR("active-bg-color"));
+  gdk_rgba_parse(&dwb.color.normal_fg, GET_CHAR("normal-fg-color"));
+  gdk_rgba_parse(&dwb.color.normal_bg, GET_CHAR("normal-bg-color"));
+
+  // Tabs
+  gdk_rgba_parse(&dwb.color.tab_active_fg, GET_CHAR("tab-active-fg-color"));
+  gdk_rgba_parse(&dwb.color.tab_active_bg, GET_CHAR("tab-active-bg-color"));
+  gdk_rgba_parse(&dwb.color.tab_normal_fg, GET_CHAR("tab-normal-fg-color"));
+  gdk_rgba_parse(&dwb.color.tab_normal_bg, GET_CHAR("tab-normal-bg-color"));
+
+  //InsertMode 
+  gdk_rgba_parse(&dwb.color.insert_fg, GET_CHAR("insertmode-fg-color"));
+  gdk_rgba_parse(&dwb.color.insert_bg, GET_CHAR("insertmode-bg-color"));
+
+  //Downloads
+  gdk_rgba_parse(&dwb.color.download_fg, "#ffffff");
+  gdk_rgba_parse(&dwb.color.download_bg, "#000000");
+
+  //SSL 
+  gdk_rgba_parse(&dwb.color.ssl_trusted, GET_CHAR("ssl-trusted-color"));
+  gdk_rgba_parse(&dwb.color.ssl_untrusted, GET_CHAR("ssl-untrusted-color"));
+
+  gdk_rgba_parse(&dwb.color.active_c_bg, GET_CHAR("active-completion-bg-color"));
+  gdk_rgba_parse(&dwb.color.active_c_fg, GET_CHAR("active-completion-fg-color"));
+  gdk_rgba_parse(&dwb.color.normal_c_bg, GET_CHAR("normal-completion-bg-color"));
+  gdk_rgba_parse(&dwb.color.normal_c_fg, GET_CHAR("normal-completion-fg-color"));
+
+  gdk_rgba_parse(&dwb.color.error, GET_CHAR("error-color"));
+#else
   // Statusbar
   gdk_color_parse(GET_CHAR("active-fg-color"), &dwb.color.active_fg);
   gdk_color_parse(GET_CHAR("active-bg-color"), &dwb.color.active_bg);
@@ -2727,6 +2767,7 @@ dwb_init_style() {
   gdk_color_parse(GET_CHAR("normal-completion-fg-color"), &dwb.color.normal_c_fg);
 
   gdk_color_parse(GET_CHAR("error-color"), &dwb.color.error);
+#endif
 
   dwb.color.tab_number_color = GET_CHAR("tab-number-color");
   dwb.color.allow_color = GET_CHAR("status-allowed-color");
@@ -2750,6 +2791,7 @@ dwb_init_gui() {
   // Window
   dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, dwb.misc.name);
+  gtk_widget_set_name(dwb.gui.window, "dwb");
   // Icon
   GdkPixbuf *icon_pixbuf = gdk_pixbuf_new_from_xpm_data(icon);
   gtk_window_set_icon(GTK_WINDOW(dwb.gui.window), icon_pixbuf);
@@ -2759,7 +2801,11 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
+#if _HAS_GTK3
+  gtk_widget_override_background_color(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
+#else
   gtk_widget_modify_bg(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
+#endif
 
   // Main
   dwb.gui.vbox = gtk_vbox_new(false, 1);
@@ -2781,9 +2827,15 @@ dwb_init_gui() {
 
   // Paned
   GtkWidget *paned_event = gtk_event_box_new(); 
+#if _HAS_GTK3
+  gtk_widget_override_background_color(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
+  gtk_widget_override_background_color(dwb.gui.paned, GTK_STATE_NORMAL, &dwb.color.normal_bg);
+  gtk_widget_override_background_color(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
+#else 
   gtk_widget_modify_bg(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
   gtk_widget_modify_bg(dwb.gui.paned, GTK_STATE_NORMAL, &dwb.color.normal_bg);
   gtk_widget_modify_bg(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
+#endif
   gtk_container_add(GTK_CONTAINER(paned_event), dwb.gui.paned);
   //
   // Downloadbar 
@@ -3189,7 +3241,7 @@ main(int argc, char *argv[]) {
   }
   dwb_init_files();
   dwb_init_settings();
-  if (GET_BOOL("save-session") && argr == 1 && !restore) {
+  if (GET_BOOL("save-session") && argr == 1 && !restore && single != NEW_INSTANCE) {
     restore = "default";
   }
 

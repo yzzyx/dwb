@@ -102,9 +102,14 @@ dwb_dl_progress_cb(WebKitDownload *download) {
   guint green = progress * 0xaa;
   char *colorstring = g_strdup_printf("#%02x%02x%02x", 0x00, green, blue);
 
-  GdkColor color; 
+  DwbColor color; 
+#if _HAS_GTK3
+  gdk_rgba_parse(&color, colorstring);
+  gtk_widget_override_background_color(label->event, GTK_STATE_NORMAL, &color);
+#else
   gdk_color_parse(colorstring, &color);
   gtk_widget_modify_bg(label->event, GTK_STATE_NORMAL, &color);
+#endif
   FREE(colorstring);
 }/*}}}*/
 
@@ -196,11 +201,19 @@ dwb_dl_add_progress_label(GList *gl, const char *filename) {
   gtk_label_set_use_markup(GTK_LABEL(l->rlabel), true);
   gtk_misc_set_alignment(GTK_MISC(l->llabel), 0.0, 0.5);
   gtk_misc_set_alignment(GTK_MISC(l->rlabel), 1.0, 0.5);
+#if _HAS_GTK3
+  gtk_widget_override_color(l->llabel, GTK_STATE_NORMAL, &dwb.color.download_fg);
+  gtk_widget_override_color(l->rlabel, GTK_STATE_NORMAL, &dwb.color.download_fg);
+  gtk_widget_override_color(l->event, GTK_STATE_NORMAL, &dwb.color.download_bg);
+  gtk_widget_override_font(l->llabel, dwb.font.fd_active);
+  gtk_widget_override_font(l->rlabel, dwb.font.fd_active);
+#else
   gtk_widget_modify_fg(l->llabel, GTK_STATE_NORMAL, &dwb.color.download_fg);
   gtk_widget_modify_fg(l->rlabel, GTK_STATE_NORMAL, &dwb.color.download_fg);
   gtk_widget_modify_bg(l->event, GTK_STATE_NORMAL, &dwb.color.download_bg);
   gtk_widget_modify_font(l->llabel, dwb.font.fd_active);
   gtk_widget_modify_font(l->rlabel, dwb.font.fd_active);
+#endif
 
   l->download = dwb.state.download;
 

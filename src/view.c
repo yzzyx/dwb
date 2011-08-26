@@ -630,7 +630,28 @@ dwb_web_view_add_history_item(GList *gl) {
 
 /* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
-dwb_view_modify_style(View *v, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd) {
+dwb_view_modify_style(View *v, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd) {
+#if _HAS_GTK3
+  if (fg) {
+    gtk_widget_override_color(v->rstatus, GTK_STATE_NORMAL, fg);
+    gtk_widget_override_color(v->lstatus, GTK_STATE_NORMAL, fg);
+    gtk_widget_override_color(v->entry, GTK_STATE_NORMAL, fg);
+  }
+  if (bg) {
+    gtk_widget_override_background_color(v->statusbox, GTK_STATE_NORMAL, bg);
+    gtk_widget_override_background_color(v->entry, GTK_STATE_NORMAL, bg);
+  }
+  if (tabfg) 
+    gtk_widget_override_color(v->tablabel, GTK_STATE_NORMAL, tabfg);
+  if (tabbg)
+    gtk_widget_override_background_color(v->tabevent, GTK_STATE_NORMAL, tabbg);
+  if (fd) {
+    gtk_widget_override_font(v->rstatus, fd);
+    gtk_widget_override_font(v->urilabel, fd);
+    gtk_widget_override_font(v->lstatus, fd);
+    gtk_widget_override_font(v->tablabel, fd);
+  }
+#else 
   if (fg) {
     gtk_widget_modify_fg(v->rstatus, GTK_STATE_NORMAL, fg);
     gtk_widget_modify_fg(v->lstatus, GTK_STATE_NORMAL, fg);
@@ -650,6 +671,7 @@ dwb_view_modify_style(View *v, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkC
     gtk_widget_modify_font(v->lstatus, fd);
     gtk_widget_modify_font(v->tablabel, fd);
   }
+#endif
 } /*}}}*/
 
 /* dwb_view_set_active_style (GList *) {{{*/
@@ -769,7 +791,11 @@ dwb_view_create_web_view() {
   gtk_label_set_use_markup(GTK_LABEL(v->rstatus), true);
   gtk_label_set_ellipsize(GTK_LABEL(v->urilabel), PANGO_ELLIPSIZE_MIDDLE);
 
+#if _HAS_GTK3
+  gtk_widget_override_color(v->urilabel, GTK_STATE_NORMAL, &dwb.color.active_fg);
+#else 
   gtk_widget_modify_fg(v->urilabel, GTK_STATE_NORMAL, &dwb.color.active_fg);
+#endif
 
   status_hbox = gtk_hbox_new(false, 2);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->lstatus, false, false, 0);
@@ -783,10 +809,15 @@ dwb_view_create_web_view() {
   // Srolling
   v->scroll = gtk_scrolled_window_new(NULL, NULL);
   gtk_container_add(GTK_CONTAINER(v->scroll), v->web);
+#if _HAS_GTK3
+  gtk_window_set_has_resize_grip(GTK_WINDOW(dwb.gui.window), false);
+  GtkCssProvider *provider = gtk_css_provider_get_default();
+  gtk_css_provider_load_from_data(provider, "GtkScrollbar { -GtkRange-slider-width: 0; -GtkRange-trough-border: 0; }", -1, NULL);
+#else
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
-
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(v->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+#endif
 
 
   // Tabbar
