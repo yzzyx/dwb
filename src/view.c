@@ -460,10 +460,9 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       v->status->ssl = SSL_NONE;
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
-      // TODO use this state for adblocker
       break;
     case WEBKIT_LOAD_COMMITTED: 
-      // TODO
+      dwb_view_ssl_state(gl);
 
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
           && (((host = dwb_get_host(web)) 
@@ -476,7 +475,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       FREE(host);
       break;
     case WEBKIT_LOAD_FINISHED:
-      dwb_view_ssl_state(gl);
       dwb_update_status(gl);
       /* TODO sqlite */
       if (!dwb.misc.private_browsing && dwb_prepend_navigation(gl, &dwb.fc.history))
