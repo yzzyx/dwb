@@ -743,11 +743,7 @@ dwb_web_view_init_signals(GList *gl) {
 
 void 
 dwb_view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
-  gtk_widget_set_size_request(v->bottombox, -1, rect->height);
-  gtk_widget_set_size_request(v->statusbox, -1, rect->height);
-  gtk_widget_set_size_request(v->rstatus, -1, rect->height);
-  gtk_widget_set_size_request(v->lstatus, -1, rect->height);
-  gtk_widget_set_size_request(v->urilabel, -1, rect->height);
+  gtk_widget_set_size_request(v->entry, -1, rect->height);
   g_signal_handlers_disconnect_by_func(entry, dwb_view_entry_size_allocate_cb, v);
 }
 
@@ -881,7 +877,7 @@ dwb_view_create_web_view() {
   gtk_widget_show(v->bottombox);
   gtk_widget_show_all(v->scroll);
   gtk_widget_show_all(v->tabevent);
-  g_signal_connect(v->entry, "size-allocate", G_CALLBACK(dwb_view_entry_size_allocate_cb), v);
+  g_signal_connect(v->bottombox, "size-allocate", G_CALLBACK(dwb_view_entry_size_allocate_cb), v);
 
   return v;
 } /*}}}*/
