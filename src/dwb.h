@@ -547,6 +547,7 @@ struct _Misc {
   int tab_height;
 
   char *pbbackground;
+  gboolean top_statusbar;
 };
 struct _Files {
   const char *bookmarks;

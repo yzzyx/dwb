@@ -802,7 +802,10 @@ dwb_view_create_web_view() {
   gtk_box_pack_start(GTK_BOX(status_hbox), v->rstatus, false, false, 0);
   gtk_container_add(GTK_CONTAINER(v->statusbox), status_hbox);
 
-  gtk_box_pack_end(GTK_BOX(v->bottombox), v->statusbox, false, false, 0);
+  if (dwb.misc.top_statusbar)
+    gtk_box_pack_start(GTK_BOX(v->bottombox), v->statusbox, false, false, 0);
+  else 
+    gtk_box_pack_end(GTK_BOX(v->bottombox), v->statusbox, false, false, 0);
 
   // Srolling
   v->scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -849,8 +852,14 @@ dwb_view_create_web_view() {
   //
   gtk_widget_modify_font(v->tablabel, dwb.font.fd_inactive);
 
-  gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
-  gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);
+  if (dwb.misc.top_statusbar) {
+    gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);
+    gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
+  }
+  else {
+    gtk_box_pack_start(GTK_BOX(v->vbox), v->scroll, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);
+  }
 
   gtk_widget_show(v->vbox);
   gtk_widget_show(v->lstatus);

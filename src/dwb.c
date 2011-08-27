@@ -569,6 +569,8 @@ static WebSettings DWB_SETTINGS[] = {
     false, true,  DOUBLE, { .d = 0.3          }, (S_Func)dwb_set_dummy,  },
   { { "layout",                                  "The default layout (Normal, Bottomstack, Maximized)", },     
     false, true,  CHAR, { .p = "Normal MAXIMIZED" },  (S_Func)dwb_set_dummy,  },
+  { { "top-statusbar",                                  "Whether to have the statusbar on top", },     
+    false, true,  BOOLEAN, { .b = false },  (S_Func)dwb_set_dummy,  },
   { { "mail-client",                            "Program used for mailto:-urls", },                                            
     false, true,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy,  }, 
   { { "ftp-client",                            "Program used for ftp", },                                            
@@ -602,6 +604,7 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
   View *v = gl->data;
   v->status->adblocker = s->arg.b;
 }/*}}}*/
+/* dwb_set_private_browsing  */
 static void
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
   dwb.misc.private_browsing = s->arg.b;
@@ -2990,6 +2993,7 @@ dwb_init_vars() {
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
   dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
   dwb.misc.scroll_step = GET_DOUBLE("scroll-step");
+  dwb.misc.top_statusbar = GET_BOOL("top-statusbar");
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(GET_CHAR("hide-tabbar"));
   dwb.state.cookies_allowed = GET_BOOL("cookies");
 

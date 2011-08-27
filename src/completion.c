@@ -305,7 +305,10 @@ dwb_comp_complete(CompletionType type, int back) {
   dwb.state.mode &= ~(COMPLETE_PATH | AUTO_COMPLETE);
   if ( !(dwb.state.mode & COMPLETION_MODE) ) {
     v->compbox = gtk_vbox_new(true, 0);
-    gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
+    if (dwb.misc.top_statusbar) 
+      gtk_box_pack_start(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
+    else 
+      gtk_box_pack_end(GTK_BOX(v->bottombox), v->compbox, false, false, 0);
     switch (type) {
       case COMP_SETTINGS:    dwb.comps.completions = dwb_comp_get_settings_completion(); break;
       case COMP_KEY:         dwb.comps.completions = dwb_comp_get_key_completion(true); break;
