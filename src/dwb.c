@@ -2596,6 +2596,11 @@ dwb_init_key_map() {
     else if (KEYS[i].key.str) {
       kv.key = KEYS[i].key;
     }
+    else {
+       kv.key.str = NULL;
+       kv.key.mod = 0;
+    }
+
     kv.id = KEYS[i].id;
     dwb.keymap = dwb_keymap_add(dwb.keymap, kv);
   }
