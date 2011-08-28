@@ -254,7 +254,6 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
     WebKitWebPolicyDecision *policy, GList *gl) {
 
   dwb_clean_load_end(gl);
-  puts("navigation");
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
