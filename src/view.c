@@ -253,6 +253,8 @@ static gboolean
 dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
+  dwb_clean_load_end(gl);
+  puts("navigation");
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
@@ -479,7 +481,6 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       /* TODO sqlite */
       if (!dwb.misc.private_browsing && dwb_prepend_navigation(gl, &dwb.fc.history))
         dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
-      dwb_clean_load_end(gl);
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);
