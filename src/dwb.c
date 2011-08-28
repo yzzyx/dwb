@@ -1191,12 +1191,14 @@ dwb_block_ad(GList *gl, const char *uri) {
   PRINT_DEBUG("%s", uri);
   for (GList *l = dwb.fc.adblock; l; l=l->next) {
     char *data = l->data;
-    if (data[0] == '@') {
-      if (g_regex_match_simple(data + 1, uri, 0, 0) )
+    if (data != NULL) {
+      if (data[0] == '@') {
+        if (g_regex_match_simple(data + 1, uri, 0, 0) )
+          return true;
+      }
+      else if (strstr(uri, data)) {
         return true;
-    }
-    else if (strstr(uri, data)) {
-      return true;
+      }
     }
   }
   return false;
