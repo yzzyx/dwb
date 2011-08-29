@@ -338,7 +338,7 @@ static FunctionMap FMAP [] = {
   { { "execute_userscript",    "Execute userscript" },                 1, 
     (Func) dwb_com_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
   { { "fullscreen",    "Toggle fullscreen" },                 1, 
-    (Func) dwb_com_fullscreen, NULL,     NEVER_SM,    { 0 } }, 
+    (Func) dwb_com_fullscreen, NULL,     ALWAYS_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
