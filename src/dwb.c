@@ -445,6 +445,10 @@ static WebSettings DWB_SETTINGS[] = {
     false, true,  BOOLEAN, { .b = false              },  (S_Func) dwb_set_proxy,  },
   { { "proxy-url",                               "The HTTP-proxy url", },                                          
     false, true,  CHAR,    { .p = NULL              },   (S_Func) dwb_soup_init_proxy,  },
+  { { "ssl-strict",                               "Whether to allow only save certificates", },                                          
+    false, true,  BOOLEAN,    { .b = true            },   (S_Func) dwb_soup_init_session_features,  },
+  { { "ssl-ca-cert",                               "Path to ssl-certificate", },                                          
+    false, true,  CHAR,    { .p = NULL            },   (S_Func) dwb_soup_init_session_features,  },
   { { "cookies",                                  "Whether to allow all cookies", },                                     
     false, true,  BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars,  },
   { { "background-tabs",			                     "Whether to open tabs in background", },                                 
@@ -3022,8 +3026,8 @@ dwb_init() {
 
   dwb.misc.soupsession = webkit_get_default_session();
   dwb_soup_init_proxy();
-  dwb_soup_init_cookies(dwb.misc.soupsession);
   dwb_init_vars();
+  dwb_soup_init_session_features();
 
 
   if (dwb.state.layout & BOTTOM_STACK) {

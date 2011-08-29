@@ -101,3 +101,13 @@ dwb_soup_init_proxy() {
   g_object_set(dwb.misc.soupsession, "proxy-uri", use_proxy ? uri : NULL, NULL); 
   soup_uri_free(uri);
 }/*}}}*/
+
+void 
+dwb_soup_init_session_features() {
+  char *cert = GET_CHAR("ssl-ca-cert");
+  if (cert != NULL && g_file_test(cert, G_FILE_TEST_EXISTS)) {
+    g_object_set(dwb.misc.soupsession, 
+        SOUP_SESSION_SSL_CA_FILE, cert, NULL);
+  }
+  g_object_set(dwb.misc.soupsession, SOUP_SESSION_SSL_STRICT, GET_BOOL("ssl-strict"), NULL);
+}
