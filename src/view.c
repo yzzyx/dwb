@@ -674,7 +674,6 @@ dwb_web_view_init_settings(GList *gl) {
       s->func(gl, s);
     }
   }
-
 }
 
 /* dwb_web_view_init_signals(View *v) {{{*/

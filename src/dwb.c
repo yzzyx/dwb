@@ -3026,6 +3026,7 @@ dwb_init() {
 
   dwb.misc.soupsession = webkit_get_default_session();
   dwb_soup_init_proxy();
+  dwb_soup_init_cookies(dwb.misc.soupsession);
   dwb_init_vars();
   dwb_soup_init_session_features();
 
