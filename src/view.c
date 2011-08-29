@@ -629,47 +629,25 @@ dwb_web_view_add_history_item(GList *gl) {
 /* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
 dwb_view_modify_style(View *v, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd) {
-#if _HAS_GTK3
-  if (fg) {
-    gtk_widget_override_color(v->rstatus, GTK_STATE_NORMAL, fg);
-    gtk_widget_override_color(v->lstatus, GTK_STATE_NORMAL, fg);
-    gtk_widget_override_color(v->entry, GTK_STATE_NORMAL, fg);
-  }
   if (bg) {
-    gtk_widget_override_background_color(v->statusbox, GTK_STATE_NORMAL, bg);
-    gtk_widget_override_background_color(v->entry, GTK_STATE_NORMAL, bg);
+    DWB_WIDGET_OVERRIDE_BACKGROUND(v->statusbox, GTK_STATE_NORMAL, bg);
+    DWB_WIDGET_OVERRIDE_BASE(v->entry, GTK_STATE_NORMAL, bg);
+  }
+  if (tabbg)
+    DWB_WIDGET_OVERRIDE_BACKGROUND(v->tabevent, GTK_STATE_NORMAL, tabbg);
+  if (fg) {
+    DWB_WIDGET_OVERRIDE_COLOR(v->rstatus, GTK_STATE_NORMAL, fg);
+    DWB_WIDGET_OVERRIDE_COLOR(v->lstatus, GTK_STATE_NORMAL, fg);
+    DWB_WIDGET_OVERRIDE_TEXT(v->entry, GTK_STATE_NORMAL, fg);
   }
   if (tabfg) 
-    gtk_widget_override_color(v->tablabel, GTK_STATE_NORMAL, tabfg);
-  if (tabbg)
-    gtk_widget_override_background_color(v->tabevent, GTK_STATE_NORMAL, tabbg);
+    DWB_WIDGET_OVERRIDE_COLOR(v->tablabel, GTK_STATE_NORMAL, tabfg);
   if (fd) {
-    gtk_widget_override_font(v->rstatus, fd);
-    gtk_widget_override_font(v->urilabel, fd);
-    gtk_widget_override_font(v->lstatus, fd);
-    gtk_widget_override_font(v->tablabel, fd);
+    DWB_WIDGET_OVERRIDE_FONT(v->rstatus, fd);
+    DWB_WIDGET_OVERRIDE_FONT(v->urilabel, fd);
+    DWB_WIDGET_OVERRIDE_FONT(v->lstatus, fd);
+    DWB_WIDGET_OVERRIDE_FONT(v->tablabel, fd);
   }
-#else 
-  if (fg) {
-    gtk_widget_modify_fg(v->rstatus, GTK_STATE_NORMAL, fg);
-    gtk_widget_modify_fg(v->lstatus, GTK_STATE_NORMAL, fg);
-    gtk_widget_modify_text(v->entry, GTK_STATE_NORMAL, fg);
-  }
-  if (bg) {
-    gtk_widget_modify_bg(v->statusbox, GTK_STATE_NORMAL, bg);
-    gtk_widget_modify_base(v->entry, GTK_STATE_NORMAL, bg);
-  }
-  if (tabfg) 
-    gtk_widget_modify_fg(v->tablabel, GTK_STATE_NORMAL, tabfg);
-  if (tabbg)
-    gtk_widget_modify_bg(v->tabevent, GTK_STATE_NORMAL, tabbg);
-  if (fd) {
-    gtk_widget_modify_font(v->rstatus, fd);
-    gtk_widget_modify_font(v->urilabel, fd);
-    gtk_widget_modify_font(v->lstatus, fd);
-    gtk_widget_modify_font(v->tablabel, fd);
-  }
-#endif
 } /*}}}*/
 
 /* dwb_view_set_active_style (GList *) {{{*/
@@ -773,7 +751,7 @@ dwb_view_create_web_view() {
   v->entry = gtk_entry_new();
   gtk_entry_set_inner_border(GTK_ENTRY(v->entry), NULL);
 
-  gtk_widget_modify_font(v->entry, dwb.font.fd_entry);
+  DWB_WIDGET_OVERRIDE_FONT(v->entry, dwb.font.fd_entry);
   gtk_entry_set_has_frame(GTK_ENTRY(v->entry), false);
   gtk_entry_set_inner_border(GTK_ENTRY(v->entry), false);
 
@@ -795,11 +773,7 @@ dwb_view_create_web_view() {
   gtk_label_set_use_markup(GTK_LABEL(v->rstatus), true);
   gtk_label_set_ellipsize(GTK_LABEL(v->urilabel), PANGO_ELLIPSIZE_MIDDLE);
 
-#if _HAS_GTK3
-  gtk_widget_override_color(v->urilabel, GTK_STATE_NORMAL, &dwb.color.active_fg);
-#else 
-  gtk_widget_modify_fg(v->urilabel, GTK_STATE_NORMAL, &dwb.color.active_fg);
-#endif
+  DWB_WIDGET_OVERRIDE_COLOR(v->urilabel, GTK_STATE_NORMAL, &dwb.color.active_fg);
 
   status_hbox = gtk_hbox_new(false, 2);
   gtk_box_pack_start(GTK_BOX(status_hbox), v->lstatus, false, false, 0);
@@ -856,7 +830,7 @@ dwb_view_create_web_view() {
 
   //gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel);
   //
-  gtk_widget_modify_font(v->tablabel, dwb.font.fd_inactive);
+  DWB_WIDGET_OVERRIDE_FONT(v->tablabel, dwb.font.fd_inactive);
 
   if (dwb.misc.top_statusbar) {
     gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);

@@ -27,23 +27,15 @@ typedef gboolean (*Match_Func)(char*, const char*);
 /* dwb_comp_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
 static void 
 dwb_comp_modify_completion_item(Completion *c, DwbColor *fg, DwbColor *bg, PangoFontDescription  *fd) {
-#if _HAS_GTK3
-  gtk_widget_override_color(c->llabel, GTK_STATE_NORMAL, fg);
-  gtk_widget_override_color(c->rlabel, GTK_STATE_NORMAL, fg);
-  gtk_widget_override_color(c->mlabel, GTK_STATE_NORMAL, fg);
-  gtk_widget_override_background_color(c->event, GTK_STATE_NORMAL, bg);
-  gtk_widget_override_font(c->llabel, dwb.font.fd_completion);
-  gtk_widget_override_font(c->mlabel, dwb.font.fd_completion);
-  gtk_widget_override_font(c->rlabel, dwb.font.fd_completion);
-#else 
-  gtk_widget_modify_fg(c->llabel, GTK_STATE_NORMAL, fg);
-  gtk_widget_modify_fg(c->rlabel, GTK_STATE_NORMAL, fg);
-  gtk_widget_modify_fg(c->mlabel, GTK_STATE_NORMAL, fg);
-  gtk_widget_modify_bg(c->event, GTK_STATE_NORMAL, bg);
-  gtk_widget_modify_font(c->llabel, dwb.font.fd_completion);
-  gtk_widget_modify_font(c->mlabel, dwb.font.fd_completion);
-  gtk_widget_modify_font(c->rlabel, dwb.font.fd_completion);
-#endif
+  DWB_WIDGET_OVERRIDE_COLOR(c->llabel, GTK_STATE_NORMAL, fg);
+  DWB_WIDGET_OVERRIDE_COLOR(c->rlabel, GTK_STATE_NORMAL, fg);
+  DWB_WIDGET_OVERRIDE_COLOR(c->mlabel, GTK_STATE_NORMAL, fg);
+
+  DWB_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_NORMAL, bg);
+
+  DWB_WIDGET_OVERRIDE_FONT(c->llabel, dwb.font.fd_completion);
+  DWB_WIDGET_OVERRIDE_FONT(c->mlabel, dwb.font.fd_completion);
+  DWB_WIDGET_OVERRIDE_FONT(c->rlabel, dwb.font.fd_completion);
 }/*}}}*/
 
 /* dwb_comp_get_completion_item(Navigation *)      return: Completion * {{{*/

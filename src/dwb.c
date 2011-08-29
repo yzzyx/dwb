@@ -811,18 +811,10 @@ dwb_set_status_bar_text(GtkWidget *label, const char *text, DwbColor *fg,  Pango
     gtk_label_set_text(GTK_LABEL(label), text);
   }
   if (fg) {
-#if _HAS_GTK3
-    gtk_widget_override_color(label, GTK_STATE_NORMAL, fg);
-#else 
-    gtk_widget_modify_fg(label, GTK_STATE_NORMAL, fg);
-#endif
+    DWB_WIDGET_OVERRIDE_COLOR(label, GTK_STATE_NORMAL, fg);
   }
   if (fd) {
-#if _HAS_GTK3
-    gtk_widget_override_font(label, fd);
-#else
-    gtk_widget_modify_font(label, fd);
-#endif
+    DWB_WIDGET_OVERRIDE_FONT(label, fd);
   }
 }/*}}}*/
 
@@ -1440,7 +1432,7 @@ dwb_reload_layout(GList *gl, WebSettings *s) {
     else {
       dwb_view_set_normal_style(v);
     }
-    gtk_widget_modify_font(v->entry, dwb.font.fd_entry);
+    DWB_WIDGET_OVERRIDE_FONT(v->entry, dwb.font.fd_entry);
   }
 }/*}}}*/
 
@@ -2717,69 +2709,36 @@ dwb_init_scripts() {
 static void
 dwb_init_style() {
   // Colors 
-#if _HAS_GTK3
   // Statusbar
-  gdk_rgba_parse(&dwb.color.active_fg, GET_CHAR("active-fg-color"));
-  gdk_rgba_parse(&dwb.color.active_bg, GET_CHAR("active-bg-color"));
-  gdk_rgba_parse(&dwb.color.normal_fg, GET_CHAR("normal-fg-color"));
-  gdk_rgba_parse(&dwb.color.normal_bg, GET_CHAR("normal-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.active_fg, GET_CHAR("active-fg-color"));
+  DWB_COLOR_PARSE(&dwb.color.active_bg, GET_CHAR("active-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.normal_fg, GET_CHAR("normal-fg-color"));
+  DWB_COLOR_PARSE(&dwb.color.normal_bg, GET_CHAR("normal-bg-color"));
 
   // Tabs
-  gdk_rgba_parse(&dwb.color.tab_active_fg, GET_CHAR("tab-active-fg-color"));
-  gdk_rgba_parse(&dwb.color.tab_active_bg, GET_CHAR("tab-active-bg-color"));
-  gdk_rgba_parse(&dwb.color.tab_normal_fg, GET_CHAR("tab-normal-fg-color"));
-  gdk_rgba_parse(&dwb.color.tab_normal_bg, GET_CHAR("tab-normal-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.tab_active_fg, GET_CHAR("tab-active-fg-color"));
+  DWB_COLOR_PARSE(&dwb.color.tab_active_bg, GET_CHAR("tab-active-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.tab_normal_fg, GET_CHAR("tab-normal-fg-color"));
+  DWB_COLOR_PARSE(&dwb.color.tab_normal_bg, GET_CHAR("tab-normal-bg-color"));
 
   //InsertMode 
-  gdk_rgba_parse(&dwb.color.insert_fg, GET_CHAR("insertmode-fg-color"));
-  gdk_rgba_parse(&dwb.color.insert_bg, GET_CHAR("insertmode-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.insert_fg, GET_CHAR("insertmode-fg-color"));
+  DWB_COLOR_PARSE(&dwb.color.insert_bg, GET_CHAR("insertmode-bg-color"));
 
   //Downloads
-  gdk_rgba_parse(&dwb.color.download_fg, "#ffffff");
-  gdk_rgba_parse(&dwb.color.download_bg, "#000000");
+  DWB_COLOR_PARSE(&dwb.color.download_fg, "#ffffff");
+  DWB_COLOR_PARSE(&dwb.color.download_bg, "#000000");
 
   //SSL 
-  gdk_rgba_parse(&dwb.color.ssl_trusted, GET_CHAR("ssl-trusted-color"));
-  gdk_rgba_parse(&dwb.color.ssl_untrusted, GET_CHAR("ssl-untrusted-color"));
+  DWB_COLOR_PARSE(&dwb.color.ssl_trusted, GET_CHAR("ssl-trusted-color"));
+  DWB_COLOR_PARSE(&dwb.color.ssl_untrusted, GET_CHAR("ssl-untrusted-color"));
 
-  gdk_rgba_parse(&dwb.color.active_c_bg, GET_CHAR("active-completion-bg-color"));
-  gdk_rgba_parse(&dwb.color.active_c_fg, GET_CHAR("active-completion-fg-color"));
-  gdk_rgba_parse(&dwb.color.normal_c_bg, GET_CHAR("normal-completion-bg-color"));
-  gdk_rgba_parse(&dwb.color.normal_c_fg, GET_CHAR("normal-completion-fg-color"));
+  DWB_COLOR_PARSE(&dwb.color.active_c_bg, GET_CHAR("active-completion-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.active_c_fg, GET_CHAR("active-completion-fg-color"));
+  DWB_COLOR_PARSE(&dwb.color.normal_c_bg, GET_CHAR("normal-completion-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.normal_c_fg, GET_CHAR("normal-completion-fg-color"));
 
-  gdk_rgba_parse(&dwb.color.error, GET_CHAR("error-color"));
-#else
-  // Statusbar
-  gdk_color_parse(GET_CHAR("active-fg-color"), &dwb.color.active_fg);
-  gdk_color_parse(GET_CHAR("active-bg-color"), &dwb.color.active_bg);
-  gdk_color_parse(GET_CHAR("normal-fg-color"), &dwb.color.normal_fg);
-  gdk_color_parse(GET_CHAR("normal-bg-color"), &dwb.color.normal_bg);
-
-  // Tabs
-  gdk_color_parse(GET_CHAR("tab-active-fg-color"), &dwb.color.tab_active_fg);
-  gdk_color_parse(GET_CHAR("tab-active-bg-color"), &dwb.color.tab_active_bg);
-  gdk_color_parse(GET_CHAR("tab-normal-fg-color"), &dwb.color.tab_normal_fg);
-  gdk_color_parse(GET_CHAR("tab-normal-bg-color"), &dwb.color.tab_normal_bg);
-
-  //InsertMode 
-  gdk_color_parse(GET_CHAR("insertmode-fg-color"), &dwb.color.insert_fg);
-  gdk_color_parse(GET_CHAR("insertmode-bg-color"), &dwb.color.insert_bg);
-
-  //Downloads
-  gdk_color_parse("#ffffff", &dwb.color.download_fg);
-  gdk_color_parse("#000000", &dwb.color.download_bg);
-
-  //SSL 
-  gdk_color_parse(GET_CHAR("ssl-trusted-color"),   &dwb.color.ssl_trusted);
-  gdk_color_parse(GET_CHAR("ssl-untrusted-color"), &dwb.color.ssl_untrusted);
-
-  gdk_color_parse(GET_CHAR("active-completion-bg-color"), &dwb.color.active_c_bg);
-  gdk_color_parse(GET_CHAR("active-completion-fg-color"), &dwb.color.active_c_fg);
-  gdk_color_parse(GET_CHAR("normal-completion-bg-color"), &dwb.color.normal_c_bg);
-  gdk_color_parse(GET_CHAR("normal-completion-fg-color"), &dwb.color.normal_c_fg);
-
-  gdk_color_parse(GET_CHAR("error-color"), &dwb.color.error);
-#endif
+  DWB_COLOR_PARSE(&dwb.color.error, GET_CHAR("error-color"));
 
   dwb.color.tab_number_color = GET_CHAR("tab-number-color");
   dwb.color.allow_color = GET_CHAR("status-allowed-color");
@@ -2813,11 +2772,7 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
-#if _HAS_GTK3
-  gtk_widget_override_background_color(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
-#else
-  gtk_widget_modify_bg(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
-#endif
+  DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 
   // Main
   dwb.gui.vbox = gtk_vbox_new(false, 1);
@@ -2839,15 +2794,9 @@ dwb_init_gui() {
 
   // Paned
   GtkWidget *paned_event = gtk_event_box_new(); 
-#if _HAS_GTK3
-  gtk_widget_override_background_color(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
-  gtk_widget_override_background_color(dwb.gui.paned, GTK_STATE_NORMAL, &dwb.color.normal_bg);
-  gtk_widget_override_background_color(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
-#else 
-  gtk_widget_modify_bg(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
-  gtk_widget_modify_bg(dwb.gui.paned, GTK_STATE_NORMAL, &dwb.color.normal_bg);
-  gtk_widget_modify_bg(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
-#endif
+  DWB_WIDGET_OVERRIDE_BACKGROUND(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
+  DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.paned, GTK_STATE_NORMAL, &dwb.color.normal_bg);
+  DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
   gtk_container_add(GTK_CONTAINER(paned_event), dwb.gui.paned);
   //
   // Downloadbar 

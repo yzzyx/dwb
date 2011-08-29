@@ -74,8 +74,20 @@
 
 #if _HAS_GTK3 
 #define DwbColor          GdkRGBA
+#define DWB_COLOR_PARSE(color, string)   (gdk_rgba_parse(color, string))
+#define DWB_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_override_background_color
+#define DWB_WIDGET_OVERRIDE_BASE         gtk_widget_override_background_color
+#define DWB_WIDGET_OVERRIDE_COLOR        gtk_widget_override_color
+#define DWB_WIDGET_OVERRIDE_TEXT         gtk_widget_override_color
+#define DWB_WIDGET_OVERRIDE_FONT         gtk_widget_override_font
 #else 
 #define DwbColor          GdkColor
+#define DWB_COLOR_PARSE(color, string)   (gdk_color_parse(string, color))
+#define DWB_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_modify_bg
+#define DWB_WIDGET_OVERRIDE_BASE         gtk_widget_modify_base
+#define DWB_WIDGET_OVERRIDE_COLOR        gtk_widget_modify_fg
+#define DWB_WIDGET_OVERRIDE_TEXT         gtk_widget_modify_text
+#define DWB_WIDGET_OVERRIDE_FONT         gtk_widget_modify_font
 #endif
 
 /* MAKROS {{{*/ 
