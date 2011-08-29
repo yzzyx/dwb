@@ -296,11 +296,18 @@ DwbHintObj = (function() {
     return r;
   }
   const __clear = function() {
-    if (_elements) {
-      for (var i=0; i<_elements.length; i++) {
-        _elements[i].element.removeAttribute('dwb_highlight');
-        _elements[i].hint.parentNode.removeChild(_elements[i].hint);
+    var p;
+    try {
+      if (_elements) {
+        for (var i=0; i<_elements.length; i++) {
+          _elements[i].element.removeAttribute('dwb_highlight');
+          if (p = _elements[i].hint.parentNode) 
+            p.removeChild(_elements[i].hint);
+        }
       }
+    }
+    catch (e) { 
+      console.error(e); 
     }
     _elements = [];
     _activeArr = [];
@@ -387,7 +394,7 @@ DwbHintObj = (function() {
     if (e.form.method.toLowerCase() == 'post') {
       return e.name;
     }
-    return NULL;
+    return null;
   }
   const __focusInput = function() {
     var res = document.body.querySelectorAll('input[type=text], input[type=password], textarea');
@@ -457,7 +464,7 @@ DwbHintObj = (function() {
       },
     submitSearchEngine :
       function (string) {
-        __submitSearchEngine(string);
+        return __submitSearchEngine(string);
       },
     focusInput : 
       function () {
