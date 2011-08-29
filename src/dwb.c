@@ -337,6 +337,8 @@ static FunctionMap FMAP [] = {
     (Func) dwb_com_print, NULL,                             POST_SM,    { 0 } }, 
   { { "execute_userscript",    "Execute userscript" },                 1, 
     (Func) dwb_com_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
+  { { "fullscreen",    "Toggle fullscreen" },                 1, 
+    (Func) dwb_com_fullscreen, NULL,     NEVER_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -3048,11 +3050,14 @@ dwb_init() {
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
   dwb.state.last_cookie = NULL;
+  dwb.state.last_cookies = NULL;
+  dwb.state.fullscreen = false;
+
   dwb.comps.completions = NULL; 
   dwb.comps.active_comp = NULL;
+
   dwb.misc.max_c_items = MAX_COMPLETIONS;
   dwb.misc.userscripts = NULL;
-  dwb.state.last_cookies = NULL;
   dwb.misc.proxyuri = NULL;
   dwb.misc.scripts = NULL;
 

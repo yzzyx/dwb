@@ -418,6 +418,7 @@ struct _State {
   char *mimetype_request;
 
   TabBarVisible tabbar_visible;
+  gboolean fullscreen;
 };
 
 struct _WebSettings {

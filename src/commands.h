@@ -83,4 +83,5 @@ gboolean dwb_com_toggle_hidden_files(KeyMap *, Arg *);
 gboolean dwb_com_web_inspector(KeyMap *, Arg *);
 gboolean dwb_com_quit(KeyMap *, Arg *);
 gboolean dwb_com_reload_scripts(KeyMap *, Arg *);
+gboolean dwb_com_fullscreen(KeyMap *, Arg *);
 #endif

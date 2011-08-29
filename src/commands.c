@@ -851,3 +851,12 @@ dwb_com_reload_scripts(KeyMap *km, Arg *arg) {
   }
   return true;
 }
+gboolean
+dwb_com_fullscreen(KeyMap *km, Arg *arg) {
+  dwb.state.fullscreen = !dwb.state.fullscreen;
+  if (dwb.state.fullscreen) 
+    gtk_window_fullscreen(GTK_WINDOW(dwb.gui.window));
+  else 
+    gtk_window_unfullscreen(GTK_WINDOW(dwb.gui.window));
+  return true;
+}
