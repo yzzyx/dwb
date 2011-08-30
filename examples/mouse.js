@@ -176,11 +176,14 @@ function MouseAutoScrollObj() {
     mouseDown : 
       function(ev) {
         var t = ev.target;
+        console.log(t.tagName);
         if (ev.button == 1) {
           if (MouseAutoScroll._span) {
             MouseAutoScroll.clear();
           }
           else if (!t.hasAttribute("href") 
+              && ! (t.tagName == "INPUT") 
+              && ! (t.tagName == "TEXTAREA") 
               && !t.hasAttribute("onmousedown") 
               && !(t.hasAttribute("onclick"))) {
             MouseAutoScroll._x = ev.x;
