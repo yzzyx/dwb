@@ -2975,15 +2975,27 @@ static void
 dwb_init_icons() {
   GdkPixbuf *pb;
 
+#if _HAS_GTK3
+  pb = gtk_widget_render_icon_pixbuf(dwb.gui.window, "gtk-directory", -1);
+#else 
   pb = gtk_widget_render_icon(dwb.gui.window, "gtk-directory", -1, NULL);
+#endif
   gdk_pixbuf_save(pb, dwb.files.dir_icon, "png", NULL, NULL);
   g_object_unref(pb);
 
+#if _HAS_GTK3
+  pb = gtk_widget_render_icon_pixbuf(dwb.gui.window, "gtk-file", -1);
+#else 
   pb = gtk_widget_render_icon(dwb.gui.window, "gtk-file", -1, NULL);
+#endif
   gdk_pixbuf_save(pb, dwb.files.file_icon, "png", NULL, NULL);
   g_object_unref(pb);
 
+#if _HAS_GTK3
+  pb = gtk_widget_render_icon_pixbuf(dwb.gui.window, "gtk-execute", -1);
+#else 
   pb = gtk_widget_render_icon(dwb.gui.window, "gtk-execute", -1, NULL);
+#endif
   gdk_pixbuf_save(pb, dwb.files.exec_icon, "png", NULL, NULL);
   g_object_unref(pb);
 }
@@ -3024,11 +3036,8 @@ dwb_init() {
   dwb_init_icons();
   dwb_init_scripts();
 
-  dwb.misc.soupsession = webkit_get_default_session();
-  dwb_soup_init_proxy();
-  dwb_soup_init_cookies(dwb.misc.soupsession);
+  dwb_soup_init();
   dwb_init_vars();
-  dwb_soup_init_session_features();
 
 
   if (dwb.state.layout & BOTTOM_STACK) {

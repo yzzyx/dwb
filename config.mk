@@ -28,6 +28,10 @@ NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REA
 ifeq (${GTK}, 3)
 LIBS  += gtk+-3.0
 LIBS  += webkitgtk-3.0
+FLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
+FLAGS+=-DGTK_DISABLE_DEPRECATED
+FLAGS+=-DGDK_DISABLE_DEPRECATED
+FLAGS+=-DGSEAL_ENABLE
 else
 LIBS  += gtk+-2.0
 LIBS  += webkit-1.0

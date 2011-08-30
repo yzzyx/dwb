@@ -27,5 +27,6 @@ void dwb_soup_save_cookies(GSList *);
 void dwb_soup_init_cookies(SoupSession *);
 void dwb_soup_init_proxy();
 void dwb_soup_init_session_features();
+void dwb_soup_init();
 
 #endif

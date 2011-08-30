@@ -111,3 +111,14 @@ dwb_soup_init_session_features() {
   }
   g_object_set(dwb.misc.soupsession, SOUP_SESSION_SSL_STRICT, GET_BOOL("ssl-strict"), NULL);
 }
+void 
+dwb_soup_init() {
+  dwb.misc.soupsession = webkit_get_default_session();
+  dwb_soup_init_proxy();
+  dwb_soup_init_cookies(dwb.misc.soupsession);
+  dwb_soup_init_session_features();
+#ifdef DWB_DEBUG
+  SoupLogger *sl = soup_logger_new(SOUP_LOGGER_LOG_HEADERS, -1);
+  soup_session_add_feature(dwb.misc.soupsession, sl);
+#endif
+}
