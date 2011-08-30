@@ -60,11 +60,11 @@ Scroll [n times] right (command
 .BR scroll_right).
 .TP
 .BR  [n]C-f
-Scroll [n] Pages down (command
+Scroll [n] pages down (command
 .BR scroll_page_down ).
 .TP
 .BR [n]C-b
-Scroll [n] Pages up (comman
+Scroll [n] pages up (comman
 .BR scroll_page_up  ).
 .TP
 .BR  [n]C-d
@@ -113,6 +113,10 @@ Add a new blank view (command
 .BR d
 Close current view (command
 .BR remove_view ).
+.TP
+.BR C-q
+Quit (command
+.BR quit ).
 .TP
 .BR u
 Undo closing last view (command
@@ -252,12 +256,12 @@ Allow cookie for the current web-page. The domain will be saved in
 .BR allow_cookie ).
 .TP
 .BR yy
-Yank selected text or if no text is selected the current url to clipboard
+Yank the current url to clipboard
 (command 
 .BR yank ).
 .TP
 .BR yY
-Yank selected text or if no text is selected the current url to primary
+Yank the current url to primary
 selection (command 
 .BR yank_primary ).
 .TP
@@ -341,6 +345,12 @@ Show userscripts (command
 .TP 
 .BR wi
 Show the webinspector. Note that 'enable-developer-extras' has to be set. 
+.TP 
+.BR g.
+Toggle hidden files when browsing local filesystem.
+.TP 
+.BR F11
+Toggle fullscreen.
 .TP 
 .BR C-M-p
 Print focused frame.
@@ -442,6 +452,8 @@ Init searchengine completion.
 .TP
 .BR C-U
 Init userscript completion.
+.BR C-p
+Complete local path.
 
 .SH CUSTOMIZATION
 dwb can be  customized in a web interface (command 
@@ -1077,6 +1089,14 @@ The size of the stacked area. Possible values: size in percent (integer),
 default value:
 .IR 30 .
 .TP 
+.BR ssl-strict
+Whether to allow only save ssl-certificates.
+default value:
+.IR true .
+.TP 
+.BR ssl-ca-cert
+Path to ssl-certificate.
+.TP 
 .BR ssl-trusted-color
 Color of the url in the statusbar for ssl-encrypted sites and trusted
 certificate.
@@ -1124,6 +1144,11 @@ Enable tabbed-browsing. If disabled, all new window/new tab requests will be
 opened in a new window. 
 default value:
 .IR true .
+.TP 
+.BR top-statusbar 
+Whether to have the statusbar on top.
+default value:
+.IR false .
 .TP 
 .BR use-fifo
 Use a fifo to communicate with dwb, e.g. sending "open <url>" to the fifo would

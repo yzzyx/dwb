@@ -85,7 +85,6 @@ static KeyValue KEYS[] = {
   { "spell_checking",           {   NULL,           0,                  },  },
   { "reload_scripts",           {   NULL,           0,                  },  },
   { "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
-  { "toggle_encoding",          {   "te" ,           0,  },  },
   { "focus_input",              {   "gi",           0, }, }, 
   { "set_setting",              {   "ss",           0, }, }, 
   { "set_global_setting",       {   "sgs",           0, }, }, 
