@@ -131,5 +131,5 @@ static KeyValue KEYS[] = {
   { "toggle_hidden_files",          {   "g.",         0 }, }, 
   { "complete_path",          {   "p",         GDK_CONTROL_MASK }, }, 
   { "quit",                   {   "q",         GDK_CONTROL_MASK }, }, 
-  { "fullscreen",             {   "F11",         0 }, }, 
+  { "fullscreen",             {   "F11",         GDK_CONTROL_MASK }, }, 
 };
