@@ -56,10 +56,10 @@ function MouseGesturesObj() {
         }
         else if (Math.abs(ev.x - MouseGestures.x) < gap) {
           if (MouseGestures.y - ev.y > min) {
-            window.open(MouseGestures.target);
+            window.scrollTo(0, 0);
           }
           else if (ev.y - MouseGestures.y > min)
-            window.location.reload();
+            window.scrollTo(0, document.height - window.innerHeight);
         }
         MouseGestures.clear();
       },

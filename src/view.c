@@ -154,8 +154,7 @@ dwb_web_view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
 /* dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/
 static gboolean 
 dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
-  Arg a = { .p = gl };
-  dwb_view_remove(&a);
+  dwb_view_remove(gl);
   return true;
 }/*}}}*/
 
@@ -610,6 +609,10 @@ dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) 
     }
     return true;
   }
+  else if (e->button == 3 && e->type == GDK_BUTTON_PRESS) {
+    dwb_view_remove(gl);
+    return true;
+  }
   return false;
 }/*}}}*/
 
@@ -912,13 +915,13 @@ dwb_view_push_master(Arg *arg) {
 
 /* dwb_view_remove (void) {{{*/
 void
-dwb_view_remove(Arg *a) {
+dwb_view_remove(GList *g) {
   GList *gl = NULL;
   if (!dwb.state.views->next) {
     return;
   }
-  if (a || dwb.state.nummod == 0) {
-    gl = a ? a->p : dwb.state.fview;
+  if (g || dwb.state.nummod == 0) {
+    gl = g != NULL ? g : dwb.state.fview;
     if (gl == dwb.state.fview) {
       if ( !(dwb.state.fview = dwb.state.fview->prev) ) {
         dwb.state.fview = g_list_first(dwb.state.views)->next;
