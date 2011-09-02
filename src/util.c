@@ -515,3 +515,15 @@ gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gi
   gtk_box_pack_start(box, child, expand, fill, padding);
   gtk_box_reorder_child(box, child, position);
 }
+char * 
+dwb_util_strcasestr(const char *haystack, const char *needle) {
+  for (; *haystack; haystack++) {
+    if (tolower(*haystack) == tolower(*needle)) {
+      const char *h = haystack, *n = needle;
+      for (; *h && *n && tolower(*h) == tolower(*n); ++h, ++n);
+      if (! *n ) 
+        return (char*)haystack;
+    }
+  }
+  return NULL;
+}

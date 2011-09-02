@@ -81,5 +81,6 @@ char * dwb_util_basename(const char *);
 gboolean dwb_util_file_add(const char *filename, const char *text, int, int);
 gboolean dwb_util_file_add_navigation(const char *, const Navigation *, int, int);
 void gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gint padding, int position);
+char * dwb_util_strcasestr(const char *haystack, const char *needle);
 
 #endif
