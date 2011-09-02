@@ -517,6 +517,8 @@ gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gi
 }
 char * 
 dwb_util_strcasestr(const char *haystack, const char *needle) {
+  if (! *needle )
+    return (char *) haystack;
   for (; *haystack; haystack++) {
     if (tolower(*haystack) == tolower(*needle)) {
       const char *h = haystack, *n = needle;
