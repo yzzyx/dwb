@@ -146,7 +146,7 @@ dwb_session_save(const char *name) {
   GString *buffer = g_string_new(NULL);
   g_string_append_printf(buffer, "g:%s\n", name);
 
-  for (GList *l = g_list_last(dwb.state.views); l; l=l->prev) {
+  for (GList *l = g_list_first(dwb.state.views); l; l=l->next) {
     WebKitWebView *web = WEBVIEW(l);
     WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
     for (int i= -webkit_web_back_forward_list_get_back_length(bf_list); i<=webkit_web_back_forward_list_get_forward_length(bf_list); i++) {
