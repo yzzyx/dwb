@@ -18,6 +18,12 @@
 
 #include "download.h"
 
+typedef struct _DwbDownloadStatus {
+  gdouble total_size;
+  guint blue;
+  gint64 time;
+} DwbDownloadStatus;
+
 typedef struct _DwbDownload {
   GtkWidget *event;
   GtkWidget *rlabel;
@@ -83,31 +89,37 @@ dwb_dl_get_download_label(WebKitDownload *download) {
 
 /* dwb_dl_progress_cb(WebKitDownload *) {{{*/
 static void
-dwb_dl_progress_cb(WebKitDownload *download) {
+dwb_dl_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *status) {
   GList *l = dwb_dl_get_download_label(download); 
   DwbDownload *label = l->data;
+  /* Update at most four times a second */
+  gint64 time = g_get_monotonic_time()/250000;
+  if (time != status->time) {
+    double elapsed = webkit_download_get_elapsed_time(download);
+    double progress = webkit_download_get_progress(download);
 
-  double elapsed = webkit_download_get_elapsed_time(download);
-  double progress = webkit_download_get_progress(download);
 
+    double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
+    guint remaining = (guint)(elapsed / progress - elapsed);
+    char *message = g_strdup_printf("[%d:%02d][%d%%][%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  status->total_size);
+    gtk_label_set_text(GTK_LABEL(label->rlabel), message);
+    FREE(message);
 
-  double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
-  double total_size = (double)webkit_download_get_total_size(download) / 0x100000;
-  guint remaining = (guint)(elapsed / progress - elapsed);
-  char *message = g_strdup_printf("[%d:%02d][%d%%][%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
-  gtk_label_set_text(GTK_LABEL(label->rlabel), message);
-  FREE(message);
+    guint blue = ((1 - progress) * 0xaa);
+    if (blue != status->blue) {
+      guint green = progress * 0xaa;
+      char *colorstring = g_strdup_printf("#%02x%02x%02x", 0x00, green, blue);
 
-  guint blue = ((1 - progress) * 0xaa);
-  guint green = progress * 0xaa;
-  char *colorstring = g_strdup_printf("#%02x%02x%02x", 0x00, green, blue);
+      DwbColor color; 
 
-  DwbColor color; 
+      DWB_COLOR_PARSE(&color, colorstring);
+      DWB_WIDGET_OVERRIDE_BACKGROUND(label->event, GTK_STATE_NORMAL, &color);
 
-  DWB_COLOR_PARSE(&color, colorstring);
-  DWB_WIDGET_OVERRIDE_BACKGROUND(label->event, GTK_STATE_NORMAL, &color);
-
-  FREE(colorstring);
+      FREE(colorstring);
+    }
+    status->blue = blue;
+  }
+  status->time = time;
 }/*}}}*/
 
 /* dwb_dl_set_mimetype(const char *) {{{*/
@@ -144,7 +156,7 @@ dwb_dl_spawn(DwbDownload *dl) {
 
 /* dwb_dl_status_cb(WebKitDownload *) {{{*/
 static void
-dwb_dl_status_cb(WebKitDownload *download) {
+dwb_dl_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *dstatus) {
   WebKitDownloadStatus status = webkit_download_get_status(download);
 
   if (status == WEBKIT_DOWNLOAD_STATUS_FINISHED || status == WEBKIT_DOWNLOAD_STATUS_CANCELLED) {
@@ -165,6 +177,7 @@ dwb_dl_status_cb(WebKitDownload *download) {
       g_free(dwb.state.mimetype_request);
       dwb.state.mimetype_request = NULL;
     }
+    g_free(dstatus);
   }
 }/*}}}*/
 
@@ -271,9 +284,12 @@ dwb_dl_start() {
     active->path = g_strdup(path);
     gtk_widget_show_all(dwb.gui.downloadbar);
     downloads = g_list_prepend(downloads, active);
+    DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
+    s->blue = s->time = 0;
+    s->total_size = webkit_download_get_total_size(dwb.state.download) / 0x1000000;
     g_signal_connect(active->event, "button-press-event", G_CALLBACK(dwb_dl_button_press_cb), downloads);
-    g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(dwb_dl_progress_cb), NULL);
-    g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(dwb_dl_status_cb), NULL);
+    g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(dwb_dl_progress_cb), s);
+    g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(dwb_dl_status_cb), s);
     webkit_download_start(dwb.state.download);
   }
   FREE(lastdir);

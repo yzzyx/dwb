@@ -364,7 +364,7 @@ dwb_com_scroll(KeyMap *km, Arg *arg) {
     /* Scroll also if  frame-flattening is enabled 
      * this is just a workaround since scrolling is disfunctional if 
      * enable-frame-flattening is set */
-    if (value == 0 ) {
+    if (value == 0 && arg->n != SCROLL_TOP) {
       int x, y;
       if (arg->n == SCROLL_LEFT || arg->n == SCROLL_RIGHT) {
         x = sign * inc;
