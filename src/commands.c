@@ -25,6 +25,7 @@ static int inline modulo(int x, int y) {
   return x - dwb_floor((double)x/y)  * y;
 }
 
+/* commands.h {{{*/
 /* dwb_com_simple_command(keyMap *km) {{{*/
 void 
 dwb_com_simple_command(KeyMap *km) {
@@ -52,11 +53,9 @@ dwb_com_simple_command(KeyMap *km) {
   dwb_clean_key_buffer();
 }/*}}}*/
 
-/* COMMANDS {{{*/
 /* dwb_com_add_view(KeyMap *, Arg *) {{{*/
 void 
 dwb_com_add_view(KeyMap *km, Arg *arg) {
-  // TODO dwb_add_view background
   dwb_add_view(arg, false);
 }/*}}}*/
 
@@ -245,7 +244,6 @@ dwb_com_reload(KeyMap *km, Arg *arg) {
   webkit_web_view_get_uri(web);
   if ( (path = (char *)dwb_check_directory(webkit_web_view_get_uri(web))) ) {
     Arg a = { .p = path, .b = false };
-    // TODO background
     dwb_load_uri(NULL, &a);
   }
   else {
@@ -490,7 +488,6 @@ dwb_com_toggle_maximized(KeyMap *km, Arg *arg) {
   dwb_toggle_tabbar();
 }/*}}}*/
 
-
 /* dwb_com_remove_view(KeyMap *km, Arg *arg) {{{*/
 void 
 dwb_com_remove_view(KeyMap *km, Arg *arg) {
@@ -527,7 +524,6 @@ dwb_com_focus_nth_view(KeyMap *km, Arg *arg) {
   return true;
 }/*}}}*/
 
-
 /* dwb_com_yank {{{*/
 gboolean
 dwb_com_yank(KeyMap *km, Arg *arg) {
@@ -555,7 +551,6 @@ dwb_com_paste(KeyMap *km, Arg *arg) {
     if (dwb.state.nv == OPEN_NORMAL)
       dwb.state.nv = arg->n;
     Arg a = { .p = text, .b = false };
-    // TODO background
     dwb_load_uri(NULL, &a);
     g_free(text);
     return true;
@@ -665,6 +660,7 @@ dwb_com_entry_history_back(KeyMap *km, Arg *a) {
   return  true;
 }/*}}}*/
 
+/* dwb_com_save_session {{{*/
 int
 dwb_com_save_session(KeyMap *km, Arg *arg) {
   if (arg->n == NORMAL_MODE) {
@@ -679,8 +675,7 @@ dwb_com_save_session(KeyMap *km, Arg *arg) {
     dwb_set_normal_message(dwb.state.fview, false, "Session name:");
   }
   return true;
-}
-/*}}}*/
+}/*}}}*/
 
 /* dwb_com_bookmarks {{{*/
 gboolean
@@ -708,7 +703,7 @@ dwb_com_complete_type(KeyMap *km, Arg *arg) {
 
 }/*}}}*/
 
-/* dwb_com_toggle_scripts */
+/* dwb_com_toggle_scripts {{{ */
 gboolean 
 dwb_com_toggle_scripts(KeyMap *km, Arg *arg) {
   char *host = NULL;
@@ -770,7 +765,6 @@ dwb_com_save_files(KeyMap *km, Arg *arg) {
 gboolean
 dwb_com_undo(KeyMap *km, Arg *arg) {
   if (dwb.state.undo_list) {
-    // TODO dwb_add_view background
     WebKitWebView *web = WEBVIEW(dwb_add_view(NULL, false));
     WebKitWebBackForwardList *bflist = webkit_web_back_forward_list_new_with_web_view(web);
     for (GList *l = dwb.state.undo_list->data; l; l=l->next) {
@@ -801,6 +795,7 @@ dwb_com_print(KeyMap *km, Arg *arg) {
   return false;
 }/*}}}*/
 
+/* dwb_com_web_inspector {{{*/
 gboolean
 dwb_com_web_inspector(KeyMap *km, Arg *arg) {
   if (GET_BOOL("enable-developer-extras")) {
@@ -808,7 +803,7 @@ dwb_com_web_inspector(KeyMap *km, Arg *arg) {
     return true;
   }
   return false;
-}
+}/*}}}*/
 
 /* dwb_com_execute_userscript (Arg *) {{{*/
 gboolean
@@ -838,11 +833,14 @@ dwb_com_toggle_hidden_files(KeyMap *km, Arg *arg) {
   return -1;
 }/*}}}*/
 
+/* dwb_com_quit {{{*/
 gboolean
 dwb_com_quit(KeyMap *km, Arg *arg) {
   dwb_end();
   return NO_ERROR;
-}
+}/*}}}*/
+
+/* dwb_com_reload_scripts {{{*/
 gboolean
 dwb_com_reload_scripts(KeyMap *km, Arg *arg) {
   dwb_init_scripts();
@@ -850,7 +848,9 @@ dwb_com_reload_scripts(KeyMap *km, Arg *arg) {
     webkit_web_view_reload(WEBVIEW(l));
   }
   return true;
-}
+}/*}}}*/
+
+/* dwb_com_reload_scripts {{{*/
 gboolean
 dwb_com_fullscreen(KeyMap *km, Arg *arg) {
   dwb.state.fullscreen = !dwb.state.fullscreen;
@@ -859,4 +859,5 @@ dwb_com_fullscreen(KeyMap *km, Arg *arg) {
   else 
     gtk_window_unfullscreen(GTK_WINDOW(dwb.gui.window));
   return true;
-}
+}/*}}}*/
+/*}}}*/

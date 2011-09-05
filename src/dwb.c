@@ -697,6 +697,7 @@ dwb_set_user_agent(GList *gl, WebSettings *s) {
     s->arg.p = g_strdup_printf("%s %s/%s", current_ua, NAME, VERSION);
   }
   dwb_webkit_setting(gl, s);
+  g_hash_table_insert(dwb.settings, g_strdup("user-agent"), s);
 }
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
@@ -2925,10 +2926,8 @@ dwb_handle_signal(int s) {
     exit(EXIT_SUCCESS);
   }
   else if (s == SIGSEGV) {
-    fprintf(stderr, "Received SIGSEGV, try to clean up.\n");
-    if (dwb_session_save(NULL)) {
-      fprintf(stderr, "Success.\n");
-    }
+    fprintf(stderr, "Received SIGSEGV, trying to clean up.\n");
+    dwb_session_save(NULL);
     exit(EXIT_FAILURE);
   }
 }

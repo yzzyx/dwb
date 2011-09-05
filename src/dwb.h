@@ -136,7 +136,11 @@
 #define NUMMOD                      (dwb.state.nummod < 1 ? 1 : dwb.state.nummod)
 
 #ifdef DWB_DEBUG
-#define PRINT_DEBUG(message, ...) fprintf(stderr, "In %s:%d:%s(): " message "\n", __FILE__, __LINE__, __func__,##__VA_ARGS__)  \
+#define PRINT_DEBUG(...) do { \
+    fprintf(stderr, "\nDEBUG: %s:%d:%s():\t", __FILE__, __LINE__, __func__); \
+    fprintf(stderr, __VA_ARGS__);\
+    fprintf(stderr, "\n"); \
+  } while(0);
 
 #else 
 #define PRINT_DEBUG(message, ...) 
