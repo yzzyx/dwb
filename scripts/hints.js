@@ -165,8 +165,10 @@ DwbHintObj = (function() {
     if (doc.querySelector("[dwb_stylesheet='37']"))
       return;
     styleSheet = __createElement("style");
-    styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important; }";
-    styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important; } ";
+    styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important;" 
+      + "outline: 2px solid " + _normalColor + "!important; }";
+    styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important;" 
+      + "outline: 2px solid " + _activeColor + "!important; } ";
     styleSheet.innerHTML += ".dwb_hint { " +
       "position:absolute; z-index:20000;" +
       "background:" + _bgColor  + ";" + 
@@ -370,7 +372,6 @@ DwbHintObj = (function() {
         if ((r = __getVisibility(els[j], window) != null) && (els[j].type == "text" || els[j].type == "search")) {
           var e = new __letterHint(els[j], window, r);
           _elements.push(e);
-          e.element.setAttribute('dwb_highlight', 'hint_normal');
         }
       }
     }
