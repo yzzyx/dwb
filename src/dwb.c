@@ -170,6 +170,8 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_quit,         NULL,                   ALWAYS_SM, },
   { { "reload",                "Reload current page",                            }, 1, 
     (Func)dwb_com_reload,              NULL,                              ALWAYS_SM, },
+  { { "reload_bypass_cache",   "Reload current page without using any cached data",  }, 1, 
+    (Func)dwb_com_reload_bypass_cache,       NULL,                              ALWAYS_SM, },
   { { "remove_view",           "Close view",                        }, 1, 
     (Func)dwb_com_remove_view,         NULL,                              ALWAYS_SM, },
   { { "save_quickmark",        "Save a quickmark for this page",    }, 0, 

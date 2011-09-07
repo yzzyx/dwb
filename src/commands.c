@@ -252,6 +252,14 @@ dwb_com_reload(KeyMap *km, Arg *arg) {
   return true;
 }/*}}}*/
 
+/* dwb_com_reload_bypass_cache {{{*/
+gboolean
+dwb_com_reload_bypass_cache(KeyMap *km, Arg *arg) {
+  webkit_web_view_reload_bypass_cache(WEBVIEW_FROM_ARG(arg));
+  return true;
+}
+/*}}}*/
+
 /* dwb_com_view_source(Arg) {{{*/
 gboolean
 dwb_com_view_source(KeyMap *km, Arg *arg) {

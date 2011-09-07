@@ -51,6 +51,7 @@ static KeyValue KEYS[] = {
   { "open_quickmark_nw",        {   "wb",        0,                   },  },  
   { "push_master",              {   "gp",        0,    },  },  
   { "reload",                   {   "r",         0,                   },  },  
+  { "reload_bypass_cache",      {   "R",         0,                   },  },  
   { "remove_view",              {   "d",         0,                   },  },  
   { "save_quickmark",           {   "m",         0,                   },  },  
   { "scroll_percent",           {   "%",         0,                   },  },  

@@ -57,6 +57,7 @@ gboolean dwb_com_print(KeyMap *, Arg *);
 gboolean dwb_com_push_master(KeyMap *, Arg *);
 gboolean dwb_com_quickmark(KeyMap *, Arg *);
 gboolean dwb_com_reload(KeyMap *, Arg *);
+gboolean dwb_com_reload_bypass_cache(KeyMap *, Arg *);
 gboolean dwb_com_resize_master(KeyMap *, Arg *);
 gboolean dwb_com_save_files(KeyMap *, Arg *);
 gboolean dwb_com_save_session(KeyMap *, Arg *);
