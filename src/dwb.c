@@ -2035,7 +2035,7 @@ dwb_eval_key(GdkEventKey *e) {
     return true;
   }
   if (e->is_modifier) {
-    //return false;
+    return false;
   }
   // don't show backspace in the buffer
   if (keyval == GDK_KEY_BackSpace ) {
