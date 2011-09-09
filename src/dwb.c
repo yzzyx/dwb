@@ -2030,12 +2030,13 @@ dwb_eval_key(GdkEventKey *e) {
   const char *old = dwb.state.buffer ? dwb.state.buffer->str : NULL;
   int keyval = e->keyval;
   unsigned int mod_mask;
+  int keynum = -1;
 
   if (dwb.state.scriptlock) {
     return true;
   }
   if (e->is_modifier) {
-    //return false;
+    return false;
   }
   // don't show backspace in the buffer
   if (keyval == GDK_KEY_BackSpace ) {
@@ -2070,13 +2071,24 @@ dwb_eval_key(GdkEventKey *e) {
   }
   // nummod 
   if (DIGIT(e)) {
+    keynum = e->keyval - GDK_KEY_0;
     if (dwb.state.nummod) {
-      dwb.state.nummod = MIN(10*dwb.state.nummod + e->keyval - GDK_KEY_0, 314159);
+      dwb.state.nummod = MIN(10*dwb.state.nummod + keynum, 314159);
     }
     else {
       dwb.state.nummod = e->keyval - GDK_KEY_0;
     }
+    if (mod_mask) {
+      for (GList *l = dwb.keymap; l; l=l->next) {
+        KeyMap *km = l->data;
+        if ((km->mod & DWB_NUMMOD_MASK) && (km->mod & ~DWB_NUMMOD_MASK) == mod_mask) {
+          dwb_com_simple_command(km);
+          break;
+        }
+      }
+    }
     PRINT_DEBUG("nummod: %d", dwb.state.nummod);
+    FREE(key);
     return false;
   }
   g_string_append(dwb.state.buffer, key);
@@ -2526,6 +2538,9 @@ dwb_str_to_key(char *str) {
     }
     else if (!g_ascii_strcasecmp(string[i], "Shift")) {
       key.mod |= GDK_SHIFT_MASK;
+    }
+    else if (!strcmp(string[i], "[n]")) {
+      key.mod |= DWB_NUMMOD_MASK;
     }
     else {
       g_string_append(buffer, string[i]);

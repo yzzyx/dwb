@@ -100,6 +100,8 @@
 #define CLEAN_STATE_WITH_SHIFT(X) (X->state & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
 #define CLEAN_SHIFT(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_LOCK_MASK))
 #define CLEAN_COMP_MODE(X)          (X & ~(COMPLETION_MODE) & ~(AUTO_COMPLETE))
+/* Maybe this has to be changed in future releases */
+#define DWB_NUMMOD_MASK                 (1<<15)
 
 #define GET_TEXT()                  (gtk_entry_get_text(GTK_ENTRY(dwb.gui.entry)))
 #define CURRENT_VIEW()              ((View*)dwb.state.fview->data)
@@ -145,6 +147,7 @@
 #else 
 #define PRINT_DEBUG(message, ...) 
 #endif
+
 /*}}}*/
 
 
