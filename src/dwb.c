@@ -1456,10 +1456,10 @@ dwb_get_search_engine_uri(const char *uri, const char *text) {
 }/* }}} */
 
 /* dwb_get_search_engine(const char *uri) {{{*/
-static char *
-dwb_get_search_engine(const char *uri) {
+char *
+dwb_get_search_engine(const char *uri, gboolean force) {
   char *ret = NULL;
-  if ( (!strstr(uri, ".") || strstr(uri, " ")) && !strstr(uri, "localhost:")) {
+  if ( force || ((!strstr(uri, ".") || strstr(uri, " ")) && !strstr(uri, "localhost:"))) {
     char **token = g_strsplit(uri, " ", 2);
     for (GList *l = dwb.fc.searchengines; l; l=l->next) {
       Navigation *n = l->data;
@@ -1945,7 +1945,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
   }
   /* Check if searchengine is needed and load uri */
 
-  else if (!(uri = dwb_get_search_engine(arg->p)) || strstr(arg->p, "localhost:")) {
+  else if (!(uri = dwb_get_search_engine(arg->p, false)) || strstr(arg->p, "localhost:")) {
     uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://") 
       ? g_strdup(arg->p)
       : g_strdup_printf("http://%s", (char*)arg->p);
@@ -2035,7 +2035,7 @@ dwb_eval_key(GdkEventKey *e) {
     return true;
   }
   if (e->is_modifier) {
-    return false;
+    //return false;
   }
   // don't show backspace in the buffer
   if (keyval == GDK_KEY_BackSpace ) {
@@ -2884,15 +2884,6 @@ dwb_init_files() {
   dwb.files.adblock       = g_build_filename(path, "adblock",      NULL);
   dwb.files.scripts_allow  = g_build_filename(profile_path, "scripts.allow",      NULL);
 
-  char *icondir = g_build_filename(path, "icons", NULL);
-  if (! g_file_test(icondir, G_FILE_TEST_IS_DIR) ) {
-    g_mkdir_with_parents(icondir, 0755);
-  }
-  dwb.files.dir_icon  = g_build_filename(icondir, "directory.png", NULL);
-  dwb.files.file_icon = g_build_filename(icondir, "file.png", NULL);
-  dwb.files.exec_icon = g_build_filename(icondir, "exec.png", NULL);
-  g_free(icondir);
-
   if (!g_file_test(dwb.files.scriptdir, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(dwb.files.scriptdir, 0755);
   }
@@ -2972,33 +2963,34 @@ dwb_init_vars() {
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }/*}}}*/
 
+char *
+dwb_get_stock_item_base64_encoded(const char *name) {
+  GdkPixbuf *pb;
+  char *ret = NULL;
+#if _HAS_GTK3
+  pb = gtk_widget_render_icon_pixbuf(dwb.gui.window, name, -1);
+#else 
+  pb = gtk_widget_render_icon(dwb.gui.window, name, -1, NULL);
+#endif
+  if (pb) {
+    char *buffer;
+    size_t buffer_size;
+    gboolean success = gdk_pixbuf_save_to_buffer(pb, &buffer, &buffer_size, "png", NULL, NULL);
+    if (success) {
+      char *encoded = g_base64_encode((unsigned char*)buffer, buffer_size);
+      ret = g_strdup_printf("data:image/png;base64,%s", encoded);
+      g_free(encoded);
+      g_free(buffer);
+    }
+    g_object_unref(pb);
+  }
+  return ret;
+}
 static void
 dwb_init_icons() {
-  GdkPixbuf *pb;
-
-#if _HAS_GTK3
-  pb = gtk_widget_render_icon_pixbuf(dwb.gui.window, "gtk-directory", -1);
-#else 
-  pb = gtk_widget_render_icon(dwb.gui.window, "gtk-directory", -1, NULL);
-#endif
-  gdk_pixbuf_save(pb, dwb.files.dir_icon, "png", NULL, NULL);
-  g_object_unref(pb);
-
-#if _HAS_GTK3
-  pb = gtk_widget_render_icon_pixbuf(dwb.gui.window, "gtk-file", -1);
-#else 
-  pb = gtk_widget_render_icon(dwb.gui.window, "gtk-file", -1, NULL);
-#endif
-  gdk_pixbuf_save(pb, dwb.files.file_icon, "png", NULL, NULL);
-  g_object_unref(pb);
-
-#if _HAS_GTK3
-  pb = gtk_widget_render_icon_pixbuf(dwb.gui.window, "gtk-execute", -1);
-#else 
-  pb = gtk_widget_render_icon(dwb.gui.window, "gtk-execute", -1, NULL);
-#endif
-  gdk_pixbuf_save(pb, dwb.files.exec_icon, "png", NULL, NULL);
-  g_object_unref(pb);
+  dwb.files.dir_icon = dwb_get_stock_item_base64_encoded("gtk-directory");
+  dwb.files.file_icon = dwb_get_stock_item_base64_encoded("gtk-file");
+  dwb.files.exec_icon = dwb_get_stock_item_base64_encoded("gtk-execute");
 }
 
 #if WEBKIT_CHECK_VERSION(1, 4, 0)

@@ -294,6 +294,7 @@ enum Signal {
   SIG_RESOURCE_REQUEST,
   SIG_WINDOW_OBJECT,
   SIG_LOAD_STATUS,
+  SIG_LOAD_ERROR,
   SIG_LOAD_STATUS_AFTER,
   SIG_PROGRESS,
   SIG_TITLE,
@@ -705,5 +706,6 @@ void dwb_set_key(const char *, char *);
 void dwb_set_setting(const char *, char *value);
 gboolean dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
+char * dwb_get_search_engine(const char *uri, gboolean);
 
 #endif

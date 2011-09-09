@@ -488,6 +488,11 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   }
 }/*}}}*/
 
+static gboolean 
+dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *error, char *uri, GError *weberror, GList *gl) {
+  return false;
+}
+
 // Entry
 /* dwb_entry_keyrelease_cb {{{*/
 static gboolean 
@@ -698,6 +703,7 @@ dwb_web_view_init_signals(GList *gl) {
   v->status->signals[SIG_WINDOW_OBJECT]         = g_signal_connect(v->web, "window-object-cleared",                 G_CALLBACK(dwb_web_view_window_object_cleared_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
+  v->status->signals[SIG_LOAD_ERROR]            = g_signal_connect(v->web, "load-error",                            G_CALLBACK(dwb_web_view_load_error_cb), gl);
   v->status->signals[SIG_LOAD_STATUS_AFTER]     = g_signal_connect_after(v->web, "notify::load-status",             G_CALLBACK(dwb_web_view_load_status_after_cb), gl);
   v->status->signals[SIG_POPULATE_POPUP]        = g_signal_connect(v->web, "populate-popup",                        G_CALLBACK(dwb_web_view_populate_popup_cb), gl);
   v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                      G_CALLBACK(dwb_web_view_progress_cb), gl);
