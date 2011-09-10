@@ -286,7 +286,7 @@ dwb_dl_start() {
     downloads = g_list_prepend(downloads, active);
     DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
     s->blue = s->time = 0;
-    s->total_size = webkit_download_get_total_size(dwb.state.download) / 0x1000000;
+    s->total_size = webkit_download_get_total_size(dwb.state.download) / 0x100000;
     g_signal_connect(active->event, "button-press-event", G_CALLBACK(dwb_dl_button_press_cb), downloads);
     g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(dwb_dl_progress_cb), s);
     g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(dwb_dl_status_cb), s);
