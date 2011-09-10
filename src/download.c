@@ -19,7 +19,6 @@
 #include "download.h"
 
 typedef struct _DwbDownloadStatus {
-  gdouble total_size;
   guint blue;
   gint64 time;
 } DwbDownloadStatus;
@@ -97,11 +96,12 @@ dwb_dl_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *s
   if (time != status->time) {
     double elapsed = webkit_download_get_elapsed_time(download);
     double progress = webkit_download_get_progress(download);
+    double total_size = webkit_download_get_total_size(download) / 0x100000;
 
 
     double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
     guint remaining = (guint)(elapsed / progress - elapsed);
-    char *message = g_strdup_printf("[%d:%02d][%d%%][%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  status->total_size);
+    char *message = g_strdup_printf("[%d:%02d][%d%%][%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
     gtk_label_set_text(GTK_LABEL(label->rlabel), message);
     FREE(message);
 
@@ -286,7 +286,6 @@ dwb_dl_start() {
     downloads = g_list_prepend(downloads, active);
     DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
     s->blue = s->time = 0;
-    s->total_size = webkit_download_get_total_size(dwb.state.download) / 0x100000;
     g_signal_connect(active->event, "button-press-event", G_CALLBACK(dwb_dl_button_press_cb), downloads);
     g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(dwb_dl_progress_cb), s);
     g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(dwb_dl_status_cb), s);
