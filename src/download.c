@@ -96,7 +96,7 @@ dwb_dl_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *s
   if (time != status->time) {
     double elapsed = webkit_download_get_elapsed_time(download);
     double progress = webkit_download_get_progress(download);
-    double total_size = webkit_download_get_total_size(download) / 0x100000;
+    double total_size = (double)webkit_download_get_total_size(download) / 0x100000;
 
 
     double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
