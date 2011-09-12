@@ -504,8 +504,7 @@ dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri,
   char *content = dwb_util_get_file_content(errorfile);
   char *tmp = g_strdup(uri);
   char *res = tmp;
-  tmp = strstr(tmp, "://");
-  if (tmp != NULL) 
+  if ( (tmp = strstr(tmp, "://")) != NULL) 
     tmp += 3;
   else 
     tmp = res;
@@ -515,11 +514,10 @@ dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri,
   
   char *icon = dwb_get_stock_item_base64_encoded(GTK_STOCK_DIALOG_ERROR);
   if ((search = dwb_get_search_engine(tmp, true)) != NULL) 
-    site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "", search);
+    site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "visible", search);
   else 
-    site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "disabled", "");
+    site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
 
-  printf("%d", weberror->code);
   webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(web), site, "Error", uri);
 
   g_free(site);
