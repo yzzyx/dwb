@@ -710,5 +710,6 @@ void dwb_set_setting(const char *, char *value);
 gboolean dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
+char * dwb_get_stock_item_base64_encoded(const char *);
 
 #endif

@@ -42,6 +42,7 @@ INFO_FILE=info.html
 SETTINGS_FILE=settings.html
 HEAD_FILE=head.html
 KEY_FILE=keys.html
+ERROR_FILE=error.html
 
 #FLAGS += -pedantic
 FLAGS += -Wall 
@@ -61,6 +62,7 @@ FLAGS += -DINFO_FILE=\"$(INFO_FILE)\"
 FLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
 FLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
 FLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
+FLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 
 DFLAGS += $(FLAGS)
 DFLAGS += -DDWB_DEBUG

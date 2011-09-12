@@ -488,10 +488,46 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   }
 }/*}}}*/
 
+/* dwb_web_view_load_error_cb {{{*/
 static gboolean 
-dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *error, char *uri, GError *weberror, GList *gl) {
-  return false;
-}
+dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError *weberror, GList *gl) {
+  if (weberror->code == WEBKIT_NETWORK_ERROR_CANCELLED 
+      || weberror->code == WEBKIT_PLUGIN_ERROR_WILL_HANDLE_LOAD) 
+    return false;
+
+
+  char *errorfile = dwb_util_get_data_file(ERROR_FILE);
+  if (errorfile == NULL) 
+    return false;
+
+  char *site, *search;
+  char *content = dwb_util_get_file_content(errorfile);
+  char *tmp = g_strdup(uri);
+  char *res = tmp;
+  tmp = strstr(tmp, "://");
+  if (tmp != NULL) 
+    tmp += 3;
+  else 
+    tmp = res;
+
+  if (g_str_has_suffix(tmp, "/")) 
+    tmp[strlen(tmp)-1] = '\0';
+  
+  char *icon = dwb_get_stock_item_base64_encoded(GTK_STOCK_DIALOG_ERROR);
+  if ((search = dwb_get_search_engine(tmp, true)) != NULL) 
+    site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "", search);
+  else 
+    site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "disabled", "");
+
+  printf("%d", weberror->code);
+  webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(web), site, "Error", uri);
+
+  g_free(site);
+  g_free(content);
+  g_free(res);
+  FREE(icon);
+  return true;
+}/*}}}*/
 
 // Entry
 /* dwb_entry_keyrelease_cb {{{*/

@@ -1189,7 +1189,7 @@ dwb_block_ad(GList *gl, const char *uri) {
   if (!VIEW(gl)->status->adblocker) 
     return false;
 
-  PRINT_DEBUG("%s", uri);
+  PRINT_DEBUG(uri);
   for (GList *l = dwb.fc.adblock; l; l=l->next) {
     char *data = l->data;
     if (data != NULL) {
