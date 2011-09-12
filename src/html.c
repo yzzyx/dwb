@@ -156,6 +156,11 @@ dwb_html_key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer da
   dwb_set_key(id, value);
   return true;
 }
+static gboolean
+dwb_html_key_really_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
+  webkit_dom_element_blur(target);
+  return true;
+}
 void 
 dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   KeyMap *km;
@@ -173,7 +178,7 @@ dwb_html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
         mod = dwb_modmask_to_string(km->mod);
         value = g_strdup_printf("%s%s%s", mod, strlen(mod) > 0 ? " " : "", km->key ? km->key : "");
         webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(input), value);
-        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(dwb_html_key_changed_cb), false, wv);
+        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(dwb_html_key_really_changed_cb), false, wv);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "blur", G_CALLBACK(dwb_html_key_changed_cb), false, wv);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "focus", G_CALLBACK(dwb_html_focus_cb), false, wv);
         FREE(mod);
