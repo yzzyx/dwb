@@ -72,6 +72,8 @@ dwb_plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList
       && (! g_ascii_strcasecmp(tagname, "object") || ! g_ascii_strcasecmp(tagname, "embed")) ) 
       && ! g_slist_find(ALLOWED(gl), element) ) {
     PRINT_DEBUG("%s : %s", webkit_dom_element_get_attribute(element, "src"), type);
+
+    VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
     webkit_dom_event_prevent_default(event);
     webkit_dom_event_stop_propagation(event);
 
@@ -165,6 +167,7 @@ dwb_plugins_create_plugin_widget_cb(WebKitWebView *wv, char *mimetype, char *uri
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   WebKitDOMElement *element;
   if ( (element = dwb_plugins_find_in_frames(doc, uri)) != NULL && !g_slist_find(ALLOWED(gl), element)) {
+    VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
     char *display = dwb_plugins_create_click_element(element, gl);
     webkit_dom_element_set_attribute(element, "style", "display:none!important", NULL);
     g_object_set_data((gpointer)element, "dwb-plugin-display", display);

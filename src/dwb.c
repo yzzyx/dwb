@@ -935,6 +935,12 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
       : "[<span foreground='%s'><s>S</s></span>]";
     g_string_append_printf(string, format,  v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY ? dwb.color.allow_color : dwb.color.block_color);
   }
+  if ((v->status->pb_status & PLUGIN_STATUS_ENABLED) &&  (v->status->pb_status & PLUGIN_STATUS_HAS_PLUGIN)) {
+    if (v->status->pb_status & PLUGIN_STATUS_DISCONNECTED) 
+      g_string_append_printf(string, "[<span foreground='%s'>P</span>]",  dwb.color.allow_color);
+    else 
+      g_string_append_printf(string, "[<span foreground='%s'><s>P</s></span>]",  dwb.color.block_color);
+  }
   if (v->status->progress != 0) {
     wchar_t buffer[PBAR_LENGTH + 1] = { 0 };
     wchar_t cbuffer[PBAR_LENGTH] = { 0 };
@@ -1195,7 +1201,7 @@ dwb_block_ad(GList *gl, const char *uri) {
   if (!VIEW(gl)->status->adblocker) 
     return false;
 
-  PRINT_DEBUG(uri);
+  /* PRINT_DEBUG(uri); */
   for (GList *l = dwb.fc.adblock; l; l=l->next) {
     char *data = l->data;
     if (data != NULL) {

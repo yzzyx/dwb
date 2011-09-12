@@ -199,6 +199,7 @@ typedef enum {
   PLUGIN_STATUS_ENABLED       = 1<<1,
   PLUGIN_STATUS_CONNECTED     = 1<<2,
   PLUGIN_STATUS_DISCONNECTED  = 1<<3,
+  PLUGIN_STATUS_HAS_PLUGIN    = 1<<4,
 } PluginBlockerStatus;
 
 typedef enum {

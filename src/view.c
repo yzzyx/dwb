@@ -176,6 +176,7 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
 GtkWidget * 
 dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mimetype, char *uri, GHashTable *param, GList *gl) {
   PRINT_DEBUG("mimetype: %s uri: %s", mimetype, uri);
+  VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
   return NULL;
 }
 
@@ -460,6 +461,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       if (v->status->pb_status & PLUGIN_STATUS_ENABLED) 
         dwb_plugin_blocker_connect(gl);
       v->status->ssl = SSL_NONE;
+      v->status->pb_status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       break;

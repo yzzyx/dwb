@@ -117,7 +117,7 @@ dwb_soup_init() {
   dwb_soup_init_proxy();
   dwb_soup_init_cookies(dwb.misc.soupsession);
   dwb_soup_init_session_features();
-#ifdef DWB_DEBUG
+#if 0
   SoupLogger *sl = soup_logger_new(SOUP_LOGGER_LOG_HEADERS, -1);
   soup_session_add_feature(dwb.misc.soupsession, sl);
 #endif
