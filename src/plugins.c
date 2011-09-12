@@ -176,6 +176,7 @@ dwb_plugin_blocker_connect(GList *gl) {
   VIEW(gl)->status->signals[SIG_PLUGINS_LOAD] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(dwb_plugins_load_status_cb), gl);
   VIEW(gl)->status->signals[SIG_PLUGINS_FRAME_LOAD] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(dwb_plugins_frame_created_cb), gl);
   VIEW(gl)->status->signals[SIG_PLUGINS_CREATE_WIDGET] = g_signal_connect(WEBVIEW(gl), "create-plugin-widget", G_CALLBACK(dwb_plugins_create_plugin_widget_cb), gl);
+  VIEW(gl)->status->pb_status = PLUGIN_STATUS_CONNECTED;
 }
 
 void 
@@ -186,4 +187,5 @@ dwb_plugin_blocker_disconnect(GList *gl) {
       VIEW(gl)->status->signals[i] = 0;
     }
   }
+  VIEW(gl)->status->pb_status = PLUGIN_STATUS_DISCONNECTED;
 }

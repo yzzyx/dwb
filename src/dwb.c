@@ -323,16 +323,22 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    },        1,     
     (Func)dwb_com_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
-  { { "toggle_scripts_host", "Toggle block content for current domain" },   1, 
+  { { "toggle_scripts_host", "Toggle block content for current host" },   1, 
     (Func) dwb_com_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
-  { { "toggle_scripts_uri",    "Toggle block content for current domain" }, 1, 
+  { { "toggle_scripts_uri",    "Toggle block content for current url" }, 1, 
     (Func) dwb_com_toggle_scripts, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
-  { { "toggle_scripts_host_tmp", "Toggle block content for current domain for this session" },  1, 
+  { { "toggle_scripts_host_tmp", "Toggle block content for current host for this session" },  1, 
     (Func) dwb_com_toggle_scripts, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
-  { { "toggle_scripts_uri_tmp", "Toggle block content for current domain for this session" },   1, 
-    (Func) dwb_com_toggle_scripts, NULL,       POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
-  { { "toggle_scripts_uri",    "Toggle block content for current domain" },  1, 
-    (Func) dwb_com_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_URI } }, 
+  { { "toggle_scripts_uri_tmp", "Toggle block content for current url for this session" },   1, 
+    (Func) dwb_com_toggle_scripts, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
+  { { "toggle_plugins_host", "Toggle plugin blocker for current host" },   1, 
+    (Func) dwb_com_toggle_plugin_blocker, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
+  { { "toggle_plugins_uri",    "Toggle plugin blocker for current url" }, 1, 
+    (Func) dwb_com_toggle_plugin_blocker, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
+  { { "toggle_plugins_host_tmp", "Toggle block content for current domain for this session" },  1, 
+    (Func) dwb_com_toggle_plugin_blocker, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
+  { { "toggle_plugins_uri_tmp", "Toggle block content for current url for this session" },   1, 
+    (Func) dwb_com_toggle_plugin_blocker, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
   { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, 
     (Func) dwb_com_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
   { { "print",                 "Print current page" },                         1, 
@@ -2898,6 +2904,7 @@ dwb_init_files() {
   dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
   dwb.files.adblock       = g_build_filename(path, "adblock",      NULL);
   dwb.files.scripts_allow  = g_build_filename(profile_path, "scripts.allow",      NULL);
+  dwb.files.plugins_allow  = g_build_filename(profile_path, "plugins.allow",      NULL);
 
   if (!g_file_test(dwb.files.scriptdir, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(dwb.files.scriptdir, 0755);
@@ -2914,6 +2921,7 @@ dwb_init_files() {
   dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files.searchengines, (Content_Func)dwb_get_search_completion);
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
   dwb.fc.tmp_scripts = NULL;
+  dwb.fc.tmp_plugins = NULL;
 
   if (g_list_last(dwb.fc.searchengines)) 
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;

@@ -69,6 +69,7 @@ gboolean dwb_com_show_hints(KeyMap *, Arg *);
 gboolean dwb_com_show_keys(KeyMap *, Arg *);
 gboolean dwb_com_show_settings(KeyMap *, Arg *);
 gboolean dwb_com_toggle_scripts(KeyMap *, Arg *a);
+gboolean dwb_com_toggle_plugin_blocker(KeyMap *, Arg *a);
 gboolean dwb_com_toggle_property(KeyMap *, Arg *); 
 gboolean dwb_com_toggle_proxy(KeyMap *, Arg *); 
 gboolean dwb_com_undo(KeyMap *, Arg *);

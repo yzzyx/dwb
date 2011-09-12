@@ -195,6 +195,11 @@ typedef enum  {
 } CompletionType;
 
 typedef enum {
+  PLUGIN_STATUS_CONNECTED,
+  PLUGIN_STATUS_DISCONNECTED,
+} PluginBlockerStatus;
+
+typedef enum {
   HIDE_TB_NEVER     = 0x02,
   HIDE_TB_ALWAYS    = 0x03,
   HIDE_TB_TILED     = 0x05,
@@ -464,6 +469,7 @@ struct _ViewStatus {
   char *hover_uri;
   gboolean plugin_blocker;
   GSList *allowed_plugins;
+  PluginBlockerStatus pb_status;
 };
 
 struct _View {
@@ -592,6 +598,7 @@ struct _Files {
   const char *file_icon;
   const char *exec_icon;
   const char *scripts_allow;
+  const char *plugins_allow;
 };
 // TODO implement plugins blocker, script blocker with File struct
 typedef struct _File {
@@ -612,6 +619,7 @@ struct _FileContent {
   GList *mimetypes;
   GList *adblock;
   GList *tmp_scripts;
+  GList *tmp_plugins;
   GList *scripts_allow;
 };
 
