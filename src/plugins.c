@@ -52,7 +52,7 @@ dwb_plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
 
     webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
     webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(div), NULL);
-    // at least hide element if default behaviour cannot be prevented
+    /* at least hide element if default behaviour cannot be prevented */
 
     g_object_set_data((gpointer)div, "dwb-plugin-element", element);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(div), "click", G_CALLBACK(dwb_onclick_cb), false, gl);
@@ -133,7 +133,7 @@ dwb_plugins_find_in_frames(WebKitDOMDocument *doc, char *selector) {
   WebKitDOMNodeList *list;
   char *source;
 
-  // TODO nodes with duplicate src/data-property
+  /* TODO nodes with duplicate src/data-property */
   list = webkit_dom_document_get_elements_by_tag_name(doc, "object");
   for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
     element = (void*)webkit_dom_node_list_item(list, i);

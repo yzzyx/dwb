@@ -74,7 +74,6 @@ static KeyValue KEYS[] = {
   { "zoom_normal",              {   "z=",         0,                  },  },  
   { "zoom_out",                 {   "zo",         0,                  },  },  
   { "save_search_field",        {   "gs",         0,                  },  },  
-  // settings
   { "autoload_images",          {   NULL,           0,                  },  },
   { "autoresize_window",        {   NULL,           0,                  },  },
   { "autoshrink_images",        {   NULL,           0,                  },  },
@@ -98,7 +97,7 @@ static KeyValue KEYS[] = {
   { "paste_primary_nv",         {   "PP",           0, }, }, 
   { "paste_nw",                 {   "wp",           0, }, }, 
   { "paste_primary_nw",         {   "wP",           0, }, }, 
-  // entry  shortcuts
+  /* entry  shortcuts */
   { "entry_delete_word",        {   "w",            GDK_CONTROL_MASK, }, }, 
   { "entry_delete_letter",      {   "h",            GDK_CONTROL_MASK, }, }, 
   { "entry_delete_line",        {   "u",            GDK_CONTROL_MASK, }, }, 
@@ -112,6 +111,7 @@ static KeyValue KEYS[] = {
   { "complete_commands",        {   "I",         GDK_CONTROL_MASK,     },  },  
   { "complete_searchengines",   {   "S",         GDK_CONTROL_MASK,     },  },  
   { "complete_userscript",      {   "U",         GDK_CONTROL_MASK,     },  },  
+
   { "web_inspector",            {   "wi",         0,     },  },  
 
   { "download_hint",            {   "gd",           0 }, },
