@@ -457,7 +457,7 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
       }
-      if (v->status->plugin_blocker && v->status->pb_status == PLUGIN_STATUS_DISCONNECTED)
+      if (v->status->pb_status & PLUGIN_STATUS_ENABLED) 
         dwb_plugin_blocker_connect(gl);
       v->status->ssl = SSL_NONE;
       break;
@@ -473,12 +473,13 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", true, NULL);
         v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
       }
-      if (VIEW(gl)->status->plugin_blocker 
+      if (v->status->pb_status & PLUGIN_STATUS_ENABLED 
           && ( (host != NULL || (host = dwb_get_host(web))) 
           && (dwb_get_allowed(dwb.files.plugins_allow, host) || dwb_get_allowed(dwb.files.plugins_allow, uri)
             || g_list_find_custom(dwb.fc.tmp_plugins, host, (GCompareFunc)strcmp) || g_list_find_custom(dwb.fc.tmp_plugins, uri, (GCompareFunc)strcmp) )
-            ))
+            )) {
         dwb_plugin_blocker_disconnect(gl);
+      }
       FREE(host);
       break;
     case WEBKIT_LOAD_FINISHED:

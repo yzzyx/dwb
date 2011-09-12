@@ -173,19 +173,27 @@ dwb_plugins_create_plugin_widget_cb(WebKitWebView *wv, char *mimetype, char *uri
 }
 void 
 dwb_plugin_blocker_connect(GList *gl) {
-  VIEW(gl)->status->signals[SIG_PLUGINS_LOAD] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(dwb_plugins_load_status_cb), gl);
-  VIEW(gl)->status->signals[SIG_PLUGINS_FRAME_LOAD] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(dwb_plugins_frame_created_cb), gl);
-  VIEW(gl)->status->signals[SIG_PLUGINS_CREATE_WIDGET] = g_signal_connect(WEBVIEW(gl), "create-plugin-widget", G_CALLBACK(dwb_plugins_create_plugin_widget_cb), gl);
-  VIEW(gl)->status->pb_status = PLUGIN_STATUS_CONNECTED;
+  View *v = VIEW(gl);
+  if (v->status->pb_status & PLUGIN_STATUS_CONNECTED) 
+    return;
+
+  v->status->signals[SIG_PLUGINS_LOAD] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(dwb_plugins_load_status_cb), gl);
+  v->status->signals[SIG_PLUGINS_FRAME_LOAD] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(dwb_plugins_frame_created_cb), gl);
+  v->status->signals[SIG_PLUGINS_CREATE_WIDGET] = g_signal_connect(WEBVIEW(gl), "create-plugin-widget", G_CALLBACK(dwb_plugins_create_plugin_widget_cb), gl);
+  v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_DISCONNECTED) | PLUGIN_STATUS_CONNECTED;
 }
 
 void 
 dwb_plugin_blocker_disconnect(GList *gl) {
+  View *v = VIEW(gl);
+  if (v->status->pb_status & PLUGIN_STATUS_DISCONNECTED) 
+    return;
+
   for (int i=SIG_PLUGINS_LOAD; i<SIG_PLUGINS_LAST; i++) {
     if (VIEW(gl)->status->signals[i] > 0)  {
       g_signal_handler_disconnect(WEBVIEW(gl), VIEW(gl)->status->signals[i]);
-      VIEW(gl)->status->signals[i] = 0;
+      v->status->signals[i] = 0;
     }
   }
-  VIEW(gl)->status->pb_status = PLUGIN_STATUS_DISCONNECTED;
+  v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_CONNECTED) | PLUGIN_STATUS_DISCONNECTED;
 }

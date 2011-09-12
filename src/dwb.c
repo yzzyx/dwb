@@ -606,11 +606,15 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
 static void
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
-  v->status->plugin_blocker = s->arg.b;
-  if (s->arg.b) 
+  //v->status->plugin_blocker = s->arg.b;
+  if (s->arg.b) {
     dwb_plugin_blocker_connect(gl);
-  else 
+    v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_DISABLED) | PLUGIN_STATUS_ENABLED;
+  }
+  else {
     dwb_plugin_blocker_disconnect(gl);
+    v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_ENABLED) | PLUGIN_STATUS_DISABLED;
+  }
 }/*}}}*/
 /* dwb_set_adblock {{{*/
 static void

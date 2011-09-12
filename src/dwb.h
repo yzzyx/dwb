@@ -139,7 +139,7 @@
 
 #ifdef DWB_DEBUG
 #define PRINT_DEBUG(...) do { \
-    fprintf(stderr, "\nDEBUG: %s:%d:%s():\t", __FILE__, __LINE__, __func__); \
+    fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s():\t", __FILE__, __LINE__, __func__); \
     fprintf(stderr, __VA_ARGS__);\
     fprintf(stderr, "\n"); \
   } while(0);
@@ -195,8 +195,10 @@ typedef enum  {
 } CompletionType;
 
 typedef enum {
-  PLUGIN_STATUS_CONNECTED,
-  PLUGIN_STATUS_DISCONNECTED,
+  PLUGIN_STATUS_DISABLED      = 1<<0,
+  PLUGIN_STATUS_ENABLED       = 1<<1,
+  PLUGIN_STATUS_CONNECTED     = 1<<2,
+  PLUGIN_STATUS_DISCONNECTED  = 1<<3,
 } PluginBlockerStatus;
 
 typedef enum {
@@ -467,7 +469,6 @@ struct _ViewStatus {
   ScriptState scripts;
   int tab_height;
   char *hover_uri;
-  gboolean plugin_blocker;
   GSList *allowed_plugins;
   PluginBlockerStatus pb_status;
 };
