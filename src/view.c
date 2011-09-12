@@ -40,7 +40,7 @@ static gboolean dwb_web_view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame
 static gboolean dwb_web_view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
 static gboolean dwb_web_view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
 static void dwb_web_view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
-static void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *);
+/* static void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *); */
 static gboolean dwb_web_view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
 static gboolean dwb_web_view_value_changed_cb(GtkAdjustment *, GList *);
 static void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
@@ -331,11 +331,13 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
   }
 }/*}}}*/
 
+#if 0
 /* dwb_web_view_window_object_cleared_cb {{{*/
 static void 
 dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
     JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
 }/*}}}*/
+#endif
 
 /* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
 static gboolean
