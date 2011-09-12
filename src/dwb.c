@@ -204,7 +204,7 @@ static FunctionMap FMAP [] = {
     (Func)dwb_com_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_GLOBAL } },
   { { "set_key",               "Set keybinding",                    }, 0, 
     (Func)dwb_com_set_key,             NULL,                              NEVER_SM,    { 0 } },
-  { { "set_setting",           "Set property",                      }, 0, 
+  { { "set_setting",           "Set setting",                      }, 0, 
     (Func)dwb_com_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_PER_VIEW } },
   { { "show_global_settings",  "Show global settings",              }, 1, 
     (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_GLOBAL } },
