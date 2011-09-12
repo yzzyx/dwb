@@ -524,6 +524,7 @@ dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri,
   g_free(content);
   g_free(res);
   FREE(icon);
+  FREE(search);
   return true;
 }/*}}}*/
 
