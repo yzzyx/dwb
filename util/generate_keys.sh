@@ -2,7 +2,7 @@
 
 INFILE=keys.in
 OUTFILE=keys.out
-TEMPLATE="$(cat << EOF
+cat > ${OUTFILE} << EOF
 <div class='setting_bar'>
   <a class="setting_button" href="#general">General</a>
   <a class="setting_button" href="#bookmark_keys">Book- &amp Quickmarks</a>
@@ -12,12 +12,10 @@ TEMPLATE="$(cat << EOF
   <a class="setting_button" href="#clipboard">Clipboard</a>
   <a class="setting_button" href="#settings">Settings</a>
   <a class="setting_button" href="#misc">Miscellaneous</a>
-</div>
+  </div>
+<div class='dwb_settings_panel'>
 EOF
-)"
 
-echo "${TEMPLATE}" > ${OUTFILE}
-echo "<div class='dwb_settings_panel'>" >> ${OUTFILE}
 i=0
 while read; do 
   array=( $REPLY )

@@ -101,9 +101,18 @@ dwb_html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWeb
   return true;
 }
 gboolean
-dwb_html_focus_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
-  dwb_insert_mode(NULL);
+dwb_html_settings_really_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
+  webkit_dom_element_blur(el);
   return true;
+}
+gboolean
+dwb_html_focus_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
+  char *type = webkit_dom_element_get_attribute(el, "type");
+  if (!strcmp(type, "text")) {
+    dwb_insert_mode(NULL);
+    return true;
+  }
+  return false;
 }
 void
 dwb_html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
@@ -117,7 +126,7 @@ dwb_html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
     webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value);
     g_free(value);
   }
-  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(dwb_html_settings_changed_cb), false, wv);
+  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(dwb_html_settings_really_changed_cb), false, wv);
   webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "blur", G_CALLBACK(dwb_html_settings_changed_cb), false, wv);
   webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "focus", G_CALLBACK(dwb_html_focus_cb), false, wv);
 }

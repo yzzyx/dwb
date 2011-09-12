@@ -1,0 +1,123 @@
+# general General
+auto-load-images checkbox Load images automatically
+auto-resize-window checkbox Autoresize the window
+auto-shrink-images checkbox Automatically shrink standalone images to fit
+default-encoding text Default encoding used to display text
+enable-private-browsing checkbox Whether to enable private browsing mode
+enable-spell-checking checkbox Whether to enable spell checking
+full-content-zoom checkbox Whether the full content is scaled when zooming
+resizable-text-areas checkbox Whether text areas should be resizable
+scroll-step text Scroll step
+spell-checking-languages text Languages used for spell checking, seperated by commas
+startpage text The default homepage
+zoom-level text The default zoom level
+zoom-step text The zoom step
+# session Network &amp Session
+cookies checkbox Whether to allow all cookies
+enable-dns-prefetching checkbox Whether webkit prefetches domain names
+proxy checkbox Whether to use a HTTP-proxy
+proxy-url text The HTTP-proxy url
+save-session checkbox Whether to Automatically save sessions
+single-instance checkbox Whether to have only one instance
+ssl-ca-cert text Path to ssl-certificate
+ssl-strict checkbox Whether to allow only save ssl-certificates
+user-agent text The user agent string
+# fonts Fonts
+cursive-font-family text Cursive font family used to display text
+default-font-family text Default font family used to display text
+default-font-size text Default font size used to display text
+default-monospace-font-size text Default monospace font size used to display text
+fantasy-font-family text Fantasy font family used to display text
+font text Default font used for the ui
+font-completion text Font for tab-completion
+font-entry text Font for the addressbar
+font-inactive text Font for views without focus
+minimum-font-size text Minimum font size used to display text
+minimum-logical-font-size text Minimum logical font size used to display text
+monospace-font-family text Monospace font family used to display text
+sans-serif-font-family text Sans serif font family used to display text
+serif-font-family text Serif font family used to display text
+# colors Colors
+active-bg-color text Background color of the active view
+active-completion-bg-color text Background color of the active completion item
+active-completion-fg-color text Foreground color of the active completion item
+active-fg-color text Foreground color of the active view
+error-color text Color for error messages
+insertmode-bg-color text Background color of the statusbar in insertmode
+insertmode-fg-color text Foreground color of the statusbar in insertmode
+normal-bg-color text Background color of the normal view
+normal-completion-bg-color text Background color of normal completion items
+normal-completion-fg-color text Foreground color of normal completion items
+normal-fg-color text Foreground color of the normal view
+ssl-trusted-color text Color for encrypted sites, trusted certificate
+ssl-untrusted-color text Color for encrypted sites, untrusted certificate
+status-allowed-color text Color for script blocker, status allowed
+status-blocked-color text Color for script blocker, status blocked
+tab-active-bg-color text Background color of the active tab
+tab-active-fg-color text Foreground color of the active tab
+tab-normal-bg-color text Background color of the normal tab
+tab-normal-fg-color text Foreground color of the normal tab
+tab-number-color text Color of the tabnumber
+# lt Layout
+background-tabs checkbox Whether to open tabs in background
+default-height text Default height of the window
+default-width text Default width of the window
+enable-frame-flattening checkbox Whether to enable frame flattening
+enforce-96-dpi checkbox Enforce a resolution of 96 dpi
+factor text Zoom factor of the tiling area
+hide-tabbar text Whether to hide the tabbar  (never, always, tiled)
+layout text The default layout (Normal, Bottomstack, Maximized)
+message-delay text Time messages are shown, in seconds
+size text Tiling area size in percent
+tabbed-browsing checkbox Whether to enable tabbed browsing
+top-statusbar checkbox Whether to have the statusbar on top
+user-stylesheet-uri text The uri of a stylesheet applied to every page
+# hints Hints
+hint-active-color text Color of active links in hintmode
+hint-bg-color text Background color of hints
+hint-border text Border used for hints
+hint-fg-color text Foreground color of hints
+hint-font text Font used for hints
+hint-letter-seq text Letter sequence for letter hints
+hint-normal-color text Color of inactive links in hintmode
+hint-opacity text Opacity used for hints
+hint-style text Whether to use 'number' or 'letter' hints
+# plugins Plugins &amp Scripts
+adblocker checkbox Whether to block advertisements via a filterlist
+enable-java-applet checkbox Whether to enable java applets
+enable-plugins checkbox Whether to enable plugins
+enable-scripts checkbox Enable embedded scripting languages
+javascript-can-access-clipboard checkbox Whether javascript can access the clipboard
+javascript-can-open-windows-automatically checkbox Whether javascript can open windows
+plugin-blocker checkbox Whether to block plugins and replace them with a clickable element
+# completion Completion
+auto-completion checkbox Whether to show possible shortcuts
+complete-bookmarks checkbox Whether to enable tabcompletion for bookmarks
+complete-commands checkbox Whether to enable tabcompletion for command history
+complete-history checkbox Whether to enable tabcompletion for browsing history
+complete-searchengines checkbox Whether to enable tabcompletion for searchengines
+complete-userscripts checkbox Whether to enable tabcompletion for userscripts
+# misc Miscellaneous
+custom-encoding text The custom encoding of the view
+download-external-command text External application used for downloads
+download-use-external-program checkbox Whether to use an external download helper
+editable checkbox Whether content can be modified
+enable-caret-browsing checkbox Whether to enable caret browsing
+enable-default-context-menu checkbox Whether to enable the right click context menu
+enable-developer-extras checkbox Whether developer extensions should be enabled
+enable-dom-paste checkbox Whether to enable DOM paste
+enable-file-access-from-file-uris checkbox Whether file access from file uris is allowed
+enable-html5-database checkbox Enable HTML5 client side SQL-database support
+enable-html5-local-storage checkbox Enable HTML5 local storage
+enable-offline-web-application-cache checkbox Enable HTML5 offline web application cache
+enable-page-cache checkbox Enable page cache
+enable-site-specific-quirks checkbox Enable site specific compatibility workarounds
+enable-spatial-navigation checkbox Enable spatial navigation
+enable-universal-access-from-file-uris checkbox Whether to allow files loaded through file: 
+enable-xss-auditor checkbox Whether to enable the xss auditor
+ftp-client text Application used for ftp
+history-length text Length of the browsing history
+mail-client text Application used for mailto:-urls
+print-backgrounds checkbox Whether background images should be printed
+tab-key-cycles-through-elements checkbox Tab cycles through elements in insert mode
+use-fifo checkbox Create a fifo for communication

@@ -499,7 +499,8 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 static gboolean 
 dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError *weberror, GList *gl) {
   if (weberror->code == WEBKIT_NETWORK_ERROR_CANCELLED 
-      || weberror->code == WEBKIT_PLUGIN_ERROR_WILL_HANDLE_LOAD) 
+      || weberror->code == WEBKIT_PLUGIN_ERROR_WILL_HANDLE_LOAD 
+      || weberror->code == WEBKIT_POLICY_ERROR_FRAME_LOAD_INTERRUPTED_BY_POLICY_CHANGE) 
     return false;
 
 
