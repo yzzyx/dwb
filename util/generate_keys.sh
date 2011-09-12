@@ -21,7 +21,7 @@ while read; do
   array=( $REPLY )
   if [ "${array[0]}" = "#" ]; then 
     echo "<div class='dwb_settings_headline'><a name='${array[1]}'>${array[@]:2}</a></div>" >> ${OUTFILE}
-  else 
+  elif [[ ! ${REPLY} =~ ^\ *$ ]]; then 
     cat >> ${OUTFILE} <<EOF 
   <div class='dwb_line${i}'>
     <div class='dwb_attr'>${array[0]}</div>
@@ -32,8 +32,8 @@ while read; do
     <div style='clear:both;'></div>
   </div>
 EOF
-  ((i++))
-  ((i%=2))
+    ((i++))
+    ((i%=2))
   fi
 done < $INFILE
 echo "</div>" >> ${OUTFILE}

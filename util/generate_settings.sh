@@ -21,19 +21,19 @@ while read; do
   line=( ${REPLY} )
   if [ "${line[0]}" = "#" ]; then 
     echo "<div class='dwb_settings_headline'><a name='${line[1]}'>${line[@]:2}</a></div>" >> ${OUTFILE}
-  else 
+  elif [[ ! ${REPLY} =~ ^\ *$ ]]; then 
     cat >> ${OUTFILE} << EOF
   <div class='dwb_line$i'>
     <div class='dwb_attr'>${line[0]}</div>
       <div style='float:right;'>
         <label for='${line[0]}' class='dwb_desc'>${line[@]:2}</label>
         <input id='${line[0]}' type='${line[1]}'> 
-      </div>
+    </div>
     <div style='clear:both;'></div>
   </div>
 EOF
-  ((i++))
-  ((i%=2))
+    ((i++))
+    ((i%=2))
   fi
 done < ${INFILE}
 echo "</div>" >> ${OUTFILE}

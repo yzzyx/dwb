@@ -12,6 +12,7 @@ spell-checking-languages text Languages used for spell checking, seperated by co
 startpage text The default homepage
 zoom-level text The default zoom level
 zoom-step text The zoom step
+
 # session Network &amp Session
 cookies checkbox Whether to allow all cookies
 enable-dns-prefetching checkbox Whether webkit prefetches domain names
@@ -22,6 +23,7 @@ single-instance checkbox Whether to have only one instance
 ssl-ca-cert text Path to ssl-certificate
 ssl-strict checkbox Whether to allow only save ssl-certificates
 user-agent text The user agent string
+
 # fonts Fonts
 cursive-font-family text Cursive font family used to display text
 default-font-family text Default font family used to display text
@@ -37,6 +39,7 @@ minimum-logical-font-size text Minimum logical font size used to display text
 monospace-font-family text Monospace font family used to display text
 sans-serif-font-family text Sans serif font family used to display text
 serif-font-family text Serif font family used to display text
+
 # colors Colors
 active-bg-color text Background color of the active view
 active-completion-bg-color text Background color of the active completion item
@@ -58,6 +61,7 @@ tab-active-fg-color text Foreground color of the active tab
 tab-normal-bg-color text Background color of the normal tab
 tab-normal-fg-color text Foreground color of the normal tab
 tab-number-color text Color of the tabnumber
+
 # lt Layout
 background-tabs checkbox Whether to open tabs in background
 default-height text Default height of the window
@@ -72,6 +76,7 @@ size text Tiling area size in percent
 tabbed-browsing checkbox Whether to enable tabbed browsing
 top-statusbar checkbox Whether to have the statusbar on top
 user-stylesheet-uri text The uri of a stylesheet applied to every page
+
 # hints Hints
 hint-active-color text Color of active links in hintmode
 hint-bg-color text Background color of hints
@@ -82,6 +87,7 @@ hint-letter-seq text Letter sequence for letter hints
 hint-normal-color text Color of inactive links in hintmode
 hint-opacity text Opacity used for hints
 hint-style text Whether to use 'number' or 'letter' hints
+
 # plugins Plugins &amp Scripts
 adblocker checkbox Whether to block advertisements via a filterlist
 enable-java-applet checkbox Whether to enable java applets
@@ -90,6 +96,7 @@ enable-scripts checkbox Enable embedded scripting languages
 javascript-can-access-clipboard checkbox Whether javascript can access the clipboard
 javascript-can-open-windows-automatically checkbox Whether javascript can open windows
 plugin-blocker checkbox Whether to block plugins and replace them with a clickable element
+
 # completion Completion
 auto-completion checkbox Whether to show possible shortcuts
 complete-bookmarks checkbox Whether to enable tabcompletion for bookmarks
@@ -97,6 +104,7 @@ complete-commands checkbox Whether to enable tabcompletion for command history
 complete-history checkbox Whether to enable tabcompletion for browsing history
 complete-searchengines checkbox Whether to enable tabcompletion for searchengines
 complete-userscripts checkbox Whether to enable tabcompletion for userscripts
+
 # misc Miscellaneous
 custom-encoding text The custom encoding of the view
 download-external-command text External application used for downloads
