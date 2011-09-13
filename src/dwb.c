@@ -1125,7 +1125,7 @@ dwb_get_allowed(const char *filename, const char *data) {
 /* dwb_toggle_allowed(const char *filename, const char *data) {{{*/
 gboolean 
 dwb_toggle_allowed(const char *filename, const char *data) {
-  char *content;
+  char *content = NULL;
   if (!data)
     return false;
   gboolean allowed = dwb_get_allowed(filename, data);
@@ -1146,6 +1146,10 @@ dwb_toggle_allowed(const char *filename, const char *data) {
     }
   }
   g_file_set_contents(filename, buffer->str, -1, NULL);
+
+  FREE(content);
+  g_string_free(buffer, true);
+
   return !allowed;
 }/*}}}*/
 
@@ -1730,7 +1734,6 @@ dwb_open_quickmark(const char *key) {
     }
   }
   dwb_set_error_message(dwb.state.fview, "No such quickmark: %s", key);
-  dwb_normal_mode(false);
 }/*}}}*/
 
 /* dwb_tab_label_set_text {{{*/
@@ -1744,7 +1747,7 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
       uri ? uri : "about:blank");
   gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
 
-  FREE(escaped);
+  g_free(escaped);
 }/*}}}*/
 
 
@@ -1820,6 +1823,61 @@ dwb_check_directory(const char *path) {
   return path;
 }/*}}}*/
 
+static void 
+dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
+  char dest[STRING_LENGTH], *fullpath; 
+  const char *filename;
+  GSList *content = NULL;
+  GString *buffer = g_string_new(NULL);
+  GDir *dir = NULL;
+  GError *error = NULL;
+  strncpy(dest, path, STRING_LENGTH-1);
+
+  if (! (dir = g_dir_open(path, 0, &error))) {
+    fprintf(stderr, "dwb error: %s\n", error->message);
+    g_clear_error(&error);
+    return;
+  }
+
+  while ( (filename = g_dir_read_name(dir)) ) {
+    fullpath = g_build_filename(path, filename, NULL);
+    content = g_slist_prepend(content, fullpath);
+  }
+  content = g_slist_sort(content, (GCompareFunc)dwb_util_compare_path);
+  g_dir_close(dir);
+
+  if (strcmp(path, "/")) 
+    g_string_append_printf(buffer, "<h3>%s</h3><img src=%s/><a href=%s>..</a></br>", path, dwb.files.dir_icon, dirname(dest));
+  for (GSList *l = content; l; l=l->next) {
+    fullpath = l->data;
+    filename = g_strrstr(fullpath, "/") + 1;
+    if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
+      continue;
+    if (g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, fullpath, filename);
+    }
+    else if (g_file_test(fullpath, G_FILE_TEST_IS_EXECUTABLE)) {
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, fullpath, filename);
+    }
+    else {
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, fullpath, filename);
+    }
+    FREE(l->data);
+  }
+  g_slist_free(content);
+  fullpath = g_str_has_prefix(arg->p, "file://") ? g_strdup(arg->p) : g_strdup_printf("file:///%s", path);
+  /* add a history item */
+  /* TODO sqlite */
+  if (arg->b) {
+    WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
+    WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
+    webkit_web_back_forward_list_add_item(bf_list, item);
+  }
+  webkit_web_view_load_string(web, buffer->str, NULL, NULL, fullpath);
+  g_string_free(buffer, true);
+  FREE(fullpath);
+}
+
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(GList *gl, Arg *arg) {
@@ -1877,56 +1935,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
   }
   /* Check if uri is a directory */
   if ( (path = dwb_check_directory(arg->p)) ) {
-    GString *buffer = g_string_new(NULL);
-    GDir *dir = NULL;
-    GError *error = NULL;
-    char dest[STRING_LENGTH]; 
-    memcpy(dest, path, sizeof path);
-    if (! (dir = g_dir_open(path, 0, &error))) {
-      fprintf(stderr, "dwb error: %s\n", error->message);
-      g_clear_error(&error);
-      return;
-    }
-    const char *filename;
-    char *fullpath;
-    GSList *content = NULL;
-    while ( (filename = g_dir_read_name(dir)) ) {
-      char *fullpath = g_build_filename(path, filename, NULL);
-      content = g_slist_prepend(content, fullpath);
-    }
-    content = g_slist_sort(content, (GCompareFunc)dwb_util_compare_path);
-    g_dir_close(dir);
-
-    if (strcmp(path, "/")) 
-      g_string_append_printf(buffer, "<h3>%s</h3><img src=%s/><a href=%s>..</a></br>", path, dwb.files.dir_icon, dirname(dest));
-    for (GSList *l = content; l; l=l->next) {
-      fullpath = l->data;
-      filename = g_strrstr(fullpath, "/") + 1;
-      if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
-        continue;
-      if (g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
-        g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, fullpath, filename);
-      }
-      else if (g_file_test(fullpath, G_FILE_TEST_IS_EXECUTABLE)) {
-        g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, fullpath, filename);
-      }
-      else {
-        g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, fullpath, filename);
-      }
-      FREE(l->data);
-    }
-    g_slist_free(content);
-    fullpath = g_str_has_prefix(arg->p, "file://") ? g_strdup(arg->p) : g_strdup_printf("file:///%s", path);
-    /* add a history item */
-    /* TODO sqlite */
-    if (arg->b) {
-      WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
-      WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
-      webkit_web_back_forward_list_add_item(bf_list, item);
-    }
-    webkit_web_view_load_string(web, buffer->str, NULL, NULL, fullpath);
-    g_string_free(buffer, true);
-    FREE(fullpath);
+    dwb_show_directory(web, path, arg);
     return;
   }
   /* Check if uri is a regular file */
