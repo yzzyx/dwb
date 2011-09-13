@@ -1823,6 +1823,7 @@ dwb_check_directory(const char *path) {
   return path;
 }/*}}}*/
 
+/* dwb_show_directory(WebKitWebView *, const char *path, Arg *arg) {{{*/
 static void 
 dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
   char dest[STRING_LENGTH], *fullpath; 
@@ -1876,7 +1877,7 @@ dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
   webkit_web_view_load_string(web, buffer->str, NULL, NULL, fullpath);
   g_string_free(buffer, true);
   FREE(fullpath);
-}
+}/*}}}*/
 
 /* dwb_load_uri(const char *uri) {{{*/
 void 
