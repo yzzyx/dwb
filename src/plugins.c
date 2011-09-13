@@ -52,7 +52,7 @@ dwb_plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
 
     webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
     webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(div), NULL);
-    // at least hide element if default behaviour cannot be prevented
+    /* at least hide element if default behaviour cannot be prevented */
 
     g_object_set_data((gpointer)div, "dwb-plugin-element", element);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(div), "click", G_CALLBACK(dwb_onclick_cb), false, gl);
@@ -72,6 +72,8 @@ dwb_plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList
       && (! g_ascii_strcasecmp(tagname, "object") || ! g_ascii_strcasecmp(tagname, "embed")) ) 
       && ! g_slist_find(ALLOWED(gl), element) ) {
     PRINT_DEBUG("%s : %s", webkit_dom_element_get_attribute(element, "src"), type);
+
+    VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
     webkit_dom_event_prevent_default(event);
     webkit_dom_event_stop_propagation(event);
 
@@ -133,7 +135,7 @@ dwb_plugins_find_in_frames(WebKitDOMDocument *doc, char *selector) {
   WebKitDOMNodeList *list;
   char *source;
 
-  // TODO nodes with duplicate src/data-property
+  /* TODO nodes with duplicate src/data-property */
   list = webkit_dom_document_get_elements_by_tag_name(doc, "object");
   for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
     element = (void*)webkit_dom_node_list_item(list, i);
@@ -165,6 +167,7 @@ dwb_plugins_create_plugin_widget_cb(WebKitWebView *wv, char *mimetype, char *uri
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   WebKitDOMElement *element;
   if ( (element = dwb_plugins_find_in_frames(doc, uri)) != NULL && !g_slist_find(ALLOWED(gl), element)) {
+    VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
     char *display = dwb_plugins_create_click_element(element, gl);
     webkit_dom_element_set_attribute(element, "style", "display:none!important", NULL);
     g_object_set_data((gpointer)element, "dwb-plugin-display", display);
@@ -173,17 +176,27 @@ dwb_plugins_create_plugin_widget_cb(WebKitWebView *wv, char *mimetype, char *uri
 }
 void 
 dwb_plugin_blocker_connect(GList *gl) {
-  VIEW(gl)->status->signals[SIG_PLUGINS_LOAD] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(dwb_plugins_load_status_cb), gl);
-  VIEW(gl)->status->signals[SIG_PLUGINS_FRAME_LOAD] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(dwb_plugins_frame_created_cb), gl);
-  VIEW(gl)->status->signals[SIG_PLUGINS_CREATE_WIDGET] = g_signal_connect(WEBVIEW(gl), "create-plugin-widget", G_CALLBACK(dwb_plugins_create_plugin_widget_cb), gl);
+  View *v = VIEW(gl);
+  if (v->status->pb_status & PLUGIN_STATUS_CONNECTED) 
+    return;
+
+  v->status->signals[SIG_PLUGINS_LOAD] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(dwb_plugins_load_status_cb), gl);
+  v->status->signals[SIG_PLUGINS_FRAME_LOAD] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(dwb_plugins_frame_created_cb), gl);
+  v->status->signals[SIG_PLUGINS_CREATE_WIDGET] = g_signal_connect(WEBVIEW(gl), "create-plugin-widget", G_CALLBACK(dwb_plugins_create_plugin_widget_cb), gl);
+  v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_DISCONNECTED) | PLUGIN_STATUS_CONNECTED;
 }
 
 void 
 dwb_plugin_blocker_disconnect(GList *gl) {
+  View *v = VIEW(gl);
+  if (v->status->pb_status & PLUGIN_STATUS_DISCONNECTED) 
+    return;
+
   for (int i=SIG_PLUGINS_LOAD; i<SIG_PLUGINS_LAST; i++) {
     if (VIEW(gl)->status->signals[i] > 0)  {
       g_signal_handler_disconnect(WEBVIEW(gl), VIEW(gl)->status->signals[i]);
-      VIEW(gl)->status->signals[i] = 0;
+      v->status->signals[i] = 0;
     }
   }
+  v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_CONNECTED) | PLUGIN_STATUS_DISCONNECTED;
 }

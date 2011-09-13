@@ -1,0 +1,131 @@
+# general General
+open Open url
+Open Open url, edit the current url in the address bar
+open_nv Open in a new tab
+Open_nv Open url in a new view, edit the current url in the address bar
+open_nw Open url in a new window
+Open_nw Open url in a new window, edit the current url in the address bar
+find_backward Find backward
+find_forward Find forward
+find_next Find next
+find_previous Find previous
+hint_mode Follow hints
+hint_mode_nv Follow hints, open link in a new view
+hint_mode_nw Follow hints, open link in a new window
+history_back Go back
+history_forward Go forward
+reload Reload current page
+reload_bypass_cache Reload without using any cached data
+insert_mode Insert mode
+view_source View page source
+zoom_in Zoom in
+zoom_out Zoom out
+zoom_normal Zoom to 100%
+quit Quit dwb
+
+# bookmark_keys Bookmarks &amp Quickmarks
+bookmark Bookmark current page
+bookmarks Show bookmarks in a pop up menu and open
+bookmarks_nv Show bookmarks in a pop up menu and open in new view
+bookmarks_nw Show bookmarks in a pop up menu and open in new window
+save_quickmark Save a quickmark for this page
+open_quickmark Open a quickmark
+open_quickmark_nv Open quickmark in a new tab
+open_quickmark_nw Open quickmark in a new window
+open_start_page Open the default homepage
+
+# commandline Commandline
+command_mode Enter command mode
+entry_history_back Command history back
+entry_history_forward Command history forward
+entry_delete_letter Delete a single letter
+entry_delete_line Delete to the beginning of the line
+entry_delete_word Delete word
+entry_word_back Move cursor back on word
+entry_word_forward Move cursor forward on word
+download_set_execute Toggle between spawning an application and download path 
+
+# scrolling Scrolling
+scroll_up Scroll up
+scroll_down Scroll down
+scroll_right Scroll right
+scroll_left Scroll left
+scroll_page_down Scroll one page down
+scroll_page_up Scroll one page up
+scroll_halfpage_down Scroll one-half page down
+scroll_halfpage_up Scroll one-half page up
+scroll_bottom Scroll to  bottom of the page
+scroll_top Scroll to the top of the page
+scroll_percent Scroll to percentage
+
+# tabs Tabs &amp UI
+add_view Add a new view
+remove_view Close view
+undo Undo closing last tab
+decrease_master Decrease master area
+increase_master Increase master area
+focus_next Focus next view
+focus_nth_view Focus nth view
+focus_prev Focus previous view
+push_master Push to master area
+toggle_bottomstack Toggle bottomstack
+fullscreen Toggle fullscreen
+
+# completion Completion
+complete_bookmarks Complete bookmarks
+complete_history Complete browsing history
+complete_commands Complete command history
+complete_path Complete local file path
+complete_searchengines Complete searchengines
+complete_userscript Complete userscripts
+
+# clipboard Clipboard
+paste Open url from clipboard
+paste_nv Open url from clipboard in a new tab
+paste_nw Open url from clipboard in a new window
+paste_primary Open url from primary selection
+paste_primary_nw Open url from primary selection in a new window
+paste_primary_nv Open url from primary selection in a new window
+yank Yank current url to clipboard
+yank_primary Yank current url to primary selection
+
+# settings Settings
+set_setting Set a property for current view
+set_global_setting Set global property
+show_global_settings Show and modify global properties
+set_key Set keybinding
+show_keys Show and modify keyboard configuration
+scripts Toggle 'enable-scripts'
+spell_checking Toggle 'enable-spell-checking'
+autoload_images Toggle 'auto-load-images'
+autoresize_window Toggle 'auto-resize-window'
+toggle_plugins_host Toggle plugin blocker for current host
+toggle_plugins_uri Toggle plugin blocker for current uri
+toggle_plugins_host_tmp Toggle plugin blocker for current domain for this session
+toggle_plugins_uri_tmp Toggle plugin blocker for current uri for this session
+toggle_scripts_host Toggle block content for current domain
+toggle_scripts_uri Toggle block content for current uri
+toggle_scripts_host_tmp Toggle block content for current domain for this session
+toggle_scripts_uri_tmp Toggle block content for current uri for this session
+caret_browsing Toggle 'enable-caret-browsing'
+private_browsing Toggle private browsing
+java_applets Toggle java applets
+toggle_maximized Toggle maximized
+plugins Toggle 'enable-plugins'
+proxy Toggle proxy
+
+# misc Miscellaneous
+allow_cookie Allow cookie for current site
+download_hint Download via hints
+execute_userscript Execute userscript
+focus_input Focus the next input
+new_view New view for next navigation
+new_window New window for next navigation
+web_inspector Open the webinspector
+print Print current page
+save Save all configuration files
+save_session Save current session
+save_named_session Save current session with name
+toggle_hidden_files Toggle hidden files in directory listing
+save_search_field Add a new searchengine 
+reload_scripts Reload all javascript userscripts 

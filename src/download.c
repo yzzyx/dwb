@@ -348,7 +348,7 @@ dwb_dl_get_path(GList *gl, WebKitDownload *d) {
 }/*}}}*/
 
 /* dwb_dl_set_execute {{{*/
-// TODO complete path should not be in download.c
+/* TODO complete path should not be in download.c */
 void 
 dwb_dl_set_execute(Arg *arg) {
   if (dwb.state.mode == DOWNLOAD_GET_PATH) {

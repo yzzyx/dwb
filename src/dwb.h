@@ -139,7 +139,7 @@
 
 #ifdef DWB_DEBUG
 #define PRINT_DEBUG(...) do { \
-    fprintf(stderr, "\nDEBUG: %s:%d:%s():\t", __FILE__, __LINE__, __func__); \
+    fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s():\t", __FILE__, __LINE__, __func__); \
     fprintf(stderr, __VA_ARGS__);\
     fprintf(stderr, "\n"); \
   } while(0);
@@ -193,6 +193,14 @@ typedef enum  {
   COMP_SEARCH       = 0x08,
   COMP_PATH         = 0x09,
 } CompletionType;
+
+typedef enum {
+  PLUGIN_STATUS_DISABLED      = 1<<0,
+  PLUGIN_STATUS_ENABLED       = 1<<1,
+  PLUGIN_STATUS_CONNECTED     = 1<<2,
+  PLUGIN_STATUS_DISCONNECTED  = 1<<3,
+  PLUGIN_STATUS_HAS_PLUGIN    = 1<<4,
+} PluginBlockerStatus;
 
 typedef enum {
   HIDE_TB_NEVER     = 0x02,
@@ -462,8 +470,8 @@ struct _ViewStatus {
   ScriptState scripts;
   int tab_height;
   char *hover_uri;
-  gboolean plugin_blocker;
   GSList *allowed_plugins;
+  PluginBlockerStatus pb_status;
 };
 
 struct _View {
@@ -592,6 +600,7 @@ struct _Files {
   const char *file_icon;
   const char *exec_icon;
   const char *scripts_allow;
+  const char *plugins_allow;
 };
 // TODO implement plugins blocker, script blocker with File struct
 typedef struct _File {
@@ -612,6 +621,7 @@ struct _FileContent {
   GList *mimetypes;
   GList *adblock;
   GList *tmp_scripts;
+  GList *tmp_plugins;
   GList *scripts_allow;
 };
 

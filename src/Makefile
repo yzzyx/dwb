@@ -18,7 +18,8 @@ $(TARGET): $(OBJ)
 %.o: %.c 
 	@echo "${CC} $<"
 	@$(CC) $(FLAGS) -c -o $@ $<
-#	@$(CC) $(FLAGS) -MM $*.c > $*.d
+
+#@$(CC) $(FLAGS) -MM $*.c > $*.d
 
 
 debug: $(DTARGET)

@@ -711,11 +711,10 @@ dwb_com_complete_type(KeyMap *km, Arg *arg) {
 
 }/*}}}*/
 
-/* dwb_com_toggle_scripts {{{ */
-gboolean 
-dwb_com_toggle_scripts(KeyMap *km, Arg *arg) {
+void
+dwb_com_toggle(Arg *arg, const char *filename, GList **tmp, const char *message) {
   char *host = NULL;
-  const char *block;
+  const char *block = NULL;
   gboolean allowed;
   if (arg->n & ALLOW_HOST) {
     host = dwb_get_host(CURRENT_WEBVIEW());
@@ -730,25 +729,36 @@ dwb_com_toggle_scripts(KeyMap *km, Arg *arg) {
   if (block != NULL) {
     if (arg->n & ALLOW_TMP) {
       GList *l;
-      if ( (l = g_list_find_custom(dwb.fc.tmp_scripts, block, (GCompareFunc)strcmp)) ) {
+      if ( (l = g_list_find_custom(*tmp, block, (GCompareFunc)strcmp)) ) {
         free(l->data);
-        dwb.fc.tmp_scripts = g_list_delete_link(dwb.fc.tmp_scripts, l);
+        *tmp = g_list_delete_link(*tmp, l);
         allowed = false;
       }
       else {
-        dwb.fc.tmp_scripts = g_list_prepend(dwb.fc.tmp_scripts, g_strdup(block));
+        *tmp = g_list_prepend(*tmp, g_strdup(block));
         allowed = true;
       }
-      dwb_set_normal_message(dwb.state.fview, true, "Scripts temporarily %s for %s", allowed ? "allowed" : "blocked", block);
+      dwb_set_normal_message(dwb.state.fview, true, "%s temporarily %s for %s", message, allowed ? "allowed" : "blocked", block);
     }
     else {
-      allowed = dwb_toggle_allowed(dwb.files.scripts_allow, block);
-      dwb_set_normal_message(dwb.state.fview, true, "Scripts %s for %s", allowed ? "allowed" : "blocked", block);
+      allowed = dwb_toggle_allowed(filename, block);
+      dwb_set_normal_message(dwb.state.fview, true, "%s %s for %s", message, allowed ? "allowed" : "blocked", block);
     }
   }
   else 
     CLEAR_COMMAND_TEXT(dwb.state.fview);
-  FREE(host);
+}
+
+gboolean 
+dwb_com_toggle_plugin_blocker(KeyMap *km, Arg *arg) {
+  dwb_com_toggle(arg, dwb.files.plugins_allow, &dwb.fc.tmp_plugins, "Plugins");
+  return true;
+}
+
+/* dwb_com_toggle_scripts {{{ */
+gboolean 
+dwb_com_toggle_scripts(KeyMap *km, Arg *arg) {
+  dwb_com_toggle(arg, dwb.files.scripts_allow, &dwb.fc.tmp_scripts, "Scripts");
   return true;
 }/*}}}*/
 

@@ -73,7 +73,7 @@ dwb_comp_init_completion(GList *store, GList *gl, gboolean word_beginnings, void
   Navigation *n;
   const char *input = GET_TEXT();
   Match_Func func = word_beginnings ? (Match_Func)g_str_has_prefix : (Match_Func)dwb_util_strcasestr;
-  // TODO groupline
+  /* TODO groupline */
 #if 0
   GtkWidget *ev = gtk_event_box_new();
   GtkLabel *label = gtk_label_new(value);

@@ -95,7 +95,6 @@ dwb_util_keyval_to_char(guint keyval) {
   }
   FREE(key);
   return NULL;
-  //}
 }/*}}}*/
 
 /* dwb_util_char_to_arg(char *value, DwbType type)    return: Arg*{{{*/
