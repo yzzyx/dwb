@@ -529,7 +529,7 @@ dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri,
   else 
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
 
-  webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(web), site, "Error", uri);
+  webkit_web_frame_load_alternate_string(frame, site, "Error", uri);
 
   g_free(site);
   g_free(content);
