@@ -46,6 +46,7 @@ static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_follow_selection(void);
+static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 
 
 static void dwb_clean_buffer(GList *);
@@ -1513,7 +1514,12 @@ dwb_save_searchengine(void) {
   g_strstrip(text);
   if (text && strlen(text) > 0) {
     dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
-    dwb_util_file_add_navigation(dwb.files.searchengines, g_list_last(dwb.fc.searchengines)->data, true, -1);
+    Navigation *n = g_list_last(dwb.fc.searchengines)->data;
+    Navigation *cn = dwb_get_search_completion_from_navigation(dwb_navigation_dup(n));
+
+    dwb.fc.se_completion = g_list_append(dwb.fc.se_completion, cn);
+    dwb_util_file_add_navigation(dwb.files.searchengines, n, true, -1);
+
     dwb_set_normal_message(dwb.state.fview, true, "Searchengine saved");
     if (dwb.state.search_engine) {
       if (!dwb.misc.default_search) {
@@ -2878,15 +2884,17 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
 }/*}}}*/
 
 static Navigation * 
-dwb_get_search_completion(const char *text) {
-  Navigation *n = dwb_navigation_new_from_line(text);
-
+dwb_get_search_completion_from_navigation(Navigation *n) {
   char *uri = n->second;
   n->second = g_strdup(dwb_util_domain_from_uri(n->second));
 
   FREE(uri);
-
   return n;
+}
+static Navigation * 
+dwb_get_search_completion(const char *text) {
+  Navigation *n = dwb_navigation_new_from_line(text);
+  return dwb_get_search_completion_from_navigation(n);
 }
 
 /* dwb_init_files() {{{*/

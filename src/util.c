@@ -334,8 +334,11 @@ dwb_navigation_new(const char *uri, const char *title) {
   nv->first = uri ? g_strdup(uri) : NULL;
   nv->second = title ? g_strdup(title) : NULL;
   return nv;
-
 }/*}}}*/
+Navigation * 
+dwb_navigation_dup(Navigation *n) {
+  return dwb_navigation_new(n->first, n->second);
+}
 
 /* dwb_navigation_new_from_line(const char *text){{{*/
 Navigation * 

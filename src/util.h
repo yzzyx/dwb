@@ -57,6 +57,7 @@ char * dwb_util_get_data_file(const char *);
 // navigation
 Navigation * dwb_navigation_new_from_line(const char *);
 Navigation * dwb_navigation_new(const char *, const char *);
+Navigation * dwb_navigation_dup(Navigation *n);
 void dwb_navigation_free(Navigation *);
 
 void dwb_web_settings_free(WebSettings *);
