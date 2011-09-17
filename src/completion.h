@@ -35,15 +35,15 @@ struct _Completion {
   void *data;
 };
 
-void dwb_comp_clean_completion(void);
-void dwb_comp_clean_autocompletion(void);
-void dwb_comp_clean_path_completion(void);
+void completion_clean_completion(void);
+void completion_clean_autocompletion(void);
+void completion_clean_path_completion(void);
 
-void dwb_comp_set_autcompletion(GList *, WebSettings *);
-void dwb_comp_autocomplete(GList *, GdkEventKey *e);
-void dwb_comp_eval_autocompletion(void);
+void completion_set_autcompletion(GList *, WebSettings *);
+void completion_autocomplete(GList *, GdkEventKey *e);
+void completion_eval_autocompletion(void);
 
-void dwb_comp_complete(CompletionType, int);
-void dwb_comp_complete_path(int back);
+void completion_complete(CompletionType, int);
+void completion_complete_path(int back);
 
 #endif

@@ -26,16 +26,15 @@
 #include "download.h"
 #include "session.h"
 
-GList * dwb_add_view(Arg *, gboolean background);
-void dwb_view_remove(GList *gl);
-gboolean dwb_view_push_master(Arg *);
-GList * dwb_add_view_new_with_webview(void);
-void dwb_view_set_active_style(View *);
-void dwb_view_set_normal_style(View *);
+GList * view_add(Arg *, gboolean background);
+void view_remove(GList *gl);
+gboolean view_push_master(Arg *);
+void view_set_active_style(View *);
+void view_set_normal_style(View *);
 #if _HAS_GTK3
-void dwb_view_modify_style(View *, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
+void view_modify_style(View *, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
 #else
-void dwb_view_modify_style(View *, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
+void view_modify_style(View *, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
 #endif /* _HAS_GTK3 */
 void dwb_web_view_add_history_item(GList *gl);
 

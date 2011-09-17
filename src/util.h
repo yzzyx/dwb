@@ -22,37 +22,37 @@
 #include "dwb.h"
 
 // strings
-char * dwb_util_string_replace(const char *haystack, const char *needle, const char *replacemant);
-void dwb_util_cut_text(char *, int, int);
+char * util_string_replace(const char *haystack, const char *needle, const char *replacemant);
+void util_cut_text(char *, int, int);
 
-gboolean dwb_util_is_hex(const char *string);
-int dwb_util_test_connect(const char *uri);
+gboolean util_is_hex(const char *string);
+int util_test_connect(const char *uri);
 
 // keys
 char * dwb_modmask_to_string(guint );
-char * dwb_util_keyval_to_char(guint );
+char * util_keyval_to_char(guint );
 
 // arg
-char * dwb_util_arg_to_char(Arg *, DwbType );
-Arg * dwb_util_char_to_arg(char *, DwbType );
+char * util_arg_to_char(Arg *, DwbType );
+Arg * util_char_to_arg(char *, DwbType );
 
 // sort 
-int dwb_util_navigation_compare_first(Navigation *, Navigation *);
-int dwb_util_navigation_compare_second(Navigation *, Navigation *);
+int util_navigation_compare_first(Navigation *, Navigation *);
+int util_navigation_compare_second(Navigation *, Navigation *);
 
-int dwb_util_keymap_sort_first(KeyMap *, KeyMap *);
-int dwb_util_keymap_sort_second(KeyMap *, KeyMap *);
-int dwb_util_web_settings_sort_second(WebSettings *, WebSettings *);
-int dwb_util_web_settings_sort_first(WebSettings *, WebSettings *);
+int util_keymap_sort_first(KeyMap *, KeyMap *);
+int util_keymap_sort_second(KeyMap *, KeyMap *);
+int util_web_settings_sort_second(WebSettings *, WebSettings *);
+int util_web_settings_sort_first(WebSettings *, WebSettings *);
 
 // files
-void dwb_util_get_directory_content(GString **, const char *);
-GList * dwb_util_get_directory_entries(const char *path, const char *);
-char * dwb_util_get_file_content(const char *);
-gboolean dwb_util_set_file_content(const char *, const char *);
-char * dwb_util_build_path(void);
-char * dwb_util_get_data_dir(const char *);
-char * dwb_util_get_data_file(const char *);
+void util_get_directory_content(GString **, const char *);
+GList * util_get_directory_entries(const char *path, const char *);
+char * util_get_file_content(const char *);
+gboolean util_set_file_content(const char *, const char *);
+char * util_build_path(void);
+char * util_get_data_dir(const char *);
+char * util_get_data_file(const char *);
 
 // navigation
 Navigation * dwb_navigation_new_from_line(const char *);
@@ -75,13 +75,13 @@ char * dwb_return(const char *);
 void * dwb_malloc(size_t);
 void dwb_free(void *);
 
-char * dwb_util_domain_from_uri(const char *);
-int dwb_util_compare_path(const char *, const char *);
-char * dwb_util_basename(const char *);
+char * util_domain_from_uri(const char *);
+int util_compare_path(const char *, const char *);
+char * util_basename(const char *);
 
-gboolean dwb_util_file_add(const char *filename, const char *text, int, int);
-gboolean dwb_util_file_add_navigation(const char *, const Navigation *, int, int);
+gboolean util_file_add(const char *filename, const char *text, int, int);
+gboolean util_file_add_navigation(const char *, const Navigation *, int, int);
 void gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gint padding, int position);
-char * dwb_util_strcasestr(const char *haystack, const char *needle);
+char * util_strcasestr(const char *haystack, const char *needle);
 
 #endif

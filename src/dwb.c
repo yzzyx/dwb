@@ -89,266 +89,266 @@ static char *restore = NULL;
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
   { { "add_view",              "Add a new view",                    }, 1, 
-    (Func)dwb_com_add_view,            NULL,                              ALWAYS_SM,     { .p = NULL }, },
+    (Func)commands_add_view,            NULL,                              ALWAYS_SM,     { .p = NULL }, },
   { { "allow_cookie",          "Cookie allowed",                    }, 0, 
-    (Func)dwb_com_allow_cookie,        "No new domain in current context",    POST_SM, },
+    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, 
-    (Func)dwb_com_bookmark,            NO_URL,                            POST_SM, },
+    (Func)commands_bookmark,            NO_URL,                            POST_SM, },
   { { "bookmarks",             "Bookmarks",                         }, 0, 
-    (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
   { { "bookmarks_nv",          "Bookmarks new view",                }, 0, 
-    (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
   { { "bookmarks_nw",          "Bookmarks new window",              }, 0, 
-    (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
   { { "new_view",              "New view for next navigation",      }, 0, 
-    (Func)dwb_com_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_VIEW}, }, 
+    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_VIEW}, }, 
   { { "new_window",            "New window for next navigation",    }, 0, 
-    (Func)dwb_com_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
+    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
   { { "command_mode",          "Enter command mode",                }, 0, 
     (Func)dwb_command_mode,            NULL,                              POST_SM, },
   { { "decrease_master",       "Decrease master area",              }, 1, 
-    (Func)dwb_com_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
+    (Func)commands_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
   { { "download_hint",         "Download via hints",                }, 0, 
-    (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
   { { "find_backward",         "Find backward ",                    }, 0, 
-    (Func)dwb_com_find,                NO_URL,                            NEVER_SM,     { .b = false }, },
+    (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = false }, },
   { { "find_forward",          "Find forward ",                     }, 0, 
-    (Func)dwb_com_find,                NO_URL,                            NEVER_SM,     { .b = true }, },
+    (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = true }, },
   { { "find_next",             "Find next",                         }, 0, 
     (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = true }, },
   { { "find_previous",         "Find previous",                     }, 0, 
     (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = false }, },
   { { "focus_input",           "Focus input",                       }, 1, 
-    (Func)dwb_com_focus_input,        "No input found in current context",      ALWAYS_SM, },
+    (Func)commands_focus_input,        "No input found in current context",      ALWAYS_SM, },
   { { "focus_next",            "Focus next view",                   }, 0, 
-    (Func)dwb_com_focus,              "No other view",                   ALWAYS_SM,  { .n = 1 } },
+    (Func)commands_focus,              "No other view",                   ALWAYS_SM,  { .n = 1 } },
   { { "focus_prev",            "Focus previous view",               }, 0, 
-    (Func)dwb_com_focus,              "No other view",                   ALWAYS_SM,  { .n = -1 } },
+    (Func)commands_focus,              "No other view",                   ALWAYS_SM,  { .n = -1 } },
   { { "focus_nth_view",        "Focus nth view",                    }, 0, 
-    (Func)dwb_com_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 } },
+    (Func)commands_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 } },
   { { "hint_mode",             "Follow hints",                      }, 0, 
-    (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL }, },
   { { "hint_mode_nv",          "Follow hints (new view)",           }, 0, 
-    (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW }, },
   { { "hint_mode_nw",          "Follow hints (new window)",         }, 0, 
-    (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW }, },
   { { "history_back",          "Go Back",                           }, 1, 
-    (Func)dwb_com_history_back,        "Beginning of History",            ALWAYS_SM, },
+    (Func)commands_history_back,        "Beginning of History",            ALWAYS_SM, },
   { { "history_forward",       "Go Forward",                        }, 1, 
-    (Func)dwb_com_history_forward,     "End of History",                  ALWAYS_SM, },
+    (Func)commands_history_forward,     "End of History",                  ALWAYS_SM, },
   { { "increase_master",       "Increase master area",              }, 1, 
-    (Func)dwb_com_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
+    (Func)commands_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
   { { "insert_mode",           "Insert Mode",                       }, 0, 
     (Func)dwb_insert_mode,             NULL,                              POST_SM, },
   { { "load_html",             "Load html",                         }, 1, 
-    (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
+    (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
   { { "load_html_nv",          "Load html new view",                }, 1, 
-    (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL } },
+    (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL } },
   { { "open",                  "open",                              }, 1, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
   { { "Open",                  "open",                              }, 0, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL | SET_URL, .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL | SET_URL, .p = NULL } },
   { { "open_nv",               "tabopen",                          }, 1, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
   { { "Open_nv",               "tabopen",                          }, 0, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL } },
   { { "open_nw",               "winopen",                           }, 1, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
   { { "Open_nw",               "winopen",                           }, 0, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL } },
   { { "open_quickmark",        "Open quickmark",                         }, 0, 
-    (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, },
+    (Func)commands_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, },
   { { "open_quickmark_nv",     "Open quickmark in a new tab",                }, 0, 
-    (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, },
+    (Func)commands_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, },
   { { "open_quickmark_nw",     "Open quickmark in a new window",              }, 0, 
-    (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, },
+    (Func)commands_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, },
   { { "open_start_page",       "Open startpage",                    }, 1, 
-    (Func)dwb_com_open_startpage,      "No startpage set",                ALWAYS_SM, },
+    (Func)commands_open_startpage,      "No startpage set",                ALWAYS_SM, },
   { { "push_master",           "Push to master area",               }, 1, 
-    (Func)dwb_com_push_master,         "No other view",                   ALWAYS_SM, },
+    (Func)commands_push_master,         "No other view",                   ALWAYS_SM, },
   { { "quit",           "Quit dwb",               }, 1, 
-    (Func)dwb_com_quit,         NULL,                   ALWAYS_SM, },
+    (Func)commands_quit,         NULL,                   ALWAYS_SM, },
   { { "reload",                "Reload current page",                            }, 1, 
-    (Func)dwb_com_reload,              NULL,                              ALWAYS_SM, },
+    (Func)commands_reload,              NULL,                              ALWAYS_SM, },
   { { "reload_bypass_cache",   "Reload current page without using any cached data",  }, 1, 
-    (Func)dwb_com_reload_bypass_cache,       NULL,                              ALWAYS_SM, },
+    (Func)commands_reload_bypass_cache,       NULL,                              ALWAYS_SM, },
   { { "remove_view",           "Close view",                        }, 1, 
-    (Func)dwb_com_remove_view,         NULL,                              ALWAYS_SM, },
+    (Func)commands_remove_view,         NULL,                              ALWAYS_SM, },
   { { "save_quickmark",        "Save a quickmark for this page",    }, 0, 
-    (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
+    (Func)commands_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
   { { "save_search_field",     "Add a new searchengine",            }, 0, 
-    (Func)dwb_com_add_search_field,    "No input in current context",     POST_SM, },
+    (Func)commands_add_search_field,    "No input in current context",     POST_SM, },
   { { "scroll_percent",        "Scroll to percentage",              }, 1, 
-    (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_PERCENT }, },
+    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_PERCENT }, },
   { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, 
-    (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_BOTTOM }, },
+    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_BOTTOM }, },
   { { "scroll_down",           "Scroll down",                       }, 0, 
-    (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_DOWN, }, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_DOWN, }, },
   { { "scroll_left",           "Scroll left",                       }, 0, 
-    (Func)dwb_com_scroll,              "Left side of the page",           ALWAYS_SM,    { .n = SCROLL_LEFT }, },
+    (Func)commands_scroll,              "Left side of the page",           ALWAYS_SM,    { .n = SCROLL_LEFT }, },
   { { "scroll_halfpage_down",  "Scroll one-half page down",         }, 0, 
-    (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_DOWN, }, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_DOWN, }, },
   { { "scroll_halfpage_up",    "Scroll one-half page up",           }, 0, 
-    (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_UP, }, },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_UP, }, },
   { { "scroll_page_down",      "Scroll one page down",              }, 0, 
-    (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_PAGE_DOWN, }, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_PAGE_DOWN, }, },
   { { "scroll_page_up",        "Scroll one page up",                }, 0, 
-    (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_PAGE_UP, }, },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_PAGE_UP, }, },
   { { "scroll_right",          "Scroll left",                       }, 0, 
-    (Func)dwb_com_scroll,              "Right side of the page",          ALWAYS_SM,    { .n = SCROLL_RIGHT }, },
+    (Func)commands_scroll,              "Right side of the page",          ALWAYS_SM,    { .n = SCROLL_RIGHT }, },
   { { "scroll_top",            "Scroll to the top of the page",     }, 1, 
-    (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, },
+    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, },
   { { "scroll_up",             "Scroll up",                         }, 0, 
-    (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, },
   { { "set_global_setting",    "Set global property",               }, 0, 
-    (Func)dwb_com_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_GLOBAL } },
+    (Func)commands_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_GLOBAL } },
   { { "set_key",               "Set keybinding",                    }, 0, 
-    (Func)dwb_com_set_key,             NULL,                              NEVER_SM,    { 0 } },
+    (Func)commands_set_key,             NULL,                              NEVER_SM,    { 0 } },
   { { "set_setting",           "Set setting",                      }, 0, 
-    (Func)dwb_com_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_PER_VIEW } },
+    (Func)commands_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_PER_VIEW } },
   { { "show_global_settings",  "Show global settings",              }, 1, 
-    (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_GLOBAL } },
+    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_GLOBAL } },
   { { "show_keys",             "Key configuration",                 }, 1, 
-    (Func)dwb_com_show_keys,           NULL,                              ALWAYS_SM, },
+    (Func)commands_show_keys,           NULL,                              ALWAYS_SM, },
   { { "show_settings",         "Settings configuration",                          }, 1, 
-    (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_PER_VIEW } },
+    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_PER_VIEW } },
   { { "toggle_bottomstack",    "Toggle bottomstack",                }, 1, 
-    (Func)dwb_com_set_orientation,     NULL,                              ALWAYS_SM, },
+    (Func)commands_set_orientation,     NULL,                              ALWAYS_SM, },
   { { "toggle_maximized",      "Toggle maximized",                  }, 1, 
-    (Func)dwb_com_toggle_maximized,    NULL,                              ALWAYS_SM, },
+    (Func)commands_toggle_maximized,    NULL,                              ALWAYS_SM, },
   { { "view_source",           "View source",                       }, 1, 
-    (Func)dwb_com_view_source,         NULL,                              ALWAYS_SM, },
+    (Func)commands_view_source,         NULL,                              ALWAYS_SM, },
   { { "zoom_in",               "Zoom in",                           }, 1, 
-    (Func)dwb_com_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, },
+    (Func)commands_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, },
   { { "zoom_normal",           "Zoom to 100%",                         }, 1, 
-    (Func)dwb_com_set_zoom_level,      NULL,                              ALWAYS_SM,    { .d = 1.0,   .p = NULL } },
+    (Func)commands_set_zoom_level,      NULL,                              ALWAYS_SM,    { .d = 1.0,   .p = NULL } },
   { { "zoom_out",              "Zoom out",                          }, 1, 
-    (Func)dwb_com_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, },
+    (Func)commands_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, },
   /* yank and paste */
   { { "yank",                  "Yank current url",                              }, 1, 
-    (Func)dwb_com_yank,                 NO_URL,                 POST_SM,  { .p = GDK_NONE } },
+    (Func)commands_yank,                 NO_URL,                 POST_SM,  { .p = GDK_NONE } },
   { { "yank_primary",          "Yank current url to Primary selection",         }, 1, 
-    (Func)dwb_com_yank,                 NO_URL,                 POST_SM,  { .p = GDK_SELECTION_PRIMARY } },
+    (Func)commands_yank,                 NO_URL,                 POST_SM,  { .p = GDK_SELECTION_PRIMARY } },
   { { "paste",                 "Open url from clipboard",                             }, 1, 
-    (Func)dwb_com_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_NONE } },
+    (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_NONE } },
   { { "paste_primary",         "Open url from primary selection",           }, 1, 
-    (Func)dwb_com_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY } },
+    (Func)commands_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY } },
   { { "paste_nv",              "Open url from clipboard in a new tab",                   }, 1, 
-    (Func)dwb_com_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_NONE } },
+    (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_NONE } },
   { { "paste_primary_nv",      "Open url from primary selection in a new window", }, 1, 
-    (Func)dwb_com_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY } },
+    (Func)commands_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY } },
   { { "paste_nw",              "Open url from clipboard in a new window",                   }, 1, 
-    (Func)dwb_com_paste,             "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_NONE } },
+    (Func)commands_paste,             "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_NONE } },
   { { "paste_primary_nw",      "Open url from primary selection in a new window", }, 1, 
-    (Func)dwb_com_paste,             "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY } },
+    (Func)commands_paste,             "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY } },
 
   { { "save_session",          "Save current session", },              1, 
-    (Func)dwb_com_save_session,        NULL,                              ALWAYS_SM,  { .n = NORMAL_MODE } },
+    (Func)commands_save_session,        NULL,                              ALWAYS_SM,  { .n = NORMAL_MODE } },
   { { "save_named_session",    "Save current session with name", },    0, 
-    (Func)dwb_com_save_session,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
+    (Func)commands_save_session,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
   { { "save",                  "Save all configuration files", },      1, 
-    (Func)dwb_com_save_files,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
+    (Func)commands_save_files,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
   { { "undo",                  "Undo closing last tab", },             1, 
-    (Func)dwb_com_undo,              "No more closed views",                              POST_SM },
+    (Func)commands_undo,              "No more closed views",                              POST_SM },
   { { "web_inspector",         "Open the webinspector", },             1, 
-    (Func)dwb_com_web_inspector,              "Enable developer extras for the webinspector",                              POST_SM },
+    (Func)commands_web_inspector,              "Enable developer extras for the webinspector",                              POST_SM },
   { { "reload_scripts",         "Reload scripts", },             1, 
-    (Func)dwb_com_reload_scripts,              NULL,                              ALWAYS_SM },
+    (Func)commands_reload_scripts,              NULL,                              ALWAYS_SM },
 
   /* Entry editing */
   { { "entry_delete_word",      "Command line: Delete word in", },                      0,  
-    (Func)dwb_com_entry_delete_word,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_delete_word,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_delete_letter",    "Command line: Delete a single letter", },           0,  
-    (Func)dwb_com_entry_delete_letter,          NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_delete_letter,          NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_delete_line",      "Command line: Delete to beginning of the line", },  0,  
-    (Func)dwb_com_entry_delete_line,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_delete_line,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_word_forward",     "Command line: Move cursor forward on word", },      0,  
-    (Func)dwb_com_entry_word_forward,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_word_forward,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_word_back",        "Command line: Move cursor back on word", },         0,  
-    (Func)dwb_com_entry_word_back,              NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_word_back,              NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_history_back",     "Command line: Command history back", },             0,  
-    (Func)dwb_com_entry_history_back,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_history_back,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_history_forward",  "Command line: Command history forward", },          0,  
-    (Func)dwb_com_entry_history_forward,        NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_history_forward,        NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "download_set_execute",   "Downloads: toggle between spawning application/download path", },                0, 
-    (Func)dwb_dl_set_execute,        NULL,       ALWAYS_SM,  { 0 }, true, }, 
+    (Func)download_set_execute,        NULL,       ALWAYS_SM,  { 0 }, true, }, 
   { { "complete_history",       "Complete browsing history", },       0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_HISTORY }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_HISTORY }, true, }, 
   { { "complete_bookmarks",     "Complete bookmarks", },              0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_BOOKMARK }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_BOOKMARK }, true, }, 
   { { "complete_commands",      "Complete command history", },        0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_INPUT }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_INPUT }, true, }, 
   { { "complete_searchengines", "Complete searchengines", },          0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_SEARCH }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_SEARCH }, true, }, 
   { { "complete_userscript",    "Complete userscripts", },            0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_USERSCRIPT }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_USERSCRIPT }, true, }, 
   { { "complete_path",          "Complete local file path", },        0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
+    (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
   { { "scripts",               "Setting: scripts",                },   1, 
-    (Func)dwb_com_toggle_property,     NULL,                              POST_SM,    { .p = "enable-scripts" } },
+    (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-scripts" } },
   { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-shrink-images" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-shrink-images" } },
   { { "autoload_images",       "Toggle autoload images",          },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-load-images" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-load-images" } },
   { { "autoresize_window",     "Toggle autoresize window",        },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-resize-window" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-resize-window" } },
   { { "caret_browsing",        "Toggle caret browsing",           },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-caret-browsing" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-caret-browsing" } },
   { { "default_context_menu",  "Toggle enable default context menu",           }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,       POST_SM,    { .p = "enable-default-context-menu" } },
+    (Func)commands_toggle_property,     NULL,       POST_SM,    { .p = "enable-default-context-menu" } },
   { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,                  POST_SM, { .p = "enable-file-acces-from-file-uris" } },
+    (Func)commands_toggle_property,     NULL,                  POST_SM, { .p = "enable-file-acces-from-file-uris" } },
   { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, 
-    (Func)dwb_com_toggle_property,  NULL,   POST_SM, { .p = "enable-universal-file-acces-from-file-uris" } },
+    (Func)commands_toggle_property,  NULL,   POST_SM, { .p = "enable-universal-file-acces-from-file-uris" } },
   { { "java_applets",          "Toggle java applets",             }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-java-applets" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-java-applets" } },
   { { "plugins",               "Toggle plugins",                  }, 1, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-plugins" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-plugins" } },
   { { "private_browsing",      "Toggle private browsing",         }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-private-browsing" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-private-browsing" } },
   { { "page_cache",            "Toggle page cache",               }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-page-cache" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-page-cache" } },
   { { "js_can_open_windows",   "Toggle Javascript can open windows automatically", }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,   POST_SM,    { .p = "javascript-can-open-windows-automatically" } },
+    (Func)commands_toggle_property,     NULL,   POST_SM,    { .p = "javascript-can-open-windows-automatically" } },
   { { "enforce_96_dpi",        "Toggle enforce a resolution of 96 dpi", },    0, 
-    (Func)dwb_com_toggle_property,     NULL,           POST_SM,    { .p = "enforce-96-dpi" } },
+    (Func)commands_toggle_property,     NULL,           POST_SM,    { .p = "enforce-96-dpi" } },
   { { "print_backgrounds",     "Toggle print backgrounds", },      0,    
-    (Func)dwb_com_toggle_property,    NULL,                    POST_SM,    { .p = "print-backgrounds" } },
+    (Func)commands_toggle_property,    NULL,                    POST_SM,    { .p = "print-backgrounds" } },
   { { "resizable_text_areas",  "Toggle resizable text areas", },   0,  
-    (Func)dwb_com_toggle_property,      NULL,                    POST_SM,    { .p = "resizable-text-areas" } },
+    (Func)commands_toggle_property,      NULL,                    POST_SM,    { .p = "resizable-text-areas" } },
   { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   
-    (Func)dwb_com_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" } },
+    (Func)commands_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    },        1,     
-    (Func)dwb_com_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
+    (Func)commands_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
   { { "toggle_scripts_host", "Toggle block content for current host" },   1, 
-    (Func) dwb_com_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
+    (Func) commands_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
   { { "toggle_scripts_uri",    "Toggle block content for current url" }, 1, 
-    (Func) dwb_com_toggle_scripts, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
+    (Func) commands_toggle_scripts, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
   { { "toggle_scripts_host_tmp", "Toggle block content for current host for this session" },  1, 
-    (Func) dwb_com_toggle_scripts, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
+    (Func) commands_toggle_scripts, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
   { { "toggle_scripts_uri_tmp", "Toggle block content for current url for this session" },   1, 
-    (Func) dwb_com_toggle_scripts, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
+    (Func) commands_toggle_scripts, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
   { { "toggle_plugins_host", "Toggle plugin blocker for current host" },   1, 
-    (Func) dwb_com_toggle_plugin_blocker, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
+    (Func) commands_toggle_plugin_blocker, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
   { { "toggle_plugins_uri",    "Toggle plugin blocker for current url" }, 1, 
-    (Func) dwb_com_toggle_plugin_blocker, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
+    (Func) commands_toggle_plugin_blocker, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
   { { "toggle_plugins_host_tmp", "Toggle block content for current domain for this session" },  1, 
-    (Func) dwb_com_toggle_plugin_blocker, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
+    (Func) commands_toggle_plugin_blocker, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
   { { "toggle_plugins_uri_tmp", "Toggle block content for current url for this session" },   1, 
-    (Func) dwb_com_toggle_plugin_blocker, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
+    (Func) commands_toggle_plugin_blocker, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
   { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, 
-    (Func) dwb_com_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
+    (Func) commands_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
   { { "print",                 "Print current page" },                         1, 
-    (Func) dwb_com_print, NULL,                             POST_SM,    { 0 } }, 
+    (Func) commands_print, NULL,                             POST_SM,    { 0 } }, 
   { { "execute_userscript",    "Execute userscript" },                 1, 
-    (Func) dwb_com_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
+    (Func) commands_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
   { { "fullscreen",    "Toggle fullscreen" },                 1, 
-    (Func) dwb_com_fullscreen, NULL,     ALWAYS_SM,    { 0 } }, 
+    (Func) commands_fullscreen, NULL,     ALWAYS_SM,    { 0 } }, 
   { { "pass_through",    "Pass-through mode" },                 1, 
-    (Func) dwb_com_pass_through, NULL,     POST_SM,    { 0 } }, 
+    (Func) commands_pass_through, NULL,     POST_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -542,7 +542,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "hint-opacity",                            "The opacity of hints", },                                     
     false, true,  DOUBLE, { .d = 0.8         },          (S_Func) dwb_reload_scripts,  },
   { { "auto-completion",                         "Show possible shortcuts", },                                
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_comp_set_autcompletion,  },
+    false, true,  BOOLEAN, { .b = true         },     (S_Func)completion_set_autcompletion,  },
   { { "startpage",                               "The default homepage", },                                        
     false, true,  CHAR,    { .p = "dwb://bookmarks" },        (S_Func)dwb_set_startpage,  }, 
   { { "single-instance",                         "Whether to have only on instance", },                                         
@@ -609,11 +609,11 @@ static void
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
   if (s->arg.b) {
-    dwb_plugin_blocker_connect(gl);
+    plugins_connect(gl);
     v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_DISABLED) | PLUGIN_STATUS_ENABLED;
   }
   else {
-    dwb_plugin_blocker_disconnect(gl);
+    plugins_disconnect(gl);
     v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_ENABLED) | PLUGIN_STATUS_DISABLED;
   }
 }/*}}}*/
@@ -752,7 +752,7 @@ static gboolean
 dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
 
-  char *key = dwb_util_keyval_to_char(e->keyval);
+  char *key = util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_KEY_Escape) {
     dwb_normal_mode(true);
     ret = false;
@@ -785,16 +785,16 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     dwb_follow_selection();
   }
   else if (DWB_TAB_KEY(e)) {
-    dwb_comp_autocomplete(dwb.keymap, e);
+    completion_autocomplete(dwb.keymap, e);
     ret = true;
   }
   else {
     if (dwb.state.mode & AUTO_COMPLETE) {
       if (DWB_TAB_KEY(e)) {
-        dwb_comp_autocomplete(NULL, e);
+        completion_autocomplete(NULL, e);
       }
       else if (e->keyval == GDK_KEY_Return) {
-        dwb_comp_eval_autocompletion();
+        completion_eval_autocompletion();
         return true;
       }
       ret = true;
@@ -1025,7 +1025,7 @@ dwb_set_setting(const char *key, char *value) {
   GHashTable *t = dwb.state.setting_apply == APPLY_GLOBAL ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
   if (key) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
-      if ( (a = dwb_util_char_to_arg(value, s->type)) || (s->type == CHAR && a->p == NULL)) {
+      if ( (a = util_char_to_arg(value, s->type)) || (s->type == CHAR && a->p == NULL)) {
         s->arg = *a;
         dwb_apply_settings(s);
         dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
@@ -1060,7 +1060,7 @@ dwb_set_key(const char *prop, char *val) {
   dwb_set_normal_message(dwb.state.fview, true, "Saved key for command %s: %s", prop, val ? val : "");
 
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
 
   dwb_normal_mode(false);
 }/*}}}*/
@@ -1329,7 +1329,7 @@ dwb_open_si_channel() {
 void 
 dwb_unfocus() {
   if (dwb.state.fview) {
-    dwb_view_set_normal_style(VIEW(dwb.state.fview));
+    view_set_normal_style(VIEW(dwb.state.fview));
     dwb_source_remove(dwb.state.fview);
     CLEAR_COMMAND_TEXT(dwb.state.fview);
     dwb.state.fview = NULL;
@@ -1415,7 +1415,7 @@ gboolean
 dwb_spawn(GList *gl, const char *prop, const char *uri) {
   const char *program;
   char *command;
-  if ( (program = GET_CHAR(prop)) && (command = dwb_util_string_replace(program, "dwb_uri", uri)) ) {
+  if ( (program = GET_CHAR(prop)) && (command = util_string_replace(program, "dwb_uri", uri)) ) {
     g_spawn_command_line_async(command, NULL);
     free(command);
     return true;
@@ -1454,10 +1454,10 @@ dwb_reload_layout(GList *gl, WebSettings *s) {
   for (GList *l = dwb.state.views; l; l=l->next) {
     v = VIEW(l);
     if (l == dwb.state.fview) {
-      dwb_view_set_active_style(v);
+      view_set_active_style(v);
     }
     else {
-      dwb_view_set_normal_style(v);
+      view_set_normal_style(v);
     }
     DWB_WIDGET_OVERRIDE_FONT(v->entry, dwb.font.fd_entry);
   }
@@ -1523,7 +1523,7 @@ dwb_save_searchengine(void) {
     Navigation *cn = dwb_get_search_completion_from_navigation(dwb_navigation_dup(n));
 
     dwb.fc.se_completion = g_list_append(dwb.fc.se_completion, cn);
-    dwb_util_file_add_navigation(dwb.files.searchengines, n, true, -1);
+    util_file_add_navigation(dwb.files.searchengines, n, true, -1);
 
     dwb_set_normal_message(dwb.state.fview, true, "Searchengine saved");
     if (dwb.state.search_engine) {
@@ -1598,7 +1598,7 @@ dwb_update_hints(GdkEventKey *e) {
     return false;
   }
   else {
-    val = dwb_util_keyval_to_char(e->keyval);
+    val = util_keyval_to_char(e->keyval);
     snprintf(input, BUFFER_LENGTH - 1, "%s%s", GET_TEXT(), val ? val : "");
     com = g_strdup_printf("DwbHintObj.updateHints(\"%s\")", input);
     FREE(val);
@@ -1720,7 +1720,7 @@ dwb_save_quickmark(const char *key) {
     }
     dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_quickmark_new(uri, title, key));
     char *text = g_strdup_printf("%s %s %s", key, uri, title);
-    dwb_util_file_add(dwb.files.quickmarks, text, true, -1);
+    util_file_add(dwb.files.quickmarks, text, true, -1);
     g_free(text);
     dwb_normal_mode(false);
 
@@ -1804,7 +1804,7 @@ dwb_focus(GList *gl) {
   }
   dwb.state.fview = gl;
   dwb.gui.entry = v->entry;
-  dwb_view_set_active_style(VIEW(gl));
+  view_set_active_style(VIEW(gl));
   dwb_focus_scroll(gl);
   dwb_update_status(gl);
 }/*}}}*/
@@ -1855,7 +1855,7 @@ dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
     fullpath = g_build_filename(path, filename, NULL);
     content = g_slist_prepend(content, fullpath);
   }
-  content = g_slist_sort(content, (GCompareFunc)dwb_util_compare_path);
+  content = g_slist_sort(content, (GCompareFunc)util_compare_path);
   g_dir_close(dir);
 
   if (strcmp(path, "/")) 
@@ -1912,7 +1912,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
   /*  new tab ?  */
   else if (dwb.state.nv == OPEN_NEW_VIEW) {
     dwb.state.nv = OPEN_NORMAL;
-    dwb_add_view(arg, false);
+    view_add(arg, false);
     return;
   }
   /*  get resolved uri */
@@ -2027,7 +2027,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
     return false;
   }
 
-  char *key = dwb_util_keyval_to_char(e->keyval);
+  char *key = util_keyval_to_char(e->keyval);
   gboolean ret = false;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
@@ -2072,7 +2072,7 @@ dwb_eval_key(GdkEventKey *e) {
   /* don't show backspace in the buffer */
   if (keyval == GDK_KEY_BackSpace ) {
     if (dwb.state.mode & AUTO_COMPLETE) {
-      dwb_comp_clean_autocompletion();
+      completion_clean_autocompletion();
     }
     if (dwb.state.buffer && dwb.state.buffer->str ) {
       if (dwb.state.buffer->len) {
@@ -2086,7 +2086,7 @@ dwb_eval_key(GdkEventKey *e) {
     }
     return ret;
   }
-  char *key = dwb_util_keyval_to_char(keyval);
+  char *key = util_keyval_to_char(keyval);
   if (key) {
     mod_mask = CLEAN_STATE(e);
   }
@@ -2113,7 +2113,7 @@ dwb_eval_key(GdkEventKey *e) {
       for (GList *l = dwb.keymap; l; l=l->next) {
         KeyMap *km = l->data;
         if ((km->mod & DWB_NUMMOD_MASK) && (km->mod & ~DWB_NUMMOD_MASK) == mod_mask) {
-          dwb_com_simple_command(km);
+          commands_simple_command(km);
           break;
         }
       }
@@ -2157,14 +2157,14 @@ dwb_eval_key(GdkEventKey *e) {
   }
   /* autocompletion */
   if (dwb.state.mode & AUTO_COMPLETE) {
-    dwb_comp_clean_autocompletion();
+    completion_clean_autocompletion();
   }
   if (coms && g_list_length(coms) > 0) {
-    dwb_comp_autocomplete(coms, NULL);
+    completion_autocomplete(coms, NULL);
     ret = true;
   }
   if (tmp && dwb.state.buffer->len == longest) {
-    dwb_com_simple_command(tmp);
+    commands_simple_command(tmp);
   }
   if (longest == 0) {
     dwb_clean_key_buffer();
@@ -2190,7 +2190,7 @@ dwb_insert_mode(Arg *arg) {
   if (dwb.state.mode == HINT_MODE) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
-  dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
+  view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
   dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
 
   dwb.state.mode = INSERT_MODE;
@@ -2206,18 +2206,18 @@ dwb_normal_mode(gboolean clean) {
     dwb_execute_script(MAIN_FRAME(), "DwbHintObj.clear()", false);
   }
   else if (mode & INSERT_MODE) {
-    dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
+    view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
     CLEAR_COMMAND_TEXT(dwb.state.fview);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   }
   else if (mode == DOWNLOAD_GET_PATH) {
-    dwb_comp_clean_path_completion();
+    completion_clean_path_completion();
   }
   if (mode & COMPLETION_MODE) {
-    dwb_comp_clean_completion();
+    completion_clean_completion();
   }
   if (mode & AUTO_COMPLETE) {
-    dwb_comp_clean_autocompletion();
+    completion_clean_autocompletion();
   }
   dwb_focus_scroll(dwb.state.fview);
 
@@ -2487,7 +2487,7 @@ dwb_save_settings() {
   }
   for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
-    char *value = dwb_util_arg_to_char(&s->arg, s->type); 
+    char *value = util_arg_to_char(&s->arg, s->type); 
     g_key_file_set_value(keyfile, dwb.misc.profile, s->n.first, value ? value : "" );
 
     FREE(value);
@@ -2511,7 +2511,7 @@ dwb_save_files(gboolean end_session) {
 
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
-    dwb_session_save(NULL);
+    session_save(NULL);
   }
   return true;
 }
@@ -2593,7 +2593,7 @@ dwb_keymap_delete(GList *gl, KeyValue key) {
       break;
     }
   }
-  gl = g_list_sort(gl, (GCompareFunc)dwb_util_keymap_sort_second);
+  gl = g_list_sort(gl, (GCompareFunc)util_keymap_sort_second);
   return gl;
 }/*}}}*/
 
@@ -2651,7 +2651,7 @@ dwb_init_key_map() {
   }
 
   dwb.keymap = g_list_concat(dwb.keymap, dwb_get_scripts());
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
 
   g_key_file_free(keyfile);
 }/*}}}*/
@@ -2695,7 +2695,7 @@ dwb_read_settings() {
       if (!strcmp(keys[i], DWB_SETTINGS[j].n.first)) {
         WebSettings *s = dwb_malloc(sizeof(WebSettings));
         *s = DWB_SETTINGS[j];
-        if ( (arg = dwb_util_char_to_arg(value, s->type)) ) {
+        if ( (arg = util_char_to_arg(value, s->type)) ) {
           s->arg = *arg;
         }
         g_hash_table_insert(dwb.settings, key, s);
@@ -2734,12 +2734,12 @@ dwb_init_scripts() {
 
   setlocale(LC_NUMERIC, "C");
   /* user scripts */
-  dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
+  util_get_directory_content(&buffer, dwb.files.scriptdir);
 
   /* systemscripts */
   char *dir = NULL;
-  if ( (dir = dwb_util_get_data_dir("scripts")) ) {
-    dwb_util_get_directory_content(&buffer, dir);
+  if ( (dir = util_get_data_dir("scripts")) ) {
+    util_get_directory_content(&buffer, dir);
     g_free(dir);
   }
   g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\");", 
@@ -2832,17 +2832,6 @@ dwb_init_gui() {
   dwb.gui.left = gtk_vbox_new(true, 0);
   dwb.gui.right = gtk_vbox_new(true, 1);
 
-
-#if 0
-  GtkWidget *web = webkit_web_view_new();
-  WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(web));
-  dwb.misc.global_ctx = webkit_web_frame_get_global_context(frame);
-  char *content;
-  g_file_get_contents("./script.js", &content, NULL, NULL);
-  JSStringRef script = JSStringCreateWithUTF8CString(content);
-  JSEvaluateScript(dwb.misc.global_ctx, script, JSContextGetGlobalObject(dwb.misc.global_ctx), NULL, 0, NULL);
-#endif 
-
   /* Paned */
   GtkWidget *paned_event = gtk_event_box_new(); 
   DWB_WIDGET_OVERRIDE_BACKGROUND(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
@@ -2875,7 +2864,7 @@ dwb_init_gui() {
 /* dwb_init_file_content {{{*/
 GList *
 dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
-  char *content = dwb_util_get_file_content(filename);
+  char *content = util_get_file_content(filename);
 
   if (content) {
     char **token = g_strsplit(content, "\n", 0);
@@ -2892,7 +2881,7 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
 static Navigation * 
 dwb_get_search_completion_from_navigation(Navigation *n) {
   char *uri = n->second;
-  n->second = g_strdup(dwb_util_domain_from_uri(n->second));
+  n->second = g_strdup(util_domain_from_uri(n->second));
 
   FREE(uri);
   return n;
@@ -2906,7 +2895,7 @@ dwb_get_search_completion(const char *text) {
 /* dwb_init_files() {{{*/
 static void
 dwb_init_files() {
-  char *path           = dwb_util_build_path();
+  char *path           = util_build_path();
   char *profile_path   = g_build_filename(path, dwb.misc.profile, NULL);
 
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
@@ -2966,7 +2955,7 @@ dwb_handle_signal(int s) {
   }
   else if (s == SIGSEGV) {
     fprintf(stderr, "Received SIGSEGV, trying to clean up.\n");
-    dwb_session_save(NULL);
+    session_save(NULL);
     exit(EXIT_FAILURE);
   }
 }
@@ -3065,8 +3054,8 @@ dwb_init() {
   dwb.misc.proxyuri = NULL;
   dwb.misc.scripts = NULL;
 
-  char *path = dwb_util_get_data_file(PLUGIN_FILE);
-  dwb.misc.pbbackground = dwb_util_get_file_content(path);
+  char *path = util_get_data_file(PLUGIN_FILE);
+  dwb.misc.pbbackground = util_get_file_content(path);
 
 
   dwb_init_key_map();
@@ -3081,17 +3070,17 @@ dwb_init() {
 
   if (dwb.state.layout & BOTTOM_STACK) {
     Arg a = { .n = dwb.state.layout };
-    dwb_com_set_orientation(NULL, &a);
+    commands_set_orientation(NULL, &a);
   }
-  if (restore && dwb_session_restore(restore));
+  if (restore && session_restore(restore));
   else if (dwb.misc.argc > 0) {
     for (int i=0; i<dwb.misc.argc; i++) {
       Arg a = { .p = dwb.misc.argv[i] };
-      dwb_add_view(&a, false);
+      view_add(&a, false);
     }
   }
   else {
-    dwb_add_view(NULL, false);
+    view_add(NULL, false);
   }
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
   g_signal_connect(VIEW(dwb.state.fview)->tablabel, "size-allocate", G_CALLBACK(dwb_tab_size_cb), NULL);
@@ -3120,7 +3109,7 @@ dwb_parse_command_line(const char *line) {
         m->map->func(&m, &m->map->arg);
       }
       else {
-        dwb_com_simple_command(m);
+        commands_simple_command(m);
       }
       m->map->arg = a;
       break;
@@ -3151,7 +3140,7 @@ dwb_init_fifo(int single) {
   FILE *ff;
 
   /* Files */
-  char *path = dwb_util_build_path();
+  char *path = util_build_path();
   dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
 
 
@@ -3225,7 +3214,7 @@ main(int argc, char *argv[]) {
     for (int i=1; i<argc; i++) {
       if (argv[i][0] == '-') {
         if (argv[i][1] == 'l') {
-          dwb_session_list();
+          session_list();
           argr--;
         }
         else if (argv[i][1] == 'p' && argv[i++]) {

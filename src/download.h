@@ -23,9 +23,9 @@
 #include "util.h"
 
 
-void dwb_dl_get_path(GList *, WebKitDownload *);
-void dwb_dl_start(void);
+void download_get_path(GList *, WebKitDownload *);
+void download_start(void);
 
-void dwb_dl_set_execute(Arg *);
+void download_set_execute(Arg *);
 
 #endif

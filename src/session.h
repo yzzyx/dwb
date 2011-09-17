@@ -22,8 +22,8 @@
 #include "util.h"
 #include "view.h"
 
-gboolean dwb_session_save(const char *);
-gboolean dwb_session_restore(const char *);
-void dwb_session_list(void);
+gboolean session_save(const char *);
+gboolean session_restore(const char *);
+void session_list(void);
 
 #endif

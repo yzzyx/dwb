@@ -18,9 +18,9 @@
 
 #include "util.h"
 
-/* dwb_util_string_replace(const char *haystack, const char *needle, const char  *replace)      return: char * (alloc){{{*/
+/* util_string_replace(const char *haystack, const char *needle, const char  *replace)      return: char * (alloc){{{*/
 char *
-dwb_util_string_replace(const char *haystack, const char *needle, const char *replacemant) {
+util_string_replace(const char *haystack, const char *needle, const char *replacemant) {
   char **token;
   char *ret = NULL;
   if ( haystack && needle && (token = g_regex_split_simple(needle, haystack, 0, 0)) && strcmp(token[0], haystack)) {
@@ -29,9 +29,9 @@ dwb_util_string_replace(const char *haystack, const char *needle, const char *re
   }
   return ret;
 }/*}}}*/
-/* dwb_util_cut_text(char *text, int start, int end) {{{*/
+/* util_cut_text(char *text, int start, int end) {{{*/
 void
-dwb_util_cut_text(char *text, int start, int end) {
+util_cut_text(char *text, int start, int end) {
   int length = strlen(text);
   int del = end - start;
 
@@ -39,9 +39,9 @@ dwb_util_cut_text(char *text, int start, int end) {
   memset(&text[length-del], '\0', del);
 }/*}}}*/
 
-/* dwb_util_is_hex(const char *string) {{{*/
+/* util_is_hex(const char *string) {{{*/
 gboolean
-dwb_util_is_hex(const char *string) {
+util_is_hex(const char *string) {
   char *dup, *loc; 
   dup = loc = g_strdup(string);
   gboolean ret = !strtok(dup, "1234567890abcdefABCDEF");
@@ -50,7 +50,7 @@ dwb_util_is_hex(const char *string) {
   return ret;
 }/*}}}*/
 
-/* dwb_util_modmask_to_char(guint modmask)      return char*{{{*/
+/* util_modmask_to_char(guint modmask)      return char*{{{*/
 char *
 dwb_modmask_to_string(guint modmask) {
   char *mod[7];
@@ -81,9 +81,9 @@ dwb_modmask_to_string(guint modmask) {
   char *line = g_strjoinv(" ", mod);
   return line;
 }/*}}}*/
-/* dwb_util_keyval_to_char (guint keyval)      return: char * (alloc) {{{*/
+/* util_keyval_to_char (guint keyval)      return: char * (alloc) {{{*/
 char *
-dwb_util_keyval_to_char(guint keyval) {
+util_keyval_to_char(guint keyval) {
   char *key = dwb_malloc(6);
   guint32 unichar;
   int length;
@@ -97,9 +97,9 @@ dwb_util_keyval_to_char(guint keyval) {
   return NULL;
 }/*}}}*/
 
-/* dwb_util_char_to_arg(char *value, DwbType type)    return: Arg*{{{*/
+/* util_char_to_arg(char *value, DwbType type)    return: Arg*{{{*/
 Arg *
-dwb_util_char_to_arg(char *value, DwbType type) {
+util_char_to_arg(char *value, DwbType type) {
   errno = 0;
   Arg *ret = NULL;
   if (type == BOOLEAN && !value)  {
@@ -149,7 +149,7 @@ dwb_util_char_to_arg(char *value, DwbType type) {
     }
     else if (type == COLOR_CHAR) {
       int length = strlen(value);
-      if (value[0] == '#' && (length == 4 || length == 7) && dwb_util_is_hex(&value[1])) {
+      if (value[0] == '#' && (length == 4 || length == 7) && util_is_hex(&value[1])) {
         Arg a = { .p = g_strdup(value) };
         ret = &a;
       }
@@ -157,9 +157,9 @@ dwb_util_char_to_arg(char *value, DwbType type) {
   }
   return ret;
 }/*}}}*/
-/* dwb_util_arg_to_char(Arg *arg, DwbType type) {{{*/
+/* util_arg_to_char(Arg *arg, DwbType type) {{{*/
 char *
-dwb_util_arg_to_char(Arg *arg, DwbType type) {
+util_arg_to_char(Arg *arg, DwbType type) {
   char *value = NULL;
   if (type == BOOLEAN) {
     if (arg->b) 
@@ -182,40 +182,40 @@ dwb_util_arg_to_char(Arg *arg, DwbType type) {
   return value;
 }/*}}}*/
 
-/* dwb_util_navigation_sort_first {{{*/
+/* util_navigation_sort_first {{{*/
 int
-dwb_util_navigation_compare_first(Navigation *a, Navigation *b) {
+util_navigation_compare_first(Navigation *a, Navigation *b) {
   return (strcmp(a->first, b->first));
 }/*}}}*/
-/* dwb_util_navigation_sort_first {{{*/
+/* util_navigation_sort_first {{{*/
 int
-dwb_util_navigation_compare_second(Navigation *a, Navigation *b) {
+util_navigation_compare_second(Navigation *a, Navigation *b) {
   return (strcmp(a->second, b->second));
 }/*}}}*/
-/* dwb_util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
+/* util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
 int
-dwb_util_keymap_sort_first(KeyMap *a, KeyMap *b) {
+util_keymap_sort_first(KeyMap *a, KeyMap *b) {
   return strcmp(a->map->n.first, b->map->n.first);
 }/*}}}*/
-/* dwb_util_keymap_sort_second(KeyMap *, KeyMap *) {{{*/
+/* util_keymap_sort_second(KeyMap *, KeyMap *) {{{*/
 int
-dwb_util_keymap_sort_second(KeyMap *a, KeyMap *b) {
+util_keymap_sort_second(KeyMap *a, KeyMap *b) {
   return strcmp(a->map->n.second, b->map->n.second);
 }/*}}}*/
-/* dwb_util_web_settings_sort_first(WebSettings *a, WebSettings *b) {{{*/
+/* util_web_settings_sort_first(WebSettings *a, WebSettings *b) {{{*/
 int
-dwb_util_web_settings_sort_first(WebSettings *a, WebSettings *b) {
+util_web_settings_sort_first(WebSettings *a, WebSettings *b) {
   return strcmp(a->n.first, b->n.first);
 }/*}}}*/
-/* dwb_util_web_settings_sort_second (WebSettings *a, WebSettings *b) {{{*/
+/* util_web_settings_sort_second (WebSettings *a, WebSettings *b) {{{*/
 int
-dwb_util_web_settings_sort_second(WebSettings *a, WebSettings *b) {
+util_web_settings_sort_second(WebSettings *a, WebSettings *b) {
   return strcmp(a->n.second, b->n.second);
 }/*}}}*/
 
-/* dwb_util_get_directory_entries(const char *)   return: GList * {{{*/
+/* util_get_directory_entries(const char *)   return: GList * {{{*/
 GList *
-dwb_util_get_directory_entries(const char *path, const char *text) {
+util_get_directory_entries(const char *path, const char *text) {
   GList *list = NULL;
   GDir *dir;
   char *filename;
@@ -239,9 +239,9 @@ dwb_util_get_directory_entries(const char *path, const char *text) {
   list = g_list_sort(list, (GCompareFunc)strcmp);
   return list;
 }/*}}}*/
-/*dwb_util_get_directory_content(GString **, const char *filename) {{{*/
+/*util_get_directory_content(GString **, const char *filename) {{{*/
 void 
-dwb_util_get_directory_content(GString **buffer, const char *dirname) {
+util_get_directory_content(GString **buffer, const char *dirname) {
   GDir *dir;
   char *content;
   GError *error = NULL;
@@ -266,9 +266,9 @@ dwb_util_get_directory_content(GString **buffer, const char *dirname) {
   }
 
 }/*}}}*/
-/* dwb_util_get_file_content(const char *filename)    return: char * (alloc) {{{*/
+/* util_get_file_content(const char *filename)    return: char * (alloc) {{{*/
 char *
-dwb_util_get_file_content(const char *filename) {
+util_get_file_content(const char *filename) {
   GError *error = NULL;
   char *content = NULL;
   if (!(g_file_test(filename, G_FILE_TEST_IS_REGULAR) &&  g_file_get_contents(filename, &content, NULL, &error))) {
@@ -277,9 +277,9 @@ dwb_util_get_file_content(const char *filename) {
   }
   return content;
 }/*}}}*/
-/* dwb_util_set_file_content(const char *filename, const char *content) {{{*/
+/* util_set_file_content(const char *filename, const char *content) {{{*/
 gboolean
-dwb_util_set_file_content(const char *filename, const char *content) {
+util_set_file_content(const char *filename, const char *content) {
   GError *error = NULL;
   if (!g_file_set_contents(filename, content, -1, &error)) {
     fprintf(stderr, "Cannot save %s : %s", filename, error->message);
@@ -288,18 +288,18 @@ dwb_util_set_file_content(const char *filename, const char *content) {
   }
   return true;
 }/*}}}*/
-/* dwb_util_build_path()       return: char * (alloc) {{{*/
+/* util_build_path()       return: char * (alloc) {{{*/
 char *
-dwb_util_build_path() {
+util_build_path() {
   char *path = g_build_filename(g_get_user_config_dir(), dwb.misc.name, NULL);
   if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(path, 0755);
   }
   return path;
 }/*}}}*/
-/* dwb_util_get_data_dir(const char *)      return  char * (alloc) {{{*/
+/* util_get_data_dir(const char *)      return  char * (alloc) {{{*/
 char *
-dwb_util_get_data_dir(const char *dir) {
+util_get_data_dir(const char *dir) {
   char *path = NULL;
   const char *dirs;
 
@@ -316,8 +316,8 @@ dwb_util_get_data_dir(const char *dir) {
   return NULL;
 }/*}}}*/
 char *
-dwb_util_get_data_file(const char *filename) {
-  char *path = dwb_util_get_data_dir("lib");
+util_get_data_file(const char *filename) {
+  char *path = util_get_data_dir("lib");
   char *ret = g_build_filename(path, filename, NULL);
   g_free(path);
   if (g_file_test(ret, G_FILE_TEST_EXISTS)) {
@@ -430,9 +430,9 @@ dwb_free(void *p) {
     g_free(p);
 }/*}}}*/
 
-/* dwb_util_domain_from_uri (char *uri)      return: char* {{{*/
+/* util_domain_from_uri (char *uri)      return: char* {{{*/
 char *
-dwb_util_domain_from_uri(const char *uri) {
+util_domain_from_uri(const char *uri) {
   if (!uri) 
     return NULL;
 
@@ -450,19 +450,19 @@ dwb_util_domain_from_uri(const char *uri) {
   return ret;
 }/*}}}*/
 
-/* dwb_util_compare_path(char *uri)      return: char* {{{*/
+/* util_compare_path(char *uri)      return: char* {{{*/
 int
-dwb_util_compare_path(const char *a, const char *b) {
+util_compare_path(const char *a, const char *b) {
   return strcmp(g_strrstr(a, "/"), g_strrstr(b, "/"));
 }/*}}}*/
 
-/* dwb_util_basename(const char *path)       return: char * {{{*/
+/* util_basename(const char *path)       return: char * {{{*/
 /* Sligtly different implementation of basename, doesn't modify the pointer,
  * returns pointer to the basename or NULL, if there is no basename
  */
 /* dwb_comp_get_path(GList *, char *)        return GList* */
 char *
-dwb_util_basename(const char *path) {
+util_basename(const char *path) {
   int l = strlen(path);
   if (path[l-1] == '/')
     return NULL;
@@ -474,9 +474,9 @@ dwb_util_basename(const char *path) {
   return ret;
 }/*}}}*/
 
-/* dwb_util_file_add(const char *filename, const char *text, int append, int max){{{*/
+/* util_file_add(const char *filename, const char *text, int append, int max){{{*/
 gboolean
-dwb_util_file_add(const char *filename, const char *text, int append, int max) {
+util_file_add(const char *filename, const char *text, int append, int max) {
   if (!text)
     return false;
 
@@ -502,16 +502,16 @@ dwb_util_file_add(const char *filename, const char *text, int append, int max) {
   }
   if (append)
     g_string_append_printf(content, "%s\n", text);
-  ret = dwb_util_set_file_content(filename, content->str);
+  ret = util_set_file_content(filename, content->str);
   g_string_free(content, true);
   return ret;
 }
 
 gboolean 
-dwb_util_file_add_navigation(const char *filename, const Navigation *n, int append, int max) {
+util_file_add_navigation(const char *filename, const Navigation *n, int append, int max) {
   gboolean  ret;
   char *text = g_strdup_printf("%s %s", n->first, n->second);
-  ret = dwb_util_file_add(filename, text, append, max);
+  ret = util_file_add(filename, text, append, max);
   g_free(text);
   return ret;
 }/*}}}*/
@@ -522,7 +522,7 @@ gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gi
   gtk_box_reorder_child(box, child, position);
 }
 char * 
-dwb_util_strcasestr(const char *haystack, const char *needle) {
+util_strcasestr(const char *haystack, const char *needle) {
   if (needle == NULL || ! *needle )
     return (char *) haystack;
   for (; *haystack; haystack++) {

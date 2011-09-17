@@ -3,6 +3,6 @@
 
 #include "dwb.h"
 
-void dwb_plugin_blocker_connect(GList *);
-void dwb_plugin_blocker_disconnect(GList *);
+void plugins_connect(GList *);
+void plugins_disconnect(GList *);
 #endif
