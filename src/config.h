@@ -137,4 +137,5 @@ static KeyValue KEYS[] = {
   { "complete_path",          {   "p",         GDK_CONTROL_MASK }, }, 
   { "quit",                   {   "q",         GDK_CONTROL_MASK }, }, 
   { "fullscreen",             {   "F11",         GDK_CONTROL_MASK }, }, 
+  { "pass_through",           {   "i",        GDK_CONTROL_MASK }, }, 
 };

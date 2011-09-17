@@ -224,6 +224,7 @@ typedef enum {
   DOWNLOAD_GET_PATH     = 1<<14,
   SAVE_SESSION          = 1<<15,
   COMPLETE_PATH         = 1<<16,
+  PASS_THROUGH          = 1<<17,
 } Mode;
 
 
@@ -323,7 +324,15 @@ enum Signal {
   SIG_PLUGINS_CREATE_WIDGET,
   SIG_PLUGINS_LAST,
 
+  SIG_KEY_PRESS,
+  SIG_KEY_RELEASE,
   SIG_LAST,
+};
+enum GlobalSignal {
+  SIG_GLOBAL_DELETE,
+  SIG_GLOBAL_KEYPRESS,
+  SIG_GLOBAL_KEYRELEASE,
+  SIG_GLOBAL_LAST,
 };
 
 enum _Direction {
@@ -637,6 +646,7 @@ struct _Dwb {
   Files files;
   FileContent fc;
   gpointer *instance;
+  unsigned int signals[SIG_GLOBAL_LAST];
 };
 
 /*}}}*/

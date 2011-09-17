@@ -878,4 +878,10 @@ dwb_com_fullscreen(KeyMap *km, Arg *arg) {
     gtk_window_unfullscreen(GTK_WINDOW(dwb.gui.window));
   return true;
 }/*}}}*/
+/* dwb_com_reload_scripts {{{*/
+gboolean
+dwb_com_pass_through(KeyMap *km, Arg *arg) {
+  dwb.state.mode |= PASS_THROUGH;
+  puts("pass through");
+}/*}}}*/
 /*}}}*/

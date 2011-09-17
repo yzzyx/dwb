@@ -86,4 +86,5 @@ gboolean dwb_com_web_inspector(KeyMap *, Arg *);
 gboolean dwb_com_quit(KeyMap *, Arg *);
 gboolean dwb_com_reload_scripts(KeyMap *, Arg *);
 gboolean dwb_com_fullscreen(KeyMap *, Arg *);
+gboolean dwb_com_pass_through(KeyMap *, Arg *);
 #endif

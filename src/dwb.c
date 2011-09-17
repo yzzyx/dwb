@@ -347,6 +347,8 @@ static FunctionMap FMAP [] = {
     (Func) dwb_com_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
   { { "fullscreen",    "Toggle fullscreen" },                 1, 
     (Func) dwb_com_fullscreen, NULL,     ALWAYS_SM,    { 0 } }, 
+  { { "pass_through",    "Pass-through mode" },                 1, 
+    (Func) dwb_com_pass_through, NULL,     ALWAYS_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -2161,7 +2163,6 @@ dwb_eval_key(GdkEventKey *e) {
   if (tmp && dwb.state.buffer->len == longest) {
     dwb_com_simple_command(tmp);
   }
-  PRINT_DEBUG("longest match: %d", longest);
   if (longest == 0) {
     dwb_clean_key_buffer();
     CLEAR_COMMAND_TEXT(dwb.state.fview);
@@ -2814,9 +2815,9 @@ dwb_init_gui() {
 
   gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), GET_INT("default-width"), GET_INT("default-height"));
   gtk_window_set_geometry_hints(GTK_WINDOW(dwb.gui.window), NULL, NULL, GDK_HINT_MIN_SIZE);
-  g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
-  g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
-  g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
+  dwb.signals[SIG_GLOBAL_DELETE] = g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
+  dwb.signals[SIG_GLOBAL_KEYPRESS] = g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
+  dwb.signals[SIG_GLOBAL_KEYRELEASE] = g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
   DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 
   /* Main */
