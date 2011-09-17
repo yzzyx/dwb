@@ -1825,20 +1825,29 @@ dwb_new_window(Arg *arg) {
 
 /* dwb_check_directory(const char *) {{{*/
 const char *
-dwb_check_directory(const char *path) {
+dwb_check_directory(const char *path, GError **error) {
   if (g_str_has_prefix(path, "file://")) 
     path += *(path + 8) == '/' ? 8 : 7;
-  if (! g_file_test(path, G_FILE_TEST_IS_DIR)) 
+  if (!g_file_test(path, G_FILE_TEST_IS_DIR))
     return NULL;
+  if (access(path, R_OK)) 
+    g_set_error(error, 0, 1, "Cannot access %s", path);
 
   return path;
 }/*}}}*/
 
-/* dwb_show_directory(WebKitWebView *, const char *path, Arg *arg) {{{*/
-static void 
-dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
+/* dwb_show_directory(WebKitWebView *, const char *path, Arg *arg) 
+ * 
+ * Param: 
+ * WebKitWebView: 
+ * path: 
+ * Arg arg:  .p = fullpath
+ * {{{*/
+void 
+dwb_show_directory(WebKitWebView *web, const char *path, const Arg *arg) {
   char dest[STRING_LENGTH], *fullpath; 
   const char *filename;
+  char *escaped;
   GSList *content = NULL;
   GString *buffer = g_string_new(NULL);
   GDir *dir = NULL;
@@ -1866,13 +1875,19 @@ dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
     if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
       continue;
     if (g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, fullpath, filename);
+      escaped = g_uri_escape_string(fullpath, "/", true);
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, escaped, filename);
+      g_free(escaped);
     }
     else if (g_file_test(fullpath, G_FILE_TEST_IS_EXECUTABLE)) {
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, fullpath, filename);
+      escaped = g_uri_escape_string(fullpath, "/", true);
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, escaped, filename);
+      g_free(escaped);
     }
     else {
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, fullpath, filename);
+      escaped = g_uri_escape_string(fullpath, "/", true);
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, escaped, filename);
+      g_free(escaped);
     }
     FREE(l->data);
   }
@@ -1946,7 +1961,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
     return;
   }
   /* Check if uri is a directory */
-  if ( (path = dwb_check_directory(arg->p)) ) {
+  if ( (path = dwb_check_directory(arg->p, NULL)) ) {
     dwb_show_directory(web, path, arg);
     return;
   }

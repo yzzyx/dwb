@@ -253,6 +253,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     WebKitWebPolicyDecision *policy, GList *gl) {
 
   dwb_clean_load_end(gl);
+
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
@@ -274,11 +275,18 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   }
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
   const char *path;
+  GError *error = NULL;
 
-  if (reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED && (path = dwb_check_directory(uri))) {
-    dwb_load_uri(NULL, &a);
+  if (reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED && (path = dwb_check_directory(uri, &error))) {
+    if (error == NULL) {
+      dwb_load_uri(gl, &a);
+    }
+    else {
+      dwb_set_error_message(gl, error->message);
+      g_clear_error(&error);
+    }
     webkit_web_policy_decision_ignore(policy);
-    return true;
+    return false;
   }
   else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
     if (dwb.state.mode == INSERT_MODE) {

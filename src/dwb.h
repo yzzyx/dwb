@@ -711,7 +711,7 @@ CompletionType dwb_eval_completion_type(void);
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
 gboolean dwb_block_ad(GList *gl, const char *);
-const char * dwb_check_directory(const char *);
+const char * dwb_check_directory(const char *, GError **);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);
@@ -724,5 +724,6 @@ gboolean dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
 char * dwb_get_stock_item_base64_encoded(const char *);
+void dwb_show_directory(WebKitWebView *, const char *, const Arg *);
 
 #endif
