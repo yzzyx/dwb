@@ -17,6 +17,7 @@ history_forward Go forward
 reload Reload current page
 reload_bypass_cache Reload without using any cached data
 insert_mode Insert mode
+pass_through Go in pass-through mode, all keys are directly send to the webview
 view_source View page source
 zoom_in Zoom in
 zoom_out Zoom out

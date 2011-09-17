@@ -328,12 +328,6 @@ enum Signal {
   SIG_KEY_RELEASE,
   SIG_LAST,
 };
-enum GlobalSignal {
-  SIG_GLOBAL_DELETE,
-  SIG_GLOBAL_KEYPRESS,
-  SIG_GLOBAL_KEYRELEASE,
-  SIG_GLOBAL_LAST,
-};
 
 enum _Direction {
   SCROLL_UP             = GDK_SCROLL_UP,
@@ -646,7 +640,6 @@ struct _Dwb {
   Files files;
   FileContent fc;
   gpointer *instance;
-  unsigned int signals[SIG_GLOBAL_LAST];
 };
 
 /*}}}*/

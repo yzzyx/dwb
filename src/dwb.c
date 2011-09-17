@@ -139,7 +139,7 @@ static FunctionMap FMAP [] = {
   { { "increase_master",       "Increase master area",              }, 1, 
     (Func)dwb_com_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
   { { "insert_mode",           "Insert Mode",                       }, 0, 
-    (Func)dwb_insert_mode,             NULL,                              ALWAYS_SM, },
+    (Func)dwb_insert_mode,             NULL,                              POST_SM, },
   { { "load_html",             "Load html",                         }, 1, 
     (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
   { { "load_html_nv",          "Load html new view",                }, 1, 
@@ -348,7 +348,7 @@ static FunctionMap FMAP [] = {
   { { "fullscreen",    "Toggle fullscreen" },                 1, 
     (Func) dwb_com_fullscreen, NULL,     ALWAYS_SM,    { 0 } }, 
   { { "pass_through",    "Pass-through mode" },                 1, 
-    (Func) dwb_com_pass_through, NULL,     ALWAYS_SM,    { 0 } }, 
+    (Func) dwb_com_pass_through, NULL,     POST_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -755,6 +755,9 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   char *key = dwb_util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_KEY_Escape) {
     dwb_normal_mode(true);
+    ret = false;
+  }
+  else if (dwb.state.mode & PASS_THROUGH) {
     ret = false;
   }
   else if (dwb.state.mode == INSERT_MODE) {
@@ -2188,6 +2191,7 @@ dwb_insert_mode(Arg *arg) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
   dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
+  dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
 
   dwb.state.mode = INSERT_MODE;
   return true;
@@ -2815,9 +2819,9 @@ dwb_init_gui() {
 
   gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), GET_INT("default-width"), GET_INT("default-height"));
   gtk_window_set_geometry_hints(GTK_WINDOW(dwb.gui.window), NULL, NULL, GDK_HINT_MIN_SIZE);
-  dwb.signals[SIG_GLOBAL_DELETE] = g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
-  dwb.signals[SIG_GLOBAL_KEYPRESS] = g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
-  dwb.signals[SIG_GLOBAL_KEYRELEASE] = g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
+  g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
+  g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
+  g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
   DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 
   /* Main */

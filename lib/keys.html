@@ -7,7 +7,7 @@
   <a class="setting_button" href="#clipboard">Clipboard</a>
   <a class="setting_button" href="#settings">Settings</a>
   <a class="setting_button" href="#misc">Miscellaneous</a>
-</div>
+  </div>
 <div class='dwb_settings_panel'>
 <div class='dwb_settings_headline'><a name='general'>General</a></div>
   <div class='dwb_line0'>
@@ -155,6 +155,14 @@
     <div style='clear:both;'></div>
   </div>
   <div class='dwb_line0'>
+    <div class='dwb_attr'>pass_through</div>
+    <div style='float:right;'>
+      <label class='dwb_desc' for='pass_through'>Go in pass-through mode, all keys are directly send to the webview</label>
+      <input id='pass_through' type='text' >
+    </div>
+    <div style='clear:both;'></div>
+  </div>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>view_source</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='view_source'>View page source</label>
@@ -162,7 +170,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>zoom_in</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='zoom_in'>Zoom in</label>
@@ -170,7 +178,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>zoom_out</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='zoom_out'>Zoom out</label>
@@ -178,7 +186,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>zoom_normal</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='zoom_normal'>Zoom to 100%</label>
@@ -186,7 +194,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>quit</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='quit'>Quit dwb</label>
@@ -195,7 +203,7 @@
     <div style='clear:both;'></div>
   </div>
 <div class='dwb_settings_headline'><a name='bookmark_keys'>Bookmarks &amp Quickmarks</a></div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>bookmark</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='bookmark'>Bookmark current page</label>
@@ -203,7 +211,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>bookmarks</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='bookmarks'>Show bookmarks in a pop up menu and open</label>
@@ -211,7 +219,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>bookmarks_nv</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='bookmarks_nv'>Show bookmarks in a pop up menu and open in new view</label>
@@ -219,7 +227,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>bookmarks_nw</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='bookmarks_nw'>Show bookmarks in a pop up menu and open in new window</label>
@@ -227,7 +235,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>save_quickmark</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='save_quickmark'>Save a quickmark for this page</label>
@@ -235,7 +243,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>open_quickmark</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='open_quickmark'>Open a quickmark</label>
@@ -243,7 +251,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>open_quickmark_nv</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='open_quickmark_nv'>Open quickmark in a new tab</label>
@@ -251,7 +259,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>open_quickmark_nw</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='open_quickmark_nw'>Open quickmark in a new window</label>
@@ -259,7 +267,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>open_start_page</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='open_start_page'>Open the default homepage</label>
@@ -268,7 +276,7 @@
     <div style='clear:both;'></div>
   </div>
 <div class='dwb_settings_headline'><a name='commandline'>Commandline</a></div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>command_mode</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='command_mode'>Enter command mode</label>
@@ -276,7 +284,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>entry_history_back</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='entry_history_back'>Command history back</label>
@@ -284,7 +292,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>entry_history_forward</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='entry_history_forward'>Command history forward</label>
@@ -292,7 +300,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>entry_delete_letter</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='entry_delete_letter'>Delete a single letter</label>
@@ -300,7 +308,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>entry_delete_line</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='entry_delete_line'>Delete to the beginning of the line</label>
@@ -308,7 +316,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>entry_delete_word</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='entry_delete_word'>Delete word</label>
@@ -316,7 +324,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>entry_word_back</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='entry_word_back'>Move cursor back on word</label>
@@ -324,7 +332,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>entry_word_forward</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='entry_word_forward'>Move cursor forward on word</label>
@@ -332,7 +340,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>download_set_execute</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='download_set_execute'>Toggle between spawning an application and download path</label>
@@ -341,7 +349,7 @@
     <div style='clear:both;'></div>
   </div>
 <div class='dwb_settings_headline'><a name='scrolling'>Scrolling</a></div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>scroll_up</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_up'>Scroll up</label>
@@ -349,7 +357,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>scroll_down</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_down'>Scroll down</label>
@@ -357,7 +365,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>scroll_right</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_right'>Scroll right</label>
@@ -365,7 +373,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>scroll_left</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_left'>Scroll left</label>
@@ -373,7 +381,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>scroll_page_down</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_page_down'>Scroll one page down</label>
@@ -381,7 +389,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>scroll_page_up</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_page_up'>Scroll one page up</label>
@@ -389,7 +397,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>scroll_halfpage_down</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_halfpage_down'>Scroll one-half page down</label>
@@ -397,7 +405,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>scroll_halfpage_up</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_halfpage_up'>Scroll one-half page up</label>
@@ -405,7 +413,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>scroll_bottom</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_bottom'>Scroll to bottom of the page</label>
@@ -413,7 +421,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>scroll_top</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_top'>Scroll to the top of the page</label>
@@ -421,7 +429,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>scroll_percent</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scroll_percent'>Scroll to percentage</label>
@@ -430,7 +438,7 @@
     <div style='clear:both;'></div>
   </div>
 <div class='dwb_settings_headline'><a name='tabs'>Tabs &amp UI</a></div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>add_view</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='add_view'>Add a new view</label>
@@ -438,7 +446,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>remove_view</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='remove_view'>Close view</label>
@@ -446,7 +454,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>undo</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='undo'>Undo closing last tab</label>
@@ -454,7 +462,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>decrease_master</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='decrease_master'>Decrease master area</label>
@@ -462,7 +470,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>increase_master</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='increase_master'>Increase master area</label>
@@ -470,7 +478,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>focus_next</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='focus_next'>Focus next view</label>
@@ -478,7 +486,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>focus_nth_view</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='focus_nth_view'>Focus nth view</label>
@@ -486,7 +494,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>focus_prev</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='focus_prev'>Focus previous view</label>
@@ -494,7 +502,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>push_master</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='push_master'>Push to master area</label>
@@ -502,7 +510,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>toggle_bottomstack</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_bottomstack'>Toggle bottomstack</label>
@@ -510,7 +518,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>fullscreen</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='fullscreen'>Toggle fullscreen</label>
@@ -519,7 +527,7 @@
     <div style='clear:both;'></div>
   </div>
 <div class='dwb_settings_headline'><a name='completion'>Completion</a></div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>complete_bookmarks</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='complete_bookmarks'>Complete bookmarks</label>
@@ -527,7 +535,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>complete_history</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='complete_history'>Complete browsing history</label>
@@ -535,7 +543,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>complete_commands</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='complete_commands'>Complete command history</label>
@@ -543,7 +551,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>complete_path</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='complete_path'>Complete local file path</label>
@@ -551,7 +559,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>complete_searchengines</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='complete_searchengines'>Complete searchengines</label>
@@ -559,7 +567,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>complete_userscript</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='complete_userscript'>Complete userscripts</label>
@@ -568,7 +576,7 @@
     <div style='clear:both;'></div>
   </div>
 <div class='dwb_settings_headline'><a name='clipboard'>Clipboard</a></div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>paste</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='paste'>Open url from clipboard</label>
@@ -576,7 +584,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>paste_nv</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='paste_nv'>Open url from clipboard in a new tab</label>
@@ -584,7 +592,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>paste_nw</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='paste_nw'>Open url from clipboard in a new window</label>
@@ -592,7 +600,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>paste_primary</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='paste_primary'>Open url from primary selection</label>
@@ -600,7 +608,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>paste_primary_nw</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='paste_primary_nw'>Open url from primary selection in a new window</label>
@@ -608,7 +616,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>paste_primary_nv</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='paste_primary_nv'>Open url from primary selection in a new window</label>
@@ -616,7 +624,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>yank</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='yank'>Yank current url to clipboard</label>
@@ -624,7 +632,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>yank_primary</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='yank_primary'>Yank current url to primary selection</label>
@@ -633,7 +641,7 @@
     <div style='clear:both;'></div>
   </div>
 <div class='dwb_settings_headline'><a name='settings'>Settings</a></div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>set_setting</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='set_setting'>Set a property for current view</label>
@@ -641,7 +649,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>set_global_setting</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='set_global_setting'>Set global property</label>
@@ -649,7 +657,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>show_global_settings</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='show_global_settings'>Show and modify global properties</label>
@@ -657,7 +665,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>set_key</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='set_key'>Set keybinding</label>
@@ -665,7 +673,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>show_keys</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='show_keys'>Show and modify keyboard configuration</label>
@@ -673,7 +681,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>scripts</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='scripts'>Toggle 'enable-scripts'</label>
@@ -681,7 +689,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>spell_checking</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='spell_checking'>Toggle 'enable-spell-checking'</label>
@@ -689,7 +697,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>autoload_images</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='autoload_images'>Toggle 'auto-load-images'</label>
@@ -697,7 +705,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>autoresize_window</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='autoresize_window'>Toggle 'auto-resize-window'</label>
@@ -705,7 +713,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>toggle_plugins_host</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_plugins_host'>Toggle plugin blocker for current host</label>
@@ -713,7 +721,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>toggle_plugins_uri</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_plugins_uri'>Toggle plugin blocker for current uri</label>
@@ -721,7 +729,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>toggle_plugins_host_tmp</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_plugins_host_tmp'>Toggle plugin blocker for current domain for this session</label>
@@ -729,7 +737,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>toggle_plugins_uri_tmp</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_plugins_uri_tmp'>Toggle plugin blocker for current uri for this session</label>
@@ -737,7 +745,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>toggle_scripts_host</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_scripts_host'>Toggle block content for current domain</label>
@@ -745,7 +753,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>toggle_scripts_uri</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_scripts_uri'>Toggle block content for current uri</label>
@@ -753,7 +761,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>toggle_scripts_host_tmp</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_scripts_host_tmp'>Toggle block content for current domain for this session</label>
@@ -761,7 +769,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>toggle_scripts_uri_tmp</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_scripts_uri_tmp'>Toggle block content for current uri for this session</label>
@@ -769,7 +777,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>caret_browsing</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='caret_browsing'>Toggle 'enable-caret-browsing'</label>
@@ -777,7 +785,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>private_browsing</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='private_browsing'>Toggle private browsing</label>
@@ -785,7 +793,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>java_applets</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='java_applets'>Toggle java applets</label>
@@ -793,7 +801,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>toggle_maximized</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_maximized'>Toggle maximized</label>
@@ -801,7 +809,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>plugins</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='plugins'>Toggle 'enable-plugins'</label>
@@ -809,7 +817,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>proxy</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='proxy'>Toggle proxy</label>
@@ -818,7 +826,7 @@
     <div style='clear:both;'></div>
   </div>
 <div class='dwb_settings_headline'><a name='misc'>Miscellaneous</a></div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>allow_cookie</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='allow_cookie'>Allow cookie for current site</label>
@@ -826,7 +834,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>download_hint</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='download_hint'>Download via hints</label>
@@ -834,7 +842,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>execute_userscript</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='execute_userscript'>Execute userscript</label>
@@ -842,7 +850,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>focus_input</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='focus_input'>Focus the next input</label>
@@ -850,7 +858,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>new_view</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='new_view'>New view for next navigation</label>
@@ -858,7 +866,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>new_window</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='new_window'>New window for next navigation</label>
@@ -866,7 +874,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>web_inspector</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='web_inspector'>Open the webinspector</label>
@@ -874,7 +882,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>print</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='print'>Print current page</label>
@@ -882,7 +890,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>save</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='save'>Save all configuration files</label>
@@ -890,7 +898,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>save_session</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='save_session'>Save current session</label>
@@ -898,7 +906,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>save_named_session</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='save_named_session'>Save current session with name</label>
@@ -906,7 +914,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>toggle_hidden_files</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='toggle_hidden_files'>Toggle hidden files in directory listing</label>
@@ -914,7 +922,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line0'>
+  <div class='dwb_line1'>
     <div class='dwb_attr'>save_search_field</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='save_search_field'>Add a new searchengine</label>
@@ -922,7 +930,7 @@
     </div>
     <div style='clear:both;'></div>
   </div>
-  <div class='dwb_line1'>
+  <div class='dwb_line0'>
     <div class='dwb_attr'>reload_scripts</div>
     <div style='float:right;'>
       <label class='dwb_desc' for='reload_scripts'>Reload all javascript userscripts</label>

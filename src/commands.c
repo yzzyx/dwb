@@ -39,7 +39,7 @@ dwb_com_simple_command(KeyMap *km) {
   }
 
   if ((ret = func(km, arg)) > 0) {
-    if (!km->map->hide) {
+    if (km->map->hide == NEVER_SM) {
       dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
     }
     else if (km->map->hide == ALWAYS_SM) {
@@ -882,6 +882,7 @@ dwb_com_fullscreen(KeyMap *km, Arg *arg) {
 gboolean
 dwb_com_pass_through(KeyMap *km, Arg *arg) {
   dwb.state.mode |= PASS_THROUGH;
-  puts("pass through");
+  dwb_set_normal_message(dwb.state.fview, false, "-- PASS THROUGH --");
+  return true;
 }/*}}}*/
 /*}}}*/
