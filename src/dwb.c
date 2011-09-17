@@ -2207,6 +2207,7 @@ dwb_normal_mode(gboolean clean) {
   }
   else if (mode  == INSERT_MODE) {
     dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
+    CLEAR_COMMAND_TEXT(dwb.state.fview);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   }
   else if (mode == DOWNLOAD_GET_PATH) {
