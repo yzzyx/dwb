@@ -242,7 +242,7 @@ commands_reload(KeyMap *km, Arg *arg) {
   WebKitWebView *web = WEBVIEW_FROM_ARG(arg);
   char *path;
   webkit_web_view_get_uri(web);
-  if ( (path = (char *)dwb_check_directory(webkit_web_view_get_uri(web))) ) {
+  if ( (path = (char *)dwb_check_directory(webkit_web_view_get_uri(web), NULL)) ) {
     Arg a = { .p = path, .b = false };
     dwb_load_uri(NULL, &a);
   }
