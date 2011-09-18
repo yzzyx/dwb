@@ -724,7 +724,7 @@ view_init_settings(GList *gl) {
   v->setting = dwb_get_default_settings();
   for (GList *l = g_hash_table_get_values(v->setting); l; l=l->next) {
     WebSettings *s = l->data;
-    if (!s->builtin && !s->global) {
+    if (s->apply & SETTING_PER_VIEW) {
       s->func(gl, s);
     }
   }

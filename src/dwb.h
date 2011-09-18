@@ -452,10 +452,16 @@ struct _State {
   gboolean fullscreen;
 };
 
+typedef enum _SettingsApply SettingsApply;
+enum _SettingsApply {
+  SETTING_BUILTIN = 1<<0,
+  SETTING_GLOBAL = 1<<1,
+  SETTING_ONINIT = 1<<2,
+  SETTING_PER_VIEW = 1<<3,
+};
 struct _WebSettings {
   Navigation n;
-  gboolean builtin;
-  gboolean global;
+  SettingsApply apply;
   DwbType type;
   Arg arg;
   S_Func func;
@@ -580,6 +586,7 @@ struct _Misc {
 
   char *pbbackground;
   gboolean top_statusbar;
+  int synctimer;
 };
 struct _Files {
   const char *bookmarks;
