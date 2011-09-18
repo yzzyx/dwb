@@ -250,11 +250,6 @@ typedef enum {
   HTML_STRING = 0x06,
 } DwbType;
 
-typedef enum {
-  APPLY_GLOBAL    = 0x01,
-  APPLY_PER_VIEW  = 0x02,
-} SettingsScope;
-
 typedef enum { 
   DL_ACTION_DOWNLOAD  = 0x01,
   DL_ACTION_EXECUTE   = 0x02,
@@ -417,7 +412,6 @@ struct _State {
   guint scriptlock;
   int size;
   GHashTable *settings_hash;
-  SettingsScope setting_apply;
   gboolean forward_search;
   gboolean background_tabs;
 

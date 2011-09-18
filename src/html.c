@@ -89,7 +89,6 @@ html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView
   }
   else 
     value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
-  dwb.state.setting_apply = APPLY_GLOBAL;
   dwb_set_setting(id, value);
   return true;
 }

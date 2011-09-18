@@ -48,6 +48,7 @@ static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_follow_selection(void);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
+static gboolean dwb_sync_files(gpointer);
 
 
 static void dwb_clean_buffer(GList *);
@@ -201,18 +202,14 @@ static FunctionMap FMAP [] = {
     (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, },
   { { "scroll_up",             "Scroll up",                         }, 0, 
     (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, },
-  { { "set_global_setting",    "Set global property",               }, 0, 
-    (Func)commands_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_GLOBAL } },
+  { { "set_setting",    "Set setting",               }, 0, 
+    (Func)commands_set_setting,         NULL,                              NEVER_SM,    },
   { { "set_key",               "Set keybinding",                    }, 0, 
     (Func)commands_set_key,             NULL,                              NEVER_SM,    { 0 } },
-  { { "set_setting",           "Set setting",                      }, 0, 
-    (Func)commands_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_PER_VIEW } },
-  { { "show_global_settings",  "Show global settings",              }, 1, 
-    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_GLOBAL } },
   { { "show_keys",             "Key configuration",                 }, 1, 
     (Func)commands_show_keys,           NULL,                              ALWAYS_SM, },
   { { "show_settings",         "Settings configuration",                          }, 1, 
-    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_PER_VIEW } },
+    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    },
   { { "toggle_bottomstack",    "Toggle bottomstack",                }, 1, 
     (Func)commands_set_orientation,     NULL,                              ALWAYS_SM, },
   { { "toggle_maximized",      "Toggle maximized",                  }, 1, 
@@ -620,12 +617,14 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
     v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_ENABLED) | PLUGIN_STATUS_DISABLED;
   }
 }/*}}}*/
+
 /* dwb_set_adblock {{{*/
 static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
   View *v = gl->data;
   v->status->adblocker = s->arg.b;
 }/*}}}*/
+
 /* dwb_set_private_browsing  */
 static void
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
@@ -640,19 +639,6 @@ dwb_set_hide_tabbar(GList *gl, WebSettings *s) {
   dwb_toggle_tabbar();
 }/*}}}*/
 
-gboolean
-dwb_sync_files(gpointer data) {
-  puts("sync");
-  const char *filename = "blub";
-  GString *buffer = g_string_new(NULL);
-  for (GList *gl = dwb.fc.history; gl; gl=gl->next) {
-    Navigation *n = gl->data;
-    g_string_append_printf(buffer, "%s %s\n", n->first, n->second);
-  }
-  g_file_set_contents(filename, buffer->str, -1, NULL);
-  g_string_free(buffer, true);
-  return true;
-}
 /* dwb_set_sync_interval{{{*/
 static void
 dwb_set_sync_interval(GList *gl, WebSettings *s) {
@@ -993,6 +979,18 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+/* dwb_sync_files {{{*/
+static gboolean
+dwb_sync_files(gpointer data) {
+  GString *buffer = g_string_new(NULL);
+  for (GList *gl = dwb.fc.history; gl; gl=gl->next) {
+    Navigation *n = gl->data;
+    g_string_append_printf(buffer, "%s %s\n", n->first, n->second);
+  }
+  g_file_set_contents(dwb.files.history, buffer->str, -1, NULL);
+  g_string_free(buffer, true);
+  return true;
+}/*}}}*/
 
 /* dwb_follow_selection() {{{*/
 static void 
@@ -1035,12 +1033,9 @@ dwb_open_startpage(GList *gl) {
 /* dwb_apply_settings(WebSettings *s) {{{*/
 static void
 dwb_apply_settings(WebSettings *s) {
-  if (dwb.state.setting_apply == APPLY_GLOBAL) 
-    for (GList *l = dwb.state.views; l; l=l->next) 
-      if (s->func) 
-        s->func(l, s);
-  else 
-    s->func(dwb.state.fview, s);
+  for (GList *l = dwb.state.views; l; l=l->next) 
+    if (s->func) 
+      s->func(l, s);
   dwb_normal_mode(false);
 
 }/*}}}*/
@@ -1051,7 +1046,7 @@ dwb_set_setting(const char *key, char *value) {
   WebSettings *s;
   Arg *a = NULL;
 
-  GHashTable *t = dwb.state.setting_apply == APPLY_GLOBAL ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
+  GHashTable *t = dwb.settings;
   if (key) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
       if ( (a = util_char_to_arg(value, s->type)) || (s->type == CHAR && a->p == NULL)) {

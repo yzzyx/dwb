@@ -63,7 +63,6 @@ commands_add_view(KeyMap *km, Arg *arg) {
 gboolean 
 commands_set_setting(KeyMap *km, Arg *arg) {
   dwb.state.mode = SETTINGS_MODE;
-  dwb.state.setting_apply = arg->n;
   dwb_focus_entry();
   return true;
 }/*}}}*/
@@ -183,7 +182,6 @@ commands_show_keys(KeyMap *km, Arg *arg) {
 /* commands_show_settings(KeyMap *km, Arg *a) {{{*/
 gboolean
 commands_show_settings(KeyMap *km, Arg *arg) {
-  dwb.state.setting_apply = APPLY_GLOBAL;
   html_load(dwb.state.fview, "dwb://settings");
   return true;
 }/*}}}*/
