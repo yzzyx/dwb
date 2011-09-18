@@ -224,6 +224,7 @@ typedef enum {
   DOWNLOAD_GET_PATH     = 1<<14,
   SAVE_SESSION          = 1<<15,
   COMPLETE_PATH         = 1<<16,
+  PASS_THROUGH          = 1<<17,
 } Mode;
 
 
@@ -248,11 +249,6 @@ typedef enum {
   COLOR_CHAR  = 0x05,
   HTML_STRING = 0x06,
 } DwbType;
-
-typedef enum {
-  APPLY_GLOBAL    = 0x01,
-  APPLY_PER_VIEW  = 0x02,
-} SettingsScope;
 
 typedef enum { 
   DL_ACTION_DOWNLOAD  = 0x01,
@@ -323,6 +319,8 @@ enum Signal {
   SIG_PLUGINS_CREATE_WIDGET,
   SIG_PLUGINS_LAST,
 
+  SIG_KEY_PRESS,
+  SIG_KEY_RELEASE,
   SIG_LAST,
 };
 
@@ -414,7 +412,6 @@ struct _State {
   guint scriptlock;
   int size;
   GHashTable *settings_hash;
-  SettingsScope setting_apply;
   gboolean forward_search;
   gboolean background_tabs;
 
@@ -449,10 +446,16 @@ struct _State {
   gboolean fullscreen;
 };
 
+typedef enum _SettingsApply SettingsApply;
+enum _SettingsApply {
+  SETTING_BUILTIN = 1<<0,
+  SETTING_GLOBAL = 1<<1,
+  SETTING_ONINIT = 1<<2,
+  SETTING_PER_VIEW = 1<<3,
+};
 struct _WebSettings {
   Navigation n;
-  gboolean builtin;
-  gboolean global;
+  SettingsApply apply;
   DwbType type;
   Arg arg;
   S_Func func;
@@ -577,6 +580,7 @@ struct _Misc {
 
   char *pbbackground;
   gboolean top_statusbar;
+  int synctimer;
 };
 struct _Files {
   const char *bookmarks;
@@ -708,7 +712,7 @@ CompletionType dwb_eval_completion_type(void);
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
 gboolean dwb_block_ad(GList *gl, const char *);
-const char * dwb_check_directory(const char *);
+const char * dwb_check_directory(const char *, GError **);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);
@@ -721,5 +725,6 @@ gboolean dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
 char * dwb_get_stock_item_base64_encoded(const char *);
+void dwb_show_directory(WebKitWebView *, const char *, const Arg *);
 
 #endif

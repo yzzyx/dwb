@@ -43,9 +43,12 @@ static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_adblock(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
+static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_follow_selection(void);
+static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
+static gboolean dwb_sync_files(gpointer);
 
 
 static void dwb_clean_buffer(GList *);
@@ -88,264 +91,262 @@ static char *restore = NULL;
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
   { { "add_view",              "Add a new view",                    }, 1, 
-    (Func)dwb_com_add_view,            NULL,                              ALWAYS_SM,     { .p = NULL }, },
+    (Func)commands_add_view,            NULL,                              ALWAYS_SM,     { .p = NULL }, },
   { { "allow_cookie",          "Cookie allowed",                    }, 0, 
-    (Func)dwb_com_allow_cookie,        "No new domain in current context",    POST_SM, },
+    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, 
-    (Func)dwb_com_bookmark,            NO_URL,                            POST_SM, },
+    (Func)commands_bookmark,            NO_URL,                            POST_SM, },
   { { "bookmarks",             "Bookmarks",                         }, 0, 
-    (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
   { { "bookmarks_nv",          "Bookmarks new view",                }, 0, 
-    (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
   { { "bookmarks_nw",          "Bookmarks new window",              }, 0, 
-    (Func)dwb_com_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
   { { "new_view",              "New view for next navigation",      }, 0, 
-    (Func)dwb_com_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_VIEW}, }, 
+    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_VIEW}, }, 
   { { "new_window",            "New window for next navigation",    }, 0, 
-    (Func)dwb_com_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
+    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
   { { "command_mode",          "Enter command mode",                }, 0, 
     (Func)dwb_command_mode,            NULL,                              POST_SM, },
   { { "decrease_master",       "Decrease master area",              }, 1, 
-    (Func)dwb_com_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
+    (Func)commands_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
   { { "download_hint",         "Download via hints",                }, 0, 
-    (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
   { { "find_backward",         "Find backward ",                    }, 0, 
-    (Func)dwb_com_find,                NO_URL,                            NEVER_SM,     { .b = false }, },
+    (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = false }, },
   { { "find_forward",          "Find forward ",                     }, 0, 
-    (Func)dwb_com_find,                NO_URL,                            NEVER_SM,     { .b = true }, },
+    (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = true }, },
   { { "find_next",             "Find next",                         }, 0, 
     (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = true }, },
   { { "find_previous",         "Find previous",                     }, 0, 
     (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = false }, },
   { { "focus_input",           "Focus input",                       }, 1, 
-    (Func)dwb_com_focus_input,        "No input found in current context",      ALWAYS_SM, },
+    (Func)commands_focus_input,        "No input found in current context",      ALWAYS_SM, },
   { { "focus_next",            "Focus next view",                   }, 0, 
-    (Func)dwb_com_focus,              "No other view",                   ALWAYS_SM,  { .n = 1 } },
+    (Func)commands_focus,              "No other view",                   ALWAYS_SM,  { .n = 1 } },
   { { "focus_prev",            "Focus previous view",               }, 0, 
-    (Func)dwb_com_focus,              "No other view",                   ALWAYS_SM,  { .n = -1 } },
+    (Func)commands_focus,              "No other view",                   ALWAYS_SM,  { .n = -1 } },
   { { "focus_nth_view",        "Focus nth view",                    }, 0, 
-    (Func)dwb_com_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 } },
+    (Func)commands_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 } },
   { { "hint_mode",             "Follow hints",                      }, 0, 
-    (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL }, },
   { { "hint_mode_nv",          "Follow hints (new view)",           }, 0, 
-    (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW }, },
   { { "hint_mode_nw",          "Follow hints (new window)",         }, 0, 
-    (Func)dwb_com_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW }, },
   { { "history_back",          "Go Back",                           }, 1, 
-    (Func)dwb_com_history_back,        "Beginning of History",            ALWAYS_SM, },
+    (Func)commands_history_back,        "Beginning of History",            ALWAYS_SM, },
   { { "history_forward",       "Go Forward",                        }, 1, 
-    (Func)dwb_com_history_forward,     "End of History",                  ALWAYS_SM, },
+    (Func)commands_history_forward,     "End of History",                  ALWAYS_SM, },
   { { "increase_master",       "Increase master area",              }, 1, 
-    (Func)dwb_com_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
+    (Func)commands_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
   { { "insert_mode",           "Insert Mode",                       }, 0, 
-    (Func)dwb_insert_mode,             NULL,                              ALWAYS_SM, },
+    (Func)dwb_insert_mode,             NULL,                              POST_SM, },
   { { "load_html",             "Load html",                         }, 1, 
-    (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
+    (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
   { { "load_html_nv",          "Load html new view",                }, 1, 
-    (Func)dwb_com_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL } },
+    (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL } },
   { { "open",                  "open",                              }, 1, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
   { { "Open",                  "open",                              }, 0, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL | SET_URL, .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL | SET_URL, .p = NULL } },
   { { "open_nv",               "tabopen",                          }, 1, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
   { { "Open_nv",               "tabopen",                          }, 0, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL } },
   { { "open_nw",               "winopen",                           }, 1, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
   { { "Open_nw",               "winopen",                           }, 0, 
-    (Func)dwb_com_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL } },
+    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL } },
   { { "open_quickmark",        "Open quickmark",                         }, 0, 
-    (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, },
+    (Func)commands_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, },
   { { "open_quickmark_nv",     "Open quickmark in a new tab",                }, 0, 
-    (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, },
+    (Func)commands_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, },
   { { "open_quickmark_nw",     "Open quickmark in a new window",              }, 0, 
-    (Func)dwb_com_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, },
+    (Func)commands_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, },
   { { "open_start_page",       "Open startpage",                    }, 1, 
-    (Func)dwb_com_open_startpage,      "No startpage set",                ALWAYS_SM, },
+    (Func)commands_open_startpage,      "No startpage set",                ALWAYS_SM, },
   { { "push_master",           "Push to master area",               }, 1, 
-    (Func)dwb_com_push_master,         "No other view",                   ALWAYS_SM, },
+    (Func)commands_push_master,         "No other view",                   ALWAYS_SM, },
   { { "quit",           "Quit dwb",               }, 1, 
-    (Func)dwb_com_quit,         NULL,                   ALWAYS_SM, },
+    (Func)commands_quit,         NULL,                   ALWAYS_SM, },
   { { "reload",                "Reload current page",                            }, 1, 
-    (Func)dwb_com_reload,              NULL,                              ALWAYS_SM, },
+    (Func)commands_reload,              NULL,                              ALWAYS_SM, },
   { { "reload_bypass_cache",   "Reload current page without using any cached data",  }, 1, 
-    (Func)dwb_com_reload_bypass_cache,       NULL,                              ALWAYS_SM, },
+    (Func)commands_reload_bypass_cache,       NULL,                              ALWAYS_SM, },
   { { "remove_view",           "Close view",                        }, 1, 
-    (Func)dwb_com_remove_view,         NULL,                              ALWAYS_SM, },
+    (Func)commands_remove_view,         NULL,                              ALWAYS_SM, },
   { { "save_quickmark",        "Save a quickmark for this page",    }, 0, 
-    (Func)dwb_com_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
+    (Func)commands_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
   { { "save_search_field",     "Add a new searchengine",            }, 0, 
-    (Func)dwb_com_add_search_field,    "No input in current context",     POST_SM, },
+    (Func)commands_add_search_field,    "No input in current context",     POST_SM, },
   { { "scroll_percent",        "Scroll to percentage",              }, 1, 
-    (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_PERCENT }, },
+    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_PERCENT }, },
   { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, 
-    (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_BOTTOM }, },
+    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_BOTTOM }, },
   { { "scroll_down",           "Scroll down",                       }, 0, 
-    (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_DOWN, }, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_DOWN, }, },
   { { "scroll_left",           "Scroll left",                       }, 0, 
-    (Func)dwb_com_scroll,              "Left side of the page",           ALWAYS_SM,    { .n = SCROLL_LEFT }, },
+    (Func)commands_scroll,              "Left side of the page",           ALWAYS_SM,    { .n = SCROLL_LEFT }, },
   { { "scroll_halfpage_down",  "Scroll one-half page down",         }, 0, 
-    (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_DOWN, }, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_DOWN, }, },
   { { "scroll_halfpage_up",    "Scroll one-half page up",           }, 0, 
-    (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_UP, }, },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_UP, }, },
   { { "scroll_page_down",      "Scroll one page down",              }, 0, 
-    (Func)dwb_com_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_PAGE_DOWN, }, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_PAGE_DOWN, }, },
   { { "scroll_page_up",        "Scroll one page up",                }, 0, 
-    (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_PAGE_UP, }, },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_PAGE_UP, }, },
   { { "scroll_right",          "Scroll left",                       }, 0, 
-    (Func)dwb_com_scroll,              "Right side of the page",          ALWAYS_SM,    { .n = SCROLL_RIGHT }, },
+    (Func)commands_scroll,              "Right side of the page",          ALWAYS_SM,    { .n = SCROLL_RIGHT }, },
   { { "scroll_top",            "Scroll to the top of the page",     }, 1, 
-    (Func)dwb_com_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, },
+    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, },
   { { "scroll_up",             "Scroll up",                         }, 0, 
-    (Func)dwb_com_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, },
-  { { "set_global_setting",    "Set global property",               }, 0, 
-    (Func)dwb_com_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_GLOBAL } },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, },
+  { { "set_setting",    "Set setting",               }, 0, 
+    (Func)commands_set_setting,         NULL,                              NEVER_SM,    },
   { { "set_key",               "Set keybinding",                    }, 0, 
-    (Func)dwb_com_set_key,             NULL,                              NEVER_SM,    { 0 } },
-  { { "set_setting",           "Set setting",                      }, 0, 
-    (Func)dwb_com_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_PER_VIEW } },
-  { { "show_global_settings",  "Show global settings",              }, 1, 
-    (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_GLOBAL } },
+    (Func)commands_set_key,             NULL,                              NEVER_SM,    { 0 } },
   { { "show_keys",             "Key configuration",                 }, 1, 
-    (Func)dwb_com_show_keys,           NULL,                              ALWAYS_SM, },
+    (Func)commands_show_keys,           NULL,                              ALWAYS_SM, },
   { { "show_settings",         "Settings configuration",                          }, 1, 
-    (Func)dwb_com_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_PER_VIEW } },
+    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    },
   { { "toggle_bottomstack",    "Toggle bottomstack",                }, 1, 
-    (Func)dwb_com_set_orientation,     NULL,                              ALWAYS_SM, },
+    (Func)commands_set_orientation,     NULL,                              ALWAYS_SM, },
   { { "toggle_maximized",      "Toggle maximized",                  }, 1, 
-    (Func)dwb_com_toggle_maximized,    NULL,                              ALWAYS_SM, },
+    (Func)commands_toggle_maximized,    NULL,                              ALWAYS_SM, },
   { { "view_source",           "View source",                       }, 1, 
-    (Func)dwb_com_view_source,         NULL,                              ALWAYS_SM, },
+    (Func)commands_view_source,         NULL,                              ALWAYS_SM, },
   { { "zoom_in",               "Zoom in",                           }, 1, 
-    (Func)dwb_com_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, },
+    (Func)commands_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, },
   { { "zoom_normal",           "Zoom to 100%",                         }, 1, 
-    (Func)dwb_com_set_zoom_level,      NULL,                              ALWAYS_SM,    { .d = 1.0,   .p = NULL } },
+    (Func)commands_set_zoom_level,      NULL,                              ALWAYS_SM,    { .d = 1.0,   .p = NULL } },
   { { "zoom_out",              "Zoom out",                          }, 1, 
-    (Func)dwb_com_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, },
+    (Func)commands_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, },
   /* yank and paste */
   { { "yank",                  "Yank current url",                              }, 1, 
-    (Func)dwb_com_yank,                 NO_URL,                 POST_SM,  { .p = GDK_NONE } },
+    (Func)commands_yank,                 NO_URL,                 POST_SM,  { .p = GDK_NONE } },
   { { "yank_primary",          "Yank current url to Primary selection",         }, 1, 
-    (Func)dwb_com_yank,                 NO_URL,                 POST_SM,  { .p = GDK_SELECTION_PRIMARY } },
+    (Func)commands_yank,                 NO_URL,                 POST_SM,  { .p = GDK_SELECTION_PRIMARY } },
   { { "paste",                 "Open url from clipboard",                             }, 1, 
-    (Func)dwb_com_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_NONE } },
+    (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_NONE } },
   { { "paste_primary",         "Open url from primary selection",           }, 1, 
-    (Func)dwb_com_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY } },
+    (Func)commands_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY } },
   { { "paste_nv",              "Open url from clipboard in a new tab",                   }, 1, 
-    (Func)dwb_com_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_NONE } },
+    (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_NONE } },
   { { "paste_primary_nv",      "Open url from primary selection in a new window", }, 1, 
-    (Func)dwb_com_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY } },
+    (Func)commands_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY } },
   { { "paste_nw",              "Open url from clipboard in a new window",                   }, 1, 
-    (Func)dwb_com_paste,             "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_NONE } },
+    (Func)commands_paste,             "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_NONE } },
   { { "paste_primary_nw",      "Open url from primary selection in a new window", }, 1, 
-    (Func)dwb_com_paste,             "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY } },
+    (Func)commands_paste,             "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY } },
 
   { { "save_session",          "Save current session", },              1, 
-    (Func)dwb_com_save_session,        NULL,                              ALWAYS_SM,  { .n = NORMAL_MODE } },
+    (Func)commands_save_session,        NULL,                              ALWAYS_SM,  { .n = NORMAL_MODE } },
   { { "save_named_session",    "Save current session with name", },    0, 
-    (Func)dwb_com_save_session,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
+    (Func)commands_save_session,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
   { { "save",                  "Save all configuration files", },      1, 
-    (Func)dwb_com_save_files,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
+    (Func)commands_save_files,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
   { { "undo",                  "Undo closing last tab", },             1, 
-    (Func)dwb_com_undo,              "No more closed views",                              POST_SM },
+    (Func)commands_undo,              "No more closed views",                              POST_SM },
   { { "web_inspector",         "Open the webinspector", },             1, 
-    (Func)dwb_com_web_inspector,              "Enable developer extras for the webinspector",                              POST_SM },
+    (Func)commands_web_inspector,              "Enable developer extras for the webinspector",                              POST_SM },
   { { "reload_scripts",         "Reload scripts", },             1, 
-    (Func)dwb_com_reload_scripts,              NULL,                              ALWAYS_SM },
+    (Func)commands_reload_scripts,              NULL,                              ALWAYS_SM },
 
   /* Entry editing */
   { { "entry_delete_word",      "Command line: Delete word in", },                      0,  
-    (Func)dwb_com_entry_delete_word,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_delete_word,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_delete_letter",    "Command line: Delete a single letter", },           0,  
-    (Func)dwb_com_entry_delete_letter,          NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_delete_letter,          NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_delete_line",      "Command line: Delete to beginning of the line", },  0,  
-    (Func)dwb_com_entry_delete_line,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_delete_line,            NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_word_forward",     "Command line: Move cursor forward on word", },      0,  
-    (Func)dwb_com_entry_word_forward,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_word_forward,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_word_back",        "Command line: Move cursor back on word", },         0,  
-    (Func)dwb_com_entry_word_back,              NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_word_back,              NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_history_back",     "Command line: Command history back", },             0,  
-    (Func)dwb_com_entry_history_back,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_history_back,           NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "entry_history_forward",  "Command line: Command history forward", },          0,  
-    (Func)dwb_com_entry_history_forward,        NULL,        ALWAYS_SM,  { 0 }, true, }, 
+    (Func)commands_entry_history_forward,        NULL,        ALWAYS_SM,  { 0 }, true, }, 
   { { "download_set_execute",   "Downloads: toggle between spawning application/download path", },                0, 
-    (Func)dwb_dl_set_execute,        NULL,       ALWAYS_SM,  { 0 }, true, }, 
+    (Func)download_set_execute,        NULL,       ALWAYS_SM,  { 0 }, true, }, 
   { { "complete_history",       "Complete browsing history", },       0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_HISTORY }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_HISTORY }, true, }, 
   { { "complete_bookmarks",     "Complete bookmarks", },              0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_BOOKMARK }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_BOOKMARK }, true, }, 
   { { "complete_commands",      "Complete command history", },        0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_INPUT }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_INPUT }, true, }, 
   { { "complete_searchengines", "Complete searchengines", },          0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_SEARCH }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_SEARCH }, true, }, 
   { { "complete_userscript",    "Complete userscripts", },            0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_USERSCRIPT }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_USERSCRIPT }, true, }, 
   { { "complete_path",          "Complete local file path", },        0, 
-    (Func)dwb_com_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
+    (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
   { { "scripts",               "Setting: scripts",                },   1, 
-    (Func)dwb_com_toggle_property,     NULL,                              POST_SM,    { .p = "enable-scripts" } },
+    (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-scripts" } },
   { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-shrink-images" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-shrink-images" } },
   { { "autoload_images",       "Toggle autoload images",          },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-load-images" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-load-images" } },
   { { "autoresize_window",     "Toggle autoresize window",        },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "auto-resize-window" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-resize-window" } },
   { { "caret_browsing",        "Toggle caret browsing",           },   0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-caret-browsing" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-caret-browsing" } },
   { { "default_context_menu",  "Toggle enable default context menu",           }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,       POST_SM,    { .p = "enable-default-context-menu" } },
+    (Func)commands_toggle_property,     NULL,       POST_SM,    { .p = "enable-default-context-menu" } },
   { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,                  POST_SM, { .p = "enable-file-acces-from-file-uris" } },
+    (Func)commands_toggle_property,     NULL,                  POST_SM, { .p = "enable-file-acces-from-file-uris" } },
   { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, 
-    (Func)dwb_com_toggle_property,  NULL,   POST_SM, { .p = "enable-universal-file-acces-from-file-uris" } },
+    (Func)commands_toggle_property,  NULL,   POST_SM, { .p = "enable-universal-file-acces-from-file-uris" } },
   { { "java_applets",          "Toggle java applets",             }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-java-applets" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-java-applets" } },
   { { "plugins",               "Toggle plugins",                  }, 1, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-plugins" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-plugins" } },
   { { "private_browsing",      "Toggle private browsing",         }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-private-browsing" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-private-browsing" } },
   { { "page_cache",            "Toggle page cache",               }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,                    POST_SM,    { .p = "enable-page-cache" } },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-page-cache" } },
   { { "js_can_open_windows",   "Toggle Javascript can open windows automatically", }, 0, 
-    (Func)dwb_com_toggle_property,     NULL,   POST_SM,    { .p = "javascript-can-open-windows-automatically" } },
+    (Func)commands_toggle_property,     NULL,   POST_SM,    { .p = "javascript-can-open-windows-automatically" } },
   { { "enforce_96_dpi",        "Toggle enforce a resolution of 96 dpi", },    0, 
-    (Func)dwb_com_toggle_property,     NULL,           POST_SM,    { .p = "enforce-96-dpi" } },
+    (Func)commands_toggle_property,     NULL,           POST_SM,    { .p = "enforce-96-dpi" } },
   { { "print_backgrounds",     "Toggle print backgrounds", },      0,    
-    (Func)dwb_com_toggle_property,    NULL,                    POST_SM,    { .p = "print-backgrounds" } },
+    (Func)commands_toggle_property,    NULL,                    POST_SM,    { .p = "print-backgrounds" } },
   { { "resizable_text_areas",  "Toggle resizable text areas", },   0,  
-    (Func)dwb_com_toggle_property,      NULL,                    POST_SM,    { .p = "resizable-text-areas" } },
+    (Func)commands_toggle_property,      NULL,                    POST_SM,    { .p = "resizable-text-areas" } },
   { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   
-    (Func)dwb_com_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" } },
+    (Func)commands_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" } },
   { { "proxy",                 "Toggle proxy",                    },        1,     
-    (Func)dwb_com_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
+    (Func)commands_toggle_proxy,        NULL,                    POST_SM,    { 0 } },
   { { "toggle_scripts_host", "Toggle block content for current host" },   1, 
-    (Func) dwb_com_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
+    (Func) commands_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
   { { "toggle_scripts_uri",    "Toggle block content for current url" }, 1, 
-    (Func) dwb_com_toggle_scripts, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
+    (Func) commands_toggle_scripts, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
   { { "toggle_scripts_host_tmp", "Toggle block content for current host for this session" },  1, 
-    (Func) dwb_com_toggle_scripts, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
+    (Func) commands_toggle_scripts, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
   { { "toggle_scripts_uri_tmp", "Toggle block content for current url for this session" },   1, 
-    (Func) dwb_com_toggle_scripts, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
+    (Func) commands_toggle_scripts, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
   { { "toggle_plugins_host", "Toggle plugin blocker for current host" },   1, 
-    (Func) dwb_com_toggle_plugin_blocker, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
+    (Func) commands_toggle_plugin_blocker, NULL,                  POST_SM,    { .n = ALLOW_HOST } }, 
   { { "toggle_plugins_uri",    "Toggle plugin blocker for current url" }, 1, 
-    (Func) dwb_com_toggle_plugin_blocker, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
+    (Func) commands_toggle_plugin_blocker, NULL,                POST_SM,    { .n = ALLOW_URI } }, 
   { { "toggle_plugins_host_tmp", "Toggle block content for current domain for this session" },  1, 
-    (Func) dwb_com_toggle_plugin_blocker, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
+    (Func) commands_toggle_plugin_blocker, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
   { { "toggle_plugins_uri_tmp", "Toggle block content for current url for this session" },   1, 
-    (Func) dwb_com_toggle_plugin_blocker, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
+    (Func) commands_toggle_plugin_blocker, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
   { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, 
-    (Func) dwb_com_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
+    (Func) commands_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
   { { "print",                 "Print current page" },                         1, 
-    (Func) dwb_com_print, NULL,                             POST_SM,    { 0 } }, 
+    (Func) commands_print, NULL,                             POST_SM,    { 0 } }, 
   { { "execute_userscript",    "Execute userscript" },                 1, 
-    (Func) dwb_com_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
+    (Func) commands_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 } }, 
   { { "fullscreen",    "Toggle fullscreen" },                 1, 
-    (Func) dwb_com_fullscreen, NULL,     ALWAYS_SM,    { 0 } }, 
+    (Func) commands_fullscreen, NULL,     ALWAYS_SM,    { 0 } }, 
+  { { "pass_through",    "Pass-through mode" },                 1, 
+    (Func) commands_pass_through, NULL,     POST_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -353,245 +354,247 @@ static FunctionMap FMAP [] = {
   /* { name,    description, builtin, global, type,  argument,  set-function */
 static WebSettings DWB_SETTINGS[] = {
   { { "auto-load-images",			                   "Load images automatically", },                                         
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "auto-resize-window",			                 "Autoresize window", },                                       
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "auto-shrink-images",			                 "Automatically shrink standalone images to fit", },                                       
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "cursive-font-family",			               "Cursive font family used to display text", },                                     
-    true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
   { { "default-encoding",			                   "Default encoding used to display text", },                                        
-    true, false,  CHAR,    { .p = NULL      }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = NULL      }, (S_Func) dwb_webkit_setting,  },
   { { "default-font-family",			               "Default font family used to display text", },                                     
-    true, false,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting,  },
   { { "default-font-size",			                 "Default font size used to display text", },                                       
-    true, false,  INTEGER, { .i = 12                }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  INTEGER, { .i = 12                }, (S_Func) dwb_webkit_setting,  },
   { { "default-monospace-font-size",			       "Default monospace font size used to display text", },                             
-    true, false,  INTEGER, { .i = 10                }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  INTEGER, { .i = 10                }, (S_Func) dwb_webkit_setting,  },
   { { "enable-caret-browsing",			             "Whether to enable caret browsing", },                                          
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-default-context-menu",			       "Whether to enable the right click context menu", },                             
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-developer-extras",			           "Whether developer extensions should be enabled",    },                              
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-dns-prefetching",			           "Whether webkit prefetches domain names",    },                              
-    true, false,  BOOLEAN, { .b = true             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-dom-paste",			                   "Whether to enable DOM paste", },                                        
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-frame-flattening",			           "Whether to enable Frame Flattening", },                                        
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-file-access-from-file-uris",			 "Whether file access from file uris is allowed", },                              
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-html5-database",			             "Enable HTML5 client side SQL-database support" },                                    
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-html5-local-storage",			         "Enable HTML5 local storage", },                              
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-java-applet",			                 "Whether to enable java applets", },                                            
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-offline-web-application-cache",		 "Enable HTML5 offline web application cache", },                           
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-page-cache",			                 "Whether to enable page cache", },                                              
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-plugins",			                     "Whether to enable plugins", },                                                 
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-private-browsing",			           "Whether to enable private browsing mode", },                                        
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_set_private_browsing,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_set_private_browsing,  },
   { { "enable-scripts",			                     "Enable embedded scripting languages", },                                                  
-    false, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_set_scripts,  },
+    SETTING_PER_VIEW,  BOOLEAN, { .b = true              }, (S_Func) dwb_set_scripts,  },
   { { "enable-site-specific-quirks",			       "Enable site-specific compatibility workarounds", },                                    
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-spatial-navigation",			         "Spatial navigation", },                                      
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-spell-checking",			             "Whether to enable spell checking", },                                          
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-universal-access-from-file-uris",	 "Whether to allow files loaded through file:", },                        
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-xss-auditor",			                 "Whether to enable the XSS auditor", },                                             
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enforce-96-dpi",			                     "Enforce a resolution of 96 dpi", },                                          
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "fantasy-font-family",			               "Default fantasy font family used to display text", },                                     
-    true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
   { { "javascript-can-access-clipboard",			   "Whether javascript can access clipboard", },                         
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "javascript-can-open-windows-automatically", "Whether javascript can open windows", },             
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "minimum-font-size",			                 "Minimum font size to display text", },                                       
-    true, false,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting,  },
   { { "minimum-logical-font-size",			         "Minimum logical font size used to display text", },                               
-    true, false,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting,  },
   { { "monospace-font-family",			             "Monospace font family used to display text", },                                   
-    true, false,  CHAR,    { .p = "monospace"       }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "monospace"       }, (S_Func) dwb_webkit_setting,  },
   { { "print-backgrounds",			                 "Whether background images should be printed", },                                       
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "resizable-text-areas",			               "Whether text areas are resizable", },                                    
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "sans-serif-font-family",			             "Sans serif font family used to display text", },                                  
-    true, false,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting,  },
   { { "serif-font-family",			                 "Serif font family used to display text", },                                       
-    true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
   { { "spell-checking-languages",			           "Language used for spellchecking sperated by commas", },                                
-    true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
   { { "tab-key-cycles-through-elements",			   "Tab cycles through elements in insert mode", },              
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "user-agent",			                         "The user agent string", },                                              
-    false, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_agent,  },
+    SETTING_PER_VIEW,                CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_agent,  },
   { { "user-stylesheet-uri",			               "The uri of a stylsheet applied to every page", },                                     
-    true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
   { { "zoom-step",			                         "The zoom step", },                                               
-    true, false,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting,  },
   { { "custom-encoding",                         "The custom encoding of the view", },                                         
-    false, false, CHAR,    { .p = NULL           }, (S_Func) dwb_webview_property,  },
+    SETTING_PER_VIEW,                CHAR,    { .p = NULL           }, (S_Func) dwb_webview_property,  },
   { { "editable",                                "Whether content can be modified", },                                        
-    false, false, BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property,  },
+    SETTING_PER_VIEW,                BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property,  },
   { { "full-content-zoom",                       "Whether the full content is scaled when zooming", },                                       
-    false, false, BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property,  },
+    SETTING_PER_VIEW,                BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property,  },
   { { "zoom-level",                              "The default zoom level", },
-    false, false, DOUBLE,  { .d = 1.0               }, (S_Func) dwb_webview_property,  },
+    SETTING_PER_VIEW,                DOUBLE,  { .d = 1.0               }, (S_Func) dwb_webview_property,  },
   { { "proxy",                                   "Whether to use a HTTP-proxy", },                                              
-    false, true,  BOOLEAN, { .b = false              },  (S_Func) dwb_set_proxy,  },
+    SETTING_GLOBAL,      BOOLEAN, { .b = false              },  (S_Func) dwb_set_proxy,  },
   { { "proxy-url",                               "The HTTP-proxy url", },                                          
-    false, true,  CHAR,    { .p = NULL              },   (S_Func) dwb_soup_init_proxy,  },
+    SETTING_GLOBAL,      CHAR,    { .p = NULL              },   (S_Func) dwb_soup_init_proxy,  },
   { { "ssl-strict",                               "Whether to allow only save certificates", },                                          
-    false, true,  BOOLEAN,    { .b = true            },   (S_Func) dwb_soup_init_session_features,  },
+    SETTING_GLOBAL,      BOOLEAN,    { .b = true            },   (S_Func) dwb_soup_init_session_features,  },
   { { "ssl-ca-cert",                               "Path to ssl-certificate", },                                          
-    false, true,  CHAR,    { .p = NULL            },   (S_Func) dwb_soup_init_session_features,  },
+    SETTING_GLOBAL,      CHAR,    { .p = NULL            },   (S_Func) dwb_soup_init_session_features,  },
   { { "cookies",                                  "Whether to allow all cookies", },                                     
-    false, true,  BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars,  },
+    SETTING_GLOBAL,      BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars,  },
   { { "background-tabs",			                     "Whether to open tabs in background", },                                 
-    false, true,  BOOLEAN,    { .b = false         }, (S_Func) dwb_set_background_tab,  },
+    SETTING_GLOBAL,      BOOLEAN,    { .b = false         }, (S_Func) dwb_set_background_tab,  },
   { { "scroll-step",			                     "Whether to open tabs in background", },                                 
-    false, true,  DOUBLE,    { .d = 0         }, (S_Func) dwb_init_vars,  },
+    SETTING_GLOBAL,      DOUBLE,    { .d = 0         }, (S_Func) dwb_init_vars,  },
 
   { { "active-fg-color",                         "Foreground color of the active view", },                              
-    false, true,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,   },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,   },
   { { "active-bg-color",                         "Background color of the active view", },                              
-    false, true,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
   { { "normal-fg-color",                         "Foreground color of inactive views", },                            
-    false, true,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
   { { "normal-bg-color",                         "Background color of inactive views", },                            
-    false, true,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
 
   { { "tab-active-fg-color",                     "Foreground color of the active tab", },                           
-    false, true,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-active-bg-color",                     "Background color of the active tab", },                           
-    false, true,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-normal-fg-color",                     "Foreground color of inactive tabs", },                         
-    false, true,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-normal-bg-color",                     "Background color of inactive tabs", },                         
-    false, true,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-number-color",                        "Color of the number in the tab", },                      
-    false, true,  COLOR_CHAR, { .p = "#7ac5cd"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#7ac5cd"         },    (S_Func) dwb_reload_layout,  },
   { { "hide-tabbar",                             "Whether to hide the tabbar (never, always, tiled)", },                      
-    false, true,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar,  },
+    SETTING_GLOBAL,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar,  },
   { { "tabbed-browsing",                         "Whether to enable tabbed browsing", },                                  
-    false, true,  BOOLEAN,      { .b = true         },      (S_Func) dwb_set_dummy,  },
+    SETTING_GLOBAL,  BOOLEAN,      { .b = true         },      (S_Func) dwb_set_dummy,  },
+  { { "sync-history",                            "Interval to save history to hdd or 0 to directly write to hdd", },                                  
+    SETTING_GLOBAL|SETTING_ONINIT,  INTEGER,      { .i = 0         },      (S_Func) dwb_set_sync_interval,  },
 
   { { "active-completion-fg-color",                    "Foreground color of the active tabcompletion item", },                        
-    false, true,  COLOR_CHAR, { .p = "#53868b"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#53868b"         }, (S_Func) dwb_init_style,  },
   { { "active-completion-bg-color",                    "Background color of the active tabcompletion item", },                        
-    false, true,  COLOR_CHAR, { .p = "#000000"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#000000"         }, (S_Func) dwb_init_style,  },
   { { "normal-completion-fg-color",                    "Foreground color of an inactive tabcompletion item", },                      
-    false, true,  COLOR_CHAR, { .p = "#eeeeee"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#eeeeee"         }, (S_Func) dwb_init_style,  },
   { { "normal-completion-bg-color",                    "Background color of an inactive tabcompletion item", },                      
-    false, true,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style,  },
 
   { { "ssl-trusted-color",                         "Color for ssl-encrypted sites, trusted certificate", },                 
-    false, true,  COLOR_CHAR, { .p = "#00ff00"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#00ff00"         }, (S_Func) dwb_init_style,  },
   { { "ssl-untrusted-color",                       "Color for ssl-encrypted sites, untrusted certificate", },                 
-    false, true,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
   { { "insertmode-fg-color",                         "Foreground color in insertmode", },                               
-    false, true,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style,  },
   { { "insertmode-bg-color",                         "Background color in insertmode", },                               
-    false, true,  COLOR_CHAR, { .p = "#303030"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#303030"         }, (S_Func) dwb_init_style,  },
   { { "error-color",                             "Color for error messages", },                                         
-    false, true,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
   { { "status-allowed-color",                        "Color of allowed elements in the statusbar", },           
-    false, true,  COLOR_CHAR, { .p = "#00ff00"       },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#00ff00"       },    (S_Func) dwb_reload_layout,  },
   { { "status-blocked-color",                        "Color of blocked elements in the statusbar", },           
-    false, true,  COLOR_CHAR, { .p = "#ffffff"       },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"       },    (S_Func) dwb_reload_layout,  },
 
   { { "font",                                    "Default font used for the ui", },                                       
-    false, true,  CHAR, { .p = "monospace 8"          },   (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  CHAR, { .p = "monospace 8"          },   (S_Func) dwb_reload_layout,  },
   { { "font-inactive",                           "Font of views without focus", },                  
-    false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
   { { "font-entry",                              "Font of the addressbar", },                            
-    false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
   { { "font-completion",                         "Font for tab-completion", },                            
-    false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
    
   { { "hint-letter-seq",                       "Letter sequence for letter hints", },             
-    false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
   { { "hint-style",                              "Whether to use 'letter' or 'number' hints", },                     
-    false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
   { { "hint-font",                          "Font size of hints", },                                        
-    false, true,  CHAR, { .p = "bold 10px monospace"             },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "bold 10px monospace"             },     (S_Func) dwb_reload_scripts,  },
   { { "hint-fg-color",                           "Foreground color of hints", },                                 
-    false, true,  CHAR, { .p = "#000000"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "#000000"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-bg-color",                           "Background color of hints", },                                 
-    false, true,  CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-active-color",                       "Color of the active link in hintmode", },                                
-    false, true,  CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-normal-color",                       "Color of inactive links in hintmode", },                              
-    false, true,  CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-border",                             "Border used for hints", },                                      
-    false, true,  CHAR, { .p = "1px solid #000000"    }, (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "1px solid #000000"    }, (S_Func) dwb_reload_scripts,  },
   { { "hint-opacity",                            "The opacity of hints", },                                     
-    false, true,  DOUBLE, { .d = 0.8         },          (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  DOUBLE, { .d = 0.8         },          (S_Func) dwb_reload_scripts,  },
   { { "auto-completion",                         "Show possible shortcuts", },                                
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_comp_set_autcompletion,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)completion_set_autcompletion,  },
   { { "startpage",                               "The default homepage", },                                        
-    false, true,  CHAR,    { .p = "dwb://bookmarks" },        (S_Func)dwb_set_startpage,  }, 
+    SETTING_GLOBAL,  CHAR,    { .p = "dwb://bookmarks" },        (S_Func)dwb_set_startpage,  }, 
   { { "single-instance",                         "Whether to have only on instance", },                                         
-    false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_single_instance,  }, 
+    SETTING_GLOBAL,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_single_instance,  }, 
   { { "save-session",                            "Whether to automatically save sessions", },                                       
-    false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_dummy,  }, 
+    SETTING_GLOBAL,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_dummy,  }, 
   
 
   /* downloads */
   { { "download-external-command",                        "External program used for downloads", },                               
-    false, true,  CHAR, { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  CHAR, { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     (S_Func)dwb_set_dummy,  },
   { { "download-use-external-program",           "Whether to use an external download program", },                           
-    false, true,  BOOLEAN, { .b = false         },    (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false         },    (S_Func)dwb_set_dummy,  },
 
   { { "complete-history",                        "Whether to complete browsing history with tab", },                              
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
   { { "complete-bookmarks",                        "Whether to complete bookmarks with tab", },                                     
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
   { { "complete-searchengines",                   "Whether to complete searchengines with tab", },                                     
-    false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
   { { "complete-commands",                        "Whether to complete the commmand history", },                                     
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
   { { "complete-userscripts",                        "Whether to complete userscripts", },                                     
-    false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
 
   { { "use-fifo",                        "Create a fifo pipe for communication", },                            
-    false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_set_dummy,  },
     
   { { "default-width",                           "Default width of the window", },                                           
-    false, true,  INTEGER, { .i = 800          }, (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 800          }, (S_Func)dwb_set_dummy,  },
   { { "default-height",                          "Default height of the window", },                                           
-    false, true,  INTEGER, { .i = 600          }, (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 600          }, (S_Func)dwb_set_dummy,  },
   { { "message-delay",                           "Time in seconds, messages are shown", },                                           
-    false, true,  INTEGER, { .i = 2          }, (S_Func) dwb_set_message_delay,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 2          }, (S_Func) dwb_set_message_delay,  },
   { { "history-length",                          "Length of the browsing history", },                                          
-    false, true,  INTEGER, { .i = 500          }, (S_Func) dwb_set_history_length,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) dwb_set_history_length,  },
   { { "size",                                    "Tiling area size in percent", },                     
-    false, true,  INTEGER, { .i = 30          }, (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 30          }, (S_Func)dwb_set_dummy,  },
   { { "factor",                                  "Zoom factor of the tiling area", },                  
-    false, true,  DOUBLE, { .d = 0.3          }, (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  DOUBLE, { .d = 0.3          }, (S_Func)dwb_set_dummy,  },
   { { "layout",                                  "The default layout (Normal, Bottomstack, Maximized)", },     
-    false, true,  CHAR, { .p = "Normal MAXIMIZED" },  (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  CHAR, { .p = "Normal MAXIMIZED" },  (S_Func)dwb_set_dummy,  },
   { { "top-statusbar",                                  "Whether to have the statusbar on top", },     
-    false, true,  BOOLEAN, { .b = false },  (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false },  (S_Func)dwb_set_dummy,  },
   { { "mail-client",                            "Program used for mailto:-urls", },                                            
-    false, true,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy,  }, 
+    SETTING_GLOBAL,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy,  }, 
   { { "ftp-client",                            "Program used for ftp", },                                            
-    false, true,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy,   }, 
+    SETTING_GLOBAL,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy,   }, 
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
-    false, false,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
+    SETTING_PER_VIEW,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
-    false, false,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
+    SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
 };/*}}}*/
 
 /* SETTINGS_FUNCTIONS{{{*/
@@ -606,20 +609,22 @@ static void
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
   if (s->arg.b) {
-    dwb_plugin_blocker_connect(gl);
+    plugins_connect(gl);
     v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_DISABLED) | PLUGIN_STATUS_ENABLED;
   }
   else {
-    dwb_plugin_blocker_disconnect(gl);
+    plugins_disconnect(gl);
     v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_ENABLED) | PLUGIN_STATUS_DISABLED;
   }
 }/*}}}*/
+
 /* dwb_set_adblock {{{*/
 static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
   View *v = gl->data;
   v->status->adblocker = s->arg.b;
 }/*}}}*/
+
 /* dwb_set_private_browsing  */
 static void
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
@@ -632,6 +637,19 @@ static void
 dwb_set_hide_tabbar(GList *gl, WebSettings *s) {
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(s->arg.p);
   dwb_toggle_tabbar();
+}/*}}}*/
+
+/* dwb_set_sync_interval{{{*/
+static void
+dwb_set_sync_interval(GList *gl, WebSettings *s) {
+  if (dwb.misc.synctimer > 0) {
+    g_source_remove(dwb.misc.synctimer);
+    dwb.misc.synctimer = 0;
+  }
+
+  if (s->arg.i > 0) {
+    dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_files, NULL);
+  }
 }/*}}}*/
 
 /* dwb_set_startpage(GList *l, WebSettings *){{{*/
@@ -749,9 +767,12 @@ static gboolean
 dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
 
-  char *key = dwb_util_keyval_to_char(e->keyval);
+  char *key = util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_KEY_Escape) {
     dwb_normal_mode(true);
+    ret = false;
+  }
+  else if (dwb.state.mode & PASS_THROUGH) {
     ret = false;
   }
   else if (dwb.state.mode == INSERT_MODE) {
@@ -779,16 +800,16 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     dwb_follow_selection();
   }
   else if (DWB_TAB_KEY(e)) {
-    dwb_comp_autocomplete(dwb.keymap, e);
+    completion_autocomplete(dwb.keymap, e);
     ret = true;
   }
   else {
     if (dwb.state.mode & AUTO_COMPLETE) {
       if (DWB_TAB_KEY(e)) {
-        dwb_comp_autocomplete(NULL, e);
+        completion_autocomplete(NULL, e);
       }
       else if (e->keyval == GDK_KEY_Return) {
-        dwb_comp_eval_autocompletion();
+        completion_eval_autocompletion();
         return true;
       }
       ret = true;
@@ -958,6 +979,18 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+/* dwb_sync_files {{{*/
+static gboolean
+dwb_sync_files(gpointer data) {
+  GString *buffer = g_string_new(NULL);
+  for (GList *gl = dwb.fc.history; gl; gl=gl->next) {
+    Navigation *n = gl->data;
+    g_string_append_printf(buffer, "%s %s\n", n->first, n->second);
+  }
+  g_file_set_contents(dwb.files.history, buffer->str, -1, NULL);
+  g_string_free(buffer, true);
+  return true;
+}/*}}}*/
 
 /* dwb_follow_selection() {{{*/
 static void 
@@ -1000,12 +1033,9 @@ dwb_open_startpage(GList *gl) {
 /* dwb_apply_settings(WebSettings *s) {{{*/
 static void
 dwb_apply_settings(WebSettings *s) {
-  if (dwb.state.setting_apply == APPLY_GLOBAL) 
-    for (GList *l = dwb.state.views; l; l=l->next) 
-      if (s->func) 
-        s->func(l, s);
-  else 
-    s->func(dwb.state.fview, s);
+  for (GList *l = dwb.state.views; l; l=l->next) 
+    if (s->func) 
+      s->func(l, s);
   dwb_normal_mode(false);
 
 }/*}}}*/
@@ -1016,10 +1046,10 @@ dwb_set_setting(const char *key, char *value) {
   WebSettings *s;
   Arg *a = NULL;
 
-  GHashTable *t = dwb.state.setting_apply == APPLY_GLOBAL ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
+  GHashTable *t = dwb.settings;
   if (key) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
-      if ( (a = dwb_util_char_to_arg(value, s->type)) || (s->type == CHAR && a->p == NULL)) {
+      if ( (a = util_char_to_arg(value, s->type)) || (s->type == CHAR && a->p == NULL)) {
         s->arg = *a;
         dwb_apply_settings(s);
         dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
@@ -1054,7 +1084,7 @@ dwb_set_key(const char *prop, char *val) {
   dwb_set_normal_message(dwb.state.fview, true, "Saved key for command %s: %s", prop, val ? val : "");
 
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
 
   dwb_normal_mode(false);
 }/*}}}*/
@@ -1323,7 +1353,7 @@ dwb_open_si_channel() {
 void 
 dwb_unfocus() {
   if (dwb.state.fview) {
-    dwb_view_set_normal_style(VIEW(dwb.state.fview));
+    view_set_normal_style(VIEW(dwb.state.fview));
     dwb_source_remove(dwb.state.fview);
     CLEAR_COMMAND_TEXT(dwb.state.fview);
     dwb.state.fview = NULL;
@@ -1409,7 +1439,7 @@ gboolean
 dwb_spawn(GList *gl, const char *prop, const char *uri) {
   const char *program;
   char *command;
-  if ( (program = GET_CHAR(prop)) && (command = dwb_util_string_replace(program, "dwb_uri", uri)) ) {
+  if ( (program = GET_CHAR(prop)) && (command = util_string_replace(program, "dwb_uri", uri)) ) {
     g_spawn_command_line_async(command, NULL);
     free(command);
     return true;
@@ -1448,10 +1478,10 @@ dwb_reload_layout(GList *gl, WebSettings *s) {
   for (GList *l = dwb.state.views; l; l=l->next) {
     v = VIEW(l);
     if (l == dwb.state.fview) {
-      dwb_view_set_active_style(v);
+      view_set_active_style(v);
     }
     else {
-      dwb_view_set_normal_style(v);
+      view_set_normal_style(v);
     }
     DWB_WIDGET_OVERRIDE_FONT(v->entry, dwb.font.fd_entry);
   }
@@ -1513,7 +1543,12 @@ dwb_save_searchengine(void) {
   g_strstrip(text);
   if (text && strlen(text) > 0) {
     dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
-    dwb_util_file_add_navigation(dwb.files.searchengines, g_list_last(dwb.fc.searchengines)->data, true, -1);
+    Navigation *n = g_list_last(dwb.fc.searchengines)->data;
+    Navigation *cn = dwb_get_search_completion_from_navigation(dwb_navigation_dup(n));
+
+    dwb.fc.se_completion = g_list_append(dwb.fc.se_completion, cn);
+    util_file_add_navigation(dwb.files.searchengines, n, true, -1);
+
     dwb_set_normal_message(dwb.state.fview, true, "Searchengine saved");
     if (dwb.state.search_engine) {
       if (!dwb.misc.default_search) {
@@ -1587,7 +1622,7 @@ dwb_update_hints(GdkEventKey *e) {
     return false;
   }
   else {
-    val = dwb_util_keyval_to_char(e->keyval);
+    val = util_keyval_to_char(e->keyval);
     snprintf(input, BUFFER_LENGTH - 1, "%s%s", GET_TEXT(), val ? val : "");
     com = g_strdup_printf("DwbHintObj.updateHints(\"%s\")", input);
     FREE(val);
@@ -1709,7 +1744,7 @@ dwb_save_quickmark(const char *key) {
     }
     dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_quickmark_new(uri, title, key));
     char *text = g_strdup_printf("%s %s %s", key, uri, title);
-    dwb_util_file_add(dwb.files.quickmarks, text, true, -1);
+    util_file_add(dwb.files.quickmarks, text, true, -1);
     g_free(text);
     dwb_normal_mode(false);
 
@@ -1793,7 +1828,7 @@ dwb_focus(GList *gl) {
   }
   dwb.state.fview = gl;
   dwb.gui.entry = v->entry;
-  dwb_view_set_active_style(VIEW(gl));
+  view_set_active_style(VIEW(gl));
   dwb_focus_scroll(gl);
   dwb_update_status(gl);
 }/*}}}*/
@@ -1814,20 +1849,29 @@ dwb_new_window(Arg *arg) {
 
 /* dwb_check_directory(const char *) {{{*/
 const char *
-dwb_check_directory(const char *path) {
+dwb_check_directory(const char *path, GError **error) {
   if (g_str_has_prefix(path, "file://")) 
     path += *(path + 8) == '/' ? 8 : 7;
-  if (! g_file_test(path, G_FILE_TEST_IS_DIR)) 
+  if (!g_file_test(path, G_FILE_TEST_IS_DIR))
     return NULL;
+  if (access(path, R_OK)) 
+    g_set_error(error, 0, 1, "Cannot access %s", path);
 
   return path;
 }/*}}}*/
 
-/* dwb_show_directory(WebKitWebView *, const char *path, Arg *arg) {{{*/
-static void 
-dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
+/* dwb_show_directory(WebKitWebView *, const char *path, Arg *arg) 
+ * 
+ * Param: 
+ * WebKitWebView: 
+ * path: 
+ * Arg arg:  .p = fullpath
+ * {{{*/
+void 
+dwb_show_directory(WebKitWebView *web, const char *path, const Arg *arg) {
   char dest[STRING_LENGTH], *fullpath; 
   const char *filename;
+  char *escaped;
   GSList *content = NULL;
   GString *buffer = g_string_new(NULL);
   GDir *dir = NULL;
@@ -1844,7 +1888,7 @@ dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
     fullpath = g_build_filename(path, filename, NULL);
     content = g_slist_prepend(content, fullpath);
   }
-  content = g_slist_sort(content, (GCompareFunc)dwb_util_compare_path);
+  content = g_slist_sort(content, (GCompareFunc)util_compare_path);
   g_dir_close(dir);
 
   if (strcmp(path, "/")) 
@@ -1855,13 +1899,19 @@ dwb_show_directory(WebKitWebView *web, const char *path, Arg *arg) {
     if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
       continue;
     if (g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, fullpath, filename);
+      escaped = g_uri_escape_string(fullpath, "/", true);
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, escaped, filename);
+      g_free(escaped);
     }
     else if (g_file_test(fullpath, G_FILE_TEST_IS_EXECUTABLE)) {
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, fullpath, filename);
+      escaped = g_uri_escape_string(fullpath, "/", true);
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, escaped, filename);
+      g_free(escaped);
     }
     else {
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, fullpath, filename);
+      escaped = g_uri_escape_string(fullpath, "/", true);
+      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, escaped, filename);
+      g_free(escaped);
     }
     FREE(l->data);
   }
@@ -1901,7 +1951,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
   /*  new tab ?  */
   else if (dwb.state.nv == OPEN_NEW_VIEW) {
     dwb.state.nv = OPEN_NORMAL;
-    dwb_add_view(arg, false);
+    view_add(arg, false);
     return;
   }
   /*  get resolved uri */
@@ -1935,7 +1985,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
     return;
   }
   /* Check if uri is a directory */
-  if ( (path = dwb_check_directory(arg->p)) ) {
+  if ( (path = dwb_check_directory(arg->p, NULL)) ) {
     dwb_show_directory(web, path, arg);
     return;
   }
@@ -2016,7 +2066,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
     return false;
   }
 
-  char *key = dwb_util_keyval_to_char(e->keyval);
+  char *key = util_keyval_to_char(e->keyval);
   gboolean ret = false;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
@@ -2061,7 +2111,7 @@ dwb_eval_key(GdkEventKey *e) {
   /* don't show backspace in the buffer */
   if (keyval == GDK_KEY_BackSpace ) {
     if (dwb.state.mode & AUTO_COMPLETE) {
-      dwb_comp_clean_autocompletion();
+      completion_clean_autocompletion();
     }
     if (dwb.state.buffer && dwb.state.buffer->str ) {
       if (dwb.state.buffer->len) {
@@ -2075,7 +2125,7 @@ dwb_eval_key(GdkEventKey *e) {
     }
     return ret;
   }
-  char *key = dwb_util_keyval_to_char(keyval);
+  char *key = util_keyval_to_char(keyval);
   if (key) {
     mod_mask = CLEAN_STATE(e);
   }
@@ -2102,7 +2152,7 @@ dwb_eval_key(GdkEventKey *e) {
       for (GList *l = dwb.keymap; l; l=l->next) {
         KeyMap *km = l->data;
         if ((km->mod & DWB_NUMMOD_MASK) && (km->mod & ~DWB_NUMMOD_MASK) == mod_mask) {
-          dwb_com_simple_command(km);
+          commands_simple_command(km);
           break;
         }
       }
@@ -2146,16 +2196,15 @@ dwb_eval_key(GdkEventKey *e) {
   }
   /* autocompletion */
   if (dwb.state.mode & AUTO_COMPLETE) {
-    dwb_comp_clean_autocompletion();
+    completion_clean_autocompletion();
   }
   if (coms && g_list_length(coms) > 0) {
-    dwb_comp_autocomplete(coms, NULL);
+    completion_autocomplete(coms, NULL);
     ret = true;
   }
   if (tmp && dwb.state.buffer->len == longest) {
-    dwb_com_simple_command(tmp);
+    commands_simple_command(tmp);
   }
-  PRINT_DEBUG("longest match: %d", longest);
   if (longest == 0) {
     dwb_clean_key_buffer();
     CLEAR_COMMAND_TEXT(dwb.state.fview);
@@ -2180,7 +2229,8 @@ dwb_insert_mode(Arg *arg) {
   if (dwb.state.mode == HINT_MODE) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
-  dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
+  view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
+  dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
 
   dwb.state.mode = INSERT_MODE;
   return true;
@@ -2194,18 +2244,19 @@ dwb_normal_mode(gboolean clean) {
   if (dwb.state.mode == HINT_MODE || dwb.state.mode == SEARCH_FIELD_MODE) {
     dwb_execute_script(MAIN_FRAME(), "DwbHintObj.clear()", false);
   }
-  else if (mode  == INSERT_MODE) {
-    dwb_view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
+  else if (mode & INSERT_MODE) {
+    view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
+    CLEAR_COMMAND_TEXT(dwb.state.fview);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   }
   else if (mode == DOWNLOAD_GET_PATH) {
-    dwb_comp_clean_path_completion();
+    completion_clean_path_completion();
   }
   if (mode & COMPLETION_MODE) {
-    dwb_comp_clean_completion();
+    completion_clean_completion();
   }
   if (mode & AUTO_COMPLETE) {
-    dwb_comp_clean_autocompletion();
+    completion_clean_autocompletion();
   }
   dwb_focus_scroll(dwb.state.fview);
 
@@ -2475,7 +2526,7 @@ dwb_save_settings() {
   }
   for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
-    char *value = dwb_util_arg_to_char(&s->arg, s->type); 
+    char *value = util_arg_to_char(&s->arg, s->type); 
     g_key_file_set_value(keyfile, dwb.misc.profile, s->n.first, value ? value : "" );
 
     FREE(value);
@@ -2499,7 +2550,7 @@ dwb_save_files(gboolean end_session) {
 
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
-    dwb_session_save(NULL);
+    session_save(NULL);
   }
   return true;
 }
@@ -2581,7 +2632,7 @@ dwb_keymap_delete(GList *gl, KeyValue key) {
       break;
     }
   }
-  gl = g_list_sort(gl, (GCompareFunc)dwb_util_keymap_sort_second);
+  gl = g_list_sort(gl, (GCompareFunc)util_keymap_sort_second);
   return gl;
 }/*}}}*/
 
@@ -2639,7 +2690,7 @@ dwb_init_key_map() {
   }
 
   dwb.keymap = g_list_concat(dwb.keymap, dwb_get_scripts());
-  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)dwb_util_keymap_sort_second);
+  dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
 
   g_key_file_free(keyfile);
 }/*}}}*/
@@ -2683,7 +2734,7 @@ dwb_read_settings() {
       if (!strcmp(keys[i], DWB_SETTINGS[j].n.first)) {
         WebSettings *s = dwb_malloc(sizeof(WebSettings));
         *s = DWB_SETTINGS[j];
-        if ( (arg = dwb_util_char_to_arg(value, s->type)) ) {
+        if ( (arg = util_char_to_arg(value, s->type)) ) {
           s->arg = *arg;
         }
         g_hash_table_insert(dwb.settings, key, s);
@@ -2708,7 +2759,7 @@ dwb_init_settings() {
   dwb_read_settings();
   for (GList *l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
     WebSettings *s = l->data;
-    if (s->builtin) {
+    if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
       s->func(NULL, s);
     }
   }
@@ -2722,12 +2773,12 @@ dwb_init_scripts() {
 
   setlocale(LC_NUMERIC, "C");
   /* user scripts */
-  dwb_util_get_directory_content(&buffer, dwb.files.scriptdir);
+  util_get_directory_content(&buffer, dwb.files.scriptdir);
 
   /* systemscripts */
   char *dir = NULL;
-  if ( (dir = dwb_util_get_data_dir("scripts")) ) {
-    dwb_util_get_directory_content(&buffer, dir);
+  if ( (dir = util_get_data_dir("scripts")) ) {
+    util_get_directory_content(&buffer, dir);
     g_free(dir);
   }
   g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\");", 
@@ -2820,17 +2871,6 @@ dwb_init_gui() {
   dwb.gui.left = gtk_vbox_new(true, 0);
   dwb.gui.right = gtk_vbox_new(true, 1);
 
-
-#if 0
-  GtkWidget *web = webkit_web_view_new();
-  WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(web));
-  dwb.misc.global_ctx = webkit_web_frame_get_global_context(frame);
-  char *content;
-  g_file_get_contents("./script.js", &content, NULL, NULL);
-  JSStringRef script = JSStringCreateWithUTF8CString(content);
-  JSEvaluateScript(dwb.misc.global_ctx, script, JSContextGetGlobalObject(dwb.misc.global_ctx), NULL, 0, NULL);
-#endif 
-
   /* Paned */
   GtkWidget *paned_event = gtk_event_box_new(); 
   DWB_WIDGET_OVERRIDE_BACKGROUND(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
@@ -2863,7 +2903,7 @@ dwb_init_gui() {
 /* dwb_init_file_content {{{*/
 GList *
 dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
-  char *content = dwb_util_get_file_content(filename);
+  char *content = util_get_file_content(filename);
 
   if (content) {
     char **token = g_strsplit(content, "\n", 0);
@@ -2878,21 +2918,23 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
 }/*}}}*/
 
 static Navigation * 
-dwb_get_search_completion(const char *text) {
-  Navigation *n = dwb_navigation_new_from_line(text);
-
+dwb_get_search_completion_from_navigation(Navigation *n) {
   char *uri = n->second;
-  n->second = g_strdup(dwb_util_domain_from_uri(n->second));
+  n->second = g_strdup(util_domain_from_uri(n->second));
 
   FREE(uri);
-
   return n;
+}
+static Navigation * 
+dwb_get_search_completion(const char *text) {
+  Navigation *n = dwb_navigation_new_from_line(text);
+  return dwb_get_search_completion_from_navigation(n);
 }
 
 /* dwb_init_files() {{{*/
 static void
 dwb_init_files() {
-  char *path           = dwb_util_build_path();
+  char *path           = util_build_path();
   char *profile_path   = g_build_filename(path, dwb.misc.profile, NULL);
 
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
@@ -2952,7 +2994,7 @@ dwb_handle_signal(int s) {
   }
   else if (s == SIGSEGV) {
     fprintf(stderr, "Received SIGSEGV, trying to clean up.\n");
-    dwb_session_save(NULL);
+    session_save(NULL);
     exit(EXIT_FAILURE);
   }
 }
@@ -3050,9 +3092,10 @@ dwb_init() {
   dwb.misc.userscripts = NULL;
   dwb.misc.proxyuri = NULL;
   dwb.misc.scripts = NULL;
+  dwb.misc.synctimer = 0;
 
-  char *path = dwb_util_get_data_file(PLUGIN_FILE);
-  dwb.misc.pbbackground = dwb_util_get_file_content(path);
+  char *path = util_get_data_file(PLUGIN_FILE);
+  dwb.misc.pbbackground = util_get_file_content(path);
 
 
   dwb_init_key_map();
@@ -3067,17 +3110,17 @@ dwb_init() {
 
   if (dwb.state.layout & BOTTOM_STACK) {
     Arg a = { .n = dwb.state.layout };
-    dwb_com_set_orientation(NULL, &a);
+    commands_set_orientation(NULL, &a);
   }
-  if (restore && dwb_session_restore(restore));
+  if (restore && session_restore(restore));
   else if (dwb.misc.argc > 0) {
     for (int i=0; i<dwb.misc.argc; i++) {
       Arg a = { .p = dwb.misc.argv[i] };
-      dwb_add_view(&a, false);
+      view_add(&a, false);
     }
   }
   else {
-    dwb_add_view(NULL, false);
+    view_add(NULL, false);
   }
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
   g_signal_connect(VIEW(dwb.state.fview)->tablabel, "size-allocate", G_CALLBACK(dwb_tab_size_cb), NULL);
@@ -3106,7 +3149,7 @@ dwb_parse_command_line(const char *line) {
         m->map->func(&m, &m->map->arg);
       }
       else {
-        dwb_com_simple_command(m);
+        commands_simple_command(m);
       }
       m->map->arg = a;
       break;
@@ -3137,7 +3180,7 @@ dwb_init_fifo(int single) {
   FILE *ff;
 
   /* Files */
-  char *path = dwb_util_build_path();
+  char *path = util_build_path();
   dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
 
 
@@ -3211,7 +3254,7 @@ main(int argc, char *argv[]) {
     for (int i=1; i<argc; i++) {
       if (argv[i][0] == '-') {
         if (argv[i][1] == 'l') {
-          dwb_session_list();
+          session_list();
           argr--;
         }
         else if (argv[i][1] == 'p' && argv[i++]) {

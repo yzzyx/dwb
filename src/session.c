@@ -18,11 +18,11 @@
 
 #include "session.h"
 
-/* dwb_session_get_groups()                 return  char  ** (alloc){{{*/
+/* session_get_groups()                 return  char  ** (alloc){{{*/
 static char **
-dwb_session_get_groups() {
+session_get_groups() {
   char **groups = NULL;
-  char *content = dwb_util_get_file_content(dwb.files.session);
+  char *content = util_get_file_content(dwb.files.session);
   if (content) {
     groups = g_regex_split_simple("^g:", content, G_REGEX_MULTILINE, G_REGEX_MATCH_NOTEMPTY);
     g_free(content);
@@ -30,12 +30,12 @@ dwb_session_get_groups() {
   return groups;
 }/*}}}*/
 
-/* dwb_session_get_group(const char *)     return char* (alloc){{{*/
+/* session_get_group(const char *)     return char* (alloc){{{*/
 static char *
-dwb_session_get_group(const char *name) {
+session_get_group(const char *name) {
   char *content = NULL;
 
-  char **groups = dwb_session_get_groups();
+  char **groups = session_get_groups();
   if (groups) {
     int i=1;
     char *group = g_strconcat(name, "\n", NULL);
@@ -51,9 +51,9 @@ dwb_session_get_group(const char *name) {
   return content;
 }/*}}}*/
 
-/* dwb_session_load_webview(WebKitWebView *, char *, int *){{{*/
+/* session_load_webview(WebKitWebView *, char *, int *){{{*/
 static void
-dwb_session_load_webview(WebKitWebView *web, char *uri, int last) {
+session_load_webview(WebKitWebView *web, char *uri, int last) {
   if (last > 0) {
     for (int j=0; j<last; j++) {
       webkit_web_view_go_back(web);
@@ -64,12 +64,12 @@ dwb_session_load_webview(WebKitWebView *web, char *uri, int last) {
   }
 }/*}}}*/
 
-/* dwb_session_list {{{*/
+/* session_list {{{*/
 void
-dwb_session_list() {
-  char *path = dwb_util_build_path();
+session_list() {
+  char *path = util_build_path();
   dwb.files.session = g_build_filename(path, "session", NULL);
-  char **content = dwb_session_get_groups();
+  char **content = session_get_groups();
   int i=1;
   while (content[i]) {
     char **group = g_strsplit(content[i], "\n", -1);
@@ -82,10 +82,10 @@ dwb_session_list() {
   exit(EXIT_SUCCESS);
 }/*}}}*/
 
-/* dwb_session_restore(const char *name) {{{*/
+/* session_restore(const char *name) {{{*/
 gboolean
-dwb_session_restore(const char *name) {
-  char *group = dwb_session_get_group(name);
+session_restore(const char *name) {
+  char *group = session_get_group(name);
   if (!group) {
     return false;
   }
@@ -101,11 +101,11 @@ dwb_session_restore(const char *name) {
     if (line[0] && line[1] && line[2]) {
       int current = strtol(line[0], NULL, 10);
       if (current <= last) {
-        dwb_add_view(NULL, false);
+        view_add(NULL, false);
         web = CURRENT_WEBVIEW();
         bf_list = webkit_web_back_forward_list_new_with_web_view(web);
         if (lastweb) {
-          dwb_session_load_webview(lastweb, uri, last);
+          session_load_webview(lastweb, uri, last);
         }
         lastweb = web;
       }
@@ -116,14 +116,14 @@ dwb_session_restore(const char *name) {
       uri = g_strdup(line[1]);
     }
     if (i == length && lastweb)
-      dwb_session_load_webview(lastweb, uri, last);
+      session_load_webview(lastweb, uri, last);
     g_strfreev(line);
   }
   g_strfreev(lines);
   gtk_widget_show_all(dwb.gui.window);
 
   if (!dwb.state.views) 
-    dwb_add_view(NULL, false);
+    view_add(NULL, false);
 
   if (dwb.state.layout & MAXIMIZED && dwb.state.views) {
     gtk_widget_hide(dwb.gui.right);
@@ -137,9 +137,9 @@ dwb_session_restore(const char *name) {
   return true;
 }/*}}}*/
 
-/* dwb_session_save(const char *) {{{*/
+/* session_save(const char *) {{{*/
 gboolean  
-dwb_session_save(const char *name) {
+session_save(const char *name) {
   if (!name) {
     name = "default";
   }
@@ -157,7 +157,7 @@ dwb_session_save(const char *name) {
       }
     }
   }
-  char **groups = dwb_session_get_groups();
+  char **groups = session_get_groups();
   if (groups) {
     int i=1;
     char *group = g_strconcat(name,  "\n", NULL);
@@ -170,7 +170,7 @@ dwb_session_save(const char *name) {
     FREE(group);
     g_strfreev(groups);
   }
-  dwb_util_set_file_content(dwb.files.session, buffer->str);
+  util_set_file_content(dwb.files.session, buffer->str);
   g_string_free(buffer, true);
   return true;
 }/*}}}*/

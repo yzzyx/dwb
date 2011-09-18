@@ -1,4 +1,6 @@
 String.prototype.isInt = function() { return !isNaN(parseInt(this)); }
+String.prototype.isUpper = function() { return this == this.toUpperCase(); }
+String.prototype.isLower = function() { return this == this.toLowerCase(); }
 DwbHintObj = (function() {
   _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
   _font = "bold 10px monospace";
@@ -77,7 +79,13 @@ DwbHintObj = (function() {
         return regEx.test(this.hint.textContent);
       }
       else {
-        return this.element.textContent.toLowerCase().match(input);
+        var inArr = input.split(" ");
+        for (var i=0; i<inArr.length; i++) {
+          if (!this.element.textContent.toLowerCase().match(inArr[i].toLowerCase())) {
+            return false;
+          }
+        }
+        return true;
       }
     }
   };
@@ -113,7 +121,18 @@ DwbHintObj = (function() {
       this.hint.appendChild(content);
     }
     this.matchText = function(input) {
-      return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) == 0);
+      if (input.isUpper()) {
+        var inArr = input.split(" ");
+        var match = true;
+        for (var i=0; i<inArr.length; i++) {
+          if (!this.element.textContent.toUpperCase().match(inArr[i])) {
+            return false;
+          }
+        }
+        return true;
+      }
+      else 
+        return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) == 0);
     }
   }
 
@@ -240,9 +259,6 @@ DwbHintObj = (function() {
       __clear();
       __showHints();
     }
-    if (input) {
-      input = input.toLowerCase();
-    }
     if (_lastInput && (_lastInput.length > input.length)) {
       __clear();
       _lastInput = input;
@@ -251,12 +267,18 @@ DwbHintObj = (function() {
       return;
     }
     _lastInput = input;
-    if (_style == "number" && input) {
-      if (input[input.length-1].isInt()) {
-        input = input.match(/[0-9]+/g).join("");
+    if (input) {
+      if (_style == "number") {
+        if (input[input.length-1].isInt())
+          input = input.match(/[0-9]+/g).join("");
+        else 
+          input = input.match(/[^0-9]+/g).join("");
       }
-      else {
-        input = input.match(/[^0-9]+/g).join("");
+      else if (_style == "letter") {
+        if (input[input.length-1].isLower()) 
+          input = input.match(new RegExp("[" + _letterSeq.toLowerCase() + "]", "g")).join("");
+        else 
+          input = input.match(new RegExp("[^" + _letterSeq.toLowerCase() + "]", "g")).join("");
       }
     }
     for (var i=0; i<_activeArr.length; i++) {

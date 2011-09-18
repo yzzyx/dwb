@@ -20,42 +20,42 @@
 #include "html.h"
 #include "plugins.h"
 
-static void dwb_view_ssl_state(GList *);
+static void view_ssl_state(GList *);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
 #endif
 
 
 /* CALLBACKS */
-static gboolean dwb_view_caret_release_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other);
-static gboolean dwb_view_caret_motion_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other);
-static gboolean dwb_web_view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
-static gboolean dwb_web_view_close_web_view_cb(WebKitWebView *, GList *);
-static gboolean dwb_web_view_console_message_cb(WebKitWebView *, char *, int , char *, GList *);
-static WebKitWebView * dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *);
-static gboolean dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *);
-static WebKitWebView * dwb_web_view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList *);
-static void dwb_web_view_hovering_over_link_cb(WebKitWebView *, char *, char *, GList *);
-static gboolean dwb_web_view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, char *, WebKitWebPolicyDecision *, GList *);
-static gboolean dwb_web_view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
-static gboolean dwb_web_view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
-static void dwb_web_view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
-/* static void dwb_web_view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *); */
-static gboolean dwb_web_view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
-static gboolean dwb_web_view_value_changed_cb(GtkAdjustment *, GList *);
-static void dwb_web_view_title_cb(WebKitWebView *, GParamSpec *, GList *);
-static void dwb_web_view_uri_cb(WebKitWebView *, GParamSpec *, GList *);
-static void dwb_web_view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
-static gboolean dwb_view_entry_keyrelease_cb(GtkWidget *, GdkEventKey *);
-static gboolean dwb_view_entry_keypress_cb(GtkWidget *, GdkEventKey *);
-static gboolean dwb_view_entry_activate_cb(GtkEntry *, GList *);
-static gboolean dwb_view_tab_button_press_cb(GtkWidget *, GdkEventButton *, GList *);
+static gboolean view_caret_release_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other);
+static gboolean view_caret_motion_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other);
+static gboolean view_button_press_cb(WebKitWebView *, GdkEventButton *, GList *);
+static gboolean view_close_web_view_cb(WebKitWebView *, GList *);
+static gboolean view_console_message_cb(WebKitWebView *, char *, int , char *, GList *);
+static WebKitWebView * view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *);
+static gboolean view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *);
+static WebKitWebView * view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList *);
+static void view_hovering_over_link_cb(WebKitWebView *, char *, char *, GList *);
+static gboolean view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, char *, WebKitWebPolicyDecision *, GList *);
+static gboolean view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
+static gboolean view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
+static void view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
+/* static void view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *); */
+static gboolean view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
+static gboolean view_value_changed_cb(GtkAdjustment *, GList *);
+static void view_title_cb(WebKitWebView *, GParamSpec *, GList *);
+static void view_uri_cb(WebKitWebView *, GParamSpec *, GList *);
+static void view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
+static gboolean view_entry_keyrelease_cb(GtkWidget *, GdkEventKey *);
+static gboolean view_entry_keypress_cb(GtkWidget *, GdkEventKey *);
+static gboolean view_entry_activate_cb(GtkEntry *, GList *);
+static gboolean view_tab_button_press_cb(GtkWidget *, GdkEventButton *, GList *);
 
 /* WEB_VIEW_CALL_BACKS {{{*/
 
-/* dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
+/* view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
 void 
-dwb_view_link_select(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
+view_link_select(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
   WebKitDOMRange *range = webkit_dom_document_caret_range_from_point(doc, e->x, e->y);
   WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(webkit_dom_document_get_default_view(doc));
@@ -71,19 +71,19 @@ dwb_view_link_select(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *othe
     webkit_dom_dom_selection_set_base_and_extent(selection, thisnode, end, node, start, NULL);
 }
 static gboolean
-dwb_view_caret_motion_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
-  dwb_view_link_select(web, e, other);
+view_caret_motion_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
+  view_link_select(web, e, other);
   return false;
 }
 static gboolean
-dwb_view_caret_release_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
-  dwb_view_link_select(web, e, other);
-  g_signal_handlers_disconnect_by_func(web, dwb_view_caret_release_cb, other);
-  g_signal_handlers_disconnect_by_func(web, dwb_view_caret_motion_cb, other);
+view_caret_release_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
+  view_link_select(web, e, other);
+  g_signal_handlers_disconnect_by_func(web, view_caret_release_cb, other);
+  g_signal_handlers_disconnect_by_func(web, view_caret_motion_cb, other);
   return false;
 }
 static gboolean
-dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
+view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
   WebKitHitTestResultContext context;
   g_object_get(result, "context", &context, NULL);
@@ -98,8 +98,8 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(webkit_dom_document_get_default_view(doc));
     webkit_dom_dom_selection_remove_all_ranges(selection);
     webkit_dom_dom_selection_add_range(selection, range);
-    g_signal_connect(web, "button-release-event", G_CALLBACK(dwb_view_caret_release_cb), range);
-    g_signal_connect(web, "motion-notify-event", G_CALLBACK(dwb_view_caret_motion_cb), range);
+    g_signal_connect(web, "button-release-event", G_CALLBACK(view_caret_release_cb), range);
+    g_signal_connect(web, "motion-notify-event", G_CALLBACK(view_caret_motion_cb), range);
     ret = true; 
   }
   else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
@@ -111,7 +111,7 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       ret = true;
     }
     else if (e->button == 2) {
-      dwb_add_view(&a, dwb.state.background_tabs);
+      view_add(&a, dwb.state.background_tabs);
       ret = true;
     }
     FREE(clipboard);
@@ -132,9 +132,9 @@ dwb_web_view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
   return ret;
 }/*}}}*/
-/* dwb_web_view_button_press_cb {{{*/
+/* view_button_press_cb {{{*/
 static gboolean
-dwb_web_view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
+view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   char *uri =  NULL;
   WebKitHitTestResultContext context;
 
@@ -144,23 +144,23 @@ dwb_web_view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
     g_object_get(result, "link-uri", &uri, NULL);
     if (e->button == 2) {
       Arg a = { .p = uri, .b = true };
-      dwb_add_view(&a, dwb.state.background_tabs);
+      view_add(&a, dwb.state.background_tabs);
       return true;
     }
   }
   return false;
 }/*}}}*/
 
-/* dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/
+/* view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/
 static gboolean 
-dwb_web_view_close_web_view_cb(WebKitWebView *web, GList *gl) {
-  dwb_view_remove(gl);
+view_close_web_view_cb(WebKitWebView *web, GList *gl) {
+  view_remove(gl);
   return true;
 }/*}}}*/
 
-/* dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
+/* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
 static gboolean 
-dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
+view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
   if (gl == dwb.state.fview && !(strncmp(message, "_dwb_input_mode_", 16))) {
     dwb_insert_mode(NULL);
   }
@@ -174,17 +174,17 @@ dwb_web_view_console_message_cb(WebKitWebView *web, char *message, int line, cha
 }/*}}}*/
 
 GtkWidget * 
-dwb_web_view_create_plugin_widget_cb(WebKitWebView *web, char *mimetype, char *uri, GHashTable *param, GList *gl) {
+view_create_plugin_widget_cb(WebKitWebView *web, char *mimetype, char *uri, GHashTable *param, GList *gl) {
   PRINT_DEBUG("mimetype: %s uri: %s", mimetype, uri);
   VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
   return NULL;
 }
 
-/* dwb_web_view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
+/* view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
 static WebKitWebView * 
-dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
+view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
   if (dwb.misc.tabbed_browsing) {
-    GList *gl = dwb_add_view(NULL, false); 
+    GList *gl = view_add(NULL, false); 
     return WEBVIEW(gl);
   }
   else {
@@ -193,16 +193,16 @@ dwb_web_view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList
   }
 }/*}}}*/
 
-/* dwb_web_view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
+/* view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
 static gboolean 
-dwb_web_view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
-  dwb_dl_get_path(gl, download);
+view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
+  download_get_path(gl, download);
   return true;
 }/*}}}*/
 
-/* dwb_web_view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList * *){{{*/
+/* view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList * *){{{*/
 static WebKitWebView * 
-dwb_web_view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList *gl) {
+view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList *gl) {
   GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   GtkWidget *webview = webkit_web_view_new();
   
@@ -212,9 +212,9 @@ dwb_web_view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *w
   return WEBKIT_WEB_VIEW(webview);
 }/*}}}*/
 
-/* dwb_web_view_hovering_over_link_cb(WebKitWebView *, char *title, char *uri, GList *) {{{*/
+/* view_hovering_over_link_cb(WebKitWebView *, char *title, char *uri, GList *) {{{*/
 static void 
-dwb_web_view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl) {
+view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl) {
   View *v = VIEW(gl);
   if (uri) {
     VIEW(gl)->status->hover_uri = g_strdup(uri);
@@ -228,9 +228,9 @@ dwb_web_view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, G
 
 }/*}}}*/
 
-/* dwb_web_view_mime_type_policy_cb {{{*/
+/* view_mime_type_policy_cb {{{*/
 static gboolean 
-dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
+view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
   View *v = gl->data;
 
   /* Prevents from segfault if proxy is set */
@@ -247,24 +247,25 @@ dwb_web_view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebK
   return  false;
 }/*}}}*/
 
-/* dwb_web_view_navigation_policy_cb {{{*/
+/* view_navigation_policy_cb {{{*/
 static gboolean 
-dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
+view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
   dwb_clean_load_end(gl);
+
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
   if (g_str_has_prefix(uri, "dwb://")) {
-    dwb_html_load(gl, uri);
+    html_load(gl, uri);
     return true;
   }
   Arg a = { .p = uri, .b = true };
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
     if (dwb.state.nv == OPEN_NEW_VIEW) {
       dwb.state.nv = OPEN_NORMAL;
-      dwb_add_view(&a, dwb.state.background_tabs); 
+      view_add(&a, dwb.state.background_tabs); 
     }
     else {
       dwb_new_window(&a);
@@ -274,11 +275,18 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   }
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
   const char *path;
+  GError *error = NULL;
 
-  if (reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED && (path = dwb_check_directory(uri))) {
-    dwb_load_uri(NULL, &a);
+  if (reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED && (path = dwb_check_directory(uri, &error))) {
+    if (error == NULL) {
+      dwb_load_uri(gl, &a);
+    }
+    else {
+      dwb_set_error_message(gl, error->message);
+      g_clear_error(&error);
+    }
     webkit_web_policy_decision_ignore(policy);
-    return true;
+    return false;
   }
   else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
     if (dwb.state.mode == INSERT_MODE) {
@@ -313,17 +321,17 @@ dwb_web_view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, Web
   return ret;
 }/*}}}*/
 
-/* dwb_web_view_new_window_policy_cb {{{*/
+/* view_new_window_policy_cb {{{*/
 static gboolean 
-dwb_web_view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame,
+view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
   return false;
 }/*}}}*/
 
-/* dwb_web_view_resource_request_cb{{{*/
+/* view_resource_request_cb{{{*/
 static void 
-dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
+view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
   SoupMessage *msg = webkit_network_request_get_message(request);
@@ -344,37 +352,29 @@ dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
   }
 }/*}}}*/
 
-#if 0
-/* dwb_web_view_window_object_cleared_cb {{{*/
-static void 
-dwb_web_view_window_object_cleared_cb(WebKitWebView *web, WebKitWebFrame *frame, 
-    JSGlobalContextRef *context, JSObjectRef *object, GList *gl) {
-}/*}}}*/
-#endif
-
-/* dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
+/* view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
 static gboolean
-dwb_web_view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
+view_scroll_cb(GtkWidget *w, GdkEventScroll *e, GList *gl) {
   dwb_update_status_text(gl, NULL);
   if (GET_BOOL("enable-frame-flattening")) {
     Arg a = { .n = e->direction };
-    dwb_com_scroll(NULL, &a);
+    commands_scroll(NULL, &a);
     return true;
   }
   return false;
 }/*}}}*/
 
-/* dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {{{ */
+/* view_value_changed_cb(GtkAdjustment *a, GList *gl) {{{ */
 static gboolean
-dwb_web_view_value_changed_cb(GtkAdjustment *a, GList *gl) {
+view_value_changed_cb(GtkAdjustment *a, GList *gl) {
   dwb_update_status_text(gl, a);
   return false;
 }/* }}} */
 
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
-/* dwb_web_view_icon_loaded(GtkAdjustment *a, GList *gl) {{{ */
+/* view_icon_loaded(GtkAdjustment *a, GList *gl) {{{ */
 void 
-dwb_web_view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
+view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
   View *v = VIEW(gl);
   GdkPixbuf *pb = webkit_web_view_get_icon_pixbuf(web);
   GdkPixbuf *old, *rescale;
@@ -387,21 +387,21 @@ dwb_web_view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
 }/* }}} */
 #endif
 
-/* dwb_web_view_title_cb {{{*/
+/* view_title_cb {{{*/
 static void 
-dwb_web_view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
+view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
 
-/* dwb_web_view_title_cb {{{*/
+/* view_title_cb {{{*/
 static void 
-dwb_web_view_uri_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
+view_uri_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_uri(gl);
 }/*}}}*/
 
-/* dwb_web_view_progress_cb {{{*/
+/* view_progress_cb {{{*/
 static void 
-dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
+view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   View *v = gl->data;
   v->status->progress = webkit_web_view_get_progress(web) * 100;
   if (v->status->progress == 100) {
@@ -411,7 +411,7 @@ dwb_web_view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 }/*}}}*/
 
 static void
-dwb_view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
+view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
   GtkAction *a = NULL;
   const char *name;
   PRINT_DEBUG("hover_uri: %s", VIEW(gl)->status->hover_uri);
@@ -439,26 +439,26 @@ dwb_view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
 }
 
 static void 
-dwb_web_view_populate_popup_cb(WebKitWebView *web, GtkMenu *menu, GList *gl) {
+view_populate_popup_cb(WebKitWebView *web, GtkMenu *menu, GList *gl) {
   GList *items = gtk_container_get_children(GTK_CONTAINER(menu));
   for (GList *l = items; l; l=l->next) {
-    g_signal_connect(l->data, "activate", G_CALLBACK(dwb_view_popup_activate_cb), gl);
+    g_signal_connect(l->data, "activate", G_CALLBACK(view_popup_activate_cb), gl);
   }
 }
 /* window-object-cleared is emmited in receivedFirstData which emits load-status
  * commited, so we don't connect to window-object-cleared but to
  * load_status_after instead */
 static void 
-dwb_web_view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
+view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   if (status == WEBKIT_LOAD_COMMITTED) {
     dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
   }
 }
-/* dwb_web_view_load_status_cb {{{*/
+/* view_load_status_cb {{{*/
 
 static void 
-dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
+view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   View *v = VIEW(gl);
   char *host =  NULL;
@@ -471,14 +471,14 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
       }
       if (v->status->pb_status & PLUGIN_STATUS_ENABLED) 
-        dwb_plugin_blocker_connect(gl);
+        plugins_connect(gl);
       v->status->ssl = SSL_NONE;
       v->status->pb_status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       break;
     case WEBKIT_LOAD_COMMITTED: 
-      dwb_view_ssl_state(gl);
+      view_ssl_state(gl);
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
           && (((host = dwb_get_host(web)) 
           && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
@@ -492,15 +492,15 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
           && (dwb_get_allowed(dwb.files.plugins_allow, host) || dwb_get_allowed(dwb.files.plugins_allow, uri)
             || g_list_find_custom(dwb.fc.tmp_plugins, host, (GCompareFunc)strcmp) || g_list_find_custom(dwb.fc.tmp_plugins, uri, (GCompareFunc)strcmp) )
             )) {
-        dwb_plugin_blocker_disconnect(gl);
+        plugins_disconnect(gl);
       }
       FREE(host);
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
       /* TODO sqlite */
-      if (!dwb.misc.private_browsing && dwb_prepend_navigation(gl, &dwb.fc.history))
-        dwb_util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
+      if (!dwb.misc.private_browsing && dwb_prepend_navigation(gl, &dwb.fc.history) && dwb.misc.synctimer <= 0)
+        util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);
@@ -510,21 +510,21 @@ dwb_web_view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   }
 }/*}}}*/
 
-/* dwb_web_view_load_error_cb {{{*/
+/* view_load_error_cb {{{*/
 static gboolean 
-dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError *weberror, GList *gl) {
+view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError *weberror, GList *gl) {
   if (weberror->code == WEBKIT_NETWORK_ERROR_CANCELLED 
       || weberror->code == WEBKIT_PLUGIN_ERROR_WILL_HANDLE_LOAD 
       || weberror->code == WEBKIT_POLICY_ERROR_FRAME_LOAD_INTERRUPTED_BY_POLICY_CHANGE) 
     return false;
 
 
-  char *errorfile = dwb_util_get_data_file(ERROR_FILE);
+  char *errorfile = util_get_data_file(ERROR_FILE);
   if (errorfile == NULL) 
     return false;
 
   char *site, *search;
-  char *content = dwb_util_get_file_content(errorfile);
+  char *content = util_get_file_content(errorfile);
   char *tmp = g_strdup(uri);
   char *res = tmp;
   if ( (tmp = strstr(tmp, "://")) != NULL) 
@@ -541,7 +541,7 @@ dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri,
   else 
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
 
-  webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(web), site, "Error", uri);
+  webkit_web_frame_load_alternate_string(frame, site, "Error", uri);
 
   g_free(site);
   g_free(content);
@@ -554,7 +554,7 @@ dwb_web_view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri,
 /* Entry */
 /* dwb_entry_keyrelease_cb {{{*/
 static gboolean 
-dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
+view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
   if (dwb.state.mode == HINT_MODE) {
     if (e->keyval == GDK_KEY_BackSpace) {
       return dwb_update_hints(e);
@@ -568,7 +568,7 @@ dwb_view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
 
 /* dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {{{*/
 static gboolean 
-dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
+view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
   gboolean ret = false;
   gboolean complete = (mode == DOWNLOAD_GET_PATH || mode & COMPLETE_PATH);
@@ -589,21 +589,21 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   }
   else if (!e->is_modifier && complete) {
     if (DWB_TAB_KEY(e)) {
-      dwb_comp_complete_path(e->state & GDK_SHIFT_MASK);
+      completion_complete_path(e->state & GDK_SHIFT_MASK);
       return true;
     }
     else {
-      dwb_comp_clean_path_completion();
+      completion_clean_path_completion();
     }
   }
   else if (mode & COMPLETION_MODE && !DWB_TAB_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
-    dwb_comp_clean_completion();
+    completion_clean_completion();
   }
   else if (mode == FIND_MODE) {
     return false;
   }
   else if (DWB_TAB_KEY(e)) {
-    dwb_comp_complete(dwb_eval_completion_type(), e->state & GDK_SHIFT_MASK);
+    completion_complete(dwb_eval_completion_type(), e->state & GDK_SHIFT_MASK);
     return true;
   }
   if (dwb_eval_editing_key(e)) {
@@ -614,7 +614,7 @@ dwb_view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 static gboolean 
-dwb_view_entry_activate_cb(GtkEntry* entry, GList *gl) {
+view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   Mode mode = dwb.state.mode;
 
   if (mode == HINT_MODE) {
@@ -640,10 +640,10 @@ dwb_view_entry_activate_cb(GtkEntry* entry, GList *gl) {
     dwb_parse_command_line(GET_TEXT());
   }
   else if (mode == DOWNLOAD_GET_PATH) {
-    dwb_dl_start();
+    download_start();
   }
   else if (mode == SAVE_SESSION) {
-    dwb_session_save(GET_TEXT());
+    session_save(GET_TEXT());
     dwb_end();
   }
   else {
@@ -657,9 +657,9 @@ dwb_view_entry_activate_cb(GtkEntry* entry, GList *gl) {
 }/*}}}*/
 /*}}}*/
 
-/* dwb_view_tab_button_press_cb(GtkWidget, GdkEventButton* , GList * ){{{*/
+/* view_tab_button_press_cb(GtkWidget, GdkEventButton* , GList * ){{{*/
 static gboolean
-dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
+view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
   if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
     Arg a = { .p = gl };
     if ((dwb.state.layout & MAXIMIZED) ) {
@@ -668,12 +668,12 @@ dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) 
     else {
       dwb_unfocus();
       dwb_focus(gl);
-      dwb_view_push_master(&a);
+      view_push_master(&a);
     }
     return true;
   }
   else if (e->button == 3 && e->type == GDK_BUTTON_PRESS) {
-    dwb_view_remove(gl);
+    view_remove(gl);
     return true;
   }
   return false;
@@ -681,9 +681,9 @@ dwb_view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) 
 
 /* DWB_WEB_VIEW {{{*/
 
-/* dwb_web_view_add_history_item(GList *gl) {{{*/
+/* view_add_history_item(GList *gl) {{{*/
 void 
-dwb_web_view_add_history_item(GList *gl) {
+view_add_history_item(GList *gl) {
   WebKitWebView *web = WEBVIEW(gl);
   const char *uri = webkit_web_view_get_uri(web);
   const char *title = webkit_web_view_get_title(web);
@@ -692,9 +692,9 @@ dwb_web_view_add_history_item(GList *gl) {
   webkit_web_back_forward_list_add_item(bl, hitem);
 }/*}}}*/
 
-/* dwb_view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
+/* view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
-dwb_view_modify_style(View *v, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd) {
+view_modify_style(View *v, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd) {
   if (bg) {
     DWB_WIDGET_OVERRIDE_BACKGROUND(v->statusbox, GTK_STATE_NORMAL, bg);
     DWB_WIDGET_OVERRIDE_BASE(v->entry, GTK_STATE_NORMAL, bg);
@@ -716,85 +716,84 @@ dwb_view_modify_style(View *v, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbC
   }
 } /*}}}*/
 
-/* dwb_view_set_active_style (GList *) {{{*/
+/* view_set_active_style (GList *) {{{*/
 void 
-dwb_view_set_active_style(View *v) {
-  dwb_view_modify_style(v, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_active);
+view_set_active_style(View *v) {
+  view_modify_style(v, &dwb.color.active_fg, &dwb.color.active_bg, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_active);
 }/*}}}*/
 
-/* dwb_view_set_normal_style {{{*/
+/* view_set_normal_style {{{*/
 void 
-dwb_view_set_normal_style(View *v) {
-  dwb_view_modify_style(v, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_inactive);
+view_set_normal_style(View *v) {
+  view_modify_style(v, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_inactive);
 }/*}}}*/
 
 static void 
-dwb_web_view_init_settings(GList *gl) {
+view_init_settings(GList *gl) {
   View *v = gl->data;
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
   /* apply settings */
   v->setting = dwb_get_default_settings();
   for (GList *l = g_hash_table_get_values(v->setting); l; l=l->next) {
     WebSettings *s = l->data;
-    if (!s->builtin && !s->global) {
+    if (s->apply & SETTING_PER_VIEW) {
       s->func(gl, s);
     }
   }
 }
 
-/* dwb_web_view_init_signals(View *v) {{{*/
+/* view_init_signals(View *v) {{{*/
 static void
-dwb_web_view_init_signals(GList *gl) {
+view_init_signals(GList *gl) {
   View *v = gl->data;
   GtkAdjustment *a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
-  v->status->signals[SIG_BUTTON_PRESS]          = g_signal_connect(v->web, "button-press-event",                    G_CALLBACK(dwb_web_view_button_press_cb), gl);
-  v->status->signals[SIG_BUTTON_RELEASE]        = g_signal_connect(v->web, "button-release-event",                  G_CALLBACK(dwb_web_view_button_release_cb), gl);
-  v->status->signals[SIG_CLOSE_WEB_VIEW]        = g_signal_connect(v->web, "close-web-view",                        G_CALLBACK(dwb_web_view_close_web_view_cb), gl);
-  v->status->signals[SIG_CONSOLE_MESSAGE]       = g_signal_connect(v->web, "console-message",                       G_CALLBACK(dwb_web_view_console_message_cb), gl);
-  v->status->signals[SIG_CREATE_WEB_VIEW]       = g_signal_connect(v->web, "create-web-view",                       G_CALLBACK(dwb_web_view_create_web_view_cb), gl);
-  v->status->signals[SIG_DOWNLOAD_REQUESTED]    = g_signal_connect(v->web, "download-requested",                    G_CALLBACK(dwb_web_view_download_requested_cb), gl);
-  v->status->signals[SIG_HOVERING_OVER_LINK]    = g_signal_connect(v->web, "hovering-over-link",                    G_CALLBACK(dwb_web_view_hovering_over_link_cb), gl);
-  v->status->signals[SIG_MIME_TYPE]             = g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(dwb_web_view_mime_type_policy_cb), gl);
-  v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(dwb_web_view_navigation_policy_cb), gl);
-  v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(dwb_web_view_new_window_policy_cb), gl);
-  v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(dwb_web_view_resource_request_cb), gl);
-  /* v->status->signals[SIG_WINDOW_OBJECT]         = g_signal_connect(v->web, "window-object-cleared",                 G_CALLBACK(dwb_web_view_window_object_cleared_cb), gl); */
+  v->status->signals[SIG_BUTTON_PRESS]          = g_signal_connect(v->web, "button-press-event",                    G_CALLBACK(view_button_press_cb), gl);
+  v->status->signals[SIG_BUTTON_RELEASE]        = g_signal_connect(v->web, "button-release-event",                  G_CALLBACK(view_button_release_cb), gl);
+  v->status->signals[SIG_CLOSE_WEB_VIEW]        = g_signal_connect(v->web, "close-web-view",                        G_CALLBACK(view_close_web_view_cb), gl);
+  v->status->signals[SIG_CONSOLE_MESSAGE]       = g_signal_connect(v->web, "console-message",                       G_CALLBACK(view_console_message_cb), gl);
+  v->status->signals[SIG_CREATE_WEB_VIEW]       = g_signal_connect(v->web, "create-web-view",                       G_CALLBACK(view_create_web_view_cb), gl);
+  v->status->signals[SIG_DOWNLOAD_REQUESTED]    = g_signal_connect(v->web, "download-requested",                    G_CALLBACK(view_download_requested_cb), gl);
+  v->status->signals[SIG_HOVERING_OVER_LINK]    = g_signal_connect(v->web, "hovering-over-link",                    G_CALLBACK(view_hovering_over_link_cb), gl);
+  v->status->signals[SIG_MIME_TYPE]             = g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(view_mime_type_policy_cb), gl);
+  v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
+  v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
+  v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
 
-  v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(dwb_web_view_load_status_cb), gl);
-  v->status->signals[SIG_LOAD_ERROR]            = g_signal_connect(v->web, "load-error",                            G_CALLBACK(dwb_web_view_load_error_cb), gl);
-  v->status->signals[SIG_LOAD_STATUS_AFTER]     = g_signal_connect_after(v->web, "notify::load-status",             G_CALLBACK(dwb_web_view_load_status_after_cb), gl);
-  v->status->signals[SIG_POPULATE_POPUP]        = g_signal_connect(v->web, "populate-popup",                        G_CALLBACK(dwb_web_view_populate_popup_cb), gl);
-  v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                      G_CALLBACK(dwb_web_view_progress_cb), gl);
-  v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(dwb_web_view_title_cb), gl);
-  v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(dwb_web_view_uri_cb), gl);
-  v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(dwb_web_view_scroll_cb), gl);
-  v->status->signals[SIG_CREATE_PLUGIN]         = g_signal_connect(v->web,      "create-plugin-widget",                  G_CALLBACK(dwb_web_view_create_plugin_widget_cb), gl);
-  v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(dwb_web_view_value_changed_cb), gl);
+  v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(view_load_status_cb), gl);
+  v->status->signals[SIG_LOAD_ERROR]            = g_signal_connect(v->web, "load-error",                            G_CALLBACK(view_load_error_cb), gl);
+  v->status->signals[SIG_LOAD_STATUS_AFTER]     = g_signal_connect_after(v->web, "notify::load-status",             G_CALLBACK(view_load_status_after_cb), gl);
+  v->status->signals[SIG_POPULATE_POPUP]        = g_signal_connect(v->web, "populate-popup",                        G_CALLBACK(view_populate_popup_cb), gl);
+  v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                      G_CALLBACK(view_progress_cb), gl);
+  v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(view_title_cb), gl);
+  v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(view_uri_cb), gl);
+  v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(view_scroll_cb), gl);
+  v->status->signals[SIG_CREATE_PLUGIN]         = g_signal_connect(v->web,      "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
+  v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(view_value_changed_cb), gl);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
-  v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(dwb_web_view_icon_loaded), gl);
+  v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);
 #endif
 
-  v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(dwb_view_entry_keypress_cb), NULL);
-  v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(dwb_view_entry_keyrelease_cb), NULL);
-  v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(dwb_view_entry_activate_cb), gl);
+  v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(view_entry_keypress_cb), NULL);
+  v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(view_entry_keyrelease_cb), NULL);
+  v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl);
 
-  v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(dwb_view_tab_button_press_cb), gl);
+  v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);
 
   /* WebInspector */
   WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(v->web));
-  g_signal_connect(inspector, "inspect-web-view", G_CALLBACK(dwb_web_view_inspect_web_view_cb), gl);
+  g_signal_connect(inspector, "inspect-web-view", G_CALLBACK(view_inspect_web_view_cb), gl);
 } /*}}}*/
 
 void 
-dwb_view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
+view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
   gtk_widget_set_size_request(v->entry, -1, rect->height);
-  g_signal_handlers_disconnect_by_func(entry, dwb_view_entry_size_allocate_cb, v);
+  g_signal_handlers_disconnect_by_func(entry, view_entry_size_allocate_cb, v);
 }
 
 
-/* dwb_view_create_web_view(View *v)         return: GList * {{{*/
+/* view_create_web_view(View *v)         return: GList * {{{*/
 static View * 
-dwb_view_create_web_view() {
+view_create_web_view() {
   View *v = g_malloc(sizeof(View));
 
   ViewStatus *status = dwb_malloc(sizeof(ViewStatus));
@@ -918,14 +917,14 @@ dwb_view_create_web_view() {
   gtk_widget_show(v->bottombox);
   gtk_widget_show_all(v->scroll);
   gtk_widget_show_all(v->tabevent);
-  g_signal_connect(v->bottombox, "size-allocate", G_CALLBACK(dwb_view_entry_size_allocate_cb), v);
+  g_signal_connect(v->bottombox, "size-allocate", G_CALLBACK(view_entry_size_allocate_cb), v);
 
   return v;
 } /*}}}*/
 
-/* dwb_view_push_master (Arg *) {{{*/
+/* view_push_master (Arg *) {{{*/
 gboolean 
-dwb_view_push_master(Arg *arg) {
+view_push_master(Arg *arg) {
   GList *gl = NULL, *l = NULL;
   View *old = NULL, *new;
   if (!dwb.state.views->next) {
@@ -940,7 +939,7 @@ dwb_view_push_master(Arg *arg) {
       return false;
     }
     CLEAR_COMMAND_TEXT(dwb.state.views);
-    dwb_view_set_normal_style(CURRENT_VIEW());
+    view_set_normal_style(CURRENT_VIEW());
   }
   else {
     gl = dwb.state.fview;
@@ -978,9 +977,9 @@ dwb_view_push_master(Arg *arg) {
   return true;
 }/*}}}*/
 
-/* dwb_view_remove (void) {{{*/
+/* view_remove (void) {{{*/
 void
-dwb_view_remove(GList *g) {
+view_remove(GList *g) {
   GList *gl = NULL;
   if (!dwb.state.views->next) {
     return;
@@ -1051,9 +1050,9 @@ dwb_view_remove(GList *g) {
   dwb_update_layout(false);
 }/*}}}*/
 
-/* dwb_view_ssl_state (GList *gl) {{{*/
+/* view_ssl_state (GList *gl) {{{*/
 static void
-dwb_view_ssl_state(GList *gl) {
+view_ssl_state(GList *gl) {
   View *v = VIEW(gl);
   SslState ssl = SSL_NONE;
 
@@ -1074,12 +1073,12 @@ dwb_view_ssl_state(GList *gl) {
 }/*}}}*/
 
 
-/* dwb_add_view(Arg *arg)               return: View *{{{*/
+/* view_add(Arg *arg)               return: View *{{{*/
 GList *  
-dwb_add_view(Arg *arg, gboolean background) {
+view_add(Arg *arg, gboolean background) {
   GList *ret = NULL;
 
-  View *v = dwb_view_create_web_view();
+  View *v = view_create_web_view();
   if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
     PRINT_DEBUG("position :%d", p);
@@ -1090,7 +1089,7 @@ dwb_add_view(Arg *arg, gboolean background) {
     ret = dwb.state.fview->next;
 
     if (background) {
-      dwb_view_set_normal_style(v);
+      view_set_normal_style(v);
       gtk_widget_hide(v->vbox);
     }
     else {
@@ -1121,8 +1120,8 @@ dwb_add_view(Arg *arg, gboolean background) {
 
 
 
-  dwb_web_view_init_signals(ret);
-  dwb_web_view_init_settings(ret);
+  view_init_signals(ret);
+  view_init_settings(ret);
 
   dwb_update_layout(background);
   if (arg && arg->p) {
