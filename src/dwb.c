@@ -48,7 +48,7 @@ static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_follow_selection(void);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
-static gboolean dwb_sync_files(gpointer);
+static gboolean dwb_sync_history(gpointer);
 
 
 static void dwb_clean_buffer(GList *);
@@ -648,7 +648,7 @@ dwb_set_sync_interval(GList *gl, WebSettings *s) {
   }
 
   if (s->arg.i > 0) {
-    dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_files, NULL);
+    dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_history, NULL);
   }
 }/*}}}*/
 
@@ -979,9 +979,9 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
-/* dwb_sync_files {{{*/
+/* dwb_sync_history {{{*/
 static gboolean
-dwb_sync_files(gpointer data) {
+dwb_sync_history(gpointer data) {
   GString *buffer = g_string_new(NULL);
   for (GList *gl = dwb.fc.history; gl; gl=gl->next) {
     Navigation *n = gl->data;
@@ -2547,6 +2547,9 @@ gboolean
 dwb_save_files(gboolean end_session) {
   dwb_save_keys();
   dwb_save_settings();
+  if (dwb.misc.synctimer > 0) {
+    dwb_sync_history(NULL);
+  }
 
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
