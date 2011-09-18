@@ -326,6 +326,18 @@ static void
 dwb_web_view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
+  SoupMessage *msg = webkit_network_request_get_message(request);
+  GTlsCertificate *cert = NULL;
+  GTlsCertificateFlags flags = 0;
+  soup_message_get_https_status(msg, &cert, &flags);
+  if (cert)
+    puts("cert");
+
+  //if (request) {
+  //  SoupMessage *msg1 = webkit_network_response_get_message(response);
+  //  printf("response: %p\n", msg1);
+  //}
+
   if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
     webkit_network_request_set_uri(request, "about:blank");
     return;
