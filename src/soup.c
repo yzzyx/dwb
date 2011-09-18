@@ -111,9 +111,32 @@ dwb_soup_init_session_features() {
   }
   g_object_set(dwb.misc.soupsession, SOUP_SESSION_SSL_STRICT, GET_BOOL("ssl-strict"), NULL);
 }
+#if 0
+void
+got_headers_cb(SoupMessage *msg) {
+  SoupURI *soupuri = soup_message_get_uri(msg);
+  char *uri = soup_uri_to_string(soupuri, false);
+  if (g_str_has_prefix(uri, "https://")) {
+    GTlsCertificate *cert = NULL;
+    GTlsCertificateFlags flags;
+    soup_message_get_https_status(msg, &cert, &flags);
+    g_object_set_data(G_OBJECT(msg), "dwb_ssl_state", "blub");
+  }
+}
+void 
+request_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
+  g_signal_connect(msg, "got-headers", G_CALLBACK(got_headers_cb), NULL);
+  SoupURI *uri = soup_message_get_uri(msg);
+  if (uri)
+    puts(soup_uri_to_string(uri, false));
+}
+#endif
 void 
 dwb_soup_init() {
   dwb.misc.soupsession = webkit_get_default_session();
+#if 0
+  g_signal_connect(dwb.misc.soupsession, "request-started", G_CALLBACK(request_cb), NULL);
+#endif
   dwb_soup_init_proxy();
   dwb_soup_init_cookies(dwb.misc.soupsession);
   dwb_soup_init_session_features();
