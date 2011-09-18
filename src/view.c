@@ -487,7 +487,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
       /* TODO sqlite */
-      if (!dwb.misc.private_browsing && dwb_prepend_navigation(gl, &dwb.fc.history))
+      if (!dwb.misc.private_browsing && strcmp(uri, "about:blank") && dwb_prepend_navigation(gl, &dwb.fc.history))
         util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       break;
     case WEBKIT_LOAD_FAILED: 
@@ -529,7 +529,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   else 
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
 
-  webkit_web_frame_load_alternate_string(frame, site, "Error", uri);
+  webkit_web_frame_load_alternate_string(frame, site, NULL, uri);
 
   g_free(site);
   g_free(content);
