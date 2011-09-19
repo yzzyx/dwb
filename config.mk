@@ -44,7 +44,7 @@ HEAD_FILE=head.html
 KEY_FILE=keys.html
 ERROR_FILE=error.html
 
-#FLAGS += -pedantic
+FLAGS += -pedantic
 CFLAGS += -Wall 
 CFLAGS += -pipe
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
