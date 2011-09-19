@@ -66,6 +66,7 @@ void dwb_web_settings_free(WebSettings *);
 void dwb_quickmark_free(Quickmark *);
 Quickmark * dwb_quickmark_new(const char *, const char *, const char *);
 Quickmark * dwb_quickmark_new_from_line(const char *);
+int util_quickmark_compare(Quickmark *a, Quickmark *b);
 
 // useless
 gboolean dwb_true(void);
@@ -77,6 +78,7 @@ void dwb_free(void *);
 
 char * util_domain_from_uri(const char *);
 int util_compare_path(const char *, const char *);
+int util_compare_first_word(const char *, const char *);
 char * util_basename(const char *);
 
 gboolean util_file_add(const char *filename, const char *text, int, int);
