@@ -176,7 +176,7 @@ util_arg_to_char(Arg *arg, DwbType type) {
   else if (type == CHAR || type == COLOR_CHAR) {
     if (arg->p) {
       char *tmp = (char*) arg->p;
-      value = g_strdup_printf(tmp);
+      value = g_strdup(tmp);
     }
   }
   return value;
