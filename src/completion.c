@@ -230,21 +230,19 @@ completion_get_simple_completion(GList *gl) {
 /* dwb_completion_get_settings      return: GList *Completions{{{*/
 static GList *
 completion_get_settings_completion() {
-  GList *l = g_hash_table_get_values(dwb.state.setting_apply == APPLY_GLOBAL ? dwb.settings : CURRENT_VIEW()->setting);
+  GList *l = g_hash_table_get_values(dwb.settings);
   l = g_list_sort(l, (GCompareFunc)util_web_settings_sort_first);
   const char *input = GET_TEXT();
   GList *list = NULL;
 
   for (; l; l=l->next) {
     WebSettings *s = l->data;
-    if (dwb.state.setting_apply == APPLY_GLOBAL || !s->global) {
-      Navigation n = s->n;
-      if (g_strrstr(n.first, input)) {
-        char *value = util_arg_to_char(&s->arg, s->type);
-        Completion *c = completion_get_completion_item(&n, s, value);
-        gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
-        list = g_list_append(list, c);
-      }
+    Navigation n = s->n;
+    if (g_strrstr(n.first, input)) {
+      char *value = util_arg_to_char(&s->arg, s->type);
+      Completion *c = completion_get_completion_item(&n, s, value);
+      gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
+      list = g_list_append(list, c);
     }
   }
   return list;

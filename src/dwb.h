@@ -250,11 +250,6 @@ typedef enum {
   HTML_STRING = 0x06,
 } DwbType;
 
-typedef enum {
-  APPLY_GLOBAL    = 0x01,
-  APPLY_PER_VIEW  = 0x02,
-} SettingsScope;
-
 typedef enum { 
   DL_ACTION_DOWNLOAD  = 0x01,
   DL_ACTION_EXECUTE   = 0x02,
@@ -417,7 +412,6 @@ struct _State {
   guint scriptlock;
   int size;
   GHashTable *settings_hash;
-  SettingsScope setting_apply;
   gboolean forward_search;
   gboolean background_tabs;
 
@@ -452,10 +446,16 @@ struct _State {
   gboolean fullscreen;
 };
 
+typedef enum _SettingsApply SettingsApply;
+enum _SettingsApply {
+  SETTING_BUILTIN = 1<<0,
+  SETTING_GLOBAL = 1<<1,
+  SETTING_ONINIT = 1<<2,
+  SETTING_PER_VIEW = 1<<3,
+};
 struct _WebSettings {
   Navigation n;
-  gboolean builtin;
-  gboolean global;
+  SettingsApply apply;
   DwbType type;
   Arg arg;
   S_Func func;
@@ -580,6 +580,7 @@ struct _Misc {
 
   char *pbbackground;
   gboolean top_statusbar;
+  int synctimer;
 };
 struct _Files {
   const char *bookmarks;

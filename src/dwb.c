@@ -43,10 +43,12 @@ static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_adblock(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
+static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_follow_selection(void);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
+static gboolean dwb_sync_history(gpointer);
 
 
 static void dwb_clean_buffer(GList *);
@@ -200,18 +202,14 @@ static FunctionMap FMAP [] = {
     (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, },
   { { "scroll_up",             "Scroll up",                         }, 0, 
     (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, },
-  { { "set_global_setting",    "Set global property",               }, 0, 
-    (Func)commands_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_GLOBAL } },
+  { { "set_setting",    "Set setting",               }, 0, 
+    (Func)commands_set_setting,         NULL,                              NEVER_SM,    },
   { { "set_key",               "Set keybinding",                    }, 0, 
     (Func)commands_set_key,             NULL,                              NEVER_SM,    { 0 } },
-  { { "set_setting",           "Set setting",                      }, 0, 
-    (Func)commands_set_setting,         NULL,                              NEVER_SM,    { .n = APPLY_PER_VIEW } },
-  { { "show_global_settings",  "Show global settings",              }, 1, 
-    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_GLOBAL } },
   { { "show_keys",             "Key configuration",                 }, 1, 
     (Func)commands_show_keys,           NULL,                              ALWAYS_SM, },
   { { "show_settings",         "Settings configuration",                          }, 1, 
-    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    { .n = APPLY_PER_VIEW } },
+    (Func)commands_show_settings,       NULL,                              ALWAYS_SM,    },
   { { "toggle_bottomstack",    "Toggle bottomstack",                }, 1, 
     (Func)commands_set_orientation,     NULL,                              ALWAYS_SM, },
   { { "toggle_maximized",      "Toggle maximized",                  }, 1, 
@@ -356,245 +354,247 @@ static FunctionMap FMAP [] = {
   /* { name,    description, builtin, global, type,  argument,  set-function */
 static WebSettings DWB_SETTINGS[] = {
   { { "auto-load-images",			                   "Load images automatically", },                                         
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "auto-resize-window",			                 "Autoresize window", },                                       
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "auto-shrink-images",			                 "Automatically shrink standalone images to fit", },                                       
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "cursive-font-family",			               "Cursive font family used to display text", },                                     
-    true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
   { { "default-encoding",			                   "Default encoding used to display text", },                                        
-    true, false,  CHAR,    { .p = NULL      }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = NULL      }, (S_Func) dwb_webkit_setting,  },
   { { "default-font-family",			               "Default font family used to display text", },                                     
-    true, false,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting,  },
   { { "default-font-size",			                 "Default font size used to display text", },                                       
-    true, false,  INTEGER, { .i = 12                }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  INTEGER, { .i = 12                }, (S_Func) dwb_webkit_setting,  },
   { { "default-monospace-font-size",			       "Default monospace font size used to display text", },                             
-    true, false,  INTEGER, { .i = 10                }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  INTEGER, { .i = 10                }, (S_Func) dwb_webkit_setting,  },
   { { "enable-caret-browsing",			             "Whether to enable caret browsing", },                                          
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-default-context-menu",			       "Whether to enable the right click context menu", },                             
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-developer-extras",			           "Whether developer extensions should be enabled",    },                              
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-dns-prefetching",			           "Whether webkit prefetches domain names",    },                              
-    true, false,  BOOLEAN, { .b = true             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-dom-paste",			                   "Whether to enable DOM paste", },                                        
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-frame-flattening",			           "Whether to enable Frame Flattening", },                                        
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-file-access-from-file-uris",			 "Whether file access from file uris is allowed", },                              
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-html5-database",			             "Enable HTML5 client side SQL-database support" },                                    
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-html5-local-storage",			         "Enable HTML5 local storage", },                              
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-java-applet",			                 "Whether to enable java applets", },                                            
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-offline-web-application-cache",		 "Enable HTML5 offline web application cache", },                           
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-page-cache",			                 "Whether to enable page cache", },                                              
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-plugins",			                     "Whether to enable plugins", },                                                 
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-private-browsing",			           "Whether to enable private browsing mode", },                                        
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_set_private_browsing,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_set_private_browsing,  },
   { { "enable-scripts",			                     "Enable embedded scripting languages", },                                                  
-    false, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_set_scripts,  },
+    SETTING_PER_VIEW,  BOOLEAN, { .b = true              }, (S_Func) dwb_set_scripts,  },
   { { "enable-site-specific-quirks",			       "Enable site-specific compatibility workarounds", },                                    
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-spatial-navigation",			         "Spatial navigation", },                                      
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-spell-checking",			             "Whether to enable spell checking", },                                          
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "enable-universal-access-from-file-uris",	 "Whether to allow files loaded through file:", },                        
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enable-xss-auditor",			                 "Whether to enable the XSS auditor", },                                             
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "enforce-96-dpi",			                     "Enforce a resolution of 96 dpi", },                                          
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "fantasy-font-family",			               "Default fantasy font family used to display text", },                                     
-    true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
   { { "javascript-can-access-clipboard",			   "Whether javascript can access clipboard", },                         
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "javascript-can-open-windows-automatically", "Whether javascript can open windows", },             
-    true, false,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  },
   { { "minimum-font-size",			                 "Minimum font size to display text", },                                       
-    true, false,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting,  },
   { { "minimum-logical-font-size",			         "Minimum logical font size used to display text", },                               
-    true, false,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  INTEGER, { .i = 5                 }, (S_Func) dwb_webkit_setting,  },
   { { "monospace-font-family",			             "Monospace font family used to display text", },                                   
-    true, false,  CHAR,    { .p = "monospace"       }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "monospace"       }, (S_Func) dwb_webkit_setting,  },
   { { "print-backgrounds",			                 "Whether background images should be printed", },                                       
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "resizable-text-areas",			               "Whether text areas are resizable", },                                    
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "sans-serif-font-family",			             "Sans serif font family used to display text", },                                  
-    true, false,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "sans-serif"      }, (S_Func) dwb_webkit_setting,  },
   { { "serif-font-family",			                 "Serif font family used to display text", },                                       
-    true, false,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = "serif"           }, (S_Func) dwb_webkit_setting,  },
   { { "spell-checking-languages",			           "Language used for spellchecking sperated by commas", },                                
-    true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
   { { "tab-key-cycles-through-elements",			   "Tab cycles through elements in insert mode", },              
-    true, false,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "user-agent",			                         "The user agent string", },                                              
-    false, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_agent,  },
+    SETTING_PER_VIEW,                CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_agent,  },
   { { "user-stylesheet-uri",			               "The uri of a stylsheet applied to every page", },                                     
-    true, false,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
   { { "zoom-step",			                         "The zoom step", },                                               
-    true, false,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting,  },
+    SETTING_BUILTIN,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting,  },
   { { "custom-encoding",                         "The custom encoding of the view", },                                         
-    false, false, CHAR,    { .p = NULL           }, (S_Func) dwb_webview_property,  },
+    SETTING_PER_VIEW,                CHAR,    { .p = NULL           }, (S_Func) dwb_webview_property,  },
   { { "editable",                                "Whether content can be modified", },                                        
-    false, false, BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property,  },
+    SETTING_PER_VIEW,                BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property,  },
   { { "full-content-zoom",                       "Whether the full content is scaled when zooming", },                                       
-    false, false, BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property,  },
+    SETTING_PER_VIEW,                BOOLEAN, { .b = false             }, (S_Func) dwb_webview_property,  },
   { { "zoom-level",                              "The default zoom level", },
-    false, false, DOUBLE,  { .d = 1.0               }, (S_Func) dwb_webview_property,  },
+    SETTING_PER_VIEW,                DOUBLE,  { .d = 1.0               }, (S_Func) dwb_webview_property,  },
   { { "proxy",                                   "Whether to use a HTTP-proxy", },                                              
-    false, true,  BOOLEAN, { .b = false              },  (S_Func) dwb_set_proxy,  },
+    SETTING_GLOBAL,      BOOLEAN, { .b = false              },  (S_Func) dwb_set_proxy,  },
   { { "proxy-url",                               "The HTTP-proxy url", },                                          
-    false, true,  CHAR,    { .p = NULL              },   (S_Func) dwb_soup_init_proxy,  },
+    SETTING_GLOBAL,      CHAR,    { .p = NULL              },   (S_Func) dwb_soup_init_proxy,  },
   { { "ssl-strict",                               "Whether to allow only save certificates", },                                          
-    false, true,  BOOLEAN,    { .b = true            },   (S_Func) dwb_soup_init_session_features,  },
+    SETTING_GLOBAL,      BOOLEAN,    { .b = true            },   (S_Func) dwb_soup_init_session_features,  },
   { { "ssl-ca-cert",                               "Path to ssl-certificate", },                                          
-    false, true,  CHAR,    { .p = NULL            },   (S_Func) dwb_soup_init_session_features,  },
+    SETTING_GLOBAL,      CHAR,    { .p = NULL            },   (S_Func) dwb_soup_init_session_features,  },
   { { "cookies",                                  "Whether to allow all cookies", },                                     
-    false, true,  BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars,  },
+    SETTING_GLOBAL,      BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars,  },
   { { "background-tabs",			                     "Whether to open tabs in background", },                                 
-    false, true,  BOOLEAN,    { .b = false         }, (S_Func) dwb_set_background_tab,  },
+    SETTING_GLOBAL,      BOOLEAN,    { .b = false         }, (S_Func) dwb_set_background_tab,  },
   { { "scroll-step",			                     "Whether to open tabs in background", },                                 
-    false, true,  DOUBLE,    { .d = 0         }, (S_Func) dwb_init_vars,  },
+    SETTING_GLOBAL,      DOUBLE,    { .d = 0         }, (S_Func) dwb_init_vars,  },
 
   { { "active-fg-color",                         "Foreground color of the active view", },                              
-    false, true,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,   },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,   },
   { { "active-bg-color",                         "Background color of the active view", },                              
-    false, true,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
   { { "normal-fg-color",                         "Foreground color of inactive views", },                            
-    false, true,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
   { { "normal-bg-color",                         "Background color of inactive views", },                            
-    false, true,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
 
   { { "tab-active-fg-color",                     "Foreground color of the active tab", },                           
-    false, true,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-active-bg-color",                     "Background color of the active tab", },                           
-    false, true,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-normal-fg-color",                     "Foreground color of inactive tabs", },                         
-    false, true,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-normal-bg-color",                     "Background color of inactive tabs", },                         
-    false, true,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-number-color",                        "Color of the number in the tab", },                      
-    false, true,  COLOR_CHAR, { .p = "#7ac5cd"         },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#7ac5cd"         },    (S_Func) dwb_reload_layout,  },
   { { "hide-tabbar",                             "Whether to hide the tabbar (never, always, tiled)", },                      
-    false, true,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar,  },
+    SETTING_GLOBAL,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar,  },
   { { "tabbed-browsing",                         "Whether to enable tabbed browsing", },                                  
-    false, true,  BOOLEAN,      { .b = true         },      (S_Func) dwb_set_dummy,  },
+    SETTING_GLOBAL,  BOOLEAN,      { .b = true         },      (S_Func) dwb_set_dummy,  },
+  { { "sync-history",                            "Interval to save history to hdd or 0 to directly write to hdd", },                                  
+    SETTING_GLOBAL|SETTING_ONINIT,  INTEGER,      { .i = 0         },      (S_Func) dwb_set_sync_interval,  },
 
   { { "active-completion-fg-color",                    "Foreground color of the active tabcompletion item", },                        
-    false, true,  COLOR_CHAR, { .p = "#53868b"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#53868b"         }, (S_Func) dwb_init_style,  },
   { { "active-completion-bg-color",                    "Background color of the active tabcompletion item", },                        
-    false, true,  COLOR_CHAR, { .p = "#000000"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#000000"         }, (S_Func) dwb_init_style,  },
   { { "normal-completion-fg-color",                    "Foreground color of an inactive tabcompletion item", },                      
-    false, true,  COLOR_CHAR, { .p = "#eeeeee"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#eeeeee"         }, (S_Func) dwb_init_style,  },
   { { "normal-completion-bg-color",                    "Background color of an inactive tabcompletion item", },                      
-    false, true,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#151515"         }, (S_Func) dwb_init_style,  },
 
   { { "ssl-trusted-color",                         "Color for ssl-encrypted sites, trusted certificate", },                 
-    false, true,  COLOR_CHAR, { .p = "#00ff00"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#00ff00"         }, (S_Func) dwb_init_style,  },
   { { "ssl-untrusted-color",                       "Color for ssl-encrypted sites, untrusted certificate", },                 
-    false, true,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
   { { "insertmode-fg-color",                         "Foreground color in insertmode", },                               
-    false, true,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style,  },
   { { "insertmode-bg-color",                         "Background color in insertmode", },                               
-    false, true,  COLOR_CHAR, { .p = "#303030"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#303030"         }, (S_Func) dwb_init_style,  },
   { { "error-color",                             "Color for error messages", },                                         
-    false, true,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
   { { "status-allowed-color",                        "Color of allowed elements in the statusbar", },           
-    false, true,  COLOR_CHAR, { .p = "#00ff00"       },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#00ff00"       },    (S_Func) dwb_reload_layout,  },
   { { "status-blocked-color",                        "Color of blocked elements in the statusbar", },           
-    false, true,  COLOR_CHAR, { .p = "#ffffff"       },    (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"       },    (S_Func) dwb_reload_layout,  },
 
   { { "font",                                    "Default font used for the ui", },                                       
-    false, true,  CHAR, { .p = "monospace 8"          },   (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  CHAR, { .p = "monospace 8"          },   (S_Func) dwb_reload_layout,  },
   { { "font-inactive",                           "Font of views without focus", },                  
-    false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
   { { "font-entry",                              "Font of the addressbar", },                            
-    false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
   { { "font-completion",                         "Font for tab-completion", },                            
-    false, true,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
+    SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
    
   { { "hint-letter-seq",                       "Letter sequence for letter hints", },             
-    false, true,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
   { { "hint-style",                              "Whether to use 'letter' or 'number' hints", },                     
-    false, true,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
   { { "hint-font",                          "Font size of hints", },                                        
-    false, true,  CHAR, { .p = "bold 10px monospace"             },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "bold 10px monospace"             },     (S_Func) dwb_reload_scripts,  },
   { { "hint-fg-color",                           "Foreground color of hints", },                                 
-    false, true,  CHAR, { .p = "#000000"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "#000000"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-bg-color",                           "Background color of hints", },                                 
-    false, true,  CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-active-color",                       "Color of the active link in hintmode", },                                
-    false, true,  CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-normal-color",                       "Color of inactive links in hintmode", },                              
-    false, true,  CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-border",                             "Border used for hints", },                                      
-    false, true,  CHAR, { .p = "1px solid #000000"    }, (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  CHAR, { .p = "1px solid #000000"    }, (S_Func) dwb_reload_scripts,  },
   { { "hint-opacity",                            "The opacity of hints", },                                     
-    false, true,  DOUBLE, { .d = 0.8         },          (S_Func) dwb_reload_scripts,  },
+    SETTING_GLOBAL,  DOUBLE, { .d = 0.8         },          (S_Func) dwb_reload_scripts,  },
   { { "auto-completion",                         "Show possible shortcuts", },                                
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)completion_set_autcompletion,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)completion_set_autcompletion,  },
   { { "startpage",                               "The default homepage", },                                        
-    false, true,  CHAR,    { .p = "dwb://bookmarks" },        (S_Func)dwb_set_startpage,  }, 
+    SETTING_GLOBAL,  CHAR,    { .p = "dwb://bookmarks" },        (S_Func)dwb_set_startpage,  }, 
   { { "single-instance",                         "Whether to have only on instance", },                                         
-    false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_single_instance,  }, 
+    SETTING_GLOBAL,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_single_instance,  }, 
   { { "save-session",                            "Whether to automatically save sessions", },                                       
-    false, true,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_dummy,  }, 
+    SETTING_GLOBAL,  BOOLEAN,    { .b = false },          (S_Func)dwb_set_dummy,  }, 
   
 
   /* downloads */
   { { "download-external-command",                        "External program used for downloads", },                               
-    false, true,  CHAR, { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  CHAR, { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     (S_Func)dwb_set_dummy,  },
   { { "download-use-external-program",           "Whether to use an external download program", },                           
-    false, true,  BOOLEAN, { .b = false         },    (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false         },    (S_Func)dwb_set_dummy,  },
 
   { { "complete-history",                        "Whether to complete browsing history with tab", },                              
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
   { { "complete-bookmarks",                        "Whether to complete bookmarks with tab", },                                     
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
   { { "complete-searchengines",                   "Whether to complete searchengines with tab", },                                     
-    false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
   { { "complete-commands",                        "Whether to complete the commmand history", },                                     
-    false, true,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
   { { "complete-userscripts",                        "Whether to complete userscripts", },                                     
-    false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
 
   { { "use-fifo",                        "Create a fifo pipe for communication", },                            
-    false, true,  BOOLEAN, { .b = false         },     (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_set_dummy,  },
     
   { { "default-width",                           "Default width of the window", },                                           
-    false, true,  INTEGER, { .i = 800          }, (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 800          }, (S_Func)dwb_set_dummy,  },
   { { "default-height",                          "Default height of the window", },                                           
-    false, true,  INTEGER, { .i = 600          }, (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 600          }, (S_Func)dwb_set_dummy,  },
   { { "message-delay",                           "Time in seconds, messages are shown", },                                           
-    false, true,  INTEGER, { .i = 2          }, (S_Func) dwb_set_message_delay,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 2          }, (S_Func) dwb_set_message_delay,  },
   { { "history-length",                          "Length of the browsing history", },                                          
-    false, true,  INTEGER, { .i = 500          }, (S_Func) dwb_set_history_length,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) dwb_set_history_length,  },
   { { "size",                                    "Tiling area size in percent", },                     
-    false, true,  INTEGER, { .i = 30          }, (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  INTEGER, { .i = 30          }, (S_Func)dwb_set_dummy,  },
   { { "factor",                                  "Zoom factor of the tiling area", },                  
-    false, true,  DOUBLE, { .d = 0.3          }, (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  DOUBLE, { .d = 0.3          }, (S_Func)dwb_set_dummy,  },
   { { "layout",                                  "The default layout (Normal, Bottomstack, Maximized)", },     
-    false, true,  CHAR, { .p = "Normal MAXIMIZED" },  (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  CHAR, { .p = "Normal MAXIMIZED" },  (S_Func)dwb_set_dummy,  },
   { { "top-statusbar",                                  "Whether to have the statusbar on top", },     
-    false, true,  BOOLEAN, { .b = false },  (S_Func)dwb_set_dummy,  },
+    SETTING_GLOBAL,  BOOLEAN, { .b = false },  (S_Func)dwb_set_dummy,  },
   { { "mail-client",                            "Program used for mailto:-urls", },                                            
-    false, true,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy,  }, 
+    SETTING_GLOBAL,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy,  }, 
   { { "ftp-client",                            "Program used for ftp", },                                            
-    false, true,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy,   }, 
+    SETTING_GLOBAL,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy,   }, 
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
-    false, false,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
+    SETTING_PER_VIEW,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
-    false, false,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
+    SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
 };/*}}}*/
 
 /* SETTINGS_FUNCTIONS{{{*/
@@ -617,12 +617,14 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
     v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_ENABLED) | PLUGIN_STATUS_DISABLED;
   }
 }/*}}}*/
+
 /* dwb_set_adblock {{{*/
 static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
   View *v = gl->data;
   v->status->adblocker = s->arg.b;
 }/*}}}*/
+
 /* dwb_set_private_browsing  */
 static void
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
@@ -635,6 +637,19 @@ static void
 dwb_set_hide_tabbar(GList *gl, WebSettings *s) {
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(s->arg.p);
   dwb_toggle_tabbar();
+}/*}}}*/
+
+/* dwb_set_sync_interval{{{*/
+static void
+dwb_set_sync_interval(GList *gl, WebSettings *s) {
+  if (dwb.misc.synctimer > 0) {
+    g_source_remove(dwb.misc.synctimer);
+    dwb.misc.synctimer = 0;
+  }
+
+  if (s->arg.i > 0) {
+    dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_history, NULL);
+  }
 }/*}}}*/
 
 /* dwb_set_startpage(GList *l, WebSettings *){{{*/
@@ -964,6 +979,18 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+/* dwb_sync_history {{{*/
+static gboolean
+dwb_sync_history(gpointer data) {
+  GString *buffer = g_string_new(NULL);
+  for (GList *gl = dwb.fc.history; gl; gl=gl->next) {
+    Navigation *n = gl->data;
+    g_string_append_printf(buffer, "%s %s\n", n->first, n->second);
+  }
+  g_file_set_contents(dwb.files.history, buffer->str, -1, NULL);
+  g_string_free(buffer, true);
+  return true;
+}/*}}}*/
 
 /* dwb_follow_selection() {{{*/
 static void 
@@ -1006,12 +1033,9 @@ dwb_open_startpage(GList *gl) {
 /* dwb_apply_settings(WebSettings *s) {{{*/
 static void
 dwb_apply_settings(WebSettings *s) {
-  if (dwb.state.setting_apply == APPLY_GLOBAL) 
-    for (GList *l = dwb.state.views; l; l=l->next) 
-      if (s->func) 
-        s->func(l, s);
-  else 
-    s->func(dwb.state.fview, s);
+  for (GList *l = dwb.state.views; l; l=l->next) 
+    if (s->func) 
+      s->func(l, s);
   dwb_normal_mode(false);
 
 }/*}}}*/
@@ -1022,7 +1046,7 @@ dwb_set_setting(const char *key, char *value) {
   WebSettings *s;
   Arg *a = NULL;
 
-  GHashTable *t = dwb.state.setting_apply == APPLY_GLOBAL ? dwb.settings : ((View*)dwb.state.fview->data)->setting;
+  GHashTable *t = dwb.settings;
   if (key) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
       if ( (a = util_char_to_arg(value, s->type)) || (s->type == CHAR && a->p == NULL)) {
@@ -2523,6 +2547,9 @@ gboolean
 dwb_save_files(gboolean end_session) {
   dwb_save_keys();
   dwb_save_settings();
+  if (dwb.misc.synctimer > 0) {
+    dwb_sync_history(NULL);
+  }
 
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
@@ -2735,7 +2762,7 @@ dwb_init_settings() {
   dwb_read_settings();
   for (GList *l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
     WebSettings *s = l->data;
-    if (s->builtin) {
+    if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
       s->func(NULL, s);
     }
   }
@@ -3068,6 +3095,7 @@ dwb_init() {
   dwb.misc.userscripts = NULL;
   dwb.misc.proxyuri = NULL;
   dwb.misc.scripts = NULL;
+  dwb.misc.synctimer = 0;
 
   char *path = util_get_data_file(PLUGIN_FILE);
   dwb.misc.pbbackground = util_get_file_content(path);
