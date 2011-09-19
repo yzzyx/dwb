@@ -3074,6 +3074,7 @@ dwb_init_vars() {
   dwb.state.background_tabs = GET_BOOL("background-tabs");
 
   dwb.state.size = GET_INT("size");
+  dwb.state.layout = 0;
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }/*}}}*/
