@@ -334,18 +334,6 @@ static void
 view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
-  SoupMessage *msg = webkit_network_request_get_message(request);
-  GTlsCertificate *cert = NULL;
-  GTlsCertificateFlags flags = 0;
-  soup_message_get_https_status(msg, &cert, &flags);
-  if (cert)
-    puts("cert");
-
-  //if (request) {
-  //  SoupMessage *msg1 = webkit_network_response_get_message(response);
-  //  printf("response: %p\n", msg1);
-  //}
-
   if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
     webkit_network_request_set_uri(request, "about:blank");
     return;
@@ -499,8 +487,13 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
       /* TODO sqlite */
-      if (!dwb.misc.private_browsing && strcmp(uri, "about:blank") && dwb_prepend_navigation(gl, &dwb.fc.history))
+      if (!dwb.misc.private_browsing 
+          && strcmp(uri, "about:blank")
+          && !g_str_has_prefix(uri, "dwb://") 
+          && dwb_prepend_navigation(gl, &dwb.fc.history) 
+          && dwb.misc.synctimer <= 0) {
         util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
+      }
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);

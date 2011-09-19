@@ -726,5 +726,8 @@ void dwb_init_scripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
 char * dwb_get_stock_item_base64_encoded(const char *);
 void dwb_show_directory(WebKitWebView *, const char *, const Arg *);
+void dwb_remove_bookmark(const char *);
+void dwb_remove_history(const char *);
+void dwb_remove_quickmark(const char *);
 
 #endif

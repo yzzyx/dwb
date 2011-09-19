@@ -2,6 +2,7 @@
 #include "html.h"
 #include "util.h"
 
+#define HTML_REMOVE_BUTTON "<div style='float:right;cursor:pointer;' navigation='%s %s' onclick='location.reload();'>&times</div>"
 typedef struct _HtmlTable HtmlTable;
 
 struct _HtmlTable {
@@ -12,6 +13,7 @@ struct _HtmlTable {
   void (*func)(GList *, HtmlTable *);
 };
 
+
 void html_bookmarks(GList *, HtmlTable *);
 void html_history(GList *, HtmlTable *);
 void html_quickmarks(GList *, HtmlTable *);
@@ -19,10 +21,11 @@ void html_settings(GList *, HtmlTable *);
 void html_startpage(GList *, HtmlTable *);
 void html_keys(GList *, HtmlTable *);
 
+
 static HtmlTable table[] = {
-  { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, html_bookmarks },
-  { "dwb://quickmarks", "Quickmarks",   INFO_FILE,      0, html_quickmarks },
-  { "dwb://history",    "History",      INFO_FILE,      0, html_history },
+  { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, html_bookmarks,  },
+  { "dwb://quickmarks", "Quickmarks",   INFO_FILE,      0, html_quickmarks, },
+  { "dwb://history",    "History",      INFO_FILE,      0, html_history,    },
   { "dwb://keys",       "Keys",         INFO_FILE,      0, html_keys },
   { "dwb://settings",   "Settings",     INFO_FILE,      0, html_settings },
   { "dwb://startpage",   NULL,           NULL,           0, html_startpage },
@@ -52,15 +55,53 @@ html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     FREE(path);
   }
 }
+
+gboolean
+html_remove_item_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
+  WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
+  if (webkit_dom_element_has_attribute((void*)target, "navigation")) {
+    char *navigation = webkit_dom_element_get_attribute(WEBKIT_DOM_ELEMENT(target), "navigation");
+    const char *uri = webkit_web_view_get_uri(WEBVIEW(gl));
+    if (!strcmp(uri, "dwb://history")) {
+      dwb_remove_history(navigation);
+    }
+    else if (!strcmp(uri, "dwb://bookmarks")) {
+      dwb_remove_bookmark(navigation);
+    }
+    else if (!strcmp(uri, "dwb://quickmarks")) {
+      dwb_remove_quickmark(navigation);
+    }
+  }
+  return false;
+}
+void
+html_load_status_cb(WebKitWebView *web, GParamSpec *p, GList *gl) {
+  WebKitLoadStatus s = webkit_web_view_get_load_status(web);
+  if (s == WEBKIT_LOAD_FINISHED) {
+    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
+    WebKitDOMHTMLElement *body = webkit_dom_document_get_body(doc);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(body), "click", G_CALLBACK(html_remove_item_cb), true, gl);
+    g_signal_handlers_disconnect_by_func(web, html_load_status_cb, gl);
+  }
+  else if (s == WEBKIT_LOAD_FAILED) {
+    g_signal_handlers_disconnect_by_func(web, html_load_status_cb, gl);
+  }
+
+}
 void
 html_navigation(GList *gl, GList *data, HtmlTable *table) {
   int i=0;
+  WebKitWebView *wv = WEBVIEW(gl);
+
   GString *panels = g_string_new("<div class='setting_bar' ></div>");
   for (GList *l = data; l; l=l->next, i++, i%=2) {
     Navigation *n = l->data;
-    g_string_append_printf(panels, "<div class='dwb_line%d'><div><a href='%s'>%s</a></div></div>\n", i, n->first, n->second);
+    g_string_append_printf(panels, 
+        "<div class='dwb_line%d'><div><a href='%s'>%s</a><div style='float:right;cursor:pointer;' navigation='%s %s' onclick='location.reload();'>&times</div></div></div>\n", 
+        i, n->first, n->second, n->first, n->second);
   }
-  html_load_page(WEBVIEW(gl), table, panels->str);
+  html_load_page(wv, table, panels->str);
+  g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
   g_string_free(panels, true);
 }
 void
@@ -87,7 +128,7 @@ html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView
       strcpy(buffer, "false");
     value = buffer;
   }
-  else 
+  else  
     value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
   dwb_set_setting(id, value);
   return true;
@@ -127,7 +168,12 @@ html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   if (webkit_web_view_get_load_status(wv) == WEBKIT_LOAD_FINISHED) {
     g_hash_table_foreach(dwb.settings, (GHFunc)html_settings_fill, wv);
     g_signal_handlers_disconnect_by_func(wv, html_settings_load_cb, table);
+    g_signal_handlers_disconnect_by_func(wv, html_settings_load_cb, table);
   }
+  else if (webkit_web_view_get_load_status(wv) == WEBKIT_LOAD_FAILED) {
+    g_signal_handlers_disconnect_by_func(wv, html_settings_load_cb, table);
+  }
+
 }
 void
 html_settings(GList *gl, HtmlTable *table) {
@@ -194,12 +240,16 @@ html_keys(GList *gl, HtmlTable *table) {
 void
 html_quickmarks(GList *gl, HtmlTable *table) {
   int i=0;
+  WebKitWebView *wv = WEBVIEW(gl);
   GString *panels = g_string_new("<div class='setting_bar' ></div>");
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
     Quickmark *q = gl->data;
-    g_string_append_printf(panels, "<div class='dwb_line%d'><div class=dwb_qm>%s</div><div><a href='%s'>%s</a></div></div>\n", i, q->key, q->nav->first, q->nav->second);
+    g_string_append_printf(panels, "<div class='dwb_line%d'><div class=dwb_qm>%s</div><div><a href='%s'>%s</a>\
+        <div style='float:right;cursor:pointer;' navigation='%s %s %s' onclick='location.reload();'>&times</div></div></div>\n", 
+        i, q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
   }
-  html_load_page(WEBVIEW(gl), table, panels->str);
+  html_load_page(wv, table, panels->str);
+  g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
   g_string_free(panels, true);
 }
 void
