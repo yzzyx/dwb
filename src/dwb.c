@@ -979,6 +979,38 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+/* remove history, bookmark, quickmark {{{*/
+static GList * 
+dwb_remove_navigation_item(GList *content, GList *item, const char *filename) {
+  Navigation *n = item->data;
+  char *line = g_strdup_printf("%s %s\n", n->first, n->second);
+  util_file_remove_line(filename, line);
+
+  g_free(line);
+  dwb_navigation_free(n);
+
+  return g_list_delete_link(content, item);
+}
+void
+dwb_remove_bookmark(GList *bookmark) {
+  dwb.fc.bookmarks = dwb_remove_navigation_item(dwb.fc.bookmarks, bookmark, dwb.files.bookmarks);
+}
+void
+dwb_remove_history(GList *item) {
+  dwb.fc.history = dwb_remove_navigation_item(dwb.fc.history, item, dwb.files.history);
+}
+void 
+dwb_remove_quickmark(GList *item) {
+  Quickmark *q = item->data;
+  char *line = g_strdup_printf("%s %s %s\n", q->key, q->nav->first, q->nav->second);
+  util_file_remove_line(dwb.files.quickmarks, line);
+
+  g_free(line);
+  dwb_quickmark_free(q);
+
+  dwb.fc.quickmarks = g_list_delete_link(dwb.fc.quickmarks, item);
+}/*}}}*/
+
 /* dwb_sync_history {{{*/
 static gboolean
 dwb_sync_history(gpointer data) {

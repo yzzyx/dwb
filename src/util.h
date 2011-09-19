@@ -83,5 +83,6 @@ gboolean util_file_add(const char *filename, const char *text, int, int);
 gboolean util_file_add_navigation(const char *, const Navigation *, int, int);
 void gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gint padding, int position);
 char * util_strcasestr(const char *haystack, const char *needle);
+int util_file_remove_line(const char *, const char *);
 
 #endif

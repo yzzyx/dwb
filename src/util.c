@@ -325,6 +325,25 @@ util_get_data_file(const char *filename) {
   }
   return NULL;
 }
+int
+util_file_remove_line(const char *filename, const char *line) {
+  int ret = 1;
+  char *content = util_get_file_content(filename);
+  char **lines = g_strsplit(content, "\n", -1);
+  GString *buffer = g_string_new(NULL);
+  for (int i=0; lines[i]; i++) {
+    if (strlen(lines[i]) > 0 && STRCMP_SKIP_NEWLINE(lines[i], line)) {
+      g_string_append_printf(buffer, "%s\n", lines[i]);
+    }
+  }
+  g_file_set_contents(filename, buffer->str, -1, NULL);
+
+  g_string_free(buffer, true);
+  g_free(content);
+  g_strfreev(lines);
+
+  return ret;
+}
 
 /* NAVIGATION {{{*/
 /* dwb_navigation_new(const char *uri, const char *title) {{{*/
