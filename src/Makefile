@@ -1,11 +1,5 @@
 include ../config.mk
 
-# needed for migration to gtk3
-# FLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
-# FLAGS+=-DGTK_DISABLE_DEPRECATED
-# FLAGS+=-DGDK_DISABLE_DEPRECATED
-# FLAGS+=-DGSEAL_ENABLE
-
 all: $(TARGET) 
 
 $(TARGET): $(OBJ)
@@ -20,7 +14,6 @@ $(TARGET): $(OBJ)
 	@$(CC) $(CFLAGS) -c -o $@ $<
 
 #@$(CC) $(FLAGS) -MM $*.c > $*.d
-
 
 debug: $(DTARGET)
 
