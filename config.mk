@@ -44,11 +44,13 @@ HEAD_FILE=head.html
 KEY_FILE=keys.html
 ERROR_FILE=error.html
 
-CFLAGS += -Wall 
+CFLAGS += -Wall -Wno-format-zero-length
 CFLAGS += -pipe
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
 CFLAGS += --ansi
 CFLAGS += -std=c99
+# TODO g_hash_table is empty with -O2 
+CFLAGS += -O0
 CFLAGS += -D_POSIX_SOURCE
 CFLAGS += -D_BSD_SOURCE
 CFLAGS += -DNAME=\"$(NAME)\" 
@@ -63,7 +65,6 @@ CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
 CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 
 LDFLAGS += $(shell pkg-config --libs $(LIBS))
-LDFLAGS += -lc
 
 DCFLAGS = $(CFLAGS)
 DCFLAGS += -DDWB_DEBUG
