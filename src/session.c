@@ -91,7 +91,7 @@ session_restore(const char *name) {
   }
   char  **lines = g_strsplit(group, "\n", -1);
   WebKitWebView *web, *lastweb = NULL;
-  WebKitWebBackForwardList *bf_list;
+  WebKitWebBackForwardList *bf_list = NULL;
   int last = 1;
   char *uri = NULL;
 

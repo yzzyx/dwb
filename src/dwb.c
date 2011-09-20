@@ -979,6 +979,44 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+/* remove history, bookmark, quickmark {{{*/
+static int
+dwb_remove_navigation_item(GList **content, const char *line, const char *filename) {
+  Navigation *n = dwb_navigation_new_from_line(line);
+  GList *item = g_list_find_custom(*content, n, (GCompareFunc)util_navigation_compare_first);
+  dwb_navigation_free(n);
+  if (item) {
+    if (filename != NULL) 
+      util_file_remove_line(filename, line);
+    *content = g_list_delete_link(*content, item);
+    return 1;
+  }
+  return 0;
+}
+void
+dwb_remove_bookmark(const char *line) {
+  dwb_remove_navigation_item(&dwb.fc.bookmarks, line, dwb.files.bookmarks);
+}
+void
+dwb_remove_history(const char *line) {
+  dwb_remove_navigation_item(&dwb.fc.history, line, dwb.misc.synctimer <= 0 ? dwb.files.history : NULL);
+}
+void 
+dwb_remove_quickmark(const char *line) {
+  Quickmark *q = dwb_quickmark_new_from_line(line);
+  GList *item = g_list_find_custom(dwb.fc.quickmarks, q, (GCompareFunc)util_quickmark_compare);
+  dwb_quickmark_free(q);
+  if (item) {
+    util_file_remove_line(dwb.files.quickmarks, line);
+    dwb.fc.quickmarks = g_list_delete_link(dwb.fc.quickmarks, item);
+  }
+#if 0
+  char *line = g_strdup_printf("%s %s %s\n", q->key, q->nav->first, q->nav->second);
+
+  g_free(line);
+#endif
+}/*}}}*/
+
 /* dwb_sync_history {{{*/
 static gboolean
 dwb_sync_history(gpointer data) {
@@ -3036,6 +3074,7 @@ dwb_init_vars() {
   dwb.state.background_tabs = GET_BOOL("background-tabs");
 
   dwb.state.size = GET_INT("size");
+  dwb.state.layout = 0;
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }/*}}}*/

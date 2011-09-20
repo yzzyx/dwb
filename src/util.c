@@ -176,7 +176,7 @@ util_arg_to_char(Arg *arg, DwbType type) {
   else if (type == CHAR || type == COLOR_CHAR) {
     if (arg->p) {
       char *tmp = (char*) arg->p;
-      value = g_strdup_printf(tmp);
+      value = g_strdup(tmp);
     }
   }
   return value;
@@ -192,6 +192,10 @@ int
 util_navigation_compare_second(Navigation *a, Navigation *b) {
   return (strcmp(a->second, b->second));
 }/*}}}*/
+int 
+util_quickmark_compare(Quickmark *a, Quickmark *b) {
+  return strcmp(a->key, b->key);
+}
 /* util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
 int
 util_keymap_sort_first(KeyMap *a, KeyMap *b) {
@@ -324,6 +328,33 @@ util_get_data_file(const char *filename) {
     return ret;
   }
   return NULL;
+}
+static inline int
+util_strcmp_skip_newline(const char *s1, const char *s2) {
+  char *nl = strstr(s2, "\n");
+  if (nl != NULL) 
+    return strncmp(s1, s2, nl - s1);
+  else 
+    return strcmp(s1, s2);
+}
+int
+util_file_remove_line(const char *filename, const char *line) {
+  int ret = 1;
+  char *content = util_get_file_content(filename);
+  char **lines = g_strsplit(content, "\n", -1);
+  GString *buffer = g_string_new(NULL);
+  for (int i=0; lines[i]; i++) {
+    if (strlen(lines[i]) > 0 && STRCMP_FIRST_WORD(lines[i], line)) {
+      g_string_append_printf(buffer, "%s\n", lines[i]);
+    }
+  }
+  g_file_set_contents(filename, buffer->str, -1, NULL);
+
+  g_string_free(buffer, true);
+  g_free(content);
+  g_strfreev(lines);
+
+  return ret;
 }
 
 /* NAVIGATION {{{*/
