@@ -10,14 +10,14 @@ all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
-	@$(CC) $(LDFLAGS) $(OBJ) -o $(TARGET) 
+	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
 
 -include $(OBJ:.o=.d)
 -include $(DOBJ:.do=.dd)
 
 %.o: %.c 
 	@echo "${CC} $<"
-	@$(CC) $(CFLAGS) -c -o $@ $<
+	@$(CC) $(FLAGS) -c -o $@ $<
 
 #@$(CC) $(FLAGS) -MM $*.c > $*.d
 
@@ -26,11 +26,11 @@ debug: $(DTARGET)
 
 %.do: %.c
 	@echo "${CC} $<"
-	@$(CC) $(DCFLAGS) -c -o $@ $<
+	@$(CC) $(DFLAGS) -c -o $@ $<
 
 $(DTARGET): $(DOBJ) 
 	@echo "$(CC) $@"
-	@$(CC) $(LDFLAGS) $(DOBJ) -o $(DTARGET) 
+	@$(CC) $(DFLAGS) $(DOBJ) -o $(DTARGET) 
 
 cgdb: debug
 	cgdb $(DTARGET)

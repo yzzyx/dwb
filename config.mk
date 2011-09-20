@@ -18,6 +18,7 @@ HG_VERSION=$(shell hg id -n 2>/dev/null)
 VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo "$(REAL_VERSION)"; fi)
 NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REAL_NAME)"; fi)
 
+CC ?= gcc
 ##ifeq (${GTK}, 3)
 ##LIBS  += gtk+-3.0
 ##LIBS  += webkitgtk-3.0
@@ -28,10 +29,10 @@ NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REA
 ifeq (${GTK}, 3)
 LIBS  += gtk+-3.0
 LIBS  += webkitgtk-3.0
-CFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
-CFLAGS+=-DGTK_DISABLE_DEPRECATED
-CFLAGS+=-DGDK_DISABLE_DEPRECATED
-CFLAGS+=-DGSEAL_ENABLE
+FLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
+FLAGS+=-DGTK_DISABLE_DEPRECATED
+FLAGS+=-DGDK_DISABLE_DEPRECATED
+FLAGS+=-DGSEAL_ENABLE
 else
 LIBS  += gtk+-2.0
 LIBS  += webkit-1.0
@@ -44,31 +45,28 @@ HEAD_FILE=head.html
 KEY_FILE=keys.html
 ERROR_FILE=error.html
 
-CFLAGS += -Wall -Wno-format-zero-length
-CFLAGS += -pipe
-CFLAGS += $(shell pkg-config --cflags $(LIBS))
-CFLAGS += --ansi
-CFLAGS += -std=c99
+FLAGS += -Wall -Wno-format-zero-length
+FLAGS += -pipe
+FLAGS += $(shell pkg-config --cflags --libs $(LIBS))
+FLAGS += --ansi
+FLAGS += -std=c99
 # TODO g_hash_table is empty with -O2 
-CFLAGS += -O0
-CFLAGS += -D_POSIX_SOURCE
-CFLAGS += -D_BSD_SOURCE
-CFLAGS += -DNAME=\"$(NAME)\" 
-CFLAGS += -DVERSION=\"$(VERSION)\" 
-CFLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
-CFLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
-CFLAGS += -DPLUGIN_FILE=\"$(PLUGIN_FILE)\"
-CFLAGS += -DINFO_FILE=\"$(INFO_FILE)\"
-CFLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
-CFLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
-CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
-CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
+FLAGS += -D_POSIX_SOURCE
+FLAGS += -D_BSD_SOURCE
+FLAGS += -DNAME=\"$(NAME)\" 
+FLAGS += -DVERSION=\"$(VERSION)\" 
+FLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
+FLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
+FLAGS += -DPLUGIN_FILE=\"$(PLUGIN_FILE)\"
+FLAGS += -DINFO_FILE=\"$(INFO_FILE)\"
+FLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
+FLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
+FLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
+FLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 
-LDFLAGS += $(shell pkg-config --libs $(LIBS))
-
-DCFLAGS = $(CFLAGS)
-DCFLAGS += -DDWB_DEBUG
-DCFLAGS += -g 
+DFLAGS = $(FLAGS)
+DFLAGS += -DDWB_DEBUG
+DFLAGS += -g 
 
 
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
