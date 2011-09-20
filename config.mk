@@ -45,28 +45,32 @@ HEAD_FILE=head.html
 KEY_FILE=keys.html
 ERROR_FILE=error.html
 
-FLAGS += -Wall -Wno-format-zero-length
-FLAGS += -pipe
-FLAGS += $(shell pkg-config --cflags --libs $(LIBS))
-FLAGS += --ansi
-FLAGS += -std=c99
+CFLAGS += -Wall 
+CFLAGS += -pipe
+CFLAGS += $(shell pkg-config --cflags $(LIBS))
+CFLAGS += --ansi
+CFLAGS += -std=c99
 # TODO g_hash_table is empty with -O2 
-FLAGS += -D_POSIX_SOURCE
-FLAGS += -D_BSD_SOURCE
-FLAGS += -DNAME=\"$(NAME)\" 
-FLAGS += -DVERSION=\"$(VERSION)\" 
-FLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
-FLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
-FLAGS += -DPLUGIN_FILE=\"$(PLUGIN_FILE)\"
-FLAGS += -DINFO_FILE=\"$(INFO_FILE)\"
-FLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
-FLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
-FLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
-FLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
+CFLAGS += -D_POSIX_SOURCE
+CFLAGS += -O2
+CFLAGS += -D_BSD_SOURCE
+CFLAGS += -DNAME=\"$(NAME)\" 
+CFLAGS += -DVERSION=\"$(VERSION)\" 
+CFLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
+CFLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
+CFLAGS += -DPLUGIN_FILE=\"$(PLUGIN_FILE)\"
+CFLAGS += -DINFO_FILE=\"$(INFO_FILE)\"
+CFLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
+CFLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
+CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
+CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 
-DFLAGS = $(FLAGS)
-DFLAGS += -DDWB_DEBUG
-DFLAGS += -g 
+
+LDFLAGS = $(shell pkg-config --libs $(LIBS)) 
+
+DCFLAGS = $(CFLAGS)
+DCFLAGS += -DDWB_DEBUG
+DCFLAGS += -g 
 
 
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))

@@ -97,22 +97,31 @@ util_keyval_to_char(guint keyval) {
   return NULL;
 }/*}}}*/
 
+Arg *
+util_arg_new() {
+  Arg *ret = dwb_malloc(sizeof(Arg));
+  ret->n = 0;
+  ret->i = 0;
+  ret->d = 0;
+  ret->p = NULL;
+  ret->arg = NULL;
+  ret->b = false;
+  ret->e = NULL;
+  return ret;
+}
 /* util_char_to_arg(char *value, DwbType type)    return: Arg*{{{*/
 Arg *
 util_char_to_arg(char *value, DwbType type) {
   errno = 0;
-  Arg *ret = NULL;
+  Arg *ret = util_arg_new();
   if (type == BOOLEAN && !value)  {
-    Arg a =  { .b = false };
-    ret = &a;
+    ret->b = false;
   }
   else if (value || type == CHAR) {
     if (value) {
       g_strstrip(value);
       if (strlen(value) == 0) {
         if (type == CHAR) {
-          Arg a = { .p = NULL };
-          ret = &a;
           return ret;
         }
         return NULL;
@@ -120,38 +129,32 @@ util_char_to_arg(char *value, DwbType type) {
     }
     if (type == BOOLEAN) {
       if(!g_ascii_strcasecmp(value, "false") || !strcmp(value, "0")) {
-        Arg a = { .b = false };
-        ret = &a;
+        ret->b = false;
       }
       else {
-        Arg a = { .b = true };
-        ret = &a;
+        ret->b = true;
       }
     }
     else if (type == INTEGER) {
       int n = strtol(value, NULL, 10);
       if (n != LONG_MAX &&  n != LONG_MIN && !errno ) {
-        Arg a = { .i = n };
-        ret = &a;
+        ret->i = n;
       }
     }
     else if (type == DOUBLE) {
       char *end = NULL;
       double d = g_strtod(value, &end);
       if (! *end) {
-        Arg a = { .d = d };
-        ret = &a;
+        ret->d = d;
       }
     }
     else if (type == CHAR) {
-      Arg a = { .p = !value || (value && !strcmp(value, "null")) ? NULL : g_strdup(value) };
-      ret = &a;
+      ret->p = !value || (value && !strcmp(value, "null")) ? NULL : g_strdup(value);
     }
     else if (type == COLOR_CHAR) {
       int length = strlen(value);
       if (value[0] == '#' && (length == 4 || length == 7) && util_is_hex(&value[1])) {
-        Arg a = { .p = g_strdup(value) };
-        ret = &a;
+        ret->p = g_strdup(value);
       }
     }
   }
@@ -393,7 +396,6 @@ dwb_navigation_free(Navigation *n) {
   FREE(n);
 }/*}}}*/
 /*}}}*/
-
 /* QUICKMARK {{{*/
 /* dwb_quickmark_new(const char *uri, const char *title,  const char *key)  {{{*/
 Quickmark *

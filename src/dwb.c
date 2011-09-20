@@ -1609,7 +1609,7 @@ static Layout
 dwb_layout_from_char(const char *desc) {
   char **token = g_strsplit(desc, " ", 0);
   int i=0;
-  Layout layout;
+  Layout layout = 0;
   while (token[i]) {
     if (!(layout & BOTTOM_STACK) && !g_ascii_strcasecmp(token[i], "normal")) {
       layout |= NORMAL_LAYOUT;
@@ -3074,7 +3074,6 @@ dwb_init_vars() {
   dwb.state.background_tabs = GET_BOOL("background-tabs");
 
   dwb.state.size = GET_INT("size");
-  dwb.state.layout = 0;
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }/*}}}*/
