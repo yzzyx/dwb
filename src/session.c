@@ -91,7 +91,7 @@ session_restore(const char *name) {
   }
   char  **lines = g_strsplit(group, "\n", -1);
   WebKitWebView *web, *lastweb = NULL;
-  WebKitWebBackForwardList *bf_list = NULL;
+  WebKitWebBackForwardList *bf_list;
   int last = 1;
   char *uri = NULL;
 
@@ -108,10 +108,8 @@ session_restore(const char *name) {
         }
         lastweb = web;
       }
-      if (bf_list != NULL) {
-        WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(line[1], line[2]);
-        webkit_web_back_forward_list_add_item(bf_list, item);
-      }
+      WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(line[1], line[2]);
+      webkit_web_back_forward_list_add_item(bf_list, item);
       last = current;
       FREE(uri);
       uri = g_strdup(line[1]);
