@@ -44,7 +44,6 @@ HEAD_FILE=head.html
 KEY_FILE=keys.html
 ERROR_FILE=error.html
 
-FLAGS += -pedantic
 CFLAGS += -Wall 
 CFLAGS += -pipe
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
@@ -63,7 +62,8 @@ CFLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
 CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
 CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 
-LDFLAGS =$(shell pkg-config --libs $(LIBS))
+LDFLAGS += $(shell pkg-config --libs $(LIBS))
+LDFLAGS += -lc
 
 DCFLAGS = $(CFLAGS)
 DCFLAGS += -DDWB_DEBUG
