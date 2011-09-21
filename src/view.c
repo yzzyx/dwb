@@ -173,13 +173,6 @@ view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourc
   return true;
 }/*}}}*/
 
-GtkWidget * 
-view_create_plugin_widget_cb(WebKitWebView *web, char *mimetype, char *uri, GHashTable *param, GList *gl) {
-  PRINT_DEBUG("mimetype: %s uri: %s", mimetype, uri);
-  VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
-  return NULL;
-}
-
 /* view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
 static WebKitWebView * 
 view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
@@ -674,17 +667,6 @@ view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
 
 /* DWB_WEB_VIEW {{{*/
 
-/* view_add_history_item(GList *gl) {{{*/
-void 
-view_add_history_item(GList *gl) {
-  WebKitWebView *web = WEBVIEW(gl);
-  const char *uri = webkit_web_view_get_uri(web);
-  const char *title = webkit_web_view_get_title(web);
-  WebKitWebBackForwardList *bl = webkit_web_view_get_back_forward_list(web);
-  WebKitWebHistoryItem *hitem = webkit_web_history_item_new_with_data(uri,  title);
-  webkit_web_back_forward_list_add_item(bl, hitem);
-}/*}}}*/
-
 /* view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
 view_modify_style(View *v, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd) {
@@ -760,7 +742,6 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(view_title_cb), gl);
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(view_scroll_cb), gl);
-  v->status->signals[SIG_CREATE_PLUGIN]         = g_signal_connect(v->web,      "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(view_value_changed_cb), gl);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
   v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);
