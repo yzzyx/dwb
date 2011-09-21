@@ -1230,6 +1230,10 @@ dwb_history_back() {
     return 0;
 
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
+
+  if (bf_list == NULL) 
+    return 0;
+
   int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
   char *uri = (char *)webkit_web_history_item_get_uri(item);
