@@ -332,6 +332,12 @@ view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     return;
   }
 }/*}}}*/
+/* view_resource_request_cb{{{*/
+static GtkWidget * 
+view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *param, GList *gl) {
+  VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
+  return NULL;
+}/*}}}*/
 
 /* view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
 static gboolean
@@ -733,6 +739,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
   v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+  v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(view_load_status_cb), gl);
   v->status->signals[SIG_LOAD_ERROR]            = g_signal_connect(v->web, "load-error",                            G_CALLBACK(view_load_error_cb), gl);
