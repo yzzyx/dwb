@@ -2006,7 +2006,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
 
   /* Check if uri is a html-string */
   if (dwb.state.type == HTML_STRING) {
-    webkit_web_view_load_string(web, arg->p, "text/html", NULL, "dwb://");
+    webkit_web_view_load_string(web, arg->p, "text/html", NULL, NULL);
     dwb.state.type = 0;
     return;
   }

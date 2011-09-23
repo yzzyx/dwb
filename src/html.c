@@ -166,8 +166,6 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
 void 
 html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
-    const char *uri = webkit_web_view_get_uri(wv);
-    printf("blub %s\n", uri ? uri : "bli");
   if (status == WEBKIT_LOAD_FINISHED) {
     g_hash_table_foreach(dwb.settings, (GHFunc)html_settings_fill, wv);
     g_signal_handlers_disconnect_by_func(wv, html_settings_load_cb, table);
