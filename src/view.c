@@ -161,15 +161,17 @@ view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
 static gboolean 
 view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
+#if 0
   if (gl == dwb.state.fview && !(strncmp(message, "_dwb_input_mode_", 16))) {
     dwb_insert_mode(NULL);
   }
   else if (gl == dwb.state.fview && !(strncmp(message, "_dwb_normal_mode_", 17))) {
-    dwb_normal_mode(false);
+    dwb_normal_mode(true);
   }
   if (!strncmp(message, "_dwb_no_input_", 14)) {
     dwb_set_error_message(gl, "No input found in current context");
   }
+#endif
   return true;
 }/*}}}*/
 
