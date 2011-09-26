@@ -70,7 +70,7 @@ enable-frame-flattening checkbox Whether to enable frame flattening
 enforce-96-dpi checkbox Enforce a resolution of 96 dpi
 factor text Zoom factor of the tiling area
 hide-tabbar text Whether to hide the tabbar  (never, always, tiled)
-layout text The default layout (Normal, Bottomstack, Maximized)
+layout select @normal_maximized @normal @bottomstack_maximized @bottomstack The default layout (Normal, Bottomstack, Maximized)
 message-delay text Time messages are shown, in seconds
 size text Tiling area size in percent
 tabbed-browsing checkbox Whether to enable tabbed browsing
@@ -86,7 +86,7 @@ hint-font text Font used for hints
 hint-letter-seq text Letter sequence for letter hints
 hint-normal-color text Color of inactive links in hintmode
 hint-opacity text Opacity used for hints
-hint-style text Whether to use 'number' or 'letter' hints
+hint-style select @letter @number Whether to use 'number' or 'letter' hints
 
 # plugins Plugins &amp Scripts
 adblocker checkbox Whether to block advertisements via a filterlist

@@ -850,7 +850,7 @@ dwb_set_status_bar_text(GtkWidget *label, const char *text, DwbColor *fg,  Pango
   if (markup) {
     char *escaped =  g_markup_escape_text(text, -1);
     gtk_label_set_markup(GTK_LABEL(label), text);
-    free(escaped);
+    g_free(escaped);
   }
   else {
     gtk_label_set_text(GTK_LABEL(label), text);
@@ -1025,7 +1025,7 @@ clean:
   unlink(info->filename);
   g_free(info->filename);
   FREE(info->id);
-  free(info);
+  g_free(info);
 }/*}}}*/
 
 /* dwb_open_in_editor(void) ret: gboolean success {{{*/
@@ -1584,7 +1584,7 @@ dwb_spawn(GList *gl, const char *prop, const char *uri) {
   char *command;
   if ( (program = GET_CHAR(prop)) && (command = util_string_replace(program, "dwb_uri", uri)) ) {
     g_spawn_command_line_async(command, NULL);
-    free(command);
+    g_free(command);
     return true;
   }
   else {

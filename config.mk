@@ -9,6 +9,7 @@ SRCDIR=src
 JSDIR=scripts
 LIBDIR=lib
 SHAREDIR=share
+UTILDIR=util
 
 
 # Version info
@@ -18,7 +19,6 @@ NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REA
 BUILDDATE=`date +%Y.%m.%d`
 
 CC ?= gcc
-MAKE=make --no-print-directory
 
 # gtk3
 ifeq (${GTK}, 3)
