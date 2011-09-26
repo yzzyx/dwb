@@ -883,4 +883,9 @@ commands_pass_through(KeyMap *km, Arg *arg) {
   dwb_set_normal_message(dwb.state.fview, false, "-- PASS THROUGH --");
   return true;
 }/*}}}*/
+/* commands_reload_scripts {{{*/
+gboolean
+commands_open_editor(KeyMap *km, Arg *arg) {
+  return dwb_open_in_editor();
+}/*}}}*/
 /*}}}*/

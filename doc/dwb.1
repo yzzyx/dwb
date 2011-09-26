@@ -362,6 +362,10 @@ Show userscripts (command
 .BR wi
 Show the webinspector. Note that 'enable-developer-extras' has to be set. 
 .TP 
+.BR Control e
+Open external editor for current input/textarea (command
+.BR open_editor ).
+.TP 
 .BR g.
 Toggle hidden files when browsing local filesystem.
 .TP 
@@ -885,6 +889,11 @@ Whether to use an external download programm specified in
 Possible values: true/false,
 default value:
 .IR true .
+.TP 
+.BR editor
+External editor used for inputs/textareas.
+default value:
+.IR xterm\ -e\ vim\ dwb_uri .
 .TP 
 .BR error-color
 The color for error-messages. Possible values: an rgb color-string,

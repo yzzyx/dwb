@@ -138,4 +138,5 @@ static KeyValue KEYS[] = {
   { "quit",                   {   "q",         GDK_CONTROL_MASK }, }, 
   { "fullscreen",             {   "F11",         GDK_CONTROL_MASK }, }, 
   { "pass_through",           {   "i",        GDK_CONTROL_MASK }, }, 
+  { "open_editor",            {   "e",        GDK_CONTROL_MASK }, }, 
 };

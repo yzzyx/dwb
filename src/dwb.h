@@ -28,6 +28,7 @@
 #include <libgen.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <libsoup/soup.h>
 #include <locale.h>
 #include <stdarg.h>
@@ -729,5 +730,7 @@ void dwb_show_directory(WebKitWebView *, const char *, const Arg *);
 void dwb_remove_bookmark(const char *);
 void dwb_remove_history(const char *);
 void dwb_remove_quickmark(const char *);
+
+gboolean dwb_open_in_editor(void);
 
 #endif

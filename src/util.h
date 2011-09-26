@@ -28,6 +28,9 @@ void util_cut_text(char *, int, int);
 gboolean util_is_hex(const char *string);
 int util_test_connect(const char *uri);
 
+char * util_get_temp_filename(void);
+void util_rmdir(const char *path, gboolean recursive);
+
 // keys
 char * dwb_modmask_to_string(guint );
 char * util_keyval_to_char(guint );

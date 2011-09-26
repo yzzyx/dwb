@@ -86,6 +86,14 @@ static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGS
 static int MAX_COMPLETIONS = 11;
 static char *restore = NULL;
 
+typedef struct _EditorInfo {
+  char *filename;
+  char *id;
+  GList *gl;
+  WebKitDOMElement *element;
+  const char *tagname;
+} EditorInfo;
+
 
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
@@ -346,6 +354,8 @@ static FunctionMap FMAP [] = {
     (Func) commands_fullscreen, NULL,     ALWAYS_SM,    { 0 } }, 
   { { "pass_through",    "Pass-through mode" },                 1, 
     (Func) commands_pass_through, NULL,     POST_SM,    { 0 } }, 
+  { { "open_editor",    "Open external editor" },                 1, 
+    (Func) commands_open_editor, NULL,     ALWAYS_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -562,7 +572,7 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
   { { "complete-searchengines",                   "Whether to complete searchengines with tab", },                                     
     SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
-  { { "complete-commands",                        "Whether to complete the commmand history", },                                     
+  { { "complete-commands",                        "Whether to complete the command history", },                                     
     SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)dwb_init_vars,  },
   { { "complete-userscripts",                        "Whether to complete userscripts", },                                     
     SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
@@ -590,6 +600,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy,  }, 
   { { "ftp-client",                            "Program used for ftp", },                                            
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy,   }, 
+  { { "editor",                            "External editor", },                                            
+    SETTING_GLOBAL,  CHAR, { .p = "xterm -e vim dwb_uri" }, (S_Func)dwb_set_dummy,   }, 
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
@@ -978,6 +990,94 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+/* dwb_editor_watch (GChildWatchFunc) {{{*/
+static void
+dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
+  char *content = util_get_file_content(info->filename);
+  WebKitDOMElement *e = NULL;
+  WebKitWebView *wv;
+  if (content == NULL) 
+    goto clean;
+  if (!info->gl || !g_list_find(dwb.state.views, info->gl->data)) {
+    if (info->id == NULL) 
+      goto clean;
+    else 
+      wv = CURRENT_WEBVIEW();
+  }
+  else 
+    wv = WEBVIEW(info->gl);
+  if (info->id != NULL) {
+    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+    e = webkit_dom_document_get_element_by_id(doc, info->id);
+    if (e == NULL) 
+      goto clean;
+  }
+  else 
+    e = info->element;
+
+  if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) 
+    webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), content);
+  if (WEBKIT_DOM_IS_HTML_TEXT_AREA_ELEMENT(e)) 
+    webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(e), content);
+
+clean:
+  unlink(info->filename);
+  g_free(info->filename);
+  FREE(info->id);
+  free(info);
+}/*}}}*/
+
+/* dwb_open_in_editor(void) ret: gboolean success {{{*/
+gboolean
+dwb_open_in_editor(void) {
+  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
+  WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
+  if (active == NULL) 
+    return false;
+
+  char *tagname = webkit_dom_element_get_tag_name(active);
+  if (tagname == NULL) 
+    return false;
+  char *value = NULL;
+  if (! strcmp(tagname, "INPUT")) 
+    value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(active));
+  else if (!strcmp(tagname, "TEXTAREA"))
+    value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(active));
+  if (value == NULL) 
+    return false;
+
+  char *path = util_get_temp_filename();
+  
+  char *editor = GET_CHAR("editor");
+  char *commandstring = util_string_replace(editor, "dwb_uri", path);
+  if (commandstring == NULL) 
+    return false;
+
+  g_file_set_contents(path, value, -1, NULL);
+  char **commands = g_strsplit(commandstring, " ", -1);
+  GPid pid;
+  gboolean success = g_spawn_async(NULL, commands, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &pid, NULL);
+  if (!success) 
+    return false;
+
+  EditorInfo *info = dwb_malloc(sizeof(EditorInfo));
+  char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(active));
+  if (id != NULL && strlen(id) > 0) {
+    info->id = g_strdup(id);
+  }
+  else  {
+    info->id = NULL;
+  }
+  info->tagname = tagname;
+  info->element = active;
+  info->filename = path;
+  info->gl = dwb.state.fview;
+  g_child_watch_add(pid, (GChildWatchFunc)dwb_editor_watch, info);
+
+  return true;
+}/*}}}*/
+
 /* remove history, bookmark, quickmark {{{*/
 static int
 dwb_remove_navigation_item(GList **content, const char *line, const char *filename) {
@@ -2302,6 +2402,7 @@ dwb_normal_mode(gboolean clean) {
   dwb_clean_vars();
 }/*}}}*/
 
+/* gboolean dwb_highlight_search(void) {{{*/
 gboolean
 dwb_highlight_search() {
   WebKitWebView *web = CURRENT_WEBVIEW();
@@ -2313,7 +2414,8 @@ dwb_highlight_search() {
     return true;
   }
   return false;
-}
+}/*}}}*/
+
 /* dwb_update_search(gboolean ) {{{*/
 gboolean 
 dwb_update_search(gboolean forward) {
@@ -2975,8 +3077,16 @@ dwb_init_files() {
   char *profile_path   = g_build_filename(path, dwb.misc.profile, NULL);
 
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
-    g_mkdir_with_parents(profile_path, 0755);
+    g_mkdir_with_parents(profile_path, 0700);
   }
+  char *cache_dir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
+  if (!g_file_test(cache_dir, G_FILE_TEST_IS_DIR)) {
+    g_mkdir_with_parents(cache_dir, 0700);
+  }
+  else {
+    util_rmdir(cache_dir, true);
+  }
+  g_free(cache_dir);
   dwb.files.bookmarks     = g_build_filename(profile_path, "bookmarks",     NULL);
   dwb.files.history       = g_build_filename(profile_path, "history",       NULL);
   dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);
