@@ -51,7 +51,6 @@ static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 
 
-static void dwb_clean_buffer(GList *);
 static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 
 static gboolean dwb_command_mode(Arg *arg);
@@ -1344,7 +1343,7 @@ dwb_clean_load_end(GList *gl) {
     v->status->mimetype = NULL;
   }
   if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {  
-    dwb_normal_mode(false);
+    dwb_normal_mode(true);
   }
 }/*}}}*/
 
@@ -1502,16 +1501,6 @@ dwb_resize(double size) {
   dwb.state.size = size;
 }/*}}}*/
 
-/* dwb_clean_buffer{{{*/
-static void
-dwb_clean_buffer(GList *gl) {
-  if (dwb.state.buffer) {
-    g_string_free(dwb.state.buffer, true);
-    dwb.state.buffer = NULL;
-  }
-  CLEAR_COMMAND_TEXT(gl);
-}/*}}}*/
-
 /* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
 static void 
 dwb_reload_layout(GList *gl, WebSettings *s) {
@@ -1613,7 +1602,7 @@ static Layout
 dwb_layout_from_char(const char *desc) {
   char **token = g_strsplit(desc, " ", 0);
   int i=0;
-  Layout layout;
+  Layout layout = 0;
   while (token[i]) {
     if (!(layout & BOTTOM_STACK) && !g_ascii_strcasecmp(token[i], "normal")) {
       layout |= NORMAL_LAYOUT;
@@ -2010,7 +1999,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
 
   /* Check if uri is a html-string */
   if (dwb.state.type == HTML_STRING) {
-    webkit_web_view_load_string(web, arg->p, "text/html", NULL, "dwb://");
+    webkit_web_view_load_string(web, arg->p, "text/html", NULL, NULL);
     dwb.state.type = 0;
     return;
   }
@@ -2125,7 +2114,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
   return ret;
 }/*}}}*/
 
-/* dwb_clean_buffer() {{{*/
+/* dwb_clean_key_buffer() {{{*/
 void 
 dwb_clean_key_buffer() {
   dwb.state.nummod = 0;
@@ -2283,12 +2272,11 @@ void
 dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
-  if (dwb.state.mode == HINT_MODE || dwb.state.mode == SEARCH_FIELD_MODE) {
+  if (mode == HINT_MODE || mode == SEARCH_FIELD_MODE) {
     dwb_execute_script(MAIN_FRAME(), "DwbHintObj.clear()", false);
   }
   else if (mode & INSERT_MODE) {
     view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
-    CLEAR_COMMAND_TEXT(dwb.state.fview);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   }
   else if (mode == DOWNLOAD_GET_PATH) {
@@ -2303,7 +2291,11 @@ dwb_normal_mode(gboolean clean) {
   dwb_focus_scroll(dwb.state.fview);
 
   if (clean) {
-    dwb_clean_buffer(dwb.state.fview);
+    if (dwb.state.buffer != NULL) {
+      g_string_free(dwb.state.buffer, true);
+      dwb.state.buffer = NULL;
+    }
+    CLEAR_COMMAND_TEXT(dwb.state.fview);
   }
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");

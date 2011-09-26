@@ -161,24 +161,19 @@ view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
 static gboolean 
 view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
+#if 0
   if (gl == dwb.state.fview && !(strncmp(message, "_dwb_input_mode_", 16))) {
     dwb_insert_mode(NULL);
   }
   else if (gl == dwb.state.fview && !(strncmp(message, "_dwb_normal_mode_", 17))) {
-    dwb_normal_mode(false);
+    dwb_normal_mode(true);
   }
   if (!strncmp(message, "_dwb_no_input_", 14)) {
     dwb_set_error_message(gl, "No input found in current context");
   }
+#endif
   return true;
 }/*}}}*/
-
-GtkWidget * 
-view_create_plugin_widget_cb(WebKitWebView *web, char *mimetype, char *uri, GHashTable *param, GList *gl) {
-  PRINT_DEBUG("mimetype: %s uri: %s", mimetype, uri);
-  VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
-  return NULL;
-}
 
 /* view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
 static WebKitWebView * 
@@ -338,6 +333,12 @@ view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     webkit_network_request_set_uri(request, "about:blank");
     return;
   }
+}/*}}}*/
+/* view_resource_request_cb{{{*/
+static GtkWidget * 
+view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *param, GList *gl) {
+  VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
+  return NULL;
 }/*}}}*/
 
 /* view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
@@ -534,7 +535,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   else 
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
 
-  webkit_web_frame_load_alternate_string(frame, site, "Error", uri);
+  webkit_web_frame_load_alternate_string(frame, site, NULL, uri);
 
   g_free(site);
   g_free(content);
@@ -740,6 +741,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
   v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+  v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(view_load_status_cb), gl);
   v->status->signals[SIG_LOAD_ERROR]            = g_signal_connect(v->web, "load-error",                            G_CALLBACK(view_load_error_cb), gl);
@@ -749,7 +751,6 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(view_title_cb), gl);
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(view_scroll_cb), gl);
-  v->status->signals[SIG_CREATE_PLUGIN]         = g_signal_connect(v->web,      "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(view_value_changed_cb), gl);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
   v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);

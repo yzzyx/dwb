@@ -1,36 +1,29 @@
 include ../config.mk
 
-# needed for migration to gtk3
-# FLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
-# FLAGS+=-DGTK_DISABLE_DEPRECATED
-# FLAGS+=-DGDK_DISABLE_DEPRECATED
-# FLAGS+=-DGSEAL_ENABLE
-
 all: $(TARGET) 
 
 $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
-	@$(CC) $(FLAGS) $(OBJ) -o $(TARGET) 
+	@$(CC) $(LDFLAGS) $(OBJ) -o $(TARGET) 
 
 -include $(OBJ:.o=.d)
 -include $(DOBJ:.do=.dd)
 
 %.o: %.c 
 	@echo "${CC} $<"
-	@$(CC) $(FLAGS) -c -o $@ $<
+	@$(CC) $(CFLAGS) -c -o $@ $<
 
 #@$(CC) $(FLAGS) -MM $*.c > $*.d
-
 
 debug: $(DTARGET)
 
 %.do: %.c
 	@echo "${CC} $<"
-	@$(CC) $(DFLAGS) -c -o $@ $<
+	@$(CC) $(DCFLAGS) -c -o $@ $<
 
 $(DTARGET): $(DOBJ) 
 	@echo "$(CC) $@"
-	@$(CC) $(DFLAGS) $(DOBJ) -o $(DTARGET) 
+	@$(CC) $(LDFLAGS) $(DOBJ) -o $(DTARGET) 
 
 cgdb: debug
 	cgdb $(DTARGET)

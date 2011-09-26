@@ -91,7 +91,7 @@ session_restore(const char *name) {
   }
   char  **lines = g_strsplit(group, "\n", -1);
   WebKitWebView *web, *lastweb = NULL;
-  WebKitWebBackForwardList *bf_list;
+  WebKitWebBackForwardList *bf_list = NULL;
   int last = 1;
   char *uri = NULL;
 
@@ -101,16 +101,17 @@ session_restore(const char *name) {
     if (line[0] && line[1] && line[2]) {
       int current = strtol(line[0], NULL, 10);
       if (current <= last) {
-        view_add(NULL, false);
-        web = CURRENT_WEBVIEW();
+        web = WEBVIEW(view_add(NULL, false));
         bf_list = webkit_web_back_forward_list_new_with_web_view(web);
         if (lastweb) {
           session_load_webview(lastweb, uri, last);
         }
         lastweb = web;
       }
-      WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(line[1], line[2]);
-      webkit_web_back_forward_list_add_item(bf_list, item);
+      if (bf_list != NULL) {
+        WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(line[1], line[2]);
+        webkit_web_back_forward_list_add_item(bf_list, item);
+      }
       last = current;
       FREE(uri);
       uri = g_strdup(line[1]);
@@ -134,6 +135,7 @@ session_restore(const char *name) {
   dwb_unfocus();
   dwb_focus(dwb.state.views);
   dwb_update_layout(false);
+  FREE(uri);
   return true;
 }/*}}}*/
 
