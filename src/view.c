@@ -988,15 +988,17 @@ view_remove(GList *g) {
 
   /* Get History for the undo list */
   WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
-  GList *store = NULL;
+  if ( bflist != NULL ) {
+    GList *store = NULL;
 
-  for (int i = -webkit_web_back_forward_list_get_back_length(bflist); i<=0; i++) {
-    WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bflist, i);
-    Navigation *n = dwb_navigation_from_webkit_history_item(item);
-    if (n) 
-      store = g_list_append(store, n);
+    for (int i = -webkit_web_back_forward_list_get_back_length(bflist); i<=0; i++) {
+      WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bflist, i);
+      Navigation *n = dwb_navigation_from_webkit_history_item(item);
+      if (n) 
+        store = g_list_append(store, n);
+    }
+    dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
   }
-  dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
 
   /* Favicon */ 
   GdkPixbuf *pb;
