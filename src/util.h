@@ -28,7 +28,7 @@ void util_cut_text(char *, int, int);
 gboolean util_is_hex(const char *string);
 int util_test_connect(const char *uri);
 
-char * util_get_temp_filename(void);
+char * util_get_temp_filename(const char *);
 void util_rmdir(const char *path, gboolean recursive);
 
 // keys

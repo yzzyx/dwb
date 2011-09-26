@@ -1031,6 +1031,9 @@ clean:
 /* dwb_open_in_editor(void) ret: gboolean success {{{*/
 gboolean
 dwb_open_in_editor(void) {
+  char *editor = GET_CHAR("editor");
+  if (editor == NULL) 
+    return false;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
   WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
   if (active == NULL) 
@@ -1047,9 +1050,8 @@ dwb_open_in_editor(void) {
   if (value == NULL) 
     return false;
 
-  char *path = util_get_temp_filename();
+  char *path = util_get_temp_filename("edit");
   
-  char *editor = GET_CHAR("editor");
   char *commandstring = util_string_replace(editor, "dwb_uri", path);
   if (commandstring == NULL) 
     return false;

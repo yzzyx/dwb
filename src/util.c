@@ -21,11 +21,11 @@
 /* util_string_replace(const char *haystack, const char *needle, const char  *replace)      return: char * (alloc){{{*/
 
 char *
-util_get_temp_filename(void) {
+util_get_temp_filename(const char *prefix) {
   struct timeval t;
   gettimeofday(&t, NULL);
   const char *path = g_get_user_cache_dir();
-  char *filename = g_strdup_printf("edit%lu", t.tv_usec + t.tv_sec*1000000);
+  char *filename = g_strdup_printf("%s%lu", prefix, t.tv_usec + t.tv_sec*1000000);
   char *cache_path = g_build_filename(path, dwb.misc.name, filename, NULL);
   g_free(filename);
 
