@@ -104,6 +104,9 @@ DCFLAGS = $(CFLAGS)
 DCFLAGS += -DDWB_DEBUG
 DCFLAGS += -g 
 
+# Makeflags
+MFLAGS=--no-print-directory
+
 #Input 
 SOURCE = $(wildcard $(SRCDIR)/*.c) 
 HDR = $(SOURCE:%.c=%.h) 
