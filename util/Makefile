@@ -1,7 +1,7 @@
 include ../config.mk
-OUTFILES=../$(LIBDIR)/keys.html ../$(LIBDIR)/settings.html 
 SETTINGS=../$(LIBDIR)/settings.html
 KEYS=../$(LIBDIR)/keys.html
+OUTFILES=$(SETTINGS) $(KEYS)
 
 all: $(OUTFILES)
 

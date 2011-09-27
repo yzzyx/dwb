@@ -3256,7 +3256,6 @@ dwb_init() {
   dwb_soup_init();
   dwb_init_vars();
 
-
   if (dwb.state.layout & BOTTOM_STACK) {
     Arg a = { .n = dwb.state.layout };
     commands_set_orientation(NULL, &a);
