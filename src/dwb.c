@@ -870,6 +870,7 @@ dwb_source_remove(GList *gl) {
   View *v = gl->data;
   if ( (id = v->status->message_id) ) {
     g_source_remove(id);
+    v->status->message_id = 0;
   }
 }
 static gpointer 
@@ -1031,7 +1032,10 @@ clean:
 /* dwb_open_in_editor(void) ret: gboolean success {{{*/
 gboolean
 dwb_open_in_editor(void) {
+  gboolean ret = true;
   char *editor = GET_CHAR("editor");
+  char **commands = NULL;
+  char *commandstring = NULL;
   if (editor == NULL) 
     return false;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
@@ -1052,16 +1056,20 @@ dwb_open_in_editor(void) {
 
   char *path = util_get_temp_filename("edit");
   
-  char *commandstring = util_string_replace(editor, "dwb_uri", path);
-  if (commandstring == NULL) 
-    return false;
+  commandstring = util_string_replace(editor, "dwb_uri", path);
+  if (commandstring == NULL)  {
+    ret = false;
+    goto clean;
+  }
 
   g_file_set_contents(path, value, -1, NULL);
-  char **commands = g_strsplit(commandstring, " ", -1);
+  commands = g_strsplit(commandstring, " ", -1);
   GPid pid;
   gboolean success = g_spawn_async(NULL, commands, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &pid, NULL);
-  if (!success) 
-    return false;
+  if (!success) {
+    ret = false;
+    goto clean;
+  }
 
   EditorInfo *info = dwb_malloc(sizeof(EditorInfo));
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(active));
@@ -1077,7 +1085,12 @@ dwb_open_in_editor(void) {
   info->gl = dwb.state.fview;
   g_child_watch_add(pid, (GChildWatchFunc)dwb_editor_watch, info);
 
-  return true;
+clean:
+  FREE(commandstring);
+  if (commands != NULL) 
+    g_strfreev(commands);
+
+  return ret;
 }/*}}}*/
 
 /* remove history, bookmark, quickmark {{{*/
