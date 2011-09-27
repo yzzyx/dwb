@@ -87,4 +87,5 @@ gboolean commands_quit(KeyMap *, Arg *);
 gboolean commands_reload_scripts(KeyMap *, Arg *);
 gboolean commands_fullscreen(KeyMap *, Arg *);
 gboolean commands_pass_through(KeyMap *, Arg *);
+gboolean commands_open_editor(KeyMap *, Arg *);
 #endif

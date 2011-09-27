@@ -1019,6 +1019,7 @@ view_remove(GList *g) {
   FREE(v);
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
+  gl = NULL;
 
   /* Update MAXIMIZED layout */ 
   if (dwb.state.layout & MAXIMIZED) {

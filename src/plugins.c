@@ -5,7 +5,6 @@
 #define ALLOWED(g)   (VIEW(g)->status->allowed_plugins)
 #define PLUGIN_IMAGE_SIZE    "48px"
 
-
 static void 
 plugins_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) {
   WebKitDOMElement *e = g_object_get_data((gpointer)element, "dwb-plugin-element");
@@ -108,6 +107,7 @@ plugins_frame_load_status_cb(WebKitWebFrame *frame, GList *gl) {
   WebKitWebView *wv = webkit_web_frame_get_web_view(frame);
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   const char *src = webkit_web_frame_get_uri(frame);
+
   if (strcmp(src, "about:blank")) {
     /* We have to find the correct frame, but there is no access from the web_frame
      * to the Htmlelement */

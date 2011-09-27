@@ -118,18 +118,22 @@ html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView
   char buffer[10];
   memset(buffer, '\0', 10);
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(el));
-  char *value = 0;
-  char *type = webkit_dom_element_get_attribute(el, "type");
-  PRINT_DEBUG("id: %s value: %s wv: %s", id, value, type);
-  if (!strcmp(type, "checkbox")) {
-    if (webkit_dom_html_input_element_get_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(el)) ) 
-      strcpy(buffer, "true");
-    else 
-      strcpy(buffer, "false");
-    value = buffer;
+  char *value = NULL;
+  if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(el)) {
+    char *type = webkit_dom_element_get_attribute(el, "type");
+    if (!strcmp(type, "checkbox")) {
+      if (webkit_dom_html_input_element_get_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(el)) ) 
+        strcpy(buffer, "true");
+      else 
+        strcpy(buffer, "false");
+      value = buffer;
+    }
+    else  
+      value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
   }
-  else  
-    value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
+  else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(el)) {
+    value = webkit_dom_html_select_element_get_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(el));
+  }
   dwb_set_setting(id, value);
   return true;
 }
@@ -156,12 +160,20 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
   if (s->type == BOOLEAN) 
     webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), s->arg.b);
   else if (value) {
-    webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value);
+    if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) {
+      webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_really_changed_cb), false, wv);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "blur", G_CALLBACK(html_settings_changed_cb), false, wv);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "focus", G_CALLBACK(html_focus_cb), false, wv);
+    }
+    else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(e)) {
+      char *lower = g_utf8_strdown(value, -1);
+      webkit_dom_html_select_element_set_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(e), lower);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
+      g_free(lower);
+    }
     g_free(value);
   }
-  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_really_changed_cb), false, wv);
-  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "blur", G_CALLBACK(html_settings_changed_cb), false, wv);
-  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "focus", G_CALLBACK(html_focus_cb), false, wv);
 }
 void 
 html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {

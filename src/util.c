@@ -19,6 +19,18 @@
 #include "util.h"
 
 /* util_string_replace(const char *haystack, const char *needle, const char  *replace)      return: char * (alloc){{{*/
+
+char *
+util_get_temp_filename(const char *prefix) {
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  const char *path = g_get_user_cache_dir();
+  char *filename = g_strdup_printf("%s%lu", prefix, t.tv_usec + t.tv_sec*1000000);
+  char *cache_path = g_build_filename(path, dwb.misc.name, filename, NULL);
+  g_free(filename);
+
+  return cache_path;
+}
 char *
 util_string_replace(const char *haystack, const char *needle, const char *replacemant) {
   char **token;
@@ -273,6 +285,25 @@ util_get_directory_content(GString **buffer, const char *dirname) {
   }
 
 }/*}}}*/
+void 
+util_rmdir(const char *path, gboolean recursive) {
+  GDir *dir = g_dir_open(path, 0, NULL);
+  if (dir == NULL) 
+    return;
+  const char *filename = NULL;
+  char *fullpath;
+  while ( (filename = g_dir_read_name(dir)) )  {
+    fullpath = g_build_filename(path, filename, NULL);
+    if (!g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
+      unlink(fullpath);
+    }
+    else if (recursive) {
+      util_rmdir(fullpath, true);
+      rmdir(fullpath);
+    }
+    g_free(fullpath);
+  }
+}
 /* util_get_file_content(const char *filename)    return: char * (alloc) {{{*/
 char *
 util_get_file_content(const char *filename) {

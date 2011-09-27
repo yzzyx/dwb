@@ -9,6 +9,8 @@ SRCDIR=src
 JSDIR=scripts
 LIBDIR=lib
 SHAREDIR=share
+UTILDIR=util
+SUBDIRS=$(SRCDIR) $(UTILDIR)
 
 # Version info
 HG_VERSION=$(shell hg id -n 2>/dev/null)
@@ -17,7 +19,6 @@ NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REA
 BUILDDATE=`date +%Y.%m.%d`
 
 CC ?= gcc
-MAKE=make --no-print-directory
 
 GTK3LIBS=gtk+-3.0 webkitgtk-3.0 
 GTK2LIBS=gtk+-2.0 webkit-1.0
@@ -76,6 +77,7 @@ CFLAGS += -std=c99
 CFLAGS += -D_POSIX_SOURCE
 CFLAGS += -O2
 CFLAGS += -D_BSD_SOURCE
+#defines
 CFLAGS += -DNAME=\"$(NAME)\" 
 CFLAGS += -DVERSION=\"$(VERSION)\" 
 CFLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"

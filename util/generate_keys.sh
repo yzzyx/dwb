@@ -1,7 +1,7 @@
 #!/bin/bash
 
-INFILE=keys.in
-OUTFILE=keys.out
+INFILE=$1
+OUTFILE=$2
 cat > ${OUTFILE} << EOF
 <div class='setting_bar'>
   <a class="setting_button" href="#general">General</a>
