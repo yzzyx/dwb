@@ -10,7 +10,6 @@ JSDIR=scripts
 LIBDIR=lib
 SHAREDIR=share
 
-
 # Version info
 HG_VERSION=$(shell hg id -n 2>/dev/null)
 VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo "$(REAL_VERSION)"; fi)
@@ -20,20 +19,43 @@ BUILDDATE=`date +%Y.%m.%d`
 CC ?= gcc
 MAKE=make --no-print-directory
 
-# gtk3
-ifeq (${GTK}, 3)
-LIBS  += gtk+-3.0
-LIBS  += webkitgtk-3.0
-LIBS  += libsoup-2.4
-CFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
-CFLAGS+=-DGTK_DISABLE_DEPRECATED
-CFLAGS+=-DGDK_DISABLE_DEPRECATED
-CFLAGS+=-DGSEAL_ENABLE
+GTK3LIBS=gtk+-3.0 webkitgtk-3.0 
+GTK2LIBS=gtk+-2.0 webkit-1.0
+LIBSOUP=libsoup-2.4
+
+ifeq ($(shell pkg-config --exists $(LIBSOUP) && echo 1), 1)
+LIBS=$(LIBSOUP)
 else
-LIBS  += gtk+-2.0
-LIBS  += webkit-1.0
-LIBS  += libsoup-2.4
+$(error Cannot find $(LIBSOUP))
 endif
+
+#determine gtk version
+ifeq (${GTK}, 3) 																							#GTK=3
+ifeq ($(shell pkg-config --exists $(GTK3LIBS) && echo 1), 1) 		#has gtk3 libs
+LIBS+=$(GTK3LIBS)
+USEGTK3 := 1
+else 																														#has gtk3 libs
+ifeq ($(shell pkg-config --exists $(GTK2LIBS) && echo 1), 1) 			#has gtk2 libs
+$(warning Cannot find gtk3-libs, falling back to gtk2)
+LIBS+=$(GTK2LIBS)
+else 																															#has gtk2 libs
+$(error Cannot find gtk2-libs or gtk3-libs)
+endif 																														#has gtk2 libs
+endif 																													#has gtk3 libs
+else 																													#GTK=3
+ifeq ($(shell pkg-config --exists $(GTK2LIBS) && echo 1), 1)		#has gtk2 libs
+LIBS+=$(GTK2LIBS)
+else 																														#has gtk2 libs
+ifeq ($(shell pkg-config --exists $(GTK3LIBS) && echo 1), 1) 			#has gtk3 libs
+LIBS+=$(GTK3LIBS)
+USEGTK3 := 1
+$(warning Cannot find gtk2-libs, falling back to gtk3)
+else 																															#has gtk3 libs
+$(error Cannot find gtk2-libs or gtk3-libs)
+endif 																														#has gtk3 libs
+endif 																													#has gtk2 libs
+endif 																												#GTK=3
+
 
 # HTML-files
 INFO_FILE=info.html
@@ -64,6 +86,13 @@ CFLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
 CFLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
 CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
 CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
+
+ifeq (USEGTK3, 1) 
+CFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
+CFLAGS+=-DGTK_DISABLE_DEPRECATED
+CFLAGS+=-DGDK_DISABLE_DEPRECATED
+CFLAGS+=-DGSEAL_ENABLE
+endif
 
 # LDFLAGS
 LDFLAGS = $(shell pkg-config --libs $(LIBS)) 
