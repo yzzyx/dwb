@@ -24,6 +24,7 @@ MAKE=make --no-print-directory
 ifeq (${GTK}, 3)
 LIBS  += gtk+-3.0
 LIBS  += webkitgtk-3.0
+LIBS  += libsoup-2.4
 CFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
 CFLAGS+=-DGTK_DISABLE_DEPRECATED
 CFLAGS+=-DGDK_DISABLE_DEPRECATED
@@ -31,6 +32,7 @@ CFLAGS+=-DGSEAL_ENABLE
 else
 LIBS  += gtk+-2.0
 LIBS  += webkit-1.0
+LIBS  += libsoup-2.4
 endif
 
 # HTML-files
