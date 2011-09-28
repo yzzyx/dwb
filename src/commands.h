@@ -58,6 +58,7 @@ DwbStatus commands_push_master(KeyMap *, Arg *);
 DwbStatus commands_quickmark(KeyMap *, Arg *);
 DwbStatus commands_reload(KeyMap *, Arg *);
 DwbStatus commands_reload_bypass_cache(KeyMap *, Arg *);
+DwbStatus commands_stop_loading(KeyMap *, Arg *);
 DwbStatus commands_resize_master(KeyMap *, Arg *);
 DwbStatus commands_save_files(KeyMap *, Arg *);
 DwbStatus commands_save_session(KeyMap *, Arg *);

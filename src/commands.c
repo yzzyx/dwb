@@ -256,6 +256,14 @@ commands_reload_bypass_cache(KeyMap *km, Arg *arg) {
 }
 /*}}}*/
 
+/* commands_stop_loading {{{*/
+DwbStatus
+commands_stop_loading(KeyMap *km, Arg *arg) {
+  webkit_web_view_stop_loading(WEBVIEW_FROM_ARG(arg));
+  return STATUS_OK;
+}
+/*}}}*/
+
 /* commands_view_source(Arg) {{{*/
 DwbStatus
 commands_view_source(KeyMap *km, Arg *arg) {

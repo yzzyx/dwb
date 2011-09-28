@@ -67,6 +67,7 @@ static KeyValue KEYS[] = {
   { "scroll_up",                {   "k",         0,                   },  },  
   { "show_keys",                {   "Sk",         0,                  },  },  
   { "show_settings",            {   "Ss",        0,                  },  },  
+  { "stop_loading",             {   "s",         GDK_CONTROL_MASK,   },  },  
   { "toggle_bottomstack",       {   "tb",         0,  },  },  
   { "toggle_maximized",         {   "gm",         0,                  },  },  
   { "view_source",              {   "gf",         0,                  },  },  

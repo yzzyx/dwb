@@ -181,6 +181,8 @@ static FunctionMap FMAP [] = {
     (Func)commands_reload,              NULL,                              ALWAYS_SM, },
   { { "reload_bypass_cache",   "Reload current page without using any cached data",  }, 1, 
     (Func)commands_reload_bypass_cache,       NULL,                              ALWAYS_SM, },
+  { { "stop_loading",   "Stop loading current page",  }, 1, 
+    (Func)commands_stop_loading,       NULL,                              ALWAYS_SM, },
   { { "remove_view",           "Close view",                        }, 1, 
     (Func)commands_remove_view,         NULL,                              ALWAYS_SM, },
   { { "save_quickmark",        "Save a quickmark for this page",    }, 0, 

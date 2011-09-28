@@ -16,6 +16,7 @@ history_back Go back
 history_forward Go forward
 reload Reload current page
 reload_bypass_cache Reload without using any cached data
+stop_loading Stop loading current page
 insert_mode Insert mode
 pass_through Go in pass-through mode, all keys are directly send to the webview
 view_source View page source
