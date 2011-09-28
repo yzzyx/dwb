@@ -491,7 +491,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       if (!dwb.misc.private_browsing 
           && strcmp(uri, "about:blank")
           && !g_str_has_prefix(uri, "dwb://") 
-          && dwb_prepend_navigation(gl, &dwb.fc.history) 
+          && (dwb_prepend_navigation(gl, &dwb.fc.history) == STATUS_OK)
           && dwb.misc.synctimer <= 0) {
         util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       }
@@ -906,12 +906,12 @@ view_create_web_view() {
 } /*}}}*/
 
 /* view_push_master (Arg *) {{{*/
-gboolean 
+DwbStatus 
 view_push_master(Arg *arg) {
   GList *gl = NULL, *l = NULL;
   View *old = NULL, *new;
   if (!dwb.state.views->next) {
-    return false;
+    return STATUS_ERROR;
   }
   if (arg && arg->p) {
     gl = arg->p;
@@ -919,7 +919,7 @@ view_push_master(Arg *arg) {
   else if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
     if (!gl) {
-      return false;
+      return STATUS_ERROR;
     }
     CLEAR_COMMAND_TEXT(dwb.state.views);
     view_set_normal_style(CURRENT_VIEW());
@@ -957,7 +957,7 @@ view_push_master(Arg *arg) {
   }
   gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), new->tabevent, -1);
   dwb_update_layout(false);
-  return true;
+  return STATUS_OK;
 }/*}}}*/
 
 /* view_remove (void) {{{*/

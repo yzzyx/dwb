@@ -355,7 +355,7 @@ static FunctionMap FMAP [] = {
   { { "pass_through",    "Pass-through mode" },                 1, 
     (Func) commands_pass_through, NULL,     POST_SM,    { 0 } }, 
   { { "open_editor",    "Open external editor" },                 1, 
-    (Func) commands_open_editor, NULL,     ALWAYS_SM,    { 0 } }, 
+    (Func) commands_open_editor, "No input focused",     NEVER_SM,    { 0 } }, 
 };/*}}}*/
 
 /* DWB_SETTINGS {{{*/
@@ -1030,35 +1030,35 @@ clean:
 }/*}}}*/
 
 /* dwb_open_in_editor(void) ret: gboolean success {{{*/
-gboolean
+DwbStatus
 dwb_open_in_editor(void) {
-  gboolean ret = true;
+  DwbStatus ret = STATUS_OK;
   char *editor = GET_CHAR("editor");
   char **commands = NULL;
   char *commandstring = NULL;
   if (editor == NULL) 
-    return false;
+    return STATUS_ERROR;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
   WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
   if (active == NULL) 
-    return false;
+    return STATUS_ERROR;
 
   char *tagname = webkit_dom_element_get_tag_name(active);
   if (tagname == NULL) 
-    return false;
+    return STATUS_ERROR;
   char *value = NULL;
   if (! strcmp(tagname, "INPUT")) 
     value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(active));
   else if (!strcmp(tagname, "TEXTAREA"))
     value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(active));
   if (value == NULL) 
-    return false;
+    return STATUS_ERROR;
 
   char *path = util_get_temp_filename("edit");
   
   commandstring = util_string_replace(editor, "dwb_uri", path);
   if (commandstring == NULL)  {
-    ret = false;
+    ret = STATUS_ERROR;
     goto clean;
   }
 
@@ -1067,7 +1067,7 @@ dwb_open_in_editor(void) {
   GPid pid;
   gboolean success = g_spawn_async(NULL, commands, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &pid, NULL);
   if (!success) {
-    ret = false;
+    ret = STATUS_ERROR;
     goto clean;
   }
 
@@ -1170,16 +1170,16 @@ dwb_follow_selection() {
 }/*}}}*/
 
 /* dwb_open_startpage(GList *) {{{*/
-gboolean
+DwbStatus
 dwb_open_startpage(GList *gl) {
   if (!dwb.misc.startpage) 
-    return false;
+    return STATUS_ERROR;
   if (gl == NULL) 
     gl = dwb.state.fview;
 
   Arg a = { .p = dwb.misc.startpage, .b = true };
   dwb_load_uri(gl, &a);
-  return true;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_apply_settings(WebSettings *s) {{{*/
@@ -1336,17 +1336,17 @@ dwb_toggle_allowed(const char *filename, const char *data) {
 }/*}}}*/
 
 /* dwb_history_back {{{*/
-int
+DwbStatus
 dwb_history_back() {
   WebKitWebView *w = CURRENT_WEBVIEW();
 
   if (!webkit_web_view_can_go_back(w)) 
-    return 0;
+    return STATUS_ERROR;
 
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
 
   if (bf_list == NULL) 
-    return 0;
+    return STATUS_ERROR;
 
   int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
@@ -1359,18 +1359,22 @@ dwb_history_back() {
   else {
     webkit_web_view_go_to_back_forward_item(w, item);
   }
-  return n;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_history_forward{{{*/
-int
+DwbStatus
 dwb_history_forward() {
   WebKitWebView *w = CURRENT_WEBVIEW();
 
   if (!webkit_web_view_can_go_forward(w))
-    return 0;
+    return STATUS_ERROR;
 
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
+
+  if (bf_list == NULL) 
+    return STATUS_ERROR;
+
   int n = MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
   char *uri = (char *)webkit_web_history_item_get_uri(item);
@@ -1382,7 +1386,7 @@ dwb_history_forward() {
   else {
     webkit_web_view_go_to_back_forward_item(w, item);
   }
-  return n;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_block_ad (GList *, const char *uri)        return: gboolean{{{*/
@@ -1860,16 +1864,16 @@ dwb_append_navigation_with_argument(GList **fc, const char *first, const char *s
 }/*}}}*/
 
 /* dwb_prepend_navigation(GList *gl, GList *view) {{{*/
-gboolean 
+DwbStatus 
 dwb_prepend_navigation(GList *gl, GList **fc) {
   WebKitWebView *w = WEBVIEW(gl);
   const char *uri = webkit_web_view_get_uri(w);
   if (uri && strlen(uri) > 0) {
     const char *title = webkit_web_view_get_title(w);
     dwb_prepend_navigation_with_argument(fc, uri, title);
-    return true;
+    return STATUS_OK;
   }
-  return false;
+  return STATUS_ERROR;
 
 }/*}}}*/
 

@@ -28,7 +28,7 @@
 
 GList * view_add(Arg *, gboolean background);
 void view_remove(GList *gl);
-gboolean view_push_master(Arg *);
+DwbStatus view_push_master(Arg *);
 void view_set_active_style(View *);
 void view_set_normal_style(View *);
 #if _HAS_GTK3
