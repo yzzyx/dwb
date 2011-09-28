@@ -161,24 +161,19 @@ view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
 static gboolean 
 view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
+#if 0
   if (gl == dwb.state.fview && !(strncmp(message, "_dwb_input_mode_", 16))) {
     dwb_insert_mode(NULL);
   }
   else if (gl == dwb.state.fview && !(strncmp(message, "_dwb_normal_mode_", 17))) {
-    dwb_normal_mode(false);
+    dwb_normal_mode(true);
   }
   if (!strncmp(message, "_dwb_no_input_", 14)) {
     dwb_set_error_message(gl, "No input found in current context");
   }
+#endif
   return true;
 }/*}}}*/
-
-GtkWidget * 
-view_create_plugin_widget_cb(WebKitWebView *web, char *mimetype, char *uri, GHashTable *param, GList *gl) {
-  PRINT_DEBUG("mimetype: %s uri: %s", mimetype, uri);
-  VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
-  return NULL;
-}
 
 /* view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
 static WebKitWebView * 
@@ -339,6 +334,12 @@ view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     return;
   }
 }/*}}}*/
+/* view_resource_request_cb{{{*/
+static GtkWidget * 
+view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *param, GList *gl) {
+  VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
+  return NULL;
+}/*}}}*/
 
 /* view_scroll_cb(GtkWidget *w, GdkEventScroll * GList *) {{{*/
 static gboolean
@@ -487,8 +488,13 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
       /* TODO sqlite */
-      if (!dwb.misc.private_browsing && dwb_prepend_navigation(gl, &dwb.fc.history) && dwb.misc.synctimer <= 0)
+      if (!dwb.misc.private_browsing 
+          && strcmp(uri, "about:blank")
+          && !g_str_has_prefix(uri, "dwb://") 
+          && (dwb_prepend_navigation(gl, &dwb.fc.history) == STATUS_OK)
+          && dwb.misc.synctimer <= 0) {
         util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
+      }
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);
@@ -529,7 +535,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   else 
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
 
-  webkit_web_frame_load_alternate_string(frame, site, "Error", uri);
+  webkit_web_frame_load_alternate_string(frame, site, NULL, uri);
 
   g_free(site);
   g_free(content);
@@ -669,17 +675,6 @@ view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
 
 /* DWB_WEB_VIEW {{{*/
 
-/* view_add_history_item(GList *gl) {{{*/
-void 
-view_add_history_item(GList *gl) {
-  WebKitWebView *web = WEBVIEW(gl);
-  const char *uri = webkit_web_view_get_uri(web);
-  const char *title = webkit_web_view_get_title(web);
-  WebKitWebBackForwardList *bl = webkit_web_view_get_back_forward_list(web);
-  WebKitWebHistoryItem *hitem = webkit_web_history_item_new_with_data(uri,  title);
-  webkit_web_back_forward_list_add_item(bl, hitem);
-}/*}}}*/
-
 /* view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
 view_modify_style(View *v, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd) {
@@ -746,6 +741,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
   v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+  v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(view_load_status_cb), gl);
   v->status->signals[SIG_LOAD_ERROR]            = g_signal_connect(v->web, "load-error",                            G_CALLBACK(view_load_error_cb), gl);
@@ -755,7 +751,6 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(view_title_cb), gl);
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(view_scroll_cb), gl);
-  v->status->signals[SIG_CREATE_PLUGIN]         = g_signal_connect(v->web,      "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(view_value_changed_cb), gl);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
   v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);
@@ -911,12 +906,12 @@ view_create_web_view() {
 } /*}}}*/
 
 /* view_push_master (Arg *) {{{*/
-gboolean 
+DwbStatus 
 view_push_master(Arg *arg) {
   GList *gl = NULL, *l = NULL;
   View *old = NULL, *new;
   if (!dwb.state.views->next) {
-    return false;
+    return STATUS_ERROR;
   }
   if (arg && arg->p) {
     gl = arg->p;
@@ -924,7 +919,7 @@ view_push_master(Arg *arg) {
   else if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
     if (!gl) {
-      return false;
+      return STATUS_ERROR;
     }
     CLEAR_COMMAND_TEXT(dwb.state.views);
     view_set_normal_style(CURRENT_VIEW());
@@ -962,7 +957,7 @@ view_push_master(Arg *arg) {
   }
   gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), new->tabevent, -1);
   dwb_update_layout(false);
-  return true;
+  return STATUS_OK;
 }/*}}}*/
 
 /* view_remove (void) {{{*/
@@ -993,15 +988,17 @@ view_remove(GList *g) {
 
   /* Get History for the undo list */
   WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
-  GList *store = NULL;
+  if ( bflist != NULL ) {
+    GList *store = NULL;
 
-  for (int i = -webkit_web_back_forward_list_get_back_length(bflist); i<=0; i++) {
-    WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bflist, i);
-    Navigation *n = dwb_navigation_from_webkit_history_item(item);
-    if (n) 
-      store = g_list_append(store, n);
+    for (int i = -webkit_web_back_forward_list_get_back_length(bflist); i<=0; i++) {
+      WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bflist, i);
+      Navigation *n = dwb_navigation_from_webkit_history_item(item);
+      if (n) 
+        store = g_list_append(store, n);
+    }
+    dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
   }
-  dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
 
   /* Favicon */ 
   GdkPixbuf *pb;
@@ -1022,6 +1019,7 @@ view_remove(GList *g) {
   FREE(v);
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
+  gl = NULL;
 
   /* Update MAXIMIZED layout */ 
   if (dwb.state.layout & MAXIMIZED) {

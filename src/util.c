@@ -19,6 +19,18 @@
 #include "util.h"
 
 /* util_string_replace(const char *haystack, const char *needle, const char  *replace)      return: char * (alloc){{{*/
+
+char *
+util_get_temp_filename(const char *prefix) {
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  const char *path = g_get_user_cache_dir();
+  char *filename = g_strdup_printf("%s%lu", prefix, t.tv_usec + t.tv_sec*1000000);
+  char *cache_path = g_build_filename(path, dwb.misc.name, filename, NULL);
+  g_free(filename);
+
+  return cache_path;
+}
 char *
 util_string_replace(const char *haystack, const char *needle, const char *replacemant) {
   char **token;
@@ -97,22 +109,31 @@ util_keyval_to_char(guint keyval) {
   return NULL;
 }/*}}}*/
 
+Arg *
+util_arg_new() {
+  Arg *ret = dwb_malloc(sizeof(Arg));
+  ret->n = 0;
+  ret->i = 0;
+  ret->d = 0;
+  ret->p = NULL;
+  ret->arg = NULL;
+  ret->b = false;
+  ret->e = NULL;
+  return ret;
+}
 /* util_char_to_arg(char *value, DwbType type)    return: Arg*{{{*/
 Arg *
 util_char_to_arg(char *value, DwbType type) {
   errno = 0;
-  Arg *ret = NULL;
+  Arg *ret = util_arg_new();
   if (type == BOOLEAN && !value)  {
-    Arg a =  { .b = false };
-    ret = &a;
+    ret->b = false;
   }
   else if (value || type == CHAR) {
     if (value) {
       g_strstrip(value);
       if (strlen(value) == 0) {
         if (type == CHAR) {
-          Arg a = { .p = NULL };
-          ret = &a;
           return ret;
         }
         return NULL;
@@ -120,38 +141,32 @@ util_char_to_arg(char *value, DwbType type) {
     }
     if (type == BOOLEAN) {
       if(!g_ascii_strcasecmp(value, "false") || !strcmp(value, "0")) {
-        Arg a = { .b = false };
-        ret = &a;
+        ret->b = false;
       }
       else {
-        Arg a = { .b = true };
-        ret = &a;
+        ret->b = true;
       }
     }
     else if (type == INTEGER) {
       int n = strtol(value, NULL, 10);
       if (n != LONG_MAX &&  n != LONG_MIN && !errno ) {
-        Arg a = { .i = n };
-        ret = &a;
+        ret->i = n;
       }
     }
     else if (type == DOUBLE) {
       char *end = NULL;
       double d = g_strtod(value, &end);
       if (! *end) {
-        Arg a = { .d = d };
-        ret = &a;
+        ret->d = d;
       }
     }
     else if (type == CHAR) {
-      Arg a = { .p = !value || (value && !strcmp(value, "null")) ? NULL : g_strdup(value) };
-      ret = &a;
+      ret->p = !value || (value && !strcmp(value, "null")) ? NULL : g_strdup(value);
     }
     else if (type == COLOR_CHAR) {
       int length = strlen(value);
       if (value[0] == '#' && (length == 4 || length == 7) && util_is_hex(&value[1])) {
-        Arg a = { .p = g_strdup(value) };
-        ret = &a;
+        ret->p = g_strdup(value);
       }
     }
   }
@@ -176,7 +191,7 @@ util_arg_to_char(Arg *arg, DwbType type) {
   else if (type == CHAR || type == COLOR_CHAR) {
     if (arg->p) {
       char *tmp = (char*) arg->p;
-      value = g_strdup_printf(tmp);
+      value = g_strdup(tmp);
     }
   }
   return value;
@@ -192,6 +207,10 @@ int
 util_navigation_compare_second(Navigation *a, Navigation *b) {
   return (strcmp(a->second, b->second));
 }/*}}}*/
+int 
+util_quickmark_compare(Quickmark *a, Quickmark *b) {
+  return strcmp(a->key, b->key);
+}
 /* util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
 int
 util_keymap_sort_first(KeyMap *a, KeyMap *b) {
@@ -266,6 +285,25 @@ util_get_directory_content(GString **buffer, const char *dirname) {
   }
 
 }/*}}}*/
+void 
+util_rmdir(const char *path, gboolean recursive) {
+  GDir *dir = g_dir_open(path, 0, NULL);
+  if (dir == NULL) 
+    return;
+  const char *filename = NULL;
+  char *fullpath;
+  while ( (filename = g_dir_read_name(dir)) )  {
+    fullpath = g_build_filename(path, filename, NULL);
+    if (!g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
+      unlink(fullpath);
+    }
+    else if (recursive) {
+      util_rmdir(fullpath, true);
+      rmdir(fullpath);
+    }
+    g_free(fullpath);
+  }
+}
 /* util_get_file_content(const char *filename)    return: char * (alloc) {{{*/
 char *
 util_get_file_content(const char *filename) {
@@ -325,6 +363,33 @@ util_get_data_file(const char *filename) {
   }
   return NULL;
 }
+static inline int
+util_strcmp_skip_newline(const char *s1, const char *s2) {
+  char *nl = strstr(s2, "\n");
+  if (nl != NULL) 
+    return strncmp(s1, s2, nl - s1);
+  else 
+    return strcmp(s1, s2);
+}
+int
+util_file_remove_line(const char *filename, const char *line) {
+  int ret = 1;
+  char *content = util_get_file_content(filename);
+  char **lines = g_strsplit(content, "\n", -1);
+  GString *buffer = g_string_new(NULL);
+  for (int i=0; lines[i]; i++) {
+    if (strlen(lines[i]) > 0 && STRCMP_FIRST_WORD(lines[i], line)) {
+      g_string_append_printf(buffer, "%s\n", lines[i]);
+    }
+  }
+  g_file_set_contents(filename, buffer->str, -1, NULL);
+
+  g_string_free(buffer, true);
+  g_free(content);
+  g_strfreev(lines);
+
+  return ret;
+}
 
 /* NAVIGATION {{{*/
 /* dwb_navigation_new(const char *uri, const char *title) {{{*/
@@ -362,7 +427,6 @@ dwb_navigation_free(Navigation *n) {
   FREE(n);
 }/*}}}*/
 /*}}}*/
-
 /* QUICKMARK {{{*/
 /* dwb_quickmark_new(const char *uri, const char *title,  const char *key)  {{{*/
 Quickmark *

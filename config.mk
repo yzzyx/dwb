@@ -1,99 +1,133 @@
 REAL_NAME=dwb
 REAL_VERSION=0.0.18
-COPYRIGHT="© 2011 Stefan Bolte"
+COPYRIGHT="© 2011 portix"
+
+# dirs
 DISTDIR=$(REAL_NAME)-$(REAL_VERSION)
 DOCDIR=doc
 SRCDIR=src
 JSDIR=scripts
-EXAMPLEDIR=examples
 LIBDIR=lib
 SHAREDIR=share
+UTILDIR=util
+SUBDIRS=$(SRCDIR) $(UTILDIR)
 
-# VARIOUS FILES
-PLUGIN_FILE=pluginblocker.asc
-
-
+# Version info
 HG_VERSION=$(shell hg id -n 2>/dev/null)
-
 VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo "$(REAL_VERSION)"; fi)
 NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REAL_NAME)"; fi)
+BUILDDATE=`date +%Y.%m.%d`
 
-##ifeq (${GTK}, 3)
-##LIBS  += gtk+-3.0
-##LIBS  += webkitgtk-3.0
-##else
-##LIBS  += gtk+-2.0
-##LIBS  += webkit-1.0
-##endif
-ifeq (${GTK}, 3)
-LIBS  += gtk+-3.0
-LIBS  += webkitgtk-3.0
-FLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
-FLAGS+=-DGTK_DISABLE_DEPRECATED
-FLAGS+=-DGDK_DISABLE_DEPRECATED
-FLAGS+=-DGSEAL_ENABLE
+CC ?= gcc
+
+GTK3LIBS=gtk+-3.0 webkitgtk-3.0 
+GTK2LIBS=gtk+-2.0 webkit-1.0
+LIBSOUP=libsoup-2.4
+
+ifeq ($(shell pkg-config --exists $(LIBSOUP) && echo 1), 1)
+LIBS=$(LIBSOUP)
 else
-LIBS  += gtk+-2.0
-LIBS  += webkit-1.0
+$(error Cannot find $(LIBSOUP))
 endif
-#LIBS  += json-glib-1.0
 
+#determine gtk version
+ifeq (${GTK}, 3) 																							#GTK=3
+ifeq ($(shell pkg-config --exists $(GTK3LIBS) && echo 1), 1) 		#has gtk3 libs
+LIBS+=$(GTK3LIBS)
+USEGTK3 := 1
+else 																														#has gtk3 libs
+ifeq ($(shell pkg-config --exists $(GTK2LIBS) && echo 1), 1) 			#has gtk2 libs
+$(warning Cannot find gtk3-libs, falling back to gtk2)
+LIBS+=$(GTK2LIBS)
+else 																															#has gtk2 libs
+$(error Cannot find gtk2-libs or gtk3-libs)
+endif 																														#has gtk2 libs
+endif 																													#has gtk3 libs
+else 																													#GTK=3
+ifeq ($(shell pkg-config --exists $(GTK2LIBS) && echo 1), 1)		#has gtk2 libs
+LIBS+=$(GTK2LIBS)
+else 																														#has gtk2 libs
+ifeq ($(shell pkg-config --exists $(GTK3LIBS) && echo 1), 1) 			#has gtk3 libs
+LIBS+=$(GTK3LIBS)
+USEGTK3 := 1
+$(warning Cannot find gtk2-libs, falling back to gtk3)
+else 																															#has gtk3 libs
+$(error Cannot find gtk2-libs or gtk3-libs)
+endif 																														#has gtk3 libs
+endif 																													#has gtk2 libs
+endif 																												#GTK=3
+
+
+# HTML-files
 INFO_FILE=info.html
 SETTINGS_FILE=settings.html
 HEAD_FILE=head.html
 KEY_FILE=keys.html
 ERROR_FILE=error.html
 
-#FLAGS += -pedantic
-FLAGS += -Wall 
-FLAGS += -pipe
-FLAGS += `pkg-config --cflags --libs $(LIBS)` 
-FLAGS += --ansi
-FLAGS += -std=c99
-FLAGS += -D_POSIX_SOURCE
-FLAGS += -D_BSD_SOURCE
-FLAGS += -DNAME=\"$(NAME)\" 
-FLAGS += -DVERSION=\"$(VERSION)\" 
-FLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
-FLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
-FLAGS += -DPLUGIN_FILE=\"$(PLUGIN_FILE)\"
+# VARIOUS FILES
+PLUGIN_FILE=pluginblocker.asc
 
-FLAGS += -DINFO_FILE=\"$(INFO_FILE)\"
-FLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
-FLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
-FLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
-FLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
+# CFLAGS
+CFLAGS += -Wall 
+CFLAGS += -pipe
+CFLAGS += $(shell pkg-config --cflags $(LIBS))
+CFLAGS += --ansi
+CFLAGS += -std=c99
+CFLAGS += -D_POSIX_SOURCE
+CFLAGS += -O2
+CFLAGS += -D_BSD_SOURCE
+#defines
+CFLAGS += -DNAME=\"$(NAME)\" 
+CFLAGS += -DVERSION=\"$(VERSION)\" 
+CFLAGS += -DCOPYRIGHT=\"$(COPYRIGHT)\"
+CFLAGS += -DREAL_NAME=\"$(REAL_NAME)\"
+CFLAGS += -DPLUGIN_FILE=\"$(PLUGIN_FILE)\"
+CFLAGS += -DINFO_FILE=\"$(INFO_FILE)\"
+CFLAGS += -DSETTINGS_FILE=\"$(SETTINGS_FILE)\"
+CFLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
+CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
+CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 
-DFLAGS += $(FLAGS)
-DFLAGS += -DDWB_DEBUG
-DFLAGS += -g 
+ifeq (USEGTK3, 1) 
+CFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
+CFLAGS+=-DGTK_DISABLE_DEPRECATED
+CFLAGS+=-DGDK_DISABLE_DEPRECATED
+CFLAGS+=-DGSEAL_ENABLE
+endif
 
+# LDFLAGS
+LDFLAGS = $(shell pkg-config --libs $(LIBS)) 
 
-OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
-DOBJ = $(patsubst %.c, %.do, $(wildcard *.c))
+# Debug flags
+DCFLAGS = $(CFLAGS)
+DCFLAGS += -DDWB_DEBUG
+DCFLAGS += -g 
+
+# Makeflags
+MFLAGS=--no-print-directory
+
+#Input 
 SOURCE = $(wildcard $(SRCDIR)/*.c) 
 HDR = $(SOURCE:%.c=%.h) 
+
+# OUTPUT 
+# Objects
+OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
+DOBJ = $(patsubst %.c, %.do, $(wildcard *.c))
+
+# Targets
 TARGET = $(REAL_NAME)
 DTARGET=$(TARGET)_d
 
-EXAMPLES += $(EXAMPLEDIR)/ext_editor.sh 
-EXAMPLES += $(EXAMPLEDIR)/formfiller.sh
 
-MANFILE=$(REAL_NAME).1
-
-MAKE=make --no-print-directory
-
-
-BUILDDATE=`date +%Y.%m.%d`
-
-#directories
+# target directories
 PREFIX=/usr
-
 BINDIR=$(PREFIX)/bin
-
 DATAROOTDIR=$(PREFIX)/share
 DATADIR=$(DATAROOTDIR)
 
-
+# manpages
+MANFILE=$(REAL_NAME).1
 MANDIR=$(DATAROOTDIR)/man
 MAN1DIR=$(MANDIR)/man1

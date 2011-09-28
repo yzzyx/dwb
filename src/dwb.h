@@ -28,6 +28,7 @@
 #include <libgen.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <libsoup/soup.h>
 #include <locale.h>
 #include <stdarg.h>
@@ -255,6 +256,11 @@ typedef enum {
   DL_ACTION_EXECUTE   = 0x02,
 } DownloadAction;
 
+typedef enum _DwbStatus {
+  STATUS_OK, 
+  STATUS_ERROR, 
+  STATUS_END,
+} DwbStatus;
 
 #define APPEND  0x01
 #define PREPEND  0x02
@@ -288,7 +294,6 @@ enum Signal {
   SIG_BUTTON_RELEASE,
   SIG_CLOSE_WEB_VIEW, 
   SIG_CONSOLE_MESSAGE,
-  SIG_CREATE_PLUGIN,
   SIG_CREATE_WEB_VIEW,
   SIG_DOWNLOAD_REQUESTED,
   SIG_HOVERING_OVER_LINK, 
@@ -298,6 +303,7 @@ enum Signal {
   SIG_MIME_TYPE,
   SIG_NAVIGATION,
   SIG_NEW_WINDOW,
+  SIG_CREATE_PLUGIN_WIDGET,
   SIG_RESOURCE_REQUEST,
   SIG_WINDOW_OBJECT,
   SIG_LOAD_STATUS,
@@ -669,7 +675,7 @@ void dwb_update_status(GList *gl);
 void dwb_update_layout(gboolean);
 void dwb_unfocus(void);
 
-gboolean dwb_prepend_navigation(GList *, GList **);
+DwbStatus dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const char *, const char *);
 
 Navigation * dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *);
@@ -680,8 +686,8 @@ void dwb_save_searchengine(void);
 char * dwb_execute_script(WebKitWebFrame *, const char *, gboolean);
 void dwb_resize(double );
 void dwb_toggle_tabbar(void);
-int dwb_history_back(void);
-int dwb_history_forward(void);
+DwbStatus dwb_history_back(void);
+DwbStatus dwb_history_forward(void);
 
 void dwb_focus(GList *);
 void dwb_source_remove(GList *);
@@ -721,10 +727,15 @@ void dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
 void dwb_set_key(const char *, char *);
 void dwb_set_setting(const char *, char *value);
-gboolean dwb_open_startpage(GList *);
+DwbStatus dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
 char * dwb_get_stock_item_base64_encoded(const char *);
 void dwb_show_directory(WebKitWebView *, const char *, const Arg *);
+void dwb_remove_bookmark(const char *);
+void dwb_remove_history(const char *);
+void dwb_remove_quickmark(const char *);
+
+DwbStatus dwb_open_in_editor(void);
 
 #endif

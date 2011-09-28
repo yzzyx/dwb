@@ -3,10 +3,14 @@ include config.mk
 all: $(TARGET) 
 
 $(TARGET):
-	@$(MAKE) -C $(SRCDIR)
+	@for dir in $(SUBDIRS); do $(MAKE) $(MFLAGS) -C $$dir; done
+
+#@$(MAKE) -C $(SRCDIR)
+#@$(MAKE) -C $(UTILDIR)
 
 clean: 
-	@$(MAKE) clean -C $(SRCDIR)
+	@echo Cleaning 
+	@for dir in $(SUBDIRS); do $(MAKE) clean -C $$dir; done
 
 install: all install-man install-data 
 	install -Dm 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)

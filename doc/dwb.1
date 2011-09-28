@@ -298,8 +298,8 @@ Add a searchengine. Text fields can be focused via hints (command
 .BR save_search_field ).
 .TP
 .BR Ss 
-Show global settings (command
-.BR show_global_settings ).
+Show settings (command
+.BR show_settings ).
 .TP
 .BR Sk 
 Show keys (command
@@ -308,10 +308,6 @@ Show keys (command
 .BR ss 
 Set setting (command
 .BR set_setting ).
-.TP
-.BR sgs 
-Set global setting (command
-.BR set_global_setting ).
 .TP
 .BR sk
 Set keyboard shortcut (command
@@ -365,6 +361,10 @@ Show userscripts (command
 .TP 
 .BR wi
 Show the webinspector. Note that 'enable-developer-extras' has to be set. 
+.TP 
+.BR C-e
+Open external editor for current input/textarea (command
+.BR open_editor ).
 .TP 
 .BR g.
 Toggle hidden files when browsing local filesystem.
@@ -477,11 +477,10 @@ Complete local path.
 
 .SH CUSTOMIZATION
 dwb can be  customized in a web interface (command 
-.BR show_settings/show_global_settings ) 
+.BR show_settings ) 
 or via command line (command
-.BR set_setting/set_global_setting ). 
-The non global commands only affect the
-currently focused view, the global commands affect all views. Modified settings
+.BR set_setting ). 
+Modified settings
 will be saved in 
 .IR ~/.config/dwb/settings 
 when closing dwb. 
@@ -492,9 +491,8 @@ or via command line (command
 Shortcuts will be saved in 
 .IR ~/.config/dwb/keys .
 
-.SS Per-view-settings
-Per-view-settings only affect the focused view. All per-view-settings can also
-be set globally and then will affect all views. If a string value is set to 
+.SS Settings
+If a string value is set to 
 .IR NULL
 the default value will be used. The settings in detail are: 
 .TP
@@ -637,8 +635,7 @@ default value:
 .IR true .
 .TP
 .BR enable-private-browsing
-Enable or disable private browsing. If set globally, the sessions history will
-not be saved.
+Enable or disable private browsing. 
 Possible values: true/false, 
 default value:
 .IR false .
@@ -791,11 +788,6 @@ values: a decimal,
 default value:
 .IR 0.1 .
 
-.SS Global Settings
-Global settings will affect all views. All per-view-settings can also be set
-globally, see 
-.BR per-view-settings 
-for details. Settings, that only can be set globally are: 
 .TP 
 .BR active-completion-bg-color
 The background color for an active element in tab-completion. Possible values:
@@ -897,6 +889,11 @@ Whether to use an external download programm specified in
 Possible values: true/false,
 default value:
 .IR true .
+.TP 
+.BR editor
+External editor used for inputs/textareas.
+default value:
+.IR xterm\ -e\ vim\ dwb_uri .
 .TP 
 .BR error-color
 The color for error-messages. Possible values: an rgb color-string,
@@ -1211,4 +1208,4 @@ echo "open javascript:window.alert(\\"Hello world\\")"
 
 
 .SH AUTHOR
-Stefan Bolte <portix@gmx.net>
+portix <portix@gmx.net>

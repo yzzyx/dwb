@@ -1,7 +1,7 @@
 #!/bin/bash 
 
-INFILE=settings.in
-OUTFILE=settings.out
+INFILE=$1
+OUTFILE=$2
 cat > ${OUTFILE} << EOF
 <div class='setting_bar'>
   <a class="setting_button" href="#general">General</a>
@@ -22,7 +22,32 @@ while read; do
   if [ "${line[0]}" = "#" ]; then 
     echo "<div class='dwb_settings_headline'><a name='${line[1]}'>${line[@]:2}</a></div>" >> ${OUTFILE}
   elif [[ ! ${REPLY} =~ ^\ *$ ]]; then 
-    cat >> ${OUTFILE} << EOF
+    if [ ${line[1]} = "select" ]; then 
+      unset options;
+      unset desc;
+      for ((i=2; i<${#line[@]}; i++)); do 
+        if [[ ${line[i]} =~ ^@ ]]; then 
+          option=${line[i]//_/ }
+          options+="<option>${option:1}</option>"
+        else 
+          desc=${line[@]:i}
+          break
+        fi
+      done
+      cat >> ${OUTFILE} << EOF
+  <div class='dwb_line$i'>
+    <div class='dwb_attr'>${line[0]}</div>
+      <div style='float:right;'>
+        <label for='${line[0]}' class='dwb_desc'>${desc}</label>
+        <select id='${line[0]}'>
+          ${options}
+        </select>
+      </div>
+    <div style='clear:both;'></div>
+  </div>
+EOF
+    else 
+      cat >> ${OUTFILE} << EOF
   <div class='dwb_line$i'>
     <div class='dwb_attr'>${line[0]}</div>
       <div style='float:right;'>
@@ -32,6 +57,7 @@ while read; do
     <div style='clear:both;'></div>
   </div>
 EOF
+    fi
     ((i++))
     ((i%=2))
   fi
