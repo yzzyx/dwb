@@ -148,7 +148,7 @@ static FunctionMap FMAP [] = {
   { { "increase_master",       "Increase master area",              }, 1, 
     (Func)commands_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
   { { "insert_mode",           "Insert Mode",                       }, 0, 
-    (Func)dwb_insert_mode,             NULL,                              POST_SM, },
+    (Func)commands_insert_mode,             NULL,                              POST_SM, },
   { { "load_html",             "Load html",                         }, 1, 
     (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
   { { "load_html_nv",          "Load html new view",                }, 1, 
@@ -514,10 +514,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#00ff00"         }, (S_Func) dwb_init_style,  },
   { { "ssl-untrusted-color",                       "Color for ssl-encrypted sites, untrusted certificate", },                 
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
-  { { "insertmode-fg-color",                         "Foreground color in insertmode", },                               
-    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         }, (S_Func) dwb_init_style,  },
-  { { "insertmode-bg-color",                         "Background color in insertmode", },                               
-    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#303030"         }, (S_Func) dwb_init_style,  },
   { { "error-color",                             "Color for error messages", },                                         
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
   { { "status-allowed-color",                        "Color of allowed elements in the statusbar", },           
@@ -1789,7 +1785,7 @@ dwb_update_hints(GdkEventKey *e) {
       dwb_normal_mode(false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
-      dwb_insert_mode(NULL);
+      dwb_insert_mode();
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
       dwb.state.scriptlock = 1;
@@ -2376,16 +2372,18 @@ dwb_command_mode(Arg *arg) {
 }/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
-gboolean
-dwb_insert_mode(Arg *arg) {
+DwbStatus
+dwb_insert_mode(void) {
+  if (dwb.state.mode & PASS_THROUGH)
+    return STATUS_ERROR;
   if (dwb.state.mode == HINT_MODE) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
-  view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
+  //view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
   dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
 
   dwb.state.mode = INSERT_MODE;
-  return true;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_normal_mode() {{{*/
@@ -2396,10 +2394,10 @@ dwb_normal_mode(gboolean clean) {
   if (mode == HINT_MODE || mode == SEARCH_FIELD_MODE) {
     dwb_execute_script(MAIN_FRAME(), "DwbHintObj.clear()", false);
   }
-  else if (mode & INSERT_MODE) {
-    view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
-    gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
-  }
+  //else if (mode & INSERT_MODE) {
+  //  view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
+  //  gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
+  //}
   else if (mode == DOWNLOAD_GET_PATH) {
     completion_clean_path_completion();
   }
@@ -2970,10 +2968,6 @@ dwb_init_style() {
   DWB_COLOR_PARSE(&dwb.color.tab_active_bg, GET_CHAR("tab-active-bg-color"));
   DWB_COLOR_PARSE(&dwb.color.tab_normal_fg, GET_CHAR("tab-normal-fg-color"));
   DWB_COLOR_PARSE(&dwb.color.tab_normal_bg, GET_CHAR("tab-normal-bg-color"));
-
-  /* InsertMode */
-  DWB_COLOR_PARSE(&dwb.color.insert_fg, GET_CHAR("insertmode-fg-color"));
-  DWB_COLOR_PARSE(&dwb.color.insert_bg, GET_CHAR("insertmode-bg-color"));
 
   /* Downloads */
   DWB_COLOR_PARSE(&dwb.color.download_fg, "#ffffff");

@@ -146,7 +146,7 @@ gboolean
 html_focus_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   char *type = webkit_dom_element_get_attribute(el, "type");
   if (!strcmp(type, "text")) {
-    dwb_insert_mode(NULL);
+    dwb_insert_mode();
     return true;
   }
   return false;

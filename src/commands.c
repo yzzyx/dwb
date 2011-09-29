@@ -106,6 +106,11 @@ commands_add_search_field(KeyMap *km, Arg *a) {
 
 }/*}}}*/
 
+DwbStatus 
+commands_insert_mode(KeyMap *km, Arg *a) {
+  return dwb_insert_mode();
+}
+
 /* commands_toggle_property {{{*/
 DwbStatus 
 commands_toggle_property(KeyMap *km, Arg *a) {
@@ -877,6 +882,9 @@ commands_fullscreen(KeyMap *km, Arg *arg) {
 /* commands_reload_scripts {{{*/
 DwbStatus
 commands_pass_through(KeyMap *km, Arg *arg) {
+  if (dwb.state.mode & INSERT_MODE) {
+    view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
+  }
   dwb.state.mode |= PASS_THROUGH;
   dwb_set_normal_message(dwb.state.fview, false, "-- PASS THROUGH --");
   return STATUS_OK;

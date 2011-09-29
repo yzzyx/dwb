@@ -515,8 +515,6 @@ struct _Color {
   DwbColor tab_active_bg;
   DwbColor tab_normal_fg;
   DwbColor tab_normal_bg;
-  DwbColor insert_bg;
-  DwbColor insert_fg;
   DwbColor error;
   DwbColor active_c_fg;
   DwbColor active_c_bg;
@@ -655,7 +653,7 @@ struct _Dwb {
 Dwb dwb;
 /*}}}*/
 
-gboolean dwb_insert_mode(Arg *);
+DwbStatus dwb_insert_mode(void);
 void dwb_normal_mode(gboolean);
 
 void dwb_load_uri(GList *gl, Arg *);

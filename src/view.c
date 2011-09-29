@@ -90,7 +90,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   gboolean ret = false;
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-    dwb_insert_mode(NULL);
+    dwb_insert_mode();
   }
   else if (e->state & GDK_CONTROL_MASK && e->button == 1) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
