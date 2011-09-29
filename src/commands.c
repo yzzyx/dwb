@@ -215,7 +215,7 @@ commands_allow_cookie(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_bookmark(KeyMap *km, Arg *arg) {
   gboolean noerror = STATUS_ERROR;
-  if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) ) {
+  if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) == STATUS_OK) {
     util_file_add_navigation(dwb.files.bookmarks, dwb.fc.bookmarks->data, true, -1);
     dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)util_navigation_compare_first);
     dwb_set_normal_message(dwb.state.fview, true, "Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
