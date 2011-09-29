@@ -2273,14 +2273,14 @@ dwb_eval_key(GdkEventKey *e) {
     }
     return ret;
   }
-  /* hardcode keys */
+  /* Multimedia keys */
   switch (keyval) {
-    case GDK_KEY_Back : dwb_history_back(); break;
-    case GDK_KEY_Forward : dwb_history_forward(); break;
-    case GDK_KEY_Cancel : commands_stop_loading(NULL, NULL); break;
-    case GDK_KEY_Reload : commands_reload(NULL, NULL); break;
-    case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); break;
-    case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); break;
+    case GDK_KEY_Back : dwb_history_back(); return true;
+    case GDK_KEY_Forward : dwb_history_forward(); return true;
+    case GDK_KEY_Cancel : commands_stop_loading(NULL, NULL); return true;
+    case GDK_KEY_Reload : commands_reload(NULL, NULL); return true;
+    case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); return true;
+    case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return true;
   }
   char *key = util_keyval_to_char(keyval);
   if (key) {
