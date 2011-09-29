@@ -2273,6 +2273,15 @@ dwb_eval_key(GdkEventKey *e) {
     }
     return ret;
   }
+  /* hardcode keys */
+  switch (keyval) {
+    case GDK_KEY_Back : dwb_history_back(); break;
+    case GDK_KEY_Forward : dwb_history_forward(); break;
+    case GDK_KEY_Cancel : commands_stop_loading(NULL, NULL); break;
+    case GDK_KEY_Reload : commands_reload(NULL, NULL); break;
+    case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); break;
+    case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); break;
+  }
   char *key = util_keyval_to_char(keyval);
   if (key) {
     mod_mask = CLEAN_STATE(e);
