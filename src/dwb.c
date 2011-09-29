@@ -3464,7 +3464,6 @@ main(int argc, char *argv[]) {
     dwb.misc.argv = &argv[last];
     dwb.misc.argc = g_strv_length(dwb.misc.argv);
   }
-  //adblock_init();
   dwb_init_fifo(single);
   dwb_init_signals();
   dwb_init();

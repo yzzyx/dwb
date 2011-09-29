@@ -52,12 +52,12 @@ DwbStatus
 adblock_rule_parse(char *pattern) {
   DwbStatus ret = STATUS_OK;
   if (pattern == NULL)
-    return STATUS_ERROR;
+    return STATUS_IGNORE;
   g_strstrip(pattern);
   if (strlen(pattern) == 0) 
-    return STATUS_ERROR;
+    return STATUS_IGNORE;
   if (pattern[0] == '!' || pattern[0] == '[') {
-    return STATUS_ERROR;
+    return STATUS_IGNORE;
   }
   //AdblockRule *rule = adblock_rule_new();
   char *tmp = NULL;

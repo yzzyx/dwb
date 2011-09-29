@@ -260,6 +260,7 @@ typedef enum _DwbStatus {
   STATUS_OK, 
   STATUS_ERROR, 
   STATUS_END,
+  STATUS_IGNORE, 
 } DwbStatus;
 
 #define APPEND  0x01
