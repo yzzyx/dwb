@@ -132,6 +132,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
   return ret;
 }/*}}}*/
+
 /* view_button_press_cb {{{*/
 static gboolean
 view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
@@ -334,7 +335,8 @@ view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     return;
   }
 }/*}}}*/
-/* view_resource_request_cb{{{*/
+
+/* view_create_plugin_widget_cb {{{*/
 static GtkWidget * 
 view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *param, GList *gl) {
   VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
@@ -399,6 +401,7 @@ view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
 
+/* view_popup_activate_cb {{{*/
 static void
 view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
   GtkAction *a = NULL;
@@ -425,15 +428,18 @@ view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
     gtk_clipboard_set_text(clipboard, VIEW(gl)->status->hover_uri, -1);
   }
-}
+}/*}}}*/
 
+/* view_populate_popup_cb {{{*/
 static void 
 view_populate_popup_cb(WebKitWebView *web, GtkMenu *menu, GList *gl) {
   GList *items = gtk_container_get_children(GTK_CONTAINER(menu));
   for (GList *l = items; l; l=l->next) {
     g_signal_connect(l->data, "activate", G_CALLBACK(view_popup_activate_cb), gl);
   }
-}
+}/*}}}*/
+
+/* view_load_status_cb {{{*/
 /* window-object-cleared is emmited in receivedFirstData which emits load-status
  * commited, so we don't connect to window-object-cleared but to
  * load_status_after instead */
@@ -443,7 +449,8 @@ view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   if (status == WEBKIT_LOAD_COMMITTED) {
     dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
   }
-}
+}/*}}}*/
+
 /* view_load_status_cb {{{*/
 
 static void 
@@ -535,7 +542,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   else 
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
 
-  webkit_web_frame_load_alternate_string(frame, site, NULL, uri);
+  webkit_web_frame_load_alternate_string(frame, site, uri, uri);
 
   g_free(site);
   g_free(content);
@@ -543,6 +550,13 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   FREE(icon);
   FREE(search);
   return true;
+}/*}}}*/
+
+/* view_entry_size_allocate_cb {{{*/
+void 
+view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
+  gtk_widget_set_size_request(v->entry, -1, rect->height);
+  g_signal_handlers_disconnect_by_func(entry, view_entry_size_allocate_cb, v);
 }/*}}}*/
 
 /* Entry */
@@ -711,6 +725,7 @@ view_set_normal_style(View *v) {
   view_modify_style(v, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_inactive);
 }/*}}}*/
 
+/* view_init_settings {{{*/
 static void 
 view_init_settings(GList *gl) {
   View *v = gl->data;
@@ -723,7 +738,7 @@ view_init_settings(GList *gl) {
       s->func(gl, s);
     }
   }
-}
+}/*}}}*/
 
 /* view_init_signals(View *v) {{{*/
 static void
@@ -766,13 +781,6 @@ view_init_signals(GList *gl) {
   WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(inspector, "inspect-web-view", G_CALLBACK(view_inspect_web_view_cb), gl);
 } /*}}}*/
-
-void 
-view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
-  gtk_widget_set_size_request(v->entry, -1, rect->height);
-  g_signal_handlers_disconnect_by_func(entry, view_entry_size_allocate_cb, v);
-}
-
 
 /* view_create_web_view(View *v)         return: GList * {{{*/
 static View * 
