@@ -472,6 +472,10 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       v->status->pb_status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
+      /* This is more or less a dummy call, to compile the script and speed up
+       * execution time 
+       * */
+      dwb_execute_script(webkit_web_view_get_main_frame(web), "DwbHintObj.createStylesheet();", false);
       break;
     case WEBKIT_LOAD_COMMITTED: 
       view_ssl_state(gl);
