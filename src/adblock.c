@@ -4,11 +4,33 @@
 #define BUFFER_SIZE 4096
 #define LINE_SIZE 1024
 typedef enum _AdblockOption {
-  AO_BEGIN        = 1<<2,
-  AO_BEGIN_DOMAIN = 1<<3,
-  AO_END          = 1<<4,
-  AO_REGEXP       = 1<<6,
+  AO_WILDCARD           = 1<<0,
+  AO_SEPERATOR          = 1<<1,
+  AO_BEGIN              = 1<<2,
+  AO_BEGIN_DOMAIN       = 1<<3,
+  AO_END                = 1<<4,
+  AO_REGEXP             = 1<<6,
+  AO_MATCH_CASE          = 1<<7,
+  /*  Attributes */
 } AdblockOption;
+typedef enum _AdblockAttribute {
+  AA_SCRIPT             = 1<<0,
+  AA_IMAGE              = 1<<1,
+  AA_BACKGROUND         = 1<<2,
+  AA_STYLESHEET         = 1<<3,
+  AA_OBJECT             = 1<<4,
+  AA_XBL                = 1<<5,
+  AA_PING               = 1<<6,
+  AA_XMLHTTPREQUEST     = 1<<7,
+  AA_OBJECT_SUBREQUEST  = 1<<8,
+  AA_DTD                = 1<<9,
+  AA_SUBDOCUMENT        = 1<<10,
+  AA_DOCUMENT           = 1<<11,
+  AA_ELEMHIDE           = 1<<12,
+  AA_OTHER              = 1<<13,
+  AA_THIRDPARTY         = 1<<14,
+  /* inverse */
+} AdblockAttribute;
 
 
 typedef struct _AdblockRule {
@@ -83,24 +105,71 @@ adblock_rule_parse(char *pattern) {
     gboolean exception = false;
     char *options = NULL;
     int option = 0;
+    int attributes = 0;
     void *rule = NULL;
     char **domains = NULL;
     /* TODO parse options */ 
-    options = strstr(pattern, "$");
+    /* Exception */
+    tmp = pattern;
+    if (tmp[0] == '@' && tmp[1] == '@') {
+      exception = true;
+      tmp +=2;
+    }
+    options = strstr(tmp, "$");
     if (options != NULL) {
       tmp_a = g_strndup(pattern, options - pattern);
+      char **options_arr = g_strsplit(options+1, ",", -1);
+      int inverse;
+      for (int i=0; options_arr[i] != NULL; i++) {
+        inverse = 0;
+        /*  attributes */
+        if (*options_arr[i] == '~') 
+          inverse = 16;
+        if (!strcmp(options_arr[i], "script"))
+          attributes |= (AA_SCRIPT << inverse);
+        else if (!strcmp(options_arr[i], "image"))
+          attributes |= (AA_IMAGE << inverse);
+        else if (!strcmp(options_arr[i], "background"))
+          fprintf(stderr, "Not supported: adblock option 'background'\n");
+        else if (!strcmp(options_arr[i], "stylesheet"))
+          attributes |= (AA_STYLESHEET << inverse);
+        else if (!strcmp(options_arr[i], "object"))
+          attributes |= (AA_OBJECT << inverse);
+        else if (!strcmp(options_arr[i], "xbl"))
+          fprintf(stderr, "Not supported: adblock option 'xbl'\n");
+        else if (!strcmp(options_arr[i], "ping"))
+          fprintf(stderr, "Not supported: adblock option 'xbl'\n");
+        else if (!strcmp(options_arr[i], "xmlhttprequest"))
+          fprintf(stderr, "Not supported: adblock option 'xmlhttprequest'\n");
+        else if (!strcmp(options_arr[i], "object-subrequest"))
+          fprintf(stderr, "Not supported: adblock option 'object-subrequest'\n");
+        else if (!strcmp(options_arr[i], "dtd"))
+          fprintf(stderr, "Not supported: adblock option 'dtd'\n");
+        else if (!strcmp(options_arr[i], "subdocument"))
+          attributes |= (AA_SUBDOCUMENT << inverse);
+        else if (!strcmp(options_arr[i], "document"))
+          attributes |= (AA_DOCUMENT << inverse);
+        else if (!strcmp(options_arr[i], "elemhide"))
+          attributes |= (AA_ELEMHIDE << inverse);
+        else if (!strcmp(options_arr[i], "other"))
+          fprintf(stderr, "Not supported: adblock option 'other'\n");
+        else if (!strcmp(options_arr[i], "collapse"))
+          fprintf(stderr, "Not supported: adblock option 'collapse'\n");
+        else if (!strcmp(options_arr[i], "donottrack"))
+          fprintf(stderr, "Not supported: adblock option 'donottrack'\n");
+        else if (!strcmp(options_arr[i], "match-case"))
+          option |= AO_MATCH_CASE;
+        else if (g_str_has_prefix(options_arr[i], "domain=")) {
+          domains = g_strsplit(options_arr[i] + 7, "|", -1);
+        }
+      }
       tmp = tmp_a;
+      g_strfreev(options_arr);
     }
     else {
       tmp = pattern;
     }
     int length = strlen(tmp);
-    /* Exception */
-    if (pattern[0] == '@' && pattern[1] == '@') {
-      exception = true;
-      tmp += 2;
-      length -= 2;
-    }
     /* Beginning of pattern / domain */
     if (length > 0 && tmp[0] == '|') {
       if (length > 1 && tmp[1] == '|') {
@@ -135,6 +204,18 @@ adblock_rule_parse(char *pattern) {
       option |= AO_REGEXP;
     }
     else {
+      if (strchr(tmp, '*')) {
+        if (tmp[length-1] == '*') 
+          tmp[length-1] = '\0';
+        else 
+          option |= AO_WILDCARD;
+      }
+      if (strchr(tmp, '^')) {
+        option |= AO_SEPERATOR;
+      }
+      //printf("%d: %s%s%s\n", option & (AO_WILDCARD | AO_SEPERATOR), option & AO_WILDCARD ? "wildcard " : "", option & AO_SEPERATOR & AO_SEPERATOR ? "seperator " : "", tmp);
+
+
       rule = g_strdup(tmp);
     }
 

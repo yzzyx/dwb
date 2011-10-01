@@ -19,6 +19,7 @@
 #include "view.h"
 #include "html.h"
 #include "plugins.h"
+#include "adblock.h"
 
 static void view_ssl_state(GList *);
 #if WEBKIT_CHECK_VERSION(1, 4, 0)
@@ -329,10 +330,10 @@ static void
 view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
-  if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
-    webkit_network_request_set_uri(request, "about:blank");
-    return;
-  }
+  //if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
+  //  webkit_network_request_set_uri(request, "about:blank");
+  //  return;
+  //}
 }/*}}}*/
 /* view_resource_request_cb{{{*/
 static GtkWidget * 
