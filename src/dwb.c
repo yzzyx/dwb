@@ -53,7 +53,6 @@ static gboolean dwb_sync_history(gpointer);
 
 static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 
-static gboolean dwb_command_mode(Arg *arg);
 static void dwb_reload_layout(GList *,  WebSettings *);
 static char * dwb_test_userscript(const char *);
 
@@ -114,7 +113,7 @@ static FunctionMap FMAP [] = {
   { { "new_window",            "New window for next navigation",    }, 0, 
     (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
   { { "command_mode",          "Enter command mode",                }, 0, 
-    (Func)dwb_command_mode,            NULL,                              POST_SM, },
+    (Func)commands_command_mode,            NULL,                              POST_SM, },
   { { "decrease_master",       "Decrease master area",              }, 1, 
     (Func)commands_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
   { { "download_hint",         "Download via hints",                }, 0, 
@@ -2369,15 +2368,6 @@ dwb_eval_key(GdkEventKey *e) {
   FREE(key);
   return ret;
 
-}/*}}}*/
-
-/* dwb_command_mode {{{*/
-static gboolean
-dwb_command_mode(Arg *arg) {
-  dwb_set_normal_message(dwb.state.fview, false, ":");
-  dwb_focus_entry();
-  dwb.state.mode = COMMAND_MODE;
-  return true;
 }/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/

@@ -894,4 +894,13 @@ DwbStatus
 commands_open_editor(KeyMap *km, Arg *arg) {
   return dwb_open_in_editor();
 }/*}}}*/
+
+/* dwb_command_mode {{{*/
+DwbStatus
+commands_command_mode(KeyMap *km, Arg *arg) {
+  dwb_set_normal_message(dwb.state.fview, false, ":");
+  dwb_focus_entry();
+  dwb.state.mode = COMMAND_MODE;
+  return STATUS_OK;
+}/*}}}*/
 /*}}}*/
