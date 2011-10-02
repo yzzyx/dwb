@@ -72,6 +72,54 @@ adblock_rule_free(AdblockRule *rule) {
   g_free(rule);
 }
 #endif
+gboolean
+adblock_domain_matches(const char *host, const char *domain) {
+  char *match;
+  if (!strcmp(host, domain))
+    return true;
+  if ( (match = g_strrstr(host, domain)) == NULL) {
+    return false;
+  }
+  if (match == host)
+    return true;
+  while (*host)  {
+    if (*host == '.' && ((host == domain) || (*(host+1) && host+1 == match))) 
+      return true;
+    host++;
+  }
+  return false;
+}
+gboolean 
+adblock_domain_matches_uri(const char *uri, const char *domain) {
+  if (uri == NULL || domain == NULL) 
+    return false;
+  while (*uri == '/') {
+    uri++;
+  }
+  char *res = NULL, *fres = NULL;
+
+  char *tmp = strstr(uri, "://");
+  if (tmp) 
+    tmp += 3;
+  else 
+    tmp = uri;
+  char *slash = strchr(tmp, '/');
+  if (slash) {
+    res = g_strndup(tmp, slash - tmp);
+    fres = res;
+  }
+  else 
+    res = tmp;
+  char *colon = strchr(res, ':');
+  if (colon) {
+    res = g_strndup(res, colon - res);
+    FREE(fres);
+    fres = res;
+  }
+  //PRINT_DEBUG("%s %s %s", uri, res, domain);
+  return !strcmp(domain, res);
+
+}
 void                
 adblock_resource_request_cb(WebKitWebView         *wv,
                             WebKitWebFrame        *frame,
@@ -84,8 +132,32 @@ adblock_resource_request_cb(WebKitWebView         *wv,
   WebKitWebFrame *main_frame = webkit_web_view_get_main_frame(wv);
   if (frame == main_frame && webkit_web_frame_get_load_status(frame) == WEBKIT_LOAD_PROVISIONAL)
     return;
-  SoupMessage *message = webkit_network_request_get_message(request);
-  const char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, NULL);
+  SoupMessage *message;
+  const char *req_uri;
+  if (request) {
+    message = webkit_network_request_get_message(request);
+    req_uri = webkit_network_request_get_uri(request);
+  }
+  else if (response) {
+    message = webkit_network_response_get_message(response);
+    req_uri = webkit_network_response_get_uri(response);
+  }
+  else 
+    return;
+  SoupAddress *address = soup_message_get_address(message);
+  const char *host = soup_address_get_name(address);
+  
+  //const char *url = webkit_network(frame);
+  if (! adblock_domain_matches_uri("http://blub.bla/fjkl", host)) 
+    puts("no");
+
+  DEBUG_TIMED(50000, adblock_domain_matches("blub.bli.bla", "bli.bla"))
+  DEBUG_TIMED(50000, adblock_domain_matches_uri("http://blub.bla/fjkl", host));
+
+  SoupURI *uri = soup_message_get_uri(message);
+  SoupURI *first_party = soup_message_get_first_party(message);
+
+  char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, NULL);
   PRINT_DEBUG(content);
   //soup_message_set_uri(message, soup_uri_new("about:blank"));
   //  //char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, &ht);
@@ -149,46 +221,51 @@ adblock_rule_parse(char *pattern) {
       tmp_a = g_strndup(pattern, options - pattern);
       char **options_arr = g_strsplit(options+1, ",", -1);
       int inverse;
+      char *o;
       for (int i=0; options_arr[i] != NULL; i++) {
         inverse = 0;
+        o = options_arr[i];
         /*  attributes */
-        if (*options_arr[i] == '~') 
+        if (*o == '~') {
+          puts(o);
           inverse = 16;
-        if (!strcmp(options_arr[i], "script"))
+          o++;
+        }
+        if (!strcmp(o, "script"))
           attributes |= (AA_SCRIPT << inverse);
-        else if (!strcmp(options_arr[i], "image"))
+        else if (!strcmp(o, "image"))
           attributes |= (AA_IMAGE << inverse);
-        else if (!strcmp(options_arr[i], "background"))
+        else if (!strcmp(o, "background"))
           fprintf(stderr, "Not supported: adblock option 'background'\n");
-        else if (!strcmp(options_arr[i], "stylesheet"))
+        else if (!strcmp(o, "stylesheet"))
           attributes |= (AA_STYLESHEET << inverse);
-        else if (!strcmp(options_arr[i], "object"))
+        else if (!strcmp(o, "object"))
           attributes |= (AA_OBJECT << inverse);
-        else if (!strcmp(options_arr[i], "xbl"))
+        else if (!strcmp(o, "xbl"))
           fprintf(stderr, "Not supported: adblock option 'xbl'\n");
-        else if (!strcmp(options_arr[i], "ping"))
+        else if (!strcmp(o, "ping"))
           fprintf(stderr, "Not supported: adblock option 'xbl'\n");
-        else if (!strcmp(options_arr[i], "xmlhttprequest"))
+        else if (!strcmp(o, "xmlhttprequest"))
           fprintf(stderr, "Not supported: adblock option 'xmlhttprequest'\n");
-        else if (!strcmp(options_arr[i], "object-subrequest"))
+        else if (!strcmp(o, "object-subrequest"))
           fprintf(stderr, "Not supported: adblock option 'object-subrequest'\n");
-        else if (!strcmp(options_arr[i], "dtd"))
+        else if (!strcmp(o, "dtd"))
           fprintf(stderr, "Not supported: adblock option 'dtd'\n");
-        else if (!strcmp(options_arr[i], "subdocument"))
+        else if (!strcmp(o, "subdocument"))
           attributes |= (AA_SUBDOCUMENT << inverse);
-        else if (!strcmp(options_arr[i], "document"))
+        else if (!strcmp(o, "document"))
           attributes |= (AA_DOCUMENT << inverse);
-        else if (!strcmp(options_arr[i], "elemhide"))
+        else if (!strcmp(o, "elemhide"))
           attributes |= (AA_ELEMHIDE << inverse);
-        else if (!strcmp(options_arr[i], "other"))
+        else if (!strcmp(o, "other"))
           fprintf(stderr, "Not supported: adblock option 'other'\n");
-        else if (!strcmp(options_arr[i], "collapse"))
+        else if (!strcmp(o, "collapse"))
           fprintf(stderr, "Not supported: adblock option 'collapse'\n");
-        else if (!strcmp(options_arr[i], "donottrack"))
+        else if (!strcmp(o, "donottrack"))
           fprintf(stderr, "Not supported: adblock option 'donottrack'\n");
-        else if (!strcmp(options_arr[i], "match-case"))
+        else if (!strcmp(o, "match-case"))
           option |= AO_MATCH_CASE;
-        else if (g_str_has_prefix(options_arr[i], "domain=")) {
+        else if (g_str_has_prefix(o, "domain=")) {
           domains = g_strsplit(options_arr[i] + 7, "|", -1);
         }
       }
