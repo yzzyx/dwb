@@ -18,7 +18,6 @@ DwbHintObj = (function() {
   _activeInput = null;
   _styles = 0;
   _hintTypes = "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]";
-  _styleSheet = null;
 
   const __newHint = function(element, win, rect) {
     this.element = element;
@@ -181,7 +180,7 @@ DwbHintObj = (function() {
     return "rgba(" + rgb.slice(1) + "," +  _hintOpacity + ")";
   }
   const __createStyleSheet = function(doc) {
-    if (doc.querySelector("[dwb_stylesheet='37']"))
+    if (doc.hasStyleSheet) 
       return;
     styleSheet = __createElement("style");
     styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important;" 
@@ -195,9 +194,10 @@ DwbHintObj = (function() {
       "border:" + _hintBorder + ";" + 
       "font:" + _font + ";" + 
       "opacity: " + _hintOpacity + "; }";
-    styleSheet.setAttribute("dwb_stylesheet", "37");
     doc.head.appendChild(styleSheet);
+    doc.hasStyleSheet = true;
   }
+
   const __createHints = function(win, constructor) {
     try {
       var doc = win.document;
@@ -456,6 +456,9 @@ DwbHintObj = (function() {
 
 
   return {
+    createStylesheet : function() {
+      __createStyleSheet(document);
+    },
     showHints : 
       function() {
         __showHints();

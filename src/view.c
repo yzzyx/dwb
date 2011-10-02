@@ -90,7 +90,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   gboolean ret = false;
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-    dwb_insert_mode(NULL);
+    dwb_change_mode(INSERT_MODE);
   }
   else if (e->state & GDK_CONTROL_MASK && e->button == 1) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
@@ -132,6 +132,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
   return ret;
 }/*}}}*/
+
 /* view_button_press_cb {{{*/
 static gboolean
 view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
@@ -166,7 +167,7 @@ view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourc
     dwb_insert_mode(NULL);
   }
   else if (gl == dwb.state.fview && !(strncmp(message, "_dwb_normal_mode_", 17))) {
-    dwb_normal_mode(true);
+    dwb_change_mode(NORMAL_MODE, true);
   }
   if (!strncmp(message, "_dwb_no_input_", 14)) {
     dwb_set_error_message(gl, "No input found in current context");
@@ -247,8 +248,6 @@ static gboolean
 view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
-  dwb_clean_load_end(gl);
-
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
@@ -285,7 +284,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   }
   else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
     if (dwb.state.mode == INSERT_MODE) {
-      dwb_normal_mode(true);
+      dwb_change_mode(NORMAL_MODE, true);
     }
     else if (dwb.state.mode == SEARCH_FIELD_MODE) {
       PRINT_DEBUG("searchfields navigation request: %s", uri);
@@ -334,7 +333,8 @@ view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     return;
   }
 }/*}}}*/
-/* view_resource_request_cb{{{*/
+
+/* view_create_plugin_widget_cb {{{*/
 static GtkWidget * 
 view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *param, GList *gl) {
   VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
@@ -399,6 +399,7 @@ view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
 
+/* view_popup_activate_cb {{{*/
 static void
 view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
   GtkAction *a = NULL;
@@ -425,15 +426,18 @@ view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
     gtk_clipboard_set_text(clipboard, VIEW(gl)->status->hover_uri, -1);
   }
-}
+}/*}}}*/
 
+/* view_populate_popup_cb {{{*/
 static void 
 view_populate_popup_cb(WebKitWebView *web, GtkMenu *menu, GList *gl) {
   GList *items = gtk_container_get_children(GTK_CONTAINER(menu));
   for (GList *l = items; l; l=l->next) {
     g_signal_connect(l->data, "activate", G_CALLBACK(view_popup_activate_cb), gl);
   }
-}
+}/*}}}*/
+
+/* view_load_status_cb {{{*/
 /* window-object-cleared is emmited in receivedFirstData which emits load-status
  * commited, so we don't connect to window-object-cleared but to
  * load_status_after instead */
@@ -443,7 +447,8 @@ view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   if (status == WEBKIT_LOAD_COMMITTED) {
     dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
   }
-}
+}/*}}}*/
+
 /* view_load_status_cb {{{*/
 
 static void 
@@ -465,6 +470,10 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       v->status->pb_status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
+      /* This is more or less a dummy call, to compile the script and speed up
+       * execution time 
+       * */
+      dwb_execute_script(webkit_web_view_get_main_frame(web), "DwbHintObj.createStylesheet();", false);
       break;
     case WEBKIT_LOAD_COMMITTED: 
       view_ssl_state(gl);
@@ -484,6 +493,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         plugins_disconnect(gl);
       }
       FREE(host);
+      dwb_clean_load_end(gl);
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
@@ -491,7 +501,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       if (!dwb.misc.private_browsing 
           && strcmp(uri, "about:blank")
           && !g_str_has_prefix(uri, "dwb://") 
-          && dwb_prepend_navigation(gl, &dwb.fc.history) 
+          && (dwb_prepend_navigation(gl, &dwb.fc.history) == STATUS_OK)
           && dwb.misc.synctimer <= 0) {
         util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       }
@@ -535,7 +545,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   else 
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
 
-  webkit_web_frame_load_alternate_string(frame, site, NULL, uri);
+  webkit_web_frame_load_alternate_string(frame, site, uri, uri);
 
   g_free(site);
   g_free(content);
@@ -543,6 +553,13 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   FREE(icon);
   FREE(search);
   return true;
+}/*}}}*/
+
+/* view_entry_size_allocate_cb {{{*/
+void 
+view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
+  gtk_widget_set_size_request(v->entry, -1, rect->height);
+  g_signal_handlers_disconnect_by_func(entry, view_entry_size_allocate_cb, v);
 }/*}}}*/
 
 /* Entry */
@@ -617,7 +634,7 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   else if (mode == FIND_MODE) {
     dwb_focus_scroll(dwb.state.fview);
     dwb_search(NULL, NULL);
-    dwb_normal_mode(true);
+    dwb_change_mode(NORMAL_MODE, true);
   }
   else if (mode == SEARCH_FIELD_MODE) {
     dwb_submit_searchengine();
@@ -644,7 +661,7 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
     Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
     dwb_load_uri(NULL, &a);
     dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
-    dwb_normal_mode(true);
+    dwb_change_mode(NORMAL_MODE, true);
   }
 
   return true;
@@ -711,6 +728,7 @@ view_set_normal_style(View *v) {
   view_modify_style(v, &dwb.color.normal_fg, &dwb.color.normal_bg, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_inactive);
 }/*}}}*/
 
+/* view_init_settings {{{*/
 static void 
 view_init_settings(GList *gl) {
   View *v = gl->data;
@@ -723,7 +741,7 @@ view_init_settings(GList *gl) {
       s->func(gl, s);
     }
   }
-}
+}/*}}}*/
 
 /* view_init_signals(View *v) {{{*/
 static void
@@ -766,13 +784,6 @@ view_init_signals(GList *gl) {
   WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(inspector, "inspect-web-view", G_CALLBACK(view_inspect_web_view_cb), gl);
 } /*}}}*/
-
-void 
-view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
-  gtk_widget_set_size_request(v->entry, -1, rect->height);
-  g_signal_handlers_disconnect_by_func(entry, view_entry_size_allocate_cb, v);
-}
-
 
 /* view_create_web_view(View *v)         return: GList * {{{*/
 static View * 
@@ -906,12 +917,12 @@ view_create_web_view() {
 } /*}}}*/
 
 /* view_push_master (Arg *) {{{*/
-gboolean 
+DwbStatus 
 view_push_master(Arg *arg) {
   GList *gl = NULL, *l = NULL;
   View *old = NULL, *new;
   if (!dwb.state.views->next) {
-    return false;
+    return STATUS_ERROR;
   }
   if (arg && arg->p) {
     gl = arg->p;
@@ -919,7 +930,7 @@ view_push_master(Arg *arg) {
   else if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
     if (!gl) {
-      return false;
+      return STATUS_ERROR;
     }
     CLEAR_COMMAND_TEXT(dwb.state.views);
     view_set_normal_style(CURRENT_VIEW());
@@ -957,7 +968,7 @@ view_push_master(Arg *arg) {
   }
   gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), new->tabevent, -1);
   dwb_update_layout(false);
-  return true;
+  return STATUS_OK;
 }/*}}}*/
 
 /* view_remove (void) {{{*/

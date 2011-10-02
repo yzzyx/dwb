@@ -29,11 +29,6 @@ cgdb: debug
 	cgdb $(DTARGET)
 
 clean:
-	@echo Cleaning
-	@$(RM) *.o  
-	@$(RM) *.do  
-	@$(RM) $(TARGET)
-	@$(RM) $(DTARGET)
-	@$(RM) *.d
+	$(RM) *.o  *.do $(TARGET) $(DTARGET) *.d
 
 .PHONY: clean all
