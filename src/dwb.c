@@ -2443,7 +2443,6 @@ dwb_change_mode(Mode mode, ...) {
   DwbStatus ret = STATUS_OK;
   gboolean clean;
   va_list vl;
-  gboolean locked = g_static_mutex_trylock(&mutex);
   if (! g_static_mutex_trylock(&mutex))
     return STATUS_ERROR;
 
