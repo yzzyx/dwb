@@ -10,7 +10,7 @@ typedef enum _AdblockOption {
   AO_BEGIN_DOMAIN       = 1<<3,
   AO_END                = 1<<4,
   AO_REGEXP             = 1<<6,
-  AO_MATCH_CASE          = 1<<7,
+  AO_MATCH_CASE         = 1<<7,
   /*  Attributes */
 } AdblockOption;
 typedef enum _AdblockAttribute {
@@ -48,6 +48,8 @@ static GPtrArray *_hider;
 static GPtrArray *_rules;
 static GPtrArray *_exceptions;
 static GString *_css_rules;
+static SoupBuffer *soup_buffer;
+static SoupContentSniffer *content_sniffer;
 
 
 static AdblockRule *
@@ -70,6 +72,33 @@ adblock_rule_free(AdblockRule *rule) {
   g_free(rule);
 }
 #endif
+void                
+adblock_resource_request_cb(WebKitWebView         *wv,
+                            WebKitWebFrame        *frame,
+                            WebKitWebResource     *resource,
+                            WebKitNetworkRequest  *request,
+                            WebKitNetworkResponse *response,
+                            GList                 *gl) {
+  if (request == NULL) 
+    return;
+  WebKitWebFrame *main_frame = webkit_web_view_get_main_frame(wv);
+  if (frame == main_frame && webkit_web_frame_get_load_status(frame) == WEBKIT_LOAD_PROVISIONAL)
+    return;
+  SoupMessage *message = webkit_network_request_get_message(request);
+  const char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, NULL);
+  PRINT_DEBUG(content);
+  //soup_message_set_uri(message, soup_uri_new("about:blank"));
+  //  //char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, &ht);
+  //  //printf("request: %s\n", content);
+
+  //}
+  //else if (response) {
+  //  //char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, &ht);
+  //  //printf("response: %s\n", content);
+
+  //}
+
+}
 DwbStatus
 adblock_rule_parse(char *pattern) {
   DwbStatus ret = STATUS_OK;
@@ -195,6 +224,7 @@ adblock_rule_parse(char *pattern) {
       GError *error = NULL;
       tmp_c = g_strndup(tmp+1, length-2);
       rule = g_regex_new(tmp_c, 0, 0, &error);
+      FREE(tmp_c);
       if (error != NULL) {
         fprintf(stderr, "dwb warning: ignoring adblock rule %s: %s\n", pattern, error->message);
         ret = STATUS_ERROR;
@@ -204,14 +234,20 @@ adblock_rule_parse(char *pattern) {
       option |= AO_REGEXP;
     }
     else {
-      if (strchr(tmp, '*')) {
-        if (tmp[length-1] == '*') 
-          tmp[length-1] = '\0';
-        else 
-          option |= AO_WILDCARD;
-      }
       if (strchr(tmp, '^')) {
         option |= AO_SEPERATOR;
+      }
+      char *first_wild;
+      if ( (first_wild = strchr(tmp, '*')) ) {
+        if (strlen(first_wild) == 1 || (first_wild == tmp && !strchr(tmp, '*')) ) {
+          tmp[length-1] = '\0';
+        }
+        else {
+          option |= AO_WILDCARD;
+          if (! (option & AO_SEPERATOR)) {
+            tmp_c = g_strdup_printf("*%s*", tmp);
+          }
+        }
       }
       //printf("%d: %s%s%s\n", option & (AO_WILDCARD | AO_SEPERATOR), option & AO_WILDCARD ? "wildcard " : "", option & AO_SEPERATOR & AO_SEPERATOR ? "seperator " : "", tmp);
 
@@ -248,4 +284,6 @@ adblock_init() {
   }
   g_strfreev(lines);
   g_free(content);
+  soup_buffer = soup_buffer_new(SOUP_MEMORY_STATIC, NULL, 0);
+  content_sniffer = soup_content_sniffer_new();
 }
