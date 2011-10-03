@@ -25,20 +25,30 @@ DwbHintObj = (function() {
     this.element = element;
     this.win = win;
     var leftpos, toppos;
+    var scrollY = win.scrollY;
+    var scrollX = win.scrollX;
     var hint = __createElement("div");
-    var t = Math.max((rect.top + win.scrollY), win.scrollY) + "px";
-    var l = Math.max((rect.left + win.scrollX), win.scrollX) + "px"; 
-    hint.style.top = t;
-    hint.style.left = l;
+    var toppos = rect.top + scrollY;
+    var leftpos = rect.left + scrollX;
+    var t = Math.max(toppos, scrollY);
+    var l = Math.max(leftpos, scrollX);
+    hint.style.top = t + "px";
+    hint.style.left = l + "px";
 
     hint.className =  "dwb_hint";
     if (_markHints) {
+      var w, h;
+      var comptop = toppos - scrollY;
+      var compleft = leftpos - scrollX;
+      var height = rect.height;
+      var width = rect.width;
+      h = comptop > 0 ? height : height + comptop;
       overlay = __createElement("div");
       overlay.className = "dwb_overlay_normal";
-      overlay.style.width = rect.width + "px";
-      overlay.style.height = rect.height + "px";
-      overlay.style.top = t;
-      overlay.style.left = l;
+      overlay.style.width = (compleft > 0 ? width : width + compleft) + "px";
+      overlay.style.height = (comptop > 0 ? height : height + comptop) + "px";
+      overlay.style.top = t + "px";
+      overlay.style.left = l + "px";
       overlay.style.display = "block";
       this.overlay = overlay;
     }
