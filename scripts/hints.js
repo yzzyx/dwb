@@ -20,10 +20,13 @@ DwbHintObj = (function() {
   _hintTypes = "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]";
   _active = null;
   _markHints = false;
+  _bigFont = null;
 
   const __newHint = function(element, win, rect) {
     this.element = element;
+    this.overlay = null;
     this.win = win;
+    this.textDesc = null;
     var leftpos, toppos;
     var scrollY = win.scrollY;
     var scrollX = win.scrollX;
@@ -36,7 +39,7 @@ DwbHintObj = (function() {
     hint.style.left = l + "px";
 
     hint.className =  "dwb_hint";
-    if (_markHints) {
+    this.createOverlay = function() {
       var w, h;
       var comptop = toppos - scrollY;
       var compleft = leftpos - scrollX;
@@ -53,6 +56,18 @@ DwbHintObj = (function() {
       this.overlay = overlay;
     }
     this.hint = hint;
+    if (! (element instanceof HTMLInputElement && element.hasAttribute("id"))) 
+      return;
+    var label = win.document.body.querySelector("label[for='" + element.id + "']");
+    if (label == null) 
+      return;
+    var text = __createElement("div");
+    text.style.font = "normal 8px monospace";
+    text.innerText = " : " + label.innerText;
+    text.style.display = "inline";
+    this.hint.appendChild(text);
+    this.textDesc = text;
+    
   }
   const __createElement = function(tagname) {
     element = document.createElement(tagname);
@@ -65,11 +80,16 @@ DwbHintObj = (function() {
   const __numberHint = function (element, win, rect) {
     this.constructor = __newHint;
     this.constructor(element, win, rect);
+    var topobj = this;
 
     this.getTextHint = function (i, length) {
+      var e = this.element;
       start = length <=10 ? 1 : length <= 100 ? 10 : 100;
       var content = document.createTextNode(start + i);
-      this.hint.appendChild(content);
+      if (!this.textDesc) 
+        this.hint.appendChild(content);
+      else 
+        this.hint.insertBefore(content, this.textDesc);
     }
 
     this.betterMatch = function(input) {
@@ -141,7 +161,10 @@ DwbHintObj = (function() {
         text = _letterSeq[i%l] + _letterSeq[l - 1 - (parseInt(i/l))];
       }
       var content = document.createTextNode(text);
-      this.hint.appendChild(content);
+      if (!this.textDesc) 
+        this.hint.appendChild(content);
+      else 
+        this.hint.insertBefore(content, this.textDesc);
     }
     this.matchText = function(input) {
       if (input.isUpper()) {
@@ -181,15 +204,19 @@ DwbHintObj = (function() {
     if (active) {
       if (_markHints) 
         active.overlay.style.background = _normalColor;
-      else 
-        _active.element.removeAttribute("dwb_highlight");
+      else if (active.overlay) 
+        active.overlay.parentNode.removeChild(active.overlay);
+      active.hint.style.font = _font;
 
     }
     _active = element;
-    if (_markHints)
-      _active.overlay.style.background = _activeColor;
-    else 
-      _active.element.setAttribute("dwb_highlight");
+    if (!_active.overlay) {
+      _active.createOverlay();
+    }
+    if (!_markHints)
+      _active.hint.parentNode.appendChild(_active.overlay);
+    _active.overlay.style.background = _activeColor;
+    _active.hint.style.fontSize = _bigFont;
   }
   const __hexToRgb = function (color) {
     var rgb;
@@ -220,8 +247,8 @@ DwbHintObj = (function() {
       "color:" + _fgColor + ";" + 
       "border:" + _hintBorder + ";" + 
       "font:" + _font + ";" + 
+      "display:inline;" +
       "opacity: " + _hintOpacity + "; }" + 
-      "*[dwb_highlight] { background:" + _activeColor + "!important;}" + 
       ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + _normalColor + ";}";
     doc.head.appendChild(styleSheet);
     doc.hasStyleSheet = true;
@@ -245,8 +272,10 @@ DwbHintObj = (function() {
           var element = new constructor(e, win, r);
           _elements.push(element);
           hints.appendChild(element.hint);
-          if (_markHints) 
+          if (_markHints) {
+            element.createOverlay();
             hints.appendChild(element.overlay);
+          }
         }
       }
       doc.body.appendChild(hints);
@@ -260,8 +289,10 @@ DwbHintObj = (function() {
       document.activeElement.blur();
 
     __createHints(window, _style == "letter" ? __letterHint : __numberHint);
-    for (var i=0; i<_elements.length; i++) {
-      _elements[i].getTextHint(i, _elements.length);
+    var l = _elements.length;
+    for (var i=0; i<l; i++) {
+      var e =_elements[i];
+      e.getTextHint(i, l);
     }
     _activeArr = _elements;
     __setActive(_elements[0]);
@@ -403,18 +434,17 @@ DwbHintObj = (function() {
   const __addSearchEngine = function() {
     try {
       __createStyleSheet(document);
-      var hints = __createElement("div");
+      var hints = document.createDocumentFragment();
       var res = document.body.querySelectorAll("form");
       var r;
-      var mh = _markHints;
-      _markHints = true;
 
       for (var i=0; i<res.length; i++) {
         var els = res[i].elements;
         for (var j=0; j<els.length; j++) {
           if (((r = __getVisibility(els[j], window)) != null) && (els[j].type == "text" || els[j].type == "search")) {
             var e = new __letterHint(els[j], window, r);
-            hints.appendChild(e.overlay);
+            hints.appendChild(e.hint);
+            e.hint.style.visibility = "hidden";
             _elements.push(e);
           }
         }
@@ -422,10 +452,21 @@ DwbHintObj = (function() {
       if (_elements.length == 0) {
         return "_dwb_no_hints_";
       }
+      if (_markHints) {
+        for (var i=0; i<_elements.length; i++) {
+          var e = _elements[i];
+          e.createOverlay();
+          hints.appendChild(e.overlay);
+        }
+      }
+      else {
+        var e = _elements[0];
+        e.createOverlay();
+        hints.appendChild(e.overlay);
+      }
       document.body.appendChild(hints); 
       __setActive(_elements[0]);
       _activeArr = _elements;
-      _markHints = mh;
     }
     catch (e) {
       console.error(e);
@@ -476,6 +517,7 @@ DwbHintObj = (function() {
         _hintBorder = border;
         _hintOpacity = opacity;
         _markHints = markHints;
+        _bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
   }
 
 
@@ -510,7 +552,7 @@ DwbHintObj = (function() {
       },
     addSearchEngine : 
       function () {
-        __addSearchEngine();
+        return __addSearchEngine();
       },
     submitSearchEngine :
       function (string) {

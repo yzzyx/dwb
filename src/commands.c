@@ -99,7 +99,7 @@ commands_add_search_field(KeyMap *km, Arg *a) {
     }
   }
   dwb.state.mode = SEARCH_FIELD_MODE;
-  dwb_set_normal_message(dwb.state.fview, false, "Enter a Keyword for marked search:");
+  dwb_set_normal_message(dwb.state.fview, false, "Keyword:");
   dwb_focus_entry();
   FREE(value);
   return STATUS_OK;
