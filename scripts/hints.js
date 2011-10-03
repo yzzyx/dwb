@@ -18,16 +18,31 @@ DwbHintObj = (function() {
   _activeInput = null;
   _styles = 0;
   _hintTypes = "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]";
+  _active = null;
+  _markHints = false;
 
   const __newHint = function(element, win, rect) {
     this.element = element;
     this.win = win;
     var leftpos, toppos;
     var hint = __createElement("div");
-    hint.style.top = Math.max((rect.top + win.scrollY), win.scrollY) + "px";
-    hint.style.left = Math.max((rect.left + win.scrollX), win.scrollX) + "px"; 
+    console.log(rect);
+    var t = Math.max((rect.top + win.scrollY), win.scrollY) + "px";
+    var l = Math.max((rect.left + win.scrollX), win.scrollX) + "px"; 
+    hint.style.top = t;
+    hint.style.left = l;
 
-    hint.setAttribute("class", "dwb_hint");
+    hint.className =  "dwb_hint";
+    if (_markHints) {
+      overlay = __createElement("div");
+      overlay.className = "dwb_overlay_normal";
+      overlay.style.width = rect.width + "px";
+      overlay.style.height = rect.height + "px";
+      overlay.style.top = t;
+      overlay.style.left = l;
+      overlay.style.display = "block";
+      this.overlay = overlay;
+    }
     this.hint = hint;
   }
   const __createElement = function(tagname) {
@@ -151,14 +166,22 @@ DwbHintObj = (function() {
     __clear();
   }
   const __getActive = function () {
-    return document.querySelector('*[dwb_highlight=hint_active]');
+    return _active;
+    //return document.querySelector('*[dwb_highlight=hint_active]');
   }
   const __setActive = function (element) {
+    if (!_markHints)
+      return;
     var active = __getActive();
     if (active) {
-      active.setAttribute('dwb_highlight', 'hint_normal' );
+    //  //active.setAttribute('dwb_highlight', 'hint_normal' );
+    //  active.className = "dwb_overlay_normal";
+      active.overlay.style.background = _normalColor;
     }
-    element.element.setAttribute('dwb_highlight', 'hint_active');
+    _active = element;
+    //element.element.setAttribute('dwb_highlight', 'hint_active');
+    element.overlay.style.background = _activeColor;
+    //element.overlay.className = "dwb_overlay_active";
   }
   const __hexToRgb = function (color) {
     var rgb;
@@ -177,23 +200,25 @@ DwbHintObj = (function() {
         rgb[i] = parseInt("0x" + rgb[i]);
       }
     }
-    return "rgba(" + rgb.slice(1) + "," +  _hintOpacity + ")";
+    return "rgba(" + rgb.slice(1) + "," +  _hintOpacity/2 + ")";
   }
   const __createStyleSheet = function(doc) {
     if (doc.hasStyleSheet) 
       return;
     styleSheet = __createElement("style");
-    styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important;" 
-      + "outline: 2px solid " + _normalColor + "!important; }";
-    styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important;" 
-      + "outline: 2px solid " + _activeColor + "!important; } ";
+    //styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important;" 
+    //  + "outline: 2px solid " + _normalColor + "!important; }";
+    //styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important;" 
+    //  + "outline: 2px solid " + _activeColor + "!important; } ";
     styleSheet.innerHTML += ".dwb_hint { " +
       "position:absolute; z-index:20000;" +
       "background:" + _bgColor  + ";" + 
       "color:" + _fgColor + ";" + 
       "border:" + _hintBorder + ";" + 
       "font:" + _font + ";" + 
-      "opacity: " + _hintOpacity + "; }";
+      "opacity: " + _hintOpacity + "; }" + 
+      ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + _normalColor + ";}";
+      //".dwb_overlay_active { position:absolute;display:block; z-index:19999;background:#0f0;}";
     doc.head.appendChild(styleSheet);
     doc.hasStyleSheet = true;
   }
@@ -233,7 +258,9 @@ DwbHintObj = (function() {
           var element = new constructor(e, win, r);
           _elements.push(element);
           hints.appendChild(element.hint);
-          e.setAttribute('dwb_highlight', 'hint_normal');
+          if (_markHints) 
+            hints.appendChild(element.overlay);
+          //e.setAttribute('dwb_highlight', 'hint_normal');
         }
       }
       doc.body.appendChild(hints);
@@ -288,7 +315,7 @@ DwbHintObj = (function() {
       }
       else {
         e.hint.style.visibility = 'hidden';
-        e.element.removeAttribute('dwb_highlight');
+        //e.element.removeAttribute('dwb_highlight');
       }
     }
     _activeArr = array;
@@ -324,9 +351,12 @@ DwbHintObj = (function() {
     try {
       if (_elements) {
         for (var i=0; i<_elements.length; i++) {
-          _elements[i].element.removeAttribute('dwb_highlight');
-          if (p = _elements[i].hint.parentNode) 
-            p.removeChild(_elements[i].hint);
+          var e = _elements[i];
+          //_elements[i].element.removeAttribute('dwb_highlight');
+          if (p = e.hint.parentNode) 
+            p.removeChild(e.hint);
+          if (e.overlay != undefined && (p = e.overlay.parentNode)) 
+            p.removeChild(e.overlay);
         }
       }
     }
@@ -383,33 +413,47 @@ DwbHintObj = (function() {
     _lastPosition = newpos;
   }
   const __addSearchEngine = function() {
-    __createStyleSheet(document);
-    var hints = __createElement("div");
-    var res = document.body.querySelectorAll("form");
-    var r;
+    try {
+      __createStyleSheet(document);
+      var hints = __createElement("div");
+      var res = document.body.querySelectorAll("form");
+      var r;
+      var mh = _markHints;
+      _markHints = true;
 
-    for (var i=0; i<res.length; i++) {
-      var els = res[i].elements;
-      for (var j=0; j<els.length; j++) {
-        if ((r = __getVisibility(els[j], window) != null) && (els[j].type == "text" || els[j].type == "search")) {
-          var e = new __letterHint(els[j], window, r);
-          _elements.push(e);
+      for (var i=0; i<res.length; i++) {
+        var els = res[i].elements;
+        for (var j=0; j<els.length; j++) {
+          if (((r = __getVisibility(els[j], window)) != null) && (els[j].type == "text" || els[j].type == "search")) {
+            var e = new __letterHint(els[j], window, r);
+            hints.appendChild(e.overlay);
+            _elements.push(e);
+          }
         }
       }
+      if (_elements.length == 0) {
+        return "_dwb_no_hints_";
+      }
+      //for (var i=0; i<_elements.length; i++) {
+      //  _elements[i].getTextHint(i, _elements.length);
+      //  fragment.appendChild(_elements[i].overlay);
+      //  _elements[i].overlay.textContent = "bljkljlfkjsdalfkjl";
+      //  fragment.appendChild(_elements[i].hint);
+
+      //  //_elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
+      //}
+      document.body.appendChild(hints); 
+      __setActive(_elements[0]);
+      _activeArr = _elements;
+      _markHints = mh;
     }
-    if (!_elements.length) {
-      return "_dwb_no_hints_";
+    catch (e) {
+      console.error(e);
     }
-    for (var i=0; i<_elements.length; i++) {
-      _elements[i].getTextHint(i, _elements.length);
-      _elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
-    }
-    document.body.appendChild(hints); 
-    __setActive(_elements[0]);
-    _activeArr = _elements;
   }
   const __submitSearchEngine = function (string) {
-    var e = __getActive();
+    var e = __getActive().element;
+    //var e = __getActive();
     e.value = string;
     e.form.submit();
     e.value = "";
@@ -442,7 +486,7 @@ DwbHintObj = (function() {
     _activeInput.focus();
   }
   const __init = function (letter_seq, font, style,
-          fg_color, bg_color, active_color, normal_color, border,  opacity) {
+          fg_color, bg_color, active_color, normal_color, border,  opacity, markHints) {
         _letterSeq  = letter_seq;
         _font = font;
         _style =  style.toLowerCase();
@@ -452,6 +496,7 @@ DwbHintObj = (function() {
         _normalColor = __hexToRgb(normal_color);
         _hintBorder = border;
         _hintOpacity = opacity;
+        _markHints = markHints;
   }
 
 
@@ -473,7 +518,7 @@ DwbHintObj = (function() {
       },
     followActive :
       function () {
-        return __evaluate(__getActive());
+        return __evaluate(__getActive().element);
       },
 
     focusNext :
@@ -498,8 +543,8 @@ DwbHintObj = (function() {
       },
     init: 
       function (letter_seq, font, style,
-          fg_color, bg_color, active_color, normal_color, border,  opacity) {
-        __init(letter_seq, font, style, fg_color, bg_color, active_color, normal_color, border,  opacity); 
+          fg_color, bg_color, active_color, normal_color, border,  opacity, highlightLinks) {
+        __init(letter_seq, font, style, fg_color, bg_color, active_color, normal_color, border,  opacity, highlightLinks); 
       }, 
   }
 })();

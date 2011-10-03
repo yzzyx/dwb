@@ -531,6 +531,8 @@ static WebSettings DWB_SETTINGS[] = {
    
   { { "hint-letter-seq",                       "Letter sequence for letter hints", },             
     SETTING_GLOBAL,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
+  { { "hint-highlight-links",                  "Whether to highlight links in hintmode", },             
+    SETTING_GLOBAL,  BOOLEAN, { .b = false  }, (S_Func) dwb_reload_scripts,  },
   { { "hint-style",                              "Whether to use 'letter' or 'number' hints", },                     
     SETTING_GLOBAL,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
   { { "hint-font",                          "Font size of hints", },                                        
@@ -2983,7 +2985,7 @@ dwb_init_scripts() {
     util_get_directory_content(&buffer, dir);
     g_free(dir);
   }
-  g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\");", 
+  g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\", %s);", 
       GET_CHAR("hint-letter-seq"),
       GET_CHAR("hint-font"),
       GET_CHAR("hint-style"), 
@@ -2992,7 +2994,8 @@ dwb_init_scripts() {
       GET_CHAR("hint-active-color"), 
       GET_CHAR("hint-normal-color"), 
       GET_CHAR("hint-border"), 
-      GET_DOUBLE("hint-opacity"));
+      GET_DOUBLE("hint-opacity"),
+      GET_BOOL("hint-highlight-links") ? "true" : false);
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/

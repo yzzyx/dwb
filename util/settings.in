@@ -83,6 +83,7 @@ hint-bg-color text Background color of hints
 hint-border text Border used for hints
 hint-fg-color text Foreground color of hints
 hint-font text Font used for hints
+hint-highlight-links select Whether to highlight links, if enabled also enables tabbing through hints
 hint-letter-seq text Letter sequence for letter hints
 hint-normal-color text Color of inactive links in hintmode
 hint-opacity text Opacity used for hints
