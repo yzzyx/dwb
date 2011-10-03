@@ -2995,7 +2995,7 @@ dwb_init_scripts() {
       GET_CHAR("hint-normal-color"), 
       GET_CHAR("hint-border"), 
       GET_DOUBLE("hint-opacity"),
-      GET_BOOL("hint-highlight-links") ? "true" : false);
+      GET_BOOL("hint-highlight-links") ? "true" : "false");
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/

@@ -26,7 +26,6 @@ DwbHintObj = (function() {
     this.win = win;
     var leftpos, toppos;
     var hint = __createElement("div");
-    console.log(rect);
     var t = Math.max((rect.top + win.scrollY), win.scrollY) + "px";
     var l = Math.max((rect.left + win.scrollX), win.scrollX) + "px"; 
     hint.style.top = t;
@@ -167,21 +166,16 @@ DwbHintObj = (function() {
   }
   const __getActive = function () {
     return _active;
-    //return document.querySelector('*[dwb_highlight=hint_active]');
   }
   const __setActive = function (element) {
     if (!_markHints)
       return;
     var active = __getActive();
     if (active) {
-    //  //active.setAttribute('dwb_highlight', 'hint_normal' );
-    //  active.className = "dwb_overlay_normal";
       active.overlay.style.background = _normalColor;
     }
     _active = element;
-    //element.element.setAttribute('dwb_highlight', 'hint_active');
     element.overlay.style.background = _activeColor;
-    //element.overlay.className = "dwb_overlay_active";
   }
   const __hexToRgb = function (color) {
     var rgb;
@@ -206,10 +200,6 @@ DwbHintObj = (function() {
     if (doc.hasStyleSheet) 
       return;
     styleSheet = __createElement("style");
-    //styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important;" 
-    //  + "outline: 2px solid " + _normalColor + "!important; }";
-    //styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important;" 
-    //  + "outline: 2px solid " + _activeColor + "!important; } ";
     styleSheet.innerHTML += ".dwb_hint { " +
       "position:absolute; z-index:20000;" +
       "background:" + _bgColor  + ";" + 
@@ -218,7 +208,6 @@ DwbHintObj = (function() {
       "font:" + _font + ";" + 
       "opacity: " + _hintOpacity + "; }" + 
       ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + _normalColor + ";}";
-      //".dwb_overlay_active { position:absolute;display:block; z-index:19999;background:#0f0;}";
     doc.head.appendChild(styleSheet);
     doc.hasStyleSheet = true;
   }
@@ -237,30 +226,12 @@ DwbHintObj = (function() {
         if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
           __createHints(e.contentWindow, constructor);
         }
-        //else if (e instanceof HTMLMapElement) {
-        //  try {
-        //    var areas = e.getElementsByTagName("area");
-        //    for (var j=0; j<areas.length; j++) {
-        //      var coords = areas[j].coords.split(",");
-        //      r.left += parseInt(coords[0]);
-        //      r.top += parseInt(coords[1]);
-        //      var rect = { left : r.left + parseInt(coords[0]), top : r.top + parseInt(coords[1]) };
-        //      var element = new constructor(areas[i], win, rect);
-        //      _elements.push(element);
-        //      hints.appendChild(element.hint);
-        //    }
-        //  }
-        //  catch(exception) {
-        //    console.error(exception);
-        //  }
-        //}
         else {
           var element = new constructor(e, win, r);
           _elements.push(element);
           hints.appendChild(element.hint);
           if (_markHints) 
             hints.appendChild(element.overlay);
-          //e.setAttribute('dwb_highlight', 'hint_normal');
         }
       }
       doc.body.appendChild(hints);
@@ -315,7 +286,6 @@ DwbHintObj = (function() {
       }
       else {
         e.hint.style.visibility = 'hidden';
-        //e.element.removeAttribute('dwb_highlight');
       }
     }
     _activeArr = array;
@@ -352,7 +322,6 @@ DwbHintObj = (function() {
       if (_elements) {
         for (var i=0; i<_elements.length; i++) {
           var e = _elements[i];
-          //_elements[i].element.removeAttribute('dwb_highlight');
           if (p = e.hint.parentNode) 
             p.removeChild(e.hint);
           if (e.overlay != undefined && (p = e.overlay.parentNode)) 
@@ -434,14 +403,6 @@ DwbHintObj = (function() {
       if (_elements.length == 0) {
         return "_dwb_no_hints_";
       }
-      //for (var i=0; i<_elements.length; i++) {
-      //  _elements[i].getTextHint(i, _elements.length);
-      //  fragment.appendChild(_elements[i].overlay);
-      //  _elements[i].overlay.textContent = "bljkljlfkjsdalfkjl";
-      //  fragment.appendChild(_elements[i].hint);
-
-      //  //_elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
-      //}
       document.body.appendChild(hints); 
       __setActive(_elements[0]);
       _activeArr = _elements;
@@ -453,7 +414,6 @@ DwbHintObj = (function() {
   }
   const __submitSearchEngine = function (string) {
     var e = __getActive().element;
-    //var e = __getActive();
     e.value = string;
     e.form.submit();
     e.value = "";
