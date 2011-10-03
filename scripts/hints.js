@@ -222,7 +222,7 @@ DwbHintObj = (function() {
       "border:" + _hintBorder + ";" + 
       "font:" + _font + ";" + 
       "opacity: " + _hintOpacity + "; }" + 
-      "*[dwb_highlight] { background:" + _activeColor + ";}" + 
+      "*[dwb_highlight] { background:" + _activeColor + "!important;}" + 
       ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + _normalColor + ";}";
     doc.head.appendChild(styleSheet);
     doc.hasStyleSheet = true;
