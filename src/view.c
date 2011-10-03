@@ -196,6 +196,16 @@ view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *
   return true;
 }/*}}}*/
 
+gboolean 
+view_delete_web_inspector(GtkWidget *widget, GdkEvent *event, GtkWidget *wv) {
+  /* Remove webview before destroying the window, otherwise closing the
+   * webinspector  will result in a segfault 
+   * */
+  gtk_container_remove(GTK_CONTAINER(widget), wv);
+  gtk_widget_destroy(widget);
+  return true;
+}
+
 /* view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList * *){{{*/
 static WebKitWebView * 
 view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList *gl) {
@@ -205,6 +215,7 @@ view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList
   gtk_container_add(GTK_CONTAINER(window), webview);
   gtk_widget_show_all(window);
 
+  g_signal_connect(window, "delete-event", G_CALLBACK(view_delete_web_inspector), webview);
   return WEBKIT_WEB_VIEW(webview);
 }/*}}}*/
 
