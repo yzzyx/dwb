@@ -157,8 +157,10 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, key);
   PRINT_DEBUG("%s %s", key, value);
-  if (s->type == BOOLEAN) 
+  if (s->type == BOOLEAN) {
     webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), s->arg.b);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
+  }
   else if (value) {
     if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) {
       webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value);
