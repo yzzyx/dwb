@@ -653,9 +653,7 @@ struct _Dwb {
 Dwb dwb;
 /*}}}*/
 
-DwbStatus dwb_insert_mode(void);
-void dwb_normal_mode(gboolean);
-
+DwbStatus dwb_change_mode(Mode, ...);
 void dwb_load_uri(GList *gl, Arg *);
 void dwb_execute_user_script(KeyMap *km, Arg *a);
 

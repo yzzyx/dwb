@@ -90,7 +90,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   gboolean ret = false;
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-    dwb_insert_mode();
+    dwb_change_mode(INSERT_MODE);
   }
   else if (e->state & GDK_CONTROL_MASK && e->button == 1) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
@@ -167,7 +167,7 @@ view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourc
     dwb_insert_mode(NULL);
   }
   else if (gl == dwb.state.fview && !(strncmp(message, "_dwb_normal_mode_", 17))) {
-    dwb_normal_mode(true);
+    dwb_change_mode(NORMAL_MODE, true);
   }
   if (!strncmp(message, "_dwb_no_input_", 14)) {
     dwb_set_error_message(gl, "No input found in current context");
@@ -259,8 +259,6 @@ static gboolean
 view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
     WebKitWebPolicyDecision *policy, GList *gl) {
 
-  dwb_clean_load_end(gl);
-
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
@@ -297,7 +295,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   }
   else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
     if (dwb.state.mode == INSERT_MODE) {
-      dwb_normal_mode(true);
+      dwb_change_mode(NORMAL_MODE, true);
     }
     else if (dwb.state.mode == SEARCH_FIELD_MODE) {
       PRINT_DEBUG("searchfields navigation request: %s", uri);
@@ -506,6 +504,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         plugins_disconnect(gl);
       }
       FREE(host);
+      dwb_clean_load_end(gl);
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
@@ -646,7 +645,7 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   else if (mode == FIND_MODE) {
     dwb_focus_scroll(dwb.state.fview);
     dwb_search(NULL, NULL);
-    dwb_normal_mode(true);
+    dwb_change_mode(NORMAL_MODE, true);
   }
   else if (mode == SEARCH_FIELD_MODE) {
     dwb_submit_searchengine();
@@ -673,7 +672,7 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
     Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
     dwb_load_uri(NULL, &a);
     dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
-    dwb_normal_mode(true);
+    dwb_change_mode(NORMAL_MODE, true);
   }
 
   return true;

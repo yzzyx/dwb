@@ -531,6 +531,8 @@ static WebSettings DWB_SETTINGS[] = {
    
   { { "hint-letter-seq",                       "Letter sequence for letter hints", },             
     SETTING_GLOBAL,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
+  { { "hint-highlight-links",                  "Whether to highlight links in hintmode", },             
+    SETTING_GLOBAL,  BOOLEAN, { .b = false  }, (S_Func) dwb_reload_scripts,  },
   { { "hint-style",                              "Whether to use 'letter' or 'number' hints", },                     
     SETTING_GLOBAL,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
   { { "hint-font",                          "Font size of hints", },                                        
@@ -777,7 +779,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 
   char *key = util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_KEY_Escape) {
-    dwb_normal_mode(true);
+    dwb_change_mode(NORMAL_MODE, true);
     ret = false;
   }
   else if (dwb.state.mode & PASS_THROUGH) {
@@ -1185,7 +1187,7 @@ dwb_apply_settings(WebSettings *s) {
   for (GList *l = dwb.state.views; l; l=l->next) 
     if (s->func) 
       s->func(l, s);
-  dwb_normal_mode(false);
+  dwb_change_mode(NORMAL_MODE, false);
 
 }/*}}}*/
 
@@ -1212,7 +1214,7 @@ dwb_set_setting(const char *key, char *value) {
       dwb_set_error_message(dwb.state.fview, "No such setting: %s", key);
     }
   }
-  dwb_normal_mode(false);
+  dwb_change_mode(NORMAL_MODE, false);
 
 
 }/*}}}*/
@@ -1235,7 +1237,7 @@ dwb_set_key(const char *prop, char *val) {
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
 
-  dwb_normal_mode(false);
+  dwb_change_mode(NORMAL_MODE, false);
 }/*}}}*/
 
 /* dwb_get_host(WebKitWebView *) {{{*/
@@ -1459,7 +1461,7 @@ dwb_clean_load_end(GList *gl) {
     v->status->mimetype = NULL;
   }
   if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {  
-    dwb_normal_mode(true);
+    dwb_change_mode(NORMAL_MODE, true);
   }
 }/*}}}*/
 
@@ -1682,7 +1684,7 @@ dwb_submit_searchengine(void) {
 void
 dwb_save_searchengine(void) {
   char *text = g_strdup(GET_TEXT());
-  dwb_normal_mode(false);
+  dwb_change_mode(NORMAL_MODE, false);
 
   if (!text)
     return;
@@ -1781,19 +1783,19 @@ dwb_update_hints(GdkEventKey *e) {
   if (buffer) { 
     if (!strcmp("_dwb_no_hints_", buffer)) {
       dwb_set_error_message(dwb.state.fview, NO_HINTS);
-      dwb_normal_mode(false);
+      dwb_change_mode(NORMAL_MODE, false);
     }
     else if (!strcmp(buffer, "_dwb_input_")) {
-      dwb_insert_mode();
+      dwb_change_mode(INSERT_MODE);
     }
     else if  (!strcmp(buffer, "_dwb_click_")) {
       dwb.state.scriptlock = 1;
       if (dwb.state.nv != OPEN_DOWNLOAD) {
-        dwb_normal_mode(true);
+        dwb_change_mode(NORMAL_MODE, true);
       }
     }
     else  if (!strcmp(buffer, "_dwb_check_")) {
-      dwb_normal_mode(true);
+      dwb_change_mode(NORMAL_MODE, true);
     }
     FREE(buffer);
   }
@@ -1893,7 +1895,7 @@ dwb_save_quickmark(const char *key) {
     char *text = g_strdup_printf("%s %s %s", key, uri, title);
     util_file_add(dwb.files.quickmarks, text, true, -1);
     g_free(text);
-    dwb_normal_mode(false);
+    dwb_change_mode(NORMAL_MODE, false);
 
     dwb_set_normal_message(dwb.state.fview, true, "Added quickmark: %s - %s", key, uri);
   }
@@ -1911,7 +1913,7 @@ dwb_open_quickmark(const char *key) {
       Arg a = { .p = q->nav->first, .b = true };
       dwb_load_uri(NULL, &a);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
-      dwb_normal_mode(false);
+      dwb_change_mode(NORMAL_MODE, false);
       return;
     }
   }
@@ -2371,7 +2373,7 @@ dwb_eval_key(GdkEventKey *e) {
 }/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
-DwbStatus
+static DwbStatus
 dwb_insert_mode(void) {
   if (dwb.state.mode & PASS_THROUGH)
     return STATUS_ERROR;
@@ -2385,8 +2387,24 @@ dwb_insert_mode(void) {
   return STATUS_OK;
 }/*}}}*/
 
+/* dwb_command_mode(void) {{{*/
+static DwbStatus 
+dwb_command_mode(void) {
+  dwb_set_normal_message(dwb.state.fview, false, ":");
+  dwb_focus_entry();
+  dwb.state.mode = COMMAND_MODE;
+  return STATUS_OK;
+}/*}}}*/
+
+static DwbStatus
+dwb_passthrough_mode(void) {
+  dwb.state.mode |= PASS_THROUGH;
+  dwb_set_normal_message(dwb.state.fview, false, "-- PASS THROUGH --");
+  return STATUS_OK;
+}
+
 /* dwb_normal_mode() {{{*/
-void 
+static DwbStatus 
 dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
@@ -2418,15 +2436,44 @@ dwb_normal_mode(gboolean clean) {
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   dwb_clean_vars();
+  return STATUS_OK;
 }/*}}}*/
+
+DwbStatus 
+dwb_change_mode(Mode mode, ...) {
+  GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+  DwbStatus ret = STATUS_OK;
+  gboolean clean;
+  va_list vl;
+  if (! g_static_mutex_trylock(&mutex))
+    return STATUS_ERROR;
+
+  switch(mode) {
+    case NORMAL_MODE: 
+      va_start(vl, mode);
+      clean = va_arg(vl, gboolean);
+      ret = dwb_normal_mode(clean);
+      va_end(vl);
+      break;
+    case INSERT_MODE:   ret = dwb_insert_mode(); break;
+    case COMMAND_MODE:  ret = dwb_command_mode(); break;
+    case PASS_THROUGH:  ret = dwb_passthrough_mode(); break;
+    default: PRINT_DEBUG("Unknown mode: %d", mode); break;
+  }
+  g_static_mutex_unlock(&mutex);
+  return ret;
+}
+
 
 /* gboolean dwb_highlight_search(void) {{{*/
 gboolean
 dwb_highlight_search() {
-  WebKitWebView *web = CURRENT_WEBVIEW();
+  View *v = CURRENT_VIEW();
+  WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
   int matches;
   webkit_web_view_unmark_text_matches(web);
-  if ( (matches = webkit_web_view_mark_text_matches(web, CURRENT_VIEW()->status->search_string, false, 0)) ) {
+
+  if ( v->status->search_string != NULL && (matches = webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0)) ) {
     dwb_set_normal_message(dwb.state.fview, false, "[%3d hits] ", matches);
     webkit_web_view_set_highlight_text_matches(web, true);
     return true;
@@ -2938,7 +2985,7 @@ dwb_init_scripts() {
     util_get_directory_content(&buffer, dir);
     g_free(dir);
   }
-  g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\");", 
+  g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\", %s);", 
       GET_CHAR("hint-letter-seq"),
       GET_CHAR("hint-font"),
       GET_CHAR("hint-style"), 
@@ -2947,7 +2994,8 @@ dwb_init_scripts() {
       GET_CHAR("hint-active-color"), 
       GET_CHAR("hint-normal-color"), 
       GET_CHAR("hint-border"), 
-      GET_DOUBLE("hint-opacity"));
+      GET_DOUBLE("hint-opacity"),
+      GET_BOOL("hint-highlight-links") ? "true" : "false");
   dwb.misc.scripts = buffer->str;
   g_string_free(buffer, false);
 }/*}}}*/
@@ -3316,7 +3364,7 @@ dwb_parse_command_line(const char *line) {
     }
   }
   g_strfreev(token);
-  dwb_normal_mode(true);
+  dwb_change_mode(NORMAL_MODE, true);
 }/*}}}*/
 
 /* dwb_handle_channel {{{*/
