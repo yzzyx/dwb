@@ -178,14 +178,19 @@ DwbHintObj = (function() {
     return _active;
   }
   const __setActive = function (element) {
-    if (!_markHints)
-      return;
     var active = __getActive();
     if (active) {
-      active.overlay.style.background = _normalColor;
+      if (_markHints) 
+        active.overlay.style.background = _normalColor;
+      else 
+        _active.element.removeAttribute("dwb_highlight");
+
     }
     _active = element;
-    element.overlay.style.background = _activeColor;
+    if (_markHints)
+      _active.overlay.style.background = _activeColor;
+    else 
+      _active.element.setAttribute("dwb_highlight");
   }
   const __hexToRgb = function (color) {
     var rgb;
@@ -217,6 +222,7 @@ DwbHintObj = (function() {
       "border:" + _hintBorder + ";" + 
       "font:" + _font + ";" + 
       "opacity: " + _hintOpacity + "; }" + 
+      "*[dwb_highlight] { background:" + _activeColor + ";}" + 
       ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + _normalColor + ";}";
     doc.head.appendChild(styleSheet);
     doc.hasStyleSheet = true;
@@ -344,6 +350,10 @@ DwbHintObj = (function() {
     }
     _elements = [];
     _activeArr = [];
+    if(! _markHints)
+      _active.element.removeAttribute("dwb_highlight");
+    _active = null;
+    _lastPosition = 0;
   }
   const __evaluate = function (e) {
     var ret, type;
