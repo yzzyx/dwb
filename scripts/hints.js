@@ -172,7 +172,6 @@ DwbHintObj = (function() {
       __mouseEvent(element, "click");
       __mouseEvent(element, "mousedown");
     }
-    __clear();
   }
   const __getActive = function () {
     return _active;
