@@ -40,18 +40,18 @@ completion_modify_completion_item(Completion *c, DwbColor *fg, DwbColor *bg, Pan
 
 /* completion_get_completion_item(Navigation *)      return: Completion * {{{*/
 static Completion * 
-completion_get_completion_item(Navigation *n, void *data, const char *value) {
+completion_get_completion_item(const char  *left, const char *right, const char *middle, void *data) {
   Completion *c = g_malloc(sizeof(Completion));
 
-  c->rlabel = gtk_label_new(n->second);
-  c->llabel = gtk_label_new(n->first);
-  c->mlabel = gtk_label_new(value);
+  c->llabel = gtk_label_new(left);
+  c->rlabel = gtk_label_new(right);
+  c->mlabel = gtk_label_new(middle);
   c->event = gtk_event_box_new();
   c->data = data;
-  GtkWidget *hbox = gtk_hbox_new(value ? true : false, 0);
+  GtkWidget *hbox = gtk_hbox_new(middle != NULL ? true : false, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), c->llabel, true, true, 5);
-  gtk_box_pack_start(GTK_BOX(hbox), c->mlabel, value ? true : false , true, 5);
+  gtk_box_pack_start(GTK_BOX(hbox), c->mlabel, middle != NULL ? true : false , true, 5);
   gtk_box_pack_start(GTK_BOX(hbox), c->rlabel, true, true, 5);
 
   gtk_label_set_ellipsize(GTK_LABEL(c->llabel), PANGO_ELLIPSIZE_MIDDLE);
@@ -77,7 +77,7 @@ completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, vo
   for (GList *l = gl; l; l=l->next) {
     n = l->data;
     if (func(n->first, input) || (!word_beginnings && n->second && func(n->second, input))) {
-      Completion *c = completion_get_completion_item(n, data, value);
+      Completion *c = completion_get_completion_item(n->first, n->second, value, data);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       store = g_list_append(store, c);
     }
@@ -240,7 +240,7 @@ completion_get_settings_completion() {
     Navigation n = s->n;
     if (g_strrstr(n.first, input)) {
       char *value = util_arg_to_char(&s->arg, s->type);
-      Completion *c = completion_get_completion_item(&n, s, value);
+      Completion *c = completion_get_completion_item(s->n.first, s->n.second, value, s);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       list = g_list_append(list, c);
     }
@@ -265,7 +265,7 @@ completion_get_key_completion(gboolean entry) {
     if (g_str_has_prefix(n.first, input)) {
       char *mod = dwb_modmask_to_string(m->mod);
       char *value = g_strdup_printf("%s %s", mod, m->key);
-      Completion *c = completion_get_completion_item(&n, m, value);
+      Completion *c = completion_get_completion_item(n.first, n.second, value, m);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       list = g_list_append(list, c);
       FREE(value);
@@ -286,17 +286,16 @@ completion_path(void) {
 static  GList *
 completion_get_current_history(int back) {
   GList *list = NULL;
-  Navigation *n;
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(CURRENT_WEBVIEW());
   for (int i= -webkit_web_back_forward_list_get_back_length(bf_list); i<webkit_web_back_forward_list_get_forward_length(bf_list); i++) {
     if (i==0)
       continue;
     WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, i);
-    n = dwb_navigation_new(webkit_web_history_item_get_uri(item), webkit_web_history_item_get_title(item));
-    Completion *c = completion_get_completion_item(n, NULL, NULL);
+    const char *uri = webkit_web_history_item_get_uri(item);
+    const char *title = webkit_web_history_item_get_uri(item);
+    Completion *c = completion_get_completion_item(uri, title, NULL, NULL);
     gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
     list = g_list_append(list, c);
-    dwb_navigation_free(n);
   }
   if (back)
     list = g_list_reverse(list);
@@ -323,12 +322,10 @@ completion_complete_buffer() {
     const char *title = webkit_web_view_get_title(wv);
     const char *uri = webkit_web_view_get_uri(wv);
     char *text = g_strdup_printf("%d : %s", j, title != NULL ? title : uri);
-    Navigation *n = dwb_navigation_new(text, uri);
+    Completion *c = completion_get_completion_item(text, uri, NULL, l);
     g_free(text);
-    Completion *c = completion_get_completion_item(n, l, NULL);
     gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
     list = g_list_append(list, c);
-    dwb_navigation_free(n);
     i++;
   }
   if (list != NULL) {
@@ -423,14 +420,11 @@ completion_init_autocompletion(GList *gl) {
   for (GList *l=gl; l; l=l->next, i++) {
     KeyMap *m = l->data;
     if (!m->map->entry) {
-      Navigation *n = dwb_navigation_new(m->key, m->map->n.second);
-      Completion *c = completion_get_completion_item(n, m, NULL);
+      Completion *c = completion_get_completion_item(m->key, m->map->n.second, NULL, m);
       ret = g_list_append(ret, c);
       if (i<5) {
         gtk_widget_show_all(c->event);
       }
-      dwb_navigation_free(n);
-
       gtk_box_pack_start(GTK_BOX(v->autocompletion), c->event, true,  true, 1);
     }
   }
