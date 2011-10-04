@@ -306,23 +306,25 @@ completion_get_current_history(int back) {
 void
 completion_eval_buffer_completion(void) {
   /* TODO Wrong View is saved  */
-#if 0 
-  GList *l = ((Completion*)dwb.comps.active_comp)->data;
-  PRINT_DEBUG("%p", l);
-  dwb_focus_view(l);
-#endif
+  GList *l = ((Completion *)dwb.comps.active_comp->data)->data;
   completion_clean_completion();
+  dwb_focus_view(l);
   dwb_change_mode(NORMAL_MODE, true);
 }
 /* completion_complete_buffer {{{*/
 static GList *
 completion_complete_buffer() {
   GList *list = NULL;
-  int i=0;
-  for (GList *l = dwb.state.views;l; l=l->next) {
+  int i=0, j=0;
+  for (GList *l = dwb.state.views;l; l=l->next, j++) {
     if (l == dwb.state.fview) 
       continue;
-    Navigation *n = dwb_navigation_new(webkit_web_view_get_title(WEBVIEW(l)), webkit_web_view_get_uri(WEBVIEW(l)));
+    WebKitWebView *wv = WEBVIEW(l);
+    const char *title = webkit_web_view_get_title(wv);
+    const char *uri = webkit_web_view_get_uri(wv);
+    char *text = g_strdup_printf("%d : %s", j, title != NULL ? title : uri);
+    Navigation *n = dwb_navigation_new(text, uri);
+    g_free(text);
     Completion *c = completion_get_completion_item(n, l, NULL);
     gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
     list = g_list_append(list, c);
@@ -340,7 +342,6 @@ completion_complete_buffer() {
 DwbStatus 
 completion_complete(CompletionType type, int back) {
   DwbStatus ret = STATUS_OK;
-  gboolean comp_bit = true;
   View *v = CURRENT_VIEW();
   dwb.state.mode &= ~(COMPLETE_PATH | AUTO_COMPLETE);
   if ( !(dwb.state.mode & COMPLETION_MODE) ) {
@@ -360,14 +361,13 @@ completion_complete(CompletionType type, int back) {
       case COMP_INPUT:       dwb.comps.completions = completion_get_simple_completion(dwb.fc.commands); break;
       case COMP_SEARCH:      dwb.comps.completions = completion_get_simple_completion(dwb.fc.se_completion); break;
       case COMP_PATH:        completion_path(); return STATUS_OK;
-      case COMP_BUFFER:      dwb.comps.completions = completion_complete_buffer(); comp_bit = false; break;
+      case COMP_BUFFER:      dwb.comps.completions = completion_complete_buffer(); break;
       default:               dwb.comps.completions = completion_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {
       return STATUS_ERROR;
     }
-    if (comp_bit)
-      dwb.state.mode |= COMPLETION_MODE;
+    dwb.state.mode |= COMPLETION_MODE;
     completion_show_completion(back);
   }
   else if (dwb.comps.completions && dwb.comps.active_comp) {

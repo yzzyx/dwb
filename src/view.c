@@ -578,8 +578,11 @@ static gboolean
 view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
   gboolean ret = false;
-  gboolean complete = (mode == DOWNLOAD_GET_PATH || mode & COMPLETE_PATH);
-  if (e->keyval == GDK_KEY_BackSpace && !complete) {
+  gboolean complete = (mode == DOWNLOAD_GET_PATH || (mode & COMPLETE_PATH));
+  /*  Handled by activate-callback */
+  if (e->keyval == GDK_KEY_Return)
+    return false;
+  if (e->keyval == GDK_KEY_BackSpace && !complete && ! (mode & COMPLETE_BUFFER)) {
     return false;
   }
   else if (mode == HINT_MODE) {
@@ -603,8 +606,10 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       completion_clean_path_completion();
     }
   }
-  else if (mode == COMPLETE_BUFFER) {
-    return false;
+  else if (mode & COMPLETE_BUFFER) {
+    if (DWB_TAB_KEY(e)) 
+      completion_complete(COMP_BUFFER, e->state & GDK_SHIFT_MASK);
+    return true;
   }
   else if (mode & COMPLETION_MODE && !DWB_TAB_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
     completion_clean_completion();
@@ -626,7 +631,7 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 static gboolean 
 view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   char **token = NULL;
-  switch (dwb.state.mode)  {
+  switch (CLEAN_MODE(dwb.state.mode))  {
     case HINT_MODE:           return false;
     case FIND_MODE:           dwb_focus_scroll(dwb.state.fview);
                               dwb_search(NULL, NULL);

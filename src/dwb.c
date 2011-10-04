@@ -292,7 +292,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
   { { "complete_current_history",          "Complete history of current tab", },        0, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_CUR_HISTORY }, true, }, 
-  { { "buffers",                          "Show buffers", },        0, 
+  { { "buffers",                          "Buffer", },        0, 
     (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     { .n = COMP_BUFFER }, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, 
@@ -780,34 +780,36 @@ dwb_reload_scripts(GList *gl, WebSettings *s) {
 static gboolean 
 dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
+  Mode mode = CLEAN_MODE(dwb.state.mode);
 
+  PRINT_DEBUG("%d %d %d\n", mode, CLEAN_MODE(mode) & COMPLETE_BUFFER, mode & PASS_THROUGH);
   char *key = util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_KEY_Escape) {
     dwb_change_mode(NORMAL_MODE, true);
     ret = false;
   }
-  else if (dwb.state.mode & PASS_THROUGH) {
+  else if (mode & PASS_THROUGH) {
     ret = false;
   }
-  else if (dwb.state.mode == INSERT_MODE) {
+  else if (mode == INSERT_MODE) {
     if (CLEAN_STATE(e) & GDK_MODIFIER_MASK) {
       dwb_eval_key(e);
       ret = false;
     }
   }
-  else if (dwb.state.mode == QUICK_MARK_SAVE) {
+  else if (mode == QUICK_MARK_SAVE) {
     if (key) {
       dwb_save_quickmark(key);
     }
     ret = true;
   }
-  else if (dwb.state.mode == QUICK_MARK_OPEN) {
+  else if (mode == QUICK_MARK_OPEN) {
     if (key) {
       dwb_open_quickmark(key);
     }
     ret = true;
   }
-  else if (gtk_widget_has_focus(dwb.gui.entry) || dwb.state.mode & COMPLETION_MODE) {
+  else if (gtk_widget_has_focus(dwb.gui.entry) || mode & COMPLETION_MODE) {
     ret = false;
   }
   else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_KEY_Return) {
@@ -818,7 +820,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     ret = true;
   }
   else {
-    if (dwb.state.mode & AUTO_COMPLETE) {
+    if (mode & AUTO_COMPLETE) {
       if (DWB_TAB_KEY(e)) {
         completion_autocomplete(NULL, e);
       }
@@ -1448,7 +1450,7 @@ dwb_toggle_tabbar(void) {
 /* dwb_eval_completion_type {{{*/
 CompletionType 
 dwb_eval_completion_type(void) {
-  switch (dwb.state.mode) {
+  switch (CLEAN_MODE(dwb.state.mode)) {
     case SETTINGS_MODE:  return COMP_SETTINGS;
     case KEY_MODE:       return COMP_KEY;
     case COMMAND_MODE:   return COMP_COMMAND;
