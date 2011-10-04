@@ -790,6 +790,9 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
       dwb_eval_key(e);
       ret = false;
     }
+    else if (e->keyval == GDK_KEY_Return) {
+      dwb_change_mode(NORMAL_MODE, true);
+    }
   }
   else if (dwb.state.mode == QUICK_MARK_SAVE) {
     if (key) {
