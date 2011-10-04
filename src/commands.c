@@ -99,12 +99,17 @@ commands_add_search_field(KeyMap *km, Arg *a) {
     }
   }
   dwb.state.mode = SEARCH_FIELD_MODE;
-  dwb_set_normal_message(dwb.state.fview, false, "Enter a Keyword for marked search:");
+  dwb_set_normal_message(dwb.state.fview, false, "Keyword:");
   dwb_focus_entry();
   FREE(value);
   return STATUS_OK;
 
 }/*}}}*/
+
+DwbStatus 
+commands_insert_mode(KeyMap *km, Arg *a) {
+  return dwb_change_mode(INSERT_MODE);
+}
 
 /* commands_toggle_property {{{*/
 DwbStatus 
@@ -215,7 +220,7 @@ commands_allow_cookie(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_bookmark(KeyMap *km, Arg *arg) {
   gboolean noerror = STATUS_ERROR;
-  if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) ) {
+  if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) == STATUS_OK) {
     util_file_add_navigation(dwb.files.bookmarks, dwb.fc.bookmarks->data, true, -1);
     dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)util_navigation_compare_first);
     dwb_set_normal_message(dwb.state.fview, true, "Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
@@ -252,6 +257,14 @@ commands_reload(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_reload_bypass_cache(KeyMap *km, Arg *arg) {
   webkit_web_view_reload_bypass_cache(WEBVIEW_FROM_ARG(arg));
+  return STATUS_OK;
+}
+/*}}}*/
+
+/* commands_stop_loading {{{*/
+DwbStatus
+commands_stop_loading(KeyMap *km, Arg *arg) {
+  webkit_web_view_stop_loading(WEBVIEW_FROM_ARG(arg));
   return STATUS_OK;
 }
 /*}}}*/
@@ -681,7 +694,6 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
   }
   if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->n;
-  dwb_focus_entry();
   completion_complete(COMP_BOOKMARK, 0);
 
   return STATUS_OK;
@@ -690,13 +702,7 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
 /* commands_history{{{*/
 DwbStatus  
 commands_complete_type(KeyMap *km, Arg *arg) {
-  if (!g_list_length(dwb.fc.history)) {
-    return STATUS_ERROR;
-  }
-  completion_complete(arg->n, 0);
-
-  return STATUS_OK;
-
+  return completion_complete(arg->n, 0);
 }/*}}}*/
 
 void
@@ -869,13 +875,17 @@ commands_fullscreen(KeyMap *km, Arg *arg) {
 /* commands_reload_scripts {{{*/
 DwbStatus
 commands_pass_through(KeyMap *km, Arg *arg) {
-  dwb.state.mode |= PASS_THROUGH;
-  dwb_set_normal_message(dwb.state.fview, false, "-- PASS THROUGH --");
-  return STATUS_OK;
+  return dwb_change_mode(PASS_THROUGH);
 }/*}}}*/
 /* commands_reload_scripts {{{*/
 DwbStatus
 commands_open_editor(KeyMap *km, Arg *arg) {
   return dwb_open_in_editor();
+}/*}}}*/
+
+/* dwb_command_mode {{{*/
+DwbStatus
+commands_command_mode(KeyMap *km, Arg *arg) {
+  return dwb_change_mode(COMMAND_MODE);
 }/*}}}*/
 /*}}}*/

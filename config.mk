@@ -69,7 +69,7 @@ ERROR_FILE=error.html
 PLUGIN_FILE=pluginblocker.asc
 
 # CFLAGS
-CFLAGS += -Wall 
+CFLAGS += -Wall
 CFLAGS += -pipe
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
 CFLAGS += --ansi

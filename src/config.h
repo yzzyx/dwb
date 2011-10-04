@@ -67,6 +67,7 @@ static KeyValue KEYS[] = {
   { "scroll_up",                {   "k",         0,                   },  },  
   { "show_keys",                {   "Sk",         0,                  },  },  
   { "show_settings",            {   "Ss",        0,                  },  },  
+  { "stop_loading",             {   "s",         GDK_CONTROL_MASK,   },  },  
   { "toggle_bottomstack",       {   "tb",         0,  },  },  
   { "toggle_maximized",         {   "gm",         0,                  },  },  
   { "view_source",              {   "gf",         0,                  },  },  
@@ -111,6 +112,8 @@ static KeyValue KEYS[] = {
   { "complete_commands",        {   "I",         GDK_CONTROL_MASK,     },  },  
   { "complete_searchengines",   {   "S",         GDK_CONTROL_MASK,     },  },  
   { "complete_userscript",      {   "U",         GDK_CONTROL_MASK,     },  },  
+  { "complete_current_history", {   "C",         GDK_CONTROL_MASK,     },  },  
+  { "buffers",                  {   "gt",         0 } }, 
 
   { "web_inspector",            {   "wi",         0,     },  },  
 

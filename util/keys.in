@@ -16,6 +16,7 @@ history_back Go back
 history_forward Go forward
 reload Reload current page
 reload_bypass_cache Reload without using any cached data
+stop_loading Stop loading current page
 insert_mode Insert mode
 pass_through Go in pass-through mode, all keys are directly send to the webview
 view_source View page source
@@ -73,12 +74,14 @@ toggle_bottomstack Toggle bottomstack
 fullscreen Toggle fullscreen
 
 # completion Completion
+buffers Show all open tabs
 complete_bookmarks Complete bookmarks
 complete_history Complete browsing history
 complete_commands Complete command history
 complete_path Complete local file path
 complete_searchengines Complete searchengines
 complete_userscript Complete userscripts
+complete_current_history Complete history of the current tab
 
 # clipboard Clipboard
 paste Open url from clipboard

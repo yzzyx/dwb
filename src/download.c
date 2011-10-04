@@ -296,7 +296,7 @@ download_start() {
     lastdir = g_strdup(path);
   }
 
-  dwb_normal_mode(true);
+  dwb_change_mode(NORMAL_MODE, true);
   dwb.state.download = NULL;
   FREE(fullpath);
 }/*}}}*/

@@ -18,18 +18,59 @@ DwbHintObj = (function() {
   _activeInput = null;
   _styles = 0;
   _hintTypes = "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]";
-  _styleSheet = null;
+  _active = null;
+  _markHints = false;
+  _bigFont = null;
 
   const __newHint = function(element, win, rect) {
     this.element = element;
+    this.overlay = null;
     this.win = win;
+    this.textDesc = null;
     var leftpos, toppos;
+    var scrollY = win.scrollY;
+    var scrollX = win.scrollX;
     var hint = __createElement("div");
-    hint.style.top = Math.max((rect.top + win.scrollY), win.scrollY) + "px";
-    hint.style.left = Math.max((rect.left + win.scrollX), win.scrollX) + "px"; 
+    var toppos = rect.top + scrollY;
+    var leftpos = rect.left + scrollX;
+    var t = Math.max(toppos, scrollY);
+    var l = Math.max(leftpos, scrollX);
+    hint.style.top = t + "px";
+    hint.style.left = l + "px";
+    var topject = this;
 
-    hint.setAttribute("class", "dwb_hint");
+    hint.className =  "dwb_hint";
+    this.createOverlay = function() {
+      var w, h;
+      var comptop = toppos - scrollY;
+      var compleft = leftpos - scrollX;
+      var height = rect.height;
+      var width = rect.width;
+      h = comptop > 0 ? height : height + comptop;
+      overlay = __createElement("div");
+      overlay.className = "dwb_overlay_normal";
+      overlay.style.width = (compleft > 0 ? width : width + compleft) + "px";
+      overlay.style.height = (comptop > 0 ? height : height + comptop) + "px";
+      overlay.style.top = t + "px";
+      overlay.style.left = l + "px";
+      overlay.style.display = "block";
+      overlay.style.cursor = "pointer";
+      overlay.onclick = function() { __evaluate(element); };
+      this.overlay = overlay;
+    }
     this.hint = hint;
+    if (! (element instanceof HTMLInputElement && element.hasAttribute("id"))) 
+      return;
+    var label = win.document.body.querySelector("label[for='" + element.id + "']");
+    if (label == null) 
+      return;
+    var text = __createElement("div");
+    text.style.font = "normal 8px monospace";
+    text.innerText = " : " + label.innerText;
+    text.style.display = "inline";
+    this.hint.appendChild(text);
+    this.textDesc = text;
+    
   }
   const __createElement = function(tagname) {
     element = document.createElement(tagname);
@@ -42,11 +83,16 @@ DwbHintObj = (function() {
   const __numberHint = function (element, win, rect) {
     this.constructor = __newHint;
     this.constructor(element, win, rect);
+    var topobj = this;
 
     this.getTextHint = function (i, length) {
+      var e = this.element;
       start = length <=10 ? 1 : length <= 100 ? 10 : 100;
       var content = document.createTextNode(start + i);
-      this.hint.appendChild(content);
+      if (!this.textDesc) 
+        this.hint.appendChild(content);
+      else 
+        this.hint.insertBefore(content, this.textDesc);
     }
 
     this.betterMatch = function(input) {
@@ -118,7 +164,10 @@ DwbHintObj = (function() {
         text = _letterSeq[i%l] + _letterSeq[l - 1 - (parseInt(i/l))];
       }
       var content = document.createTextNode(text);
-      this.hint.appendChild(content);
+      if (!this.textDesc) 
+        this.hint.appendChild(content);
+      else 
+        this.hint.insertBefore(content, this.textDesc);
     }
     this.matchText = function(input) {
       if (input.isUpper()) {
@@ -149,17 +198,28 @@ DwbHintObj = (function() {
       __mouseEvent(element, "click");
       __mouseEvent(element, "mousedown");
     }
-    __clear();
   }
   const __getActive = function () {
-    return document.querySelector('*[dwb_highlight=hint_active]');
+    return _active;
   }
   const __setActive = function (element) {
     var active = __getActive();
     if (active) {
-      active.setAttribute('dwb_highlight', 'hint_normal' );
+      if (_markHints) 
+        active.overlay.style.background = _normalColor;
+      else if (active.overlay) 
+        active.overlay.parentNode.removeChild(active.overlay);
+      active.hint.style.font = _font;
+
     }
-    element.element.setAttribute('dwb_highlight', 'hint_active');
+    _active = element;
+    if (!_active.overlay) {
+      _active.createOverlay();
+    }
+    if (!_markHints)
+      _active.hint.parentNode.appendChild(_active.overlay);
+    _active.overlay.style.background = _activeColor;
+    _active.hint.style.fontSize = _bigFont;
   }
   const __hexToRgb = function (color) {
     var rgb;
@@ -178,26 +238,25 @@ DwbHintObj = (function() {
         rgb[i] = parseInt("0x" + rgb[i]);
       }
     }
-    return "rgba(" + rgb.slice(1) + "," +  _hintOpacity + ")";
+    return "rgba(" + rgb.slice(1) + "," +  _hintOpacity/2 + ")";
   }
   const __createStyleSheet = function(doc) {
-    if (doc.querySelector("[dwb_stylesheet='37']"))
+    if (doc.hasStyleSheet) 
       return;
     styleSheet = __createElement("style");
-    styleSheet.innerHTML = "*[dwb_highlight=hint_normal] { background-color: " + _normalColor + " !important;" 
-      + "outline: 2px solid " + _normalColor + "!important; }";
-    styleSheet.innerHTML += "*[dwb_highlight=hint_active] { background-color: " + _activeColor + " !important;" 
-      + "outline: 2px solid " + _activeColor + "!important; } ";
     styleSheet.innerHTML += ".dwb_hint { " +
       "position:absolute; z-index:20000;" +
       "background:" + _bgColor  + ";" + 
       "color:" + _fgColor + ";" + 
       "border:" + _hintBorder + ";" + 
       "font:" + _font + ";" + 
-      "opacity: " + _hintOpacity + "; }";
-    styleSheet.setAttribute("dwb_stylesheet", "37");
+      "display:inline;" +
+      "opacity: " + _hintOpacity + "; }" + 
+      ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + _normalColor + ";}";
     doc.head.appendChild(styleSheet);
+    doc.hasStyleSheet = true;
   }
+
   const __createHints = function(win, constructor) {
     try {
       var doc = win.document;
@@ -212,28 +271,14 @@ DwbHintObj = (function() {
         if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
           __createHints(e.contentWindow, constructor);
         }
-        //else if (e instanceof HTMLMapElement) {
-        //  try {
-        //    var areas = e.getElementsByTagName("area");
-        //    for (var j=0; j<areas.length; j++) {
-        //      var coords = areas[j].coords.split(",");
-        //      r.left += parseInt(coords[0]);
-        //      r.top += parseInt(coords[1]);
-        //      var rect = { left : r.left + parseInt(coords[0]), top : r.top + parseInt(coords[1]) };
-        //      var element = new constructor(areas[i], win, rect);
-        //      _elements.push(element);
-        //      hints.appendChild(element.hint);
-        //    }
-        //  }
-        //  catch(exception) {
-        //    console.error(exception);
-        //  }
-        //}
         else {
           var element = new constructor(e, win, r);
           _elements.push(element);
           hints.appendChild(element.hint);
-          e.setAttribute('dwb_highlight', 'hint_normal');
+          if (_markHints) {
+            element.createOverlay();
+            hints.appendChild(element.overlay);
+          }
         }
       }
       doc.body.appendChild(hints);
@@ -247,8 +292,10 @@ DwbHintObj = (function() {
       document.activeElement.blur();
 
     __createHints(window, _style == "letter" ? __letterHint : __numberHint);
-    for (var i=0; i<_elements.length; i++) {
-      _elements[i].getTextHint(i, _elements.length);
+    var l = _elements.length;
+    for (var i=0; i<l; i++) {
+      var e =_elements[i];
+      e.getTextHint(i, l);
     }
     _activeArr = _elements;
     __setActive(_elements[0]);
@@ -288,7 +335,6 @@ DwbHintObj = (function() {
       }
       else {
         e.hint.style.visibility = 'hidden';
-        e.element.removeAttribute('dwb_highlight');
       }
     }
     _activeArr = array;
@@ -324,9 +370,11 @@ DwbHintObj = (function() {
     try {
       if (_elements) {
         for (var i=0; i<_elements.length; i++) {
-          _elements[i].element.removeAttribute('dwb_highlight');
-          if (p = _elements[i].hint.parentNode) 
-            p.removeChild(_elements[i].hint);
+          var e = _elements[i];
+          if (p = e.hint.parentNode) 
+            p.removeChild(e.hint);
+          if (e.overlay != undefined && (p = e.overlay.parentNode)) 
+            p.removeChild(e.overlay);
         }
       }
     }
@@ -335,6 +383,10 @@ DwbHintObj = (function() {
     }
     _elements = [];
     _activeArr = [];
+    if(! _markHints)
+      _active.element.removeAttribute("dwb_highlight");
+    _active = null;
+    _lastPosition = 0;
   }
   const __evaluate = function (e) {
     var ret, type;
@@ -383,33 +435,48 @@ DwbHintObj = (function() {
     _lastPosition = newpos;
   }
   const __addSearchEngine = function() {
-    __createStyleSheet(document);
-    var hints = __createElement("div");
-    var res = document.body.querySelectorAll("form");
-    var r;
+    try {
+      __createStyleSheet(document);
+      var hints = document.createDocumentFragment();
+      var res = document.body.querySelectorAll("form");
+      var r;
 
-    for (var i=0; i<res.length; i++) {
-      var els = res[i].elements;
-      for (var j=0; j<els.length; j++) {
-        if ((r = __getVisibility(els[j], window) != null) && (els[j].type == "text" || els[j].type == "search")) {
-          var e = new __letterHint(els[j], window, r);
-          _elements.push(e);
+      for (var i=0; i<res.length; i++) {
+        var els = res[i].elements;
+        for (var j=0; j<els.length; j++) {
+          if (((r = __getVisibility(els[j], window)) != null) && (els[j].type == "text" || els[j].type == "search")) {
+            var e = new __letterHint(els[j], window, r);
+            hints.appendChild(e.hint);
+            e.hint.style.visibility = "hidden";
+            _elements.push(e);
+          }
         }
       }
+      if (_elements.length == 0) {
+        return "_dwb_no_hints_";
+      }
+      if (_markHints) {
+        for (var i=0; i<_elements.length; i++) {
+          var e = _elements[i];
+          e.createOverlay();
+          hints.appendChild(e.overlay);
+        }
+      }
+      else {
+        var e = _elements[0];
+        e.createOverlay();
+        hints.appendChild(e.overlay);
+      }
+      document.body.appendChild(hints); 
+      __setActive(_elements[0]);
+      _activeArr = _elements;
     }
-    if (!_elements.length) {
-      return "_dwb_no_hints_";
+    catch (e) {
+      console.error(e);
     }
-    for (var i=0; i<_elements.length; i++) {
-      _elements[i].getTextHint(i, _elements.length);
-      _elements[i].element.setAttribute('dwb_highlight', 'hint_normal');
-    }
-    document.body.appendChild(hints); 
-    __setActive(_elements[0]);
-    _activeArr = _elements;
   }
   const __submitSearchEngine = function (string) {
-    var e = __getActive();
+    var e = __getActive().element;
     e.value = string;
     e.form.submit();
     e.value = "";
@@ -442,7 +509,7 @@ DwbHintObj = (function() {
     _activeInput.focus();
   }
   const __init = function (letter_seq, font, style,
-          fg_color, bg_color, active_color, normal_color, border,  opacity) {
+          fg_color, bg_color, active_color, normal_color, border,  opacity, markHints) {
         _letterSeq  = letter_seq;
         _font = font;
         _style =  style.toLowerCase();
@@ -452,10 +519,15 @@ DwbHintObj = (function() {
         _normalColor = __hexToRgb(normal_color);
         _hintBorder = border;
         _hintOpacity = opacity;
+        _markHints = markHints;
+        _bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
   }
 
 
   return {
+    createStylesheet : function() {
+      __createStyleSheet(document);
+    },
     showHints : 
       function() {
         __showHints();
@@ -470,7 +542,7 @@ DwbHintObj = (function() {
       },
     followActive :
       function () {
-        return __evaluate(__getActive());
+        return __evaluate(__getActive().element);
       },
 
     focusNext :
@@ -483,7 +555,7 @@ DwbHintObj = (function() {
       },
     addSearchEngine : 
       function () {
-        __addSearchEngine();
+        return __addSearchEngine();
       },
     submitSearchEngine :
       function (string) {
@@ -495,8 +567,8 @@ DwbHintObj = (function() {
       },
     init: 
       function (letter_seq, font, style,
-          fg_color, bg_color, active_color, normal_color, border,  opacity) {
-        __init(letter_seq, font, style, fg_color, bg_color, active_color, normal_color, border,  opacity); 
+          fg_color, bg_color, active_color, normal_color, border,  opacity, highlightLinks) {
+        __init(letter_seq, font, style, fg_color, bg_color, active_color, normal_color, border,  opacity, highlightLinks); 
       }, 
   }
 })();

@@ -175,7 +175,7 @@ completion_clean_completion() {
   gtk_widget_destroy(CURRENT_VIEW()->compbox);
   dwb.comps.completions = NULL;
   dwb.comps.active_comp = NULL;
-  dwb.state.mode &= ~(COMPLETION_MODE|COMPLETE_PATH);
+  dwb.state.mode &= ~(COMPLETION_MODE|COMPLETE_PATH|COMPLETE_BUFFER);
 }/*}}}*/
 
 /* completion_show_completion(int back) {{{*/
@@ -275,15 +275,73 @@ completion_get_key_completion(gboolean entry) {
   return list;
 }/*}}}*/
 
+/* completion_path {{{*/
 static void 
 completion_path(void) {
   dwb.state.mode |= COMPLETE_PATH;
   completion_complete_path(false);
+}/*}}}*/
+
+/* completion_get_current_history {{{*/
+static  GList *
+completion_get_current_history(int back) {
+  GList *list = NULL;
+  Navigation *n;
+  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(CURRENT_WEBVIEW());
+  for (int i= -webkit_web_back_forward_list_get_back_length(bf_list); i<webkit_web_back_forward_list_get_forward_length(bf_list); i++) {
+    if (i==0)
+      continue;
+    WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, i);
+    n = dwb_navigation_new(webkit_web_history_item_get_uri(item), webkit_web_history_item_get_title(item));
+    Completion *c = completion_get_completion_item(n, NULL, NULL);
+    gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
+    list = g_list_append(list, c);
+    dwb_navigation_free(n);
+  }
+  if (back)
+    list = g_list_reverse(list);
+  return list;
+}/*}}}*/
+
+void
+completion_eval_buffer_completion(void) {
+  /* TODO Wrong View is saved  */
+  GList *l = ((Completion *)dwb.comps.active_comp->data)->data;
+  completion_clean_completion();
+  dwb_focus_view(l);
+  dwb_change_mode(NORMAL_MODE, true);
 }
+/* completion_complete_buffer {{{*/
+static GList *
+completion_complete_buffer() {
+  GList *list = NULL;
+  int i=0, j=0;
+  for (GList *l = dwb.state.views;l; l=l->next, j++) {
+    if (l == dwb.state.fview) 
+      continue;
+    WebKitWebView *wv = WEBVIEW(l);
+    const char *title = webkit_web_view_get_title(wv);
+    const char *uri = webkit_web_view_get_uri(wv);
+    char *text = g_strdup_printf("%d : %s", j, title != NULL ? title : uri);
+    Navigation *n = dwb_navigation_new(text, uri);
+    g_free(text);
+    Completion *c = completion_get_completion_item(n, l, NULL);
+    gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
+    list = g_list_append(list, c);
+    dwb_navigation_free(n);
+    i++;
+  }
+  if (list != NULL) {
+    dwb.state.mode = COMPLETE_BUFFER;
+    dwb_focus_entry();
+  }
+  return list;
+}/*}}}*/
 
 /* completion_complete {{{*/
-void 
+DwbStatus 
 completion_complete(CompletionType type, int back) {
+  DwbStatus ret = STATUS_OK;
   View *v = CURRENT_VIEW();
   dwb.state.mode &= ~(COMPLETE_PATH | AUTO_COMPLETE);
   if ( !(dwb.state.mode & COMPLETION_MODE) ) {
@@ -297,22 +355,25 @@ completion_complete(CompletionType type, int back) {
       case COMP_KEY:         dwb.comps.completions = completion_get_key_completion(true); break;
       case COMP_COMMAND:     dwb.comps.completions = completion_get_key_completion(false); break;
       case COMP_BOOKMARK:    dwb.comps.completions = completion_get_simple_completion(dwb.fc.bookmarks); break;
+      case COMP_CUR_HISTORY: dwb.comps.completions = completion_get_current_history(back); break;
       case COMP_HISTORY:     dwb.comps.completions = completion_get_simple_completion(dwb.fc.history); break;
       case COMP_USERSCRIPT:  dwb.comps.completions = completion_get_simple_completion(dwb.misc.userscripts); break;
       case COMP_INPUT:       dwb.comps.completions = completion_get_simple_completion(dwb.fc.commands); break;
       case COMP_SEARCH:      dwb.comps.completions = completion_get_simple_completion(dwb.fc.se_completion); break;
-      case COMP_PATH:        completion_path(); return;
+      case COMP_PATH:        completion_path(); return STATUS_OK;
+      case COMP_BUFFER:      dwb.comps.completions = completion_complete_buffer(); break;
       default:               dwb.comps.completions = completion_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {
-      return;
+      return STATUS_ERROR;
     }
-    completion_show_completion(back);
     dwb.state.mode |= COMPLETION_MODE;
+    completion_show_completion(back);
   }
   else if (dwb.comps.completions && dwb.comps.active_comp) {
     dwb.comps.active_comp = completion_update_completion(v->compbox, dwb.comps.completions, dwb.comps.active_comp, dwb.misc.max_c_items, back);
   }
+  return ret;
 }/*}}}*/
 /*}}}*/
 
@@ -322,7 +383,7 @@ void
 completion_eval_autocompletion() {
   Completion *c = dwb.comps.active_auto_c->data;
   KeyMap *m = c->data;
-  dwb_normal_mode(true);
+  dwb_change_mode(NORMAL_MODE, true);
   commands_simple_command(m);
 }/*}}}*/
 
