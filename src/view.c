@@ -603,6 +603,9 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
       completion_clean_path_completion();
     }
   }
+  else if (mode == COMPLETE_BUFFER) {
+    return false;
+  }
   else if (mode & COMPLETION_MODE && !DWB_TAB_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
     completion_clean_completion();
   }
@@ -622,8 +625,41 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 static gboolean 
 view_entry_activate_cb(GtkEntry* entry, GList *gl) {
-  Mode mode = dwb.state.mode;
+  char **token = NULL;
+  switch (dwb.state.mode)  {
+    case HINT_MODE:           return false;
+    case FIND_MODE:           dwb_focus_scroll(dwb.state.fview);
+                              dwb_search(NULL, NULL);
+                              dwb_change_mode(NORMAL_MODE, true);
+                              return true;
+    case SEARCH_FIELD_MODE:   dwb_submit_searchengine();
+                              return true;
+    case SETTINGS_MODE:       token = g_strsplit(GET_TEXT(), " ", 2);
+                              dwb_set_setting(token[0], token[1]);
+                              g_strfreev(token);
+                              return true;
+    case KEY_MODE:            token = g_strsplit(GET_TEXT(), " ", 2);
+                              dwb_set_key(token[0], token[1]);
+                              g_strfreev(token);
+                              return true;
+    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT());
+                              return true;
+    case DOWNLOAD_GET_PATH:   download_start(); 
+                              return true;
+    case SAVE_SESSION:        session_save(GET_TEXT());
+                              dwb_end();
+                              return true;
+    case COMPLETE_BUFFER:     completion_eval_buffer_completion();
+                              return true;
+    default : break;
+  }
+  Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
+  dwb_load_uri(NULL, &a);
+  dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
+  dwb_change_mode(NORMAL_MODE, true);
+  return true;
 
+#if 0
   if (mode == HINT_MODE) {
     return false;
   }
@@ -661,6 +697,7 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   }
 
   return true;
+#endif
 }/*}}}*/
 /*}}}*/
 

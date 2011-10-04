@@ -694,7 +694,6 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
   }
   if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->n;
-  dwb_focus_entry();
   completion_complete(COMP_BOOKMARK, 0);
 
   return STATUS_OK;
@@ -703,13 +702,7 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
 /* commands_history{{{*/
 DwbStatus  
 commands_complete_type(KeyMap *km, Arg *arg) {
-  if (!g_list_length(dwb.fc.history)) {
-    return STATUS_ERROR;
-  }
-  completion_complete(arg->n, 0);
-
-  return STATUS_OK;
-
+  return completion_complete(arg->n, 0);
 }/*}}}*/
 
 void

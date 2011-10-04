@@ -292,6 +292,8 @@ static FunctionMap FMAP [] = {
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
   { { "complete_current_history",          "Complete history of current tab", },        0, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_CUR_HISTORY }, true, }, 
+  { { "buffers",                          "Show buffers", },        0, 
+    (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     { .n = COMP_BUFFER }, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, 
     (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
@@ -1450,6 +1452,7 @@ dwb_eval_completion_type(void) {
     case SETTINGS_MODE:  return COMP_SETTINGS;
     case KEY_MODE:       return COMP_KEY;
     case COMMAND_MODE:   return COMP_COMMAND;
+    case COMPLETE_BUFFER: return COMP_BUFFER;
     default:            return COMP_NONE;
   }
 }/*}}}*/

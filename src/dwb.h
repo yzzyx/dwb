@@ -194,6 +194,7 @@ typedef enum  {
   COMP_SEARCH       = 0x08,
   COMP_PATH         = 0x09,
   COMP_CUR_HISTORY  = 0x0a,
+  COMP_BUFFER       = 0x0b,
 } CompletionType;
 
 typedef enum {
@@ -226,7 +227,8 @@ typedef enum {
   DOWNLOAD_GET_PATH     = 1<<14,
   SAVE_SESSION          = 1<<15,
   COMPLETE_PATH         = 1<<16,
-  PASS_THROUGH          = 1<<17,
+  COMPLETE_BUFFER       = 1<<17,
+  PASS_THROUGH          = 1<<18,
 } Mode;
 
 
