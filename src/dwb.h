@@ -101,6 +101,7 @@
 #define CLEAN_STATE_WITH_SHIFT(X) (X->state & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
 #define CLEAN_SHIFT(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_LOCK_MASK))
 #define CLEAN_COMP_MODE(X)          (X & ~(COMPLETION_MODE) & ~(AUTO_COMPLETE))
+#define CLEAN_MODE(mode)            ((mode) & ~(COMPLETION_MODE))
 /* Maybe this has to be changed in future releases */
 #define DWB_NUMMOD_MASK                 (1<<15)
 
@@ -193,6 +194,8 @@ typedef enum  {
   COMP_INPUT        = 0x07,
   COMP_SEARCH       = 0x08,
   COMP_PATH         = 0x09,
+  COMP_CUR_HISTORY  = 0x0a,
+  COMP_BUFFER       = 0x0b,
 } CompletionType;
 
 typedef enum {
@@ -225,7 +228,8 @@ typedef enum {
   DOWNLOAD_GET_PATH     = 1<<14,
   SAVE_SESSION          = 1<<15,
   COMPLETE_PATH         = 1<<16,
-  PASS_THROUGH          = 1<<17,
+  COMPLETE_BUFFER       = 1<<17,
+  PASS_THROUGH          = 1<<18,
 } Mode;
 
 
@@ -297,9 +301,7 @@ enum Signal {
   SIG_CREATE_WEB_VIEW,
   SIG_DOWNLOAD_REQUESTED,
   SIG_HOVERING_OVER_LINK, 
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   SIG_ICON_LOADED, 
-#endif
   SIG_MIME_TYPE,
   SIG_NAVIGATION,
   SIG_NEW_WINDOW,
@@ -351,6 +353,12 @@ typedef enum {
   SSL_UNTRUSTED,
 } SslState;
 
+typedef enum {
+  CP_COMMANDLINE   = 1<<0,
+  CP_DONT_SAVE     = 1<<1,
+  CP_HAS_MODE      = 1<<2,
+} CommandProperty;
+
 /*}}}*/
 
 
@@ -377,8 +385,7 @@ struct _KeyValue {
   Key key;
 };
 
-#define FM_COMMANDLINE    1<<0
-#define FM_DONT_SAVE      1<<1
+
 struct _FunctionMap {
   Navigation n;
   int prop; 
@@ -452,13 +459,12 @@ struct _State {
   gboolean fullscreen;
 };
 
-typedef enum _SettingsApply SettingsApply;
-enum _SettingsApply {
+typedef enum _SettingsApply {
   SETTING_BUILTIN = 1<<0,
   SETTING_GLOBAL = 1<<1,
   SETTING_ONINIT = 1<<2,
   SETTING_PER_VIEW = 1<<3,
-};
+} SettingsApply;
 struct _WebSettings {
   Navigation n;
   SettingsApply apply;
@@ -488,9 +494,7 @@ struct _View {
   GtkWidget *web;
   GtkWidget *tabevent;
   GtkWidget *tabbox;
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   GtkWidget *tabicon;
-#endif
   GtkWidget *tablabel;
   GtkWidget *statusbox;
   GtkWidget *urilabel;

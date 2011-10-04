@@ -53,6 +53,8 @@ DwbHintObj = (function() {
       overlay.style.top = t + "px";
       overlay.style.left = l + "px";
       overlay.style.display = "block";
+      overlay.style.cursor = "pointer";
+      overlay.onclick = function() { __evaluate(element); };
       this.overlay = overlay;
     }
     this.hint = hint;

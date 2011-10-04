@@ -21,9 +21,7 @@
 #include "plugins.h"
 
 static void view_ssl_state(GList *);
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
-#endif
 
 
 /* CALLBACKS */
@@ -371,7 +369,6 @@ view_value_changed_cb(GtkAdjustment *a, GList *gl) {
   return false;
 }/* }}} */
 
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
 /* view_icon_loaded(GtkAdjustment *a, GList *gl) {{{ */
 void 
 view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
@@ -385,7 +382,6 @@ view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
     gtk_image_set_from_pixbuf(GTK_IMAGE(v->tabicon), rescale);
   }
 }/* }}} */
-#endif
 
 /* view_title_cb {{{*/
 static void 
@@ -593,8 +589,15 @@ static gboolean
 view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   Mode mode = dwb.state.mode;
   gboolean ret = false;
-  gboolean complete = (mode == DOWNLOAD_GET_PATH || mode & COMPLETE_PATH);
-  if (e->keyval == GDK_KEY_BackSpace && !complete) {
+  gboolean complete = (mode == DOWNLOAD_GET_PATH || (mode & COMPLETE_PATH));
+  /*  Handled by activate-callback */
+  if (e->keyval == GDK_KEY_Return)
+    return false;
+  if (mode & COMPLETE_BUFFER) {
+    completion_buffer_key_press(e);
+    return true;
+  }
+  else if (e->keyval == GDK_KEY_BackSpace && !complete) {
     return false;
   }
   else if (mode == HINT_MODE) {
@@ -637,8 +640,41 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 static gboolean 
 view_entry_activate_cb(GtkEntry* entry, GList *gl) {
-  Mode mode = dwb.state.mode;
+  char **token = NULL;
+  switch (CLEAN_MODE(dwb.state.mode))  {
+    case HINT_MODE:           return false;
+    case FIND_MODE:           dwb_focus_scroll(dwb.state.fview);
+                              dwb_search(NULL, NULL);
+                              dwb_change_mode(NORMAL_MODE, true);
+                              return true;
+    case SEARCH_FIELD_MODE:   dwb_submit_searchengine();
+                              return true;
+    case SETTINGS_MODE:       token = g_strsplit(GET_TEXT(), " ", 2);
+                              dwb_set_setting(token[0], token[1]);
+                              g_strfreev(token);
+                              return true;
+    case KEY_MODE:            token = g_strsplit(GET_TEXT(), " ", 2);
+                              dwb_set_key(token[0], token[1]);
+                              g_strfreev(token);
+                              return true;
+    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT());
+                              return true;
+    case DOWNLOAD_GET_PATH:   download_start(); 
+                              return true;
+    case SAVE_SESSION:        session_save(GET_TEXT());
+                              dwb_end();
+                              return true;
+    case COMPLETE_BUFFER:     completion_eval_buffer_completion();
+                              return true;
+    default : break;
+  }
+  Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
+  dwb_load_uri(NULL, &a);
+  dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
+  dwb_change_mode(NORMAL_MODE, true);
+  return true;
 
+#if 0
   if (mode == HINT_MODE) {
     return false;
   }
@@ -676,6 +712,7 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
   }
 
   return true;
+#endif
 }/*}}}*/
 /*}}}*/
 
@@ -781,9 +818,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(view_scroll_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(view_value_changed_cb), gl);
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);
-#endif
 
   v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(view_entry_keypress_cb), NULL);
   v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(view_entry_keyrelease_cb), NULL);
@@ -891,11 +926,9 @@ view_create_web_view() {
 
   gtk_box_pack_end(GTK_BOX(v->tabbox), v->tablabel, true, true, 0);
 
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   GdkPixbuf *pb = gdk_pixbuf_new_from_xpm_data(dummy_icon);
   v->tabicon = gtk_image_new_from_pixbuf(pb);
   gtk_box_pack_end(GTK_BOX(v->tabbox), v->tabicon, false, false, 0);
-#endif
 
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tabbox);
 
