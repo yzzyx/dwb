@@ -21,9 +21,7 @@
 #include "plugins.h"
 
 static void view_ssl_state(GList *);
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
-#endif
 
 
 /* CALLBACKS */
@@ -360,7 +358,6 @@ view_value_changed_cb(GtkAdjustment *a, GList *gl) {
   return false;
 }/* }}} */
 
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
 /* view_icon_loaded(GtkAdjustment *a, GList *gl) {{{ */
 void 
 view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
@@ -374,7 +371,6 @@ view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
     gtk_image_set_from_pixbuf(GTK_IMAGE(v->tabicon), rescale);
   }
 }/* }}} */
-#endif
 
 /* view_title_cb {{{*/
 static void 
@@ -770,9 +766,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(view_scroll_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(view_value_changed_cb), gl);
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);
-#endif
 
   v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(view_entry_keypress_cb), NULL);
   v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(view_entry_keyrelease_cb), NULL);
@@ -880,11 +874,9 @@ view_create_web_view() {
 
   gtk_box_pack_end(GTK_BOX(v->tabbox), v->tablabel, true, true, 0);
 
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   GdkPixbuf *pb = gdk_pixbuf_new_from_xpm_data(dummy_icon);
   v->tabicon = gtk_image_new_from_pixbuf(pb);
   gtk_box_pack_end(GTK_BOX(v->tabbox), v->tabicon, false, false, 0);
-#endif
 
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tabbox);
 

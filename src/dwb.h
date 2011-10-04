@@ -193,6 +193,7 @@ typedef enum  {
   COMP_INPUT        = 0x07,
   COMP_SEARCH       = 0x08,
   COMP_PATH         = 0x09,
+  COMP_CUR_HISTORY  = 0x0a,
 } CompletionType;
 
 typedef enum {
@@ -297,9 +298,7 @@ enum Signal {
   SIG_CREATE_WEB_VIEW,
   SIG_DOWNLOAD_REQUESTED,
   SIG_HOVERING_OVER_LINK, 
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   SIG_ICON_LOADED, 
-#endif
   SIG_MIME_TYPE,
   SIG_NAVIGATION,
   SIG_NEW_WINDOW,
@@ -452,13 +451,12 @@ struct _State {
   gboolean fullscreen;
 };
 
-typedef enum _SettingsApply SettingsApply;
-enum _SettingsApply {
+typedef enum _SettingsApply {
   SETTING_BUILTIN = 1<<0,
   SETTING_GLOBAL = 1<<1,
   SETTING_ONINIT = 1<<2,
   SETTING_PER_VIEW = 1<<3,
-};
+} SettingsApply;
 struct _WebSettings {
   Navigation n;
   SettingsApply apply;
@@ -488,9 +486,7 @@ struct _View {
   GtkWidget *web;
   GtkWidget *tabevent;
   GtkWidget *tabbox;
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   GtkWidget *tabicon;
-#endif
   GtkWidget *tablabel;
   GtkWidget *statusbox;
   GtkWidget *urilabel;

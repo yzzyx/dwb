@@ -112,6 +112,7 @@ static KeyValue KEYS[] = {
   { "complete_commands",        {   "I",         GDK_CONTROL_MASK,     },  },  
   { "complete_searchengines",   {   "S",         GDK_CONTROL_MASK,     },  },  
   { "complete_userscript",      {   "U",         GDK_CONTROL_MASK,     },  },  
+  { "complete_current_history", {   "C",         GDK_CONTROL_MASK,     },  },  
 
   { "web_inspector",            {   "wi",         0,     },  },  
 

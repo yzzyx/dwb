@@ -37,6 +37,7 @@ DwbHintObj = (function() {
     var l = Math.max(leftpos, scrollX);
     hint.style.top = t + "px";
     hint.style.left = l + "px";
+    var topject = this;
 
     hint.className =  "dwb_hint";
     this.createOverlay = function() {
@@ -53,6 +54,8 @@ DwbHintObj = (function() {
       overlay.style.top = t + "px";
       overlay.style.left = l + "px";
       overlay.style.display = "block";
+      overlay.style.cursor = "pointer";
+      overlay.onclick = function() { __evaluate(element); };
       this.overlay = overlay;
     }
     this.hint = hint;

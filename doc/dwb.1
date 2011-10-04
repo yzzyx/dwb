@@ -476,6 +476,10 @@ Init searchengine completion.
 .TP
 .BR C-U
 Init userscript completion.
+.TP
+.BR C-C
+Init completion completion for the history of the current tab.
+.TP
 .BR C-p
 Complete local path.
 
@@ -913,7 +917,7 @@ default value:
 The font used for the ui. Possible values: a font description
 string,
 default value:
-.I monospace 8.
+.I monospace\ 8.
 .TP 
 .BR font-completion
 The font used for tabcompletion. Possible values: a font description
@@ -962,20 +966,15 @@ The foreground color used for hints. Possible values: a rgb color string,
 default value:
 .IR #ffffff .
 .TP 
-.BR hint-font-family
-The font family used for hints. Possible values: css font family description,
+.BR hint-font
+The font used for hints. Possible values: css font description,
 default value:
-.IR monospace .
+.IR bold\ 10px\ monospace .
 .TP 
-.BR hint-font-size
-The font size used for hints. Possible values: css font size description,
+.BR hint-highlight-links
+Wether to highlight all links in hint-mode,
 default value:
-.IR 12px .
-.TP 
-.BR hint-font-weight
-The font wheight used for hints. Possible values: css font weight description,
-default value:
-.IR normal .
+.IR false .
 .TP 
 .BR hint-letter-seq
 A letter sequence used for letter hints. Possible values: a letter sequence,

@@ -290,6 +290,8 @@ static FunctionMap FMAP [] = {
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_USERSCRIPT }, true, }, 
   { { "complete_path",          "Complete local file path", },        0, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
+  { { "complete_current_history",          "Complete history of current tab", },        0, 
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_CUR_HISTORY }, true, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, 
     (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
@@ -3276,13 +3278,11 @@ dwb_init_icons() {
   dwb.files.exec_icon = dwb_get_stock_item_base64_encoded("gtk-execute");
 }
 
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
 static void 
 dwb_tab_size_cb(GtkWidget *w, GtkAllocation *a, GList *gl) {
   dwb.misc.tab_height = a->height;
   g_signal_handlers_disconnect_by_func(w, dwb_tab_size_cb, NULL);
 }
-#endif
 
 /* dwb_init() {{{*/
 static void 
@@ -3330,9 +3330,7 @@ dwb_init() {
   else {
     view_add(NULL, false);
   }
-#if WEBKIT_CHECK_VERSION(1, 4, 0)
   g_signal_connect(VIEW(dwb.state.fview)->tablabel, "size-allocate", G_CALLBACK(dwb_tab_size_cb), NULL);
-#endif
   dwb_toggle_tabbar();
 } /*}}}*/ /*}}}*/
 
