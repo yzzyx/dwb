@@ -302,26 +302,41 @@ completion_get_current_history(int back) {
   return list;
 }/*}}}*/
 
+static void
+completion_buffer_exec(GList *gl) {
+  completion_clean_completion();
+  dwb_focus_view(gl);
+  dwb_change_mode(NORMAL_MODE, true);
+}
+#define COMPLETION_BUFFER_GET_PRIVATE(c)  (((Completion*)((c)->data))->data)
+void
+completion_buffer_key_press(GdkEventKey *e) {
+  if (DWB_TAB_KEY(e)) 
+    completion_complete(COMP_BUFFER, e->state & GDK_SHIFT_MASK);
+  else if (e->keyval >= GDK_KEY_0 && e->keyval < 48 + g_list_length(dwb.comps.completions)) {
+    GList *gl = g_list_nth(dwb.comps.completions, e->keyval - GDK_KEY_0);
+    completion_buffer_exec(COMPLETION_BUFFER_GET_PRIVATE(gl));
+  }
+}
 void
 completion_eval_buffer_completion(void) {
   /* TODO Wrong View is saved  */
-  GList *l = ((Completion *)dwb.comps.active_comp->data)->data;
-  completion_clean_completion();
-  dwb_focus_view(l);
-  dwb_change_mode(NORMAL_MODE, true);
+  GList *l = COMPLETION_BUFFER_GET_PRIVATE(dwb.comps.active_comp);
+  completion_buffer_exec(l);
 }
+#undef COMPLETION_BUFFER_GET_PRIVATE
 /* completion_complete_buffer {{{*/
 static GList *
 completion_complete_buffer() {
   GList *list = NULL;
-  int i=0, j=0;
-  for (GList *l = dwb.state.views;l; l=l->next, j++) {
+  int i=0;
+  for (GList *l = dwb.state.views;l; l=l->next) {
     if (l == dwb.state.fview) 
       continue;
     WebKitWebView *wv = WEBVIEW(l);
     const char *title = webkit_web_view_get_title(wv);
     const char *uri = webkit_web_view_get_uri(wv);
-    char *text = g_strdup_printf("%d : %s", j, title != NULL ? title : uri);
+    char *text = g_strdup_printf("%c : %s", i+48, title != NULL ? title : uri);
     Completion *c = completion_get_completion_item(text, uri, NULL, l);
     g_free(text);
     gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);

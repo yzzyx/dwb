@@ -582,7 +582,11 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
   /*  Handled by activate-callback */
   if (e->keyval == GDK_KEY_Return)
     return false;
-  if (e->keyval == GDK_KEY_BackSpace && !complete && ! (mode & COMPLETE_BUFFER)) {
+  if (mode & COMPLETE_BUFFER) {
+    completion_buffer_key_press(e);
+    return true;
+  }
+  else if (e->keyval == GDK_KEY_BackSpace && !complete) {
     return false;
   }
   else if (mode == HINT_MODE) {
@@ -605,11 +609,6 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
     else {
       completion_clean_path_completion();
     }
-  }
-  else if (mode & COMPLETE_BUFFER) {
-    if (DWB_TAB_KEY(e)) 
-      completion_complete(COMP_BUFFER, e->state & GDK_SHIFT_MASK);
-    return true;
   }
   else if (mode & COMPLETION_MODE && !DWB_TAB_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
     completion_clean_completion();
