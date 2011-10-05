@@ -2127,15 +2127,15 @@ dwb_show_directory(WebKitWebView *web, const char *path, const Arg *arg) {
       fprintf(stderr, "stat failed for %s\n", fullpath);
       continue;
     }
-    strftime(time, 255, "%x %X", localtime(&st.st_mtime));
+    strftime(time, 99, "%x %X", localtime(&st.st_mtime));
     if (st.st_size > BPGB) 
-      snprintf(size, 255, "%.1fG", (double)st.st_size / BPGB);
+      snprintf(size, 49, "%.1fG", (double)st.st_size / BPGB);
     else if (st.st_size > BPMB) 
-      snprintf(size, 255, "%.1fM", (double)st.st_size / BPMB);
+      snprintf(size, 49, "%.1fM", (double)st.st_size / BPMB);
     else if (st.st_size > BPKB) 
-      snprintf(size, 255, "%.1fK", (double)st.st_size / BPKB);
+      snprintf(size, 49, "%.1fK", (double)st.st_size / BPKB);
     else 
-      snprintf(size, 255, "%lu", st.st_size);
+      snprintf(size, 49, "%lu", st.st_size);
 
     char perm[11];
     int bits = 0;
