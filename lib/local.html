@@ -1,0 +1,119 @@
+<html>
+<head>
+  <style type="text/css">
+    body {
+      background : #ddd;
+      font: normal 12px helvetica;
+    }
+    #mainView {
+    }
+    #mainContainer {
+      top: 50px;
+      bottom: 50px;
+      margin-top: 30px;
+      background: #fff;
+      margin-left: auto;
+      margin-right: auto;
+      width: 80%;
+      border: 1px solid #999;
+      -webkit-border-radius: 10px;
+      padding: 30px;
+    }
+    #headLine {
+      width: 100%;
+      border-bottom: 1px solid #ddd;
+    }
+    #indexOf {
+      font: bold 20px helvetica;
+      display: inline;
+    }
+    #checkboxContainer {
+      position: relative;
+      float: right;
+    }
+    #fileTable {
+      position: relative;
+      width; 94%;
+      margin: 3%;
+      font: 400 11px monospace;
+    }
+    #tableHeader {
+      font: bold 12px helvetica;
+      text-align: left;
+      width: 100%;
+    }
+    .image {
+      margin-left: 5px;
+      margin-right: 5px;
+      width : 20px;
+    }
+    .dwb_regular a {
+      color : #000;
+    }
+    .dwb_fifo a {
+      color : #8b008b;
+    }
+    .dwb_blockdevice a {
+      color : #cd2626;
+    }
+    .dwb_character_device a {
+      color : #555;
+    }
+    .dwb_executable a {
+      color : #228b22;
+    }
+    .dwb_link a {
+      color : #cd3839;
+    }
+    .dwb_setuid a {
+      background-color : #f00;
+      color : #fff;
+    }
+    .dwb_sticky a {
+      background-color : #228b22;
+      color : #fff;
+    }
+    .tableRow {
+      display : table-row;
+    }
+    .tableRow > div {
+      display : table-cell;
+      padding-right: 10px;
+    }
+    a {
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="mainContainer">
+    <div id="mainView" >
+      <div id="headLine">
+        <div id="indexOf">
+          Index of %s
+        </div>
+        <div id="checkboxContainer">
+          <input id="hidden_checkbox" type="checkbox">
+            Show hidden files
+          </input>
+        </div>
+      </div>
+    <div id="fileTable" width="100%">
+      <div class="tableRow" id="tableHeader">
+        <div> Permission </div>
+        <div> Link </div>
+        <div> User </div>
+        <div> Group </div>
+        <div> Size </div>
+        <div> Last modified </div>
+        <div> Name </div>
+      </div>
+      %s
+    </div>
+    </div>
+  </div>
+</body>
+</html>

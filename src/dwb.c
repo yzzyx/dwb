@@ -74,7 +74,6 @@ static void dwb_init_settings(void);
 static void dwb_init_style(void);
 static void dwb_init_gui(void);
 static void dwb_init_vars(void);
-static void dwb_init_icons(void);
 
 static Navigation * dwb_get_search_completion(const char *text);
 
@@ -2007,17 +2006,45 @@ dwb_new_window(Arg *arg) {
 }/*}}}*/
 
 /* dwb_check_directory(const char *) {{{*/
-const char *
-dwb_check_directory(const char *path, GError **error) {
-  if (g_str_has_prefix(path, "file://")) 
-    path += *(path + 8) == '/' ? 8 : 7;
-  if (!g_file_test(path, G_FILE_TEST_IS_DIR))
-    return NULL;
-  if (access(path, R_OK)) 
-    g_set_error(error, 0, 1, "Cannot access %s", path);
+gboolean
+dwb_check_directory(WebKitWebView *wv, const char *path, Arg *a, GError **error) {
+  char *unescaped = g_uri_unescape_string(path, NULL);
+  char *local = unescaped;
+  gboolean ret = true;
+  if (g_str_has_prefix(local, "file://")) 
+    local += *(local + 8) == '/' ? 8 : 7;
+  if (!g_file_test(local, G_FILE_TEST_IS_DIR)) {
+    ret = false;
+    goto out;
+  }
+  if (access(local, R_OK)) 
+    g_set_error(error, 0, 1, "Cannot access %s", local);
+  int len = strlen (local);
+  if (len>1 && local[len-1] == '/')
+    local[len-1] = '\0';
 
-  return path;
+  dwb_show_directory(wv, local, a);
+out:
+  g_free(unescaped);
+  return ret;
 }/*}}}*/
+
+gboolean
+dwb_directory_toggle_hidden_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
+  dwb.state.hidden_files = webkit_dom_html_input_element_get_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
+  commands_reload(NULL, NULL);
+  return true;
+}
+void
+dwb_load_directory_cb(WebKitWebView *wv) {
+  if (webkit_web_view_get_load_status(wv) != WEBKIT_LOAD_FINISHED) 
+    return;
+  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+  WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, "hidden_checkbox");
+  webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), dwb.state.hidden_files);
+  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(dwb_directory_toggle_hidden_cb), false, dwb.state.fview);
+  g_signal_handlers_disconnect_by_func(wv, dwb_load_directory_cb, NULL);
+}
 
 /* dwb_show_directory(WebKitWebView *, const char *path, Arg *arg) 
  * 
@@ -2028,54 +2055,189 @@ dwb_check_directory(const char *path, GError **error) {
  * {{{*/
 void 
 dwb_show_directory(WebKitWebView *web, const char *path, const Arg *arg) {
-  char dest[STRING_LENGTH], *fullpath; 
+  /* TODO needs fix: when opening local files close commandline  */
+  char *fullpath; 
   const char *filename;
-  char *escaped;
+  char *newpath = NULL;
+  const char *tmp;
+  const char *orig_path;
   GSList *content = NULL;
-  GString *buffer = g_string_new(NULL);
   GDir *dir = NULL;
+  GString *buffer;
   GError *error = NULL;
-  strncpy(dest, path, STRING_LENGTH-1);
+  if (g_path_is_absolute(path)) {
+    orig_path = path;
+  }
+  else {
+    /*  resolve absolute path */
+    char *current_dir = g_get_current_dir();
+    char *full = g_build_filename(current_dir, path, NULL);
+    char **components = g_strsplit(full, "/", -1);
 
-  if (! (dir = g_dir_open(path, 0, &error))) {
+    g_free(current_dir);
+    g_free(full);
+
+    int up = 0;
+    char *tmppath = NULL;
+    for (int i = g_strv_length(components)-1; i>=0; i--) {
+      if (!strcmp(components[i], "..")) 
+        up++;
+      else if (! strcmp(components[i], "."))
+        continue;
+      else if (up > 0) 
+        up--;
+      else {
+        newpath = g_build_filename("/", components[i], tmppath, NULL); 
+        if (tmppath != NULL)
+          g_free(tmppath);
+        tmppath = newpath;
+      }
+    }
+    orig_path = newpath;
+    g_strfreev(components);
+  }
+
+  if (! (dir = g_dir_open(orig_path, 0, &error))) {
     fprintf(stderr, "dwb error: %s\n", error->message);
     g_clear_error(&error);
     return;
   }
 
+  fullpath = g_build_filename(orig_path, "..", NULL);
+  content = g_slist_prepend(content, fullpath);
   while ( (filename = g_dir_read_name(dir)) ) {
-    fullpath = g_build_filename(path, filename, NULL);
+    fullpath = g_build_filename(orig_path, filename, NULL);
     content = g_slist_prepend(content, fullpath);
   }
   content = g_slist_sort(content, (GCompareFunc)util_compare_path);
   g_dir_close(dir);
-
-  if (strcmp(path, "/")) 
-    g_string_append_printf(buffer, "<h3>%s</h3><img src=%s/><a href=%s>..</a></br>", path, dwb.files.dir_icon, dirname(dest));
+  buffer = g_string_new(NULL);
   for (GSList *l = content; l; l=l->next) {
     fullpath = l->data;
     filename = g_strrstr(fullpath, "/") + 1;
     if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
       continue;
-    if (g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
-      escaped = g_uri_escape_string(fullpath, "/", true);
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, escaped, filename);
-      g_free(escaped);
+    struct stat st;
+    char time[100];
+    char size[50];
+    char class[25] = { 0 };
+    char *link = NULL;
+    char *printname = NULL;
+    if (lstat(fullpath, &st) != 0) {
+      fprintf(stderr, "stat failed for %s\n", fullpath);
+      continue;
     }
-    else if (g_file_test(fullpath, G_FILE_TEST_IS_EXECUTABLE)) {
-      escaped = g_uri_escape_string(fullpath, "/", true);
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, escaped, filename);
-      g_free(escaped);
+    strftime(time, 255, "%x %X", localtime(&st.st_mtime));
+    if (st.st_size > BPGB) 
+      snprintf(size, 255, "%.1fG", (double)st.st_size / BPGB);
+    else if (st.st_size > BPMB) 
+      snprintf(size, 255, "%.1fM", (double)st.st_size / BPMB);
+    else if (st.st_size > BPKB) 
+      snprintf(size, 255, "%.1fK", (double)st.st_size / BPKB);
+    else 
+      snprintf(size, 255, "%lu", st.st_size);
+
+    char perm[11];
+    int bits = 0;
+    if (S_ISREG(st.st_mode))
+      perm[bits++] = '-';
+    else if (S_ISCHR(st.st_mode)) {
+      perm[bits++] = 'c';
+      strcpy(class, "dwb_character_device");
     }
-    else {
-      escaped = g_uri_escape_string(fullpath, "/", true);
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, escaped, filename);
-      g_free(escaped);
+    else if (S_ISDIR(st.st_mode)) {
+      perm[bits++] = 'd';
+      strcpy(class, "dwb_directory");
     }
-    FREE(l->data);
+    else if (S_ISBLK(st.st_mode)) {
+      perm[bits++] = 'b';
+      strcpy(class, "dwb_blockdevice");
+    }
+    else if (S_ISFIFO(st.st_mode)) {
+      perm[bits++] = 'f';
+      strcpy(class, "dwb_fifo");
+    }
+    else if (S_ISLNK(st.st_mode)) {
+      perm[bits++] = 'l';
+      strcpy(class, "dwb_link");
+      link = g_file_read_link(fullpath, NULL);
+      if (link != NULL) {
+        char *tmp_path = fullpath;
+        printname = g_strdup_printf("%s -> %s", filename, link);
+        l->data = fullpath = g_build_filename(orig_path, link, NULL);
+        g_free(tmp_path);
+        g_free(link);
+      }
+    }
+    /* user permissions */
+    perm[bits++] = st.st_mode & S_IRUSR ? 'r' : '-';
+    perm[bits++] = st.st_mode & S_IWUSR ? 'w' : '-';
+    if (st.st_mode & S_ISUID) {
+      perm[bits++] = st.st_mode & S_IXUSR ? 's' : 'S';
+      strcpy(class, "dwb_setuid");
+    }
+    else
+      perm[bits++] = st.st_mode & S_IXUSR ? 'x' : '-';
+    if (st.st_mode & S_IXUSR && *class == 0) 
+      strcpy(class, "dwb_executable");
+    /*  group permissons */
+    perm[bits++] = st.st_mode & S_IRGRP ? 'r' : '-';
+    perm[bits++] = st.st_mode & S_IWGRP ? 'w' : '-';
+    if (st.st_mode & S_ISGID) {
+      perm[bits++] = st.st_mode & S_IXGRP ? 's' : 'S';
+      strcpy(class, "dwb_setuid");
+    }
+    else
+      perm[bits++] = st.st_mode & S_IXGRP ? 'x' : '-';
+    /*  other */
+    perm[bits++] = st.st_mode & S_IRGRP ? 'r' : '-';
+    perm[bits++] = st.st_mode & S_IWGRP ? 'w' : '-';
+    if (st.st_mode & S_ISVTX) {
+      perm[bits++] = st.st_mode & S_IXGRP ? 't' : 'T';
+      strcpy(class, "dwb_sticky");
+    }
+    else
+      perm[bits++] = st.st_mode & S_IXGRP ? 'x' : '-';
+    perm[bits] = '\0';
+    struct passwd *pwd = getpwuid(st.st_uid);
+    char *user = pwd && pwd->pw_name ? pwd->pw_name : "";
+    struct group *grp = getgrgid(st.st_gid);
+    char *group = pwd && grp->gr_name ? grp->gr_name : "";
+    if (*class == 0)
+      strcpy(class, "dwb_regular");
+
+    g_string_append_printf(buffer, "<div class='tableRow'><div>%s</div><div>%lu</div><div>%s</div><div>%s</div>", perm, st.st_nlink, user, group);
+    g_string_append_printf(buffer, "<div>%s</div>", size);
+    g_string_append_printf(buffer, "<div>%s</div>", time);
+    g_string_append_printf(buffer, "<div class='%s'><a href='%s'>%s</a></div></div>", class, fullpath, printname == NULL ? filename: printname);
+    FREE(printname);
+
   }
-  g_slist_free(content);
-  fullpath = g_str_has_prefix(arg->p, "file://") ? g_strdup(arg->p) : g_strdup_printf("file:///%s", path);
+  tmp = orig_path+1;
+  char *match;
+  GString *path_buffer = g_string_new("/<a class='headLine' href='");
+  while ((match = strchr(tmp, '/'))) {
+    g_string_append_len(path_buffer, orig_path, match-orig_path);
+    g_string_append(path_buffer, "'>");
+    g_string_append_len(path_buffer, tmp, match-tmp);
+    tmp = match+1;
+    g_string_append(path_buffer, "</a>/<a href='");
+  }
+  g_string_append_len(path_buffer, orig_path, match-orig_path);
+  g_string_append(path_buffer, "'>");
+  g_string_append_len(path_buffer, tmp, match-tmp);
+  g_string_append(path_buffer, "</a>");
+
+  char *local_file = util_get_data_file(LOCAL_FILE);
+  char *filecontent = util_get_file_content(local_file);
+  char *page = g_strdup_printf(filecontent, path_buffer->str, buffer->str);
+
+  g_free(local_file);
+  g_free(filecontent);
+  g_string_free(buffer, true);
+  g_string_free(path_buffer, true);
+
+  fullpath = g_str_has_prefix(arg->p, "file://") ? g_strdup(arg->p) : g_strdup_printf("file:///%s", orig_path);
   /* add a history item */
   /* TODO sqlite */
   if (arg->b) {
@@ -2083,16 +2245,24 @@ dwb_show_directory(WebKitWebView *web, const char *path, const Arg *arg) {
     WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
     webkit_web_back_forward_list_add_item(bf_list, item);
   }
-  webkit_web_view_load_string(web, buffer->str, NULL, NULL, fullpath);
-  g_string_free(buffer, true);
+
+  g_signal_connect(web, "notify::load-status", G_CALLBACK(dwb_load_directory_cb), NULL);
+  webkit_web_view_load_string(web, page, NULL, NULL, fullpath);
+
   FREE(fullpath);
+  g_free(page);
+  FREE(newpath);
+
+  for (GSList *l = content; l; l=l->next) {
+    g_free(l->data);
+  }
+  g_slist_free(content);
 }/*}}}*/
 
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(GList *gl, Arg *arg) {
   /* TODO parse scheme */
-  const char *path;
   if (arg->p != NULL && strlen(arg->p) > 0)
     g_strstrip(arg->p);
   WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
@@ -2144,8 +2314,7 @@ dwb_load_uri(GList *gl, Arg *arg) {
     return;
   }
   /* Check if uri is a directory */
-  if ( (path = dwb_check_directory(arg->p, NULL)) ) {
-    dwb_show_directory(web, path, arg);
+  if ( (dwb_check_directory(web, arg->p, arg, NULL)) ) {
     return;
   }
   /* Check if uri is a regular file */
@@ -2597,6 +2766,7 @@ dwb_get_scripts() {
 
       g_file_get_contents(path, &content, NULL, NULL);
       char **lines = g_strsplit(content, "\n", -1);
+      g_free(content);
       int i=0;
       KeyMap *map = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
@@ -2615,7 +2785,6 @@ dwb_get_scripts() {
         }
         i++;
       }
-      FREE(content);
       if (!n) {
         n = dwb_navigation_new(filename, "");
         map->key = "";
@@ -3279,12 +3448,6 @@ dwb_get_stock_item_base64_encoded(const char *name) {
   }
   return ret;
 }
-static void
-dwb_init_icons() {
-  dwb.files.dir_icon = dwb_get_stock_item_base64_encoded("gtk-directory");
-  dwb.files.file_icon = dwb_get_stock_item_base64_encoded("gtk-file");
-  dwb.files.exec_icon = dwb_get_stock_item_base64_encoded("gtk-execute");
-}
 
 static void 
 dwb_tab_size_cb(GtkWidget *w, GtkAllocation *a, GList *gl) {
@@ -3318,7 +3481,6 @@ dwb_init() {
   dwb_init_key_map();
   dwb_init_style();
   dwb_init_gui();
-  dwb_init_icons();
   dwb_init_scripts();
 
   dwb_soup_init();

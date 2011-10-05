@@ -280,14 +280,15 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   const char *path;
   GError *error = NULL;
 
-  if (reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED && (path = dwb_check_directory(uri, &error))) {
-    if (error == NULL) {
-      dwb_load_uri(gl, &a);
-    }
-    else {
-      dwb_set_error_message(gl, error->message);
-      g_clear_error(&error);
-    }
+  if ((reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED || reason == WEBKIT_WEB_NAVIGATION_REASON_BACK_FORWARD || reason == WEBKIT_WEB_NAVIGATION_REASON_RELOAD) 
+      && (path = dwb_check_directory(web, uri, &a, &error))) {
+    //if (error == NULL) {
+    //  dwb_load_uri(gl, &a);
+    //}
+    //else {
+    //  dwb_set_error_message(gl, error->message);
+    //  g_clear_error(&error);
+    //}
     webkit_web_policy_decision_ignore(policy);
     return false;
   }

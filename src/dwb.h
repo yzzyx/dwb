@@ -30,6 +30,8 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <libsoup/soup.h>
+#include <pwd.h>
+#include <grp.h>
 #include <locale.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -149,6 +151,11 @@
 #else 
 #define PRINT_DEBUG(message, ...) 
 #endif
+#define BPKB 1024
+#define BPMB 1048576
+#define BPGB 1073741824
+
+
 
 /*}}}*/
 
@@ -608,9 +615,11 @@ struct _Files {
   const char *unifile;
   const char *userscripts;
   const char *adblock;
+#if 0
   const char *dir_icon;
   const char *file_icon;
   const char *exec_icon;
+#endif
   const char *scripts_allow;
   const char *plugins_allow;
 };
@@ -718,7 +727,7 @@ CompletionType dwb_eval_completion_type(void);
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
 gboolean dwb_block_ad(GList *gl, const char *);
-const char * dwb_check_directory(const char *, GError **);
+gboolean dwb_check_directory(WebKitWebView *, const char *, Arg *, GError **);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);
