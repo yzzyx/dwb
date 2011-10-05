@@ -241,8 +241,8 @@ commands_quickmark(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_reload(KeyMap *km, Arg *arg) {
   WebKitWebView *web = WEBVIEW_FROM_ARG(arg);
-  char *path = webkit_web_view_get_uri(web);
-  Arg a = { .p = path, .b = false };
+  const char *path = webkit_web_view_get_uri(web);
+  Arg a = { .p = (char *)path, .b = false };
   if ( !dwb_check_directory(web, path, &a, NULL) ) {
     webkit_web_view_reload(web);
   }
