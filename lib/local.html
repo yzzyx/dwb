@@ -15,8 +15,7 @@
       margin-left: auto;
       margin-right: auto;
       min-width: 600px;
-      max-width: 800px;
-      width: 90%;
+      max-width : 850px;
       border: 1px solid #999;
       -webkit-border-radius: 10px;
       padding: 30px;
@@ -77,6 +76,10 @@
       display : table-cell;
       padding-right: 15px;
     }
+    #dwb_local_header_last_mod {
+      white-space: pre-wrap;
+      min-width: 120px;
+    }
     a {
       text-decoration: none;
     }
@@ -99,13 +102,14 @@
     </div>
     <div id="dwb_local_filetable" width="100%">
       <div class="dwb_local_table_row" id="dwb_local_table_header">
-        <div> Permission </div>
-        <div> Link </div>
-        <div> User </div>
-        <div> Group </div>
-        <div> Size </div>
-        <div> Last modified </div>
-        <div> Name </div>
+        <div class="dwb_local_header_permission">Permission </div>
+        <div class="dwb_local_header_link">Link</div>
+        <div class="dwb_local_header_user">User</div>
+        <div class="dwb_local_header_group">Group</div>
+        <div class="dwb_local_header_size">Size</div>
+        <div class="dwb_local_header_date">Date</div>
+        <div class="dwb_local_header_time">Time</div>
+        <div class="dwb_local_header_name">Name</div>
       </div>
       %s
     </div>

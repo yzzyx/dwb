@@ -94,7 +94,8 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
     if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
       continue;
     struct stat st;
-    char time[100];
+    char date[50];
+    char time[50];
     char size[50];
     char class[30] = { 0 };
     char *link = NULL;
@@ -103,7 +104,8 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
       fprintf(stderr, "stat failed for %s\n", fullpath);
       continue;
     }
-    strftime(time, 99, "%x %X", localtime(&st.st_mtime));
+    strftime(date, 49, "%x", localtime(&st.st_mtime));
+    strftime(time, 49, "%X", localtime(&st.st_mtime));
     if (st.st_size > BPGB) 
       snprintf(size, 49, "%.1fG", (double)st.st_size / BPGB);
     else if (st.st_size > BPMB) 
@@ -182,10 +184,16 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
     if (*class == 0)
       strcpy(class, "dwb_local_regular");
 
-    g_string_append_printf(buffer, "<div class='dwb_local_table_row'><div>%s</div><div>%lu</div><div>%s</div><div>%s</div>", perm, st.st_nlink, user, group);
-    g_string_append_printf(buffer, "<div>%s</div>", size);
-    g_string_append_printf(buffer, "<div>%s</div>", time);
-    g_string_append_printf(buffer, "<div class='%s'><a href='%s'>%s</a></div></div>", class, fullpath, printname == NULL ? filename: printname);
+    g_string_append_printf(buffer, "<div class='dwb_local_table_row'>\
+        <div class='dwb_local_header_permission'>%s</div>\
+        <div class='dwb_local_header_link'>%lu</div>\
+        <div class='dwb_local_header_user'>%s</div>\
+        <div class='dwb_local_header_group'>%s</div>\
+        <div class='dwb_local_header_size'>%s</div>\
+        <div class='dwb_local_header_date'>%s</div>\
+        <div class='dwb_local_header_time'>%s</div>\
+        <div class='%s'><a href='%s'>%s</a></div></div>", 
+        perm, st.st_nlink, user, group, size, date, time, class, fullpath, printname == NULL ? filename: printname);
     FREE(printname);
 
   }
