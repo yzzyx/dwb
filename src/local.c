@@ -16,7 +16,7 @@ local_load_directory_cb(WebKitWebView *wv) {
   if (webkit_web_view_get_load_status(wv) != WEBKIT_LOAD_FINISHED) 
     return;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-  WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, "hidden_checkbox");
+  WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, "dwb_local_checkbox");
   webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), dwb.state.hidden_files);
   webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(local_toggle_hidden_cb), false, dwb.state.fview);
   g_signal_handlers_disconnect_by_func(wv, local_load_directory_cb, NULL);
@@ -96,7 +96,7 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
     struct stat st;
     char time[100];
     char size[50];
-    char class[25] = { 0 };
+    char class[30] = { 0 };
     char *link = NULL;
     char *printname = NULL;
     if (lstat(fullpath, &st) != 0) {
@@ -119,23 +119,23 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
       perm[bits++] = '-';
     else if (S_ISCHR(st.st_mode)) {
       perm[bits++] = 'c';
-      strcpy(class, "dwb_character_device");
+      strcpy(class, "dwb_local_character_device");
     }
     else if (S_ISDIR(st.st_mode)) {
       perm[bits++] = 'd';
-      strcpy(class, "dwb_directory");
+      strcpy(class, "dwb_local_directory");
     }
     else if (S_ISBLK(st.st_mode)) {
       perm[bits++] = 'b';
-      strcpy(class, "dwb_blockdevice");
+      strcpy(class, "dwb_local_blockdevice");
     }
     else if (S_ISFIFO(st.st_mode)) {
       perm[bits++] = 'f';
-      strcpy(class, "dwb_fifo");
+      strcpy(class, "dwb_local_fifo");
     }
     else if (S_ISLNK(st.st_mode)) {
       perm[bits++] = 'l';
-      strcpy(class, "dwb_link");
+      strcpy(class, "dwb_local_link");
       link = g_file_read_link(fullpath, NULL);
       if (link != NULL) {
         char *tmp_path = fullpath;
@@ -150,18 +150,18 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
     perm[bits++] = st.st_mode & S_IWUSR ? 'w' : '-';
     if (st.st_mode & S_ISUID) {
       perm[bits++] = st.st_mode & S_IXUSR ? 's' : 'S';
-      strcpy(class, "dwb_setuid");
+      strcpy(class, "dwb_local_setuid");
     }
     else
       perm[bits++] = st.st_mode & S_IXUSR ? 'x' : '-';
     if (st.st_mode & S_IXUSR && *class == 0) 
-      strcpy(class, "dwb_executable");
+      strcpy(class, "dwb_local_executable");
     /*  group permissons */
     perm[bits++] = st.st_mode & S_IRGRP ? 'r' : '-';
     perm[bits++] = st.st_mode & S_IWGRP ? 'w' : '-';
     if (st.st_mode & S_ISGID) {
       perm[bits++] = st.st_mode & S_IXGRP ? 's' : 'S';
-      strcpy(class, "dwb_setuid");
+      strcpy(class, "dwb_local_setuid");
     }
     else
       perm[bits++] = st.st_mode & S_IXGRP ? 'x' : '-';
@@ -170,7 +170,7 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
     perm[bits++] = st.st_mode & S_IWGRP ? 'w' : '-';
     if (st.st_mode & S_ISVTX) {
       perm[bits++] = st.st_mode & S_IXGRP ? 't' : 'T';
-      strcpy(class, "dwb_sticky");
+      strcpy(class, "dwb_local_sticky");
     }
     else
       perm[bits++] = st.st_mode & S_IXGRP ? 'x' : '-';
@@ -180,9 +180,9 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
     struct group *grp = getgrgid(st.st_gid);
     char *group = pwd && grp->gr_name ? grp->gr_name : "";
     if (*class == 0)
-      strcpy(class, "dwb_regular");
+      strcpy(class, "dwb_local_regular");
 
-    g_string_append_printf(buffer, "<div class='tableRow'><div>%s</div><div>%lu</div><div>%s</div><div>%s</div>", perm, st.st_nlink, user, group);
+    g_string_append_printf(buffer, "<div class='dwb_local_table_row'><div>%s</div><div>%lu</div><div>%s</div><div>%s</div>", perm, st.st_nlink, user, group);
     g_string_append_printf(buffer, "<div>%s</div>", size);
     g_string_append_printf(buffer, "<div>%s</div>", time);
     g_string_append_printf(buffer, "<div class='%s'><a href='%s'>%s</a></div></div>", class, fullpath, printname == NULL ? filename: printname);
@@ -191,7 +191,7 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
   }
   tmp = orig_path+1;
   char *match;
-  GString *path_buffer = g_string_new("/<a class='headLine' href='");
+  GString *path_buffer = g_string_new("/<a class='dwb_local_headline' href='");
   while ((match = strchr(tmp, '/'))) {
     g_string_append_len(path_buffer, orig_path, match-orig_path);
     g_string_append(path_buffer, "'>");
@@ -206,6 +206,7 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
 
   char *local_file = util_get_data_file(LOCAL_FILE);
   char *filecontent = util_get_file_content(local_file);
+
   char *favicon = dwb_get_stock_item_base64_encoded("gtk-harddisk");
   /*  title, favicon, toppath, content */
   char *page = g_strdup_printf(filecontent, orig_path, favicon, path_buffer->str, buffer->str);

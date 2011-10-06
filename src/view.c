@@ -661,6 +661,8 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
                               return true;
     case COMPLETE_BUFFER:     completion_eval_buffer_completion();
                               return true;
+    case COMPLETE_PATH:       completion_clean_path_completion();
+                              break;
     default : break;
   }
   Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };

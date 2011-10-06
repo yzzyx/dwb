@@ -7,80 +7,75 @@
       background : #ddd;
       font: normal 12px helvetica;
     }
-    #mainView {
-    }
-    #mainContainer {
+    #dwb_local_main_container {
       top: 50px;
       bottom: 50px;
       margin-top: 30px;
       background: #fff;
       margin-left: auto;
       margin-right: auto;
-      width: 80%;
+      min-width: 600px;
+      max-width: 800px;
+      width: 90%;
       border: 1px solid #999;
       -webkit-border-radius: 10px;
       padding: 30px;
     }
-    #headLine {
+    #dwb_local_headline {
       width: 100%;
       border-bottom: 1px solid #ddd;
     }
-    #indexOf {
+    #dwb_local_indexof {
       font: bold 20px helvetica;
       display: inline;
     }
-    #checkboxContainer {
+    #dwb_local_checkbox_container {
       position: relative;
       float: right;
     }
-    #fileTable {
+    #dwb_local_filetable {
       position: relative;
       width; 94%;
       margin: 3%;
       font: 400 11px monospace;
     }
-    #tableHeader {
+    #dwb_local_table_header {
       font: bold 12px helvetica;
       text-align: left;
       width: 100%;
     }
-    .image {
-      margin-left: 5px;
-      margin-right: 5px;
-      width : 20px;
-    }
-    .dwb_regular a {
+    .dwb_local_regular a {
       color : #000;
     }
-    .dwb_fifo a {
+    .dwb_local_fifo a {
       color : #8b008b;
     }
-    .dwb_blockdevice a {
+    .dwb_local_blockdevice a {
       color : #cd2626;
     }
-    .dwb_character_device a {
+    .dwb_local_character_device a {
       color : #555;
     }
-    .dwb_executable a {
+    .dwb_local_executable a {
       color : #228b22;
     }
-    .dwb_link a {
+    .dwb_local_link a {
       color : #cd3839;
     }
-    .dwb_setuid a {
+    .dwb_local_setuid a {
       background-color : #f00;
       color : #fff;
     }
-    .dwb_sticky a {
+    .dwb_local_sticky a {
       background-color : #228b22;
       color : #fff;
     }
-    .tableRow {
+    .dwb_local_table_row {
       display : table-row;
     }
-    .tableRow > div {
+    .dwb_local_table_row > div {
       display : table-cell;
-      padding-right: 12px;
+      padding-right: 15px;
     }
     a {
       text-decoration: none;
@@ -91,20 +86,19 @@
   </style>
 </head>
 <body>
-  <div id="mainContainer">
-    <div id="mainView" >
-      <div id="headLine">
-        <div id="indexOf">
-          Index of %s
-        </div>
-        <div id="checkboxContainer">
-          <input id="hidden_checkbox" type="checkbox">
-            Show hidden files
-          </input>
-        </div>
+  <div id="dwb_local_main_container">
+    <div id="dwb_local_headline">
+      <div id="dwb_local_indexof">
+        Index of %s
       </div>
-    <div id="fileTable" width="100%">
-      <div class="tableRow" id="tableHeader">
+      <div id="dwb_local_checkbox_container">
+        <input id="dwb_local_checkbox" type="checkbox">
+        Show hidden files
+        </input>
+      </div>
+    </div>
+    <div id="dwb_local_filetable" width="100%">
+      <div class="dwb_local_table_row" id="dwb_local_table_header">
         <div> Permission </div>
         <div> Link </div>
         <div> User </div>
@@ -114,7 +108,6 @@
         <div> Name </div>
       </div>
       %s
-    </div>
     </div>
   </div>
 </body>

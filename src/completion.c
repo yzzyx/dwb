@@ -278,7 +278,7 @@ completion_get_key_completion(gboolean entry) {
 /* completion_path {{{*/
 static void 
 completion_path(void) {
-  dwb.state.mode |= COMPLETE_PATH;
+  dwb.state.mode = COMPLETE_PATH;
   completion_complete_path(false);
 }/*}}}*/
 
