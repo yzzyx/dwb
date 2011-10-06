@@ -225,7 +225,7 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
   g_string_free(buffer, true);
   g_string_free(path_buffer, true);
 
-  fullpath = g_strdup_printf("file:///%s", orig_path);
+  fullpath = g_strdup_printf("file://%s", orig_path);
   /* add a history item */
   /* TODO sqlite */
   WebKitWebView *web = WEBVIEW(gl);

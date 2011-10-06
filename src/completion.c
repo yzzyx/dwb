@@ -513,27 +513,43 @@ completion_get_binaries(GList *list, char *text) {
 static GList *
 completion_get_path(GList *list, char *text) {
   GDir *dir;
-  char d_tmp[BUFFER_LENGTH];
-  strncpy(d_tmp, text, BUFFER_LENGTH - 1);
+  char d_tmp[PATH_MAX];
+  const char *filename;
+  char path[PATH_MAX+1];
+  char *store;
+  char *newpath;
+  gboolean prefix;
+
+  if ( ( prefix = g_str_has_prefix(text, "file://")) ) 
+    text += 7;
+
+  strncpy(d_tmp, text, PATH_MAX - 1);
   char *d_name = dirname(d_tmp);
   char *b_name = util_basename(text);
   char *d_current = g_get_current_dir();
-  const char *filename;
-  char path[BUFFER_LENGTH];
-
   if (! *text ) {
-    list = g_list_prepend(list, g_strconcat(d_current, "/", NULL));
+    if (prefix) 
+      list = g_list_prepend(list, g_strconcat("file://", d_current, "/", NULL));
+    else
+      list = g_list_prepend(list, g_strconcat(d_current, "/", NULL));
+    g_free(d_current);
     return list;
   }
-  else if (!strcmp(d_name, ".")) {
+  else 
+    g_free(d_current);
+
+  if (!strcmp(d_name, ".")) {
     completion_complete(0, 0);
     return NULL;
   }
-  else if (g_file_test(text, G_FILE_TEST_IS_DIR)) {
+  if (g_file_test(text, G_FILE_TEST_IS_DIR)) {
     strncpy(path, text, BUFFER_LENGTH - 1);
     char path_last = path[strlen(path) - 1];
     if (path_last != '/' && path_last != '.') {
-      return g_list_prepend(list, g_strconcat(path, "/", NULL));
+      if (prefix) 
+        return g_list_prepend(list, g_strconcat("file://", path, "/", NULL));
+      else 
+        return g_list_prepend(list, g_strconcat(path, "/", NULL));
     }
   }
   else if (g_file_test(d_name, G_FILE_TEST_IS_DIR)) {
@@ -542,9 +558,12 @@ completion_get_path(GList *list, char *text) {
   if ( (dir = g_dir_open(path, 'r', NULL)) ) {
     while ( (filename = g_dir_read_name(dir)) ) {
       if ( ( !b_name && filename[0] != '.') || (b_name && g_str_has_prefix(filename, b_name))) {
-        char *newpath = g_build_filename(path, filename, NULL);
-        char *store = g_strconcat(newpath, "/" , NULL);
-        if (g_file_test(store, G_FILE_TEST_IS_DIR)) {
+        newpath = g_build_filename(path, filename, NULL);
+        if (prefix) 
+          store = g_strconcat("file://", newpath, "/" , NULL);
+        else 
+          store = g_strconcat(newpath, "/" , NULL);
+        if (g_file_test(newpath, G_FILE_TEST_IS_DIR)) {
           list = g_list_prepend(list, store);
         }
         else {
