@@ -2230,8 +2230,11 @@ dwb_show_directory(WebKitWebView *web, const char *path, const Arg *arg) {
 
   char *local_file = util_get_data_file(LOCAL_FILE);
   char *filecontent = util_get_file_content(local_file);
-  char *page = g_strdup_printf(filecontent, path_buffer->str, buffer->str);
+  char *favicon = dwb_get_stock_item_base64_encoded("gtk-harddisk");
+  /*  title, favicon, toppath, content */
+  char *page = g_strdup_printf(filecontent, orig_path, favicon, path_buffer->str, buffer->str);
 
+  g_free(favicon);
   g_free(local_file);
   g_free(filecontent);
   g_string_free(buffer, true);
