@@ -28,6 +28,7 @@
 #include "icon.xpm"
 #include "html.h"
 #include "plugins.h"
+#include "local.h"
 
 
 /* DECLARATIONS {{{*/
@@ -49,7 +50,6 @@ static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_follow_selection(void);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
-
 
 static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 
@@ -1131,11 +1131,6 @@ dwb_remove_quickmark(const char *line) {
     util_file_remove_line(dwb.files.quickmarks, line);
     dwb.fc.quickmarks = g_list_delete_link(dwb.fc.quickmarks, item);
   }
-#if 0
-  char *line = g_strdup_printf("%s %s %s\n", q->key, q->nav->first, q->nav->second);
-
-  g_free(line);
-#endif
 }/*}}}*/
 
 /* dwb_sync_history {{{*/
@@ -1184,8 +1179,7 @@ dwb_open_startpage(GList *gl) {
   if (gl == NULL) 
     gl = dwb.state.fview;
 
-  Arg a = { .p = dwb.misc.startpage, .b = true };
-  dwb_load_uri(gl, &a);
+  dwb_load_uri(gl, dwb.misc.startpage);
   return STATUS_OK;
 }/*}}}*/
 
@@ -1357,15 +1351,7 @@ dwb_history_back() {
 
   int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
-  char *uri = (char *)webkit_web_history_item_get_uri(item);
-  if (g_str_has_prefix(uri, "file://")) {
-    Arg a = { .p = uri, .b = false };
-    webkit_web_back_forward_list_go_to_item(bf_list, item);
-    dwb_load_uri(NULL, &a);
-  }
-  else {
-    webkit_web_view_go_to_back_forward_item(w, item);
-  }
+  webkit_web_view_go_to_back_forward_item(w, item);
   return STATUS_OK;
 }/*}}}*/
 
@@ -1384,15 +1370,7 @@ dwb_history_forward() {
 
   int n = MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
-  char *uri = (char *)webkit_web_history_item_get_uri(item);
-  if (g_str_has_prefix(uri, "file://")) {
-    Arg a = { .p = uri, .b = false };
-    webkit_web_back_forward_list_go_to_item(bf_list, item);
-    dwb_load_uri(NULL, &a);
-  }
-  else {
-    webkit_web_view_go_to_back_forward_item(w, item);
-  }
+  webkit_web_view_go_to_back_forward_item(w, item);
   return STATUS_OK;
 }/*}}}*/
 
@@ -1919,8 +1897,7 @@ dwb_open_quickmark(const char *key) {
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
-      Arg a = { .p = q->nav->first, .b = true };
-      dwb_load_uri(NULL, &a);
+      dwb_load_uri(NULL, q->nav->first);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
       dwb_change_mode(NORMAL_MODE, false);
       return;
@@ -1991,286 +1968,30 @@ dwb_focus(GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
 
-/* dwb_new_window(Arg *arg) {{{*/
+/* dwb_new_window(const char *arg) {{{*/
 void 
-dwb_new_window(Arg *arg) {
+dwb_new_window(const char  *uri) {
   char *argv[6];
 
   argv[0] = (char *)dwb.misc.prog_path;
   argv[1] = "-p"; 
   argv[2] = (char *)dwb.misc.profile;
   argv[3] = "-n";
-  argv[4] = arg->p;
+  argv[4] = (char *)uri;
   argv[5] = NULL;
   g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
 }/*}}}*/
 
-/* dwb_check_directory(const char *) {{{*/
-gboolean
-dwb_check_directory(WebKitWebView *wv, const char *path, Arg *a, GError **error) {
-  char *unescaped = g_uri_unescape_string(path, NULL);
-  char *local = unescaped;
-  gboolean ret = true;
-  if (g_str_has_prefix(local, "file://")) 
-    local += *(local + 8) == '/' ? 8 : 7;
-  if (!g_file_test(local, G_FILE_TEST_IS_DIR)) {
-    ret = false;
-    goto out;
-  }
-  if (access(local, R_OK)) 
-    g_set_error(error, 0, 1, "Cannot access %s", local);
-  int len = strlen (local);
-  if (len>1 && local[len-1] == '/')
-    local[len-1] = '\0';
-
-  dwb_show_directory(wv, local, a);
-out:
-  g_free(unescaped);
-  return ret;
-}/*}}}*/
-
-gboolean
-dwb_directory_toggle_hidden_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
-  dwb.state.hidden_files = webkit_dom_html_input_element_get_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
-  commands_reload(NULL, NULL);
-  return true;
-}
-void
-dwb_load_directory_cb(WebKitWebView *wv) {
-  if (webkit_web_view_get_load_status(wv) != WEBKIT_LOAD_FINISHED) 
-    return;
-  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-  WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, "hidden_checkbox");
-  webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), dwb.state.hidden_files);
-  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(dwb_directory_toggle_hidden_cb), false, dwb.state.fview);
-  g_signal_handlers_disconnect_by_func(wv, dwb_load_directory_cb, NULL);
-}
-
-/* dwb_show_directory(WebKitWebView *, const char *path, Arg *arg) 
- * 
- * Param: 
- * WebKitWebView: 
- * path: 
- * Arg arg:  .p = fullpath
- * {{{*/
-void 
-dwb_show_directory(WebKitWebView *web, const char *path, const Arg *arg) {
-  /* TODO needs fix: when opening local files close commandline  */
-  char *fullpath; 
-  const char *filename;
-  char *newpath = NULL;
-  const char *tmp;
-  const char *orig_path;
-  GSList *content = NULL;
-  GDir *dir = NULL;
-  GString *buffer;
-  GError *error = NULL;
-  if (g_path_is_absolute(path)) {
-    orig_path = path;
-  }
-  else {
-    /*  resolve absolute path */
-    char *current_dir = g_get_current_dir();
-    char *full = g_build_filename(current_dir, path, NULL);
-    char **components = g_strsplit(full, "/", -1);
-
-    g_free(current_dir);
-    g_free(full);
-
-    int up = 0;
-    char *tmppath = NULL;
-    for (int i = g_strv_length(components)-1; i>=0; i--) {
-      if (!strcmp(components[i], "..")) 
-        up++;
-      else if (! strcmp(components[i], "."))
-        continue;
-      else if (up > 0) 
-        up--;
-      else {
-        newpath = g_build_filename("/", components[i], tmppath, NULL); 
-        if (tmppath != NULL)
-          g_free(tmppath);
-        tmppath = newpath;
-      }
-    }
-    orig_path = newpath;
-    g_strfreev(components);
-  }
-
-  if (! (dir = g_dir_open(orig_path, 0, &error))) {
-    fprintf(stderr, "dwb error: %s\n", error->message);
-    g_clear_error(&error);
-    return;
-  }
-
-  fullpath = g_build_filename(orig_path, "..", NULL);
-  content = g_slist_prepend(content, fullpath);
-  while ( (filename = g_dir_read_name(dir)) ) {
-    fullpath = g_build_filename(orig_path, filename, NULL);
-    content = g_slist_prepend(content, fullpath);
-  }
-  content = g_slist_sort(content, (GCompareFunc)util_compare_path);
-  g_dir_close(dir);
-  buffer = g_string_new(NULL);
-  for (GSList *l = content; l; l=l->next) {
-    fullpath = l->data;
-    filename = g_strrstr(fullpath, "/") + 1;
-    if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
-      continue;
-    struct stat st;
-    char time[100];
-    char size[50];
-    char class[25] = { 0 };
-    char *link = NULL;
-    char *printname = NULL;
-    if (lstat(fullpath, &st) != 0) {
-      fprintf(stderr, "stat failed for %s\n", fullpath);
-      continue;
-    }
-    strftime(time, 99, "%x %X", localtime(&st.st_mtime));
-    if (st.st_size > BPGB) 
-      snprintf(size, 49, "%.1fG", (double)st.st_size / BPGB);
-    else if (st.st_size > BPMB) 
-      snprintf(size, 49, "%.1fM", (double)st.st_size / BPMB);
-    else if (st.st_size > BPKB) 
-      snprintf(size, 49, "%.1fK", (double)st.st_size / BPKB);
-    else 
-      snprintf(size, 49, "%lu", st.st_size);
-
-    char perm[11];
-    int bits = 0;
-    if (S_ISREG(st.st_mode))
-      perm[bits++] = '-';
-    else if (S_ISCHR(st.st_mode)) {
-      perm[bits++] = 'c';
-      strcpy(class, "dwb_character_device");
-    }
-    else if (S_ISDIR(st.st_mode)) {
-      perm[bits++] = 'd';
-      strcpy(class, "dwb_directory");
-    }
-    else if (S_ISBLK(st.st_mode)) {
-      perm[bits++] = 'b';
-      strcpy(class, "dwb_blockdevice");
-    }
-    else if (S_ISFIFO(st.st_mode)) {
-      perm[bits++] = 'f';
-      strcpy(class, "dwb_fifo");
-    }
-    else if (S_ISLNK(st.st_mode)) {
-      perm[bits++] = 'l';
-      strcpy(class, "dwb_link");
-      link = g_file_read_link(fullpath, NULL);
-      if (link != NULL) {
-        char *tmp_path = fullpath;
-        printname = g_strdup_printf("%s -> %s", filename, link);
-        l->data = fullpath = g_build_filename(orig_path, link, NULL);
-        g_free(tmp_path);
-        g_free(link);
-      }
-    }
-    /* user permissions */
-    perm[bits++] = st.st_mode & S_IRUSR ? 'r' : '-';
-    perm[bits++] = st.st_mode & S_IWUSR ? 'w' : '-';
-    if (st.st_mode & S_ISUID) {
-      perm[bits++] = st.st_mode & S_IXUSR ? 's' : 'S';
-      strcpy(class, "dwb_setuid");
-    }
-    else
-      perm[bits++] = st.st_mode & S_IXUSR ? 'x' : '-';
-    if (st.st_mode & S_IXUSR && *class == 0) 
-      strcpy(class, "dwb_executable");
-    /*  group permissons */
-    perm[bits++] = st.st_mode & S_IRGRP ? 'r' : '-';
-    perm[bits++] = st.st_mode & S_IWGRP ? 'w' : '-';
-    if (st.st_mode & S_ISGID) {
-      perm[bits++] = st.st_mode & S_IXGRP ? 's' : 'S';
-      strcpy(class, "dwb_setuid");
-    }
-    else
-      perm[bits++] = st.st_mode & S_IXGRP ? 'x' : '-';
-    /*  other */
-    perm[bits++] = st.st_mode & S_IRGRP ? 'r' : '-';
-    perm[bits++] = st.st_mode & S_IWGRP ? 'w' : '-';
-    if (st.st_mode & S_ISVTX) {
-      perm[bits++] = st.st_mode & S_IXGRP ? 't' : 'T';
-      strcpy(class, "dwb_sticky");
-    }
-    else
-      perm[bits++] = st.st_mode & S_IXGRP ? 'x' : '-';
-    perm[bits] = '\0';
-    struct passwd *pwd = getpwuid(st.st_uid);
-    char *user = pwd && pwd->pw_name ? pwd->pw_name : "";
-    struct group *grp = getgrgid(st.st_gid);
-    char *group = pwd && grp->gr_name ? grp->gr_name : "";
-    if (*class == 0)
-      strcpy(class, "dwb_regular");
-
-    g_string_append_printf(buffer, "<div class='tableRow'><div>%s</div><div>%lu</div><div>%s</div><div>%s</div>", perm, st.st_nlink, user, group);
-    g_string_append_printf(buffer, "<div>%s</div>", size);
-    g_string_append_printf(buffer, "<div>%s</div>", time);
-    g_string_append_printf(buffer, "<div class='%s'><a href='%s'>%s</a></div></div>", class, fullpath, printname == NULL ? filename: printname);
-    FREE(printname);
-
-  }
-  tmp = orig_path+1;
-  char *match;
-  GString *path_buffer = g_string_new("/<a class='headLine' href='");
-  while ((match = strchr(tmp, '/'))) {
-    g_string_append_len(path_buffer, orig_path, match-orig_path);
-    g_string_append(path_buffer, "'>");
-    g_string_append_len(path_buffer, tmp, match-tmp);
-    tmp = match+1;
-    g_string_append(path_buffer, "</a>/<a href='");
-  }
-  g_string_append_len(path_buffer, orig_path, match-orig_path);
-  g_string_append(path_buffer, "'>");
-  g_string_append_len(path_buffer, tmp, match-tmp);
-  g_string_append(path_buffer, "</a>");
-
-  char *local_file = util_get_data_file(LOCAL_FILE);
-  char *filecontent = util_get_file_content(local_file);
-  char *favicon = dwb_get_stock_item_base64_encoded("gtk-harddisk");
-  /*  title, favicon, toppath, content */
-  char *page = g_strdup_printf(filecontent, orig_path, favicon, path_buffer->str, buffer->str);
-
-  g_free(favicon);
-  g_free(local_file);
-  g_free(filecontent);
-  g_string_free(buffer, true);
-  g_string_free(path_buffer, true);
-
-  fullpath = g_str_has_prefix(arg->p, "file://") ? g_strdup(arg->p) : g_strdup_printf("file:///%s", orig_path);
-  /* add a history item */
-  /* TODO sqlite */
-  if (arg->b) {
-    WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
-    WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
-    webkit_web_back_forward_list_add_item(bf_list, item);
-  }
-
-  g_signal_connect(web, "notify::load-status", G_CALLBACK(dwb_load_directory_cb), NULL);
-  webkit_web_view_load_string(web, page, NULL, NULL, fullpath);
-
-  FREE(fullpath);
-  g_free(page);
-  FREE(newpath);
-
-  for (GSList *l = content; l; l=l->next) {
-    g_free(l->data);
-  }
-  g_slist_free(content);
-}/*}}}*/
 
 /* dwb_load_uri(const char *uri) {{{*/
 void 
-dwb_load_uri(GList *gl, Arg *arg) {
+dwb_load_uri(GList *gl, const char *arg) {
   /* TODO parse scheme */
-  if (arg->p != NULL && strlen(arg->p) > 0)
-    g_strstrip(arg->p);
+  if (arg != NULL && strlen(arg) > 0)
+    g_strstrip((char*)arg);
   WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
 
-  if (!arg || !arg->p || !strlen(arg->p)) {
+  if (!arg || !arg || !strlen(arg)) {
     return;
   }
 
@@ -2287,69 +2008,50 @@ dwb_load_uri(GList *gl, Arg *arg) {
     return;
   }
   /*  get resolved uri */
-  char *tmp, *uri = NULL; 
-  GError *error = NULL;
+  char *uri = NULL; 
 
   /* free cookie of last visited website */
   if (dwb.state.last_cookies) {
     soup_cookies_free(dwb.state.last_cookies); 
     dwb.state.last_cookies = NULL;
   }
-
-  g_strstrip(arg->p);
-
   /* Check if uri is a html-string */
   if (dwb.state.type == HTML_STRING) {
-    webkit_web_view_load_string(web, arg->p, "text/html", NULL, NULL);
+    webkit_web_view_load_string(web, arg, "text/html", NULL, NULL);
     dwb.state.type = 0;
     return;
   }
   /* Check if uri is a userscript */
-  if ( (uri = dwb_test_userscript(arg->p)) ) {
+  if ( (uri = dwb_test_userscript(arg)) ) {
     Arg a = { .arg = uri };
     dwb_execute_user_script(NULL, &a);
     g_free(uri);
     return;
   }
   /* Check if uri is a javascript snippet */
-  if (g_str_has_prefix(arg->p, "javascript:")) {
-    dwb_execute_script(webkit_web_view_get_main_frame(web), arg->p, false);
+  if (g_str_has_prefix(arg, "javascript:")) {
+    dwb_execute_script(webkit_web_view_get_main_frame(web), arg, false);
     return;
   }
   /* Check if uri is a directory */
-  if ( (dwb_check_directory(web, arg->p, arg, NULL)) ) {
+  if ( (local_check_directory(web, arg, true, NULL)) ) {
     return;
   }
   /* Check if uri is a regular file */
-  if (g_str_has_prefix(arg->p, "file://") || !strcmp(arg->p, "about:blank")) {
-    webkit_web_view_load_uri(web, arg->p);
+  if (g_str_has_prefix(arg, "file://") || !strcmp(arg, "about:blank")) {
+    webkit_web_view_load_uri(web, arg);
     return;
   }
-  else if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
-    if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
-      if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
-        g_clear_error(&error);
-        char *path = g_get_current_dir();
-        tmp = g_build_filename(path, arg->p, NULL);
-        if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
-          fprintf(stderr, "Cannot open %s: %s", (char*)arg->p, error->message);
-          g_clear_error(&error);
-        }
-        FREE(tmp);
-        FREE(path);
-      }
-    }
-  }
-  else if (g_str_has_prefix(arg->p, "dwb://")) {
-    webkit_web_view_load_uri(web, arg->p);
+  else if (g_str_has_prefix(arg, "dwb://")) {
+    webkit_web_view_load_uri(web, arg);
     return;
   }
   /* Check if searchengine is needed and load uri */
 
-  else if (!(uri = dwb_get_search_engine(arg->p, false)) || strstr(arg->p, "localhost:")) {
-    uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://") 
-      ? g_strdup(arg->p)
-      : g_strdup_printf("http://%s", (char*)arg->p);
+  else if (!(uri = dwb_get_search_engine(arg, false)) || strstr(arg, "localhost:")) {
+    uri = g_str_has_prefix(arg, "http://") || g_str_has_prefix(arg, "https://") 
+      ? g_strdup(arg)
+      : g_strdup_printf("http://%s", (char*)arg);
   }
   webkit_web_view_load_uri(web, uri);
   FREE(uri);
@@ -2562,7 +2264,6 @@ dwb_insert_mode(void) {
   if (dwb.state.mode == HINT_MODE) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
-  //view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
   dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
 
   dwb.state.mode = INSERT_MODE;
@@ -2593,10 +2294,6 @@ dwb_normal_mode(gboolean clean) {
   if (mode == HINT_MODE || mode == SEARCH_FIELD_MODE) {
     dwb_execute_script(MAIN_FRAME(), "DwbHintObj.clear()", false);
   }
-  //else if (mode & INSERT_MODE) {
-  //  view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
-  //  gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
-  //}
   else if (mode == DOWNLOAD_GET_PATH) {
     completion_clean_path_completion();
   }
@@ -3496,8 +3193,7 @@ dwb_init() {
   if (restore && session_restore(restore));
   else if (dwb.misc.argc > 0) {
     for (int i=0; i<dwb.misc.argc; i++) {
-      Arg a = { .p = dwb.misc.argv[i] };
-      view_add(&a, false);
+      view_add(dwb.misc.argv[i], false);
     }
   }
   else {

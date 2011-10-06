@@ -53,14 +53,14 @@ session_get_group(const char *name) {
 
 /* session_load_webview(WebKitWebView *, char *, int *){{{*/
 static void
-session_load_webview(WebKitWebView *web, char *uri, int last) {
+session_load_webview(GList *gl, char *uri, int last) {
   if (last > 0) {
     for (int j=0; j<last; j++) {
-      webkit_web_view_go_back(web);
+      webkit_web_view_go_back(WEBVIEW(gl));
     }
   }
   else {
-    webkit_web_view_load_uri(web, uri);
+    dwb_load_uri(gl, uri);
   }
 }/*}}}*/
 
@@ -90,7 +90,7 @@ session_restore(const char *name) {
     return false;
   }
   char  **lines = g_strsplit(group, "\n", -1);
-  WebKitWebView *web, *lastweb = NULL;
+  GList *currentview, *lastview = NULL;
   WebKitWebBackForwardList *bf_list = NULL;
   int last = 1;
   char *uri = NULL;
@@ -101,12 +101,12 @@ session_restore(const char *name) {
     if (line[0] && line[1] && line[2]) {
       int current = strtol(line[0], NULL, 10);
       if (current <= last) {
-        web = WEBVIEW(view_add(NULL, false));
-        bf_list = webkit_web_back_forward_list_new_with_web_view(web);
-        if (lastweb) {
-          session_load_webview(lastweb, uri, last);
+        currentview = view_add(NULL, false);
+        bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(currentview));
+        if (lastview) {
+          session_load_webview(lastview, uri, last);
         }
-        lastweb = web;
+        lastview = currentview;
       }
       if (bf_list != NULL) {
         WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(line[1], line[2]);
@@ -116,8 +116,8 @@ session_restore(const char *name) {
       FREE(uri);
       uri = g_strdup(line[1]);
     }
-    if (i == length && lastweb)
-      session_load_webview(lastweb, uri, last);
+    if (i == length && lastview)
+      session_load_webview(lastview, uri, last);
     g_strfreev(line);
   }
   g_strfreev(lines);

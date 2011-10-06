@@ -26,7 +26,7 @@
 #include "download.h"
 #include "session.h"
 
-GList * view_add(Arg *, gboolean background);
+GList * view_add(const char *uri, gboolean background);
 void view_remove(GList *gl);
 DwbStatus view_push_master(Arg *);
 void view_set_active_style(View *);

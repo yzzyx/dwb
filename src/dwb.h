@@ -667,7 +667,7 @@ Dwb dwb;
 /*}}}*/
 
 DwbStatus dwb_change_mode(Mode, ...);
-void dwb_load_uri(GList *gl, Arg *);
+void dwb_load_uri(GList *gl, const char *);
 void dwb_execute_user_script(KeyMap *km, Arg *a);
 
 void dwb_focus_entry(void);
@@ -709,7 +709,7 @@ void dwb_entry_set_text(const char *text);
 void dwb_set_proxy(GList *, WebSettings *);
 
 void dwb_set_single_instance(GList *, WebSettings *);
-void dwb_new_window(Arg *arg);
+void dwb_new_window(const char *uri);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
 void dwb_parse_command_line(const char *);
@@ -727,7 +727,6 @@ CompletionType dwb_eval_completion_type(void);
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
 gboolean dwb_block_ad(GList *gl, const char *);
-gboolean dwb_check_directory(WebKitWebView *, const char *, Arg *, GError **);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);
@@ -740,7 +739,6 @@ DwbStatus dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
 char * dwb_get_stock_item_base64_encoded(const char *);
-void dwb_show_directory(WebKitWebView *, const char *, const Arg *);
 void dwb_remove_bookmark(const char *);
 void dwb_remove_history(const char *);
 void dwb_remove_quickmark(const char *);

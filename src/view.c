@@ -19,6 +19,7 @@
 #include "view.h"
 #include "html.h"
 #include "plugins.h"
+#include "local.h"
 
 static void view_ssl_state(GList *);
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
@@ -103,13 +104,12 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
     char *clipboard = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
     g_strstrip(clipboard);
-    Arg a = { .p = clipboard, .b = true };
     if (e->button == 3) {
-      dwb_load_uri(NULL, &a);
+      dwb_load_uri(NULL, clipboard);
       ret = true;
     }
     else if (e->button == 2) {
-      view_add(&a, dwb.state.background_tabs);
+      view_add(clipboard, dwb.state.background_tabs);
       ret = true;
     }
     FREE(clipboard);
@@ -142,8 +142,7 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
     g_object_get(result, "link-uri", &uri, NULL);
     if (e->button == 2) {
-      Arg a = { .p = uri, .b = true };
-      view_add(&a, dwb.state.background_tabs);
+      view_add(uri, dwb.state.background_tabs);
       return true;
     }
   }
@@ -264,14 +263,13 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     html_load(gl, uri);
     return true;
   }
-  Arg a = { .p = uri, .b = true };
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
     if (dwb.state.nv == OPEN_NEW_VIEW) {
       dwb.state.nv = OPEN_NORMAL;
-      view_add(&a, dwb.state.background_tabs); 
+      view_add(uri, dwb.state.background_tabs); 
     }
     else {
-      dwb_new_window(&a);
+      dwb_new_window(uri);
     }
     dwb.state.nv = OPEN_NORMAL;
     return true;
@@ -280,14 +278,11 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   GError *error = NULL;
 
   if ((reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED || reason == WEBKIT_WEB_NAVIGATION_REASON_BACK_FORWARD || reason == WEBKIT_WEB_NAVIGATION_REASON_RELOAD) 
-      && (dwb_check_directory(web, uri, &a, &error))) {
-    //if (error == NULL) {
-    //  dwb_load_uri(gl, &a);
-    //}
-    //else {
-    //  dwb_set_error_message(gl, error->message);
-    //  g_clear_error(&error);
-    //}
+      && (local_check_directory(web, uri, reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED,  &error))) {
+    if (error != NULL) {
+      dwb_set_error_message(gl, error->message);
+      g_clear_error(&error);
+    }
     webkit_web_policy_decision_ignore(policy);
     return false;
   }
@@ -669,50 +664,11 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
     default : break;
   }
   Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
-  dwb_load_uri(NULL, &a);
+  dwb_load_uri(NULL, GET_TEXT());
   dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
   dwb_change_mode(NORMAL_MODE, true);
   return true;
 
-#if 0
-  if (mode == HINT_MODE) {
-    return false;
-  }
-  else if (mode == FIND_MODE) {
-    dwb_focus_scroll(dwb.state.fview);
-    dwb_search(NULL, NULL);
-    dwb_change_mode(NORMAL_MODE, true);
-  }
-  else if (mode == SEARCH_FIELD_MODE) {
-    dwb_submit_searchengine();
-  }
-  else if (mode == SETTINGS_MODE || mode == KEY_MODE) {
-    char **token = g_strsplit(GET_TEXT(), " ", 2);
-    if  (mode == KEY_MODE) 
-      dwb_set_key(token[0], token[1]);
-    else 
-      dwb_set_setting(token[0], token[1]);
-    g_strfreev(token);
-  }
-  else if (mode == COMMAND_MODE) {
-    dwb_parse_command_line(GET_TEXT());
-  }
-  else if (mode == DOWNLOAD_GET_PATH) {
-    download_start();
-  }
-  else if (mode == SAVE_SESSION) {
-    session_save(GET_TEXT());
-    dwb_end();
-  }
-  else {
-    Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
-    dwb_load_uri(NULL, &a);
-    dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
-    dwb_change_mode(NORMAL_MODE, true);
-  }
-
-  return true;
-#endif
 }/*}}}*/
 /*}}}*/
 
@@ -1116,7 +1072,7 @@ view_ssl_state(GList *gl) {
 
 /* view_add(Arg *arg)               return: View *{{{*/
 GList *  
-view_add(Arg *arg, gboolean background) {
+view_add(const char *uri, gboolean background) {
   GList *ret = NULL;
 
   View *v = view_create_web_view();
@@ -1165,14 +1121,12 @@ view_add(Arg *arg, gboolean background) {
   view_init_settings(ret);
 
   dwb_update_layout(background);
-  if (arg && arg->p) {
-    arg->b = true;
-    dwb_load_uri(ret, arg);
+  if (uri != NULL) {
+    dwb_load_uri(ret, uri);
   }
   else if (strcmp("about:blank", dwb.misc.startpage)) {
     char *page = g_strdup(dwb.misc.startpage);
-    Arg a = { .p = page, .b = true }; 
-    dwb_load_uri(ret, &a);
+    dwb_load_uri(ret, page);
     g_free(page);
   }
   return ret;
