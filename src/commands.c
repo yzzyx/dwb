@@ -689,6 +689,7 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->n;
   completion_complete(COMP_BOOKMARK, 0);
+  dwb_focus_entry();
 
   return STATUS_OK;
 }/*}}}*/
