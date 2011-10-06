@@ -6,20 +6,20 @@
 gboolean
 local_toggle_hidden_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
   dwb.state.hidden_files = webkit_dom_html_input_element_get_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
-  commands_reload(NULL, NULL);
+  local_check_directory(gl, webkit_web_view_get_uri(WEBVIEW(gl)), false, NULL);
   return true;
 }/*}}}*/
 
 /* local_load_directory_cb {{{*/
 void
-local_load_directory_cb(WebKitWebView *wv) {
+local_load_directory_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   if (webkit_web_view_get_load_status(wv) != WEBKIT_LOAD_FINISHED) 
     return;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, "dwb_local_checkbox");
   webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), dwb.state.hidden_files);
-  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(local_toggle_hidden_cb), false, dwb.state.fview);
-  g_signal_handlers_disconnect_by_func(wv, local_load_directory_cb, NULL);
+  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(local_toggle_hidden_cb), false, gl);
+  g_signal_handlers_disconnect_by_func(wv, local_load_directory_cb, gl);
 }/*}}}*/
 
 /* local_show_directory(WebKitWebView *, const char *path, gboolean add_to_history) 
@@ -30,7 +30,7 @@ local_load_directory_cb(WebKitWebView *wv) {
  * gboolean add_to_history
  * {{{*/
 static void 
-local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_history) {
+local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
   /* TODO needs fix: when opening local files close commandline  */
   char *fullpath; 
   const char *filename;
@@ -228,13 +228,14 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
   fullpath = g_strdup_printf("file:///%s", orig_path);
   /* add a history item */
   /* TODO sqlite */
+  WebKitWebView *web = WEBVIEW(gl);
   if (add_to_history) {
     WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
     WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
     webkit_web_back_forward_list_add_item(bf_list, item);
   }
 
-  g_signal_connect(web, "notify::load-status", G_CALLBACK(local_load_directory_cb), NULL);
+  g_signal_connect(web, "notify::load-status", G_CALLBACK(local_load_directory_cb), gl);
   webkit_web_view_load_string(web, page, NULL, NULL, fullpath);
 
   FREE(fullpath);
@@ -249,7 +250,7 @@ local_show_directory(WebKitWebView *web, const char *path, gboolean add_to_histo
 
 /* dwb_check_directory(const char *) {{{*/
 gboolean
-local_check_directory(WebKitWebView *wv, const char *path, gboolean add_to_history, GError **error) {
+local_check_directory(GList *gl, const char *path, gboolean add_to_history, GError **error) {
   char *unescaped = g_uri_unescape_string(path, NULL);
   char *local = unescaped;
   gboolean ret = true;
@@ -265,7 +266,7 @@ local_check_directory(WebKitWebView *wv, const char *path, gboolean add_to_histo
   if (len>1 && local[len-1] == '/')
     local[len-1] = '\0';
 
-  local_show_directory(wv, local, add_to_history);
+  local_show_directory(gl, local, add_to_history);
 out:
   g_free(unescaped);
   return ret;

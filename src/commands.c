@@ -241,10 +241,9 @@ commands_quickmark(KeyMap *km, Arg *arg) {
 /* commands_reload(KeyMap *km, Arg *){{{*/
 DwbStatus
 commands_reload(KeyMap *km, Arg *arg) {
-  WebKitWebView *web = WEBVIEW_FROM_ARG(arg);
-  const char *path = webkit_web_view_get_uri(web);
-  if ( !local_check_directory(web, path, false, NULL) ) {
-    webkit_web_view_reload(web);
+  const char *path = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+  if ( !local_check_directory(dwb.state.fview, path, false, NULL) ) {
+    webkit_web_view_reload(CURRENT_WEBVIEW());
   }
   return STATUS_OK;
 }/*}}}*/

@@ -278,7 +278,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   GError *error = NULL;
 
   if ((reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED || reason == WEBKIT_WEB_NAVIGATION_REASON_BACK_FORWARD || reason == WEBKIT_WEB_NAVIGATION_REASON_RELOAD) 
-      && (local_check_directory(web, uri, reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED,  &error))) {
+      && (local_check_directory(gl, uri, reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED,  &error))) {
     if (error != NULL) {
       dwb_set_error_message(gl, error->message);
       g_clear_error(&error);

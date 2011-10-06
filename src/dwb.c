@@ -1989,7 +1989,8 @@ dwb_load_uri(GList *gl, const char *arg) {
   /* TODO parse scheme */
   if (arg != NULL && strlen(arg) > 0)
     g_strstrip((char*)arg);
-  WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
+  gl = gl == NULL ? dwb.state.fview : gl;
+  WebKitWebView *web = WEBVIEW(gl);
 
   if (!arg || !arg || !strlen(arg)) {
     return;
@@ -2034,7 +2035,7 @@ dwb_load_uri(GList *gl, const char *arg) {
     return;
   }
   /* Check if uri is a directory */
-  if ( (local_check_directory(web, arg, true, NULL)) ) {
+  if ( (local_check_directory(gl, arg, true, NULL)) ) {
     return;
   }
   /* Check if uri is a regular file */

@@ -4,6 +4,6 @@
 #include "dwb.h"
 
 gboolean 
-local_check_directory(WebKitWebView *, const char *, gboolean add_to_history, GError **);
+local_check_directory(GList *, const char *, gboolean add_to_history, GError **);
 
 #endif
