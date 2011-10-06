@@ -1166,7 +1166,7 @@ dwb_follow_selection() {
   {
     if (WEBKIT_DOM_IS_HTML_ANCHOR_ELEMENT(n)) {
       href = webkit_dom_html_anchor_element_get_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(n));
-      webkit_web_view_load_uri(CURRENT_WEBVIEW(), href);
+      dwb_load_uri(dwb.state.fview, href);
     }
   }
 }/*}}}*/
