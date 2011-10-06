@@ -2042,6 +2042,22 @@ dwb_load_uri(GList *gl, const char *arg) {
     webkit_web_view_load_uri(web, arg);
     return;
   }
+  else if ( g_file_test(arg, G_FILE_TEST_IS_REGULAR) ) {
+    GError *error = NULL;
+    if ( !(uri = g_filename_to_uri(arg, NULL, &error)) ) { 
+      if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
+        g_clear_error(&error);
+        char *path = g_get_current_dir();
+        char *tmp = g_build_filename(path, arg, NULL);
+        if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
+          fprintf(stderr, "Cannot open %s: %s", (char*)arg, error->message);
+          g_clear_error(&error);
+        }
+        FREE(tmp);
+        FREE(path);
+      }
+    }
+  }
   else if (g_str_has_prefix(arg, "dwb://")) {
     webkit_web_view_load_uri(web, arg);
     return;
