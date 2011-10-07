@@ -168,14 +168,14 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
     else
       perm[bits++] = st.st_mode & S_IXGRP ? 'x' : '-';
     /*  other */
-    perm[bits++] = st.st_mode & S_IRGRP ? 'r' : '-';
-    perm[bits++] = st.st_mode & S_IWGRP ? 'w' : '-';
+    perm[bits++] = st.st_mode & S_IROTH ? 'r' : '-';
+    perm[bits++] = st.st_mode & S_IWOTH ? 'w' : '-';
     if (st.st_mode & S_ISVTX) {
-      perm[bits++] = st.st_mode & S_IXGRP ? 't' : 'T';
+      perm[bits++] = st.st_mode & S_IXOTH ? 't' : 'T';
       strcpy(class, "dwb_local_sticky");
     }
     else
-      perm[bits++] = st.st_mode & S_IXGRP ? 'x' : '-';
+      perm[bits++] = st.st_mode & S_IXOTH ? 'x' : '-';
     perm[bits] = '\0';
     struct passwd *pwd = getpwuid(st.st_uid);
     char *user = pwd && pwd->pw_name ? pwd->pw_name : "";
