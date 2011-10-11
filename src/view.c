@@ -865,6 +865,12 @@ view_create_web_view() {
         GtkScrolledWindow {\
           -GtkScrolledWindow-scrollbar-spacing : 0;\
         }", -1, NULL);
+  GtkStyleContext *ctx = gtk_widget_get_style_context(v->scroll);
+  gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  ctx = gtk_widget_get_style_context(gtk_scrolled_window_get_vscrollbar(GTK_SCROLLED_WINDOW(v->scroll)));
+  gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  ctx = gtk_widget_get_style_context(gtk_scrolled_window_get_hscrollbar(GTK_SCROLLED_WINDOW(v->scroll)));
+  gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 #else
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
