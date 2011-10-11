@@ -259,6 +259,9 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
+  if (dwb.state.mode == INSERT_MODE) {
+    dwb_change_mode(NORMAL_MODE, true);
+  }
   if (g_str_has_prefix(uri, "dwb://")) {
     html_load(gl, uri);
     return true;
@@ -287,10 +290,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     return false;
   }
   else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
-    if (dwb.state.mode == INSERT_MODE) {
-      dwb_change_mode(NORMAL_MODE, true);
-    }
-    else if (dwb.state.mode == SEARCH_FIELD_MODE) {
+    if (dwb.state.mode == SEARCH_FIELD_MODE) {
       PRINT_DEBUG("searchfields navigation request: %s", uri);
       webkit_web_policy_decision_ignore(policy);
       dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, HINT_SEARCH_SUBMIT) 

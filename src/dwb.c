@@ -795,9 +795,6 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
       dwb_eval_key(e);
       ret = false;
     }
-    else if (e->keyval == GDK_KEY_Return) {
-      dwb_change_mode(NORMAL_MODE, true);
-    }
   }
   else if (mode == QUICK_MARK_SAVE) {
     if (key) {
@@ -1018,8 +1015,9 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
   if (info->id != NULL) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
     e = webkit_dom_document_get_element_by_id(doc, info->id);
-    if (e == NULL) 
+    if (e == NULL && (e = info->element) == NULL ) {
       goto clean;
+    }
   }
   else 
     e = info->element;
@@ -1036,6 +1034,23 @@ clean:
   g_free(info);
 }/*}}}*/
 
+WebKitDOMElement *
+dwb_get_active_input(WebKitDOMDocument *doc) {
+  WebKitDOMElement *ret = NULL;
+  WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
+  char *tagname = webkit_dom_element_get_tag_name(active);
+  if (! g_strcmp0(tagname, "FRAME")) {
+    ret = dwb_get_active_input(webkit_dom_html_frame_element_get_content_document(WEBKIT_DOM_HTML_FRAME_ELEMENT(active)));
+  }
+  else if (! g_strcmp0(tagname, "IFRAME")) {
+    ret = dwb_get_active_input(webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(active)));
+  }
+  else {
+    ret = active;
+  }
+  return ret;
+}
+
 /* dwb_open_in_editor(void) ret: gboolean success {{{*/
 DwbStatus
 dwb_open_in_editor(void) {
@@ -1046,7 +1061,8 @@ dwb_open_in_editor(void) {
   if (editor == NULL) 
     return STATUS_ERROR;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
-  WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
+  WebKitDOMElement *active = dwb_get_active_input(doc);
+  
   if (active == NULL) 
     return STATUS_ERROR;
 
