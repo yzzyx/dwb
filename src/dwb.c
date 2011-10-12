@@ -1034,7 +1034,8 @@ clean:
   g_free(info);
 }/*}}}*/
 
-WebKitDOMElement *
+/* dwb_get_active_input(WebKitDOMDocument )  {{{*/
+static WebKitDOMElement *
 dwb_get_active_input(WebKitDOMDocument *doc) {
   WebKitDOMElement *ret = NULL;
   WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
@@ -1049,7 +1050,7 @@ dwb_get_active_input(WebKitDOMDocument *doc) {
     ret = active;
   }
   return ret;
-}
+}/*}}}*/
 
 /* dwb_open_in_editor(void) ret: gboolean success {{{*/
 DwbStatus

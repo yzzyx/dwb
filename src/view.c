@@ -437,6 +437,7 @@ view_populate_popup_cb(WebKitWebView *web, GtkMenu *menu, GList *gl) {
   for (GList *l = items; l; l=l->next) {
     g_signal_connect(l->data, "activate", G_CALLBACK(view_popup_activate_cb), gl);
   }
+  g_list_free(items);
 }/*}}}*/
 
 /* view_load_status_cb {{{*/
