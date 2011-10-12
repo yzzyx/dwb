@@ -1,7 +1,7 @@
 var dwbWordRegexp = new RegExp("^[\w\u00c0-\u024f]*$");
 String.prototype.isInt = function() { return !isNaN(parseInt(this)); }
 String.prototype.isUpper = function() { return this == this.toUpperCase() && dwbWordRegexp.test(this); }
-String.prototype.isLower = function() { return this == this.toLowerCase();  }
+String.prototype.isLower = function() { return this == this.toLowerCase(); }
 DwbHintObj = (function() {
   _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
   _font = "bold 10px monospace";
@@ -170,6 +170,7 @@ DwbHintObj = (function() {
         this.hint.insertBefore(content, this.textDesc);
     }
     this.matchText = function(input) {
+      console.log(input.isUpper());
       if (input.isUpper()) {
         var inArr = input.split(" ");
         var match = true;
@@ -322,10 +323,13 @@ DwbHintObj = (function() {
           input = input.match(/[^0-9]+/g).join("");
       }
       else if (_style == "letter") {
+        var lowerSeq = _letterSeq.toLowerCase();
+        if (lowerSeq.indexOf(input.charAt(input.length-1)) == -1) 
+          return "_dwb_no_hints_";
         if (input[input.length-1].isLower())
-          input = input.match(new RegExp("[" + _letterSeq.toLowerCase() + "]", "g")).join("");
+          input = input.match(new RegExp("[" + lowerSeq + "]", "g")).join("");
         else 
-          input = input.match(new RegExp("[^" + _letterSeq.toLowerCase() + "]", "g")).join("");
+          input = input.match(new RegExp("[^" + lowerSeq + "]", "g")).join("");
       }
     }
     for (var i=0; i<_activeArr.length; i++) {
