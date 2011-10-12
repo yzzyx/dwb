@@ -1,5 +1,6 @@
 #include "dwb.h"
 #include "util.h"
+#include <fnmatch.h>
 
 #define BUFFER_SIZE 4096
 #define LINE_SIZE 1024
@@ -29,6 +30,7 @@ typedef enum _AdblockAttribute {
   AA_ELEMHIDE           = 1<<12,
   AA_OTHER              = 1<<13,
   AA_THIRDPARTY         = 1<<14,
+  AA_NOT_SUPPORTED      = 1<<17,
   /* inverse */
 } AdblockAttribute;
 
@@ -144,21 +146,57 @@ adblock_resource_request_cb(WebKitWebView         *wv,
   }
   else 
     return;
+  if (message == NULL)
+    return;
   SoupAddress *address = soup_message_get_address(message);
   const char *host = soup_address_get_name(address);
   
   //const char *url = webkit_network(frame);
-  if (! adblock_domain_matches_uri("http://blub.bla/fjkl", host)) 
-    puts("no");
+  //if (! adblock_domain_matches_uri("http://blub.bla/fjkl", host)) 
+  //  puts("no");
 
-  DEBUG_TIMED(50000, adblock_domain_matches("blub.bli.bla", "bli.bla"))
-  DEBUG_TIMED(50000, adblock_domain_matches_uri("http://blub.bla/fjkl", host));
+  //DEBUG_TIMED(50000, adblock_domain_matches("blub.bli.bla", "bli.bla"))
+  //DEBUG_TIMED(50000, adblock_domain_matches_uri("http://blub.bla/fjkl", host));
 
-  SoupURI *uri = soup_message_get_uri(message);
-  SoupURI *first_party = soup_message_get_first_party(message);
+  SoupURI *suri = soup_message_get_uri(message);
+  SoupURI *sfirst_party = soup_message_get_first_party(message);
+  gboolean thirdparty = !soup_uri_host_equal(suri, sfirst_party);
+  printf("%d\n", thirdparty);
+
+  char *uri = soup_uri_to_string(suri, false);
 
   char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, NULL);
   PRINT_DEBUG(content);
+
+  gboolean block = false;
+  AdblockRule *r;
+  for (int i=0; i<_rules->len; i++) {
+    r = g_ptr_array_index(_rules, i);
+    if (r->options & AO_REGEXP) {
+      if (g_regex_match(r->pattern, uri, 0, NULL)) {
+        block = true;
+        break;
+      }
+    }
+    else if (r->options & AO_SEPERATOR) {
+    }
+    else if (r->options & AO_WILDCARD) {
+      if (!fnmatch(r->pattern, uri, 0)) {
+        block = true;
+        break;
+      }
+    }
+    else {
+      if (strstr(uri, r->pattern)) {
+        puts(r->pattern);
+        block = true;
+        break;
+      }
+    }
+  }
+  if (block) {
+    webkit_network_request_set_uri(request, "about:blank");
+  }
   //soup_message_set_uri(message, soup_uri_new("about:blank"));
   //  //char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, &ht);
   //  //printf("request: %s\n", content);
@@ -227,7 +265,6 @@ adblock_rule_parse(char *pattern) {
         o = options_arr[i];
         /*  attributes */
         if (*o == '~') {
-          puts(o);
           inverse = 16;
           o++;
         }
@@ -235,34 +272,52 @@ adblock_rule_parse(char *pattern) {
           attributes |= (AA_SCRIPT << inverse);
         else if (!strcmp(o, "image"))
           attributes |= (AA_IMAGE << inverse);
-        else if (!strcmp(o, "background"))
+        else if (!strcmp(o, "background")) {
           fprintf(stderr, "Not supported: adblock option 'background'\n");
+          goto error_out;
+        }
         else if (!strcmp(o, "stylesheet"))
           attributes |= (AA_STYLESHEET << inverse);
         else if (!strcmp(o, "object"))
           attributes |= (AA_OBJECT << inverse);
-        else if (!strcmp(o, "xbl"))
+        else if (!strcmp(o, "xbl")) {
           fprintf(stderr, "Not supported: adblock option 'xbl'\n");
-        else if (!strcmp(o, "ping"))
+          goto error_out;
+        }
+        else if (!strcmp(o, "ping")) {
           fprintf(stderr, "Not supported: adblock option 'xbl'\n");
-        else if (!strcmp(o, "xmlhttprequest"))
+          goto error_out;
+        }
+        else if (!strcmp(o, "xmlhttprequest")) {
           fprintf(stderr, "Not supported: adblock option 'xmlhttprequest'\n");
-        else if (!strcmp(o, "object-subrequest"))
+          goto error_out;
+        }
+        else if (!strcmp(o, "object-subrequest")) {
           fprintf(stderr, "Not supported: adblock option 'object-subrequest'\n");
-        else if (!strcmp(o, "dtd"))
+          goto error_out;
+        }
+        else if (!strcmp(o, "dtd")) {
           fprintf(stderr, "Not supported: adblock option 'dtd'\n");
+          goto error_out;
+        }
         else if (!strcmp(o, "subdocument"))
           attributes |= (AA_SUBDOCUMENT << inverse);
-        else if (!strcmp(o, "document"))
+        else if (!strcmp(o, "document")) 
           attributes |= (AA_DOCUMENT << inverse);
         else if (!strcmp(o, "elemhide"))
           attributes |= (AA_ELEMHIDE << inverse);
-        else if (!strcmp(o, "other"))
+        else if (!strcmp(o, "other")) {
           fprintf(stderr, "Not supported: adblock option 'other'\n");
-        else if (!strcmp(o, "collapse"))
+          goto error_out;
+        }
+        else if (!strcmp(o, "collapse")) {
           fprintf(stderr, "Not supported: adblock option 'collapse'\n");
-        else if (!strcmp(o, "donottrack"))
+          goto error_out;
+        }
+        else if (!strcmp(o, "donottrack")) {
           fprintf(stderr, "Not supported: adblock option 'donottrack'\n");
+          goto error_out;
+        }
         else if (!strcmp(o, "match-case"))
           option |= AO_MATCH_CASE;
         else if (g_str_has_prefix(o, "domain=")) {
@@ -327,8 +382,6 @@ adblock_rule_parse(char *pattern) {
         }
       }
       //printf("%d: %s%s%s\n", option & (AO_WILDCARD | AO_SEPERATOR), option & AO_WILDCARD ? "wildcard " : "", option & AO_SEPERATOR & AO_SEPERATOR ? "seperator " : "", tmp);
-
-
       rule = g_strdup(tmp);
     }
 
