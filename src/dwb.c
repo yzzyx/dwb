@@ -2584,7 +2584,7 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
   dwb_free_list(dwb.fc.adblock, (void_func)dwb_free);
 
-
+  util_rmdir(dwb.files.cachedir, true);
   if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
     unlink(dwb.files.fifo);
   }
@@ -3054,14 +3054,10 @@ dwb_init_files() {
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(profile_path, 0700);
   }
-  char *cache_dir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
-  if (!g_file_test(cache_dir, G_FILE_TEST_IS_DIR)) {
-    g_mkdir_with_parents(cache_dir, 0700);
+  dwb.files.cachedir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
+  if (!g_file_test(dwb.files.cachedir, G_FILE_TEST_IS_DIR)) {
+    g_mkdir_with_parents(dwb.files.cachedir, 0700);
   }
-  else {
-    util_rmdir(cache_dir, true);
-  }
-  g_free(cache_dir);
   dwb.files.bookmarks     = g_build_filename(profile_path, "bookmarks",     NULL);
   dwb.files.history       = g_build_filename(profile_path, "history",       NULL);
   dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);

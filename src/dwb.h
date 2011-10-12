@@ -621,6 +621,7 @@ struct _Files {
 #endif
   const char *scripts_allow;
   const char *plugins_allow;
+  const char *cachedir;
 };
 // TODO implement plugins blocker, script blocker with File struct
 typedef struct _File {
