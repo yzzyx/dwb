@@ -39,16 +39,15 @@ static gboolean view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame *, WebK
 static gboolean view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
 static gboolean view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
 static void view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
-/* static void view_window_object_cleared_cb(WebKitWebView *, WebKitWebFrame *, JSGlobalContextRef *, JSObjectRef *, GList *); */
 static gboolean view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
 static gboolean view_value_changed_cb(GtkAdjustment *, GList *);
 static void view_title_cb(WebKitWebView *, GParamSpec *, GList *);
 static void view_uri_cb(WebKitWebView *, GParamSpec *, GList *);
 static void view_load_status_cb(WebKitWebView *, GParamSpec *, GList *);
 static gboolean view_entry_keyrelease_cb(GtkWidget *, GdkEventKey *);
-static gboolean view_entry_keypress_cb(GtkWidget *, GdkEventKey *);
-static gboolean view_entry_activate_cb(GtkEntry *, GList *);
+static gboolean view_entry_keypress_cb(GtkWidget *, GdkEventKey *, GList *);
 static gboolean view_tab_button_press_cb(GtkWidget *, GdkEventButton *, GList *);
+static gboolean view_entry_activate(GList *gl, GdkEventKey *e);
 
 /* WEB_VIEW_CALL_BACKS {{{*/
 
@@ -582,13 +581,13 @@ view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) {
 
 /* dwb_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {{{*/
 static gboolean 
-view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
+view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e, GList *gl) {
   Mode mode = dwb.state.mode;
   gboolean ret = false;
   gboolean complete = (mode == DOWNLOAD_GET_PATH || (mode & COMPLETE_PATH));
   /*  Handled by activate-callback */
   if (e->keyval == GDK_KEY_Return)
-    return false;
+    return view_entry_activate(gl, e);
   if (mode & COMPLETE_BUFFER) {
     completion_buffer_key_press(e);
     return true;
@@ -635,10 +634,10 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e) {
 
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
 static gboolean 
-view_entry_activate_cb(GtkEntry* entry, GList *gl) {
+view_entry_activate(GList *gl, GdkEventKey *e) {
   char **token = NULL;
   switch (CLEAN_MODE(dwb.state.mode))  {
-    case HINT_MODE:           return false;
+    case HINT_MODE:           dwb_update_hints(e); return false;
     case FIND_MODE:           dwb_focus_scroll(dwb.state.fview);
                               dwb_search(NULL, NULL);
                               dwb_change_mode(NORMAL_MODE, true);
@@ -666,13 +665,11 @@ view_entry_activate_cb(GtkEntry* entry, GList *gl) {
                               break;
     default : break;
   }
-  Arg a = { .n = 0, .p = (char*)GET_TEXT(), .b = true };
   dwb_load_uri(NULL, GET_TEXT());
-  dwb_prepend_navigation_with_argument(&dwb.fc.commands, a.p, NULL);
+  dwb_prepend_navigation_with_argument(&dwb.fc.commands, GET_TEXT(), NULL);
   dwb_change_mode(NORMAL_MODE, true);
   return true;
-
-}/*}}}*/
+}
 /*}}}*/
 
 /* view_tab_button_press_cb(GtkWidget, GdkEventButton* , GList * ){{{*/
@@ -779,9 +776,9 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(view_value_changed_cb), gl);
   v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);
 
-  v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(view_entry_keypress_cb), NULL);
-  v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(view_entry_keyrelease_cb), NULL);
-  v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl);
+  v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(view_entry_keypress_cb), gl);
+  v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(view_entry_keyrelease_cb), gl);
+  //v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl);
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);
 
