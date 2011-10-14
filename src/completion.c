@@ -258,7 +258,7 @@ completion_get_key_completion(gboolean entry) {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
-    if (!entry && (m->map->entry || !(m->map->prop & FM_COMMANDLINE))) {
+    if (!entry && (m->map->entry || !(m->map->prop & CP_COMMANDLINE))) {
       continue;
     }
     Navigation n = m->map->n;
@@ -278,7 +278,7 @@ completion_get_key_completion(gboolean entry) {
 /* completion_path {{{*/
 static void 
 completion_path(void) {
-  dwb.state.mode |= COMPLETE_PATH;
+  dwb.state.mode = COMPLETE_PATH;
   completion_complete_path(false);
 }/*}}}*/
 

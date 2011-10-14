@@ -137,21 +137,35 @@ download_set_mimetype(const char *command) {
   }
 }/*}}}*/
 
+static void 
+download_do_spawn(const char *command, const char *path) {
+  GError *error = NULL;
+  char *argv[64];
+
+  if (g_str_has_prefix(path, "file://")) 
+    path += 7;
+
+  char **argcom = g_strsplit(command, " ", -1);
+
+  int argc=0;
+  for (; argc<g_strv_length(argcom) && argc<62; argc++) {
+    argv[argc] = argcom[argc];
+  }
+  argv[argc++] = (char *)path;
+  argv[argc++] = NULL;
+
+  if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error) ) {
+    fprintf(stderr, "Couldn't open %s with %s : %s\n", path, command, error->message);
+    g_clear_error(&error);
+  }
+  download_set_mimetype(command);
+  g_strfreev(argcom);
+}
 /* download_spawn(DwbDownload *) {{{*/
 static void 
 download_spawn(DwbDownload *dl) {
-  GError *error = NULL;
   const char *filename = webkit_download_get_destination_uri(dl->download);
-  char *command = g_strconcat(dl->path, " ", filename + 7, NULL);
-
-  char **argv = g_strsplit(command, " ", -1);
-  if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error) ) {
-    fprintf(stderr, "Couldn't open %s with %s : %s\n", filename + 7, dl->path, error->message);
-    g_clear_error(&error);
-  }
-  download_set_mimetype(dl->path);
-  FREE(command);
-  g_strfreev(argv);
+  download_do_spawn(dl->path, filename);
 }/*}}}*/
 
 /* download_status_cb(WebKitDownload *) {{{*/
@@ -236,27 +250,22 @@ download_start() {
   char *command = NULL;
   gboolean external = GET_BOOL("download-use-external-program");
   
-  if (g_str_has_prefix(uri, "file://") && g_file_test(uri + 7, G_FILE_TEST_EXISTS)) {
-    GError *error = NULL;
-    char *command = g_strconcat(path, " ", uri + 7, NULL);
-    char **argv = g_strsplit(command, " ", -1);
-    if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error) ) {
-      fprintf(stderr, "Couldn't open %s with %s : %s\n", uri + 7, path, error->message);
-      g_clear_error(&error);
-    }
-    download_set_mimetype(path);
-    g_strfreev(argv);
-    g_free(command);
-
-    return;
-  }
-
   if (!filename || !strlen(filename)) {
     filename = "dwb_download";
   }
 
   if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
-    fullpath = g_build_filename("file:///tmp", filename, NULL);
+    char *cache_name = g_build_filename(dwb.files.cachedir, filename, NULL);
+#if 0
+    if (g_file_test(cache_name, G_FILE_TEST_EXISTS)) {
+      download_do_spawn(path, cache_name);
+      dwb_change_mode(NORMAL_MODE, true);
+      g_free(cache_name);
+      return;
+    }
+#endif
+    fullpath = g_strconcat("file://", cache_name, NULL);
+    g_free(cache_name);
   }
   else {
     if (!path || !strlen(path)) {

@@ -1,0 +1,118 @@
+<html>
+<head>
+  <title>%s</title>
+  <link rel='icon' type='image/x-icon' href="%s" >
+  <style type="text/css">
+    body {
+      background : #ddd;
+      font: normal 12px helvetica;
+    }
+    #dwb_local_main_container {
+      top: 50px;
+      bottom: 50px;
+      margin-top: 30px;
+      background: #fff;
+      margin-left: auto;
+      margin-right: auto;
+      min-width: 600px;
+      max-width : 850px;
+      border: 1px solid #999;
+      -webkit-border-radius: 10px;
+      padding: 30px;
+    }
+    #dwb_local_headline {
+      width: 100%;
+      border-bottom: 1px solid #ddd;
+    }
+    #dwb_local_indexof {
+      font: bold 20px helvetica;
+      display: inline;
+    }
+    #dwb_local_checkbox_container {
+      position: relative;
+      float: right;
+    }
+    #dwb_local_filetable {
+      position: relative;
+      width; 94%;
+      margin: 3%;
+      font: 400 11px monospace;
+    }
+    #dwb_local_table_header {
+      font: bold 12px helvetica;
+      text-align: left;
+      width: 100%;
+    }
+    .dwb_local_regular a {
+      color : #000;
+    }
+    .dwb_local_fifo a {
+      color : #8b008b;
+    }
+    .dwb_local_blockdevice a {
+      color : #cd2626;
+    }
+    .dwb_local_character_device a {
+      color : #555;
+    }
+    .dwb_local_executable a {
+      color : #228b22;
+    }
+    .dwb_local_link a {
+      color : #cd3839;
+    }
+    .dwb_local_setuid a {
+      background-color : #f00;
+      color : #fff;
+    }
+    .dwb_local_sticky a {
+      background-color : #228b22;
+      color : #fff;
+    }
+    .dwb_local_table_row {
+      display : table-row;
+    }
+    .dwb_local_table_row > div {
+      display : table-cell;
+      padding-right: 15px;
+    }
+    #dwb_local_header_last_mod {
+      white-space: pre-wrap;
+      min-width: 120px;
+    }
+    a {
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="dwb_local_main_container">
+    <div id="dwb_local_headline">
+      <div id="dwb_local_indexof">
+        Index of %s
+      </div>
+      <div id="dwb_local_checkbox_container">
+        <input id="dwb_local_checkbox" type="checkbox">
+        Show hidden files
+        </input>
+      </div>
+    </div>
+    <div id="dwb_local_filetable" width="100%">
+      <div class="dwb_local_table_row" id="dwb_local_table_header">
+        <div class="dwb_local_header_permission">Permission </div>
+        <div class="dwb_local_header_link">Link</div>
+        <div class="dwb_local_header_user">User</div>
+        <div class="dwb_local_header_group">Group</div>
+        <div class="dwb_local_header_size">Size</div>
+        <div class="dwb_local_header_date">Date</div>
+        <div class="dwb_local_header_time">Time</div>
+        <div class="dwb_local_header_name">Name</div>
+      </div>
+      %s
+    </div>
+  </div>
+</body>
+</html>

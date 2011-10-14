@@ -24,9 +24,8 @@ char *
 util_get_temp_filename(const char *prefix) {
   struct timeval t;
   gettimeofday(&t, NULL);
-  const char *path = g_get_user_cache_dir();
   char *filename = g_strdup_printf("%s%lu", prefix, t.tv_usec + t.tv_sec*1000000);
-  char *cache_path = g_build_filename(path, dwb.misc.name, filename, NULL);
+  char *cache_path = g_build_filename(dwb.files.cachedir, filename, NULL);
   g_free(filename);
 
   return cache_path;

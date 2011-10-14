@@ -30,6 +30,8 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <libsoup/soup.h>
+#include <pwd.h>
+#include <grp.h>
 #include <locale.h>
 #include <stdarg.h>
 #include <dirent.h>
@@ -149,6 +151,11 @@
 #else 
 #define PRINT_DEBUG(message, ...) 
 #endif
+#define BPKB 1024
+#define BPMB 1048576
+#define BPGB 1073741824
+
+
 
 /*}}}*/
 
@@ -318,7 +325,6 @@ enum Signal {
   SIG_VALUE_CHANGED,
   SIG_ENTRY_KEY_PRESS,
   SIG_ENTRY_KEY_RELEASE,
-  SIG_ENTRY_ACTIVATE,
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
 
@@ -353,6 +359,12 @@ typedef enum {
   SSL_UNTRUSTED,
 } SslState;
 
+typedef enum {
+  CP_COMMANDLINE   = 1<<0,
+  CP_DONT_SAVE     = 1<<1,
+  CP_HAS_MODE      = 1<<2,
+} CommandProperty;
+
 /*}}}*/
 
 
@@ -379,8 +391,7 @@ struct _KeyValue {
   Key key;
 };
 
-#define FM_COMMANDLINE    1<<0
-#define FM_DONT_SAVE      1<<1
+
 struct _FunctionMap {
   Navigation n;
   int prop; 
@@ -603,11 +614,14 @@ struct _Files {
   const char *unifile;
   const char *userscripts;
   const char *adblock;
+#if 0
   const char *dir_icon;
   const char *file_icon;
   const char *exec_icon;
+#endif
   const char *scripts_allow;
   const char *plugins_allow;
+  const char *cachedir;
 };
 // TODO implement plugins blocker, script blocker with File struct
 typedef struct _File {
@@ -653,7 +667,7 @@ Dwb dwb;
 /*}}}*/
 
 DwbStatus dwb_change_mode(Mode, ...);
-void dwb_load_uri(GList *gl, Arg *);
+void dwb_load_uri(GList *gl, const char *);
 void dwb_execute_user_script(KeyMap *km, Arg *a);
 
 void dwb_focus_entry(void);
@@ -695,7 +709,7 @@ void dwb_entry_set_text(const char *text);
 void dwb_set_proxy(GList *, WebSettings *);
 
 void dwb_set_single_instance(GList *, WebSettings *);
-void dwb_new_window(Arg *arg);
+void dwb_new_window(const char *uri);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
 void dwb_parse_command_line(const char *);
@@ -713,7 +727,6 @@ CompletionType dwb_eval_completion_type(void);
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
 gboolean dwb_block_ad(GList *gl, const char *);
-const char * dwb_check_directory(const char *, GError **);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);
@@ -726,7 +739,6 @@ DwbStatus dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
 char * dwb_get_stock_item_base64_encoded(const char *);
-void dwb_show_directory(WebKitWebView *, const char *, const Arg *);
 void dwb_remove_bookmark(const char *);
 void dwb_remove_history(const char *);
 void dwb_remove_quickmark(const char *);

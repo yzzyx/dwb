@@ -28,6 +28,7 @@
 #include "icon.xpm"
 #include "html.h"
 #include "plugins.h"
+#include "local.h"
 
 
 /* DECLARATIONS {{{*/
@@ -49,7 +50,6 @@ static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_follow_selection(void);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
-
 
 static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 
@@ -74,7 +74,6 @@ static void dwb_init_settings(void);
 static void dwb_init_style(void);
 static void dwb_init_gui(void);
 static void dwb_init_vars(void);
-static void dwb_init_icons(void);
 
 static Navigation * dwb_get_search_completion(const char *text);
 
@@ -98,13 +97,13 @@ typedef struct _EditorInfo {
 static FunctionMap FMAP [] = {
   { { "add_view",              "Add a new view",                    }, 1, 
     (Func)commands_add_view,            NULL,                              ALWAYS_SM,     { .p = NULL }, },
-  { { "allow_cookie",          "Cookie allowed",                    }, 0, 
+  { { "allow_cookie",          "Cookie allowed",                    }, 1, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, 
     (Func)commands_bookmark,            NO_URL,                            POST_SM, },
-  { { "bookmarks",             "Bookmarks",                         }, 0, 
-    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
-  { { "bookmarks_nv",          "Bookmarks new view",                }, 0, 
+  { { "bookmarks",             "Bookmarks",                         }, 0,
+    (Func)commands_bookmarks,           "No Bookmarks",                    POST_SM,     { .n = OPEN_NORMAL }, }, 
+  { { "bookmarks_nv",          "Bookmarks new view",                }, 0,
     (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
   { { "bookmarks_nw",          "Bookmarks new window",              }, 0, 
     (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
@@ -116,29 +115,29 @@ static FunctionMap FMAP [] = {
     (Func)commands_command_mode,            NULL,                              POST_SM, },
   { { "decrease_master",       "Decrease master area",              }, 1, 
     (Func)commands_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
-  { { "download_hint",         "Download via hints",                }, 0, 
+  { { "download_hint",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
-  { { "find_backward",         "Find backward ",                    }, 0, 
+  { { "find_backward",         "Find backward ",                    }, CP_COMMANDLINE|CP_HAS_MODE, 
     (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = false }, },
-  { { "find_forward",          "Find forward ",                     }, 0, 
+  { { "find_forward",          "Find forward ",                     }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = true }, },
-  { { "find_next",             "Find next",                         }, 0, 
+  { { "find_next",             "Find next",                         }, 1, 
     (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = true }, },
-  { { "find_previous",         "Find previous",                     }, 0, 
+  { { "find_previous",         "Find previous",                     }, 1, 
     (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = false }, },
   { { "focus_input",           "Focus input",                       }, 1, 
     (Func)commands_focus_input,        "No input found in current context",      ALWAYS_SM, },
-  { { "focus_next",            "Focus next view",                   }, 0, 
+  { { "focus_next",            "Focus next view",                   }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_focus,              "No other view",                   ALWAYS_SM,  { .n = 1 } },
-  { { "focus_prev",            "Focus previous view",               }, 0, 
+  { { "focus_prev",            "Focus previous view",               }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_focus,              "No other view",                   ALWAYS_SM,  { .n = -1 } },
   { { "focus_nth_view",        "Focus nth view",                    }, 0, 
     (Func)commands_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 } },
-  { { "hint_mode",             "Follow hints",                      }, 0, 
+  { { "hint_mode",             "Follow hints",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL }, },
-  { { "hint_mode_nv",          "Follow hints (new view)",           }, 0, 
+  { { "hint_mode_nv",          "Follow hints (new view)",           }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW }, },
-  { { "hint_mode_nw",          "Follow hints (new window)",         }, 0, 
+  { { "hint_mode_nw",          "Follow hints (new window)",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW }, },
   { { "history_back",          "Go Back",                           }, 1, 
     (Func)commands_history_back,        "Beginning of History",            ALWAYS_SM, },
@@ -146,7 +145,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_history_forward,     "End of History",                  ALWAYS_SM, },
   { { "increase_master",       "Increase master area",              }, 1, 
     (Func)commands_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
-  { { "insert_mode",           "Insert Mode",                       }, 0, 
+  { { "insert_mode",           "Insert Mode",                       }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_insert_mode,             NULL,                              POST_SM, },
   { { "load_html",             "Load html",                         }, 1, 
     (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL } },
@@ -154,21 +153,21 @@ static FunctionMap FMAP [] = {
     (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL } },
   { { "open",                  "open",                              }, 1, 
     (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL } },
-  { { "Open",                  "open",                              }, 0, 
+  { { "Open",                  "open",                              }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL | SET_URL, .p = NULL } },
   { { "open_nv",               "tabopen",                          }, 1, 
     (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL } },
-  { { "Open_nv",               "tabopen",                          }, 0, 
+  { { "Open_nv",               "tabopen",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL } },
   { { "open_nw",               "winopen",                           }, 1, 
     (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL } },
-  { { "Open_nw",               "winopen",                           }, 0, 
+  { { "Open_nw",               "winopen",                           }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL } },
-  { { "open_quickmark",        "Open quickmark",                         }, 0, 
+  { { "open_quickmark",        "Open quickmark",                         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, },
-  { { "open_quickmark_nv",     "Open quickmark in a new tab",                }, 0, 
+  { { "open_quickmark_nv",     "Open quickmark in a new tab",                }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, },
-  { { "open_quickmark_nw",     "Open quickmark in a new window",              }, 0, 
+  { { "open_quickmark_nw",     "Open quickmark in a new window",              }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, },
   { { "open_start_page",       "Open startpage",                    }, 1, 
     (Func)commands_open_startpage,      "No startpage set",                ALWAYS_SM, },
@@ -184,35 +183,35 @@ static FunctionMap FMAP [] = {
     (Func)commands_stop_loading,       NULL,                              ALWAYS_SM, },
   { { "remove_view",           "Close view",                        }, 1, 
     (Func)commands_remove_view,         NULL,                              ALWAYS_SM, },
-  { { "save_quickmark",        "Save a quickmark for this page",    }, 0, 
+  { { "save_quickmark",        "Save a quickmark for this page",    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
-  { { "save_search_field",     "Add a new searchengine",            }, 0, 
+  { { "save_search_field",     "Add a new searchengine",            }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_add_search_field,    "No input in current context",     POST_SM, },
   { { "scroll_percent",        "Scroll to percentage",              }, 1, 
     (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_PERCENT }, },
   { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, 
     (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_BOTTOM }, },
-  { { "scroll_down",           "Scroll down",                       }, 0, 
+  { { "scroll_down",           "Scroll down",                       }, 1, 
     (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_DOWN, }, },
-  { { "scroll_left",           "Scroll left",                       }, 0, 
+  { { "scroll_left",           "Scroll left",                       }, 1, 
     (Func)commands_scroll,              "Left side of the page",           ALWAYS_SM,    { .n = SCROLL_LEFT }, },
-  { { "scroll_halfpage_down",  "Scroll one-half page down",         }, 0, 
+  { { "scroll_halfpage_down",  "Scroll one-half page down",         }, 1, 
     (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_DOWN, }, },
-  { { "scroll_halfpage_up",    "Scroll one-half page up",           }, 0, 
+  { { "scroll_halfpage_up",    "Scroll one-half page up",           }, 1, 
     (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_UP, }, },
-  { { "scroll_page_down",      "Scroll one page down",              }, 0, 
+  { { "scroll_page_down",      "Scroll one page down",              }, 1, 
     (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_PAGE_DOWN, }, },
-  { { "scroll_page_up",        "Scroll one page up",                }, 0, 
+  { { "scroll_page_up",        "Scroll one page up",                }, 1, 
     (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_PAGE_UP, }, },
-  { { "scroll_right",          "Scroll left",                       }, 0, 
+  { { "scroll_right",          "Scroll left",                       }, 1, 
     (Func)commands_scroll,              "Right side of the page",          ALWAYS_SM,    { .n = SCROLL_RIGHT }, },
   { { "scroll_top",            "Scroll to the top of the page",     }, 1, 
     (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, },
-  { { "scroll_up",             "Scroll up",                         }, 0, 
+  { { "scroll_up",             "Scroll up",                         }, 1, 
     (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, },
   { { "set_setting",    "Set setting",               }, 0, 
     (Func)commands_set_setting,         NULL,                              NEVER_SM,    },
-  { { "set_key",               "Set keybinding",                    }, 0, 
+  { { "set_key",               "Set keybinding",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_set_key,             NULL,                              NEVER_SM,    { 0 } },
   { { "show_keys",             "Key configuration",                 }, 1, 
     (Func)commands_show_keys,           NULL,                              ALWAYS_SM, },
@@ -250,7 +249,7 @@ static FunctionMap FMAP [] = {
 
   { { "save_session",          "Save current session", },              1, 
     (Func)commands_save_session,        NULL,                              ALWAYS_SM,  { .n = NORMAL_MODE } },
-  { { "save_named_session",    "Save current session with name", },    0, 
+  { { "save_named_session",    "Save current session with name", },    CP_COMMANDLINE|CP_HAS_MODE, 
     (Func)commands_save_session,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
   { { "save",                  "Save all configuration files", },      1, 
     (Func)commands_save_files,        NULL,                              POST_SM,  { .n = SAVE_SESSION } },
@@ -292,8 +291,8 @@ static FunctionMap FMAP [] = {
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, true, }, 
   { { "complete_current_history",          "Complete history of current tab", },        0, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_CUR_HISTORY }, true, }, 
-  { { "buffers",                          "Buffer", },        0, 
-    (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     { .n = COMP_BUFFER }, }, 
+  { { "buffers",                          "Buffer", },        CP_COMMANDLINE | CP_HAS_MODE,
+    (Func)commands_complete_type,            "Only one buffer",     POST_SM,     { .n = COMP_BUFFER }, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, 
     (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },
@@ -1016,8 +1015,9 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
   if (info->id != NULL) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
     e = webkit_dom_document_get_element_by_id(doc, info->id);
-    if (e == NULL) 
+    if (e == NULL && (e = info->element) == NULL ) {
       goto clean;
+    }
   }
   else 
     e = info->element;
@@ -1034,6 +1034,24 @@ clean:
   g_free(info);
 }/*}}}*/
 
+/* dwb_get_active_input(WebKitDOMDocument )  {{{*/
+static WebKitDOMElement *
+dwb_get_active_input(WebKitDOMDocument *doc) {
+  WebKitDOMElement *ret = NULL;
+  WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
+  char *tagname = webkit_dom_element_get_tag_name(active);
+  if (! g_strcmp0(tagname, "FRAME")) {
+    ret = dwb_get_active_input(webkit_dom_html_frame_element_get_content_document(WEBKIT_DOM_HTML_FRAME_ELEMENT(active)));
+  }
+  else if (! g_strcmp0(tagname, "IFRAME")) {
+    ret = dwb_get_active_input(webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(active)));
+  }
+  else {
+    ret = active;
+  }
+  return ret;
+}/*}}}*/
+
 /* dwb_open_in_editor(void) ret: gboolean success {{{*/
 DwbStatus
 dwb_open_in_editor(void) {
@@ -1044,7 +1062,8 @@ dwb_open_in_editor(void) {
   if (editor == NULL) 
     return STATUS_ERROR;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
-  WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
+  WebKitDOMElement *active = dwb_get_active_input(doc);
+  
   if (active == NULL) 
     return STATUS_ERROR;
 
@@ -1129,11 +1148,6 @@ dwb_remove_quickmark(const char *line) {
     util_file_remove_line(dwb.files.quickmarks, line);
     dwb.fc.quickmarks = g_list_delete_link(dwb.fc.quickmarks, item);
   }
-#if 0
-  char *line = g_strdup_printf("%s %s %s\n", q->key, q->nav->first, q->nav->second);
-
-  g_free(line);
-#endif
 }/*}}}*/
 
 /* dwb_sync_history {{{*/
@@ -1169,7 +1183,7 @@ dwb_follow_selection() {
   {
     if (WEBKIT_DOM_IS_HTML_ANCHOR_ELEMENT(n)) {
       href = webkit_dom_html_anchor_element_get_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(n));
-      webkit_web_view_load_uri(CURRENT_WEBVIEW(), href);
+      dwb_load_uri(dwb.state.fview, href);
     }
   }
 }/*}}}*/
@@ -1182,8 +1196,7 @@ dwb_open_startpage(GList *gl) {
   if (gl == NULL) 
     gl = dwb.state.fview;
 
-  Arg a = { .p = dwb.misc.startpage, .b = true };
-  dwb_load_uri(gl, &a);
+  dwb_load_uri(gl, dwb.misc.startpage);
   return STATUS_OK;
 }/*}}}*/
 
@@ -1355,15 +1368,7 @@ dwb_history_back() {
 
   int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
-  char *uri = (char *)webkit_web_history_item_get_uri(item);
-  if (g_str_has_prefix(uri, "file://")) {
-    Arg a = { .p = uri, .b = false };
-    webkit_web_back_forward_list_go_to_item(bf_list, item);
-    dwb_load_uri(NULL, &a);
-  }
-  else {
-    webkit_web_view_go_to_back_forward_item(w, item);
-  }
+  webkit_web_view_go_to_back_forward_item(w, item);
   return STATUS_OK;
 }/*}}}*/
 
@@ -1382,15 +1387,7 @@ dwb_history_forward() {
 
   int n = MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
-  char *uri = (char *)webkit_web_history_item_get_uri(item);
-  if (g_str_has_prefix(uri, "file://")) {
-    Arg a = { .p = uri, .b = false };
-    webkit_web_back_forward_list_go_to_item(bf_list, item);
-    dwb_load_uri(NULL, &a);
-  }
-  else {
-    webkit_web_view_go_to_back_forward_item(w, item);
-  }
+  webkit_web_view_go_to_back_forward_item(w, item);
   return STATUS_OK;
 }/*}}}*/
 
@@ -1917,8 +1914,7 @@ dwb_open_quickmark(const char *key) {
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
-      Arg a = { .p = q->nav->first, .b = true };
-      dwb_load_uri(NULL, &a);
+      dwb_load_uri(NULL, q->nav->first);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
       dwb_change_mode(NORMAL_MODE, false);
       return;
@@ -1989,112 +1985,31 @@ dwb_focus(GList *gl) {
   dwb_update_status(gl);
 }/*}}}*/
 
-/* dwb_new_window(Arg *arg) {{{*/
+/* dwb_new_window(const char *arg) {{{*/
 void 
-dwb_new_window(Arg *arg) {
+dwb_new_window(const char  *uri) {
   char *argv[6];
 
   argv[0] = (char *)dwb.misc.prog_path;
   argv[1] = "-p"; 
   argv[2] = (char *)dwb.misc.profile;
   argv[3] = "-n";
-  argv[4] = arg->p;
+  argv[4] = (char *)uri;
   argv[5] = NULL;
   g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
 }/*}}}*/
 
-/* dwb_check_directory(const char *) {{{*/
-const char *
-dwb_check_directory(const char *path, GError **error) {
-  if (g_str_has_prefix(path, "file://")) 
-    path += *(path + 8) == '/' ? 8 : 7;
-  if (!g_file_test(path, G_FILE_TEST_IS_DIR))
-    return NULL;
-  if (access(path, R_OK)) 
-    g_set_error(error, 0, 1, "Cannot access %s", path);
-
-  return path;
-}/*}}}*/
-
-/* dwb_show_directory(WebKitWebView *, const char *path, Arg *arg) 
- * 
- * Param: 
- * WebKitWebView: 
- * path: 
- * Arg arg:  .p = fullpath
- * {{{*/
-void 
-dwb_show_directory(WebKitWebView *web, const char *path, const Arg *arg) {
-  char dest[STRING_LENGTH], *fullpath; 
-  const char *filename;
-  char *escaped;
-  GSList *content = NULL;
-  GString *buffer = g_string_new(NULL);
-  GDir *dir = NULL;
-  GError *error = NULL;
-  strncpy(dest, path, STRING_LENGTH-1);
-
-  if (! (dir = g_dir_open(path, 0, &error))) {
-    fprintf(stderr, "dwb error: %s\n", error->message);
-    g_clear_error(&error);
-    return;
-  }
-
-  while ( (filename = g_dir_read_name(dir)) ) {
-    fullpath = g_build_filename(path, filename, NULL);
-    content = g_slist_prepend(content, fullpath);
-  }
-  content = g_slist_sort(content, (GCompareFunc)util_compare_path);
-  g_dir_close(dir);
-
-  if (strcmp(path, "/")) 
-    g_string_append_printf(buffer, "<h3>%s</h3><img src=%s/><a href=%s>..</a></br>", path, dwb.files.dir_icon, dirname(dest));
-  for (GSList *l = content; l; l=l->next) {
-    fullpath = l->data;
-    filename = g_strrstr(fullpath, "/") + 1;
-    if (!dwb.state.hidden_files && filename[0] == '.' && filename[1] != '.')
-      continue;
-    if (g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
-      escaped = g_uri_escape_string(fullpath, "/", true);
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.dir_icon, escaped, filename);
-      g_free(escaped);
-    }
-    else if (g_file_test(fullpath, G_FILE_TEST_IS_EXECUTABLE)) {
-      escaped = g_uri_escape_string(fullpath, "/", true);
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.exec_icon, escaped, filename);
-      g_free(escaped);
-    }
-    else {
-      escaped = g_uri_escape_string(fullpath, "/", true);
-      g_string_append_printf(buffer, "<img src=%s/><a href=%s>%s</a></br>", dwb.files.file_icon, escaped, filename);
-      g_free(escaped);
-    }
-    FREE(l->data);
-  }
-  g_slist_free(content);
-  fullpath = g_str_has_prefix(arg->p, "file://") ? g_strdup(arg->p) : g_strdup_printf("file:///%s", path);
-  /* add a history item */
-  /* TODO sqlite */
-  if (arg->b) {
-    WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
-    WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
-    webkit_web_back_forward_list_add_item(bf_list, item);
-  }
-  webkit_web_view_load_string(web, buffer->str, NULL, NULL, fullpath);
-  g_string_free(buffer, true);
-  FREE(fullpath);
-}/*}}}*/
 
 /* dwb_load_uri(const char *uri) {{{*/
 void 
-dwb_load_uri(GList *gl, Arg *arg) {
+dwb_load_uri(GList *gl, const char *arg) {
   /* TODO parse scheme */
-  const char *path;
-  if (arg->p != NULL && strlen(arg->p) > 0)
-    g_strstrip(arg->p);
-  WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
+  if (arg != NULL && strlen(arg) > 0)
+    g_strstrip((char*)arg);
+  gl = gl == NULL ? dwb.state.fview : gl;
+  WebKitWebView *web = WEBVIEW(gl);
 
-  if (!arg || !arg->p || !strlen(arg->p)) {
+  if (!arg || !arg || !strlen(arg)) {
     return;
   }
 
@@ -2111,53 +2026,49 @@ dwb_load_uri(GList *gl, Arg *arg) {
     return;
   }
   /*  get resolved uri */
-  char *tmp, *uri = NULL; 
-  GError *error = NULL;
+  char *uri = NULL; 
 
   /* free cookie of last visited website */
   if (dwb.state.last_cookies) {
     soup_cookies_free(dwb.state.last_cookies); 
     dwb.state.last_cookies = NULL;
   }
-
-  g_strstrip(arg->p);
-
   /* Check if uri is a html-string */
   if (dwb.state.type == HTML_STRING) {
-    webkit_web_view_load_string(web, arg->p, "text/html", NULL, NULL);
+    webkit_web_view_load_string(web, arg, "text/html", NULL, NULL);
     dwb.state.type = 0;
     return;
   }
   /* Check if uri is a userscript */
-  if ( (uri = dwb_test_userscript(arg->p)) ) {
+  if ( (uri = dwb_test_userscript(arg)) ) {
     Arg a = { .arg = uri };
     dwb_execute_user_script(NULL, &a);
     g_free(uri);
     return;
   }
   /* Check if uri is a javascript snippet */
-  if (g_str_has_prefix(arg->p, "javascript:")) {
-    dwb_execute_script(webkit_web_view_get_main_frame(web), arg->p, false);
+  if (g_str_has_prefix(arg, "javascript:")) {
+    dwb_execute_script(webkit_web_view_get_main_frame(web), arg, false);
     return;
   }
   /* Check if uri is a directory */
-  if ( (path = dwb_check_directory(arg->p, NULL)) ) {
-    dwb_show_directory(web, path, arg);
+  if ( (local_check_directory(gl, arg, true, NULL)) ) {
     return;
   }
   /* Check if uri is a regular file */
-  if (g_str_has_prefix(arg->p, "file://") || !strcmp(arg->p, "about:blank")) {
-    webkit_web_view_load_uri(web, arg->p);
+  if (g_str_has_prefix(arg, "file://") || !strcmp(arg, "about:blank")) {
+    webkit_web_view_load_uri(web, arg);
     return;
   }
-  else if ( g_file_test(arg->p, G_FILE_TEST_IS_REGULAR) ) {
-    if ( !(uri = g_filename_to_uri(arg->p, NULL, &error)) ) { 
+  else if ( g_file_test(arg, G_FILE_TEST_IS_REGULAR) ) {
+    GError *error = NULL;
+    if ( !(uri = g_filename_to_uri(arg, NULL, &error)) ) { 
       if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
         g_clear_error(&error);
         char *path = g_get_current_dir();
-        tmp = g_build_filename(path, arg->p, NULL);
+        char *tmp = g_build_filename(path, arg, NULL);
         if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
-          fprintf(stderr, "Cannot open %s: %s", (char*)arg->p, error->message);
+          fprintf(stderr, "Cannot open %s: %s", (char*)arg, error->message);
           g_clear_error(&error);
         }
         FREE(tmp);
@@ -2165,16 +2076,16 @@ dwb_load_uri(GList *gl, Arg *arg) {
       }
     }
   }
-  else if (g_str_has_prefix(arg->p, "dwb://")) {
-    webkit_web_view_load_uri(web, arg->p);
+  else if (g_str_has_prefix(arg, "dwb://")) {
+    webkit_web_view_load_uri(web, arg);
     return;
   }
   /* Check if searchengine is needed and load uri */
 
-  else if (!(uri = dwb_get_search_engine(arg->p, false)) || strstr(arg->p, "localhost:")) {
-    uri = g_str_has_prefix(arg->p, "http://") || g_str_has_prefix(arg->p, "https://") 
-      ? g_strdup(arg->p)
-      : g_strdup_printf("http://%s", (char*)arg->p);
+  else if (!(uri = dwb_get_search_engine(arg, false)) || strstr(arg, "localhost:")) {
+    uri = g_str_has_prefix(arg, "http://") || g_str_has_prefix(arg, "https://") 
+      ? g_strdup(arg)
+      : g_strdup_printf("http://%s", (char*)arg);
   }
   webkit_web_view_load_uri(web, uri);
   FREE(uri);
@@ -2387,7 +2298,6 @@ dwb_insert_mode(void) {
   if (dwb.state.mode == HINT_MODE) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
-  //view_modify_style(CURRENT_VIEW(), &dwb.color.insert_fg, &dwb.color.insert_bg, NULL, NULL, NULL);
   dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
 
   dwb.state.mode = INSERT_MODE;
@@ -2418,10 +2328,6 @@ dwb_normal_mode(gboolean clean) {
   if (mode == HINT_MODE || mode == SEARCH_FIELD_MODE) {
     dwb_execute_script(MAIN_FRAME(), "DwbHintObj.clear()", false);
   }
-  //else if (mode & INSERT_MODE) {
-  //  view_modify_style(CURRENT_VIEW(), &dwb.color.active_fg, &dwb.color.active_bg, NULL, NULL, NULL);
-  //  gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
-  //}
   else if (mode == DOWNLOAD_GET_PATH) {
     completion_clean_path_completion();
   }
@@ -2594,6 +2500,7 @@ dwb_get_scripts() {
 
       g_file_get_contents(path, &content, NULL, NULL);
       char **lines = g_strsplit(content, "\n", -1);
+      g_free(content);
       int i=0;
       KeyMap *map = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
@@ -2612,14 +2519,13 @@ dwb_get_scripts() {
         }
         i++;
       }
-      FREE(content);
       if (!n) {
         n = dwb_navigation_new(filename, "");
         map->key = "";
         map->mod = 0;
         gl = g_list_prepend(gl, map);
       }
-      FunctionMap fm = { { n->first, n->first }, FM_DONT_SAVE | FM_COMMANDLINE, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path } };
+      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path } };
       *fmap = fm;
       map->map = fmap;
       dwb.misc.userscripts = g_list_prepend(dwb.misc.userscripts, n);
@@ -2678,7 +2584,7 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
   dwb_free_list(dwb.fc.adblock, (void_func)dwb_free);
 
-
+  util_rmdir(dwb.files.cachedir, true);
   if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
     unlink(dwb.files.fifo);
   }
@@ -2700,7 +2606,7 @@ dwb_save_keys() {
   }
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *map = l->data;
-    if (! (map->map->prop & FM_DONT_SAVE) ) {
+    if (! (map->map->prop & CP_DONT_SAVE) ) {
       char *mod = dwb_modmask_to_string(map->mod);
       char *sc = g_strdup_printf("%s %s", mod, map->key ? map->key : "");
       g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
@@ -3148,14 +3054,10 @@ dwb_init_files() {
   if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
     g_mkdir_with_parents(profile_path, 0700);
   }
-  char *cache_dir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
-  if (!g_file_test(cache_dir, G_FILE_TEST_IS_DIR)) {
-    g_mkdir_with_parents(cache_dir, 0700);
+  dwb.files.cachedir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
+  if (!g_file_test(dwb.files.cachedir, G_FILE_TEST_IS_DIR)) {
+    g_mkdir_with_parents(dwb.files.cachedir, 0700);
   }
-  else {
-    util_rmdir(cache_dir, true);
-  }
-  g_free(cache_dir);
   dwb.files.bookmarks     = g_build_filename(profile_path, "bookmarks",     NULL);
   dwb.files.history       = g_build_filename(profile_path, "history",       NULL);
   dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);
@@ -3276,12 +3178,6 @@ dwb_get_stock_item_base64_encoded(const char *name) {
   }
   return ret;
 }
-static void
-dwb_init_icons() {
-  dwb.files.dir_icon = dwb_get_stock_item_base64_encoded("gtk-directory");
-  dwb.files.file_icon = dwb_get_stock_item_base64_encoded("gtk-file");
-  dwb.files.exec_icon = dwb_get_stock_item_base64_encoded("gtk-execute");
-}
 
 static void 
 dwb_tab_size_cb(GtkWidget *w, GtkAllocation *a, GList *gl) {
@@ -3315,7 +3211,6 @@ dwb_init() {
   dwb_init_key_map();
   dwb_init_style();
   dwb_init_gui();
-  dwb_init_icons();
   dwb_init_scripts();
 
   dwb_soup_init();
@@ -3328,8 +3223,7 @@ dwb_init() {
   if (restore && session_restore(restore));
   else if (dwb.misc.argc > 0) {
     for (int i=0; i<dwb.misc.argc; i++) {
-      Arg a = { .p = dwb.misc.argv[i] };
-      view_add(&a, false);
+      view_add(dwb.misc.argv[i], false);
     }
   }
   else {
@@ -3344,13 +3238,16 @@ dwb_init() {
 void 
 dwb_parse_command_line(const char *line) {
   char **token = g_strsplit(line, " ", 2);
+  KeyMap *m;
 
   if (!token[0]) 
     return;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
-    KeyMap *m = l->data;
+    m = l->data;
     if (!strcmp(m->map->n.first, token[0])) {
+      if (m->map->prop & CP_HAS_MODE) 
+        dwb_change_mode(NORMAL_MODE, true);
       Arg a = m->map->arg;
       if (token[1]) {
         g_strstrip(token[1]);
@@ -3367,7 +3264,9 @@ dwb_parse_command_line(const char *line) {
     }
   }
   g_strfreev(token);
-  dwb_change_mode(NORMAL_MODE, true);
+  if (!(m->map->prop & CP_HAS_MODE)) {
+    dwb_change_mode(NORMAL_MODE, true);
+  }
 }/*}}}*/
 
 /* dwb_handle_channel {{{*/

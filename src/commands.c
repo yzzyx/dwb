@@ -17,6 +17,7 @@
  */
 
 #include "commands.h"
+#include "local.h"
 
 static int inline dwb_floor(double x) { 
   return x >= 0 ? (int) x : (int) x - 1;
@@ -56,7 +57,7 @@ commands_simple_command(KeyMap *km) {
 /* commands_add_view(KeyMap *, Arg *) {{{*/
 void 
 commands_add_view(KeyMap *km, Arg *arg) {
-  view_add(arg, false);
+  view_add(arg->p, false);
 }/*}}}*/
 
 /* commands_set_setting {{{*/
@@ -240,15 +241,9 @@ commands_quickmark(KeyMap *km, Arg *arg) {
 /* commands_reload(KeyMap *km, Arg *){{{*/
 DwbStatus
 commands_reload(KeyMap *km, Arg *arg) {
-  WebKitWebView *web = WEBVIEW_FROM_ARG(arg);
-  char *path;
-  webkit_web_view_get_uri(web);
-  if ( (path = (char *)dwb_check_directory(webkit_web_view_get_uri(web), NULL)) ) {
-    Arg a = { .p = path, .b = false };
-    dwb_load_uri(NULL, &a);
-  }
-  else {
-    webkit_web_view_reload(web);
+  const char *path = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+  if ( !local_check_directory(dwb.state.fview, path, false, NULL) ) {
+    webkit_web_view_reload(CURRENT_WEBVIEW());
   }
   return STATUS_OK;
 }/*}}}*/
@@ -440,7 +435,7 @@ commands_open(KeyMap *km, Arg *arg) {
   dwb.state.type = arg->i;
 
   if (arg && arg->p) {
-    dwb_load_uri(NULL, arg);
+    dwb_load_uri(NULL, arg->p);
   }
   else {
     dwb_focus_entry();
@@ -559,8 +554,7 @@ commands_paste(KeyMap *km, Arg *arg) {
   if ( (text = gtk_clipboard_wait_for_text(clipboard)) ) {
     if (dwb.state.nv == OPEN_NORMAL)
       dwb.state.nv = arg->n;
-    Arg a = { .p = text, .b = false };
-    dwb_load_uri(NULL, &a);
+    dwb_load_uri(NULL, text);
     g_free(text);
     return STATUS_OK;
   }

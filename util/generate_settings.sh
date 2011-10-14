@@ -25,12 +25,12 @@ while read; do
     if [ ${line[1]} = "select" ]; then 
       unset options;
       unset desc;
-      for ((i=2; i<${#line[@]}; i++)); do 
-        if [[ ${line[i]} =~ ^@ ]]; then 
-          option=${line[i]//_/ }
+      for ((j=2; j<${#line[@]}; j++)); do 
+        if [[ ${line[j]} =~ ^@ ]]; then 
+          option=${line[j]//_/ }
           options+="<option>${option:1}</option>"
         else 
-          desc=${line[@]:i}
+          desc=${line[@]:j}
           break
         fi
       done
