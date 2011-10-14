@@ -219,6 +219,8 @@ typedef enum {
   HINT_T_IMAGES = 2,
   HINT_T_EDITABLE = 3,
   HINT_T_URL = 4,
+  HINT_T_CLIPBOARD = 5,
+  HINT_T_PRIMARY = 6,
 } HintType;
 typedef enum {
   HIDE_TB_NEVER     = 0x02,
@@ -752,6 +754,7 @@ void dwb_remove_history(const char *);
 void dwb_remove_quickmark(const char *);
 DwbStatus dwb_evaluate_hints(const char *);
 
+DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
 
 #endif

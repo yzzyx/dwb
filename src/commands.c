@@ -543,16 +543,8 @@ commands_focus_nth_view(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_yank(KeyMap *km, Arg *arg) {
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
-  GtkClipboard *clipboard = gtk_clipboard_get(atom);
-  gboolean ret = STATUS_ERROR;
   const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
-
-  gtk_clipboard_set_text(clipboard, uri, -1);
-  if (*uri) {
-    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", uri);
-    ret = STATUS_OK;
-  }
-  return ret;
+  return dwb_set_clipboard(uri, atom);
 }/*}}}*/
 
 /* commands_paste {{{*/

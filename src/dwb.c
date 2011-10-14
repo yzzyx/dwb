@@ -1008,6 +1008,20 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+DwbStatus
+dwb_set_clipboard(const char *text, GdkAtom atom) {
+  GtkClipboard *clipboard = gtk_clipboard_get(atom);
+  gboolean ret = STATUS_ERROR;
+  //const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+
+  gtk_clipboard_set_text(clipboard, text, -1);
+  if (*text) {
+    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", text);
+    ret = STATUS_OK;
+  }
+  return ret;
+}
+
 /* dwb_editor_watch (GChildWatchFunc) {{{*/
 static void
 dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
@@ -1790,12 +1804,11 @@ dwb_evaluate_hints(const char *buffer) {
     ret = STATUS_END;
   }
   else  {
-    int nv = dwb.state.nv;
     dwb.state.mode = NORMAL_MODE;
-    dwb.state.nv = nv;
     switch (dwb.state.hint_type) {
       case HINT_T_ALL: break;
       case HINT_T_IMAGES : dwb_load_uri(NULL, buffer); 
+                           dwb_change_mode(NORMAL_MODE, true);
                            break;
       case HINT_T_URL    : a = util_arg_new();
                            a->n = dwb.state.nv | SET_URL;

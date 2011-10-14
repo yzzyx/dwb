@@ -41,6 +41,8 @@ static KeyValue KEYS[] = {
   { "hint_mode_download",            {   ";d",           0 }, },
   { "hint_mode_nv",             {   "F",         0,                   },  },  
   { "hint_mode_nw",             {   "wf",         0,                   },  },  
+  { "hint_mode_clipboard",      {   ";y",         0,                   },  },  
+  { "hint_mode_primary",        {   ";Y",         0,                   },  },  
   { "history_back",             {   "H",         0,                   },  },  
   { "history_forward",          {   "L",         0,                   },  },  
   { "insert_mode",              {   "i",         0,                   },  },  
