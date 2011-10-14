@@ -102,7 +102,7 @@ static FunctionMap FMAP [] = {
   { { "bookmark",              "Bookmark current page",             }, 1, 
     (Func)commands_bookmark,            NO_URL,                            POST_SM, },
   { { "bookmarks",             "Bookmarks",                         }, 0,
-    (Func)commands_bookmarks,           "No Bookmarks",                    POST_SM,     { .n = OPEN_NORMAL }, }, 
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
   { { "bookmarks_nv",          "Bookmarks new view",                }, 0,
     (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
   { { "bookmarks_nw",          "Bookmarks new window",              }, 0, 
