@@ -281,7 +281,7 @@ DwbHintObj = (function() {
         if ((r = __getVisibility(e, win)) == null) 
           continue;
         if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
-          __createHints(e.contentWindow, constructor);
+          __createHints(e.contentWindow, constructor, type);
         }
         else {
           var element = new constructor(e, win, r);
