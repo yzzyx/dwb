@@ -218,7 +218,8 @@ typedef enum {
   HINT_T_LINKS = 1,
   HINT_T_IMAGES = 2,
   HINT_T_EDITABLE = 3,
-} HintTypes;
+  HINT_T_URL = 4,
+} HintType;
 typedef enum {
   HIDE_TB_NEVER     = 0x02,
   HIDE_TB_ALWAYS    = 0x03,
@@ -434,6 +435,7 @@ struct _State {
   int nummod;
   Open nv;
   DwbType type;
+  HintType hint_type;
   guint scriptlock;
   int size;
   GHashTable *settings_hash;

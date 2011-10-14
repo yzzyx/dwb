@@ -182,6 +182,7 @@ commands_show_hints(KeyMap *km, Arg *arg) {
       }
     }
     dwb.state.mode = HINT_MODE;
+    dwb.state.hint_type = arg->i;
     dwb_focus_entry();
   }
   return ret;
@@ -444,13 +445,13 @@ commands_open(KeyMap *km, Arg *arg) {
 
   dwb.state.type = arg->i;
 
-  if (arg && arg->p) {
+  if (arg && arg->p && ! (arg->n & SET_URL)) {
     dwb_load_uri(NULL, arg->p);
   }
   else {
     dwb_focus_entry();
     if (arg->n & SET_URL)
-      dwb_entry_set_text(CURRENT_URL());
+      dwb_entry_set_text(arg->p ? arg->p : CURRENT_URL());
   }
   return STATUS_OK;
 } /*}}}*/

@@ -34,7 +34,11 @@ static KeyValue KEYS[] = {
   { "hint_mode",                {   "f",         0,                   },  },  
   { "hint_mode_links",          {   ";;",         0,                   },  },  
   { "hint_mode_images",         {   ";i",         0,                   },  },  
+  { "hint_mode_images_nv",      {   ";I",         0,                   },  },  
   { "hint_mode_editable",       {   ";e",         0,                   },  },  
+  { "hint_mode_url",            {   ";o",         0,                   },  },  
+  { "hint_mode_url_nv",         {   ";O",         0,                   },  },  
+  { "hint_mode_download",            {   ";d",           0 }, },
   { "hint_mode_nv",             {   "F",         0,                   },  },  
   { "hint_mode_nw",             {   "wf",         0,                   },  },  
   { "history_back",             {   "H",         0,                   },  },  
@@ -120,7 +124,6 @@ static KeyValue KEYS[] = {
 
   { "web_inspector",            {   "wi",         0,     },  },  
 
-  { "download_hint",            {   "gd",           0 }, },
   { "save_session",             {   "ZZ",           0 }, }, 
   { "save_named_session",       {   "gZZ",           0 }, }, 
   { "toggle_scripts_uri",       {   "tsu",           0 }, }, 

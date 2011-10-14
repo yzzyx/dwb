@@ -115,8 +115,6 @@ static FunctionMap FMAP [] = {
     (Func)commands_command_mode,            NULL,                              POST_SM, },
   { { "decrease_master",       "Decrease master area",              }, 1, 
     (Func)commands_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
-  { { "download_hint",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
   { { "find_backward",         "Find backward ",                    }, CP_COMMANDLINE|CP_HAS_MODE, 
     (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = false }, },
   { { "find_forward",          "Find forward ",                     }, CP_COMMANDLINE | CP_HAS_MODE, 
@@ -139,12 +137,20 @@ static FunctionMap FMAP [] = {
     (Func)commands_show_hints,          "No links",                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_LINKS }, },
   { { "hint_mode_images",       "Follow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No images",                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_IMAGES }, },
+  { { "hint_mode_images_nv",       "Follow images (new view)",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No images",                          NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_IMAGES }, },
   { { "hint_mode_editable",       "Follow editable",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No editable elements",           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_EDITABLE }, },
+  { { "hint_mode_url",            "hintopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_URL }, },
+  { { "hint_mode_url_nv",         "hinttabopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_URL }, },
   { { "hint_mode_nv",          "Follow hints (new view)",           }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_ALL }, },
   { { "hint_mode_nw",          "Follow hints (new window)",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW, .i = HINT_T_ALL }, },
+  { { "hint_mode_download",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
   { { "history_back",          "Go Back",                           }, 1, 
     (Func)commands_history_back,        "Beginning of History",            ALWAYS_SM, },
   { { "history_forward",       "Go Forward",                        }, 1, 
@@ -1760,7 +1766,10 @@ dwb_web_settings_get_value(const char *id) {
 DwbStatus 
 dwb_evaluate_hints(const char *buffer) {
   DwbStatus ret = STATUS_OK;
-  if (!strcmp("_dwb_no_hints_", buffer)) {
+  Arg *a;
+  if (!strcmp(buffer, "undefined")) 
+    return ret;
+  else if (!strcmp("_dwb_no_hints_", buffer)) {
     dwb_set_error_message(dwb.state.fview, NO_HINTS);
     dwb_change_mode(NORMAL_MODE, false);
     ret = STATUS_ERROR;
@@ -1780,6 +1789,24 @@ dwb_evaluate_hints(const char *buffer) {
     dwb_change_mode(NORMAL_MODE, true);
     ret = STATUS_END;
   }
+  else  {
+    int nv = dwb.state.nv;
+    dwb.state.mode = NORMAL_MODE;
+    dwb.state.nv = nv;
+    switch (dwb.state.hint_type) {
+      case HINT_T_ALL: break;
+      case HINT_T_IMAGES : dwb_load_uri(NULL, buffer); 
+                           break;
+      case HINT_T_URL    : a = util_arg_new();
+                           a->n = dwb.state.nv | SET_URL;
+                           a->p = (char*)buffer;
+                           commands_open(NULL, a);
+                           g_free(a);
+                           break;
+      default : break;
+    }
+    ret = STATUS_END;
+  }
   return ret;
 }
 
@@ -1792,7 +1819,7 @@ dwb_update_hints(GdkEventKey *e) {
   gboolean ret = false;
 
   if (e->keyval == GDK_KEY_Return) {
-    com = g_strdup("DwbHintObj.followActive()");
+    com = g_strdup_printf("DwbHintObj.followActive(%d)", dwb.state.hint_type);
   }
   else if (DWB_TAB_KEY(e)) {
     if (e->state & GDK_SHIFT_MASK) {
@@ -1809,7 +1836,7 @@ dwb_update_hints(GdkEventKey *e) {
   else {
     val = util_keyval_to_char(e->keyval);
     snprintf(input, BUFFER_LENGTH - 1, "%s%s", GET_TEXT(), val ? val : "");
-    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\")", input);
+    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\", %d)", input, dwb.state.hint_type);
     FREE(val);
   }
   if (com) {
@@ -1817,7 +1844,8 @@ dwb_update_hints(GdkEventKey *e) {
     g_free(com);
   }
   if (buffer != NULL) { 
-    dwb_evaluate_hints(buffer);
+    if (dwb_evaluate_hints(buffer) == STATUS_END) 
+      ret = true;
     g_free(buffer);
   }
   return ret;

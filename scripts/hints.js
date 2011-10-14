@@ -21,17 +21,18 @@ DwbHintObj = (function() {
   _active = null;
   _markHints = false;
   _bigFont = null;
-  _actualType = 0;
   _hintTypes = [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]",  // HINT_T_ALL
                  "a",  // HINT_T_LINKS
                  "img",  // HINT_T_IMAGES
                  "input[type=text], input[type=password], input[type=search], textarea",  // HINT_T_EDITABLE
+                 "[src], [href]",  // HINT_T_URL
                ];
   const HintTypes = {
     HINT_T_ALL : 0,
     HINT_T_LINKS : 1,
     HINT_T_IMAGES : 2,
     HINT_T_EDITABLE : 3,
+    HINT_T_URL : 4,
   };
 
   const __newHint = function(element, win, rect) {
@@ -66,7 +67,6 @@ DwbHintObj = (function() {
       overlay.style.left = l + "px";
       overlay.style.display = "block";
       overlay.style.cursor = "pointer";
-      overlay.onclick = function() { __evaluate(element); };
       this.overlay = overlay;
     }
     this.hint = hint;
@@ -272,7 +272,6 @@ DwbHintObj = (function() {
   const __createHints = function(win, constructor, type) {
     try {
       var doc = win.document;
-      _actualType = type;
       var res = doc.body.querySelectorAll(_hintTypes[type]); 
       var e, r;
       __createStyleSheet(doc);
@@ -304,14 +303,13 @@ DwbHintObj = (function() {
     if (document.activeElement) 
       document.activeElement.blur();
 
-    _actualType = type;
     __createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
     var l = _elements.length;
 
     if (l == 0) 
       return "_dwb_no_hints_";
     else if (l == 1)  {
-      return  __evaluate(_elements[0].element);
+      return  __evaluate(_elements[0].element, type);
     }
 
     for (var i=0; i<l; i++) {
@@ -321,7 +319,7 @@ DwbHintObj = (function() {
     _activeArr = _elements;
     __setActive(_elements[0]);
   }
-  const __updateHints = function(input) {
+  const __updateHints = function(input, type) {
     var array = [];
     if (!_activeArr.length) {
       __clear();
@@ -331,8 +329,7 @@ DwbHintObj = (function() {
       __clear();
       _lastInput = input;
       __showHints();
-      __updateHints(input);
-      return;
+      return __updateHints(input);
     }
     _lastInput = input;
     if (input) {
@@ -368,7 +365,7 @@ DwbHintObj = (function() {
       return "_dwb_no_hints_";
     }
     else if (array.length == 1) {
-      return __evaluate(array[0].element);
+      return __evaluate(array[0].element, type);
     }
     else {
       _lastPosition = array[0].betterMatch(input);
@@ -412,14 +409,19 @@ DwbHintObj = (function() {
     _active = null;
     _lastPosition = 0;
   }
-  const __evaluate = function (e) {
+  const __evaluate = function (e, type) {
     var ret = null;
     var type;
     if (e.type) 
       type = e.type.toLowerCase();
     var tagname = e.tagName.toLowerCase();
-
-    if (tagname && (tagname == "input" || tagname == "textarea") ) {
+    if (type > 0) {
+      switch (type) {
+        case HintTypes.HINT_T_IMAGES:  ret = e.src; break;
+        case HintTypes.HINT_T_URL:     ret = e.hasAttribute("href") ? e.href : e.src; break;
+      }
+    }
+    else if (tagname && (tagname == "input" || tagname == "textarea") ) {
       if (type == "radio" || type == "checkbox") {
         e.focus();
         __clickElement(e, "click");
@@ -558,16 +560,16 @@ DwbHintObj = (function() {
         return __showHints(type);
       },
     updateHints :
-      function (input) {
-        return __updateHints(input);
+      function (input, type) {
+        return __updateHints(input, type);
       },
     clear : 
       function () {
         __clear();
       },
     followActive :
-      function () {
-        return __evaluate(__getActive().element);
+      function (type) {
+        return __evaluate(__getActive().element, type);
       },
 
     focusNext :
