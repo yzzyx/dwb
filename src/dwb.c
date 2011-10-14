@@ -102,7 +102,7 @@ static FunctionMap FMAP [] = {
   { { "bookmark",              "Bookmark current page",             }, 1, 
     (Func)commands_bookmark,            NO_URL,                            POST_SM, },
   { { "bookmarks",             "Bookmarks",                         }, 0,
-    (Func)commands_bookmarks,           "No Bookmarks",                    POST_SM,     { .n = OPEN_NORMAL }, }, 
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
   { { "bookmarks_nv",          "Bookmarks new view",                }, 0,
     (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
   { { "bookmarks_nw",          "Bookmarks new window",              }, 0, 
@@ -134,11 +134,17 @@ static FunctionMap FMAP [] = {
   { { "focus_nth_view",        "Focus nth view",                    }, 0, 
     (Func)commands_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 } },
   { { "hint_mode",             "Follow hints",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_ALL }, },
+  { { "hint_mode_links",       "Follow links",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No links",                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_LINKS }, },
+  { { "hint_mode_images",       "Follow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No images",                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_IMAGES }, },
+  { { "hint_mode_editable",       "Follow editable",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No editable elements",           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_EDITABLE }, },
   { { "hint_mode_nv",          "Follow hints (new view)",           }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_ALL }, },
   { { "hint_mode_nw",          "Follow hints (new window)",         }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW, .i = HINT_T_ALL }, },
   { { "history_back",          "Go Back",                           }, 1, 
     (Func)commands_history_back,        "Beginning of History",            ALWAYS_SM, },
   { { "history_forward",       "Go Forward",                        }, 1, 
@@ -1751,6 +1757,32 @@ dwb_web_settings_get_value(const char *id) {
   return &s->arg;
 }/*}}}*/
 
+DwbStatus 
+dwb_evaluate_hints(const char *buffer) {
+  DwbStatus ret = STATUS_OK;
+  if (!strcmp("_dwb_no_hints_", buffer)) {
+    dwb_set_error_message(dwb.state.fview, NO_HINTS);
+    dwb_change_mode(NORMAL_MODE, false);
+    ret = STATUS_ERROR;
+  }
+  else if (!strcmp(buffer, "_dwb_input_")) {
+    dwb_change_mode(INSERT_MODE);
+    ret = STATUS_END;
+  }
+  else if  (!strcmp(buffer, "_dwb_click_")) {
+    dwb.state.scriptlock = 1;
+    if (dwb.state.nv != OPEN_DOWNLOAD) {
+      dwb_change_mode(NORMAL_MODE, true);
+      ret = STATUS_END;
+    }
+  }
+  else  if (!strcmp(buffer, "_dwb_check_")) {
+    dwb_change_mode(NORMAL_MODE, true);
+    ret = STATUS_END;
+  }
+  return ret;
+}
+
 /* update_hints {{{*/
 gboolean
 dwb_update_hints(GdkEventKey *e) {
@@ -1784,24 +1816,9 @@ dwb_update_hints(GdkEventKey *e) {
     buffer = dwb_execute_script(MAIN_FRAME(), com, true);
     g_free(com);
   }
-  if (buffer) { 
-    if (!strcmp("_dwb_no_hints_", buffer)) {
-      dwb_set_error_message(dwb.state.fview, NO_HINTS);
-      dwb_change_mode(NORMAL_MODE, false);
-    }
-    else if (!strcmp(buffer, "_dwb_input_")) {
-      dwb_change_mode(INSERT_MODE);
-    }
-    else if  (!strcmp(buffer, "_dwb_click_")) {
-      dwb.state.scriptlock = 1;
-      if (dwb.state.nv != OPEN_DOWNLOAD) {
-        dwb_change_mode(NORMAL_MODE, true);
-      }
-    }
-    else  if (!strcmp(buffer, "_dwb_check_")) {
-      dwb_change_mode(NORMAL_MODE, true);
-    }
-    FREE(buffer);
+  if (buffer != NULL) { 
+    dwb_evaluate_hints(buffer);
+    g_free(buffer);
   }
   return ret;
 }/*}}}*/

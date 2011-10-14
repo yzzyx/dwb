@@ -214,6 +214,12 @@ typedef enum {
 } PluginBlockerStatus;
 
 typedef enum {
+  HINT_T_ALL = 0,
+  HINT_T_LINKS = 1,
+  HINT_T_IMAGES = 2,
+  HINT_T_EDITABLE = 3,
+} HintTypes;
+typedef enum {
   HIDE_TB_NEVER     = 0x02,
   HIDE_TB_ALWAYS    = 0x03,
   HIDE_TB_TILED     = 0x05,
@@ -742,6 +748,7 @@ char * dwb_get_stock_item_base64_encoded(const char *);
 void dwb_remove_bookmark(const char *);
 void dwb_remove_history(const char *);
 void dwb_remove_quickmark(const char *);
+DwbStatus dwb_evaluate_hints(const char *);
 
 DwbStatus dwb_open_in_editor(void);
 

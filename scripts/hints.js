@@ -18,10 +18,21 @@ DwbHintObj = (function() {
   _lastPosition = 0;
   _activeInput = null;
   _styles = 0;
-  _hintTypes = "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]";
   _active = null;
   _markHints = false;
   _bigFont = null;
+  _actualType = 0;
+  _hintTypes = [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]",  // HINT_T_ALL
+                 "a",  // HINT_T_LINKS
+                 "img",  // HINT_T_IMAGES
+                 "input[type=text], input[type=password], input[type=search], textarea",  // HINT_T_EDITABLE
+               ];
+  const HintTypes = {
+    HINT_T_ALL : 0,
+    HINT_T_LINKS : 1,
+    HINT_T_IMAGES : 2,
+    HINT_T_EDITABLE : 3,
+  };
 
   const __newHint = function(element, win, rect) {
     this.element = element;
@@ -258,10 +269,11 @@ DwbHintObj = (function() {
     doc.hasStyleSheet = true;
   }
 
-  const __createHints = function(win, constructor) {
+  const __createHints = function(win, constructor, type) {
     try {
       var doc = win.document;
-      var res = doc.body.querySelectorAll(_hintTypes); 
+      _actualType = type;
+      var res = doc.body.querySelectorAll(_hintTypes[type]); 
       var e, r;
       __createStyleSheet(doc);
       var hints = doc.createDocumentFragment();
@@ -288,12 +300,20 @@ DwbHintObj = (function() {
       console.error(exc);
     }
   }
-  const __showHints = function () {
+  const __showHints = function (type) {
     if (document.activeElement) 
       document.activeElement.blur();
 
-    __createHints(window, _style == "letter" ? __letterHint : __numberHint);
+    _actualType = type;
+    __createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
     var l = _elements.length;
+
+    if (l == 0) 
+      return "_dwb_no_hints_";
+    else if (l == 1)  {
+      return  __evaluate(_elements[0].element);
+    }
+
     for (var i=0; i<l; i++) {
       var e =_elements[i];
       e.getTextHint(i, l);
@@ -381,19 +401,20 @@ DwbHintObj = (function() {
             p.removeChild(e.overlay);
         }
       }
+      if(! _markHints && _active)
+        _active.element.removeAttribute("dwb_highlight");
     }
     catch (e) { 
       console.error(e); 
     }
     _elements = [];
     _activeArr = [];
-    if(! _markHints)
-      _active.element.removeAttribute("dwb_highlight");
     _active = null;
     _lastPosition = 0;
   }
   const __evaluate = function (e) {
-    var ret, type;
+    var ret = null;
+    var type;
     if (e.type) 
       type = e.type.toLowerCase();
     var tagname = e.tagName.toLowerCase();
@@ -533,8 +554,8 @@ DwbHintObj = (function() {
       __createStyleSheet(document);
     },
     showHints : 
-      function() {
-        __showHints();
+      function(type) {
+        return __showHints(type);
       },
     updateHints :
       function (input) {
