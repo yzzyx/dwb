@@ -1806,7 +1806,7 @@ dwb_evaluate_hints(const char *buffer) {
   else  {
     dwb.state.mode = NORMAL_MODE;
     switch (dwb.state.hint_type) {
-      case HINT_T_ALL: break;
+      case HINT_T_ALL:     break;
       case HINT_T_IMAGES : dwb_load_uri(NULL, buffer); 
                            dwb_change_mode(NORMAL_MODE, true);
                            break;

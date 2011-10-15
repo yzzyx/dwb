@@ -329,7 +329,7 @@ DwbHintObj = (function() {
       __clear();
       _lastInput = input;
       __showHints();
-      return __updateHints(input);
+      return __updateHints(input, type);
     }
     _lastInput = input;
     if (input) {
@@ -408,6 +408,7 @@ DwbHintObj = (function() {
     _activeArr = [];
     _active = null;
     _lastPosition = 0;
+    _lastInput = null;
   }
   const __evaluate = function (e, type) {
     var ret = null;
