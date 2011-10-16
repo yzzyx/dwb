@@ -2615,7 +2615,7 @@ dwb_save_keys() {
     }
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
-    g_file_set_contents(dwb.files.keys, content, size, &error);
+    util_set_file_content(dwb.files.keys, content);
     g_free(content);
   }
   if (error) {
@@ -2646,7 +2646,7 @@ dwb_save_settings() {
     FREE(value);
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
-    g_file_set_contents(dwb.files.settings, content, size, &error);
+    util_set_file_content(dwb.files.settings, content);
     g_free(content);
   }
   if (error) {

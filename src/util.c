@@ -318,12 +318,30 @@ util_get_file_content(const char *filename) {
 gboolean
 util_set_file_content(const char *filename, const char *content) {
   GError *error = NULL;
+  gboolean ret = true;
+  char *link = NULL;
+  char *dname = NULL;
+  char *realpath = NULL;
+  if (g_file_test(filename, G_FILE_TEST_IS_SYMLINK)) {
+     link = g_file_read_link(filename, &error);
+     if (link == NULL) {
+       fprintf(stderr, "Cannot save %s : %s", filename, error->message);
+       g_clear_error(&error);
+       return false;
+     }
+     dname = g_path_get_dirname(filename);
+     realpath = g_build_filename(dname, link, NULL);
+     g_free(link);
+     g_free(dname);
+     filename = realpath;
+  }
   if (!g_file_set_contents(filename, content, -1, &error)) {
     fprintf(stderr, "Cannot save %s : %s", filename, error->message);
     g_clear_error(&error);
-    return false;
+    ret = false;
   }
-  return true;
+  FREE(realpath);
+  return ret;
 }/*}}}*/
 /* util_build_path()       return: char * (alloc) {{{*/
 char *
