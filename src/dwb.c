@@ -115,8 +115,6 @@ static FunctionMap FMAP [] = {
     (Func)commands_command_mode,            NULL,                              POST_SM, },
   { { "decrease_master",       "Decrease master area",              }, 1, 
     (Func)commands_resize_master,       "Cannot decrease further",         ALWAYS_SM,    { .n = 5 } },
-  { { "download_hint",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
   { { "find_backward",         "Find backward ",                    }, CP_COMMANDLINE|CP_HAS_MODE, 
     (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = false }, },
   { { "find_forward",          "Find forward ",                     }, CP_COMMANDLINE | CP_HAS_MODE, 
@@ -134,11 +132,29 @@ static FunctionMap FMAP [] = {
   { { "focus_nth_view",        "Focus nth view",                    }, 0, 
     (Func)commands_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 } },
   { { "hint_mode",             "Follow hints",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_ALL }, },
+  { { "hint_mode_links",       "Follow links",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No links",                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_LINKS }, },
+  { { "hint_mode_images",       "Follow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No images",                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_IMAGES }, },
+  { { "hint_mode_images_nv",       "Follow images (new view)",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No images",                          NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_IMAGES }, },
+  { { "hint_mode_editable",       "Follow editable",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No editable elements",           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_EDITABLE }, },
+  { { "hint_mode_url",            "hintopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_URL }, },
+  { { "hint_mode_url_nv",         "hinttabopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_URL }, },
   { { "hint_mode_nv",          "Follow hints (new view)",           }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_ALL }, },
   { { "hint_mode_nw",          "Follow hints (new window)",         }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW }, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW, .i = HINT_T_ALL }, },
+  { { "hint_mode_clipboard",          "Copy to clipboard",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_CLIPBOARD }, },
+  { { "hint_mode_primary",          "Copy to primary",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_PRIMARY }, },
+  { { "hint_mode_download",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
   { { "history_back",          "Go Back",                           }, 1, 
     (Func)commands_history_back,        "Beginning of History",            ALWAYS_SM, },
   { { "history_forward",       "Go Forward",                        }, 1, 
@@ -1000,6 +1016,19 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+DwbStatus
+dwb_set_clipboard(const char *text, GdkAtom atom) {
+  GtkClipboard *clipboard = gtk_clipboard_get(atom);
+  gboolean ret = STATUS_ERROR;
+
+  gtk_clipboard_set_text(clipboard, text, -1);
+  if (*text) {
+    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", text);
+    ret = STATUS_OK;
+  }
+  return ret;
+}
+
 /* dwb_editor_watch (GChildWatchFunc) {{{*/
 static void
 dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
@@ -1755,6 +1784,60 @@ dwb_web_settings_get_value(const char *id) {
   return &s->arg;
 }/*}}}*/
 
+DwbStatus 
+dwb_evaluate_hints(const char *buffer) {
+  DwbStatus ret = STATUS_OK;
+  if (!strcmp(buffer, "undefined")) 
+    return ret;
+  else if (!strcmp("_dwb_no_hints_", buffer)) {
+    dwb_set_error_message(dwb.state.fview, NO_HINTS);
+    dwb_change_mode(NORMAL_MODE, false);
+    ret = STATUS_ERROR;
+  }
+  else if (!strcmp(buffer, "_dwb_input_")) {
+    dwb_change_mode(INSERT_MODE);
+    ret = STATUS_END;
+  }
+  else if  (!strcmp(buffer, "_dwb_click_")) {
+    dwb.state.scriptlock = 1;
+    if (dwb.state.nv != OPEN_DOWNLOAD) {
+      dwb_change_mode(NORMAL_MODE, true);
+      ret = STATUS_END;
+    }
+  }
+  else  if (!strcmp(buffer, "_dwb_check_")) {
+    dwb_change_mode(NORMAL_MODE, true);
+    ret = STATUS_END;
+  }
+  else  {
+    dwb.state.mode = NORMAL_MODE;
+    Arg *a = NULL;
+    switch (dwb.state.hint_type) {
+      case HINT_T_ALL:     break;
+      case HINT_T_IMAGES : dwb_load_uri(NULL, buffer); 
+                           dwb_change_mode(NORMAL_MODE, true);
+                           break;
+      case HINT_T_URL    : a = util_arg_new();
+                           a->n = dwb.state.nv | SET_URL;
+                           a->p = (char *)buffer;
+                           commands_open(NULL, a);
+                           break;
+      case HINT_T_CLIPBOARD : 
+      case HINT_T_PRIMARY   : a = util_arg_new();
+                              a->p = dwb.state.hint_type == HINT_T_CLIPBOARD ? GDK_NONE : GDK_SELECTION_PRIMARY; 
+                              a->n = CA_CUSTOM;
+                              a->arg = (char*)buffer;
+                              dwb_change_mode(NORMAL_MODE, true);
+                              commands_yank(NULL, a);
+                              break;
+      default : break;
+    }
+    FREE(a);
+    ret = STATUS_END;
+  }
+  return ret;
+}
+
 /* update_hints {{{*/
 gboolean
 dwb_update_hints(GdkEventKey *e) {
@@ -1764,7 +1847,8 @@ dwb_update_hints(GdkEventKey *e) {
   gboolean ret = false;
 
   if (e->keyval == GDK_KEY_Return) {
-    com = g_strdup("DwbHintObj.followActive()");
+    printf("%d\n", MIN(dwb.state.hint_type, HINT_T_URL));
+    com = g_strdup_printf("DwbHintObj.followActive(%d)", MIN(dwb.state.hint_type, HINT_T_URL));
   }
   else if (DWB_TAB_KEY(e)) {
     if (e->state & GDK_SHIFT_MASK) {
@@ -1781,31 +1865,17 @@ dwb_update_hints(GdkEventKey *e) {
   else {
     val = util_keyval_to_char(e->keyval);
     snprintf(input, BUFFER_LENGTH - 1, "%s%s", GET_TEXT(), val ? val : "");
-    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\")", input);
+    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\", %d)", input, MIN(dwb.state.hint_type, HINT_T_URL));
     FREE(val);
   }
   if (com) {
     buffer = dwb_execute_script(MAIN_FRAME(), com, true);
     g_free(com);
   }
-  if (buffer) { 
-    if (!strcmp("_dwb_no_hints_", buffer)) {
-      dwb_set_error_message(dwb.state.fview, NO_HINTS);
-      dwb_change_mode(NORMAL_MODE, false);
-    }
-    else if (!strcmp(buffer, "_dwb_input_")) {
-      dwb_change_mode(INSERT_MODE);
-    }
-    else if  (!strcmp(buffer, "_dwb_click_")) {
-      dwb.state.scriptlock = 1;
-      if (dwb.state.nv != OPEN_DOWNLOAD) {
-        dwb_change_mode(NORMAL_MODE, true);
-      }
-    }
-    else  if (!strcmp(buffer, "_dwb_check_")) {
-      dwb_change_mode(NORMAL_MODE, true);
-    }
-    FREE(buffer);
+  if (buffer != NULL) { 
+    if (dwb_evaluate_hints(buffer) == STATUS_END) 
+      ret = true;
+    g_free(buffer);
   }
   return ret;
 }/*}}}*/

@@ -9,9 +9,6 @@ find_backward Find backward
 find_forward Find forward
 find_next Find next
 find_previous Find previous
-hint_mode Follow hints
-hint_mode_nv Follow hints, open link in a new view
-hint_mode_nw Follow hints, open link in a new window
 history_back Go back
 history_forward Go forward
 reload Reload current page
@@ -24,6 +21,20 @@ zoom_in Zoom in
 zoom_out Zoom out
 zoom_normal Zoom to 100%
 quit Quit dwb
+
+# hints Hints
+hint_mode Follow hints
+hint_mode_nv Follow hints, open link in a new view
+hint_mode_nw Follow hints, open link in a new window
+hint_mode_links Follow links
+hint_mode_images Follow images
+hint_mode_images_nv Follow images in a new tab
+hint_mode_editable Focus editable elements
+hint_mode_url Set hint's url in commandline
+hint_mode_url_nv Set hint's url in commandline, open in a new tab
+hint_mode_download Download via hints
+hint_mode_clipboard Save link location to clipboard
+hint_mode_primary Save link location to primary selection
 
 # bookmark_keys Bookmarks &amp Quickmarks
 bookmark Bookmark current page
@@ -121,7 +132,6 @@ proxy Toggle proxy
 
 # misc Miscellaneous
 allow_cookie Allow cookie for current site
-download_hint Download via hints
 execute_userscript Execute userscript
 focus_input Focus the next input
 new_view New view for next navigation

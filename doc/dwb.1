@@ -249,13 +249,37 @@ Show hints, open link in a new view. (command
 Show hints, open link in a new view. (command
 .BR hint_mode_nw ).
 .TP
-.BR gd 
-Download via hints (command 
-.BR download_hint ).
+.BR ;i 
+Follow image (command 
+.BR hint_mode_images ).
 .TP
-.BR gi
-Focus next textinput (command 
-.BR focus_input ). 
+.BR ;I 
+Follow image in a new tab (command 
+.BR hint_mode_images_nv ).
+.TP
+.BR ;e 
+Focus editable elements via hints (command 
+.BR hint_mode_editable ).
+.TP
+.BR ;o 
+Set hint\'s url in commandline (command 
+.BR hint_mode_url ).
+.TP
+.BR ;O 
+Set hint\'s url in commandline, open in a new tab (command 
+.BR hint_mode_url_nv ).
+.TP
+.BR ;d 
+Download via hints (command 
+.BR hint_mode_download ).
+.TP
+.BR ;y 
+Save link location to clipboard (command 
+.BR hint_mode_clipboard ).
+.TP
+.BR ;Y
+Save link location to primary selection (command 
+.BR hint_mode_primary ). 
 .TP
 .BR gf 
 Toggle "view source" (command 

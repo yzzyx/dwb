@@ -166,15 +166,26 @@ commands_resize_master(KeyMap *km, Arg *arg) {
 /* commands_show_hints {{{*/
 DwbStatus
 commands_show_hints(KeyMap *km, Arg *arg) {
+  DwbStatus ret = STATUS_OK;
   if (dwb.state.nv == OPEN_NORMAL)
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    dwb_execute_script(MAIN_FRAME(), "DwbHintObj.showHints()", false);
+    char *command = g_strdup_printf("DwbHintObj.showHints(%d)", MIN(arg->i, HINT_T_URL));
+    char *jsret = dwb_execute_script(MAIN_FRAME(), command, true);
+    g_free(command);
+    if (jsret != NULL) {
+      ret = dwb_evaluate_hints(jsret);
+      g_free(jsret);
+      if (ret == STATUS_END) {
+        return ret;
+      }
+    }
     dwb.state.mode = HINT_MODE;
+    dwb.state.hint_type = arg->i;
     dwb_focus_entry();
   }
-  return STATUS_OK;
+  return ret;
 }/*}}}*/
 
 /* commands_show_keys(KeyMap *km, Arg *arg){{{*/
@@ -434,13 +445,13 @@ commands_open(KeyMap *km, Arg *arg) {
 
   dwb.state.type = arg->i;
 
-  if (arg && arg->p) {
+  if (arg && arg->p && ! (arg->n & SET_URL)) {
     dwb_load_uri(NULL, arg->p);
   }
   else {
     dwb_focus_entry();
     if (arg->n & SET_URL)
-      dwb_entry_set_text(CURRENT_URL());
+      dwb_entry_set_text(arg->p ? arg->p : CURRENT_URL());
   }
   return STATUS_OK;
 } /*}}}*/
@@ -532,20 +543,15 @@ commands_focus_nth_view(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_yank(KeyMap *km, Arg *arg) {
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
-  GtkClipboard *clipboard = gtk_clipboard_get(atom);
-  gboolean ret = STATUS_ERROR;
   const char *text = NULL;
   if (arg->n == CA_URI) 
     text = webkit_web_view_get_uri(CURRENT_WEBVIEW());
   else if (arg->n == CA_TITLE)
     text = webkit_web_view_get_title(CURRENT_WEBVIEW());
+  else if (arg->n == CA_CUSTOM) 
+    text = arg->arg;
 
-  gtk_clipboard_set_text(clipboard, text, -1);
-  if (*text) {
-    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", text);
-    ret = STATUS_OK;
-  }
-  return ret;
+  return dwb_set_clipboard(text, atom);
 }/*}}}*/
 
 /* commands_paste {{{*/

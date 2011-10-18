@@ -5,6 +5,7 @@ OUTFILE=$2
 cat > ${OUTFILE} << EOF
 <div class='setting_bar'>
   <a class="setting_button" href="#general">General</a>
+  <a class="setting_button" href="#hints">Hints</a>
   <a class="setting_button" href="#bookmark_keys">Book- &amp Quickmarks</a>
   <a class="setting_button" href="#commandline">Commandline</a>
   <a class="setting_button" href="#scrolling">Scrolling</a>
