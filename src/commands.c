@@ -171,7 +171,7 @@ commands_show_hints(KeyMap *km, Arg *arg) {
     dwb.state.nv = arg->n;
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    char *command = g_strdup_printf("DwbHintObj.showHints(%d)", arg->i);
+    char *command = g_strdup_printf("DwbHintObj.showHints(%d)", MIN(arg->i, HINT_T_URL));
     char *jsret = dwb_execute_script(MAIN_FRAME(), command, true);
     g_free(command);
     if (jsret != NULL) {

@@ -221,6 +221,7 @@ typedef enum {
   HINT_T_URL = 4,
   HINT_T_CLIPBOARD = 5,
   HINT_T_PRIMARY = 6,
+  HINT_T_BOOKMARK = 7,
 } HintType;
 typedef enum {
   HIDE_TB_NEVER     = 0x02,

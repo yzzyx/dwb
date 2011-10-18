@@ -141,6 +141,8 @@ static FunctionMap FMAP [] = {
     (Func)commands_show_hints,          "No images",                          NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_IMAGES }, },
   { { "hint_mode_editable",       "Follow editable",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No editable elements",           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_EDITABLE }, },
+  { { "hint_mode_bookmark",       "Add a bookmark",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_BOOKMARK }, },
   { { "hint_mode_url",            "hintopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_URL }, },
   { { "hint_mode_url_nv",         "hinttabopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
@@ -1012,7 +1014,6 @@ DwbStatus
 dwb_set_clipboard(const char *text, GdkAtom atom) {
   GtkClipboard *clipboard = gtk_clipboard_get(atom);
   gboolean ret = STATUS_ERROR;
-  //const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
 
   gtk_clipboard_set_text(clipboard, text, -1);
   if (*text) {
@@ -1780,7 +1781,6 @@ dwb_web_settings_get_value(const char *id) {
 DwbStatus 
 dwb_evaluate_hints(const char *buffer) {
   DwbStatus ret = STATUS_OK;
-  Arg *a;
   if (!strcmp(buffer, "undefined")) 
     return ret;
   else if (!strcmp("_dwb_no_hints_", buffer)) {
@@ -1805,6 +1805,7 @@ dwb_evaluate_hints(const char *buffer) {
   }
   else  {
     dwb.state.mode = NORMAL_MODE;
+    Arg *a = NULL;
     switch (dwb.state.hint_type) {
       case HINT_T_ALL:     break;
       case HINT_T_IMAGES : dwb_load_uri(NULL, buffer); 
@@ -1812,12 +1813,20 @@ dwb_evaluate_hints(const char *buffer) {
                            break;
       case HINT_T_URL    : a = util_arg_new();
                            a->n = dwb.state.nv | SET_URL;
-                           a->p = (char*)buffer;
+                           a->p = (char *)buffer;
                            commands_open(NULL, a);
-                           g_free(a);
                            break;
+      case HINT_T_CLIPBOARD : a = util_arg_new();
+                              a->p = GDK_NONE; 
+                              a->arg = (char*)buffer;
+                              break;
+      case HINT_T_PRIMARY  :  a = util_arg_new();
+                              a->p = GDK_SELECTION_PRIMARY; 
+                              a->arg = (char*)buffer;
+                              break;
       default : break;
     }
+    FREE(a);
     ret = STATUS_END;
   }
   return ret;
@@ -1832,7 +1841,7 @@ dwb_update_hints(GdkEventKey *e) {
   gboolean ret = false;
 
   if (e->keyval == GDK_KEY_Return) {
-    com = g_strdup_printf("DwbHintObj.followActive(%d)", dwb.state.hint_type);
+    com = g_strdup_printf("DwbHintObj.followActive(%d)", MIN(dwb.state.hint_type, HINT_T_URL));
   }
   else if (DWB_TAB_KEY(e)) {
     if (e->state & GDK_SHIFT_MASK) {
