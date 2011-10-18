@@ -2426,13 +2426,9 @@ dwb_normal_mode(gboolean clean) {
 
 DwbStatus 
 dwb_change_mode(Mode mode, ...) {
-  GStaticMutex mutex = G_STATIC_MUTEX_INIT;
   DwbStatus ret = STATUS_OK;
   gboolean clean;
   va_list vl;
-  if (! g_static_mutex_trylock(&mutex))
-    return STATUS_ERROR;
-
   switch(mode) {
     case NORMAL_MODE: 
       va_start(vl, mode);
@@ -2445,7 +2441,6 @@ dwb_change_mode(Mode mode, ...) {
     case PASS_THROUGH:  ret = dwb_passthrough_mode(); break;
     default: PRINT_DEBUG("Unknown mode: %d", mode); break;
   }
-  g_static_mutex_unlock(&mutex);
   return ret;
 }
 
