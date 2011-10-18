@@ -299,6 +299,11 @@ typedef enum {
   SET_URL          = 1<<4, 
 } Open;
 
+enum {
+  CA_TITLE,
+  CA_URI,
+} ClipboardAction;
+
 enum Signal {
   SIG_FIRST = 0, 
   SIG_BUTTON_PRESS,

@@ -534,11 +534,15 @@ commands_yank(KeyMap *km, Arg *arg) {
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
   GtkClipboard *clipboard = gtk_clipboard_get(atom);
   gboolean ret = STATUS_ERROR;
-  const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+  const char *text = NULL;
+  if (arg->n == CA_URI) 
+    text = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+  else if (arg->n == CA_TITLE)
+    text = webkit_web_view_get_title(CURRENT_WEBVIEW());
 
-  gtk_clipboard_set_text(clipboard, uri, -1);
-  if (*uri) {
-    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", uri);
+  gtk_clipboard_set_text(clipboard, text, -1);
+  if (*text) {
+    dwb_set_normal_message(dwb.state.fview, true, "Yanked: %s", text);
     ret = STATUS_OK;
   }
   return ret;

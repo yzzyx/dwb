@@ -92,6 +92,8 @@ paste_primary_nw Open url from primary selection in a new window
 paste_primary_nv Open url from primary selection in a new window
 yank Yank current url to clipboard
 yank_primary Yank current url to primary selection
+yank_title Yank current title to clipboard
+yank_title_primary Yank current title to primary selection
 
 # settings Settings
 set_setting Set a setting from commandline

@@ -92,6 +92,8 @@ static KeyValue KEYS[] = {
   { "set_key",                  {   "sk",           0, }, }, 
   { "yank",                     {   "yy",           0, }, }, 
   { "yank_primary",             {   "yY",           0, }, }, 
+  { "yank_title",               {   "yt",           0, }, }, 
+  { "yank_title_primary",       {   "yT",           0, }, }, 
   { "paste",                    {   "pp",           0, }, }, 
   { "paste_primary",            {   "pP",           0, }, }, 
   { "paste_nv",                 {   "Pp",           0, }, }, 
