@@ -548,8 +548,6 @@ commands_yank(KeyMap *km, Arg *arg) {
     text = webkit_web_view_get_uri(CURRENT_WEBVIEW());
   else if (arg->n == CA_TITLE)
     text = webkit_web_view_get_title(CURRENT_WEBVIEW());
-  else if (arg->n == CA_CUSTOM) 
-    text = arg->arg;
 
   return dwb_set_clipboard(text, atom);
 }/*}}}*/

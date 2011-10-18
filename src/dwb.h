@@ -312,7 +312,6 @@ typedef enum {
 enum {
   CA_TITLE,
   CA_URI,
-  CA_CUSTOM,
 } ClipboardAction;
 
 enum Signal {

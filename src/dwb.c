@@ -1822,13 +1822,11 @@ dwb_evaluate_hints(const char *buffer) {
                            a->p = (char *)buffer;
                            commands_open(NULL, a);
                            break;
-      case HINT_T_CLIPBOARD : 
-      case HINT_T_PRIMARY   : a = util_arg_new();
-                              a->p = dwb.state.hint_type == HINT_T_CLIPBOARD ? GDK_NONE : GDK_SELECTION_PRIMARY; 
-                              a->n = CA_CUSTOM;
-                              a->arg = (char*)buffer;
-                              dwb_change_mode(NORMAL_MODE, true);
-                              commands_yank(NULL, a);
+      case HINT_T_CLIPBOARD : dwb_change_mode(NORMAL_MODE, true);
+                              ret = dwb_set_clipboard(buffer, GDK_NONE);
+                              break;
+      case HINT_T_PRIMARY   : dwb_change_mode(NORMAL_MODE, true);
+                              ret = dwb_set_clipboard(buffer, GDK_SELECTION_PRIMARY);
                               break;
       default : break;
     }
