@@ -3036,7 +3036,10 @@ dwb_init_style() {
 static void 
 dwb_init_gui() {
   /* Window */
-  dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  if (dwb.gui.wid == 0) 
+    dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  else 
+    dwb.gui.window = gtk_plug_new(dwb.gui.wid);
   gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, dwb.misc.name);
   gtk_widget_set_name(dwb.gui.window, "dwb");
   /* Icon */
@@ -3425,6 +3428,7 @@ main(int argc, char *argv[]) {
   dwb.misc.profile = "default";
   dwb.misc.argc = 0;
   dwb.misc.prog_path = argv[0];
+  dwb.gui.wid = 0;
   int last = 0;
   int single = 0;
   int argr = argc;
@@ -3439,13 +3443,16 @@ main(int argc, char *argv[]) {
           session_list();
           argr--;
         }
-        else if (argv[i][1] == 'p' && argv[i++]) {
+        else if (argv[i][1] == 'p' && argv[++i]) {
           dwb.misc.profile = argv[i];
           argr -= 2;
         }
         else if (argv[i][1] == 'n') {
           single = NEW_INSTANCE;
           argr -=1;
+        }
+        else if (argv[i][1] == 'e' && argv[++i]) {
+          dwb.gui.wid = strtol(argv[i], NULL, 10);
         }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {

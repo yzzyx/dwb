@@ -576,6 +576,7 @@ struct _Gui {
   GtkWidget *downloadbar;
   int width;
   int height;
+  guint wid;
 };
 struct _Misc {
   const char *name;

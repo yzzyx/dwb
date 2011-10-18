@@ -205,7 +205,11 @@ view_delete_web_inspector(GtkWidget *widget, GdkEvent *event, GtkWidget *wv) {
 /* view_inspect_web_view_cb(WebKitWebInspector *, WebKitWebView *, GList * *){{{*/
 static WebKitWebView * 
 view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList *gl) {
-  GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  GtkWidget *window;
+  if (dwb.gui.wid == 0) 
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  else
+    window = gtk_plug_new(dwb.gui.wid);
   GtkWidget *webview = webkit_web_view_new();
   
   gtk_container_add(GTK_CONTAINER(window), webview);
