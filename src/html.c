@@ -116,7 +116,6 @@ html_history(GList *gl, HtmlTable *table) {
 gboolean
 html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   char buffer[10];
-  puts("change");
   memset(buffer, '\0', 10);
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(el));
   char *value = NULL;
