@@ -116,6 +116,7 @@ html_history(GList *gl, HtmlTable *table) {
 gboolean
 html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   char buffer[10];
+  puts("change");
   memset(buffer, '\0', 10);
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(el));
   char *value = NULL;
@@ -143,6 +144,18 @@ html_settings_really_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKit
   return true;
 }
 gboolean
+html_keydown_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
+  glong val = webkit_dom_ui_event_get_key_code(WEBKIT_DOM_UI_EVENT(ev));
+  if (val == 13) {
+    WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
+    if (target != NULL) {
+      webkit_dom_element_blur(WEBKIT_DOM_ELEMENT(target));
+      return true;
+    }
+  }
+  return false;
+}
+gboolean
 html_focus_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   char *type = webkit_dom_element_get_attribute(el, "type");
   if (!strcmp(type, "text")) {
@@ -155,18 +168,20 @@ void
 html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
   char *value = util_arg_to_char(&s->arg, s->type);
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+  WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
   WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, key);
   PRINT_DEBUG("%s %s", key, value);
   if (s->type == BOOLEAN) {
     webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), s->arg.b);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
   }
-  else if (value) {
+  else {
     if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) {
-      webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value);
+      webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value ? value : "");
       webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_really_changed_cb), false, wv);
       webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "blur", G_CALLBACK(html_settings_changed_cb), false, wv);
       webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "focus", G_CALLBACK(html_focus_cb), false, wv);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
     }
     else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(e)) {
       char *lower = g_utf8_strdown(value, -1);
@@ -174,7 +189,7 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
       webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
       g_free(lower);
     }
-    g_free(value);
+    FREE(value);
   }
 }
 void 
@@ -218,6 +233,7 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
 
   if (webkit_web_view_get_load_status(wv) == WEBKIT_LOAD_FINISHED) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+    WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
     for (GList *l = dwb.keymap; l; l=l->next) {
       km = l->data; 
       n = km->map->n;
@@ -229,6 +245,7 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(html_key_really_changed_cb), false, wv);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "blur", G_CALLBACK(html_key_changed_cb), false, wv);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "focus", G_CALLBACK(html_focus_cb), false, wv);
+        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
         FREE(mod);
         g_free(value);
       }
