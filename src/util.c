@@ -528,7 +528,7 @@ util_domain_from_uri(const char *uri) {
     strncpy(domain, uri_p, p - uri_p);
   }
   char *ret = domain[0] ? domain : uri_p;
-  return ret;
+  return g_strdup(ret);
 }/*}}}*/
 
 /* util_compare_path(char *uri)      return: char* {{{*/
@@ -568,7 +568,7 @@ util_file_add(const char *filename, const char *text, int append, int max) {
   if (!append) 
     g_string_append_printf(content, "%s\n", text);
 
-  gboolean ret;
+  gboolean ret = true;
   if ( (file = fopen(filename, "r")) ) {
     for (int i=0; fgets(buffer, sizeof buffer, file) &&  (max < 0 || i < max-1); i++ ) {
       if (STRCMP_FIRST_WORD(text, buffer) && STRCMP_SKIP_NEWLINE(text, buffer) ) {
@@ -580,10 +580,13 @@ util_file_add(const char *filename, const char *text, int append, int max) {
   else {
     fprintf(stderr, "Cannot open file %s\n", filename);
     ret = false;
+    goto error_out;
   }
   if (append)
     g_string_append_printf(content, "%s\n", text);
   ret = util_set_file_content(filename, content->str);
+
+error_out:
   g_string_free(content, true);
   return ret;
 }

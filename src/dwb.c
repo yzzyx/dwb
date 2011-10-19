@@ -847,7 +847,6 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
         completion_eval_autocompletion();
         return true;
       }
-      ret = true;
     }
     ret = dwb_eval_key(e);
   }
@@ -1252,7 +1251,7 @@ dwb_set_setting(const char *key, char *value) {
   GHashTable *t = dwb.settings;
   if (key) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
-      if ( (a = util_char_to_arg(value, s->type)) || (s->type == CHAR && a->p == NULL)) {
+      if ( (a = util_char_to_arg(value, s->type))) {
         s->arg = *a;
         dwb_apply_settings(s);
         dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
@@ -1812,6 +1811,7 @@ dwb_evaluate_hints(const char *buffer) {
   else  {
     dwb.state.mode = NORMAL_MODE;
     Arg *a = NULL;
+    ret = STATUS_END;
     switch (dwb.state.hint_type) {
       case HINT_T_ALL:     break;
       case HINT_T_IMAGES : dwb_load_uri(NULL, buffer); 
@@ -1831,7 +1831,6 @@ dwb_evaluate_hints(const char *buffer) {
       default : break;
     }
     FREE(a);
-    ret = STATUS_END;
   }
   return ret;
 }
@@ -2226,17 +2225,13 @@ dwb_eval_editing_key(GdkEventKey *e) {
 void 
 dwb_clean_key_buffer() {
   dwb.state.nummod = 0;
-  if (dwb.state.buffer) {
-    g_string_free(dwb.state.buffer, true);
-    dwb.state.buffer = NULL;
-  }
+  g_string_truncate(dwb.state.buffer, 0);
 }/*}}}*/
 
 /* dwb_eval_key(GdkEventKey *e) {{{*/
 static gboolean
 dwb_eval_key(GdkEventKey *e) {
   gboolean ret = false;
-  const char *old = dwb.state.buffer ? dwb.state.buffer->str : NULL;
   int keyval = e->keyval;
   unsigned int mod_mask;
   int keynum = -1;
@@ -2252,11 +2247,9 @@ dwb_eval_key(GdkEventKey *e) {
     if (dwb.state.mode & AUTO_COMPLETE) {
       completion_clean_autocompletion();
     }
-    if (dwb.state.buffer && dwb.state.buffer->str ) {
-      if (dwb.state.buffer->len) {
-        g_string_erase(dwb.state.buffer, dwb.state.buffer->len - 1, 1);
-        dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_active, false);
-      }
+    if (dwb.state.buffer->len > 0) {
+      g_string_erase(dwb.state.buffer, dwb.state.buffer->len - 1, 1);
+      dwb_set_status_bar_text(VIEW(dwb.state.fview)->lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_active, false);
       ret = false;
     }
     else {
@@ -2282,10 +2275,6 @@ dwb_eval_key(GdkEventKey *e) {
   }
   else {
     return false;
-  }
-  if (!old) {
-    dwb.state.buffer = g_string_new(NULL);
-    old = dwb.state.buffer->str;
   }
   /* nummod */
   if (DIGIT(e)) {
@@ -2412,10 +2401,7 @@ dwb_normal_mode(gboolean clean) {
   dwb_focus_scroll(dwb.state.fview);
 
   if (clean) {
-    if (dwb.state.buffer != NULL) {
-      g_string_free(dwb.state.buffer, true);
-      dwb.state.buffer = NULL;
-    }
+    dwb_clean_key_buffer();
     CLEAR_COMMAND_TEXT(dwb.state.fview);
   }
 
@@ -2613,7 +2599,6 @@ dwb_get_scripts() {
 static void 
 dwb_clean_vars() {
   dwb.state.mode = NORMAL_MODE;
-  dwb.state.buffer = NULL;
   dwb.state.nummod = 0;
   dwb.state.nv = OPEN_NORMAL;
   dwb.state.type = 0;
@@ -3104,7 +3089,7 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
 static Navigation * 
 dwb_get_search_completion_from_navigation(Navigation *n) {
   char *uri = n->second;
-  n->second = g_strdup(util_domain_from_uri(n->second));
+  n->second = util_domain_from_uri(n->second);
 
   FREE(uri);
   return n;
@@ -3222,6 +3207,7 @@ dwb_init_vars() {
 
   dwb.state.size = GET_INT("size");
   dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
+  dwb.state.buffer = g_string_new(NULL);
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }/*}}}*/
 
@@ -3308,7 +3294,7 @@ dwb_init() {
 void 
 dwb_parse_command_line(const char *line) {
   char **token = g_strsplit(line, " ", 2);
-  KeyMap *m;
+  KeyMap *m = NULL;
 
   if (!token[0]) 
     return;
@@ -3334,7 +3320,7 @@ dwb_parse_command_line(const char *line) {
     }
   }
   g_strfreev(token);
-  if (!(m->map->prop & CP_HAS_MODE)) {
+  if (m != NULL && !(m->map->prop & CP_HAS_MODE)) {
     dwb_change_mode(NORMAL_MODE, true);
   }
 }/*}}}*/
@@ -3433,6 +3419,8 @@ main(int argc, char *argv[]) {
 
   if (argc > 1) {
     for (int i=1; i<argc; i++) {
+      if (! argv[i] )
+        continue;
       if (argv[i][0] == '-') {
         if (argv[i][1] == 'l') {
           session_list();

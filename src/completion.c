@@ -194,9 +194,11 @@ completion_show_completion(int back) {
       gtk_widget_show_all(((Completion*)l->data)->event);
     }
   }
-  completion_modify_completion_item(dwb.comps.active_comp->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_active);
-  completion_set_entry_text(dwb.comps.active_comp->data);
-  gtk_widget_show(CURRENT_VIEW()->compbox);
+  if (dwb.comps.active_comp != NULL) {
+    completion_modify_completion_item(dwb.comps.active_comp->data, &dwb.color.active_c_fg, &dwb.color.active_c_bg, dwb.font.fd_active);
+    completion_set_entry_text(dwb.comps.active_comp->data);
+    gtk_widget_show(CURRENT_VIEW()->compbox);
+  }
 
 }/*}}}*/
 
