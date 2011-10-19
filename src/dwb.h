@@ -40,6 +40,8 @@
 #include <JavaScriptCore/JavaScript.h>
 #include <gdk/gdkkeysyms.h> 
 
+
+
 #ifndef NAME
 #define NAME "dwb"
 #endif
@@ -67,6 +69,10 @@
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
 #define _HAS_GTK3  GTK_CHECK_VERSION(3, 0, 0)
+
+#if _HAS_GTK3 
+#include <gtk/gtkx.h>
+#endif
 
 #ifndef true
 #define true 1
