@@ -21,7 +21,14 @@ BUILDDATE=`date +%Y.%m.%d`
 CC ?= gcc
 
 GTK3LIBS=gtk+-3.0 webkitgtk-3.0 
-GTK2LIBS=gtk+-2.0 webkit-1.0
+ifeq ($(shell pkg-config --exists javascriptcoregtk-3.0 && echo 1), 1)
+GTK3LIBS+=javascriptcoregtk-3.0
+endif
+GTK2LIBS=gtk+-2.0 webkit-1.0 
+ifeq ($(shell pkg-config --exists javascriptcoregtk-1.0 && echo 1), 1)
+GTK2LIBS+=javascriptcoregtk-1.0
+endif
+
 LIBSOUP=libsoup-2.4
 
 ifeq ($(shell pkg-config --exists $(LIBSOUP) && echo 1), 1)
