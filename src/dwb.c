@@ -199,6 +199,8 @@ static FunctionMap FMAP [] = {
     (Func)commands_stop_loading,       NULL,                              ALWAYS_SM, },
   { { "remove_view",           "Close view",                        }, 1, 
     (Func)commands_remove_view,         NULL,                              ALWAYS_SM, },
+  { { "only",           "Close other tabs except for current",                        }, 1, 
+    (Func)commands_only,         "No other view",                              ALWAYS_SM, },
   { { "save_quickmark",        "Save a quickmark for this page",    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
   { { "save_search_field",     "Add a new searchengine",            }, CP_COMMANDLINE | CP_HAS_MODE, 

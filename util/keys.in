@@ -74,6 +74,7 @@ scroll_percent Scroll to percentage
 # tabs Tabs &amp UI
 add_view Add a new view
 remove_view Close view
+only Close all tabs except for the current one
 undo Undo closing last tab
 decrease_master Decrease master area
 increase_master Increase master area

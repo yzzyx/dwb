@@ -891,4 +891,19 @@ DwbStatus
 commands_command_mode(KeyMap *km, Arg *arg) {
   return dwb_change_mode(COMMAND_MODE);
 }/*}}}*/
+/* dwb_command_mode {{{*/
+DwbStatus
+commands_only(KeyMap *km, Arg *arg) {
+  DwbStatus ret = STATUS_ERROR;
+  GList *l = dwb.state.views, *next;
+  while (l) {
+    next = l->next;
+    if (l != dwb.state.fview) {
+      view_remove(l);
+      ret = STATUS_OK;
+    }
+    l = next;
+  }
+  return ret;
+}/*}}}*/
 /*}}}*/

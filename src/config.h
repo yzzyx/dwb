@@ -24,6 +24,7 @@ static KeyValue KEYS[] = {
   { "bookmarks_nv",             {   "gB",        0,                   },  },  
   { "bookmarks_nw",             {   "wB",        0,                   },  },  
   { "command_mode",             {   ":",         0,                   },  },  
+  { "only",                     {   "co",         0,                   },  },  
   { "find_forward",             {   "/",         0,                   },  }, 
   { "find_next",                {   "n",         0,                   },  },
   { "find_previous",            {   "N",         0,                   },  },
