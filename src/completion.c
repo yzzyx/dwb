@@ -172,7 +172,9 @@ completion_clean_completion() {
     FREE(l->data);
   }
   g_list_free(dwb.comps.completions);
-  gtk_widget_destroy(CURRENT_VIEW()->compbox);
+  if (dwb.comps.view != NULL) 
+    gtk_widget_destroy(VIEW(dwb.comps.view)->compbox);
+  dwb.comps.view = NULL;
   dwb.comps.completions = NULL;
   dwb.comps.active_comp = NULL;
   dwb.state.mode &= ~(COMPLETION_MODE|COMPLETE_PATH|COMPLETE_BUFFER);
@@ -383,6 +385,7 @@ completion_complete(CompletionType type, int back) {
     }
     dwb.state.mode |= COMPLETION_MODE;
     completion_show_completion(back);
+    dwb.comps.view = dwb.state.fview;
   }
   else if (dwb.comps.completions && dwb.comps.active_comp) {
     dwb.comps.active_comp = completion_update_completion(v->compbox, dwb.comps.completions, dwb.comps.active_comp, dwb.misc.max_c_items, back);

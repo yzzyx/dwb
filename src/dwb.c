@@ -3253,6 +3253,7 @@ dwb_init() {
 
   dwb.comps.completions = NULL; 
   dwb.comps.active_comp = NULL;
+  dwb.comps.view = NULL;
 
   dwb.misc.max_c_items = MAX_COMPLETIONS;
   dwb.misc.userscripts = NULL;

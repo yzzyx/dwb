@@ -433,6 +433,7 @@ struct _Completions {
   gboolean autocompletion;
   GList *path_completion;
   GList *active_path;
+  GList *view;
 };
 struct _State {
   GList *views;
