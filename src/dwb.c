@@ -201,7 +201,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_remove_view,         NULL,                              ALWAYS_SM, },
   { { "only",           "Close other tabs except for current",                        }, 1, 
     (Func)commands_only,         "No other view",                              ALWAYS_SM, },
-  { { "save_quickmark",        "Save a quickmark for this page",    }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "save_quickmark",        "Save quickmark",    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, },
   { { "save_search_field",     "Add a new searchengine",            }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_add_search_field,    "No input in current context",     POST_SM, },
@@ -1830,7 +1830,7 @@ dwb_evaluate_hints(const char *buffer) {
       case HINT_T_PRIMARY   : dwb_change_mode(NORMAL_MODE, true);
                               ret = dwb_set_clipboard(buffer, GDK_SELECTION_PRIMARY);
                               break;
-      default : break;
+      default : return ret;
     }
     FREE(a);
   }
@@ -2925,7 +2925,7 @@ dwb_read_settings() {
 /* dwb_init_settings() {{{*/
 static void
 dwb_init_settings() {
-  dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)dwb_free, NULL);
+  dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)dwb_free, (GDestroyNotify)dwb_free);
   dwb.state.web_settings = webkit_web_settings_new();
   dwb_read_settings();
   for (GList *l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
@@ -3264,7 +3264,10 @@ dwb_init() {
   dwb.misc.synctimer = 0;
 
   char *path = util_get_data_file(PLUGIN_FILE);
-  dwb.misc.pbbackground = util_get_file_content(path);
+  if (path) {
+    dwb.misc.pbbackground = util_get_file_content(path);
+    g_free(path);
+  }
 
 
   dwb_init_key_map();
@@ -3352,9 +3355,9 @@ dwb_init_fifo(int single) {
   char *path = util_build_path();
   dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
 
-
   dwb.misc.si_channel = NULL;
   if (single == NEW_INSTANCE) {
+    FREE(path);
     return;
   }
 

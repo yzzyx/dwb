@@ -220,14 +220,13 @@ typedef enum {
 } PluginBlockerStatus;
 
 typedef enum {
-  HINT_T_ALL = 0,
-  HINT_T_LINKS = 1,
-  HINT_T_IMAGES = 2,
-  HINT_T_EDITABLE = 3,
-  HINT_T_URL = 4,
-  HINT_T_CLIPBOARD = 5,
-  HINT_T_PRIMARY = 6,
-  HINT_T_BOOKMARK = 7,
+  HINT_T_ALL        = 0,
+  HINT_T_LINKS      = 1,
+  HINT_T_IMAGES     = 2,
+  HINT_T_EDITABLE   = 3,
+  HINT_T_URL        = 4,
+  HINT_T_CLIPBOARD  = 5,
+  HINT_T_PRIMARY    = 6,
 } HintType;
 typedef enum {
   HIDE_TB_NEVER     = 0x02,
