@@ -44,7 +44,6 @@ html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     g_file_get_contents(headpath, &filecontent, NULL, NULL);
     g_string_append_printf(content, filecontent, t->title);
     g_free(filecontent);
-    FREE(headpath);
     /* load content */
     g_file_get_contents(path, &filecontent, NULL, NULL);
     if (panel) 
@@ -52,8 +51,9 @@ html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, current_uri, current_uri);
     g_string_free(content, true);
     g_free(filecontent);
-    FREE(path);
   }
+  FREE(headpath);
+  FREE(path);
 }
 
 gboolean
