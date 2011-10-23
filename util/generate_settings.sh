@@ -3,7 +3,6 @@
 INFILE=$1
 OUTFILE=$2
 [ -f ${OUTFILE} ] && rm ${OUTFILE}
-i=0
 while read; do 
   line=( ${REPLY} )
   if [ "${line[0]}" = "#" ]; then 
@@ -26,7 +25,7 @@ EOF
         fi
       done
       cat >> ${OUTFILE} << EOF
-  <tr class='dwb_table_row$i'>
+  <tr class='dwb_table_row'>
     <td class='dwb_table_cell_left'>${line[0]}</td>
     <td class='dwb_table_cell_middle'>${desc}</td>
     <td class='dwb_table_cell_right'>
@@ -38,14 +37,12 @@ EOF
 EOF
     else 
       cat >> ${OUTFILE} << EOF
-  <tr class='dwb_table_row$i'>
+  <tr class='dwb_table_row'>
     <td class='dwb_table_cell_left'>${line[0]}</td>
     <td class='dwb_table_cell_middle'>${line[@]:2}</td>
     <td class='dwb_table_cell_right'><input id='${line[0]}' type='${line[1]}'></td>
   </tr>
 EOF
     fi
-    ((i++))
-    ((i%=2))
   fi
 done < ${INFILE}

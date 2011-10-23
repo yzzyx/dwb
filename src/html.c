@@ -96,13 +96,13 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
   GString *panels = g_string_new("<div class='setting_bar' ></div>");
   for (GList *l = data; l; l=l->next, i++, i%=2) {
     Navigation *n = l->data;
-    g_string_append_printf(panels, "<tr class='dwb_table_row%d'>\
+    g_string_append_printf(panels, "<tr class='dwb_table_row'>\
         <td class=dwb_table_cell_left>\
           <a href=%s>%s</a>\
         </td>\
         <td class='dwb_table_cell_middle'></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
-        <tr>",  i, n->first, n->second, n->first, n->second);
+        <tr>",  n->first, n->second, n->first, n->second);
     //g_string_append_printf(panels, 
     //    "<div class='dwb_line%d'><div><a href='%s'>%s</a><div style='float:right;cursor:pointer;' navigation='%s %s' onclick='location.reload();'>&times</div></div></div>\n", 
     //    i, n->first, n->second, n->first, n->second);
@@ -277,11 +277,11 @@ html_quickmarks(GList *gl, HtmlTable *table) {
   GString *panels = g_string_new("<div class='setting_bar' ></div>");
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
     Quickmark *q = gl->data;
-    g_string_append_printf(panels, "<tr class='dwb_table_row%d'>\
+    g_string_append_printf(panels, "<tr class='dwb_table_row'>\
         <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a><div></td>\
         <td></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
-        </tr>", i, q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
+        </tr>", q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
   }
   html_load_page(wv, table, panels->str);
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
