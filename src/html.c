@@ -44,7 +44,6 @@ html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     g_file_get_contents(headpath, &filecontent, NULL, NULL);
     g_string_append_printf(content, filecontent, t->title);
     g_free(filecontent);
-    FREE(headpath);
     /* load content */
     g_file_get_contents(path, &filecontent, NULL, NULL);
     if (panel) 
@@ -52,8 +51,9 @@ html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, current_uri, current_uri);
     g_string_free(content, true);
     g_free(filecontent);
-    FREE(path);
   }
+  FREE(headpath);
+  FREE(path);
 }
 
 gboolean
@@ -96,9 +96,16 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
   GString *panels = g_string_new("<div class='setting_bar' ></div>");
   for (GList *l = data; l; l=l->next, i++, i%=2) {
     Navigation *n = l->data;
-    g_string_append_printf(panels, 
-        "<div class='dwb_line%d'><div><a href='%s'>%s</a><div style='float:right;cursor:pointer;' navigation='%s %s' onclick='location.reload();'>&times</div></div></div>\n", 
-        i, n->first, n->second, n->first, n->second);
+    g_string_append_printf(panels, "<tr class='dwb_table_row%d'>\
+        <td class=dwb_table_cell_left>\
+          <a href=%s>%s</a>\
+        </td>\
+        <td class='dwb_table_cell_middle'></td>\
+        <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
+        <tr>",  i, n->first, n->second, n->first, n->second);
+    //g_string_append_printf(panels, 
+    //    "<div class='dwb_line%d'><div><a href='%s'>%s</a><div style='float:right;cursor:pointer;' navigation='%s %s' onclick='location.reload();'>&times</div></div></div>\n", 
+    //    i, n->first, n->second, n->first, n->second);
   }
   html_load_page(wv, table, panels->str);
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
@@ -270,9 +277,11 @@ html_quickmarks(GList *gl, HtmlTable *table) {
   GString *panels = g_string_new("<div class='setting_bar' ></div>");
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
     Quickmark *q = gl->data;
-    g_string_append_printf(panels, "<div class='dwb_line%d'><div class=dwb_qm>%s</div><div><a href='%s'>%s</a>\
-        <div style='float:right;cursor:pointer;' navigation='%s %s %s' onclick='location.reload();'>&times</div></div></div>\n", 
-        i, q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
+    g_string_append_printf(panels, "<tr class='dwb_table_row%d'>\
+        <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a><div></td>\
+        <td></td>\
+        <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
+        </tr>", i, q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
   }
   html_load_page(wv, table, panels->str);
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 

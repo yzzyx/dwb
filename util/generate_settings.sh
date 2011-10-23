@@ -2,25 +2,16 @@
 
 INFILE=$1
 OUTFILE=$2
-cat > ${OUTFILE} << EOF
-<div class='setting_bar'>
-  <a class="setting_button" href="#general">General</a>
-  <a class="setting_button" href="#session">Network &amp Session</a>
-  <a class="setting_button" href="#fonts">Fonts</a>
-  <a class="setting_button" href="#colors">Colors</a>
-  <a class="setting_button" href="#lt">Layout</a>
-  <a class="setting_button" href="#hints">Hints</a>
-  <a class="setting_button" href="#plugins">Plugins &amp Scripts</a>
-  <a class="setting_button" href="#completion">Completion</a>
-  <a class="setting_button" href="#misc">Miscellaneous</a>
-</div>
-<div class='dwb_settings_panel'>
-EOF
+[ -f ${OUTFILE} ] && rm ${OUTFILE}
 i=0
 while read; do 
   line=( ${REPLY} )
   if [ "${line[0]}" = "#" ]; then 
-    echo "<div class='dwb_settings_headline'><a name='${line[1]}'>${line[@]:2}</a></div>" >> ${OUTFILE}
+    cat >> ${OUTFILE} <<EOF 
+    <tr class='dwb_table_row'>
+      <th class='dwb_table_headline' colspan='3'>${line[@]:2}</th>
+    </tr>
+EOF
   elif [[ ! ${REPLY} =~ ^\ *$ ]]; then 
     if [ ${line[1]} = "select" ]; then 
       unset options;
@@ -35,31 +26,26 @@ while read; do
         fi
       done
       cat >> ${OUTFILE} << EOF
-  <div class='dwb_line$i'>
-    <div class='dwb_attr'>${line[0]}</div>
-      <div style='float:right;'>
-        <label for='${line[0]}' class='dwb_desc'>${desc}</label>
+  <tr class='dwb_table_row$i'>
+    <td class='dwb_table_cell_left'>${line[0]}</td>
+    <td class='dwb_table_cell_middle'>${desc}</td>
+    <td class='dwb_table_cell_right'>
         <select id='${line[0]}'>
           ${options}
         </select>
-      </div>
-    <div style='clear:both;'></div>
-  </div>
+    </td>
+  </tr>
 EOF
     else 
       cat >> ${OUTFILE} << EOF
-  <div class='dwb_line$i'>
-    <div class='dwb_attr'>${line[0]}</div>
-      <div style='float:right;'>
-        <label for='${line[0]}' class='dwb_desc'>${line[@]:2}</label>
-        <input id='${line[0]}' type='${line[1]}'> 
-    </div>
-    <div style='clear:both;'></div>
-  </div>
+  <tr class='dwb_table_row$i'>
+    <td class='dwb_table_cell_left'>${line[0]}</td>
+    <td class='dwb_table_cell_middle'>${line[@]:2}</td>
+    <td class='dwb_table_cell_right'><input id='${line[0]}' type='${line[1]}'></td>
+  </tr>
 EOF
     fi
     ((i++))
     ((i%=2))
   fi
 done < ${INFILE}
-echo "</div>" >> ${OUTFILE}
