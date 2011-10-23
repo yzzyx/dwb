@@ -325,7 +325,7 @@ util_set_file_content(const char *filename, const char *content) {
   if (g_file_test(filename, G_FILE_TEST_IS_SYMLINK)) {
      link = g_file_read_link(filename, &error);
      if (link == NULL) {
-       fprintf(stderr, "Cannot save %s : %s", filename, error->message);
+       fprintf(stderr, "Cannot save %s : %s\n", filename, error->message);
        g_clear_error(&error);
        return false;
      }

@@ -2925,7 +2925,7 @@ dwb_read_settings() {
 /* dwb_init_settings() {{{*/
 static void
 dwb_init_settings() {
-  dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)dwb_free, (GDestroyNotify)dwb_free);
+  dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)dwb_free, NULL);
   dwb.state.web_settings = webkit_web_settings_new();
   dwb_read_settings();
   for (GList *l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
