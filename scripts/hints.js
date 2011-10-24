@@ -159,7 +159,7 @@ DwbHintObj = (function() {
       if (length <= l) {
         text = _letterSeq[i];
       }
-      else if (length <= 2*l) {
+      else if (length < 2*l) {
         var rem = (length) % l;
         var r = Math.floor(Math.sqrt(2*(rem)))+1;
         if (i < l-r) {
