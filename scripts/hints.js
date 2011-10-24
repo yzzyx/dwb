@@ -156,13 +156,12 @@ DwbHintObj = (function() {
     this.getTextHint = function(i, length) {
       var text;
       var l = _letterSeq.length;
-      if (length < l) {
+      if (length <= l) {
         text = _letterSeq[i];
       }
-      else if (length < 2*l) {
+      else if (length <= 2*l) {
         var rem = (length) % l;
-        var sqrt = Math.sqrt(2*rem);
-        var r = sqrt == (getint = parseInt(sqrt)) ? sqrt + 1 : getint;
+        var r = Math.floor(Math.sqrt(2*(rem)))+1;
         if (i < l-r) {
           text = _letterSeq[i];
         }
