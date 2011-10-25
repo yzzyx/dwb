@@ -14,7 +14,8 @@ zoom-level text The default zoom level
 zoom-step text The zoom step
 
 # session Network &amp Session
-cookies checkbox Whether to allow all cookies
+cookies checkbox Whether to allow all cookies or only session cookies
+cookies-accept-policy select @always @never @nothirdparty The cookies to accept, affects also session cookies
 enable-dns-prefetching checkbox Whether webkit prefetches domain names
 proxy checkbox Whether to use a HTTP-proxy
 proxy-url text The HTTP-proxy url

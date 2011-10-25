@@ -17,6 +17,7 @@
  */
 
 #include "soup.h"
+static SoupCookieJar *jar;
 
 /* dwb_soup_save_cookies(cookies) {{{*/
 void 
@@ -41,6 +42,27 @@ dwb_soup_test_cookie_allowed(SoupCookie *cookie) {
     }
   }
   return false;
+}/*}}}*/
+
+/* dwb_soup_set_cookie_accept_policy {{{*/
+DwbStatus 
+dwb_soup_set_cookie_accept_policy(const char *policy) {
+  SoupCookieJarAcceptPolicy apo = -1;
+  DwbStatus ret = STATUS_OK;
+  if (! g_ascii_strcasecmp(policy, "nothirdparty"))
+    apo = SOUP_COOKIE_JAR_ACCEPT_NO_THIRD_PARTY;
+  else if (! g_ascii_strcasecmp(policy, "never"))
+    apo = SOUP_COOKIE_JAR_ACCEPT_NEVER;
+  else if (! g_ascii_strcasecmp(policy, "always"))
+    apo = SOUP_COOKIE_JAR_ACCEPT_ALWAYS;
+
+  if (apo < 0) {
+    dwb_set_error_message(dwb.state.fview, "Invalid value for cookies-accept-policy: %d, using 0", policy);
+    apo = 0;
+    ret = STATUS_ERROR;
+  }
+  soup_cookie_jar_set_accept_policy(jar, apo);
+  return ret;
 }/*}}}*/
 
 /* dwb_soup_cookie_compare(SoupCookie *, SoupCookie *) {{{*/
@@ -73,7 +95,8 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
 /* dwb_soup_init_cookies {{{*/
 void
 dwb_soup_init_cookies(SoupSession *s) {
-  SoupCookieJar *jar = soup_cookie_jar_new(); 
+  jar = soup_cookie_jar_new(); 
+  dwb_soup_set_cookie_accept_policy(GET_CHAR("cookies-accept-policy"));
   SoupCookieJar *old_cookies = soup_cookie_jar_text_new(dwb.files.cookies, true);
   GSList *l = soup_cookie_jar_all_cookies(old_cookies);
   for (; l; l=l->next ) {

@@ -34,7 +34,7 @@
 /* DECLARATIONS {{{*/
 static void dwb_webkit_setting(GList *, WebSettings *);
 static void dwb_webview_property(GList *, WebSettings *);
-void dwb_set_background_tab(GList *, WebSettings *);
+static void dwb_set_background_tab(GList *, WebSettings *);
 static void dwb_set_scripts(GList *, WebSettings *);
 static void dwb_set_user_agent(GList *, WebSettings *);
 static void dwb_set_dummy(GList *, WebSettings *);
@@ -46,8 +46,10 @@ static void dwb_set_adblock(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
+static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_follow_selection(void);
+static void dwb_set_single_instance(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 
@@ -494,6 +496,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,      CHAR,    { .p = NULL            },   (S_Func) dwb_soup_init_session_features,  },
   { { "cookies",                                  "Whether to allow all cookies", },                                     
     SETTING_GLOBAL,      BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars,  },
+  { { "cookies-accept-policy",                     "Cookies to accept, alwaysnever or nothirdparty", },                                     
+    SETTING_GLOBAL,      CHAR, { .p = "always"          }, (S_Func) dwb_set_cookie_accept_policy,  },
   { { "background-tabs",			                     "Whether to open tabs in background", },                                 
     SETTING_GLOBAL,      BOOLEAN,    { .b = false         }, (S_Func) dwb_set_background_tab,  },
   { { "scroll-step",			                     "Whether to open tabs in background", },                                 
@@ -667,6 +671,16 @@ dwb_set_private_browsing(GList *gl, WebSettings *s) {
   dwb_webkit_setting(gl, s);
 }/*}}}*/
 
+/* dwb_set_cookie_accept_policy  */
+static DwbStatus
+dwb_set_cookie_accept_policy(GList *gl, WebSettings *s) {
+  if (dwb_soup_set_cookie_accept_policy(s->arg.p) == STATUS_ERROR) {
+    s->arg.p = g_strdup("always");
+    return STATUS_ERROR;
+  }
+  return STATUS_OK;
+}/*}}}*/
+
 /* dwb_set_hide_tabbar{{{*/
 static void
 dwb_set_hide_tabbar(GList *gl, WebSettings *s) {
@@ -706,13 +720,13 @@ dwb_set_history_length(GList *l, WebSettings *s) {
 }/*}}}*/
 
 /* dwb_set_background_tab (GList *, WebSettings *s) {{{*/
-void 
+static void 
 dwb_set_background_tab(GList *l, WebSettings *s) {
   dwb.state.background_tabs = s->arg.b;
 }/*}}}*/
 
 /* dwb_set_single_instance(GList *l, WebSettings *s){{{*/
-void
+static void
 dwb_set_single_instance(GList *l, WebSettings *s) {
   if (!s->arg.b) {
     if (dwb.misc.si_channel) {
@@ -1235,13 +1249,14 @@ dwb_open_startpage(GList *gl) {
 }/*}}}*/
 
 /* dwb_apply_settings(WebSettings *s) {{{*/
-static void
+static DwbStatus
 dwb_apply_settings(WebSettings *s) {
+  DwbStatus ret = STATUS_OK;
   for (GList *l = dwb.state.views; l; l=l->next) 
     if (s->func) 
-      s->func(l, s);
+      ret = s->func(l, s);
   dwb_change_mode(NORMAL_MODE, false);
-
+  return ret;
 }/*}}}*/
 
 /* dwb_set_setting(const char *){{{*/
@@ -1255,8 +1270,8 @@ dwb_set_setting(const char *key, char *value) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
       if ( (a = util_char_to_arg(value, s->type))) {
         s->arg = *a;
-        dwb_apply_settings(s);
-        dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
+        if (dwb_apply_settings(s) != STATUS_ERROR) 
+          dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
         dwb_save_settings();
       }
       else {

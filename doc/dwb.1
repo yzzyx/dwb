@@ -907,9 +907,21 @@ default value:
 .IR false .
 .TP 
 .BR cookies
-Whether to allow all cookies. Possible values: true/false,
+Whether to allow all cookies. Session cookies will still work. For also
+disabling session cookies, see cookies-accept-policy. Possible values: true/false,
 default value:
 .IR false .
+.TP 
+.BR cookies-accept-policy
+The accept policy for cookies. 
+.IR always
+will accept all cookies, 
+.IR nothirdparty 
+will accept all cookies except for third party cookies,
+.IR never 
+will reject all cookies. This setting also affects session cookies.
+default value:
+.IR always .
 .TP 
 .TP 
 .BR default-width

@@ -165,6 +165,12 @@
 
 /*}}}*/
 
+typedef enum _DwbStatus {
+  STATUS_OK, 
+  STATUS_ERROR, 
+  STATUS_END,
+} DwbStatus;
+
 
 /* TYPES {{{*/
 
@@ -193,7 +199,7 @@ typedef struct _WebSettings WebSettings;
 typedef gboolean (*Command_f)(void*);
 typedef gboolean (*Func)(void *, void*);
 typedef void (*void_func)(void*);
-typedef void (*S_Func)(void *, WebSettings *);
+typedef DwbStatus (*S_Func)(void *, WebSettings *);
 typedef void *(*Content_Func)(const char *);
 
 typedef enum  {
@@ -281,12 +287,6 @@ typedef enum {
   DL_ACTION_DOWNLOAD  = 0x01,
   DL_ACTION_EXECUTE   = 0x02,
 } DownloadAction;
-
-typedef enum _DwbStatus {
-  STATUS_OK, 
-  STATUS_ERROR, 
-  STATUS_END,
-} DwbStatus;
 
 #define APPEND  0x01
 #define PREPEND  0x02
@@ -731,7 +731,6 @@ void dwb_entry_set_text(const char *text);
 
 void dwb_set_proxy(GList *, WebSettings *);
 
-void dwb_set_single_instance(GList *, WebSettings *);
 void dwb_new_window(const char *uri);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
