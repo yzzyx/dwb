@@ -666,7 +666,7 @@ struct _FileContent {
   GList *adblock;
   GList *tmp_scripts;
   GList *tmp_plugins;
-  GList *scripts_allow;
+  GList *downloads;
 };
 
 struct _Dwb {
@@ -762,6 +762,7 @@ void dwb_init_scripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
 char * dwb_get_stock_item_base64_encoded(const char *);
 void dwb_remove_bookmark(const char *);
+void dwb_remove_download(const char *);
 void dwb_remove_history(const char *);
 void dwb_remove_quickmark(const char *);
 DwbStatus dwb_evaluate_hints(const char *);

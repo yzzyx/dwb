@@ -181,6 +181,8 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
         download_spawn(label);
       }
       gtk_widget_destroy(label->event);
+      Navigation *n = dwb_navigation_new(webkit_download_get_uri(download), webkit_download_get_destination_uri(download));
+      dwb.fc.downloads = g_list_append(dwb.fc.downloads, n);
       FREE(label->path);
       downloads = g_list_delete_link(downloads, list);
     }

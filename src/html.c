@@ -17,6 +17,7 @@ struct _HtmlTable {
 void html_bookmarks(GList *, HtmlTable *);
 void html_history(GList *, HtmlTable *);
 void html_quickmarks(GList *, HtmlTable *);
+void html_downloads(GList *, HtmlTable *);
 void html_settings(GList *, HtmlTable *);
 void html_startpage(GList *, HtmlTable *);
 void html_keys(GList *, HtmlTable *);
@@ -26,6 +27,7 @@ static HtmlTable table[] = {
   { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, html_bookmarks,  },
   { "dwb://quickmarks", "Quickmarks",   INFO_FILE,      0, html_quickmarks, },
   { "dwb://history",    "History",      INFO_FILE,      0, html_history,    },
+  { "dwb://downloads",  "Downloads",    INFO_FILE,      0, html_downloads, },
   { "dwb://keys",       "Keys",         INFO_FILE,      0, html_keys },
   { "dwb://settings",   "Settings",     INFO_FILE,      0, html_settings },
   { "dwb://startpage",   NULL,           NULL,           0, html_startpage },
@@ -71,6 +73,9 @@ html_remove_item_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
     else if (!strcmp(uri, "dwb://quickmarks")) {
       dwb_remove_quickmark(navigation);
     }
+    else if (!strcmp(uri, "dwb://downloads")) {
+      dwb_remove_download(navigation);
+    }
   }
   return false;
 }
@@ -93,12 +98,12 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
   int i=0;
   WebKitWebView *wv = WEBVIEW(gl);
 
-  GString *panels = g_string_new("<div class='setting_bar' ></div>");
+  GString *panels = g_string_new(NULL);
   for (GList *l = data; l; l=l->next, i++, i%=2) {
     Navigation *n = l->data;
     g_string_append_printf(panels, "<tr class='dwb_table_row'>\
         <td class=dwb_table_cell_left>\
-          <a href=%s>%s</a>\
+          <a href='%s'>%s</a>\
         </td>\
         <td class='dwb_table_cell_middle'></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
@@ -274,7 +279,7 @@ void
 html_quickmarks(GList *gl, HtmlTable *table) {
   int i=0;
   WebKitWebView *wv = WEBVIEW(gl);
-  GString *panels = g_string_new("<div class='setting_bar' ></div>");
+  GString *panels = g_string_new(NULL);
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
     Quickmark *q = gl->data;
     g_string_append_printf(panels, "<tr class='dwb_table_row'>\
@@ -282,6 +287,23 @@ html_quickmarks(GList *gl, HtmlTable *table) {
         <td class='dwb_table_cell_middle'></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
         </tr>", q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
+  }
+  html_load_page(wv, table, panels->str);
+  g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
+  g_string_free(panels, true);
+}
+void
+html_downloads(GList *gl, HtmlTable *table) {
+  int i=0;
+  WebKitWebView *wv = WEBVIEW(gl);
+  GString *panels = g_string_new(NULL);
+  for (GList *gl = dwb.fc.downloads; gl; gl=gl->next, i++, i%=2) {
+    Navigation *n = gl->data;
+    g_string_append_printf(panels, "<tr class='dwb_table_row'>\
+        <td class='dwb_table_cell_left'>%s</td>\
+        <td class='dwb_table_cell_middle'><a href='%s'>restart</a></td>\
+        <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
+        </tr>", n->second+7, n->first, n->first, n->second);
   }
   html_load_page(wv, table, panels->str);
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 

@@ -1184,6 +1184,10 @@ dwb_remove_bookmark(const char *line) {
   dwb_remove_navigation_item(&dwb.fc.bookmarks, line, dwb.files.bookmarks);
 }
 void
+dwb_remove_download(const char *line) {
+  dwb_remove_navigation_item(&dwb.fc.downloads, line, dwb.files.bookmarks);
+}
+void
 dwb_remove_history(const char *line) {
   dwb_remove_navigation_item(&dwb.fc.history, line, dwb.misc.synctimer <= 0 ? dwb.files.history : NULL);
 }
@@ -3163,6 +3167,7 @@ dwb_init_files() {
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
   dwb.fc.tmp_scripts = NULL;
   dwb.fc.tmp_plugins = NULL;
+  dwb.fc.downloads   = NULL;
 
   if (g_list_last(dwb.fc.searchengines)) 
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;
