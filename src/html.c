@@ -278,8 +278,8 @@ html_quickmarks(GList *gl, HtmlTable *table) {
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
     Quickmark *q = gl->data;
     g_string_append_printf(panels, "<tr class='dwb_table_row'>\
-        <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a><div></td>\
-        <td></td>\
+        <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a></div></td>\
+        <td class='dwb_table_cell_middle'></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
         </tr>", q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
   }
