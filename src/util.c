@@ -354,7 +354,7 @@ util_build_path() {
 }/*}}}*/
 /* util_get_data_dir(const char *)      return  char * (alloc) {{{*/
 char *
-util_get_data_dir(const char *dir) {
+util_get_system_data_dir(const char *dir) {
   char *path = NULL;
   const char *dirs;
 
@@ -370,24 +370,44 @@ util_get_data_dir(const char *dir) {
   }
   return NULL;
 }/*}}}*/
+
+/* util_get_user_data_dir {{{*/
+char *
+util_get_user_data_dir(const char *dir) {
+  const gchar *data_dir = g_get_user_data_dir();
+
+  char *path = g_build_filename(data_dir, dwb.misc.name, dir, NULL);
+  if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
+    return NULL;
+  }
+  return path;
+}/*}}}*/
+
+
+/* util_get_data_file(const char *filename)   return: filename (alloc) or NULL {{{*/
 char *
 util_get_data_file(const char *filename) {
-  char *path = util_get_data_dir("lib");
-  char *ret = g_build_filename(path, filename, NULL);
-  g_free(path);
-  if (g_file_test(ret, G_FILE_TEST_EXISTS)) {
-    return ret;
+  char *path = NULL;
+  char *ret = NULL;
+  path = util_get_user_data_dir("lib");
+  if (path != NULL) {
+    ret = g_build_filename(path, filename, NULL);
+    g_free(path);
+    if (g_file_test(ret, G_FILE_TEST_EXISTS)) 
+      return ret;
+  }
+
+  path = util_get_system_data_dir("lib");
+  if (path != NULL)  {
+    ret = g_build_filename(path, filename, NULL);
+    g_free(path);
+    if (g_file_test(ret, G_FILE_TEST_EXISTS)) 
+      return ret;
   }
   return NULL;
-}
-static inline int
-util_strcmp_skip_newline(const char *s1, const char *s2) {
-  char *nl = strstr(s2, "\n");
-  if (nl != NULL) 
-    return strncmp(s1, s2, nl - s1);
-  else 
-    return strcmp(s1, s2);
-}
+}/*}}}*/
+
+/* util_file_remove_line const char *filename, const char *line {{{*/
 int
 util_file_remove_line(const char *filename, const char *line) {
   int ret = 1;
@@ -406,7 +426,7 @@ util_file_remove_line(const char *filename, const char *line) {
   g_strfreev(lines);
 
   return ret;
-}
+}/*}}}*/
 
 /* NAVIGATION {{{*/
 /* dwb_navigation_new(const char *uri, const char *title) {{{*/

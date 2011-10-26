@@ -54,7 +54,8 @@ GList * util_get_directory_entries(const char *path, const char *);
 char * util_get_file_content(const char *);
 gboolean util_set_file_content(const char *, const char *);
 char * util_build_path(void);
-char * util_get_data_dir(const char *);
+char * util_get_system_data_dir(const char *);
+char * util_get_user_data_dir(const char *);
 char * util_get_data_file(const char *);
 
 // navigation

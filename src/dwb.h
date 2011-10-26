@@ -68,7 +68,9 @@
 
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
-#define _HAS_GTK3  GTK_CHECK_VERSION(3, 0, 0)
+#if GTK_CHECK_VERSION(3, 0, 0)
+#define _HAS_GTK3 1
+#endif
 
 #if _HAS_GTK3 
 #include <gtk/gtkx.h>

@@ -1,5 +1,6 @@
 include ../config.mk
 
+DEPS=$(patsubst %.o, %.d, $(OBJ))
 all: $(TARGET) 
 
 $(TARGET): $(OBJ)
@@ -9,13 +10,16 @@ $(TARGET): $(OBJ)
 -include $(OBJ:.o=.d)
 -include $(DOBJ:.do=.dd)
 
-%.o: %.c 
+%.o: %.c %.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CFLAGS) 
 
-#@$(CC) $(FLAGS) -MM $*.c > $*.d
-
 debug: $(DTARGET)
+
+#%.d: %.c %.h
+#	@echo "$(CC) -MM $@"
+#	@$(CC) $(CFLAGS) -MM $< -o $@
+#	
 
 %.do: %.c
 	@echo "${CC} $<"

@@ -2967,7 +2967,7 @@ dwb_init_scripts() {
 
   /* systemscripts */
   char *dir = NULL;
-  if ( (dir = util_get_data_dir("scripts")) ) {
+  if ( (dir = util_get_system_data_dir("scripts")) ) {
     util_get_directory_content(&buffer, dir);
     g_free(dir);
   }

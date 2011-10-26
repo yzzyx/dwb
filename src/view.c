@@ -266,7 +266,9 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     dwb_change_mode(NORMAL_MODE, true);
   }
   if (g_str_has_prefix(uri, "dwb://")) {
-    html_load(gl, uri);
+    if (!html_load(gl, uri)) {
+      fprintf(stderr, "Error loadings %s, maybe some files are missing.\n", uri);
+    }
     return true;
   }
   if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {

@@ -10,17 +10,17 @@ struct _HtmlTable {
   const char *title;
   const char *file;
   int type;
-  void (*func)(GList *, HtmlTable *);
+  DwbStatus (*func)(GList *, HtmlTable *);
 };
 
 
-void html_bookmarks(GList *, HtmlTable *);
-void html_history(GList *, HtmlTable *);
-void html_quickmarks(GList *, HtmlTable *);
-void html_downloads(GList *, HtmlTable *);
-void html_settings(GList *, HtmlTable *);
-void html_startpage(GList *, HtmlTable *);
-void html_keys(GList *, HtmlTable *);
+DwbStatus html_bookmarks(GList *, HtmlTable *);
+DwbStatus html_history(GList *, HtmlTable *);
+DwbStatus html_quickmarks(GList *, HtmlTable *);
+DwbStatus html_downloads(GList *, HtmlTable *);
+DwbStatus html_settings(GList *, HtmlTable *);
+DwbStatus html_startpage(GList *, HtmlTable *);
+DwbStatus html_keys(GList *, HtmlTable *);
 
 
 static HtmlTable table[] = {
@@ -34,12 +34,13 @@ static HtmlTable table[] = {
 };
 
 static char current_uri[BUFFER_LENGTH];
-void
+DwbStatus
 html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
   char *filecontent;
   GString *content = g_string_new(NULL);
   char *path = util_get_data_file(t->file);
   char *headpath = util_get_data_file(HEAD_FILE);
+  DwbStatus ret = STATUS_ERROR;
 
   if (path && headpath) {
     /* load head */
@@ -53,9 +54,11 @@ html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(wv), content->str, current_uri, current_uri);
     g_string_free(content, true);
     g_free(filecontent);
+    ret = STATUS_OK;
   }
   FREE(headpath);
   FREE(path);
+  return ret;
 }
 
 gboolean
@@ -93,10 +96,11 @@ html_load_status_cb(WebKitWebView *web, GParamSpec *p, GList *gl) {
   }
 
 }
-void
+DwbStatus
 html_navigation(GList *gl, GList *data, HtmlTable *table) {
   int i=0;
   WebKitWebView *wv = WEBVIEW(gl);
+  DwbStatus ret;
 
   GString *panels = g_string_new(NULL);
   for (GList *l = data; l; l=l->next, i++, i%=2) {
@@ -108,22 +112,21 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
         <td class='dwb_table_cell_middle'></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
         <tr>",  n->first, n->second, n->first, n->second);
-    //g_string_append_printf(panels, 
-    //    "<div class='dwb_line%d'><div><a href='%s'>%s</a><div style='float:right;cursor:pointer;' navigation='%s %s' onclick='location.reload();'>&times</div></div></div>\n", 
-    //    i, n->first, n->second, n->first, n->second);
   }
-  html_load_page(wv, table, panels->str);
+  ret = html_load_page(wv, table, panels->str);
+
   g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
   g_string_free(panels, true);
+  return ret;
 }
-void
+DwbStatus
 html_bookmarks(GList *gl, HtmlTable *table) {
   dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)util_navigation_compare_second);
-  html_navigation(gl, dwb.fc.bookmarks, table);
+  return html_navigation(gl, dwb.fc.bookmarks, table);
 }
-void
+DwbStatus
 html_history(GList *gl, HtmlTable *table) {
-  html_navigation(gl, dwb.fc.history, table);
+  return html_navigation(gl, dwb.fc.history, table);
 }
 gboolean
 html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
@@ -211,16 +214,21 @@ html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
     g_signal_handlers_disconnect_by_func(wv, html_settings_load_cb, table);
   }
 }
-void
+DwbStatus
 html_settings(GList *gl, HtmlTable *table) {
-  char *content;
+  char *content = NULL;
+  DwbStatus ret = STATUS_ERROR;
   WebKitWebView *wv = WEBVIEW(gl);
-  g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_settings_load_cb), table);
+
   char *path = util_get_data_file(SETTINGS_FILE);
-  g_file_get_contents(path, &content, NULL, NULL);
-  html_load_page(wv, table, content);
-  g_free(path);
-  g_free(content);
+  if  (path != NULL) {
+    g_file_get_contents(path, &content, NULL, NULL);
+    ret = html_load_page(wv, table, content);
+    g_free(path);
+    g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_settings_load_cb), table);
+  }
+  FREE(content);
+  return ret;
 }
 
 static gboolean
@@ -264,23 +272,28 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
     g_signal_handlers_disconnect_by_func(wv, html_keys_load_cb, table);
   }
 }
-void
+DwbStatus
 html_keys(GList *gl, HtmlTable *table) {
-  char *content;
+  DwbStatus ret = STATUS_ERROR;
+  char *content = NULL;
   WebKitWebView *wv = WEBVIEW(gl);
-  g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_keys_load_cb), table);
   char *path = util_get_data_file(KEY_FILE);
-  g_file_get_contents(path, &content, NULL, NULL);
-  html_load_page(wv, table, content);
-  g_free(path);
-  g_free(content);
+  if (path != NULL) {
+    g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_keys_load_cb), table);
+    g_file_get_contents(path, &content, NULL, NULL);
+    ret = html_load_page(wv, table, content);
+    g_free(path);
+  }
+  FREE(content);
+  return ret;
 }
-void
+DwbStatus
 html_quickmarks(GList *gl, HtmlTable *table) {
-  int i=0;
+  DwbStatus ret;
   WebKitWebView *wv = WEBVIEW(gl);
   GString *panels = g_string_new(NULL);
-  for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next, i++, i%=2) {
+
+  for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next) {
     Quickmark *q = gl->data;
     g_string_append_printf(panels, "<tr class='dwb_table_row'>\
         <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a></div></td>\
@@ -288,16 +301,17 @@ html_quickmarks(GList *gl, HtmlTable *table) {
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
         </tr>", q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
   }
-  html_load_page(wv, table, panels->str);
-  g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
+  if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
+    g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
   g_string_free(panels, true);
+  return ret;
 }
-void
+DwbStatus
 html_downloads(GList *gl, HtmlTable *table) {
-  int i=0;
+  DwbStatus ret;
   WebKitWebView *wv = WEBVIEW(gl);
   GString *panels = g_string_new(NULL);
-  for (GList *gl = dwb.fc.downloads; gl; gl=gl->next, i++, i%=2) {
+  for (GList *gl = dwb.fc.downloads; gl; gl=gl->next) {
     Navigation *n = gl->data;
     g_string_append_printf(panels, "<tr class='dwb_table_row'>\
         <td class='dwb_table_cell_left'>%s</td>\
@@ -305,23 +319,27 @@ html_downloads(GList *gl, HtmlTable *table) {
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
         </tr>", n->second+7, n->first, n->first, n->second);
   }
-  html_load_page(wv, table, panels->str);
-  g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
+  if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
+    g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
   g_string_free(panels, true);
+  return ret;
 }
-void
+DwbStatus
 html_startpage(GList *gl, HtmlTable *table) {
-  dwb_open_startpage(gl);
+  return dwb_open_startpage(gl);
 }
 
 gboolean 
 html_load(GList *gl, const char *uri) {
+  gboolean ret = false;
   for (int i=0; i<LENGTH(table); i++) {
     if (!strncmp(table[i].uri, uri, strlen(table[i].uri))) {
       strncpy(current_uri, uri, BUFFER_LENGTH - 1);
-      table[i].func(gl, &table[i]);
-      return true;
+      if (table[i].func(gl, &table[i]) == STATUS_OK)  {
+        ret = true;
+        break;
+      }
     }
   }
-  return false;
+  return ret;
 }
