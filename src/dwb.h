@@ -119,6 +119,7 @@
 #define CURRENT_VIEW()              ((View*)dwb.state.fview->data)
 #define VIEW(X)                     ((View*)X->data)
 #define WEBVIEW(X)                  (WEBKIT_WEB_VIEW(((View*)X->data)->web))
+#define CURRENT_WEBVIEW_WIDGET()    (((View*)dwb.state.fview->data)->web)
 #define CURRENT_WEBVIEW()           (WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web))
 #define MAIN_FRAME()                (webkit_web_view_get_main_frame(CURRENT_WEBVIEW()))  
 #define FOCUSED_FRAME()             (webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()))  

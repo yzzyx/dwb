@@ -1602,6 +1602,7 @@ void
 dwb_focus_entry() {
   gtk_widget_show(dwb.gui.entry);
   gtk_widget_grab_focus(dwb.gui.entry);
+  gtk_widget_set_can_focus(CURRENT_WEBVIEW_WIDGET(), false);
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
 }/*}}}*/
 
@@ -1611,6 +1612,7 @@ dwb_focus_scroll(GList *gl) {
   if (gl == NULL)
     return;
   View *v = gl->data;
+  gtk_widget_set_can_focus(v->web, true);
   gtk_widget_grab_focus(v->web);
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/

@@ -87,6 +87,10 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   g_object_get(result, "context", &context, NULL);
   gboolean ret = false;
 
+  if (gtk_widget_has_focus(dwb.gui.entry)) {
+    dwb_focus_scroll(gl);
+    CLEAR_COMMAND_TEXT(gl);
+  }
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
     dwb_change_mode(INSERT_MODE);
   }
@@ -262,7 +266,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
 
-  if (dwb.state.mode == INSERT_MODE) {
+  if (dwb.state.mode == INSERT_MODE && gl == dwb.state.fview) {
     dwb_change_mode(NORMAL_MODE, true);
   }
   if (g_str_has_prefix(uri, "dwb://")) {
