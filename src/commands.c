@@ -323,83 +323,8 @@ commands_zoom_out(KeyMap *km, Arg *arg) {
 /* commands_scroll {{{*/
 DwbStatus 
 commands_scroll(KeyMap *km, Arg *arg) {
-  double scroll;
-  GtkAllocation alloc;
   GList *gl = arg->p ? arg->p : dwb.state.fview;
-
-  View *v = gl->data;
-
-  GtkAdjustment *a = arg->n == SCROLL_LEFT || arg->n == SCROLL_RIGHT 
-    ? gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
-    : gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
-  int sign = arg->n == SCROLL_UP || arg->n == SCROLL_PAGE_UP || arg->n == SCROLL_HALF_PAGE_UP || arg->n == SCROLL_LEFT ? -1 : 1;
-
-  double value = gtk_adjustment_get_value(a);
-
-  PRINT_DEBUG("gtk_adjustment value: %f", value);
-
-  double inc;
-  if (arg->n == SCROLL_PAGE_UP || arg->n == SCROLL_PAGE_DOWN) {
-    inc = gtk_adjustment_get_page_increment(a);
-    if (inc == 0) {
-      gtk_widget_get_allocation(GTK_WIDGET(CURRENT_WEBVIEW()), &alloc);
-      inc = alloc.height;
-    }
-  }
-  else if (arg->n == SCROLL_HALF_PAGE_UP || arg->n == SCROLL_HALF_PAGE_DOWN) {
-    inc = gtk_adjustment_get_page_increment(a) / 2;
-    if (inc == 0) {
-      gtk_widget_get_allocation(GTK_WIDGET(CURRENT_WEBVIEW()), &alloc);
-      inc = alloc.height / 2;
-    }
-  }
-  else
-    inc = dwb.misc.scroll_step > 0 ? dwb.misc.scroll_step : gtk_adjustment_get_step_increment(a);
-
-  PRINT_DEBUG("scroll increment %f", inc);
-  /* if gtk_get_step_increment fails and dwb.misc.scroll_step is 0 use a default
-   * value */
-  if (inc == 0) {
-    inc = 40;
-  }
-
-  double lower  = gtk_adjustment_get_lower(a);
-  double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
-
-  PRINT_DEBUG("Scroll lower %f", lower);
-  PRINT_DEBUG("Scroll upper %f", upper);
-
-  switch (arg->n) {
-    case  SCROLL_TOP:      scroll = lower; break;
-    case  SCROLL_BOTTOM:   scroll = upper; break;
-    case  SCROLL_PERCENT:  scroll = upper * dwb.state.nummod / 100; break;
-    default:        scroll = value + sign * inc * NN(dwb.state.nummod); break;
-  }
-
-  scroll = scroll < lower ? lower : scroll > upper ? upper : scroll;
-  if (scroll == value) {
-
-    /* Scroll also if  frame-flattening is enabled 
-     * this is just a workaround since scrolling is disfunctional if 
-     * enable-frame-flattening is set */
-    if (value == 0 && arg->n != SCROLL_TOP) {
-      int x, y;
-      if (arg->n == SCROLL_LEFT || arg->n == SCROLL_RIGHT) {
-        x = sign * inc;
-        y = 0;
-      }
-      else {
-        x = 0; 
-        y = sign * inc;
-      }
-      char *command = g_strdup_printf("window.scrollBy(%d, %d)", x, y);
-      dwb_execute_script(FOCUSED_FRAME(), command, false);
-      g_free(command);
-    }
-  }
-  else {
-    gtk_adjustment_set_value(a, scroll);
-  }
+  dwb_scroll(gl, arg->n);
   return STATUS_OK;
 }/*}}}*/
 

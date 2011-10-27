@@ -361,7 +361,7 @@ enum Signal {
   SIG_LAST,
 };
 
-enum _Direction {
+typedef enum {
   SCROLL_UP             = GDK_SCROLL_UP,
   SCROLL_DOWN           = GDK_SCROLL_DOWN,
   SCROLL_LEFT           = GDK_SCROLL_LEFT, 
@@ -374,7 +374,7 @@ enum _Direction {
   SCROLL_BOTTOM,
   SCROLL_PERCENT,
   SCROLL_PIXEL,
-} Direction;
+} ScrollDirection;
 
 typedef enum {
   SSL_NONE,
@@ -723,6 +723,7 @@ void dwb_resize(double );
 void dwb_toggle_tabbar(void);
 DwbStatus dwb_history_back(void);
 DwbStatus dwb_history_forward(void);
+void dwb_scroll(GList *, ScrollDirection);
 
 void dwb_focus(GList *);
 void dwb_source_remove(GList *);

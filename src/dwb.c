@@ -1044,6 +1044,85 @@ dwb_set_clipboard(const char *text, GdkAtom atom) {
   return ret;
 }
 
+void 
+dwb_scroll(GList *gl, ScrollDirection dir) {
+  double scroll;
+  GtkAllocation alloc;
+  View *v = gl->data;
+
+  GtkAdjustment *a = dir == SCROLL_LEFT || dir == SCROLL_RIGHT 
+    ? gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(v->scroll)) 
+    : gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
+  int sign = dir == SCROLL_UP || dir == SCROLL_PAGE_UP || dir == SCROLL_HALF_PAGE_UP || dir == SCROLL_LEFT ? -1 : 1;
+
+  double value = gtk_adjustment_get_value(a);
+
+  PRINT_DEBUG("gtk_adjustment value: %f", value);
+
+  double inc;
+  if (dir == SCROLL_PAGE_UP || dir == SCROLL_PAGE_DOWN) {
+    inc = gtk_adjustment_get_page_increment(a);
+    if (inc == 0) {
+      gtk_widget_get_allocation(GTK_WIDGET(CURRENT_WEBVIEW()), &alloc);
+      inc = alloc.height;
+    }
+  }
+  else if (dir == SCROLL_HALF_PAGE_UP || dir == SCROLL_HALF_PAGE_DOWN) {
+    inc = gtk_adjustment_get_page_increment(a) / 2;
+    if (inc == 0) {
+      gtk_widget_get_allocation(GTK_WIDGET(CURRENT_WEBVIEW()), &alloc);
+      inc = alloc.height / 2;
+    }
+  }
+  else
+    inc = dwb.misc.scroll_step > 0 ? dwb.misc.scroll_step : gtk_adjustment_get_step_increment(a);
+
+  PRINT_DEBUG("scroll increment %f", inc);
+  /* if gtk_get_step_increment fails and dwb.misc.scroll_step is 0 use a default
+   * value */
+  if (inc == 0) {
+    inc = 40;
+  }
+
+  double lower  = gtk_adjustment_get_lower(a);
+  double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
+
+  PRINT_DEBUG("Scroll lower %f", lower);
+  PRINT_DEBUG("Scroll upper %f", upper);
+
+  switch (dir) {
+    case  SCROLL_TOP:      scroll = lower; break;
+    case  SCROLL_BOTTOM:   scroll = upper; break;
+    case  SCROLL_PERCENT:  scroll = upper * dwb.state.nummod / 100; break;
+    default:        scroll = value + sign * inc * NN(dwb.state.nummod); break;
+  }
+
+  scroll = scroll < lower ? lower : scroll > upper ? upper : scroll;
+  if (scroll == value) {
+
+    /* Scroll also if  frame-flattening is enabled 
+     * this is just a workaround since scrolling is disfunctional if 
+     * enable-frame-flattening is set */
+    if (value == 0 && dir != SCROLL_TOP) {
+      int x, y;
+      if (dir == SCROLL_LEFT || dir == SCROLL_RIGHT) {
+        x = sign * inc;
+        y = 0;
+      }
+      else {
+        x = 0; 
+        y = sign * inc;
+      }
+      char *command = g_strdup_printf("window.scrollBy(%d, %d)", x, y);
+      dwb_execute_script(FOCUSED_FRAME(), command, false);
+      g_free(command);
+    }
+  }
+  else {
+    gtk_adjustment_set_value(a, scroll);
+  }
+}
+
 /* dwb_editor_watch (GChildWatchFunc) {{{*/
 static void
 dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
@@ -2276,7 +2355,7 @@ dwb_eval_key(GdkEventKey *e) {
       ret = false;
     }
     else {
-      ret = true;
+      ret = false;
     }
     return ret;
   }
