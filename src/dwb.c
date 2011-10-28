@@ -2462,6 +2462,7 @@ dwb_insert_mode(void) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
   dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
+  dwb_focus_scroll(dwb.state.fview);
 
   dwb.state.mode = INSERT_MODE;
   return STATUS_OK;
