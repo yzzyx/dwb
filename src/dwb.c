@@ -1987,8 +1987,13 @@ dwb_execute_script(WebKitWebFrame *frame, const char *com, gboolean ret) {
   char *retval;
 
   JSContextRef context = webkit_web_frame_get_global_context(frame);
+  g_return_val_if_fail(context != NULL, NULL);
   JSStringRef text = JSStringCreateWithUTF8CString(com);
-  eval_ret = JSEvaluateScript(context, text, JSContextGetGlobalObject(context), NULL, 0, NULL);
+
+  JSObjectRef global_object = JSContextGetGlobalObject(context);
+  g_return_val_if_fail(global_object != NULL, NULL);
+
+  eval_ret = JSEvaluateScript(context, text, global_object, NULL, 0, NULL);
   JSStringRelease(text);
 
   if (eval_ret) {
