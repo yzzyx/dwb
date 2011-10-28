@@ -105,7 +105,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_bookmark,            NO_URL,                            POST_SM, },
   { { "bookmarks",             "Bookmarks",                         }, 0,
     (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, }, 
-  { { "bookmarks_nv",          "Bookmarks new view",                }, 0,
+  { { "bookmarks_nv",          "Bookmarks new tab",                }, 0,
     (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, },
   { { "bookmarks_nw",          "Bookmarks new window",              }, 0, 
     (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
@@ -316,7 +316,7 @@ static FunctionMap FMAP [] = {
   { { "complete_current_history",          "Complete history of current tab", },        0, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_CUR_HISTORY }, true, }, 
   { { "buffers",                          "Buffer", },        CP_COMMANDLINE | CP_HAS_MODE,
-    (Func)commands_complete_type,            "Only one buffer",     POST_SM,     { .n = COMP_BUFFER }, }, 
+    (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     { .n = COMP_BUFFER }, }, 
 
   { { "spell_checking",        "Setting: spell checking",         },   0, 
     (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" } },

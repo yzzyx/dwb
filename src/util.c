@@ -253,6 +253,7 @@ util_get_directory_entries(const char *path, const char *text) {
         list = g_list_prepend(list,  store);
       }
     }
+    g_dir_close(dir);
   }
   list = g_list_sort(list, (GCompareFunc)strcmp);
   return list;
