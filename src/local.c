@@ -186,7 +186,7 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
 
     g_string_append_printf(buffer, "<div class='dwb_local_table_row'>\
         <div class='dwb_local_header_permission'>%s</div>\
-        <div class='dwb_local_header_link'>%lu</div>\
+        <div class='dwb_local_header_link'>%"PRId64"</div>\
         <div class='dwb_local_header_user'>%s</div>\
         <div class='dwb_local_header_group'>%s</div>\
         <div class='dwb_local_header_size'>%s</div>\

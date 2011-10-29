@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <wchar.h>
 #include <libgen.h>
+#include <inttypes.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/time.h>

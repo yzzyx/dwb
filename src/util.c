@@ -590,7 +590,7 @@ util_file_add(const char *filename, const char *text, int append, int max) {
     g_string_append_printf(content, "%s\n", text);
 
   gboolean ret = true;
-  if ( (file = fopen(filename, "r")) ) {
+  if ( (file = fopen(filename, "r"))) {
     for (int i=0; fgets(buffer, sizeof buffer, file) &&  (max < 0 || i < max-1); i++ ) {
       if (STRCMP_FIRST_WORD(text, buffer) && STRCMP_SKIP_NEWLINE(text, buffer) ) {
         g_string_append(content, buffer);
@@ -598,16 +598,10 @@ util_file_add(const char *filename, const char *text, int append, int max) {
     }
     fclose(file);
   }
-  else {
-    fprintf(stderr, "Cannot open file %s\n", filename);
-    ret = false;
-    goto error_out;
-  }
   if (append)
     g_string_append_printf(content, "%s\n", text);
   ret = util_set_file_content(filename, content->str);
 
-error_out:
   g_string_free(content, true);
   return ret;
 }
