@@ -3389,13 +3389,15 @@ dwb_init() {
     Arg a = { .n = dwb.state.layout };
     commands_set_orientation(NULL, &a);
   }
-  if (restore && session_restore(restore));
-  else if (dwb.misc.argc > 0) {
+  gboolean restore_success = false;
+  if (restore) 
+    restore_success = session_restore(restore);
+  if (dwb.misc.argc > 0) {
     for (int i=0; i<dwb.misc.argc; i++) {
       view_add(dwb.misc.argv[i], false);
     }
   }
-  else {
+  else if (!restore || !restore_success) {
     view_add(NULL, false);
   }
   g_signal_connect(VIEW(dwb.state.fview)->tablabel, "size-allocate", G_CALLBACK(dwb_tab_size_cb), NULL);
