@@ -341,6 +341,8 @@ static void
 view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
+  if (frame == webkit_web_view_get_main_frame(web) && webkit_web_frame_get_load_status(frame) == WEBKIT_LOAD_PROVISIONAL)
+    return;
   if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
     webkit_network_request_set_uri(request, "about:blank");
     return;
