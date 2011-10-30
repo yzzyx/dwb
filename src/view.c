@@ -870,6 +870,9 @@ view_create_web_view() {
         -GtkRange-slider-width: 0; \
         -GtkRange-trough-border: 0; \
         }\
+        GtkEntry { \
+          background-image: none;\
+        }\
         GtkScrolledWindow {\
           -GtkScrolledWindow-scrollbar-spacing : 0;\
         }", -1, NULL);
@@ -878,6 +881,8 @@ view_create_web_view() {
   ctx = gtk_widget_get_style_context(gtk_scrolled_window_get_vscrollbar(GTK_SCROLLED_WINDOW(v->scroll)));
   gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   ctx = gtk_widget_get_style_context(gtk_scrolled_window_get_hscrollbar(GTK_SCROLLED_WINDOW(v->scroll)));
+  gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  ctx = gtk_widget_get_style_context(v->entry);
   gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 #else
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));

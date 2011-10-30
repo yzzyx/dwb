@@ -589,7 +589,7 @@ util_file_add(const char *filename, const char *text, int append, int max) {
   if (!append) 
     g_string_append_printf(content, "%s\n", text);
 
-  gboolean ret = true;
+  gboolean ret = false;
   if ( (file = fopen(filename, "r"))) {
     for (int i=0; fgets(buffer, sizeof buffer, file) &&  (max < 0 || i < max-1); i++ ) {
       if (STRCMP_FIRST_WORD(text, buffer) && STRCMP_SKIP_NEWLINE(text, buffer) ) {
@@ -597,6 +597,7 @@ util_file_add(const char *filename, const char *text, int append, int max) {
       }
     }
     fclose(file);
+    ret = true;
   }
   if (append)
     g_string_append_printf(content, "%s\n", text);
