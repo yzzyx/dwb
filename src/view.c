@@ -89,6 +89,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
     dwb_change_mode(INSERT_MODE);
+    return false;
   }
   else if (e->state & GDK_CONTROL_MASK && e->button == 1) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
@@ -126,6 +127,10 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
   else if (e->button == 9) {
     dwb_history_forward();
+  }
+  /* Leave insert mode, see check for context above */
+  if (dwb.state.mode & INSERT_MODE) {
+    dwb_change_mode(NORMAL_MODE);
   }
   return ret;
 }/*}}}*/
