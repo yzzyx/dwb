@@ -17,6 +17,7 @@ DwbHintObj = (function() {
   _lastInput = null;
   _lastPosition = 0;
   _activeInput = null;
+  _new_tab = false;
   _styles = 0;
   _active = null;
   _markHints = false;
@@ -298,10 +299,11 @@ DwbHintObj = (function() {
       console.error(exc);
     }
   }
-  const __showHints = function (type) {
+  const __showHints = function (type, new_tab) {
     if (document.activeElement) 
       document.activeElement.blur();
 
+    _new_tab = new_tab;
     __createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
     var l = _elements.length;
 
@@ -415,6 +417,9 @@ DwbHintObj = (function() {
     if (e.type) 
       type = e.type.toLowerCase();
     var tagname = e.tagName.toLowerCase();
+    if (_new_tab && e.target == "_blank") {
+      e.target = null;
+    }
     if (type > 0) {
       switch (type) {
         case HintTypes.HINT_T_IMAGES:  ret = e.src; break;
@@ -556,8 +561,8 @@ DwbHintObj = (function() {
       __createStyleSheet(document);
     },
     showHints : 
-      function(type) {
-        return __showHints(type);
+      function(type, new_tab) {
+        return __showHints(type, new_tab);
       },
     updateHints :
       function (input, type) {
