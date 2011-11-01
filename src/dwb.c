@@ -2654,14 +2654,34 @@ dwb_get_scripts() {
   char *content;
   GList *gl = NULL;
   Navigation *n = NULL;
+  GError *error = NULL;
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
       char *path = g_build_filename(dwb.files.userscripts, filename, NULL);
+      char *realpath;
+      /* ignore subdirectories */
+      if (g_file_test(path, G_FILE_TEST_IS_DIR))
+        continue;
+      else if (g_file_test(path, G_FILE_TEST_IS_SYMLINK)) {
+        realpath = g_file_read_link(path, &error);
+        if (error != NULL) {
+          fprintf(stderr, "Cannot read %s : %s\n", path, error->message);
+          continue;
+        }
+        g_free(path);
+        path = realpath;
+      }
 
       g_file_get_contents(path, &content, NULL, NULL);
+      if (content == NULL) 
+        continue;
+
       char **lines = g_strsplit(content, "\n", -1);
+
       g_free(content);
+      content = NULL;
+
       int i=0;
       KeyMap *map = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
@@ -3212,15 +3232,12 @@ dwb_get_search_completion(const char *text) {
 static void
 dwb_init_files() {
   char *path           = util_build_path();
-  char *profile_path   = g_build_filename(path, dwb.misc.profile, NULL);
+  char *profile_path = util_check_directory(g_build_filename(path, dwb.misc.profile, NULL));
+  char *userscripts, *scripts, *cachedir;
 
-  if (!g_file_test(profile_path, G_FILE_TEST_IS_DIR)) {
-    g_mkdir_with_parents(profile_path, 0700);
-  }
-  dwb.files.cachedir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
-  if (!g_file_test(dwb.files.cachedir, G_FILE_TEST_IS_DIR)) {
-    g_mkdir_with_parents(dwb.files.cachedir, 0700);
-  }
+  cachedir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
+  dwb.files.cachedir = util_check_directory(cachedir);
+
   dwb.files.bookmarks     = g_build_filename(profile_path, "bookmarks",     NULL);
   dwb.files.history       = g_build_filename(profile_path, "history",       NULL);
   dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);
@@ -3228,8 +3245,6 @@ dwb_init_files() {
   dwb.files.session       = g_build_filename(profile_path, "session",       NULL);
   dwb.files.searchengines = g_build_filename(path, "searchengines", NULL);
   dwb.files.keys          = g_build_filename(path, "keys",          NULL);
-  dwb.files.scriptdir     = g_build_filename(path, "scripts",      NULL);
-  dwb.files.userscripts   = g_build_filename(path, "userscripts",   NULL);
   dwb.files.settings      = g_build_filename(path, "settings",      NULL);
   dwb.files.mimetypes     = g_build_filename(path, "mimetypes",      NULL);
   dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
@@ -3238,13 +3253,10 @@ dwb_init_files() {
   dwb.files.scripts_allow  = g_build_filename(profile_path, "scripts.allow",      NULL);
   dwb.files.plugins_allow  = g_build_filename(profile_path, "plugins.allow",      NULL);
 
-  if (!g_file_test(dwb.files.scriptdir, G_FILE_TEST_IS_DIR)) {
-    g_mkdir_with_parents(dwb.files.scriptdir, 0755);
-  }
-
-  if (!g_file_test(dwb.files.userscripts, G_FILE_TEST_IS_DIR)) {
-    g_mkdir_with_parents(dwb.files.userscripts, 0755);
-  }
+  scripts                 = g_build_filename(path, "scripts",      NULL);
+  dwb.files.scriptdir     = util_check_directory(scripts);
+  userscripts             = g_build_filename(path, "userscripts",   NULL);
+  dwb.files.userscripts   = util_check_directory(userscripts);
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 

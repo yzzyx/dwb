@@ -353,6 +353,31 @@ util_build_path() {
   }
   return path;
 }/*}}}*/
+
+/* dwb_check_directory(char *filename (alloc) )  return: char * (alloc) {{{*/
+char *
+util_check_directory(char *filename) {
+  GError *error = NULL;
+  char *ret = filename;
+  g_return_val_if_fail(filename != NULL, NULL);
+  if (g_file_test(filename, G_FILE_TEST_IS_SYMLINK)) {
+    ret = g_file_read_link(filename, &error);
+    if (error != NULL) {
+      fprintf(stderr, "Cannot read link %s : %s, creating a new directory\n", filename, error->message);
+      g_mkdir_with_parents(filename, 0700);
+      ret = filename;
+      g_clear_error(&error);
+    }
+    else {
+      g_free(filename);
+    }
+  }
+  else if (! g_file_test(filename, G_FILE_TEST_IS_DIR) ) {
+    g_mkdir_with_parents(filename, 0700);
+  }
+  return ret;
+}/*}}}*/
+
 /* util_get_data_dir(const char *)      return  char * (alloc) {{{*/
 char *
 util_get_system_data_dir(const char *dir) {
@@ -597,7 +622,6 @@ util_file_add(const char *filename, const char *text, int append, int max) {
       }
     }
     fclose(file);
-    ret = true;
   }
   if (append)
     g_string_append_printf(content, "%s\n", text);

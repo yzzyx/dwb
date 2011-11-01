@@ -91,5 +91,6 @@ void gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fil
 char * util_strcasestr(const char *haystack, const char *needle);
 int util_file_remove_line(const char *, const char *);
 Arg * util_arg_new(void);
+char * util_check_directory(char *);
 
 #endif
