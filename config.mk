@@ -112,6 +112,7 @@ LDFLAGS = $(shell pkg-config --libs $(LIBS))
 DCFLAGS = $(CFLAGS)
 DCFLAGS += -DDWB_DEBUG
 DCFLAGS += -g 
+DCFLAGS += -O0 
 
 # Makeflags
 MFLAGS=--no-print-directory

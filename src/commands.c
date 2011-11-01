@@ -324,7 +324,7 @@ commands_zoom_out(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_scroll(KeyMap *km, Arg *arg) {
   GList *gl = arg->p ? arg->p : dwb.state.fview;
-  dwb_scroll(gl, arg->n);
+  dwb_scroll(gl, dwb.misc.scroll_step, arg->n);
   return STATUS_OK;
 }/*}}}*/
 

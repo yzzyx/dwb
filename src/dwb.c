@@ -1045,7 +1045,7 @@ dwb_set_clipboard(const char *text, GdkAtom atom) {
 }
 
 void 
-dwb_scroll(GList *gl, ScrollDirection dir) {
+dwb_scroll(GList *gl, double step, ScrollDirection dir) {
   double scroll;
   GtkAllocation alloc;
   View *v = gl->data;
@@ -1075,7 +1075,7 @@ dwb_scroll(GList *gl, ScrollDirection dir) {
     }
   }
   else
-    inc = dwb.misc.scroll_step > 0 ? dwb.misc.scroll_step : gtk_adjustment_get_step_increment(a);
+    inc = step > 0 ? step : gtk_adjustment_get_step_increment(a);
 
   PRINT_DEBUG("scroll increment %f", inc);
   /* if gtk_get_step_increment fails and dwb.misc.scroll_step is 0 use a default

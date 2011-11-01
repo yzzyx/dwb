@@ -818,7 +818,6 @@ view_create_web_view() {
   status->allowed_plugins = NULL;
   status->pb_status = 0;
 
-
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
   v->status = status;

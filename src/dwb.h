@@ -520,7 +520,6 @@ struct _ViewStatus {
   GSList *allowed_plugins;
   PluginBlockerStatus pb_status;
 };
-
 struct _View {
   GtkWidget *vbox;
   GtkWidget *web;
@@ -622,6 +621,7 @@ struct _Misc {
   char *pbbackground;
   gboolean top_statusbar;
   int synctimer;
+
 };
 struct _Files {
   const char *bookmarks;
@@ -641,11 +641,6 @@ struct _Files {
   const char *unifile;
   const char *userscripts;
   const char *adblock;
-#if 0
-  const char *dir_icon;
-  const char *file_icon;
-  const char *exec_icon;
-#endif
   const char *scripts_allow;
   const char *plugins_allow;
   const char *cachedir;
@@ -724,7 +719,7 @@ void dwb_resize(double );
 void dwb_toggle_tabbar(void);
 DwbStatus dwb_history_back(void);
 DwbStatus dwb_history_forward(void);
-void dwb_scroll(GList *, ScrollDirection);
+void dwb_scroll(GList *, double, ScrollDirection);
 
 void dwb_focus(GList *);
 void dwb_source_remove(GList *);
