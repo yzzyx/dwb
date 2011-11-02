@@ -2733,6 +2733,10 @@ dwb_clean_vars() {
   dwb.state.scriptlock = 0;
   dwb.state.last_com_history = NULL;
   dwb.state.dl_action = DL_ACTION_DOWNLOAD;
+  if (dwb.state.mimetype_request) {
+    g_free(dwb.state.mimetype_request);
+    dwb.state.mimetype_request = NULL;
+  }
 }/*}}}*/
 
 static void
@@ -3153,6 +3157,24 @@ dwb_init_gui() {
   /* Icon */
   GdkPixbuf *icon_pixbuf = gdk_pixbuf_new_from_xpm_data(icon);
   gtk_window_set_icon(GTK_WINDOW(dwb.gui.window), icon_pixbuf);
+
+#if _HAS_GTK3
+  gtk_window_set_has_resize_grip(GTK_WINDOW(dwb.gui.window), false);
+  GtkCssProvider *provider = gtk_css_provider_get_default();
+  gtk_css_provider_load_from_data(provider, 
+      "GtkScrollbar { \
+        -GtkRange-slider-width: 0; \
+        -GtkRange-trough-border: 0; \
+        }\
+        GtkEntry { \
+          background-image: none;\
+        }\
+        GtkScrolledWindow {\
+          -GtkScrolledWindow-scrollbar-spacing : 0;\
+        }", -1, NULL);
+  GdkScreen *screen = gdk_screen_get_default();
+  gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+#endif
 
   gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), GET_INT("default-width"), GET_INT("default-height"));
   gtk_window_set_geometry_hints(GTK_WINDOW(dwb.gui.window), NULL, NULL, GDK_HINT_MIN_SIZE);

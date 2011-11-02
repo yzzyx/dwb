@@ -868,29 +868,8 @@ view_create_web_view() {
   /* Srolling */
   v->scroll = gtk_scrolled_window_new(NULL, NULL);
   gtk_container_add(GTK_CONTAINER(v->scroll), v->web);
-#if _HAS_GTK3
-  gtk_window_set_has_resize_grip(GTK_WINDOW(dwb.gui.window), false);
-  GtkCssProvider *provider = gtk_css_provider_get_default();
-  gtk_css_provider_load_from_data(provider, 
-      "GtkScrollbar { \
-        -GtkRange-slider-width: 0; \
-        -GtkRange-trough-border: 0; \
-        }\
-        GtkEntry { \
-          background-image: none;\
-        }\
-        GtkScrolledWindow {\
-          -GtkScrolledWindow-scrollbar-spacing : 0;\
-        }", -1, NULL);
-  GtkStyleContext *ctx = gtk_widget_get_style_context(v->scroll);
-  gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  ctx = gtk_widget_get_style_context(gtk_scrolled_window_get_vscrollbar(GTK_SCROLLED_WINDOW(v->scroll)));
-  gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  ctx = gtk_widget_get_style_context(gtk_scrolled_window_get_hscrollbar(GTK_SCROLLED_WINDOW(v->scroll)));
-  gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  ctx = gtk_widget_get_style_context(v->entry);
-  gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-#else
+
+#if !_HAS_GTK3
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(v->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);

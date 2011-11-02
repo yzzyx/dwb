@@ -349,7 +349,7 @@ download_get_path(GList *gl, WebKitDownload *d) {
   dwb_focus_entry();
   dwb.state.mode = DOWNLOAD_GET_PATH;
   dwb.state.download = d;
-  if ( (dwb.state.mimetype_request && (command = download_get_command_from_mimetype(dwb.state.mimetype_request))) ||  g_file_test(uri, G_FILE_TEST_EXISTS)) {
+  if ( ((dwb.state.mimetype_request && (command = download_get_command_from_mimetype(dwb.state.mimetype_request)))) ||  g_file_test(uri, G_FILE_TEST_EXISTS)) {
     dwb.state.dl_action = DL_ACTION_EXECUTE;
     download_entry_set_spawn_command(command);
   }
