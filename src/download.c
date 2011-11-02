@@ -246,7 +246,7 @@ download_add_progress_label(GList *gl, const char *filename) {
 void 
 download_start() {
   const char *path = GET_TEXT();
-  char *fullpath;
+  char *fullpath = NULL;
   const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
   const char *uri = webkit_download_get_uri(dwb.state.download);
   char *command = NULL;
@@ -256,55 +256,62 @@ download_start() {
     filename = "dwb_download";
   }
 
-  if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
-    char *cache_name = g_build_filename(dwb.files.cachedir, filename, NULL);
-#if 0
-    if (g_file_test(cache_name, G_FILE_TEST_EXISTS)) {
-      download_do_spawn(path, cache_name);
-      dwb_change_mode(NORMAL_MODE, true);
-      g_free(cache_name);
-      return;
-    }
-#endif
-    fullpath = g_strconcat("file://", cache_name, NULL);
-    g_free(cache_name);
-  }
-  else {
-    if (!path || !strlen(path)) {
-      path = g_get_current_dir();
-    }
-    if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-      fullpath = external ? g_build_filename(path, filename, NULL) : g_build_filename("file://", path, filename, NULL);
+  /* Handle local files */
+  if (g_str_has_prefix(uri, "file://") && g_file_test(uri+7, G_FILE_TEST_EXISTS)) {
+    if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
+      download_do_spawn(path, uri+7);
     }
     else {
-      filename = strrchr(path, '/')+1;
-      fullpath = external ? g_strdup(path) : g_build_filename("file://", path, NULL);
+      GFile *source = g_file_new_for_uri(uri);
+      fullpath = g_build_filename(path, filename, NULL);
+      GFile *dest = g_file_new_for_path(fullpath);
+      g_file_copy(source, dest, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, NULL);
     }
   }
-
-  if (external && dwb.state.dl_action == DL_ACTION_DOWNLOAD) {
-    command = download_get_command(uri, fullpath);
-    if (!g_spawn_command_line_async(command, NULL)) {
-      dwb_set_error_message(dwb.state.fview, "Cannot spawn download program");
-    }
-  }
+  /* Remote download; */
   else {
-    webkit_download_set_destination_uri(dwb.state.download, fullpath);
-    DwbDownload *active = download_add_progress_label(dwb.state.fview, filename);
-    active->action = dwb.state.dl_action;
-    active->path = g_strdup(path);
-    gtk_widget_show_all(dwb.gui.downloadbar);
-    downloads = g_list_prepend(downloads, active);
-    DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
-    s->blue = s->time = 0;
-    g_signal_connect(active->event, "button-press-event", G_CALLBACK(download_button_press_cb), downloads);
-    g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(download_progress_cb), s);
-    g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(download_status_cb), s);
-    webkit_download_start(dwb.state.download);
-  }
-  FREE(lastdir);
-  if (dwb.state.dl_action != DL_ACTION_EXECUTE) {
-    lastdir = g_strdup(path);
+    if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
+      char *cache_name = g_build_filename(dwb.files.cachedir, filename, NULL);
+      fullpath = g_strconcat("file://", cache_name, NULL);
+      g_free(cache_name);
+    }
+    else {
+      if (!path || !strlen(path)) {
+        path = g_get_current_dir();
+      }
+      if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
+        fullpath = external ? g_build_filename(path, filename, NULL) : g_build_filename("file://", path, filename, NULL);
+      }
+      else {
+        filename = strrchr(path, '/')+1;
+        fullpath = external ? g_strdup(path) : g_build_filename("file://", path, NULL);
+      }
+    }
+
+    if (external && dwb.state.dl_action == DL_ACTION_DOWNLOAD) {
+      command = download_get_command(uri, fullpath);
+      if (!g_spawn_command_line_async(command, NULL)) {
+        dwb_set_error_message(dwb.state.fview, "Cannot spawn download program");
+      }
+    }
+    else {
+      webkit_download_set_destination_uri(dwb.state.download, fullpath);
+      DwbDownload *active = download_add_progress_label(dwb.state.fview, filename);
+      active->action = dwb.state.dl_action;
+      active->path = g_strdup(path);
+      gtk_widget_show_all(dwb.gui.downloadbar);
+      downloads = g_list_prepend(downloads, active);
+      DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
+      s->blue = s->time = 0;
+      g_signal_connect(active->event, "button-press-event", G_CALLBACK(download_button_press_cb), downloads);
+      g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(download_progress_cb), s);
+      g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(download_status_cb), s);
+      webkit_download_start(dwb.state.download);
+    }
+    FREE(lastdir);
+    if (dwb.state.dl_action != DL_ACTION_EXECUTE) {
+      lastdir = g_strdup(path);
+    }
   }
 
   dwb_change_mode(NORMAL_MODE, true);
