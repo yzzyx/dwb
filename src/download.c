@@ -265,7 +265,9 @@ download_start() {
       GFile *source = g_file_new_for_uri(uri);
       fullpath = g_build_filename(path, filename, NULL);
       GFile *dest = g_file_new_for_path(fullpath);
-      g_file_copy(source, dest, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, NULL);
+      g_file_copy_async(source, dest, G_FILE_COPY_OVERWRITE, G_PRIORITY_DEFAULT, NULL, NULL, NULL, NULL, NULL);
+      g_object_unref(source);
+      g_object_unref(dest);
     }
   }
   /* Remote download; */
