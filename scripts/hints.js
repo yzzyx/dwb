@@ -1,6 +1,4 @@
-var dwbWordRegexp = new RegExp("^[\w\u00c0-\u024f]*$");
 String.prototype.isInt = function() { return !isNaN(parseInt(this)); }
-String.prototype.isUpper = function() { return this == this.toUpperCase() && dwbWordRegexp.test(this); }
 String.prototype.isLower = function() { return this == this.toLowerCase(); }
 DwbHintObj = (function() {
   _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
@@ -130,9 +128,9 @@ DwbHintObj = (function() {
       }
       return ret;
     }
-    this.matchText = function(input) {
+    this.matchText = function(input, matchHint) {
       var ret = false;
-      if (input.isInt()) {
+      if (matchHint) {
         var regEx = new RegExp('^' + input);
         return regEx.test(this.hint.textContent);
       }
@@ -180,9 +178,11 @@ DwbHintObj = (function() {
       else 
         this.hint.insertBefore(content, this.textDesc);
     }
-    this.matchText = function(input) {
-      console.log(input.isUpper());
-      if (input.isUpper()) {
+    this.matchText = function(input, matchHint) {
+      if (matchHint) {
+        return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) == 0);
+      }
+      else {
         var inArr = input.split(" ");
         var match = true;
         for (var i=0; i<inArr.length; i++) {
@@ -192,8 +192,6 @@ DwbHintObj = (function() {
         }
         return true;
       }
-      else 
-        return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) == 0);
     }
   }
 
@@ -322,6 +320,7 @@ DwbHintObj = (function() {
   }
   const __updateHints = function(input, type) {
     var array = [];
+    var matchHint = false;
     if (!_activeArr.length) {
       __clear();
       __showHints();
@@ -335,24 +334,30 @@ DwbHintObj = (function() {
     _lastInput = input;
     if (input) {
       if (_style == "number") {
-        if (input[input.length-1].isInt())
+        if (input[input.length-1].isInt()) {
           input = input.match(/[0-9]+/g).join("");
+          matchHint = true;
+        }
         else 
           input = input.match(/[^0-9]+/g).join("");
       }
       else if (_style == "letter") {
         var lowerSeq = _letterSeq.toLowerCase();
-        if (lowerSeq.indexOf(input.charAt(input.length-1)) == -1) 
-          return "_dwb_no_hints_";
-        if (input[input.length-1].isLower())
+        if (input[input.length-1].isLower()) {
+          if (lowerSeq.indexOf(input.charAt(input.length-1)) == -1) {
+            return "_dwb_no_hints_";
+          }
           input = input.match(new RegExp("[" + lowerSeq + "]", "g")).join("");
-        else 
+          matchHint = true;
+        }
+        else  {
           input = input.match(new RegExp("[^" + lowerSeq + "]", "g")).join("");
+        }
       }
     }
     for (var i=0; i<_activeArr.length; i++) {
       var e = _activeArr[i];
-      if (e.matchText(input)) {
+      if (e.matchText(input, matchHint)) {
         array.push(e);
       }
       else {

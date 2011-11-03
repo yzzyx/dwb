@@ -1946,7 +1946,6 @@ dwb_update_hints(GdkEventKey *e) {
   gboolean ret = false;
 
   if (e->keyval == GDK_KEY_Return) {
-    printf("%d\n", MIN(dwb.state.hint_type, HINT_T_URL));
     com = g_strdup_printf("DwbHintObj.followActive(%d)", MIN(dwb.state.hint_type, HINT_T_URL));
   }
   else if (DWB_TAB_KEY(e)) {
