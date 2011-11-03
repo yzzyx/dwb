@@ -86,7 +86,7 @@ completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, vo
 }/*}}}*/
 
 /* dwb_completion_set_text(Completion *) {{{*/
-static void
+void
 completion_set_entry_text(Completion *c) {
   const char *text = gtk_label_get_text(GTK_LABEL(c->llabel));
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);

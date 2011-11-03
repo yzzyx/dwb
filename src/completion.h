@@ -38,6 +38,7 @@ struct _Completion {
 void completion_clean_completion(void);
 void completion_clean_autocompletion(void);
 void completion_clean_path_completion(void);
+void completion_set_entry_text(Completion *);
 
 void completion_set_autcompletion(GList *, WebSettings *);
 void completion_autocomplete(GList *, GdkEventKey *e);
