@@ -317,7 +317,7 @@ html_downloads(GList *gl, HtmlTable *table) {
         <td class='dwb_table_cell_left'>%s</td>\
         <td class='dwb_table_cell_middle'><a href='%s'>restart</a></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
-        </tr>", n->second+7, n->first, n->first, n->second);
+        </tr>", n->second, n->first, n->first, n->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 

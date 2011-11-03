@@ -282,7 +282,7 @@ download_start() {
         path = g_get_current_dir();
       }
       if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-        fullpath = external ? g_build_filename(path, filename, NULL) : g_build_filename("file://", path, filename, NULL);
+        fullpath = external ? g_build_filename(path, filename, NULL) : g_strconcat("file://", path, filename, NULL);
       }
       else {
         filename = strrchr(path, '/')+1;
