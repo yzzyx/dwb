@@ -80,12 +80,6 @@ static void dwb_init_vars(void);
 static Navigation * dwb_get_search_completion(const char *text);
 
 static void dwb_clean_vars(void);
-/*}}}*/
-
-static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
-static int MAX_COMPLETIONS = 11;
-static char *restore = NULL;
-
 typedef struct _EditorInfo {
   char *filename;
   char *id;
@@ -94,6 +88,10 @@ typedef struct _EditorInfo {
   const char *tagname;
 } EditorInfo;
 
+static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
+static int MAX_COMPLETIONS = 11;
+static char *restore = NULL;
+/*}}}*/
 
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
@@ -683,6 +681,7 @@ dwb_set_cookie_accept_policy(GList *gl, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
+/* SETTING FUNCTIONS {{{*/
 /* dwb_set_hide_tabbar{{{*/
 static void
 dwb_set_hide_tabbar(GList *gl, WebSettings *s) {
@@ -756,6 +755,7 @@ dwb_set_proxy(GList *l, WebSettings *s) {
   dwb_set_normal_message(dwb.state.fview, true, "Set setting proxy: %s", s->arg.b ? "true" : "false");
 }/*}}}*/
 
+/* dwb_set_scripts {{{*/
 void
 dwb_set_scripts(GList *gl, WebSettings *s) {
   dwb_webkit_setting(gl, s);
@@ -764,7 +764,9 @@ dwb_set_scripts(GList *gl, WebSettings *s) {
     v->status->scripts = SCRIPTS_ALLOWED;
   else 
     v->status->scripts = SCRIPTS_BLOCKED;
-}
+}/*}}}*/
+
+/* dwb_set_user_agent {{{*/
 void
 dwb_set_user_agent(GList *gl, WebSettings *s) {
   char *ua = s->arg.p;
@@ -775,7 +777,7 @@ dwb_set_user_agent(GList *gl, WebSettings *s) {
   }
   dwb_webkit_setting(gl, s);
   g_hash_table_insert(dwb.settings, g_strdup("user-agent"), s);
-}
+}/*}}}*/
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
 static void
@@ -807,9 +809,8 @@ dwb_webview_property(GList *gl, WebSettings *s) {
 static void 
 dwb_reload_scripts(GList *gl, WebSettings *s) {
   dwb_init_scripts();
-} /*}}}*//*}}}*/
+} /*}}}*/
 /*}}}*/
-
 
 /* CALLBACKS {{{*/
 
@@ -1045,6 +1046,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+/* dwb_set_clipboard (const char *, GdkAtom) {{{*/
 DwbStatus
 dwb_set_clipboard(const char *text, GdkAtom atom) {
   GtkClipboard *clipboard = gtk_clipboard_get(atom);
@@ -1056,8 +1058,9 @@ dwb_set_clipboard(const char *text, GdkAtom atom) {
     ret = STATUS_OK;
   }
   return ret;
-}
+}/*}}}*/
 
+/* dwb_scroll (Glist *gl, double step, ScrollDirection dir) {{{*/
 void 
 dwb_scroll(GList *gl, double step, ScrollDirection dir) {
   double scroll;
@@ -1135,7 +1138,7 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir) {
   else {
     gtk_adjustment_set_value(a, scroll);
   }
-}
+}/*}}}*/
 
 /* dwb_editor_watch (GChildWatchFunc) {{{*/
 static void
@@ -1899,6 +1902,7 @@ dwb_web_settings_get_value(const char *id) {
   return &s->arg;
 }/*}}}*/
 
+/* dwb_evaluate_hints(const char *buffer)  return DwbStatus {{{*/
 DwbStatus 
 dwb_evaluate_hints(const char *buffer) {
   DwbStatus ret = STATUS_OK;
@@ -1949,7 +1953,7 @@ dwb_evaluate_hints(const char *buffer) {
     FREE(a);
   }
   return ret;
-}
+}/*}}}*/
 
 /* update_hints {{{*/
 gboolean
@@ -2024,7 +2028,6 @@ dwb_execute_script(WebKitWebFrame *frame, const char *com, gboolean ret) {
 }
 /*}}}*/
 
-
 /*prepend_navigation_with_argument(GList **fc, const char *first, const char *second) {{{*/
 void
 dwb_prepend_navigation_with_argument(GList **fc, const char *first, const char *second) {
@@ -2073,34 +2076,28 @@ dwb_prepend_navigation(GList *gl, GList **fc) {
 
 /* dwb_confirm_snooper {{{*/
 static gboolean
-dwb_confirm_snooper(GtkWidget *w, GdkEventKey *e, Arg *a) {
-  if (e->keyval == GDK_KEY_y) {
-    a->i = 1;
-    goto confirmed;
+dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, Arg *a) {
+  switch (e->keyval) {
+    case GDK_KEY_y:       a->i = 1; break;
+    case GDK_KEY_n:       a->i = 0; break;
+    case GDK_KEY_Escape:  break;
+    default:              return true;
   }
-  else if (e->keyval == GDK_KEY_n) {
-    a->i = 0;
-    goto confirmed;
-  }
-  else if (e->keyval == GDK_KEY_Escape) {
-    goto confirmed;
-  }
-  return true;
-
-confirmed:
-  dwb_change_mode(NORMAL_MODE, false);
+  dwb.state.mode &= ~CONFIRM;
   gtk_key_snooper_remove(a->n);
   return true;
 }/*}}}*/
 
-/* dwb_confirm {{{*/
+/* dwb_confirm()  return confirmed (gboolean) {{{
+ * yes / no confirmation
+ * */
 gboolean
 dwb_confirm(void) {
   dwb.state.mode |= CONFIRM;
   gboolean confirmed;
   Arg *a = util_arg_new();
   a->i = -1;
-  a->n = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_confirm_snooper, a);
+  a->n = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_confirm_snooper_cb, a);
   while ((dwb.state.mode & CONFIRM) && a->i == -1) {
     gtk_main_iteration();
   }
@@ -2123,6 +2120,7 @@ dwb_save_quickmark(const char *key) {
           dwb_set_prompt_message(dwb.state.fview, "Overwrite quickmark %s : %s [y/n]?", q->key, q->nav->first);
           if (!dwb_confirm()) {
             dwb_set_error_message(dwb.state.fview, "Aborted saving quickmark %s : %s", key, uri);
+            dwb_change_mode(NORMAL_MODE, false);
             return;
           }
         }
@@ -2172,7 +2170,6 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
 
   g_free(escaped);
 }/*}}}*/
-
 
 /* dwb_update_status(GList *gl) {{{*/
 void 
@@ -2234,7 +2231,6 @@ dwb_new_window(const char  *uri) {
   argv[5] = NULL;
   g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
 }/*}}}*/
-
 
 /* dwb_load_uri(const char *uri) {{{*/
 void 
@@ -2540,12 +2536,13 @@ dwb_command_mode(void) {
   return STATUS_OK;
 }/*}}}*/
 
+/* dwb_passthrough_mode () {{{*/
 static DwbStatus
 dwb_passthrough_mode(void) {
   dwb.state.mode |= PASS_THROUGH;
   dwb_set_normal_message(dwb.state.fview, false, "-- PASS THROUGH --");
   return STATUS_OK;
-}
+}/*}}}*/
 
 /* dwb_normal_mode() {{{*/
 static DwbStatus 
@@ -2576,6 +2573,7 @@ dwb_normal_mode(gboolean clean) {
   return STATUS_OK;
 }/*}}}*/
 
+/* dwb_change_mode (Mode mode, ...)   return DwbStatus {{{*/
 DwbStatus 
 dwb_change_mode(Mode mode, ...) {
   DwbStatus ret = STATUS_OK;
@@ -2594,8 +2592,7 @@ dwb_change_mode(Mode mode, ...) {
     default: PRINT_DEBUG("Unknown mode: %d", mode); break;
   }
   return ret;
-}
-
+}/*}}}*/
 
 /* gboolean dwb_highlight_search(void) {{{*/
 gboolean
@@ -2797,6 +2794,7 @@ dwb_clean_vars() {
   }
 }/*}}}*/
 
+/* dwb_free_list(GList *list, void (*func)(void*)) {{{*/
 static void
 dwb_free_list(GList *list, void (*func)(void*)) {
   for (GList *l = list; l; l=l->next) {
@@ -2804,7 +2802,7 @@ dwb_free_list(GList *list, void (*func)(void*)) {
     func(n);
   }
   g_list_free(list);
-}
+}/*}}}*/
 
 /* dwb_clean_up() {{{*/
 gboolean
@@ -3612,6 +3610,7 @@ dwb_init_fifo(int single) {
 }/*}}}*/
 /*}}}*/
 
+/* MAIN {{{*/
 int 
 main(int argc, char *argv[]) {
   dwb.misc.name = REAL_NAME;
@@ -3682,4 +3681,4 @@ main(int argc, char *argv[]) {
   dwb_init();
   gtk_main();
   return EXIT_SUCCESS;
-}
+}/*}}}*/
