@@ -109,6 +109,7 @@ complete-userscripts checkbox Whether to enable tabcompletion for userscripts
 # misc Miscellaneous
 custom-encoding text The custom encoding of the view
 download-external-command text External application used for downloads
+download-directory text Default download directory
 download-use-external-program checkbox Whether to use an external download helper
 editor text External editor used for inputs/textareas
 editable checkbox Whether content can be modified

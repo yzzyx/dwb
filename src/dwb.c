@@ -591,6 +591,8 @@ static WebSettings DWB_SETTINGS[] = {
   /* downloads */
   { { "download-external-command",                        "External program used for downloads", },                               
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e wget 'dwb_uri' -O 'dwb_output' --load-cookies 'dwb_cookies'"   },     (S_Func)dwb_set_dummy,  },
+  { { "download-directory",                        "Default download directory", },                               
+    SETTING_GLOBAL,  CHAR, { .p = NULL   },     (S_Func)dwb_set_dummy,  },
   { { "download-use-external-program",           "Whether to use an external download program", },                           
     SETTING_GLOBAL,  BOOLEAN, { .b = false         },    (S_Func)dwb_set_dummy,  },
 

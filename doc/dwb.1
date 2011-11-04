@@ -948,6 +948,12 @@ will be replaced with the fifo-path if "use-fifo" is enabled,
 default value:
 .IR xterm\ -e\ wget\ 'dwb_uri'\ -O\ 'dwb_output'\ --load-cookies\ 'dwb_cookies' .
 .TP
+.BR download-directory
+The default download directory, if empty, the current working directory is used
+or the last download path is used.
+default value: 
+.IR NULL .
+.TP
 .BR download-use-external-program
 Whether to use an external download programm specified in
 \'download-external-programm\' or the builtin download helper.

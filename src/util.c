@@ -403,7 +403,8 @@ util_get_user_data_dir(const char *dir) {
   const gchar *data_dir = g_get_user_data_dir();
 
   char *path = g_build_filename(data_dir, dwb.misc.name, dir, NULL);
-  if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
+  if (path != NULL && !g_file_test(path, G_FILE_TEST_IS_DIR)) {
+    g_free(path);
     return NULL;
   }
   return path;

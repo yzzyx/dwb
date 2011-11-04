@@ -34,11 +34,14 @@ typedef struct _DwbDownload {
 
 static GList *downloads = NULL;
 static char *lastdir = NULL;
+static DownloadAction lastaction;
 
 /*  dwb_get_command_from_mimetype(char *mimetype){{{*/
 static char *
 download_get_command_from_mimetype(char *mimetype) {
   char *command = NULL;
+  if (mimetype == NULL)
+    return NULL;
   for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
     Navigation *n = l->data;
     if (!strcmp(n->first, mimetype)) {
@@ -275,7 +278,8 @@ download_start() {
     if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
       char *cache_name = g_build_filename(dwb.files.cachedir, filename, NULL);
       fullpath = g_strconcat("file://", cache_name, NULL);
-      g_free(cache_name);
+      FREE(cache_name);
+      lastaction = DL_ACTION_EXECUTE;
     }
     else {
       if (!path || !strlen(path)) {
@@ -288,6 +292,7 @@ download_start() {
         filename = strrchr(path, '/')+1;
         fullpath = external ? g_strdup(path) : g_build_filename("file://", path, NULL);
       }
+      lastaction = DL_ACTION_DOWNLOAD;
     }
 
     if (external && dwb.state.dl_action == DL_ACTION_DOWNLOAD) {
@@ -325,7 +330,15 @@ download_start() {
 static void
 download_entry_set_directory() {
   dwb_set_normal_message(dwb.state.fview, false, "Downloadpath:");
-  char *current_dir = lastdir ? g_strdup(lastdir) : g_get_current_dir();
+  char *default_dir = GET_CHAR("download-directory");
+  char *current_dir = NULL;
+  if (default_dir != NULL) 
+    current_dir = g_strdup(default_dir);
+  else if (lastdir != NULL)
+    current_dir = g_strdup(lastdir);
+  else 
+    current_dir = g_get_current_dir();
+    
   char *newdir = current_dir[strlen(current_dir) - 1] != '/' ? g_strdup_printf("%s/", current_dir) : g_strdup(current_dir);
 
   dwb_entry_set_text(newdir);
@@ -354,11 +367,12 @@ download_get_path(GList *gl, WebKitDownload *d) {
     return;
   }
 
-  char *command = NULL;
+  char *command = download_get_command_from_mimetype(dwb.state.mimetype_request);
   dwb_focus_entry();
   dwb.state.mode = DOWNLOAD_GET_PATH;
   dwb.state.download = d;
-  if ( ((dwb.state.mimetype_request && (command = download_get_command_from_mimetype(dwb.state.mimetype_request)))) ||  g_file_test(uri, G_FILE_TEST_EXISTS)) {
+  if ( lastaction != DL_ACTION_DOWNLOAD && 
+        ( command != NULL ||  g_file_test(uri, G_FILE_TEST_EXISTS)) ) {
     dwb.state.dl_action = DL_ACTION_EXECUTE;
     download_entry_set_spawn_command(command);
   }
