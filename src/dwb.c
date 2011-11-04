@@ -544,6 +544,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
   { { "error-color",                             "Color for error messages", },                                         
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         }, (S_Func) dwb_init_style,  },
+  { { "prompt-color",                             "Color for prompt messages", },                                         
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#00ff00"         }, (S_Func) dwb_init_style,  },
   { { "status-allowed-color",                        "Color of allowed elements in the statusbar", },           
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#00ff00"       },    (S_Func) dwb_reload_layout,  },
   { { "status-blocked-color",                        "Color of blocked elements in the statusbar", },           
@@ -936,6 +938,18 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
     v->status->message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, gl);
   }
 }/*}}}*/
+
+void 
+dwb_set_prompt_message(GList *gl, const char *prompt, ...) {
+  va_list arg_list; 
+
+  va_start(arg_list, prompt);
+  char message[STRING_LENGTH];
+  vsnprintf(message, STRING_LENGTH - 1, prompt, arg_list);
+  va_end(arg_list);
+  dwb_source_remove(gl);
+  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.prompt, dwb.font.fd_active, false);
+}
 
 /* dwb_set_error_message {{{*/
 void 
@@ -2057,6 +2071,44 @@ dwb_prepend_navigation(GList *gl, GList **fc) {
 
 }/*}}}*/
 
+/* dwb_confirm_snooper {{{*/
+static gboolean
+dwb_confirm_snooper(GtkWidget *w, GdkEventKey *e, Arg *a) {
+  if (e->keyval == GDK_KEY_y) {
+    a->i = 1;
+    goto confirmed;
+  }
+  else if (e->keyval == GDK_KEY_n) {
+    a->i = 0;
+    goto confirmed;
+  }
+  else if (e->keyval == GDK_KEY_Escape) {
+    goto confirmed;
+  }
+  return true;
+
+confirmed:
+  dwb_change_mode(NORMAL_MODE, false);
+  gtk_key_snooper_remove(a->n);
+  return true;
+}/*}}}*/
+
+/* dwb_confirm {{{*/
+gboolean
+dwb_confirm(void) {
+  dwb.state.mode |= CONFIRM;
+  gboolean confirmed;
+  Arg *a = util_arg_new();
+  a->i = -1;
+  a->n = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_confirm_snooper, a);
+  while ((dwb.state.mode & CONFIRM) && a->i == -1) {
+    gtk_main_iteration();
+  }
+  confirmed = a->i > 0;
+  g_free(a);
+  return confirmed;
+}/*}}}*/
+
 /* dwb_save_quickmark(const char *key) {{{*/
 static void 
 dwb_save_quickmark(const char *key) {
@@ -2067,6 +2119,13 @@ dwb_save_quickmark(const char *key) {
     for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
       Quickmark *q = l->data;
       if (!strcmp(key, q->key)) {
+        if (strcmp(uri, q->nav->first)) {
+          dwb_set_prompt_message(dwb.state.fview, "Overwrite quickmark %s : %s [y/n]?", q->key, q->nav->first);
+          if (!dwb_confirm()) {
+            dwb_set_error_message(dwb.state.fview, "Aborted saving quickmark %s : %s", key, uri);
+            return;
+          }
+        }
         dwb_quickmark_free(q);
         dwb.fc.quickmarks = g_list_delete_link(dwb.fc.quickmarks, l);
         break;
@@ -2859,6 +2918,7 @@ dwb_save_files(gboolean end_session) {
 /* dwb_end() {{{*/
 gboolean
 dwb_end() {
+  dwb.state.mode = NORMAL_MODE;
   if (dwb_save_files(true)) {
     if (dwb_clean_up()) {
       gtk_main_quit();
@@ -3126,6 +3186,7 @@ dwb_init_style() {
   DWB_COLOR_PARSE(&dwb.color.normal_c_fg, GET_CHAR("normal-completion-fg-color"));
 
   DWB_COLOR_PARSE(&dwb.color.error, GET_CHAR("error-color"));
+  DWB_COLOR_PARSE(&dwb.color.prompt, GET_CHAR("prompt-color"));
 
   dwb.color.tab_number_color = GET_CHAR("tab-number-color");
   dwb.color.allow_color = GET_CHAR("status-allowed-color");

@@ -47,12 +47,11 @@ active-completion-bg-color text Background color of the active completion item
 active-completion-fg-color text Foreground color of the active completion item
 active-fg-color text Foreground color of the active view
 error-color text Color for error messages
-insertmode-bg-color text Background color of the statusbar in insertmode
-insertmode-fg-color text Foreground color of the statusbar in insertmode
 normal-bg-color text Background color of the normal view
 normal-completion-bg-color text Background color of normal completion items
 normal-completion-fg-color text Foreground color of normal completion items
 normal-fg-color text Foreground color of the normal view
+prompt-color text Color for prompt messages
 ssl-trusted-color text Color for encrypted sites, trusted certificate
 ssl-untrusted-color text Color for encrypted sites, untrusted certificate
 status-allowed-color text Color for script blocker, status allowed

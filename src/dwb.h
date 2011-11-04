@@ -262,6 +262,7 @@ typedef enum {
   COMPLETE_PATH         = 1<<16,
   COMPLETE_BUFFER       = 1<<17,
   PASS_THROUGH          = 1<<18,
+  CONFIRM               = 1<<19,
 } Mode;
 
 
@@ -551,6 +552,7 @@ struct _Color {
   DwbColor tab_normal_fg;
   DwbColor tab_normal_bg;
   DwbColor error;
+  DwbColor prompt;
   DwbColor active_c_fg;
   DwbColor active_c_bg;
   DwbColor normal_c_fg;
@@ -621,7 +623,6 @@ struct _Misc {
   char *pbbackground;
   gboolean top_statusbar;
   int synctimer;
-
 };
 struct _Files {
   const char *bookmarks;
@@ -698,7 +699,9 @@ void dwb_focus_scroll(GList *);
 gboolean dwb_update_search(gboolean forward);
 
 void dwb_set_normal_message(GList *, gboolean, const char *, ...);
+void dwb_set_prompt_message(GList *, const char *, ...);
 void dwb_set_error_message(GList *, const char *, ...);
+gboolean dwb_confirm(void);
 void dwb_set_status_text(GList *, const char *, DwbColor *,  PangoFontDescription *);
 void dwb_set_status_bar_text(GtkWidget *, const char *, DwbColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
