@@ -942,18 +942,6 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
   }
 }/*}}}*/
 
-void 
-dwb_set_prompt_message(GList *gl, const char *prompt, ...) {
-  va_list arg_list; 
-
-  va_start(arg_list, prompt);
-  char message[STRING_LENGTH];
-  vsnprintf(message, STRING_LENGTH - 1, prompt, arg_list);
-  va_end(arg_list);
-  dwb_source_remove(gl);
-  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.prompt, dwb.font.fd_active, false);
-}
-
 /* dwb_set_error_message {{{*/
 void 
 dwb_set_error_message(GList *gl, const char *error, ...) {
@@ -1842,12 +1830,27 @@ void
 dwb_save_searchengine(void) {
   char *text = g_strdup(GET_TEXT());
   dwb_change_mode(NORMAL_MODE, false);
+  char *uri = NULL;
+  gboolean confirmed = true;
 
   if (!text)
     return;
 
   g_strstrip(text);
   if (text && strlen(text) > 0) {
+    Navigation compn = { .first = text };
+    GList *existing = g_list_find_custom(dwb.fc.searchengines, &compn, (GCompareFunc)util_navigation_compare_first);
+    if (existing != NULL) {
+      uri = util_domain_from_uri(((Navigation*)existing->data)->second);
+      if (uri) {
+        confirmed = dwb_confirm(dwb.state.fview, "Overwrite searchengine %s : %s [y/n]?", ((Navigation*)existing->data)->first, uri);
+        g_free(uri);
+      }
+      if (!confirmed) {
+        dwb_set_error_message(dwb.state.fview, "Aborted");
+        return;
+      }
+    }
     dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
     Navigation *n = g_list_last(dwb.fc.searchengines)->data;
     Navigation *cn = dwb_get_search_completion_from_navigation(dwb_navigation_dup(n));
@@ -2094,9 +2097,19 @@ dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, Arg *a) {
  * yes / no confirmation
  * */
 gboolean
-dwb_confirm(void) {
+dwb_confirm(GList *gl, char *prompt, ...) {
   dwb.state.mode |= CONFIRM;
   gboolean confirmed;
+
+  va_list arg_list; 
+
+  va_start(arg_list, prompt);
+  char message[STRING_LENGTH];
+  vsnprintf(message, STRING_LENGTH - 1, prompt, arg_list);
+  va_end(arg_list);
+  dwb_source_remove(gl);
+  dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.prompt, dwb.font.fd_active, false);
+
   Arg *a = util_arg_new();
   a->i = -1;
   a->n = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_confirm_snooper_cb, a);
@@ -2119,8 +2132,7 @@ dwb_save_quickmark(const char *key) {
       Quickmark *q = l->data;
       if (!strcmp(key, q->key)) {
         if (strcmp(uri, q->nav->first)) {
-          dwb_set_prompt_message(dwb.state.fview, "Overwrite quickmark %s : %s [y/n]?", q->key, q->nav->first);
-          if (!dwb_confirm()) {
+          if (!dwb_confirm(dwb.state.fview, "Overwrite quickmark %s : %s [y/n]?", q->key, q->nav->first)) {
             dwb_set_error_message(dwb.state.fview, "Aborted saving quickmark %s : %s", key, uri);
             dwb_change_mode(NORMAL_MODE, false);
             return;

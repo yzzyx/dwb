@@ -699,9 +699,8 @@ void dwb_focus_scroll(GList *);
 gboolean dwb_update_search(gboolean forward);
 
 void dwb_set_normal_message(GList *, gboolean, const char *, ...);
-void dwb_set_prompt_message(GList *, const char *, ...);
 void dwb_set_error_message(GList *, const char *, ...);
-gboolean dwb_confirm(void);
+gboolean dwb_confirm(GList *, char *, ...);
 void dwb_set_status_text(GList *, const char *, DwbColor *,  PangoFontDescription *);
 void dwb_set_status_bar_text(GtkWidget *, const char *, DwbColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
