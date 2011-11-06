@@ -623,8 +623,9 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
     dwb.state.nv = arg->n;
   completion_complete(COMP_BOOKMARK, 0);
   dwb_focus_entry();
-  completion_set_entry_text((Completion*)dwb.comps.active_comp->data);
-
+  if (dwb.comps.active_comp != NULL) {
+    completion_set_entry_text((Completion*)dwb.comps.active_comp->data);
+  }
   return STATUS_OK;
 }/*}}}*/
 
