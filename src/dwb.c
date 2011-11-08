@@ -2130,28 +2130,32 @@ dwb_save_quickmark(const char *key) {
     char *text = g_strdup_printf("%s %s %s", key, uri, title);
     util_file_add(dwb.files.quickmarks, text, true, -1);
     g_free(text);
-    dwb_change_mode(NORMAL_MODE, false);
 
     dwb_set_normal_message(dwb.state.fview, true, "Added quickmark: %s - %s", key, uri);
   }
   else {
     dwb_set_error_message(dwb.state.fview, NO_URL);
   }
+  dwb_change_mode(NORMAL_MODE, false);
 }/*}}}*/
 
 /* dwb_open_quickmark(const char *key){{{*/
 static void 
 dwb_open_quickmark(const char *key) {
+  gboolean found = false;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!strcmp(key, q->key)) {
       dwb_load_uri(NULL, q->nav->first);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
-      dwb_change_mode(NORMAL_MODE, false);
-      return;
+      found = true;
+      break;
     }
   }
-  dwb_set_error_message(dwb.state.fview, "No such quickmark: %s", key);
+  if (!found) {
+    dwb_set_error_message(dwb.state.fview, "No such quickmark: %s", key);
+  }
+  dwb_change_mode(NORMAL_MODE, false);
 }/*}}}*/
 
 /* dwb_tab_label_set_text {{{*/
