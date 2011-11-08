@@ -822,7 +822,6 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
   Mode mode = CLEAN_MODE(dwb.state.mode);
 
-  PRINT_DEBUG("%d %d %d\n", mode, CLEAN_MODE(mode) & COMPLETE_BUFFER, mode & PASS_THROUGH);
   char *key = util_keyval_to_char(e->keyval);
   if (e->keyval == GDK_KEY_Escape) {
     dwb_change_mode(NORMAL_MODE, true);
@@ -1064,8 +1063,6 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir) {
 
   double value = gtk_adjustment_get_value(a);
 
-  PRINT_DEBUG("gtk_adjustment value: %f", value);
-
   double inc;
   if (dir == SCROLL_PAGE_UP || dir == SCROLL_PAGE_DOWN) {
     inc = gtk_adjustment_get_page_increment(a);
@@ -1084,7 +1081,6 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir) {
   else
     inc = step > 0 ? step : gtk_adjustment_get_step_increment(a);
 
-  PRINT_DEBUG("scroll increment %f", inc);
   /* if gtk_get_step_increment fails and dwb.misc.scroll_step is 0 use a default
    * value */
   if (inc == 0) {
@@ -1093,9 +1089,6 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir) {
 
   double lower  = gtk_adjustment_get_lower(a);
   double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
-
-  PRINT_DEBUG("Scroll lower %f", lower);
-  PRINT_DEBUG("Scroll upper %f", upper);
 
   switch (dir) {
     case  SCROLL_TOP:      scroll = lower; break;
@@ -2089,7 +2082,6 @@ dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
     default:              return true;
   }
   dwb.state.mode &= ~CONFIRM;
-  //gtk_key_snooper_remove(a->n);
   return true;
 }/*}}}*/
 
@@ -2467,7 +2459,6 @@ dwb_eval_key(GdkEventKey *e) {
         }
       }
     }
-    PRINT_DEBUG("nummod: %d", dwb.state.nummod);
     FREE(key);
     return false;
   }
@@ -2480,9 +2471,6 @@ dwb_eval_key(GdkEventKey *e) {
   int longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
-
-  PRINT_DEBUG("buffer: %s key: %s", buf, key);
-  PRINT_DEBUG("%d", e->state);
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;

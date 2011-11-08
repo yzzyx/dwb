@@ -25,9 +25,7 @@ static char *
 plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
   WebKitDOMNode *parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(element));
 
-  PRINT_DEBUG("%s", webkit_dom_html_element_get_id(element));
   if (parent != NULL) {
-    PRINT_DEBUG("%s", webkit_dom_html_element_get_id(element));
     WebKitDOMDocument *doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(element));
     WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
   
@@ -70,8 +68,6 @@ plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl
   if ( (!strcmp(type, "application/x-shockwave-flash") 
       && (! g_ascii_strcasecmp(tagname, "object") || ! g_ascii_strcasecmp(tagname, "embed")) ) 
       && ! g_slist_find(ALLOWED(gl), element) ) {
-    PRINT_DEBUG("%s : %s", webkit_dom_element_get_attribute(element, "src"), type);
-
     VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
     webkit_dom_event_prevent_default(event);
     webkit_dom_event_stop_propagation(event);

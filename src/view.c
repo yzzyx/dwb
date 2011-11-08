@@ -302,7 +302,6 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   }
   else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
     if (dwb.state.mode == SEARCH_FIELD_MODE) {
-      PRINT_DEBUG("searchfields navigation request: %s", uri);
       webkit_web_policy_decision_ignore(policy);
       dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, HINT_SEARCH_SUBMIT) 
         ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
@@ -419,7 +418,6 @@ static void
 view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
   GtkAction *a = NULL;
   const char *name;
-  PRINT_DEBUG("hover_uri: %s", VIEW(gl)->status->hover_uri);
   /* 
    * context-menu-action-2000       open link
    * context-menu-action-1          open link in window
@@ -436,7 +434,6 @@ view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
   if (a == NULL) 
     return;
   name  = gtk_action_get_name(a);
-  PRINT_DEBUG("action name: %s", name);
   if (!strcmp(name, "context-menu-action-3")) { /* copy link location */
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
     gtk_clipboard_set_text(clipboard, VIEW(gl)->status->hover_uri, -1);
@@ -1081,7 +1078,6 @@ view_add(const char *uri, gboolean background) {
   View *v = view_create_web_view();
   if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
-    PRINT_DEBUG("position :%d", p);
     gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
     gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
     gtk_box_insert(GTK_BOX(dwb.gui.right), v->vbox, true, true, 0, p-1);
