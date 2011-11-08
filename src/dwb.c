@@ -2081,17 +2081,18 @@ dwb_prepend_navigation(GList *gl, GList **fc) {
 
 /* dwb_confirm_snooper {{{*/
 static gboolean
-dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, Arg *a) {
+dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
   switch (e->keyval) {
-    case GDK_KEY_y:       a->i = 1; break;
-    case GDK_KEY_n:       a->i = 0; break;
+    case GDK_KEY_y:       *state = 1; break;
+    case GDK_KEY_n:       *state = 0; break;
     case GDK_KEY_Escape:  break;
     default:              return true;
   }
   dwb.state.mode &= ~CONFIRM;
-  gtk_key_snooper_remove(a->n);
+  //gtk_key_snooper_remove(a->n);
   return true;
 }/*}}}*/
+
 
 /* dwb_confirm()  return confirmed (gboolean) {{{
  * yes / no confirmation
@@ -2099,7 +2100,6 @@ dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, Arg *a) {
 gboolean
 dwb_confirm(GList *gl, char *prompt, ...) {
   dwb.state.mode |= CONFIRM;
-  gboolean confirmed;
 
   va_list arg_list; 
 
@@ -2110,15 +2110,13 @@ dwb_confirm(GList *gl, char *prompt, ...) {
   dwb_source_remove(gl);
   dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.prompt, dwb.font.fd_active, false);
 
-  Arg *a = util_arg_new();
-  a->i = -1;
-  a->n = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_confirm_snooper_cb, a);
-  while ((dwb.state.mode & CONFIRM) && a->i == -1) {
+  int state = -1;
+  int id = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_confirm_snooper_cb, &state);
+  while ((dwb.state.mode & CONFIRM) && state == -1) {
     gtk_main_iteration();
   }
-  confirmed = a->i > 0;
-  g_free(a);
-  return confirmed;
+  gtk_key_snooper_remove(id);
+  return state > 0;
 }/*}}}*/
 
 /* dwb_save_quickmark(const char *key) {{{*/
