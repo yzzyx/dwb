@@ -1893,13 +1893,6 @@ dwb_layout_from_char(const char *desc) {
   return layout;
 }/*}}}*/
 
-/* dwb_web_settings_get_value(const char *id, void *value) {{{*/
-static Arg *  
-dwb_web_settings_get_value(const char *id) {
-  WebSettings *s = g_hash_table_lookup(dwb.settings, id);
-  return &s->arg;
-}/*}}}*/
-
 /* dwb_evaluate_hints(const char *buffer)  return DwbStatus {{{*/
 DwbStatus 
 dwb_evaluate_hints(const char *buffer) {
@@ -2342,9 +2335,8 @@ dwb_update_layout(gboolean background) {
       w = WEBVIEW(dwb.state.views->next);
       if (dwb.misc.factor != 1.0) {
         webkit_web_view_set_zoom_level(w, dwb.misc.factor);
+        webkit_web_view_set_full_content_zoom(w, GET_BOOL("full-content-zoom"));
       }
-      Arg *a = dwb_web_settings_get_value("full-content-zoom");
-      webkit_web_view_set_full_content_zoom(w, a->b);
     }
     else if (visible) {
       gtk_widget_hide(dwb.gui.right);
@@ -3467,7 +3459,6 @@ dwb_init() {
     dwb.misc.pbbackground = util_get_file_content(path);
     g_free(path);
   }
-
 
   dwb_init_key_map();
   dwb_init_style();
