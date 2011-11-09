@@ -650,7 +650,7 @@ view_entry_activate(GList *gl, GdkEventKey *e) {
   switch (CLEAN_MODE(dwb.state.mode))  {
     case HINT_MODE:           dwb_update_hints(e); return false;
     case FIND_MODE:           dwb_focus_scroll(dwb.state.fview);
-                              dwb_search(NULL, NULL);
+                              dwb_search(NULL);
                               dwb_change_mode(NORMAL_MODE, true);
                               return true;
     case SEARCH_FIELD_MODE:   dwb_submit_searchengine();
