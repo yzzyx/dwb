@@ -12,8 +12,10 @@ typedef enum _AdblockOption {
   AO_END                = 1<<4,
   AO_REGEXP             = 1<<6,
   AO_MATCH_CASE         = 1<<7,
-  /*  Attributes */
+  AO_THIRDPARTY         = 1<<8,
+  AO_NOTHIRDPARTY       = 1<<9,
 } AdblockOption;
+/*  Attributes */
 typedef enum _AdblockAttribute {
   AA_SCRIPT             = 1<<0,
   AA_IMAGE              = 1<<1,
@@ -29,8 +31,6 @@ typedef enum _AdblockAttribute {
   AA_DOCUMENT           = 1<<11,
   AA_ELEMHIDE           = 1<<12,
   AA_OTHER              = 1<<13,
-  AA_THIRDPARTY         = 1<<14,
-  AA_NOT_SUPPORTED      = 1<<17,
   /* inverse */
 } AdblockAttribute;
 
@@ -38,6 +38,7 @@ typedef enum _AdblockAttribute {
 typedef struct _AdblockRule {
   void *pattern;
   AdblockOption options;
+  AdblockAttribute attributes;
   char **domains;
 } AdblockRule;
 
@@ -47,12 +48,12 @@ typedef struct _AdblockElementHider {
 } AdblockElementHider;
 
 static GPtrArray *_hider;
+static GPtrArray *_simple_rules;
+static GPtrArray *_simple_exceptions;
 static GPtrArray *_rules;
 static GPtrArray *_exceptions;
 static GString *_css_rules;
-static SoupBuffer *soup_buffer;
 static SoupContentSniffer *content_sniffer;
-
 
 static AdblockRule *
 adblock_rule_new() {
@@ -92,7 +93,7 @@ adblock_domain_matches(const char *host, const char *domain) {
   return false;
 }
 gboolean 
-adblock_domain_matches_uri(const char *uri, const char *domain) {
+adblock_domain_matches_uri(char *uri, char *domain) {
   if (uri == NULL || domain == NULL) 
     return false;
   while (*uri == '/') {
@@ -118,7 +119,6 @@ adblock_domain_matches_uri(const char *uri, const char *domain) {
     FREE(fres);
     fres = res;
   }
-  //PRINT_DEBUG("%s %s %s", uri, res, domain);
   return !strcmp(domain, res);
 
 }
@@ -135,21 +135,20 @@ adblock_resource_request_cb(WebKitWebView         *wv,
   if (frame == main_frame && webkit_web_frame_get_load_status(frame) == WEBKIT_LOAD_PROVISIONAL)
     return;
   SoupMessage *message;
-  const char *req_uri;
   if (request) {
     message = webkit_network_request_get_message(request);
-    req_uri = webkit_network_request_get_uri(request);
+    //req_uri = webkit_network_request_get_uri(request);
   }
   else if (response) {
     message = webkit_network_response_get_message(response);
-    req_uri = webkit_network_response_get_uri(response);
+    //req_uri = webkit_network_response_get_uri(response);
   }
   else 
     return;
   if (message == NULL)
     return;
-  SoupAddress *address = soup_message_get_address(message);
-  const char *host = soup_address_get_name(address);
+  //SoupAddress *address = soup_message_get_address(message);
+  //const char *host = soup_address_get_name(address);
   
   //const char *url = webkit_network(frame);
   //if (! adblock_domain_matches_uri("http://blub.bla/fjkl", host)) 
@@ -160,13 +159,12 @@ adblock_resource_request_cb(WebKitWebView         *wv,
 
   SoupURI *suri = soup_message_get_uri(message);
   SoupURI *sfirst_party = soup_message_get_first_party(message);
+  printf("%p %p\n", suri, sfirst_party);
   gboolean thirdparty = !soup_uri_host_equal(suri, sfirst_party);
   printf("%d\n", thirdparty);
 
   char *uri = soup_uri_to_string(suri, false);
 
-  char *content = soup_content_sniffer_sniff(content_sniffer, message, soup_buffer, NULL);
-  PRINT_DEBUG(content);
 
   gboolean block = false;
   AdblockRule *r;
@@ -188,7 +186,6 @@ adblock_resource_request_cb(WebKitWebView         *wv,
     }
     else {
       if (strstr(uri, r->pattern)) {
-        puts(r->pattern);
         block = true;
         break;
       }
@@ -256,7 +253,7 @@ adblock_rule_parse(char *pattern) {
     }
     options = strstr(tmp, "$");
     if (options != NULL) {
-      tmp_a = g_strndup(pattern, options - pattern);
+      tmp_a = g_strndup(tmp, options - tmp);
       char **options_arr = g_strsplit(options+1, ",", -1);
       int inverse;
       char *o;
@@ -265,7 +262,7 @@ adblock_rule_parse(char *pattern) {
         o = options_arr[i];
         /*  attributes */
         if (*o == '~') {
-          inverse = 16;
+          inverse = 15;
           o++;
         }
         if (!strcmp(o, "script"))
@@ -278,8 +275,9 @@ adblock_rule_parse(char *pattern) {
         }
         else if (!strcmp(o, "stylesheet"))
           attributes |= (AA_STYLESHEET << inverse);
-        else if (!strcmp(o, "object"))
-          attributes |= (AA_OBJECT << inverse);
+        else if (!strcmp(o, "object")) {
+          fprintf(stderr, "Not supported: adblock option 'object'\n");
+        }
         else if (!strcmp(o, "xbl")) {
           fprintf(stderr, "Not supported: adblock option 'xbl'\n");
           goto error_out;
@@ -293,8 +291,7 @@ adblock_rule_parse(char *pattern) {
           goto error_out;
         }
         else if (!strcmp(o, "object-subrequest")) {
-          fprintf(stderr, "Not supported: adblock option 'object-subrequest'\n");
-          goto error_out;
+          attributes |= AA_OBJECT_SUBREQUEST;
         }
         else if (!strcmp(o, "dtd")) {
           fprintf(stderr, "Not supported: adblock option 'dtd'\n");
@@ -320,6 +317,14 @@ adblock_rule_parse(char *pattern) {
         }
         else if (!strcmp(o, "match-case"))
           option |= AO_MATCH_CASE;
+        else if (!strcmp(o, "third-party")) {
+          if (inverse) {
+            option |= AO_NOTHIRDPARTY;
+          }
+          else {
+            option |= AO_THIRDPARTY;
+          }
+        }
         else if (g_str_has_prefix(o, "domain=")) {
           domains = g_strsplit(options_arr[i] + 7, "|", -1);
         }
@@ -327,9 +332,9 @@ adblock_rule_parse(char *pattern) {
       tmp = tmp_a;
       g_strfreev(options_arr);
     }
-    else {
-      tmp = pattern;
-    }
+    //else {
+    //  tmp = pattern;
+    //}
     int length = strlen(tmp);
     /* Beginning of pattern / domain */
     if (length > 0 && tmp[0] == '|') {
@@ -368,36 +373,79 @@ adblock_rule_parse(char *pattern) {
     else {
       if (strchr(tmp, '^')) {
         option |= AO_SEPERATOR;
-      }
-      char *first_wild;
-      if ( (first_wild = strchr(tmp, '*')) ) {
-        if (strlen(first_wild) == 1 || (first_wild == tmp && !strchr(tmp, '*')) ) {
-          tmp[length-1] = '\0';
+        GString *buffer = g_string_new(NULL);
+        if (option & AO_BEGIN) {
+          g_string_append_c(buffer, '^');
         }
-        else {
-          option |= AO_WILDCARD;
-          if (! (option & AO_SEPERATOR)) {
-            tmp_c = g_strdup_printf("*%s*", tmp);
+        for (char *regexp_tmp = tmp; *regexp_tmp; regexp_tmp++ ) {
+          switch (*regexp_tmp) {
+            case '^' : g_string_append(buffer, "([\\x00-\\x24\\x26-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x80]|$)");
+                      /*  skip anchor at end of pattern */
+                       if (*(regexp_tmp+1) && *(regexp_tmp+1) == '|') { 
+                         continue;
+                       }
+                       break;
+            case '*' : g_string_append(buffer, ".*");
+                       break;
+            default: g_string_append_c(buffer, *regexp_tmp);
           }
         }
+        if (option & AO_END) {
+          g_string_append_c(buffer, '$');
+        }
+        rule = g_regex_new(buffer->str, 0, 0, NULL);
+        g_string_free(buffer, true);
       }
-      //printf("%d: %s%s%s\n", option & (AO_WILDCARD | AO_SEPERATOR), option & AO_WILDCARD ? "wildcard " : "", option & AO_SEPERATOR & AO_SEPERATOR ? "seperator " : "", tmp);
-      rule = g_strdup(tmp);
+      else {
+        rule = g_strdup_printf("*%s*", tmp);
+      }
     }
 
     AdblockRule *adrule = adblock_rule_new();
+    adrule->attributes = attributes;
     adrule->pattern = rule;
     adrule->options = option;
     adrule->domains = domains;
-    if (exception) 
-      g_ptr_array_add(_exceptions, adrule);
-    else 
-      g_ptr_array_add(_rules, adrule);
+    if (attributes) {
+      if (exception) 
+        g_ptr_array_add(_exceptions, adrule);
+      else 
+        g_ptr_array_add(_rules, adrule);
+    }
+    else {
+      if (exception) 
+        g_ptr_array_add(_simple_exceptions, adrule);
+      else 
+        g_ptr_array_add(_simple_rules, adrule);
+    }
   }
 error_out:
   FREE(tmp_a);
   FREE(tmp_b);
   return ret;
+}
+void 
+adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, SoupSession *session) {
+  AdblockAttribute attribute = 0;
+  if (!strncmp(type, "image/", 6)) {
+    attribute = AA_IMAGE;
+  }
+  else if (!fnmatch("*javascript*", type, FNM_NOESCAPE)) {
+    attribute = AA_SCRIPT;
+  }
+  else if (!strcmp(type, "application/x-shockwave-flash") || !strcmp(type, "application/x-flv")) {
+    attribute = AA_OBJECT_SUBREQUEST;
+  }
+  else if (!strcmp(type, "text/css")) {
+    attribute = AA_STYLESHEET;
+  }
+  if (attribute)
+    printf("%d\n", attribute);
+
+}
+void
+adblock_request_started_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
+  g_signal_connect(msg, "content-sniffed", G_CALLBACK(adblock_content_sniffed_cb), session);
 }
 
 void
@@ -406,6 +454,8 @@ adblock_init() {
   _hider = g_ptr_array_new();
   _rules = g_ptr_array_new();
   _exceptions = g_ptr_array_new();
+  _simple_rules = g_ptr_array_new();
+  _simple_exceptions = g_ptr_array_new();
 
   char *content = util_get_file_content("easylist.txt");
   char **lines = g_strsplit(content, "\n", -1);
@@ -414,6 +464,6 @@ adblock_init() {
   }
   g_strfreev(lines);
   g_free(content);
-  soup_buffer = soup_buffer_new(SOUP_MEMORY_STATIC, NULL, 0);
+  g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
   content_sniffer = soup_content_sniffer_new();
 }

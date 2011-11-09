@@ -3274,6 +3274,7 @@ dwb_init() {
   dwb_init_scripts();
 
   dwb_soup_init();
+  adblock_init();
   dwb_init_vars();
 
   if (dwb.state.layout & BOTTOM_STACK) {
@@ -3467,7 +3468,6 @@ main(int argc, char *argv[]) {
   dwb_init_fifo(single);
   dwb_init_signals();
   dwb_init();
-  adblock_init();
   gtk_main();
   return EXIT_SUCCESS;
 }
