@@ -43,6 +43,7 @@ DwbStatus commands_entry_word_back(KeyMap *, Arg *);
 DwbStatus commands_entry_word_forward(KeyMap *, Arg *);
 DwbStatus commands_execute_userscript(KeyMap *, Arg *);
 DwbStatus commands_find(KeyMap *, Arg *);
+DwbStatus commands_search(KeyMap *, Arg *);
 DwbStatus commands_focus_input(KeyMap *, Arg *);
 DwbStatus commands_focus(KeyMap *, Arg *);
 DwbStatus commands_focus_nth_view(KeyMap *, Arg *);

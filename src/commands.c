@@ -149,6 +149,14 @@ commands_find(KeyMap *km, Arg *arg) {
   return STATUS_OK;
 }/*}}}*/
 
+DwbStatus  
+commands_search(KeyMap *km, Arg *arg) { 
+  DwbStatus ret = STATUS_OK;
+  if (!dwb_search(arg)) 
+    ret = STATUS_ERROR;
+  return ret;
+}
+
 /*commands_resize_master {{{*/
 DwbStatus  
 commands_resize_master(KeyMap *km, Arg *arg) { 

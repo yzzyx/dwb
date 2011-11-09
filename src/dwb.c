@@ -120,9 +120,9 @@ static FunctionMap FMAP [] = {
   { { "find_forward",          "Find forward ",                     }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = true }, },
   { { "find_next",             "Find next",                         }, 1, 
-    (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = true }, },
+    (Func)commands_search,                  "No matches",                      ALWAYS_SM,     { .b = true }, },
   { { "find_previous",         "Find previous",                     }, 1, 
-    (Func)dwb_search,                  "No matches",                      ALWAYS_SM,     { .b = false }, },
+    (Func)commands_search,                  "No matches",                      ALWAYS_SM,     { .b = false }, },
   { { "focus_input",           "Focus input",                       }, 1, 
     (Func)commands_focus_input,        "No input found in current context",      ALWAYS_SM, },
   { { "focus_next",            "Focus next view",                   }, CP_COMMANDLINE | CP_HAS_MODE, 
@@ -2627,7 +2627,8 @@ dwb_update_search(gboolean forward) {
 
 /* dwb_search {{{*/
 gboolean
-dwb_search(KeyMap *km, Arg *arg) {
+dwb_search(Arg *arg) {
+  gboolean ret = false;
   View *v = CURRENT_VIEW();
   gboolean forward = dwb.state.forward_search;
   if (arg) {
@@ -2637,9 +2638,9 @@ dwb_search(KeyMap *km, Arg *arg) {
     dwb_highlight_search();
   }
   if (v->status->search_string) {
-    webkit_web_view_search_text(WEBKIT_WEB_VIEW(v->web), v->status->search_string, false, forward, true);
+    ret = webkit_web_view_search_text(WEBKIT_WEB_VIEW(v->web), v->status->search_string, false, forward, true);
   }
-  return true;
+  return ret;
 }/*}}}*/
 
 /* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
