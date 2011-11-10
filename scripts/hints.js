@@ -323,12 +323,12 @@ DwbHintObj = (function() {
     var matchHint = false;
     if (!_activeArr.length) {
       __clear();
-      __showHints();
+      __showHints(type, _new_tab);
     }
     if (_lastInput && (_lastInput.length > input.length)) {
       __clear();
       _lastInput = input;
-      __showHints();
+      __showHints(type, _new_tab);
       return __updateHints(input, type);
     }
     _lastInput = input;
