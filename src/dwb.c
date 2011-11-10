@@ -108,9 +108,9 @@ static FunctionMap FMAP [] = {
   { { "bookmarks_nw",          "Bookmarks new window",              }, 0, 
     (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
   { { "new_view",              "New view for next navigation",      }, 0, 
-    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_VIEW}, }, 
+    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_VIEW }, }, 
   { { "new_window",            "New window for next navigation",    }, 0, 
-    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW}, }, 
+    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW }, }, 
   { { "command_mode",          "Enter command mode",                }, 0, 
     (Func)commands_command_mode,            NULL,                              POST_SM, },
   { { "decrease_master",       "Decrease master area",              }, 1, 
@@ -1034,6 +1034,15 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+/* dwb_set_open_mode(Open) {{{*/
+void
+dwb_set_open_mode(Open mode) {
+  if (mode & OPEN_NEW_VIEW && !dwb.misc.tabbed_browsing) 
+      dwb.state.nv = (mode & ~OPEN_NEW_VIEW) | OPEN_NEW_WINDOW;
+  else 
+    dwb.state.nv = mode;
+}/*}}}*/
 
 /* dwb_set_clipboard (const char *, GdkAtom) {{{*/
 DwbStatus
@@ -2247,7 +2256,7 @@ dwb_load_uri(GList *gl, const char *arg) {
   }
 
   /* new window ? */
-  if (dwb.state.nv == OPEN_NEW_WINDOW) {
+  if (dwb.state.nv & OPEN_NEW_WINDOW) {
     dwb.state.nv = OPEN_NORMAL;
     dwb_new_window(arg);
     return;

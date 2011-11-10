@@ -267,6 +267,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
 
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
+  WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
   if (dwb.state.mode == INSERT_MODE && gl == dwb.state.fview) {
     dwb_change_mode(NORMAL_MODE, true);
@@ -275,20 +276,31 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     if (!html_load(gl, uri)) {
       fprintf(stderr, "Error loadings %s, maybe some files are missing.\n", uri);
     }
+    webkit_web_policy_decision_ignore(policy);
     return true;
   }
-  if (dwb.state.nv == OPEN_NEW_VIEW || dwb.state.nv == OPEN_NEW_WINDOW) {
-    if (dwb.state.nv == OPEN_NEW_VIEW) {
+  /* Hints can open new windows / tabs via navigation_policy since the
+   * navigation is done by a simulated click 
+   */
+  if (dwb.state.nv & OPEN_NEW_VIEW) {
+    if (dwb.state.nv & OPEN_VIA_HINTS || (dwb.state.nv & OPEN_EXPLICIT && reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) ) {
       dwb.state.nv = OPEN_NORMAL;
-      view_add(uri, dwb.state.background_tabs); 
+      view_add(uri, dwb.state.background_tabs);
+      webkit_web_policy_decision_ignore(policy);
+      return true;
     }
-    else {
-      dwb_new_window(uri);
-    }
-    dwb.state.nv = OPEN_NORMAL;
-    return true;
   }
-  WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
+  /* In single mode (without tabs), this seems to be the only way of creating a
+   * new window
+   */
+  if (dwb.state.nv & OPEN_NEW_WINDOW) {
+    if ((dwb.state.nv & OPEN_VIA_HINTS) || (dwb.state.nv & OPEN_EXPLICIT && reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED)) {
+      dwb_change_mode(NORMAL_MODE, true);
+      dwb_new_window(uri);
+      webkit_web_policy_decision_ignore(policy);
+      return true;
+    }
+  }
   GError *error = NULL;
 
   if ((reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED || reason == WEBKIT_WEB_NAVIGATION_REASON_BACK_FORWARD || reason == WEBKIT_WEB_NAVIGATION_REASON_RELOAD) 
@@ -298,7 +310,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
       g_clear_error(&error);
     }
     webkit_web_policy_decision_ignore(policy);
-    return false;
+    return true;
   }
   else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
     if (dwb.state.mode == SEARCH_FIELD_MODE) {
@@ -307,6 +319,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
         ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
         : g_strdup(uri);
       dwb_save_searchengine();
+      webkit_web_policy_decision_ignore(policy);
       return true;
     }
   }
@@ -333,7 +346,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
 static gboolean 
 view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
-    WebKitWebPolicyDecision *policy, GList *gl) {
+    WebKitWebPolicyDecision *decision, GList *gl) {
   return false;
 }/*}}}*/
 

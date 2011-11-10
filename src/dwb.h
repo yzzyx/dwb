@@ -317,6 +317,8 @@ typedef enum {
   OPEN_NEW_WINDOW  = 1<<2, 
   OPEN_DOWNLOAD    = 1<<3, 
   SET_URL          = 1<<4, 
+  OPEN_VIA_HINTS   = 1<<5,
+  OPEN_EXPLICIT    = 1<<6,
 } Open;
 
 enum {
@@ -768,6 +770,7 @@ void dwb_remove_download(const char *);
 void dwb_remove_history(const char *);
 void dwb_remove_quickmark(const char *);
 DwbStatus dwb_evaluate_hints(const char *);
+void dwb_set_open_mode(Open);
 
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
