@@ -175,8 +175,9 @@ commands_resize_master(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_show_hints(KeyMap *km, Arg *arg) {
   DwbStatus ret = STATUS_OK;
-  if (dwb.state.nv == OPEN_NORMAL)
-    dwb.state.nv = arg->n;
+  if (dwb.state.nv == OPEN_NORMAL) {
+    dwb_set_open_mode(arg->n | OPEN_VIA_HINTS);
+  }
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
     char *command = g_strdup_printf("DwbHintObj.showHints(%d, %s)", MIN(arg->i, HINT_T_URL), arg->n != OPEN_NORMAL ? "true" : "false");
@@ -252,7 +253,7 @@ commands_bookmark(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_quickmark(KeyMap *km, Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
-    dwb.state.nv = arg->i;
+    dwb_set_open_mode(arg->i);
   dwb.state.mode = arg->n;
   return STATUS_OK;
 }/*}}}*/
@@ -374,7 +375,7 @@ commands_history_forward(KeyMap *km, Arg *arg) {
 DwbStatus  
 commands_open(KeyMap *km, Arg *arg) {
   if (dwb.state.nv & OPEN_NORMAL)
-    dwb.state.nv = arg->n & ~SET_URL;
+    dwb_set_open_mode(arg->n & ~SET_URL);
 
   dwb.state.type = arg->i;
 
@@ -494,7 +495,7 @@ commands_paste(KeyMap *km, Arg *arg) {
 
   if ( (text = gtk_clipboard_wait_for_text(clipboard)) ) {
     if (dwb.state.nv == OPEN_NORMAL)
-      dwb.state.nv = arg->n;
+      dwb_set_open_mode(arg->n);
     dwb_load_uri(NULL, text);
     g_free(text);
     return STATUS_OK;
@@ -628,7 +629,7 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
     return STATUS_ERROR;
   }
   if (dwb.state.nv == OPEN_NORMAL)
-    dwb.state.nv = arg->n;
+    dwb_set_open_mode(arg->n);
   completion_complete(COMP_BOOKMARK, 0);
   dwb_focus_entry();
   if (dwb.comps.active_comp != NULL) {
@@ -697,7 +698,7 @@ commands_toggle_scripts(KeyMap *km, Arg *arg) {
 /* commands_new_window_or_view{{{*/
 DwbStatus 
 commands_new_window_or_view(KeyMap *km, Arg *arg) {
-  dwb.state.nv = arg->n;
+  dwb_set_open_mode(arg->n | OPEN_EXPLICIT);
   return STATUS_OK;
 }/*}}}*/
 
