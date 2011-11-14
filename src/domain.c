@@ -18,9 +18,10 @@
 #ifdef DWB_DOMAIN_SERVICE
 #include <glib-2.0/glib.h>
 #include <string.h>
-#include "tlds.h"
+#include "util.h"
 
 static GHashTable *_tld_table;
+static char **_effective_tlds;
 
 const char *
 domain_get_base_for_host(const char *host) {
@@ -55,20 +56,30 @@ domain_get_base_for_host(const char *host) {
   }
   return ret;
 }
+void
+domain_end() {
+  if (_tld_table)
+    g_hash_table_unref(_tld_table);
+  if (_effective_tlds) {
+    g_strfreev(_effective_tlds);
+  }
+}
 
 void 
 domain_init() {
   _tld_table = g_hash_table_new((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal);
   char *eff_tld;
 
-  for (int i=0; effective_tlds[i]; i++) {
-    eff_tld = effective_tlds[i];
-
+  char *tld_file = util_get_data_file("tlds.txt");
+  char *content = util_get_file_content(tld_file);
+  _effective_tlds = g_strsplit(content, "\n", -1);
+  for (int i=0; (eff_tld = _effective_tlds[i]); i++) {
     if (*eff_tld == '*' || *eff_tld == '!') 
       eff_tld++;
     if (*eff_tld == '.')
       eff_tld++;
-    g_hash_table_insert(_tld_table, eff_tld, effective_tlds[i]);
+    g_hash_table_insert(_tld_table, eff_tld, _effective_tlds[i]);
   }
+  g_free(tld_file);
 }
 #endif

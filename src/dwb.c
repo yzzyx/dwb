@@ -30,6 +30,7 @@
 #include "plugins.h"
 #ifdef DWB_ADBLOCKER
 #include "adblock.h"
+#include "domain.h"
 #endif
 
 
@@ -2636,6 +2637,9 @@ dwb_clean_up() {
     unlink(dwb.files.fifo);
   }
   gtk_widget_destroy(dwb.gui.window);
+#ifdef DWB_DOMAIN_SERVICE
+  domain_end();
+#endif
   return true;
 }/*}}}*/
 

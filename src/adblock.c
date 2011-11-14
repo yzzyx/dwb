@@ -169,7 +169,6 @@ adblock_match_simple(GPtrArray *array,
                             WebKitNetworkRequest  *request,
                             WebKitNetworkResponse *response,
                             GList                 *gl) {
-  puts("resource");
   g_return_val_if_fail(request != NULL, false);
 
   gboolean ret      = false;
@@ -196,7 +195,7 @@ adblock_match_simple(GPtrArray *array,
       continue;
     if (rule->options & AO_SEPERATOR || rule->options & AO_REGEXP) {
       if (g_regex_match(rule->pattern, uri, 0, NULL)) {
-        printf("blocked %s %s", uri, g_regex_get_pattern(rule->pattern));
+        //printf("blocked %s %s", uri, g_regex_get_pattern(rule->pattern));
         ret = true;
         break;
       }
@@ -207,7 +206,7 @@ adblock_match_simple(GPtrArray *array,
         flags |= FNM_CASEFOLD;
       }
       if (fnmatch(rule->pattern, uri, flags) == 0) {
-        printf("blocked %s %s", uri, (char*)(rule->pattern));
+        //printf("blocked %s %s", uri, (char*)(rule->pattern));
         ret = true;
         break;
       }
@@ -262,9 +261,8 @@ adblock_resource_request_cb(WebKitWebView         *wv,
 
   SoupURI *suri = soup_message_get_uri(message);
   SoupURI *sfirst_party = soup_message_get_first_party(message);
-  printf("%p %p\n", suri, sfirst_party);
   gboolean thirdparty = !soup_uri_host_equal(suri, sfirst_party);
-  printf("%d\n", thirdparty);
+
 
   char *uri = soup_uri_to_string(suri, false);
 
@@ -543,9 +541,17 @@ void
 adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, SoupSession *session) {
   AdblockAttribute attribute = 0;
   SoupURI *uri = soup_message_get_uri(msg);
+  SoupURI *first_party_uri = soup_message_get_first_party(msg);
   const char *host = soup_uri_get_host(uri);
+  const char *first_party_host = soup_uri_get_host(first_party_uri);
   const char *base_domain = domain_get_base_for_host(host);
-  puts(base_domain);
+  const char *base_first_party = domain_get_base_for_host(first_party_host);
+
+  g_return_if_fail(base_domain != NULL);
+  g_return_if_fail(base_first_party != NULL);
+
+  gboolean third_party = strcmp(base_first_party, base_domain);
+
   if (!strncmp(type, "image/", 6)) {
     attribute = AA_IMAGE;
   }
@@ -558,9 +564,6 @@ adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, Soup
   else if (!strcmp(type, "text/css")) {
     attribute = AA_STYLESHEET;
   }
-  if (attribute)
-    printf("%d\n", attribute);
-
 }
 void
 adblock_request_started_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {

@@ -745,7 +745,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
   v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
 #ifdef DWB_ADBLOCKER
-                                                  g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(adblock_resource_request_cb), gl);
+                                                  //g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(adblock_resource_request_cb), gl);
 #endif
   v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
 
