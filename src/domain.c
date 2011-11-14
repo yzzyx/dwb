@@ -19,10 +19,56 @@
 #include <glib-2.0/glib.h>
 #include <string.h>
 #include "util.h"
+#define SUBDOMAIN_MAX 32
 
 static GHashTable *_tld_table;
 static char **_effective_tlds;
 
+char **
+domain_get_subdomains_for_host(const char *host) {
+  int n=0;
+  GSList *list = NULL;
+  list = g_slist_append(list, g_strdup(host));
+  n++;
+  const char *cur_domain = host;
+  const char *prev_domain = host;
+  const char *pprev_domain = host;
+  const char *ret = NULL;
+  char *nextdot = strchr(cur_domain, '.');
+  char *entry = NULL;
+  while (1) {
+    entry = g_hash_table_lookup(_tld_table, cur_domain);
+    if (entry != NULL) {
+      if (*entry == '*') {
+        ret = pprev_domain;
+        break;
+      }
+      else if (*entry == '!' && nextdot) {
+        ret = nextdot + 1;
+        break;
+      }
+      else {
+        ret = prev_domain;
+        break;
+      }
+    }
+    if (nextdot == NULL)
+      break;
+    pprev_domain = prev_domain;
+    prev_domain = cur_domain;
+    cur_domain = nextdot + 1;
+    list = g_slist_append(list, g_strdup(cur_domain));
+    n++;
+    nextdot = strchr(cur_domain, '.');
+  }
+  char **rets = calloc(n+1, sizeof(char *));
+  rets[n] = NULL;
+  int i=0;
+  for (GSList *l = list; l; l = l->next, i++)
+    rets[i] = l->data;
+  g_slist_free(list);
+  return rets;
+}
 const char *
 domain_get_base_for_host(const char *host) {
   const char *cur_domain = host;

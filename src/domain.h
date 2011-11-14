@@ -20,8 +20,11 @@
 
 #ifndef DOMAIN_H
 #define DOMAIN_H
+
 void domain_init(void);
 void domain_end(void);
+
 const char *domain_get_base_for_host(const char *host);
+char ** domain_get_subdomains_for_host(const char *host);
 #endif
 #endif
