@@ -1,6 +1,27 @@
+/*
+ * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#ifdef DWB_ADBLOCKER
 #include "dwb.h"
 #include "util.h"
 #include <fnmatch.h>
+#include "domain.h"
+#include <sys/socket.h>
 
 #define BUFFER_SIZE 4096
 #define LINE_SIZE 1024
@@ -52,6 +73,7 @@ static GPtrArray *_simple_rules;
 static GPtrArray *_simple_exceptions;
 static GPtrArray *_rules;
 static GPtrArray *_exceptions;
+//static GHashTable *_tld_table;
 static GString *_css_rules;
 static SoupContentSniffer *content_sniffer;
 
@@ -185,7 +207,7 @@ adblock_match_simple(GPtrArray *array,
         flags |= FNM_CASEFOLD;
       }
       if (fnmatch(rule->pattern, uri, flags) == 0) {
-        printf("blocked %s %s", uri, (rule->pattern));
+        printf("blocked %s %s", uri, (char*)(rule->pattern));
         ret = true;
         break;
       }
@@ -516,10 +538,14 @@ error_out:
   FREE(tmp_b);
   return ret;
 }
+
 void 
 adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, SoupSession *session) {
   AdblockAttribute attribute = 0;
-  puts("sniffed");
+  SoupURI *uri = soup_message_get_uri(msg);
+  const char *host = soup_uri_get_host(uri);
+  const char *base_domain = domain_get_base_for_host(host);
+  puts(base_domain);
   if (!strncmp(type, "image/", 6)) {
     attribute = AA_IMAGE;
   }
@@ -549,6 +575,7 @@ adblock_init() {
   _exceptions = g_ptr_array_new();
   _simple_rules = g_ptr_array_new();
   _simple_exceptions = g_ptr_array_new();
+  domain_init();
 
   char *content = util_get_file_content("easylist.txt");
   char **lines = g_strsplit(content, "\n", -1);
@@ -560,3 +587,4 @@ adblock_init() {
   g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
   content_sniffer = soup_content_sniffer_new();
 }
+#endif

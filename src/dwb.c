@@ -28,7 +28,10 @@
 #include "icon.xpm"
 #include "html.h"
 #include "plugins.h"
+#ifdef DWB_ADBLOCKER
 #include "adblock.h"
+#endif
+
 
 
 /* DECLARATIONS {{{*/
@@ -3274,7 +3277,9 @@ dwb_init() {
   dwb_init_scripts();
 
   dwb_soup_init();
+#ifdef DWB_ADBLOCKER
   adblock_init();
+#endif
   dwb_init_vars();
 
   if (dwb.state.layout & BOTTOM_STACK) {

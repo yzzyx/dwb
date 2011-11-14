@@ -16,15 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifdef DWB_ADBLOCKER
-#ifndef ADBLOCK_H
-#define ADBLOCK_H
+#ifdef DWB_DOMAIN_SERVICE
 
-#include "dwb.h"
-
-void adblock_init();
-void adblock_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, 
-    WebKitNetworkRequest  *, WebKitNetworkResponse *, GList *gl);
-void adblock_connect(GList *gl);
-#endif // ADBLOCK_H
-#endif // DWB_ADBLOCKER
+#ifndef DOMAIN_H
+#define DOMAIN_H
+void domain_init(void);
+const char *domain_get_base_for_host(const char *host);
+#endif
+#endif
