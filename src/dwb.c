@@ -3216,8 +3216,8 @@ dwb_init_gui() {
     dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   else 
     dwb.gui.window = gtk_plug_new(dwb.gui.wid);
-  gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, dwb.misc.name);
-  gtk_widget_set_name(dwb.gui.window, "dwb");
+  gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, "Dwb");
+  gtk_widget_set_name(dwb.gui.window, dwb.misc.name);
   /* Icon */
   GdkPixbuf *icon_pixbuf = gdk_pixbuf_new_from_xpm_data(icon);
   gtk_window_set_icon(GTK_WINDOW(dwb.gui.window), icon_pixbuf);
@@ -3554,7 +3554,7 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 
 /* dwb_init_fifo{{{*/
 static void 
-dwb_init_fifo(int single) {
+dwb_init_fifo(gboolean single) {
   FILE *ff;
 
   /* Files */
@@ -3562,7 +3562,7 @@ dwb_init_fifo(int single) {
   dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
 
   dwb.misc.si_channel = NULL;
-  if (single == NEW_INSTANCE) {
+  if (single) {
     FREE(path);
     return;
   }
@@ -3624,9 +3624,8 @@ main(int argc, char *argv[]) {
   dwb.misc.prog_path = argv[0];
   dwb.gui.wid = 0;
   int last = 0;
-  int single = 0;
+  gboolean single = false;
   int argr = argc;
- 
 
   gtk_init(&argc, &argv);
 
@@ -3644,7 +3643,7 @@ main(int argc, char *argv[]) {
           argr -= 2;
         }
         else if (argv[i][1] == 'n') {
-          single = NEW_INSTANCE;
+          single = true;
           argr -=1;
         }
         else if (argv[i][1] == 'e' && argv[++i]) {
@@ -3673,7 +3672,7 @@ main(int argc, char *argv[]) {
   }
   dwb_init_files();
   dwb_init_settings();
-  if (GET_BOOL("save-session") && argr == 1 && !restore && single != NEW_INSTANCE) {
+  if (GET_BOOL("save-session") && argr == 1 && !restore && !single) {
     restore = "default";
   }
 
