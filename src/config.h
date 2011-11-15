@@ -555,7 +555,7 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,      CHAR,    { .p = NULL            },   (S_Func) dwb_soup_init_session_features,  },
   { { "cookies",                                  "Whether to allow all cookies", },                                     
     SETTING_GLOBAL,      BOOLEAN, { .b = false             }, (S_Func) dwb_init_vars,  },
-  { { "cookies-accept-policy",                     "Cookies to accept, alwaysnever or nothirdparty", },                                     
+  { { "cookies-accept-policy",                     "Cookies to accept, always never or nothirdparty", },                                     
     SETTING_GLOBAL,      CHAR, { .p = "always"          }, (S_Func) dwb_set_cookie_accept_policy,  },
   { { "background-tabs",			                     "Whether to open tabs in background", },                                 
     SETTING_GLOBAL,      BOOLEAN,    { .b = false         }, (S_Func) dwb_set_background_tab,  },
