@@ -1,7 +1,7 @@
 include ../config.mk
 
 DEPS=$(patsubst %.o, %.d, $(OBJ))
-all: $(TARGET) 
+#all: $(TARGET) 
 
 $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
