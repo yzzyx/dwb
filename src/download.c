@@ -253,7 +253,9 @@ download_start() {
   const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
   const char *uri = webkit_download_get_uri(dwb.state.download);
   char *command = NULL;
+  char *tmppath = NULL;
   gboolean external = GET_BOOL("download-use-external-program");
+  gboolean clean = true;
   
   if (!filename || !strlen(filename)) {
     filename = "dwb_download";
@@ -282,15 +284,28 @@ download_start() {
       lastaction = DL_ACTION_EXECUTE;
     }
     else {
-      if (!path || !strlen(path)) {
+      if (!path || *path == '\0') {
         path = g_get_current_dir();
       }
       if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-        fullpath = external ? g_build_filename(path, filename, NULL) : g_strconcat("file://", path, filename, NULL);
+        fullpath = g_build_filename(path, filename, NULL);
+        if (!external) {
+          tmppath = fullpath;
+          fullpath = g_strconcat("file://", tmppath, NULL);
+          g_free(tmppath);
+        }
       }
       else {
-        filename = strrchr(path, '/')+1;
-        fullpath = external ? g_strdup(path) : g_build_filename("file://", path, NULL);
+        filename = strrchr(path, '/');
+        if (filename != NULL) {
+          filename++;
+        }
+        else {
+          dwb_set_error_message(dwb.state.fview, "Invalid path: %s", path);
+          clean = false;
+          goto error_out;
+        }
+        fullpath = external ? g_strdup(path) : g_strconcat("file://", path, NULL);
       }
       lastaction = DL_ACTION_DOWNLOAD;
     }
@@ -321,7 +336,8 @@ download_start() {
     }
   }
 
-  dwb_change_mode(NORMAL_MODE, true);
+error_out:
+  dwb_change_mode(NORMAL_MODE, clean);
   dwb.state.download = NULL;
   FREE(fullpath);
 }/*}}}*/
