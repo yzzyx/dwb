@@ -68,8 +68,12 @@ session_load_webview(GList *gl, char *uri, int last) {
 void
 session_list() {
   char *path = util_build_path();
-  dwb.files.session = g_build_filename(path, "session", NULL);
+  dwb.files.session = util_check_directory(g_build_filename(path, dwb.misc.profile, "session", NULL));
   char **content = session_get_groups();
+  if (content == NULL) {
+    fprintf(stderr, "No sessions found for profile: %s\n", dwb.misc.profile);
+    exit(EXIT_SUCCESS);
+  }
   int i=1;
   while (content[i]) {
     char **group = g_strsplit(content[i], "\n", -1);

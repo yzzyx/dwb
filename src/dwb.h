@@ -55,8 +55,6 @@
 #ifndef COPYRIGHT
 #define COPYRIGHT "© 2010-2011 Stefan Bolte"
 #endif
-#define SINGLE_INSTANCE 1
-#define NEW_INSTANCE 2
 
 #define PBAR_LENGTH   20
 #define STRING_LENGTH 1024
@@ -156,7 +154,7 @@
     fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s():\t", __FILE__, __LINE__, __func__); \
     fprintf(stderr, __VA_ARGS__);\
     fprintf(stderr, "\n"); \
-  } while(0);
+  } while(0)
 
 #else 
 #define PRINT_DEBUG(message, ...) 
