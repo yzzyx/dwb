@@ -2637,6 +2637,9 @@ dwb_clean_up() {
     unlink(dwb.files.fifo);
   }
   gtk_widget_destroy(dwb.gui.window);
+#ifdef DWB_ADBLOCKER
+  adblock_end();
+#endif
 #ifdef DWB_DOMAIN_SERVICE
   domain_end();
 #endif

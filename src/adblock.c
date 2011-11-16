@@ -63,7 +63,7 @@ typedef struct _AdblockRule {
 } AdblockRule;
 
 typedef struct _AdblockElementHider {
-  const char *css_rule;
+  char *css_rule;
   char **domains;
 } AdblockElementHider;
 
@@ -74,17 +74,16 @@ static GPtrArray *_rules;
 static GPtrArray *_exceptions;
 //static GHashTable *_tld_table;
 static GString *_css_rules;
-static SoupContentSniffer *content_sniffer;
 
 static AdblockRule *
 adblock_rule_new() {
   AdblockRule *rule = dwb_malloc(sizeof(AdblockRule));
   rule->pattern = NULL;
   rule->options = 0;
+  rule->attributes = 0;
   rule->domains = NULL;
   return rule;
 }
-#if 0
 static void 
 adblock_rule_free(AdblockRule *rule) {
   if (rule->pattern != NULL) {
@@ -95,7 +94,21 @@ adblock_rule_free(AdblockRule *rule) {
   }
   g_free(rule);
 }
-#endif
+static AdblockElementHider *
+adblock_element_hider_new() {
+  AdblockElementHider *hider = dwb_malloc(sizeof(AdblockElementHider));
+  hider->css_rule = NULL;
+  hider->domains = NULL;
+  return hider;
+}
+static void
+adblock_element_hider_free(AdblockElementHider *hider) {
+  if (hider->css_rule)
+    g_free(hider->css_rule);
+  if (hider->domains)
+    g_strfreev(hider->domains);
+  g_free(hider);
+}
 //gboolean
 //adblock_domain_matches(const char *host, const char *domain) {
 //  char *match;
@@ -193,31 +206,59 @@ adblock_match_simple(GPtrArray *array,
 gboolean                
 adblock_match_simple(GPtrArray *array, SoupURI *soupuri, const char *base_domain, gboolean thirdparty) {
   gboolean match = false;
+  gboolean found;
 
   char *uri = soup_uri_to_string(soupuri, false);
   const char *base_start = strstr(uri, base_domain);
   const char *uri_start = strstr(uri, soupuri->host);
-  char *uris[32];
+  const char *subdomains[32];
   int uc = 0;
-  char *cur = uri_start;
-  char *nextdot;
-  uris[uc++] = cur;
+  const char *cur = uri_start;
+  const char *nextdot;
+  char *real_domain;
+  AdblockRule *rule;
+  subdomains[uc++] = cur;
+  gboolean domain_exc = false;
+  /* Get all subdomains */
   while (cur != base_start) {
     nextdot = strchr(cur, '.');
     cur = nextdot + 1;
-    uris[uc++] = cur;
+    subdomains[uc++] = cur;
   }
-  uris[uc++] = NULL;
+  subdomains[uc++] = NULL;
 
   for (int i=0; i<array->len; i++) {
-    AdblockRule *rule = g_ptr_array_index(array, i);
+    rule = g_ptr_array_index(array, i);
+    found = false;
+    if (rule->domains) {
+      /* TODO Maybe replace this with a hashtable */
+      for (int j=0; subdomains[j]; j++) {
+        for (int k=0; rule->domains[k]; k++) {
+          real_domain = rule->domains[k];
+          if (*real_domain == '~') {
+            domain_exc = true;
+            real_domain++;
+          }
+          else 
+            domain_exc = false;
 
+          if (!g_strcmp0(subdomains[j], real_domain)) {
+            if (domain_exc) {
+              goto loop_end;
+            }
+            found = true;
+          }
+        }
+      }
+      if (found)
+        continue;
+    }
     if    ( (rule->options & AO_THIRDPARTY && !thirdparty) 
         ||  (rule->options & AO_NOTHIRDPARTY && thirdparty) )
       continue;
     if (rule->options & AO_BEGIN_DOMAIN) {
-      for (int i=0; uris[i]; i++) {
-        if ( (match = adblock_do_match(rule, uris[i])) ) 
+      for (int i=0; subdomains[i]; i++) {
+        if ( (match = adblock_do_match(rule, subdomains[i])) ) 
           break;
       }
     }
@@ -246,6 +287,8 @@ adblock_match_simple(GPtrArray *array, SoupURI *soupuri, const char *base_domain
 #endif
     if (match)
       break;
+loop_end:
+    ;
   }
   g_free(uri);
   return match;
@@ -363,8 +406,9 @@ adblock_rule_parse(char *pattern) {
   if ( (tmp = strstr(pattern, "##")) != NULL) {
     /* Match domains */
     if (pattern[0] != '#') {
+      // TODO domain hashtable
       char *domains = g_strndup(pattern, tmp-pattern);
-      AdblockElementHider *hider = dwb_malloc(sizeof(AdblockElementHider));
+      AdblockElementHider *hider = adblock_element_hider_new();
       hider->domains = g_strsplit(domains, ",", -1);
       hider->css_rule = g_strdup(tmp+2);
       g_free(domains);
@@ -577,6 +621,7 @@ error_out:
 gboolean
 adblock_match(GPtrArray *array, AdblockOption option, AdblockAttribute attribute) {
 
+  return false;
 }
 
 void 
@@ -588,7 +633,6 @@ adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, Soup
   const char *first_party_host = soup_uri_get_host(first_party_uri);
   const char *base_domain = domain_get_base_for_host(host);
   const char *base_first_party = domain_get_base_for_host(first_party_host);
-  char *uri_string = soup_uri_to_string(uri, false);
 
   g_return_if_fail(base_domain != NULL);
   g_return_if_fail(base_first_party != NULL);
@@ -621,14 +665,22 @@ adblock_request_started_cb(SoupSession *session, SoupMessage *msg, SoupSocket *s
   g_signal_connect(msg, "content-sniffed", G_CALLBACK(adblock_content_sniffed_cb), session);
 }
 
+void 
+adblock_end() {
+  g_string_free(_css_rules, true);
+  g_ptr_array_free(_rules, true);
+  g_ptr_array_free(_exceptions, true);
+  g_ptr_array_free(_simple_rules, true);
+  g_ptr_array_free(_simple_exceptions, true);
+}
 void
 adblock_init() {
   _css_rules = g_string_new(NULL);
-  _hider = g_ptr_array_new();
-  _rules = g_ptr_array_new();
-  _exceptions = g_ptr_array_new();
-  _simple_rules = g_ptr_array_new();
-  _simple_exceptions = g_ptr_array_new();
+  _hider              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_element_hider_free);
+  _rules              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
+  _exceptions         = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
+  _simple_rules       = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
+  _simple_exceptions  = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
   domain_init();
 
   char *content = util_get_file_content("easylist.txt");
@@ -639,6 +691,5 @@ adblock_init() {
   g_strfreev(lines);
   g_free(content);
   g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
-  content_sniffer = soup_content_sniffer_new();
 }
 #endif
