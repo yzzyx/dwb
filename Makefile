@@ -52,4 +52,4 @@ dist: distclean
 	@echo "Creating tarball."
 	@hg archive -t tgz $(DISTDIR).tar.gz
 
-.PHONY: clean all install uninstall dist  distclean
+.PHONY: clean all install uninstall distclean install-data install-man uninstall-man uninstall-data 

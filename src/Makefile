@@ -35,4 +35,4 @@ cgdb: debug
 clean:
 	$(RM) *.o  *.do $(TARGET) $(DTARGET) *.d
 
-.PHONY: clean all
+.PHONY: clean all cgdb 
