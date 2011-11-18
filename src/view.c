@@ -20,6 +20,9 @@
 #include "html.h"
 #include "plugins.h"
 #include "local.h"
+#ifdef DWB_ADBLOCKER
+#include "adblock.h"
+#endif
 
 static void view_ssl_state(GList *);
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
@@ -336,10 +339,10 @@ static void
 view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
-  if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
-    webkit_network_request_set_uri(request, "about:blank");
-    return;
-  }
+  //if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
+  //  webkit_network_request_set_uri(request, "about:blank");
+  //  return;
+  //}
 }/*}}}*/
 
 /* view_create_plugin_widget_cb {{{*/
@@ -768,6 +771,9 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
   v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+#ifdef DWB_ADBLOCKER
+                                                  //g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(adblock_resource_request_cb), gl);
+#endif
   v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(view_load_status_cb), gl);

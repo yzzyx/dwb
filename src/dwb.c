@@ -29,6 +29,10 @@
 #include "html.h"
 #include "plugins.h"
 #include "local.h"
+#ifdef DWB_ADBLOCKER
+#include "adblock.h"
+#include "domain.h"
+#endif
 
 
 /* DECLARATIONS {{{*/
@@ -2656,6 +2660,12 @@ dwb_clean_up() {
     unlink(dwb.files.fifo);
   }
   gtk_widget_destroy(dwb.gui.window);
+#ifdef DWB_ADBLOCKER
+  adblock_end();
+#endif
+#ifdef DWB_DOMAIN_SERVICE
+  domain_end();
+#endif
   return true;
 }/*}}}*/
 
@@ -3281,6 +3291,9 @@ dwb_init() {
   dwb_init_scripts();
 
   dwb_soup_init();
+#ifdef DWB_ADBLOCKER
+  adblock_init();
+#endif
   dwb_init_vars();
 
   if (dwb.state.layout & BOTTOM_STACK) {

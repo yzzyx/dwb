@@ -10,7 +10,7 @@ JSDIR=scripts
 LIBDIR=lib
 SHAREDIR=share
 UTILDIR=util
-SUBDIRS=$(SRCDIR) $(UTILDIR)
+SUBDIRS=$(SRCDIR) $(UTILDIR) 
 
 # Version info
 HG_VERSION=$(shell hg id -n 2>/dev/null)
@@ -58,6 +58,7 @@ endif 																													#has gtk2 libs
 endif 																												#GTK=3
 
 
+
 # HTML-files
 INFO_FILE=info.html
 SETTINGS_FILE=settings.html
@@ -90,6 +91,10 @@ CFLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
 CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
 CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 CFLAGS += -DLOCAL_FILE=\"$(LOCAL_FILE)\"
+ifneq (${DISABLE_ADBLOCKER}, 1)
+CFLAGS += -DDWB_ADBLOCKER
+CFLAGS += -DDWB_DOMAIN_SERVICE
+endif
 
 ifeq (USEGTK3, 1) 
 CFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
@@ -97,6 +102,7 @@ CFLAGS+=-DGTK_DISABLE_DEPRECATED
 CFLAGS+=-DGDK_DISABLE_DEPRECATED
 CFLAGS+=-DGSEAL_ENABLE
 endif
+CFLAGS +=-I/usr/lib/dwb/ 
 
 # LDFLAGS
 LDFLAGS = $(shell pkg-config --libs $(LIBS)) 
@@ -104,7 +110,7 @@ LDFLAGS = $(shell pkg-config --libs $(LIBS))
 # Debug flags
 DCFLAGS = $(CFLAGS)
 DCFLAGS += -DDWB_DEBUG
-DCFLAGS += -g 
+DCFLAGS += -g -O0
 
 # Makeflags
 MFLAGS=--no-print-directory

@@ -110,6 +110,8 @@ dwb_soup_init_session_features() {
         SOUP_SESSION_SSL_CA_FILE, cert, NULL);
   }
   g_object_set(dwb.misc.soupsession, SOUP_SESSION_SSL_STRICT, GET_BOOL("ssl-strict"), NULL);
+  //soup_session_add_feature(dwb.misc.soupsession, SOUP_SESSION_FEATURE(soup_content_sniffer_new()));
+  //soup_session_add_feature_by_type(webkit_get_default_session(), SOUP_TYPE_CONTENT_SNIFFER);
 }
 void 
 dwb_soup_init() {
