@@ -20,6 +20,9 @@
 #include "html.h"
 #include "plugins.h"
 #include "local.h"
+#ifdef DWB_ADBLOCKER
+#include "adblock.h"
+#endif
 
 static void view_ssl_state(GList *);
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
@@ -787,6 +790,9 @@ view_init_signals(GList *gl) {
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);
 
+#ifdef DWB_ADBLOCKER
+  adblock_connect(gl);
+#endif
   /* WebInspector */
   WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(inspector, "inspect-web-view", G_CALLBACK(view_inspect_web_view_cb), gl);

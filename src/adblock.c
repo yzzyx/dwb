@@ -25,6 +25,14 @@
 
 #define BUFFER_SIZE 4096
 #define LINE_SIZE 1024
+
+#define ADBLOCK_INVERSE 15
+/* clear upper bits, last attribute may be 1<<14 */
+#define ADBLOCK_CLEAR_UPPER 0x7fff
+#define ADBLOCK_CLEAR_LOWER 0x3fff8000
+
+/* DECLARATIONS {{{*/
+/* Type definitions {{{*/
 typedef enum _AdblockOption {
   AO_WILDCARD           = 1<<0,
   AO_SEPERATOR          = 1<<1,
@@ -54,10 +62,6 @@ typedef enum _AdblockAttribute {
   AA_OTHER              = 1<<12,
   /* inverse */
 } AdblockAttribute;
-#define ADBLOCK_INVERSE 15
-#define ADBLOCK_CLEAR_UPPER 0xffff
-#define ADBLOCK_CLEAR_LOWER 0x7fff8000
-
 
 typedef struct _AdblockRule {
   void *pattern;
@@ -70,7 +74,9 @@ typedef struct _AdblockElementHider {
   char *css_rule;
   char **domains;
 } AdblockElementHider;
+/*}}}*/
 
+/* Static variables {{{*/
 static GPtrArray *_hider;
 static GPtrArray *_simple_rules;
 static GPtrArray *_simple_exceptions;
@@ -78,7 +84,12 @@ static GPtrArray *_rules;
 static GPtrArray *_exceptions;
 //static GHashTable *_tld_table;
 static GString *_css_rules;
+static int _sig_resource;
+/*}}}*//*}}}*/
 
+
+/* NEW AND FREE {{{*/
+/* adblock_rule_new {{{*/
 static AdblockRule *
 adblock_rule_new() {
   AdblockRule *rule = dwb_malloc(sizeof(AdblockRule));
@@ -87,7 +98,9 @@ adblock_rule_new() {
   rule->attributes = 0;
   rule->domains = NULL;
   return rule;
-}
+}/*}}}*/
+
+/* adblock_rule_free {{{*/
 static void 
 adblock_rule_free(AdblockRule *rule) {
   if (rule->pattern != NULL) {
@@ -97,14 +110,18 @@ adblock_rule_free(AdblockRule *rule) {
     g_strfreev(rule->domains);
   }
   g_free(rule);
-}
+}/*}}}*/
+
+/* adblock_element_hider_new {{{*/
 static AdblockElementHider *
 adblock_element_hider_new() {
   AdblockElementHider *hider = dwb_malloc(sizeof(AdblockElementHider));
   hider->css_rule = NULL;
   hider->domains = NULL;
   return hider;
-}
+}/*}}}*/
+
+/* adblock_element_hider_free {{{*/
 static void
 adblock_element_hider_free(AdblockElementHider *hider) {
   if (hider->css_rule)
@@ -112,8 +129,11 @@ adblock_element_hider_free(AdblockElementHider *hider) {
   if (hider->domains)
     g_strfreev(hider->domains);
   g_free(hider);
-}
+}/*}}}*//*}}}*/
 
+
+/* MATCH {{{*/
+/* adblock_do_match(AdblockRule *, const char *) {{{*/
 static inline gboolean
 adblock_do_match(AdblockRule *rule, const char *uri) {
   if (rule->options & AO_SEPERATOR || rule->options & AO_REGEXP) {
@@ -133,8 +153,9 @@ adblock_do_match(AdblockRule *rule, const char *uri) {
     }
   }
   return false;
-}
+}/*}}}*/
 
+/* adblock_match(GPtrArray *, SoupURI *, const char *base_domain, * AdblockAttribute, gboolean thirdparty) {{{*/
 gboolean                
 adblock_match(GPtrArray *array, SoupURI *soupuri, const char *base_domain, AdblockAttribute attributes, gboolean thirdparty) {
   gboolean match = false;
@@ -143,33 +164,46 @@ adblock_match(GPtrArray *array, SoupURI *soupuri, const char *base_domain, Adblo
   char *uri = soup_uri_to_string(soupuri, false);
   const char *base_start = strstr(uri, base_domain);
   const char *uri_start = strstr(uri, soupuri->host);
-  const char *subdomains[32];
-  int uc = 0;
+  const char *suburis[32], *subdomains[32];
+  int uc = 0, sdc = 0;
+  const char *host = soup_uri_get_host(soupuri);
   const char *cur = uri_start;
   const char *nextdot;
   char *real_domain;
   AdblockRule *rule;
-  subdomains[uc++] = cur;
   gboolean domain_exc = false;
-  /* Get all subdomains */
+  /* Get all suburis */
+  suburis[uc++] = cur;
   while (cur != base_start) {
     nextdot = strchr(cur, '.');
     cur = nextdot + 1;
-    subdomains[uc++] = cur;
+    suburis[uc++] = cur;
   }
-  subdomains[uc++] = NULL;
+  suburis[uc++] = NULL;
+  /* Get all subdomains */
+  subdomains[sdc++] = host;
+  while (strcmp(host, base_domain)) {
+    nextdot = strchr(host, '.');
+    host = nextdot + 1;
+    subdomains[sdc++] = host;
+  }
+  subdomains[sdc++] = NULL;
 
   for (int i=0; i<array->len; i++) {
     rule = g_ptr_array_index(array, i);
     found = false;
     if (attributes) {
+      /* If exception attributes exist, check if exception is matched */
       if (rule->attributes & ADBLOCK_CLEAR_LOWER && rule->attributes & (attributes<<ADBLOCK_INVERSE)) 
         continue;
+      /* If attribute restriction exist, check if attribute is matched */
       if (rule->attributes & ADBLOCK_CLEAR_UPPER && ! (rule->attributes & attributes) ) 
         continue;
     }
     if (rule->domains) {
-      /* TODO Maybe replace this with a hashtable */
+      /* TODO Maybe replace this with a hashtable 
+       * in most cases these loops run four times, 2 times each
+       * */
       for (int j=0; subdomains[j]; j++) {
         for (int k=0; rule->domains[k]; k++) {
           real_domain = rule->domains[k];
@@ -181,6 +215,7 @@ adblock_match(GPtrArray *array, SoupURI *soupuri, const char *base_domain, Adblo
             domain_exc = false;
 
           if (!g_strcmp0(subdomains[j], real_domain)) {
+            /* Exceptions will be ignored immediately */
             if (domain_exc) {
               goto loop_end;
             }
@@ -195,8 +230,8 @@ adblock_match(GPtrArray *array, SoupURI *soupuri, const char *base_domain, Adblo
         ||  (rule->options & AO_NOTHIRDPARTY && thirdparty) )
       continue;
     if (rule->options & AO_BEGIN_DOMAIN) {
-      for (int i=0; subdomains[i]; i++) {
-        if ( (match = adblock_do_match(rule, subdomains[i])) ) 
+      for (int i=0; suburis[i]; i++) {
+        if ( (match = adblock_do_match(rule, suburis[i])) ) 
           break;
       }
     }
@@ -210,7 +245,89 @@ loop_end:
   }
   g_free(uri);
   return match;
-}
+}/*}}}*//*}}}*/
+
+
+/* CALLBACKS {{{*/
+/* adblock_content_sniffed_cb(SoupMessage *, char *, GHashTable *, SoupSession *) {{{*/
+void 
+adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, SoupSession *session) {
+  AdblockAttribute attribute = 0;
+  SoupURI *uri = soup_message_get_uri(msg);
+  SoupURI *first_party_uri = soup_message_get_first_party(msg);
+  const char *host = soup_uri_get_host(uri);
+  const char *first_party_host = soup_uri_get_host(first_party_uri);
+  const char *base_domain = domain_get_base_for_host(host);
+  const char *base_first_party = domain_get_base_for_host(first_party_host);
+
+  g_return_if_fail(base_domain != NULL);
+  g_return_if_fail(base_first_party != NULL);
+
+  gboolean third_party = strcmp(base_first_party, base_domain);
+
+  if (!strncmp(type, "image/", 6)) {
+    attribute = AA_IMAGE;
+  }
+  else if (!fnmatch("*javascript*", type, FNM_NOESCAPE)) {
+    attribute = AA_SCRIPT;
+  }
+  else if (!strcmp(type, "application/x-shockwave-flash") || !strcmp(type, "application/x-flv")) {
+    attribute = AA_OBJECT_SUBREQUEST;
+  }
+  else if (!strcmp(type, "text/css")) {
+    attribute = AA_STYLESHEET;
+  }
+  if (attribute == 0) {
+    if (adblock_match(_simple_exceptions, uri, base_domain, 0, third_party)) {
+      return;
+    }
+    if (adblock_match(_simple_rules, uri, base_domain, 0, third_party)) {
+      soup_session_cancel_message(session, msg, 1);
+    }
+  }
+  else {
+    if (adblock_match(_exceptions, uri, base_domain, attribute, third_party)) {
+      return;
+    }
+    if (adblock_match(_rules, uri, base_domain, attribute, third_party)) {
+      soup_session_cancel_message(session, msg, 1);
+    }
+  }
+}/*}}}*/
+
+/* adblock_load_status_cb(WebKitWebView *, GParamSpec *, GList *) {{{*/
+static void
+adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
+}/*}}}*/
+
+/* adblock_request_started_cb(SoupSession *, SoupMessage *, SoupSocket *) {{{*/
+void
+adblock_request_started_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
+  g_signal_connect(msg, "content-sniffed", G_CALLBACK(adblock_content_sniffed_cb), session);
+}/*}}}*//*}}}*/
+
+
+/* START AND END {{{*/
+/* adblock_disconnect(GList *) {{{*/
+void 
+adblock_disconnect(GList *gl) {
+  g_signal_handler_disconnect(WEBVIEW(gl), (VIEW(gl)->status->signals[SIG_ADBLOCK]));
+  if (_sig_resource != 0) {
+    g_signal_handler_disconnect(webkit_get_default_session(), _sig_resource);
+    _sig_resource = 0;
+  }
+}/*}}}*/
+
+/* adblock_connect() {{{*/
+void 
+adblock_connect(GList *gl) {
+  VIEW(gl)->status->signals[SIG_ADBLOCK] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
+  if (_sig_resource == 0) {
+    _sig_resource = g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
+  }
+}/*}}}*/
+
+/* adblock_rule_parse(char *pattern) return: DwbStatus {{{*/
 DwbStatus
 adblock_rule_parse(char *pattern) {
   DwbStatus ret = STATUS_OK;
@@ -340,9 +457,6 @@ adblock_rule_parse(char *pattern) {
       tmp = tmp_a;
       g_strfreev(options_arr);
     }
-    //else {
-    //  tmp = pattern;
-    //}
     int length = strlen(tmp);
     /* Beginning of pattern / domain */
     if (length > 0 && tmp[0] == '|') {
@@ -441,57 +555,9 @@ error_out:
   FREE(tmp_a);
   FREE(tmp_b);
   return ret;
-}
-void 
-adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, SoupSession *session) {
-  AdblockAttribute attribute = 0;
-  SoupURI *uri = soup_message_get_uri(msg);
-  SoupURI *first_party_uri = soup_message_get_first_party(msg);
-  const char *host = soup_uri_get_host(uri);
-  const char *first_party_host = soup_uri_get_host(first_party_uri);
-  const char *base_domain = domain_get_base_for_host(host);
-  const char *base_first_party = domain_get_base_for_host(first_party_host);
+}/*}}}*/
 
-  g_return_if_fail(base_domain != NULL);
-  g_return_if_fail(base_first_party != NULL);
-
-  gboolean third_party = strcmp(base_first_party, base_domain);
-
-  if (!strncmp(type, "image/", 6)) {
-    attribute = AA_IMAGE;
-  }
-  else if (!fnmatch("*javascript*", type, FNM_NOESCAPE)) {
-    attribute = AA_SCRIPT;
-  }
-  else if (!strcmp(type, "application/x-shockwave-flash") || !strcmp(type, "application/x-flv")) {
-    attribute = AA_OBJECT_SUBREQUEST;
-  }
-  else if (!strcmp(type, "text/css")) {
-    attribute = AA_STYLESHEET;
-  }
-  if (attribute == 0) {
-    if (adblock_match(_simple_exceptions, uri, base_domain, 0, third_party)) {
-      return;
-    }
-    if (adblock_match(_simple_rules, uri, base_domain, 0, third_party)) {
-      soup_session_cancel_message(session, msg, 1);
-    }
-  }
-  else {
-    if (adblock_match(_exceptions, uri, base_domain, attribute, third_party)) {
-      return;
-    }
-    if (adblock_match(_rules, uri, base_domain, attribute, third_party)) {
-      soup_session_cancel_message(session, msg, 1);
-    }
-
-  }
-}
-void
-adblock_request_started_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
-  g_signal_connect(msg, "content-sniffed", G_CALLBACK(adblock_content_sniffed_cb), session);
-}
-
+/* adblock_end() {{{*/
 void 
 adblock_end() {
   if (_css_rules != NULL) 
@@ -504,7 +570,9 @@ adblock_end() {
     g_ptr_array_free(_simple_rules, true);
   if (_simple_exceptions != NULL) 
     g_ptr_array_free(_simple_exceptions, true);
-}
+}/*}}}*/
+
+/* adblock_init() {{{*/
 void
 adblock_init() {
   if (!GET_BOOL("adblocker"))
@@ -531,6 +599,5 @@ adblock_init() {
   }
   g_strfreev(lines);
   g_free(content);
-  g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
-}
+}/*}}}*//*}}}*/
 #endif
