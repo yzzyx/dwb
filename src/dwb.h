@@ -151,7 +151,7 @@
   GTimer *__debug_timer = g_timer_new(); \
   for (int i=0; i<limit; i++) { (code); }\
   gulong __debug_micro = 0;\
-  gdouble __debug_elapsed = g_timer_elapsed(__debug_timer, __debug_micro);\
+  gdouble __debug_elapsed = g_timer_elapsed(__debug_timer, &__debug_micro);\
   PRINT_DEBUG("timer: \033[32m%s\033[0m: elapsed: %f, micro: %lu", #code, __debug_elapsed, __debug_micro);\
   g_timer_destroy(__debug_timer); \
 } while(0);
@@ -347,7 +347,8 @@ enum Signal {
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
 #ifdef DWB_ADBLOCKER
-  SIG_ADBLOCK,
+  SIG_AD_LOAD_STATUS,
+  SIG_AD_FRAME_CREATED,
 #endif
 
   SIG_PLUGINS_LOAD,
@@ -507,7 +508,6 @@ struct _ViewStatus {
   char *search_string;
   GList *downloads;
   char *mimetype;
-  gboolean adblocker;
   gulong signals[SIG_LAST];
   int progress;
   SslState ssl;
@@ -749,7 +749,6 @@ CompletionType dwb_eval_completion_type(void);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
-gboolean dwb_block_ad(GList *gl, const char *);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);

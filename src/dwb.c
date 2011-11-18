@@ -623,7 +623,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "editor",                            "External editor", },                                            
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e vim dwb_uri" }, (S_Func)dwb_set_dummy,   }, 
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
-    SETTING_PER_VIEW,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
+    SETTING_GLOBAL,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
   { { "adblocker-filterlist",                    "Path to a filterlist", },                   
     SETTING_GLOBAL,  CHAR, { .p = NULL }, (S_Func)dwb_set_dummy,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
@@ -637,7 +637,7 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
   return;
 }/*}}}*/
 
-/* dwb_set_adblock {{{*/
+/* dwb_set_plugin_blocker {{{*/
 static void
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
@@ -654,8 +654,14 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
 /* dwb_set_adblock {{{*/
 static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
-  View *v = gl->data;
-  v->status->adblocker = s->arg.b;
+  if (s->arg.b) {
+    for (GList *l = dwb.state.views; l; l=l->next) 
+      adblock_connect(gl);
+  }
+  else {
+    for (GList *l = dwb.state.views; l; l=l->next) 
+      adblock_disconnect(gl);
+  }
 }/*}}}*/
 
 /* dwb_set_private_browsing  */
@@ -1423,30 +1429,6 @@ dwb_history_forward() {
   webkit_web_view_go_to_back_forward_item(w, item);
   return STATUS_OK;
 }/*}}}*/
-
-#if 0
-/* dwb_block_ad (GList *, const char *uri)        return: gboolean{{{*/
-gboolean 
-dwb_block_ad(GList *gl, const char *uri) {
-  if (!VIEW(gl)->status->adblocker) 
-    return false;
-
-  /* PRINT_DEBUG(uri); */
-  for (GList *l = dwb.fc.adblock; l; l=l->next) {
-    char *data = l->data;
-    if (data != NULL) {
-      if (data[0] == '@') {
-        if (g_regex_match_simple(data + 1, uri, 0, 0) )
-          return true;
-      }
-      else if (strstr(uri, data)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}/*}}}*/
-#endif
 
 /* dwb_eval_tabbar_visible (const char *) {{{*/
 static TabBarVisible 

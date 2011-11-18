@@ -19,60 +19,65 @@
 #include <glib-2.0/glib.h>
 #include <string.h>
 #include "util.h"
-#define SUBDOMAIN_MAX 32
+#include "domain.h"
 
 static GHashTable *_tld_table;
 static char **_effective_tlds;
 
-#if 0
-char **
-domain_get_subdomains_for_host(const char *host) {
-  int n=0;
-  GSList *list = NULL;
-  list = g_slist_append(list, g_strdup(host));
-  n++;
-  const char *cur_domain = host;
-  const char *prev_domain = host;
-  const char *pprev_domain = host;
-  const char *ret = NULL;
-  char *nextdot = strchr(cur_domain, '.');
-  char *entry = NULL;
-  while (1) {
-    entry = g_hash_table_lookup(_tld_table, cur_domain);
-    if (entry != NULL) {
-      if (*entry == '*') {
-        ret = pprev_domain;
-        break;
+gboolean 
+domain_match(char **domains, const char *host, const char *base_domain) {
+  g_return_val_if_fail(domains != NULL, false);
+  g_return_val_if_fail(host != NULL, false);
+  g_return_val_if_fail(base_domain != NULL, false);
+  g_return_val_if_fail(g_str_has_suffix(host, base_domain), false);
+
+  const char *subdomains[SUBDOMAIN_MAX];
+  int sdc = 0;
+  gboolean found = false;
+  gboolean domain_exc = false;
+  char *real_domain;
+  char *nextdot;
+  /* extract subdomains */
+  subdomains[sdc++] = host;
+  while (g_strcmp0(host, base_domain)) {
+    nextdot = strchr(host, '.');
+    host = nextdot + 1;
+    subdomains[sdc++] = host;
+    if (sdc == SUBDOMAIN_MAX-1)
+      break;
+  }
+  subdomains[sdc++] = NULL;
+
+  /* TODO Maybe replace this with a hashtable 
+   * in most cases these loops run four times, 2 times each
+   * */
+  for (int j=0; subdomains[j]; j++) {
+    for (int k=0; domains[k]; k++) {
+      real_domain = domains[k];
+      if (*real_domain == '~') {
+        domain_exc = true;
+        real_domain++;
       }
-      else if (*entry == '!' && nextdot) {
-        ret = nextdot + 1;
-        break;
-      }
-      else {
-        ret = prev_domain;
-        break;
+      else 
+        domain_exc = false;
+
+      if (!g_strcmp0(subdomains[j], real_domain)) {
+        /* Exceptions will be ignored immediately */
+        if (domain_exc) {
+          return false;
+        }
+        found = true;
       }
     }
-    if (nextdot == NULL)
-      break;
-    pprev_domain = prev_domain;
-    prev_domain = cur_domain;
-    cur_domain = nextdot + 1;
-    list = g_slist_append(list, g_strdup(cur_domain));
-    n++;
-    nextdot = strchr(cur_domain, '.');
   }
-  char **rets = calloc(n+1, sizeof(char *));
-  rets[n] = NULL;
-  int i=0;
-  for (GSList *l = list; l; l = l->next, i++)
-    rets[i] = l->data;
-  g_slist_free(list);
-  return rets;
-}
-#endif
+  return found;
+}/*}}}*/
+
 const char *
 domain_get_base_for_host(const char *host) {
+  g_return_val_if_fail(host != NULL, NULL);
+  g_return_val_if_fail(_tld_table != NULL, NULL);
+
   const char *cur_domain = host;
   const char *prev_domain = host;
   const char *pprev_domain = host;
