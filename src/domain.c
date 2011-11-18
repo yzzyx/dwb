@@ -24,6 +24,7 @@
 static GHashTable *_tld_table;
 static char **_effective_tlds;
 
+#if 0
 char **
 domain_get_subdomains_for_host(const char *host) {
   int n=0;
@@ -69,6 +70,7 @@ domain_get_subdomains_for_host(const char *host) {
   g_slist_free(list);
   return rets;
 }
+#endif
 const char *
 domain_get_base_for_host(const char *host) {
   const char *cur_domain = host;
