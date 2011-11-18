@@ -35,6 +35,7 @@ typedef enum _AdblockOption {
   AO_MATCH_CASE         = 1<<7,
   AO_THIRDPARTY         = 1<<8,
   AO_NOTHIRDPARTY       = 1<<9,
+  AO_DOMAIN_EXCEPTION   = 1<<10, /* TODO check domain exceptions and validity of rules */
 } AdblockOption;
 /*  Attributes */
 typedef enum _AdblockAttribute {
@@ -117,7 +118,7 @@ static inline gboolean
 adblock_do_match(AdblockRule *rule, const char *uri) {
   if (rule->options & AO_SEPERATOR || rule->options & AO_REGEXP) {
     if (g_regex_match(rule->pattern, uri, 0, NULL)) {
-      printf("blocked %s %s\n", uri, g_regex_get_pattern(rule->pattern));
+      PRINT_DEBUG("blocked %s %s\n", uri, g_regex_get_pattern(rule->pattern));
       return true;
     }
   }
@@ -127,23 +128,12 @@ adblock_do_match(AdblockRule *rule, const char *uri) {
       flags |= FNM_CASEFOLD;
     }
     if (fnmatch(rule->pattern, uri, flags) == 0) {
-      printf("blocked %s %s\n", uri, (char*)(rule->pattern));
+      PRINT_DEBUG("blocked %s %s\n", uri, (char*)(rule->pattern));
       return true;
     }
   }
   return false;
 }
-#if 0
-adblock_match_simple(GPtrArray *array,
-                            WebKitWebView         *wv,
-                            WebKitWebFrame        *frame,
-                            WebKitWebResource     *resource,
-                            WebKitNetworkRequest  *request,
-                            WebKitNetworkResponse *response,
-                            GList                 *gl) {
-#endif
- 
-
 
 gboolean                
 adblock_match(GPtrArray *array, SoupURI *soupuri, const char *base_domain, AdblockAttribute attributes, gboolean thirdparty) {
@@ -198,7 +188,7 @@ adblock_match(GPtrArray *array, SoupURI *soupuri, const char *base_domain, Adblo
           }
         }
       }
-      if (found)
+      if ( !found )
         continue;
     }
     if    ( (rule->options & AO_THIRDPARTY && !thirdparty) 
@@ -504,14 +494,28 @@ adblock_request_started_cb(SoupSession *session, SoupMessage *msg, SoupSocket *s
 
 void 
 adblock_end() {
-  g_string_free(_css_rules, true);
-  g_ptr_array_free(_rules, true);
-  g_ptr_array_free(_exceptions, true);
-  g_ptr_array_free(_simple_rules, true);
-  g_ptr_array_free(_simple_exceptions, true);
+  if (_css_rules != NULL) 
+    g_string_free(_css_rules, true);
+  if (_rules != NULL) 
+    g_ptr_array_free(_rules, true);
+  if(_exceptions != NULL) 
+    g_ptr_array_free(_exceptions, true);
+  if (_simple_rules != NULL)
+    g_ptr_array_free(_simple_rules, true);
+  if (_simple_exceptions != NULL) 
+    g_ptr_array_free(_simple_exceptions, true);
 }
 void
 adblock_init() {
+  if (!GET_BOOL("adblocker"))
+    return;
+  char *filterlist = GET_CHAR("adblocker-filterlist");
+  if (filterlist == NULL)
+    return;
+  if (!g_file_test(filterlist, G_FILE_TEST_EXISTS)) {
+    fprintf(stderr, "Filterlist not found: %s\n", filterlist);
+    return;
+  }
   _css_rules = g_string_new(NULL);
   _hider              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_element_hider_free);
   _rules              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
@@ -520,7 +524,7 @@ adblock_init() {
   _simple_exceptions  = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
   domain_init();
 
-  char *content = util_get_file_content("easylist.txt");
+  char *content = util_get_file_content(filterlist);
   char **lines = g_strsplit(content, "\n", -1);
   for (int i=0; lines[i] != NULL; i++) {
     adblock_rule_parse(lines[i]);

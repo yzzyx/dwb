@@ -624,6 +624,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e vim dwb_uri" }, (S_Func)dwb_set_dummy,   }, 
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
+  { { "adblocker-filterlist",                    "Path to a filterlist", },                   
+    SETTING_GLOBAL,  CHAR, { .p = NULL }, (S_Func)dwb_set_dummy,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
 };/*}}}*/
@@ -1422,6 +1424,7 @@ dwb_history_forward() {
   return STATUS_OK;
 }/*}}}*/
 
+#if 0
 /* dwb_block_ad (GList *, const char *uri)        return: gboolean{{{*/
 gboolean 
 dwb_block_ad(GList *gl, const char *uri) {
@@ -1443,6 +1446,7 @@ dwb_block_ad(GList *gl, const char *uri) {
   }
   return false;
 }/*}}}*/
+#endif
 
 /* dwb_eval_tabbar_visible (const char *) {{{*/
 static TabBarVisible 
