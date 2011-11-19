@@ -22,4 +22,4 @@ rm ${TMP}
 
 AFTER=( $(wc -l "${DEST}") )
 
-printf "Removed $((${BEFORE} - ${AFTER})) unsupported filters\n"
+printf "Removed $((${BEFORE} - ${AFTER})) unsupported of ${BEFORE} filters\n"

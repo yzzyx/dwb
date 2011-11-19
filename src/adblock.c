@@ -20,6 +20,7 @@
 #include "dwb.h"
 #include "util.h"
 #include "domain.h"
+#include "adblock.h"
 
 #define BUFFER_SIZE 4096
 #define LINE_SIZE 1024
@@ -320,14 +321,14 @@ adblock_disconnect(GList *gl) {
 /* adblock_connect() {{{*/
 void 
 adblock_connect(GList *gl) {
-  if (_init) {
-    if (_hider->len > 0 || _css_rules->len > 0) {
-      VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
-      VIEW(gl)->status->signals[SIG_AD_FRAME_CREATED] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(adblock_frame_created_cb), gl);
-    }
-    if (_sig_resource == 0) {
-      _sig_resource = g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
-    }
+  if (!_init && !adblock_init()) 
+      return;
+  if (_hider->len > 0 || _css_rules->len > 0) {
+    VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
+    VIEW(gl)->status->signals[SIG_AD_FRAME_CREATED] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(adblock_frame_created_cb), gl);
+  }
+  if (_sig_resource == 0) {
+    _sig_resource = g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
   }
 }/*}}}*/
 
@@ -566,21 +567,21 @@ adblock_end() {
 }/*}}}*/
 
 /* adblock_init() {{{*/
-void
+gboolean
 adblock_init() {
+  if (!GET_BOOL("adblocker"))
+    return false;
   char *filterlist = GET_CHAR("adblocker-filterlist");
   if (filterlist == NULL)
-    return;
+    return false;
   if (!g_file_test(filterlist, G_FILE_TEST_EXISTS)) {
     fprintf(stderr, "Filterlist not found: %s\n", filterlist);
-    return;
+    return false;
   }
   _css_rules = g_string_new(NULL);
   _hider              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_element_hider_free);
   _rules              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
   _exceptions         = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
-  //_simple_rules       = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
-  //_simple_exceptions  = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
   domain_init();
 
   char *content = util_get_file_content(filterlist);
@@ -590,7 +591,7 @@ adblock_init() {
   }
   g_strfreev(lines);
   g_free(content);
-  PRINT_DEBUG("rules: %d exc: %d simple_rules: %d simple_exceptions: %d\n", _rules->len, _exceptions->len, _simple_rules->len, _simple_exceptions->len);
   _init = true;
+  return true;
 }/*}}}*//*}}}*/
 #endif

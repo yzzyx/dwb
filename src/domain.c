@@ -20,9 +20,9 @@
 #include <string.h>
 #include "util.h"
 #include "domain.h"
+#include "tlds.h"
 
 static GHashTable *_tld_table;
-static char **_effective_tlds;
 
 gboolean 
 domain_match(char **domains, const char *host, const char *base_domain) {
@@ -49,7 +49,7 @@ domain_match(char **domains, const char *host, const char *base_domain) {
   subdomains[sdc++] = NULL;
 
   /* TODO Maybe replace this with a hashtable 
-   * in most cases these loops run four times, 2 times each
+   * in most cases the loop runs at most 9 times, 3 times each
    * */
   for (int j=0; subdomains[j]; j++) {
     for (int k=0; domains[k]; k++) {
@@ -113,11 +113,21 @@ void
 domain_end() {
   if (_tld_table)
     g_hash_table_unref(_tld_table);
-  if (_effective_tlds) {
-    g_strfreev(_effective_tlds);
-  }
 }
 
+void 
+domain_init() {
+  _tld_table = g_hash_table_new((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal);
+  char *eff_tld;
+  for (int i=0; (eff_tld = TLDS_EFFECTIVE[i]); i++) {
+    if (*eff_tld == '*' || *eff_tld == '!') 
+      eff_tld++;
+    if (*eff_tld == '.')
+      eff_tld++;
+    g_hash_table_insert(_tld_table, eff_tld, TLDS_EFFECTIVE[i]);
+  }
+}
+#if 0
 void 
 domain_init() {
   _tld_table = g_hash_table_new((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal);
@@ -125,6 +135,8 @@ domain_init() {
 
   char *tld_file = util_get_data_file("tlds.txt");
   char *content = util_get_file_content(tld_file);
+
+  g_return_if_fail(content != NULL);
   _effective_tlds = g_strsplit(content, "\n", -1);
   for (int i=0; (eff_tld = _effective_tlds[i]); i++) {
     if (*eff_tld == '*' || *eff_tld == '!') 
@@ -135,4 +147,6 @@ domain_init() {
   }
   g_free(tld_file);
 }
+#endif
+
 #endif

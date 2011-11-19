@@ -22,7 +22,7 @@
 
 #include "dwb.h"
 
-void adblock_init();
+gboolean adblock_init();
 void adblock_end();
 void adblock_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, 
     WebKitNetworkRequest  *, WebKitNetworkResponse *, GList *gl);

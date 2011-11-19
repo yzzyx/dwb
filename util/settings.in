@@ -91,7 +91,7 @@ hint-style select @letter @number Whether to use 'number' or 'letter' hints
 
 # plugins Plugins &amp Scripts
 adblocker checkbox Whether to block advertisements via a filterlist
-adblocker text Path to a adblock plus compatible filterlist
+adblocker-filterlist text Path to a adblock plus compatible filterlist
 enable-java-applet checkbox Whether to enable java applets
 enable-plugins checkbox Whether to enable plugins
 enable-scripts checkbox Enable embedded scripting languages

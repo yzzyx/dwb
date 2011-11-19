@@ -46,7 +46,9 @@ static void dwb_set_startpage(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
+#ifdef DWB_ADBLOCKER
 static void dwb_set_adblock(GList *, WebSettings *);
+#endif
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
@@ -622,10 +624,12 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, (S_Func)dwb_set_dummy,   }, 
   { { "editor",                            "External editor", },                                            
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e vim dwb_uri" }, (S_Func)dwb_set_dummy,   }, 
+#ifdef DWB_ADBLOCKER
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
     SETTING_GLOBAL,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
   { { "adblocker-filterlist",                    "Path to a filterlist", },                   
     SETTING_GLOBAL,  CHAR, { .p = NULL }, (S_Func)dwb_set_dummy,   }, 
+#endif
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
 };/*}}}*/
@@ -651,6 +655,7 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   }
 }/*}}}*/
 
+#ifdef DWB_ADBLOCKER
 /* dwb_set_adblock {{{*/
 static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
@@ -663,6 +668,7 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
       adblock_disconnect(gl);
   }
 }/*}}}*/
+#endif
 
 /* dwb_set_private_browsing  */
 static void

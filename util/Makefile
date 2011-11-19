@@ -1,7 +1,7 @@
 include ../config.mk
 SETTINGS=../$(LIBDIR)/settings.html
 KEYS=../$(LIBDIR)/keys.html
-TLDS=../$(LIBDIR)/tlds.txt
+TLDS=../$(SRCDIR)/tlds.h
 OUTFILES=$(SETTINGS) $(KEYS) $(TLDS)
 
 all: $(OUTFILES)
@@ -13,10 +13,6 @@ $(KEYS): keys.in
 $(SETTINGS): settings.in
 	@echo gen settings.html
 	@$(shell ./generate_settings.sh $< $@)
-
-$(TLDS): tlds.in
-	@echo gen tlds.txt
-	@sed '/^\/\/\|^\s*$$/d' $< > $@
 
 clean: 
 	$(RM) $(OUTFILES)

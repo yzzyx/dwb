@@ -143,7 +143,7 @@
 
 #ifdef DWB_DEBUG
 #define PRINT_DEBUG(...) do { \
-    fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s():\t", __FILE__, __LINE__, __func__); \
+    fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s()\t", __FILE__, __LINE__, __func__); \
     fprintf(stderr, __VA_ARGS__);\
     fprintf(stderr, "\n"); \
   } while(0);

@@ -27,7 +27,20 @@ $(DTARGET): $(DOBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(LDFLAGS) $(DOBJ) -o $(DTARGET) 
 
-#domain.o: tlds.h
+tlds.h: tlds.in
+	@echo gen tlds.h
+	@echo "#ifndef TLDS_H" > $@
+	@echo "#define TLDS_H" >> $@
+	@echo "static char *TLDS_EFFECTIVE[] = {" >> $@
+	@sed '/^\/\/\|^\s*$$/d;s/^/\t"/;s/$$/",/' $< >> $@
+	@echo "NULL," >> $@
+	@echo "};" >> $@
+	@echo "#endif" >> $@
+
+domain.o: tlds.h
+
+domain.do: tlds.h
+
 #
 #tlds.h: effective_tld_names.dat
 #	@echo gen tlds.h
