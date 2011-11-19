@@ -1,0 +1,25 @@
+#!/bin/bash
+
+URL=${1:-https://easylist-downloads.adblockplus.org/easylist.txt}
+
+UNSUPPORTED="[\$,~]{1}(object|xbl|ping|xmlhttprequest|dtd|subdocument|document|elemhide|other|collapse|donottrack)(,|$)"
+CONFIG=${XDG_CONFIG_HOME}/dwb/settings
+DEST=( $(sed '/adblocker-filterlist/!d;s/^.*=//' ${CONFIG}) )
+
+if [[ ! ${DEST} ]]; then 
+  echo "No setting 'adblocker-filterlist' found, exiting."
+  exit 1
+fi
+
+echo "Saving filterlist as ${DEST}"
+TMP=$(mktemp)
+wget -O ${TMP} ${URL} &>/dev/null
+
+BEFORE=( $(wc -l "${TMP}") )
+
+sed -r "/${UNSUPPORTED}/d" "${TMP}" > ${DEST}
+rm ${TMP}
+
+AFTER=( $(wc -l "${DEST}") )
+
+printf "Removed $((${BEFORE} - ${AFTER})) unsupported filters\n"
