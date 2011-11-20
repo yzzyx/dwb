@@ -246,14 +246,33 @@ adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, Soup
 /* adblock_frame_load_committed_cb {{{*/
 static void 
 adblock_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
-
 }/*}}}*/
 
 /* adblock_frame_created_cb {{{*/
 static void 
 adblock_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  g_signal_connect(frame, "load-committed", G_CALLBACK(adblock_frame_load_committed_cb), gl);
+  g_signal_connect(frame, "notify::load-status", G_CALLBACK(adblock_frame_load_committed_cb), gl);
 }/*}}}*/
+
+static void 
+adblock_set_css(WebKitDOMDocument *doc, char *rule) {
+  WebKitDOMElement *style = webkit_dom_document_create_element(doc, "style", NULL);
+  webkit_dom_element_set_attribute(style, "type", "text/css", NULL);
+  WebKitDOMHTMLElement *head = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_head(doc));
+  webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(style), rule, NULL);
+  webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(style), NULL);
+
+  WebKitDOMNodeList *frames = webkit_dom_document_query_selector_all(doc, "iframe, frame", NULL);
+  for (int i=0; i<webkit_dom_node_list_get_length(frames); i++) {
+    WebKitDOMNode *node = webkit_dom_node_list_item(frames, i);
+    char *tagname = webkit_dom_element_get_tag_name(WEBKIT_DOM_ELEMENT(node));
+    if (!g_strcmp0(tagname, "IFRAME")) 
+      doc = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
+    else if (!g_strcmp0(tagname, "FRAME")) 
+      doc = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
+    adblock_set_css(doc, rule);
+  }
+}
 
 /* adblock_load_status_cb(WebKitWebView *, GParamSpec *, GList *) {{{*/
 static void
@@ -282,17 +301,10 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     }
     /* remove trailing comma */
     g_string_erase(css_rule, css_rule->len-1, 1);
-
     g_string_append(css_rule, "{display:none!important;}");
-
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-    WebKitDOMElement *style = webkit_dom_document_create_element(doc, "style", NULL);
-    webkit_dom_element_set_attribute(style, "type", "text/css", NULL);
-    WebKitDOMHTMLElement *head = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_head(doc));
-    webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(style), css_rule->str, NULL);
-    webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(style), NULL);
-
-    g_string_free(css_rule, true);
+    adblock_set_css(doc, css_rule->str);
+    g_string_free(css_rule, false);
   }
 }/*}}}*/
 

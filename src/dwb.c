@@ -3281,11 +3281,11 @@ dwb_init() {
   dwb_init_style();
   dwb_init_gui();
   dwb_init_scripts();
-
-  dwb_soup_init();
 #ifdef DWB_ADBLOCKER
   adblock_init();
 #endif
+
+  dwb_soup_init();
   dwb_init_vars();
 
   if (dwb.state.layout & BOTTOM_STACK) {
