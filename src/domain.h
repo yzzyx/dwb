@@ -28,5 +28,6 @@ void domain_end(void);
 
 gboolean domain_match(char **, const char *, const char *);
 const char * domain_get_base_for_host(const char *host);
+void domain_get_subdomains(const char ***subdomains, const char *host, const char *base_domain);
 #endif
 #endif

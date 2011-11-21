@@ -72,10 +72,11 @@ typedef struct _AdblockElementHider {
 /*}}}*/
 
 /* Static variables {{{*/
-static GPtrArray *_hider;
 static GPtrArray *_rules;
 static GPtrArray *_exceptions;
 //static GHashTable *_tld_table;
+static GHashTable *_hider_rules;
+static GSList *_hider_list;
 static GString *_css_rules;
 static int _sig_resource;
 static gboolean _init = false;
@@ -118,13 +119,16 @@ adblock_element_hider_new() {
 /* adblock_element_hider_free {{{*/
 static void
 adblock_element_hider_free(AdblockElementHider *hider) {
-  if (hider->selector)
-    g_free(hider->selector);
-  if (hider->domains)
-    g_strfreev(hider->domains);
-  g_free(hider);
+  if (hider) {
+    if (hider->selector) {
+      g_free(hider->selector);
+    }
+    if (hider->domains) {
+      g_strfreev(hider->domains);
+    }
+    g_free(hider);
+  }
 }/*}}}*//*}}}*/
-
 
 /* MATCH {{{*/
 /* inline adblock_do_match(AdblockRule *, const char *) {{{*/
@@ -276,8 +280,13 @@ adblock_set_css(WebKitDOMDocument *doc, char *rule) {
 
 /* adblock_load_status_cb(WebKitWebView *, GParamSpec *, GList *) {{{*/
 static void
+#ifdef DWB_DEBUG
+adblock_load_status_cb_real(WebKitWebView *wv, GParamSpec *p, GList *gl) {
+#else
 adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
+#endif
   WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
+  GSList *list;
   if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
     /* Get hostname and base_domain */
     AdblockElementHider *hider;
@@ -288,15 +297,19 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     SoupURI *suri = soup_message_get_uri(msg);
     const char *host = soup_uri_get_host(suri);
     const char *base_domain = domain_get_base_for_host(host);
-
     g_return_if_fail(base_domain != NULL);
-    
+
     GString *css_rule = g_string_new(_css_rules->str);
-    for (int i=0; i<_hider->len; i++) {
-      hider = g_ptr_array_index(_hider, i);
-      if (domain_match(hider->domains, host, base_domain)) {
-        g_string_append(css_rule, hider->selector);
-        g_string_append_c(css_rule, ',');
+    const char *subdomains[SUBDOMAIN_MAX];
+    domain_get_subdomains((const char ***)&subdomains, host, base_domain);
+    for (int i=0; subdomains[i]; i++) {
+      list = g_hash_table_lookup(_hider_rules, subdomains[i]);
+      for (GSList *l = list; l; l=l->next) {
+        hider = l->data;
+        if (domain_match(hider->domains, host, base_domain)) {
+          g_string_append(css_rule, hider->selector);
+          g_string_append_c(css_rule, ',');
+        }
       }
     }
     /* remove trailing comma */
@@ -307,6 +320,12 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     g_string_free(css_rule, false);
   }
 }/*}}}*/
+#ifdef DWB_DEBUG
+static void
+adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
+  DEBUG_TIMED(1, adblock_load_status_cb_real(wv, p, gl));
+}
+#endif
 
 /* adblock_request_started_cb(SoupSession *, SoupMessage *, SoupSocket *) {{{*/
 static void
@@ -335,7 +354,7 @@ void
 adblock_connect(GList *gl) {
   if (!_init && !adblock_init()) 
       return;
-  if (_hider->len > 0 || _css_rules->len > 0) {
+  if (g_hash_table_size(_hider_rules) > 0 || _css_rules->len > 0) {
     VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
     VIEW(gl)->status->signals[SIG_AD_FRAME_CREATED] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(adblock_frame_created_cb), gl);
   }
@@ -349,6 +368,7 @@ DwbStatus
 adblock_rule_parse(char *pattern) {
   DwbStatus ret = STATUS_OK;
   GError *error = NULL;
+  char **domain_list;
   GRegexCompileFlags regex_flags = G_REGEX_OPTIMIZE | G_REGEX_CASELESS;
   if (pattern == NULL)
     return STATUS_IGNORE;
@@ -368,10 +388,24 @@ adblock_rule_parse(char *pattern) {
       // TODO domain hashtable
       char *domains = g_strndup(pattern, tmp-pattern);
       AdblockElementHider *hider = adblock_element_hider_new();
-      hider->domains = g_strsplit(domains, ",", -1);
+      domain_list = g_strsplit(domains, ",", -1);
+      hider->domains = domain_list;
+      
       hider->selector = g_strdup(tmp+2);
+      char *domain;
+      GSList *list;
+      for (; *domain_list; domain_list++) {
+        domain = *domain_list;
+        list = g_hash_table_lookup(_hider_rules, domain);
+        if (list == NULL) {
+          list = g_slist_append(list, hider);
+          g_hash_table_insert(_hider_rules, g_strdup(domain), list);
+        }
+        else 
+          list = g_slist_append(list, hider);
+      }
+      _hider_list = g_slist_append(_hider_list, hider);
       g_free(domains);
-      g_ptr_array_add(_hider, hider);
     }
     /* general rules */
     else {
@@ -576,11 +610,23 @@ adblock_end() {
     g_ptr_array_free(_rules, true);
   if(_exceptions != NULL) 
     g_ptr_array_free(_exceptions, true);
+  if (_hider_rules != NULL) 
+    g_hash_table_remove_all(_hider_rules);
+  if (_hider_list != NULL) {
+    for (GSList *l = _hider_list; l; l=l->next) 
+      adblock_element_hider_free((AdblockElementHider*)l->data);
+    g_slist_free(_hider_list);
+  }
 }/*}}}*/
 
 /* adblock_init() {{{*/
+#ifdef DWB_DEBUG
+gboolean
+adblock_init_real() {
+#else
 gboolean
 adblock_init() {
+#endif
   if (!GET_BOOL("adblocker"))
     return false;
   char *filterlist = GET_CHAR("adblocker-filterlist");
@@ -591,9 +637,9 @@ adblock_init() {
     return false;
   }
   _css_rules = g_string_new(NULL);
-  _hider              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_element_hider_free);
   _rules              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
   _exceptions         = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
+  _hider_rules        = g_hash_table_new_full((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal, (GDestroyNotify)g_free, NULL);
   domain_init();
 
   char *content = util_get_file_content(filterlist);
@@ -603,7 +649,14 @@ adblock_init() {
   }
   g_strfreev(lines);
   g_free(content);
+
   _init = true;
   return true;
 }/*}}}*//*}}}*/
+#ifdef DWB_DEBUG
+gboolean
+adblock_init() {
+  DEBUG_TIMED(1, adblock_init_real());
+}
+#endif
 #endif
