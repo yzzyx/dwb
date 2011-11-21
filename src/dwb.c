@@ -1243,9 +1243,11 @@ static char *
 dwb_get_search_engine_uri(const char *uri, const char *text) {
   char *ret = NULL;
   if (uri) {
-    char **token = g_strsplit(uri, HINT_SEARCH_SUBMIT, 2);
-    ret = g_strconcat(token[0], text, token[1], NULL);
-    g_strfreev(token);
+    GRegex *regex = g_regex_new(HINT_SEARCH_SUBMIT, 0, 0, NULL);
+    char *escaped = g_uri_escape_string(text, NULL, true);
+    ret = g_regex_replace(regex, uri, -1, 0, escaped, 0, NULL);
+    g_free(escaped);
+    g_regex_unref(regex);
   }
   return ret;
 }/* }}} */
