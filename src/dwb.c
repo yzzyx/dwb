@@ -676,7 +676,7 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
 }/*}}}*/
 void
 dwb_set_user_stylesheet(GList *gl, WebSettings *s) {
-  if (GET_BOOL("adblocker")) {
+  if (adblock_running()) {
     adblock_set_user_stylesheet(s->arg.p);
   }
   else {
@@ -2665,7 +2665,6 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
 
-  util_rmdir(dwb.files.cachedir, true);
   if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
     unlink(dwb.files.fifo);
   }
@@ -3199,6 +3198,7 @@ dwb_handle_signal(int s) {
   else if (s == SIGSEGV) {
     fprintf(stderr, "Received SIGSEGV, trying to clean up.\n");
     session_save(NULL);
+    dwb_clean_up();
     exit(EXIT_FAILURE);
   }
 }

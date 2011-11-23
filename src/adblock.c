@@ -71,6 +71,9 @@ typedef struct _AdblockElementHider {
 } AdblockElementHider;
 /*}}}*/
 
+static void adblock_set_stylesheet(GList *gl, char *uri);
+void adblock_save_stylesheet(const char *path, const char *additional);
+
 /* Static variables {{{*/
 static GPtrArray *_rules;
 static GPtrArray *_exceptions;
@@ -83,7 +86,7 @@ static gboolean _init = false;
 static char *_default_stylesheet;
 static char *_user_content;
 static char *_default_path;
-static GString *_default_content;
+static GFileMonitor *_monitor;
 /*}}}*//*}}}*/
 
 
@@ -206,11 +209,7 @@ done:
 /* CALLBACKS {{{*/
 /* adblock_content_sniffed_cb(SoupMessage *, char *, GHashTable *, SoupSession *) {{{*/
 void 
-#ifdef DWB_DEBUG
-adblock_content_sniffed_cb_real(SoupMessage *msg, char *type, GHashTable *table, SoupSession *session) {
-#else
 adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, SoupSession *session) {
-#endif
   AdblockAttribute attribute = 0;
   SoupURI *uri = soup_message_get_uri(msg);
   SoupURI *first_party_uri = soup_message_get_first_party(msg);
@@ -244,39 +243,13 @@ adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, Soup
     soup_session_cancel_message(session, msg, 204);
   }
 }/*}}}*/
-#ifdef DWB_DEBUG
-void 
-adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, SoupSession *session) {
-  DEBUG_TIMED(1, adblock_content_sniffed_cb_real(msg, type, table, session));
-}
-#endif
-
-static void 
-adblock_set_css(WebKitDOMDocument *doc, char *rule) {
-  WebKitDOMElement *style = webkit_dom_document_create_element(doc, "style", NULL);
-  webkit_dom_element_set_attribute(style, "type", "text/css", NULL);
-  WebKitDOMHTMLElement *head = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_head(doc));
-  webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(style), rule, NULL);
-  webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(style), NULL);
-
-  WebKitDOMNodeList *frames = webkit_dom_document_query_selector_all(doc, "iframe, frame", NULL);
-  for (int i=0; i<webkit_dom_node_list_get_length(frames); i++) {
-    WebKitDOMNode *node = webkit_dom_node_list_item(frames, i);
-    char *tagname = webkit_dom_element_get_tag_name(WEBKIT_DOM_ELEMENT(node));
-    if (!g_strcmp0(tagname, "IFRAME")) 
-      doc = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
-    else if (!g_strcmp0(tagname, "FRAME")) 
-      doc = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
-    adblock_set_css(doc, rule);
-  }
-}
 
 /* adblock_load_status_cb(WebKitWebView *, GParamSpec *, GList *) {{{*/
 void
 adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
   GSList *list;
-  if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
+  if (status == WEBKIT_LOAD_COMMITTED) {
     /* Get hostname and base_domain */
     AdblockElementHider *hider;
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
@@ -288,25 +261,38 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     const char *base_domain = domain_get_base_for_host(host);
     g_return_if_fail(base_domain != NULL);
 
-    GString *css_rule = g_string_new(_css_rules->str);
-    const char *subdomains[SUBDOMAIN_MAX];
-    domain_get_subdomains((const char **)&subdomains, host, base_domain);
-    for (int i=0; subdomains[i]; i++) {
-      list = g_hash_table_lookup(_hider_rules, subdomains[i]);
-      for (GSList *l = list; l; l=l->next) {
-        hider = l->data;
-        if (domain_match(hider->domains, host, base_domain)) {
-          g_string_append(css_rule, hider->selector);
-          g_string_append_c(css_rule, ',');
+    GString *css_rule = NULL;
+    char *path = g_build_filename(_default_path, host, NULL);
+    char *stylesheet_path = g_strconcat("file://", path, NULL);
+    g_free(path);
+    if (g_file_test(stylesheet_path+7, G_FILE_TEST_EXISTS)) {
+      adblock_set_stylesheet(gl, stylesheet_path);
+      g_free(stylesheet_path);
+      return;
+    }
+    else {
+      css_rule = g_string_new(NULL);
+      const char *subdomains[SUBDOMAIN_MAX];
+      domain_get_subdomains((const char **)&subdomains, host, base_domain);
+      for (int i=0; subdomains[i]; i++) {
+        list = g_hash_table_lookup(_hider_rules, subdomains[i]);
+        for (GSList *l = list; l; l=l->next) {
+          hider = l->data;
+          if (domain_match(hider->domains, host, base_domain)) {
+            g_string_append(css_rule, hider->selector);
+            g_string_append_c(css_rule, ',');
+          }
         }
       }
     }
-    /* remove trailing comma */
-    g_string_erase(css_rule, css_rule->len-1, 1);
-    g_string_append(css_rule, "{display:none!important;}");
-    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-    adblock_set_css(doc, css_rule->str);
-    g_string_free(css_rule, false);
+    if (css_rule != NULL && css_rule->len > 0) {
+      adblock_save_stylesheet(stylesheet_path + 7, css_rule->str);
+      adblock_set_stylesheet(gl, stylesheet_path);
+    }
+    else if (VIEW(gl)->status->current_stylesheet != _default_stylesheet) {
+      adblock_set_stylesheet(gl, _default_stylesheet);
+    }
+    g_free(stylesheet_path);
   }
 }/*}}}*/
 
@@ -323,6 +309,7 @@ void
 adblock_disconnect(GList *gl) {
   if ((VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS]) > 0) 
     g_signal_handler_disconnect(WEBVIEW(gl), (VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS]));
+  adblock_set_stylesheet(gl, GET_CHAR("user-stylesheet-uri"));
   if (_sig_resource != 0) {
     g_signal_handler_disconnect(webkit_get_default_session(), _sig_resource);
     _sig_resource = 0;
@@ -336,6 +323,7 @@ adblock_connect(GList *gl) {
       return;
   if (g_hash_table_size(_hider_rules) > 0 || _css_rules->len > 0) {
     VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
+    adblock_set_stylesheet(gl, _default_stylesheet);
   }
   if (_sig_resource == 0) {
     _sig_resource = g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
@@ -596,28 +584,84 @@ adblock_end() {
       adblock_element_hider_free((AdblockElementHider*)l->data);
     g_slist_free(_hider_list);
   }
+  if (_default_path != NULL) {
+    util_rmdir(_default_path, true);
+    g_free(_default_path);
+  }
   if (_default_stylesheet != NULL)
     g_free(_default_stylesheet);
+  if (_monitor != NULL)
+    g_object_unref(_monitor);
+  if (_user_content != NULL)
+    g_free(_user_content);
 }/*}}}*/
 
-void
-adblock_set_user_stylesheet(const char *file) {
-  _user_content = util_get_file_content(file);
-  if (_css_rules->len > 0) {
-    g_string_append(_default_content, _css_rules->str);
-    /* remove trailing comma */
-    g_string_erase(_default_content, _default_content->len-1, 1);
-    g_string_append(_default_content, "{display:none!important;}");
+void 
+adblock_save_stylesheet(const char *path, const char *additional) {
+  GString *buffer = g_string_new(_user_content);
+  if (additional) {
+    g_string_append(buffer, additional);
   }
-  if (_user_content != NULL) 
-    g_string_append(_default_content, _user_content);
-  util_set_file_content(_default_stylesheet+7, _default_content->str);
-  
+  if (_css_rules && _css_rules->len > 0) 
+    g_string_append(buffer, _css_rules->str);
+  if (buffer->len > 0 && buffer->str[buffer->len-1] == ',')
+    g_string_erase(buffer, buffer->len -1, 1);
+  g_string_append(buffer, "{display:none!important;}");
+  util_set_file_content(path, buffer->str);
+  g_string_free(buffer, true);
+}
+static void 
+adblock_user_stylesheet_changed_cb(GFileMonitor *monitor, GFile *file, GFile *other, GFileMonitorEvent event) {
+  if (event == G_FILE_MONITOR_EVENT_CHANGED) {
+    adblock_set_user_stylesheet(GET_CHAR("user-stylesheet-uri"));
+  }
+}
+
+static void 
+adblock_set_stylesheet(GList *gl, char *uri) {
+  View *v = VIEW(gl);
+  if (v->status->current_stylesheet != _default_stylesheet) {
+    g_free(v->status->current_stylesheet);
+  }
+  WebKitWebSettings *settings = webkit_web_view_get_settings(WEBVIEW(gl));
+  g_object_set(settings, "user-stylesheet-uri", uri, NULL);
+  v->status->current_stylesheet = uri;
+}
+
+void
+adblock_set_user_stylesheet(const char *uri) {
+  char *scheme = g_uri_parse_scheme(uri);
+  GError *error = NULL;
+  if (!g_strcmp0(scheme, "file")) {
+    _user_content = util_get_file_content(uri+7);
+    GFile *file = g_file_new_for_uri(uri);
+    _monitor = g_file_monitor_file(file, 0, NULL, &error);
+    if (error != NULL) {
+      fprintf(stderr, "Cannot create file monitor for %s : %s\n", uri, error->message);
+      g_clear_error(&error);
+    }
+    else {
+      g_signal_connect(_monitor, "changed", G_CALLBACK(adblock_user_stylesheet_changed_cb), NULL);
+    }
+    g_object_unref(file);
+  }
+  else if (scheme != NULL) {
+    fprintf(stderr, "Userstylsheets with scheme %s are currently not supported in combination with adblocker\n", scheme);
+    _user_content = NULL;
+  }
+  adblock_save_stylesheet(_default_stylesheet+7, NULL);
+}
+
+gboolean
+adblock_running() {
+  return _init && GET_BOOL("adblocker");
 }
 
 /* adblock_init() {{{*/
 gboolean
 adblock_init() {
+  if (_init)
+    return true;
   if (!GET_BOOL("adblocker"))
     return false;
   char *filterlist = GET_CHAR("adblocker-filterlist");
@@ -631,7 +675,6 @@ adblock_init() {
   _exceptions         = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
   _hider_rules        = g_hash_table_new_full((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal, (GDestroyNotify)g_free, NULL);
   _css_rules          = g_string_new(NULL);
-  _default_content    = g_string_new(NULL);
   domain_init();
 
 
@@ -646,6 +689,11 @@ adblock_init() {
   char pid[6];
   snprintf(pid, 6, "%d", getpid());
   _default_path = g_build_filename(dwb.files.cachedir, "css", pid, NULL);
+  if (g_file_test(_default_path, G_FILE_TEST_IS_DIR))  {
+    util_rmdir(_default_path, true);
+  }
+  g_mkdir_with_parents(_default_path, 0700);
+
   _default_stylesheet = g_strconcat("file://", _default_path, "/default.css", NULL);
   adblock_set_user_stylesheet(GET_CHAR("user-stylesheet-uri"));
 
