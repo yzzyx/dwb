@@ -24,23 +24,6 @@
 
 static GHashTable *_tld_table;
 
-void 
-domain_get_subdomains(const char **subdomains, const char *host, const char *base_domain) {
-  if (base_domain == NULL)
-    base_domain = domain_get_base_for_host(host);
-  int uc = 0;
-  char *nextdot;
-  subdomains[uc++] = host;
-  while (host != base_domain) {
-    nextdot = strchr(host, '.');
-    host = nextdot + 1;
-    subdomains[uc++] = host;
-    if (uc == SUBDOMAIN_MAX-1)
-      break;
-  }
-  subdomains[uc++] = NULL;
-
-}
 gboolean 
 domain_match(char **domains, const char *host, const char *base_domain) {
   g_return_val_if_fail(domains != NULL, false);
@@ -144,26 +127,4 @@ domain_init() {
     g_hash_table_insert(_tld_table, eff_tld, TLDS_EFFECTIVE[i]);
   }
 }
-#if 0
-void 
-domain_init() {
-  _tld_table = g_hash_table_new((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal);
-  char *eff_tld;
-
-  char *tld_file = util_get_data_file("tlds.txt");
-  char *content = util_get_file_content(tld_file);
-
-  g_return_if_fail(content != NULL);
-  _effective_tlds = g_strsplit(content, "\n", -1);
-  for (int i=0; (eff_tld = _effective_tlds[i]); i++) {
-    if (*eff_tld == '*' || *eff_tld == '!') 
-      eff_tld++;
-    if (*eff_tld == '.')
-      eff_tld++;
-    g_hash_table_insert(_tld_table, eff_tld, _effective_tlds[i]);
-  }
-  g_free(tld_file);
-}
-#endif
-
 #endif

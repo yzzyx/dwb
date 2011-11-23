@@ -267,14 +267,26 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     g_free(path);
     if (g_file_test(stylesheet_path+7, G_FILE_TEST_EXISTS)) {
       adblock_set_stylesheet(gl, stylesheet_path);
-      g_free(stylesheet_path);
       return;
     }
     else {
       css_rule = g_string_new(NULL);
+      /* get all subdomains */
       const char *subdomains[SUBDOMAIN_MAX];
-      domain_get_subdomains((const char **)&subdomains, host, base_domain);
+      char *nextdot = NULL;
+      int uc = 0;
+      subdomains[uc++] = host;
+      while (host != base_domain) {
+        nextdot = strchr(host, '.');
+        host = nextdot + 1;
+        subdomains[uc++] = host;
+        if (uc == SUBDOMAIN_MAX-1)
+          break;
+      }
+      subdomains[uc++] = NULL;
+
       for (int i=0; subdomains[i]; i++) {
+        puts(subdomains[i]);
         list = g_hash_table_lookup(_hider_rules, subdomains[i]);
         for (GSList *l = list; l; l=l->next) {
           hider = l->data;
@@ -288,6 +300,7 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     if (css_rule != NULL && css_rule->len > 0) {
       adblock_save_stylesheet(stylesheet_path + 7, css_rule->str);
       adblock_set_stylesheet(gl, stylesheet_path);
+      return;
     }
     else if (VIEW(gl)->status->current_stylesheet != _default_stylesheet) {
       adblock_set_stylesheet(gl, _default_stylesheet);
