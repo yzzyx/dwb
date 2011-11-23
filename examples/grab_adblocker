@@ -2,7 +2,7 @@
 
 URL=${1:-https://easylist-downloads.adblockplus.org/easylist.txt}
 
-UNSUPPORTED="[\$,~]{1}(object|xbl|ping|xmlhttprequest|dtd|document|subdocument|elemhide|other|collapse|donottrack)(,|$)"
+UNSUPPORTED="[\$,~]{1}(object|xbl|ping|xmlhttprequest|dtd|document|elemhide|other|collapse|donottrack)(,|$)"
 CONFIG=${XDG_CONFIG_HOME}/dwb/settings
 
 TMP=$(mktemp)
