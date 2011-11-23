@@ -546,6 +546,7 @@ adblock_rule_parse(char *pattern) {
           case '[' : 
           case ']' : 
           case '+' : 
+          case '.' : 
           case '\\' : 
           case '|' : g_string_append_c(buffer, '\\');
           default  : g_string_append_c(buffer, *regexp_tmp);
