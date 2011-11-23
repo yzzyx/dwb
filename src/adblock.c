@@ -620,7 +620,7 @@ adblock_user_stylesheet_changed_cb(GFileMonitor *monitor, GFile *file, GFile *ot
 static void 
 adblock_set_stylesheet(GList *gl, char *uri) {
   View *v = VIEW(gl);
-  if (v->status->current_stylesheet != _default_stylesheet) {
+  if (v->status->current_stylesheet != NULL && v->status->current_stylesheet != _default_stylesheet) {
     g_free(v->status->current_stylesheet);
   }
   WebKitWebSettings *settings = webkit_web_view_get_settings(WEBVIEW(gl));
