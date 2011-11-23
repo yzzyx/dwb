@@ -2,24 +2,33 @@
 
 URL=${1:-https://easylist-downloads.adblockplus.org/easylist.txt}
 
-UNSUPPORTED="[\$,~]{1}(object|xbl|ping|xmlhttprequest|dtd|subdocument|document|elemhide|other|collapse|donottrack)(,|$)"
+UNSUPPORTED="[\$,~]{1}(object|xbl|ping|xmlhttprequest|dtd|document|subdocument|elemhide|other|collapse|donottrack)(,|$)"
 CONFIG=${XDG_CONFIG_HOME}/dwb/settings
-DEST=( $(sed '/adblocker-filterlist/!d;s/^.*=//' ${CONFIG}) )
 
-if [[ ! ${DEST} ]]; then 
-  echo "No setting 'adblocker-filterlist' found, exiting."
-  exit 1
+TMP=$(mktemp)
+wget -O ${TMP} ${URL} &>/dev/null
+declare PROFILE
+while read; do 
+  if [[ ${REPLY} =~ ^\[ ]]; then 
+    PROFILE=${REPLY:1:$((${#REPLY}-2))}
+  fi
+  if [ "${PROFILE}" = "default" ]  && [[ ${REPLY} =~ ^adblocker-filterlist ]]; then 
+    DEST=${REPLY//*=/}
+    break
+  fi
+done < ${CONFIG}
+
+if [ ! ${DEST} ]; then 
+  DEST=${XDG_CONFIG_HOME}/dwb/adblock_default
+  echo "No setting 'adblocker-filterlist' found for profile default, using '${DEST}'"
+  sed -i "0,/adblocker-filterlist/s#^adblocker-filterlist=.*#adblocker-filterlist=${DEST}#" ${CONFIG}
 fi
 
 echo "Saving filterlist as ${DEST}"
-TMP=$(mktemp)
-wget -O ${TMP} ${URL} &>/dev/null
 
 BEFORE=( $(wc -l "${TMP}") )
 
 sed -r "/${UNSUPPORTED}/d" "${TMP}" > ${DEST}
 rm ${TMP}
-
 AFTER=( $(wc -l "${DEST}") )
-
 printf "Removed $((${BEFORE} - ${AFTER})) unsupported of ${BEFORE} filters\n"

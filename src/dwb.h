@@ -358,7 +358,6 @@ enum Signal {
   SIG_POPULATE_POPUP, 
 #ifdef DWB_ADBLOCKER
   SIG_AD_LOAD_STATUS,
-  SIG_AD_FRAME_CREATED,
 #endif
 
   SIG_PLUGINS_LOAD,
@@ -526,6 +525,9 @@ struct _ViewStatus {
   char *hover_uri;
   GSList *allowed_plugins;
   PluginBlockerStatus pb_status;
+#ifdef DWB_ADBLOCKER
+  char *current_stylesheet;
+#endif
 };
 
 struct _View {

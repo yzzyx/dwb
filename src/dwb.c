@@ -48,6 +48,7 @@ static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
 #ifdef DWB_ADBLOCKER
 static void dwb_set_adblock(GList *, WebSettings *);
+static void dwb_set_user_stylesheet(GList *, WebSettings *);
 #endif
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
@@ -470,8 +471,13 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "user-agent",			                         "The user agent string", },                                              
     SETTING_PER_VIEW,                CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_agent,  },
+#ifdef DWB_ADBLOCKER
+  { { "user-stylesheet-uri",			               "The uri of a stylsheet applied to every page", },                                     
+    SETTING_GLOBAL,  CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_stylesheet,  },
+#else
   { { "user-stylesheet-uri",			               "The uri of a stylsheet applied to every page", },                                     
     SETTING_BUILTIN,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
+#endif
   { { "zoom-step",			                         "The zoom step", },                                               
     SETTING_BUILTIN,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting,  },
   { { "custom-encoding",                         "The custom encoding of the view", },                                         
@@ -668,6 +674,18 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
       adblock_disconnect(gl);
   }
 }/*}}}*/
+void
+dwb_set_user_stylesheet(GList *gl, WebSettings *s) {
+  if (GET_BOOL("adblocker")) {
+    adblock_set_user_stylesheet(s->arg.p);
+  }
+  else {
+    for (GList *l = dwb.state.views; l; l=l->next) {
+      dwb_webkit_setting(l, s);
+    }
+  }
+  //dwb_webkit_setting(gl, s);
+}
 #endif
 
 /* dwb_set_private_browsing  */
@@ -770,6 +788,7 @@ dwb_set_user_agent(GList *gl, WebSettings *s) {
   dwb_webkit_setting(gl, s);
   g_hash_table_insert(dwb.settings, g_strdup("user-agent"), s);
 }
+
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
 static void
@@ -2645,7 +2664,6 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.mimetypes, (void_func)dwb_navigation_free);
   dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
-  dwb_free_list(dwb.fc.adblock, (void_func)dwb_free);
 
   util_rmdir(dwb.files.cachedir, true);
   if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
@@ -3166,7 +3184,6 @@ dwb_init_files() {
   else 
     dwb.misc.default_search = NULL;
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
-  dwb.fc.adblock = dwb_init_file_content(dwb.fc.adblock, dwb.files.adblock, (Content_Func)dwb_return);
 
   FREE(path);
   FREE(profile_path);

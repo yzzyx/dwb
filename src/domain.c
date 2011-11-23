@@ -25,7 +25,7 @@
 static GHashTable *_tld_table;
 
 void 
-domain_get_subdomains(const char ***subdomains, const char *host, const char *base_domain) {
+domain_get_subdomains(const char **subdomains, const char *host, const char *base_domain) {
   if (base_domain == NULL)
     base_domain = domain_get_base_for_host(host);
   int uc = 0;
@@ -35,7 +35,6 @@ domain_get_subdomains(const char ***subdomains, const char *host, const char *ba
     nextdot = strchr(host, '.');
     host = nextdot + 1;
     subdomains[uc++] = host;
-    subdomains++;
     if (uc == SUBDOMAIN_MAX-1)
       break;
   }

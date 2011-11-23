@@ -788,10 +788,6 @@ view_init_signals(GList *gl) {
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);
 
-#ifdef DWB_ADBLOCKER
-  if (GET_BOOL("adblocker"))
-    adblock_connect(gl);
-#endif
   /* WebInspector */
   WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(v->web));
   g_signal_connect(inspector, "inspect-web-view", G_CALLBACK(view_inspect_web_view_cb), gl);
@@ -810,7 +806,9 @@ view_create_web_view() {
   status->progress = 0;
   status->allowed_plugins = NULL;
   status->pb_status = 0;
-
+#ifdef DWB_ADBLOCKER
+  status->current_stylesheet = NULL;
+#endif
 
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
@@ -1042,6 +1040,9 @@ view_remove(GList *g) {
 
   /*  clean up */ 
   dwb_source_remove(gl);
+#ifdef DWB_ADBLOCKER
+  FREE(v->status->current_stylesheet);
+#endif
   FREE(v->status);
   FREE(v);
 
@@ -1135,6 +1136,10 @@ view_add(const char *uri, gboolean background) {
 
   view_init_signals(ret);
   view_init_settings(ret);
+#ifdef DWB_ADBLOCKER
+  if (GET_BOOL("adblocker"))
+    adblock_connect(ret);
+#endif
 
   dwb_update_layout(background);
   if (uri != NULL) {
