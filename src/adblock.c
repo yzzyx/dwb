@@ -491,7 +491,7 @@ void
 adblock_connect(GList *gl) {
   if (!_init && !adblock_init()) 
       return;
-  if (g_hash_table_size(_hider_rules) > 0 || _css_rules->len > 0) {
+  if (g_hash_table_size(_hider_rules) > 0 || _css_rules->len > 0 || _css_exceptions->len > 0) {
     VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
     VIEW(gl)->status->signals[SIG_AD_RESOURCE_REQUEST] = g_signal_connect(WEBVIEW(gl), "resource-request-starting", G_CALLBACK(adblock_resource_request_starting_cb), gl);
     adblock_set_stylesheet(gl, _default_stylesheet);
@@ -500,6 +500,12 @@ adblock_connect(GList *gl) {
     _sig_resource = g_signal_connect(webkit_get_default_session(), "request-started", G_CALLBACK(adblock_request_started_cb), NULL);
   }
 }/*}}}*/
+
+static void 
+adblock_warn_ignored(const char *message, const char *rule) {
+  fprintf(stderr, "Adblock warning: %s\n", message);
+  fprintf(stderr, "Adblock warning: Rule %s will be ignored\n", rule);
+}
 
 /* adblock_rule_parse(char *pattern) return: DwbStatus {{{*/
 DwbStatus
@@ -597,51 +603,50 @@ adblock_rule_parse(char *pattern) {
         else if (!strcmp(o, "stylesheet"))
           attributes |= (AA_STYLESHEET << inverse);
         else if (!strcmp(o, "object")) {
-          fprintf(stderr, "Not supported: adblock option 'object'\n");
+          adblock_warn_ignored("Adblock option 'option' isn't supported", pattern);
+          goto error_out;
         }
         else if (!strcmp(o, "xbl")) {
-          fprintf(stderr, "Not supported: adblock option 'xbl'\n");
+          adblock_warn_ignored("Adblock option 'xbl' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "ping")) {
-          fprintf(stderr, "Not supported: adblock option 'xbl'\n");
+          adblock_warn_ignored("Adblock option 'ping' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "xmlhttprequest")) {
-          fprintf(stderr, "Not supported: adblock option 'xmlhttprequest'\n");
+          adblock_warn_ignored("Adblock option 'xmlhttprequest' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "object-subrequest")) {
           attributes |= (AA_OBJECT_SUBREQUEST << inverse);
         }
         else if (!strcmp(o, "dtd")) {
-          fprintf(stderr, "Not supported: adblock option 'dtd'\n");
+          adblock_warn_ignored("Adblock option 'dtd' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "subdocument")) {
           attributes |= (AA_SUBDOCUMENT << inverse);
-          //fprintf(stderr, "Not supported: adblock option 'subdocument'\n");
         }
         else if (!strcmp(o, "document")) {
           attributes |= (AA_DOCUMENT << inverse);
-          fprintf(stderr, "Not supported: adblock option 'document'\n");
+          adblock_warn_ignored("Adblock option 'document' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "elemhide")) {
-          attributes |= (AA_ELEMHIDE << inverse);
-          fprintf(stderr, "Not supported: adblock option 'elemhide'\n");
+          adblock_warn_ignored("Adblock option 'elemhide' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "other")) {
-          fprintf(stderr, "Not supported: adblock option 'other'\n");
+          adblock_warn_ignored("Adblock option 'other' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "collapse")) {
-          fprintf(stderr, "Not supported: adblock option 'collapse'\n");
+          adblock_warn_ignored("Adblock option 'collapse' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "donottrack")) {
-          fprintf(stderr, "Not supported: adblock option 'donottrack'\n");
+          adblock_warn_ignored("Adblock option 'donottrack' isn't supported", pattern);
           goto error_out;
         }
         else if (!strcmp(o, "match-case"))
@@ -692,7 +697,7 @@ adblock_rule_parse(char *pattern) {
 
       FREE(tmp_c);
       if (error != NULL) {
-        fprintf(stderr, "dwb warning: ignoring adblock rule %s: %s\n", pattern, error->message);
+        adblock_warn_ignored("Invalid regular expression", pattern);
         ret = STATUS_ERROR;
         g_clear_error(&error);
         goto error_out;
@@ -749,7 +754,7 @@ adblock_rule_parse(char *pattern) {
           g_ptr_array_add(_frame_rules, adrule);
       }
       else {
-        fputs("Adblocker: Filteroption subdocument isn't supported in combination with other filteroptions.\n", stderr);
+        adblock_warn_ignored("Adblock option 'subdocument' isn't supported in combination with other filteroptions.", pattern);
       }
     }
     else {
