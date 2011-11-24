@@ -291,7 +291,7 @@ util_rmdir(const char *path, gboolean recursive) {
   if (dir == NULL) 
     return;
   const char *filename = NULL;
-  char *fullpath;
+  char *fullpath = NULL;
   while ( (filename = g_dir_read_name(dir)) )  {
     fullpath = g_build_filename(path, filename, NULL);
     if (!g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
@@ -303,6 +303,10 @@ util_rmdir(const char *path, gboolean recursive) {
     }
     g_free(fullpath);
   }
+  if (filename == NULL) {
+    rmdir(path);
+  }
+  g_dir_close(dir);
 }
 /* util_get_file_content(const char *filename)    return: char * (alloc) {{{*/
 char *

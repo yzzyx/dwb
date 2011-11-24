@@ -20,6 +20,9 @@
 #include "html.h"
 #include "plugins.h"
 #include "local.h"
+#ifdef DWB_ADBLOCKER
+#include "adblock.h"
+#endif
 
 static void view_ssl_state(GList *);
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
@@ -38,7 +41,7 @@ static void view_hovering_over_link_cb(WebKitWebView *, char *, char *, GList *)
 static gboolean view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, char *, WebKitWebPolicyDecision *, GList *);
 static gboolean view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
 static gboolean view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
-static void view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
+/* static void view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *); */
 static gboolean view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
 static gboolean view_value_changed_cb(GtkAdjustment *, GList *);
 static void view_title_cb(WebKitWebView *, GParamSpec *, GList *);
@@ -350,18 +353,23 @@ view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame,
   return false;
 }/*}}}*/
 
+#if 0
 /* view_resource_request_cb{{{*/
 static void 
 view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response, GList *gl) {
+<<<<<<< local
   if (frame == webkit_web_view_get_main_frame(web) && webkit_web_frame_get_load_status(frame) == WEBKIT_LOAD_PROVISIONAL)
     return;
   if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
     webkit_network_request_set_uri(request, "about:blank");
     return;
   }
+=======
+>>>>>>> other
 }/*}}}*/
+#endif
 
 /* view_create_plugin_widget_cb {{{*/
 static GtkWidget * 
@@ -786,7 +794,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_MIME_TYPE]             = g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(view_mime_type_policy_cb), gl);
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
-  v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+  /* v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl); */
   v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(view_load_status_cb), gl);
@@ -802,7 +810,7 @@ view_init_signals(GList *gl) {
 
   v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(view_entry_keypress_cb), gl);
   v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(view_entry_keyrelease_cb), gl);
-  //v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl);
+  /* v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl); */
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);
 
@@ -824,6 +832,9 @@ view_create_web_view() {
   status->progress = 0;
   status->allowed_plugins = NULL;
   status->pb_status = 0;
+#ifdef DWB_ADBLOCKER
+  status->current_stylesheet = NULL;
+#endif
 
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
@@ -1039,6 +1050,9 @@ view_remove(GList *g) {
 
   /*  clean up */ 
   dwb_source_remove(gl);
+#ifdef DWB_ADBLOCKER
+  FREE(v->status->current_stylesheet);
+#endif
   FREE(v->status);
   FREE(v);
 
@@ -1131,6 +1145,10 @@ view_add(const char *uri, gboolean background) {
 
   view_init_signals(ret);
   view_init_settings(ret);
+#ifdef DWB_ADBLOCKER
+  if (GET_BOOL("adblocker"))
+    adblock_connect(ret);
+#endif
 
   dwb_update_layout(background);
   if (uri != NULL) {
