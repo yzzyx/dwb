@@ -199,7 +199,7 @@ adblock_match(GPtrArray *array, const char *uri, const char *host, const char *b
     if (rule->options & AO_BEGIN_DOMAIN) {
       for (int i=0; suburis[i]; i++) {
         if ( (match = adblock_do_match(rule, suburis[i])) ) 
-          goto done;
+          return match;
       }
     }
     else if ((match = adblock_do_match(rule, uri))) {
@@ -207,7 +207,6 @@ adblock_match(GPtrArray *array, const char *uri, const char *host, const char *b
     }
 
   }
-done:
   return match;
 }/*}}}*//*}}}*/
 
@@ -249,7 +248,7 @@ adblock_content_sniffed_cb(SoupMessage *msg, char *type, GHashTable *table, Soup
   else if (!strcmp(type, "text/css")) {
     attribute = AA_STYLESHEET;
   }
-  PRINT_DEBUG("%s %s %d %s\n", host, base_domain, attribute, soup_uri_to_string(uri, false));
+  PRINT_DEBUG("%s %s %d %s\n", host, base_domain, attribute, uri);
   if (!adblock_match(_exceptions, uri, host, base_domain, attribute, third_party)) {
     if (adblock_match(_rules, uri, host, base_domain, attribute, third_party)) {
       soup_session_cancel_message(session, msg, 204);
@@ -367,14 +366,14 @@ adblock_request_started_cb(SoupSession *session, SoupMessage *msg, SoupSocket *s
 /* adblock_disconnect(GList *) {{{*/
 void 
 adblock_disconnect(GList *gl) {
-  if ((VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS]) > 0)  {
-    g_signal_handler_disconnect(WEBVIEW(gl), (VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS]));
-    VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = 0;
-    g_signal_handler_disconnect(WEBVIEW(gl), (VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS]));
+  View *v = VIEW(gl);
+  if (v->status->signals[SIG_AD_LOAD_STATUS] > 0)  {
+    g_signal_handler_disconnect(WEBVIEW(gl), VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS]);
+    v->status->signals[SIG_AD_LOAD_STATUS] = 0;
   }
-  if ((VIEW(gl)->status->signals[SIG_AD_RESOURCE_REQUEST]) > 0) {
+  if (v->status->signals[SIG_AD_RESOURCE_REQUEST] > 0) {
     g_signal_handler_disconnect(WEBVIEW(gl), (VIEW(gl)->status->signals[SIG_AD_RESOURCE_REQUEST]));
-    VIEW(gl)->status->signals[SIG_AD_RESOURCE_REQUEST] = 0;
+    v->status->signals[SIG_AD_RESOURCE_REQUEST] = 0;
   }
   adblock_set_stylesheet(gl, GET_CHAR("user-stylesheet-uri"));
   if (_sig_resource != 0) {

@@ -558,26 +558,27 @@ static WebSettings DWB_SETTINGS[] = {
   { { "font-completion",                         "Font for tab-completion", },                            
     SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
    
+  /* TODO merge with default */
   { { "hint-letter-seq",                       "Letter sequence for letter hints", },             
-    SETTING_GLOBAL,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  CHAR, { .p = "FDSARTGBVECWXQYIOPMNHZULKJ"  }, (S_Func) dwb_reload_scripts,  },
   { { "hint-highlight-links",                  "Whether to highlight links in hintmode", },             
-    SETTING_GLOBAL,  BOOLEAN, { .b = false  }, (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  BOOLEAN, { .b = false  }, (S_Func) dwb_reload_scripts,  },
   { { "hint-style",                              "Whether to use 'letter' or 'number' hints", },                     
-    SETTING_GLOBAL,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  CHAR, { .p = "letter"            },     (S_Func) dwb_reload_scripts,  },
   { { "hint-font",                          "Font size of hints", },                                        
-    SETTING_GLOBAL,  CHAR, { .p = "bold 10px monospace"             },     (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  CHAR, { .p = "bold 10px monospace"             },     (S_Func) dwb_reload_scripts,  },
   { { "hint-fg-color",                           "Foreground color of hints", },                                 
-    SETTING_GLOBAL,  CHAR, { .p = "#000000"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  CHAR, { .p = "#000000"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-bg-color",                           "Background color of hints", },                                 
-    SETTING_GLOBAL,  CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  CHAR, { .p = "#ffffff"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-active-color",                       "Color of the active link in hintmode", },                                
-    SETTING_GLOBAL,  CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  CHAR, { .p = "#00ff00"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-normal-color",                       "Color of inactive links in hintmode", },                              
-    SETTING_GLOBAL,  CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  CHAR, { .p = "#ffff99"      },     (S_Func) dwb_reload_scripts,  },
   { { "hint-border",                             "Border used for hints", },                                      
-    SETTING_GLOBAL,  CHAR, { .p = "1px solid #000000"    }, (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  CHAR, { .p = "1px solid #000000"    }, (S_Func) dwb_reload_scripts,  },
   { { "hint-opacity",                            "The opacity of hints", },                                     
-    SETTING_GLOBAL,  DOUBLE, { .d = 0.8         },          (S_Func) dwb_reload_scripts,  },
+    SETTING_PER_VIEW,  DOUBLE, { .d = 0.8         },          (S_Func) dwb_reload_scripts,  },
   { { "auto-completion",                         "Show possible shortcuts", },                                
     SETTING_GLOBAL,  BOOLEAN, { .b = true         },     (S_Func)completion_set_autcompletion,  },
   { { "startpage",                               "The default homepage", },                                        
@@ -667,11 +668,11 @@ static void
 dwb_set_adblock(GList *gl, WebSettings *s) {
   if (s->arg.b) {
     for (GList *l = dwb.state.views; l; l=l->next) 
-      adblock_connect(gl);
+      adblock_connect(l);
   }
   else {
     for (GList *l = dwb.state.views; l; l=l->next) 
-      adblock_disconnect(gl);
+      adblock_disconnect(l);
   }
 }/*}}}*/
 void
@@ -1267,9 +1268,18 @@ dwb_open_startpage(GList *gl) {
 /* dwb_apply_settings(WebSettings *s) {{{*/
 static void
 dwb_apply_settings(WebSettings *s) {
-  for (GList *l = dwb.state.views; l; l=l->next) 
-    if (s->func) 
-      s->func(l, s);
+  if (s->apply & SETTING_ONINIT) 
+    return;
+  else if (s->apply & SETTING_GLOBAL) {
+    if (s->func)
+      s->func(NULL, s);
+  }
+  else {
+    for (GList *l = dwb.state.views; l; l=l->next) {
+      if (s->func) 
+        s->func(l, s);
+    }
+  }
   dwb_change_mode(NORMAL_MODE, false);
 
 }/*}}}*/

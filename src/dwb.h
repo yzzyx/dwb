@@ -500,10 +500,10 @@ struct _State {
 };
 
 typedef enum _SettingsApply {
-  SETTING_BUILTIN = 1<<0,
-  SETTING_GLOBAL = 1<<1,
-  SETTING_ONINIT = 1<<2,
-  SETTING_PER_VIEW = 1<<3,
+  SETTING_BUILTIN   = 1<<0,
+  SETTING_GLOBAL    = 1<<1,
+  SETTING_ONINIT    = 1<<2,
+  SETTING_PER_VIEW  = 1<<3,
 } SettingsApply;
 struct _WebSettings {
   Navigation n;
