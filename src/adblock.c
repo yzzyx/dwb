@@ -148,6 +148,7 @@ adblock_element_hider_free(AdblockElementHider *hider) {
   }
 }/*}}}*//*}}}*/
 
+
 /* MATCH {{{*/
 /* inline adblock_do_match(AdblockRule *, const char *) {{{*/
 static inline gboolean
@@ -344,6 +345,8 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
       adblock_save_stylesheet(stylesheet_path + 7, css_rule->str);
       adblock_set_stylesheet(gl, stylesheet_path);
       g_string_free(css_rule, true);
+      /* The stylesheet_path should not be freed at this point, it is freed when
+       * navigating to another domain */
       return;
     }
     else if (VIEW(gl)->status->current_stylesheet != _default_stylesheet) {
@@ -353,7 +356,7 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   }
 }/*}}}*/
 
-/*{{{*/
+/* adblock_request_started_cb {{{*/
 static void 
 adblock_resource_request_starting_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
@@ -392,6 +395,75 @@ static void
 adblock_request_started_cb(SoupSession *session, SoupMessage *msg, SoupSocket *socket) {
   g_signal_connect(msg, "content-sniffed", G_CALLBACK(adblock_content_sniffed_cb), session);
 }/*}}}*//*}}}*/
+
+
+/* STYLESHEETS {{{*/
+/* adblock_save_stylesheet(const char *path, const char *add) {{{*/
+void 
+adblock_save_stylesheet(const char *path, const char *additional) {
+  GString *buffer = g_string_new(_user_content);
+  if (additional) {
+    g_string_append(buffer, additional);
+  }
+  if (_css_rules && _css_rules->len > 0) 
+    g_string_append(buffer, _css_rules->str);
+  if (buffer->len > 0 && buffer->str[buffer->len-1] == ',')
+    g_string_erase(buffer, buffer->len -1, 1);
+  g_string_append(buffer, "{display:none!important;}");
+  util_set_file_content(path, buffer->str);
+  g_string_free(buffer, true);
+}/*}}}*/
+
+/* adblock_user_stylesheet_changed_cb() GFileMonitorCallback {{{*/
+static void 
+adblock_user_stylesheet_changed_cb(GFileMonitor *monitor, GFile *file, GFile *other, GFileMonitorEvent event) {
+  if (event == G_FILE_MONITOR_EVENT_CHANGED) {
+    adblock_set_user_stylesheet(GET_CHAR("user-stylesheet-uri"));
+  }
+}/*}}}*/
+
+/* adblock_set_stylesheet(GList *, char *uri) {{{*/
+static void 
+adblock_set_stylesheet(GList *gl, char *uri) {
+  View *v = VIEW(gl);
+  if (v->status->current_stylesheet != NULL && v->status->current_stylesheet != _default_stylesheet) {
+    g_free(v->status->current_stylesheet);
+  }
+  WebKitWebSettings *settings = webkit_web_view_get_settings(WEBVIEW(gl));
+  g_object_set(settings, "user-stylesheet-uri", uri, NULL);
+  v->status->current_stylesheet = uri;
+}/*}}}*/
+
+/* adblock_set_user_stylesheet(const char *uri) {{{*/
+void
+adblock_set_user_stylesheet(const char *uri) {
+  char *scheme = NULL;
+  GError *error = NULL;
+  if (uri != NULL) {
+    scheme = g_uri_parse_scheme(uri);
+  }
+  if (!g_strcmp0(scheme, "file")) {
+    if (_user_content != NULL) 
+      g_free(_user_content);
+    _user_content = util_get_file_content(uri+7);
+    GFile *file = g_file_new_for_uri(uri);
+    _monitor = g_file_monitor_file(file, 0, NULL, &error);
+    if (error != NULL) {
+      fprintf(stderr, "Cannot create file monitor for %s : %s\n", uri, error->message);
+      g_clear_error(&error);
+    }
+    else {
+      g_signal_connect(_monitor, "changed", G_CALLBACK(adblock_user_stylesheet_changed_cb), NULL);
+    }
+    g_object_unref(file);
+  }
+  else if (scheme != NULL) {
+    fprintf(stderr, "Userstylsheets with scheme %s are currently not supported in combination with adblocker\n", scheme);
+    _user_content = NULL;
+  }
+  adblock_save_stylesheet(_default_stylesheet+7, _css_exceptions->str);
+}/*}}}*/
+/*}}}*/
 
 
 /* START AND END {{{*/
@@ -727,71 +799,11 @@ adblock_end() {
     g_free(_user_content);
 }/*}}}*/
 
-void 
-adblock_save_stylesheet(const char *path, const char *additional) {
-  GString *buffer = g_string_new(_user_content);
-  if (additional) {
-    g_string_append(buffer, additional);
-  }
-  if (_css_rules && _css_rules->len > 0) 
-    g_string_append(buffer, _css_rules->str);
-  if (buffer->len > 0 && buffer->str[buffer->len-1] == ',')
-    g_string_erase(buffer, buffer->len -1, 1);
-  g_string_append(buffer, "{display:none!important;}");
-  util_set_file_content(path, buffer->str);
-  g_string_free(buffer, true);
-}
-static void 
-adblock_user_stylesheet_changed_cb(GFileMonitor *monitor, GFile *file, GFile *other, GFileMonitorEvent event) {
-  if (event == G_FILE_MONITOR_EVENT_CHANGED) {
-    adblock_set_user_stylesheet(GET_CHAR("user-stylesheet-uri"));
-  }
-}
-
-static void 
-adblock_set_stylesheet(GList *gl, char *uri) {
-  View *v = VIEW(gl);
-  if (v->status->current_stylesheet != NULL && v->status->current_stylesheet != _default_stylesheet) {
-    g_free(v->status->current_stylesheet);
-  }
-  WebKitWebSettings *settings = webkit_web_view_get_settings(WEBVIEW(gl));
-  g_object_set(settings, "user-stylesheet-uri", uri, NULL);
-  v->status->current_stylesheet = uri;
-}
-
-void
-adblock_set_user_stylesheet(const char *uri) {
-  char *scheme = NULL;
-  GError *error = NULL;
-  if (uri != NULL) {
-    scheme = g_uri_parse_scheme(uri);
-  }
-  if (!g_strcmp0(scheme, "file")) {
-    if (_user_content != NULL) 
-      g_free(_user_content);
-    _user_content = util_get_file_content(uri+7);
-    GFile *file = g_file_new_for_uri(uri);
-    _monitor = g_file_monitor_file(file, 0, NULL, &error);
-    if (error != NULL) {
-      fprintf(stderr, "Cannot create file monitor for %s : %s\n", uri, error->message);
-      g_clear_error(&error);
-    }
-    else {
-      g_signal_connect(_monitor, "changed", G_CALLBACK(adblock_user_stylesheet_changed_cb), NULL);
-    }
-    g_object_unref(file);
-  }
-  else if (scheme != NULL) {
-    fprintf(stderr, "Userstylsheets with scheme %s are currently not supported in combination with adblocker\n", scheme);
-    _user_content = NULL;
-  }
-  adblock_save_stylesheet(_default_stylesheet+7, _css_exceptions->str);
-}
-
+/* adblock_running {{{*/
 gboolean
 adblock_running() {
   return _init && GET_BOOL("adblocker");
-}
+}/*}}}*/
 
 /* adblock_init() {{{*/
 gboolean
