@@ -24,6 +24,7 @@
 
 static GHashTable *_tld_table;
 
+/* taken from libsoup */
 gboolean 
 domain_match(char **domains, const char *host, const char *base_domain) {
   g_return_val_if_fail(domains != NULL, false);
@@ -107,6 +108,8 @@ domain_get_base_for_host(const char *host) {
     cur_domain = nextdot + 1;
     nextdot = strchr(cur_domain, '.');
   }
+  if (ret == NULL) 
+    ret = host;
   return ret;
 }
 void

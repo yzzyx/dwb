@@ -16,21 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifdef DWB_ADBLOCKER
-#ifndef ADBLOCK_H
-#define ADBLOCK_H
+#ifndef JS_H
+#define JS_H
 
-#include "dwb.h"
-
-gboolean adblock_init();
-void adblock_end();
-void adblock_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, 
-    WebKitNetworkRequest  *, WebKitNetworkResponse *, GList *gl);
-void adblock_connect(GList *gl);
-void adblock_disconnect(GList *gl);
-void adblock_set_user_stylesheet(const char *file);
-gboolean adblock_running();
-JSValueRef adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-
-#endif // ADBLOCK_H
-#endif // DWB_ADBLOCKER
+void js_create_callback(WebKitWebFrame *frame, const char *name, JSObjectCallAsFunctionCallback function);
+char * js_string_to_char(JSContextRef ctx, JSStringRef jsstring);
+char * js_value_to_char(JSContextRef ctx, JSValueRef value);
+#endif
