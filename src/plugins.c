@@ -74,6 +74,7 @@ plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl
 
     plugins_create_click_element(element, gl);
   }
+  g_free(tagname);
   return true;
 }
 

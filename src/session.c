@@ -90,10 +90,11 @@ session_list() {
 gboolean
 session_restore(const char *name) {
   char *group = session_get_group(name);
-  if (!group) {
+  if (group == NULL) {
     return false;
   }
   char  **lines = g_strsplit(group, "\n", -1);
+  g_free(group);
   GList *currentview, *lastview = NULL;
   WebKitWebBackForwardList *bf_list = NULL;
   int last = 1;
