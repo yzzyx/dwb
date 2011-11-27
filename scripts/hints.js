@@ -38,7 +38,6 @@ DwbHintObj = (function() {
     this.element = element;
     this.overlay = null;
     this.win = win;
-    this.textDesc = null;
     var leftpos, toppos;
     var scrollY = win.scrollY;
     var scrollX = win.scrollX;
@@ -69,18 +68,6 @@ DwbHintObj = (function() {
       this.overlay = overlay;
     }
     this.hint = hint;
-    if (! (element instanceof HTMLInputElement && element.hasAttribute("id"))) 
-      return;
-    var label = win.document.body.querySelector("label[for='" + element.id + "']");
-    if (label == null) 
-      return;
-    var text = __createElement("div");
-    text.style.font = "normal 8px monospace";
-    text.innerText = " : " + label.innerText;
-    text.style.display = "inline";
-    this.hint.appendChild(text);
-    this.textDesc = text;
-    
   }
   const __createElement = function(tagname) {
     element = document.createElement(tagname);
@@ -95,23 +82,26 @@ DwbHintObj = (function() {
     this.constructor(element, win, rect);
     var topobj = this;
 
+    this.getStart = function(n) {
+      var start = parseInt(Math.log(n) / Math.log(10))*10;
+      if (n > 10*start-start) 
+        start*=10;
+      return Math.max(start, 1);
+    }
     this.getTextHint = function (i, length) {
       var e = this.element;
-      start = length <=10 ? 1 : length <= 100 ? 10 : 100;
-      var content = document.createTextNode(start + i);
-      if (!this.textDesc) 
-        this.hint.appendChild(content);
-      else 
-        this.hint.insertBefore(content, this.textDesc);
+      start = this.getStart(length);
+      this.hint.textContent = start+i;
     }
 
     this.betterMatch = function(input) {
+      var length = _activeArr.length;
       if (input.isInt()) {
         return 0;
       }
       var bestposition = 37;
       var ret = 0;
-      for (var i=0; i<_activeArr.length; i++) {
+      for (var i=0; i<length; i++) {
         var e = _activeArr[i];
         if (input && bestposition != 0) {
           var content = e.element.textContent.toLowerCase().split(" ");
@@ -125,6 +115,10 @@ DwbHintObj = (function() {
             }
           }
         }
+      }
+      
+      for (var i=0;i<length; i++) {
+        _activeArr[i].getTextHint(i, length);
       }
       return ret;
     }
@@ -150,6 +144,10 @@ DwbHintObj = (function() {
     this.constructor(element, win, rect);
 
     this.betterMatch = function(input) {
+      var length = _activeArr.length;
+      for (var i=0;i<length; i++) {
+        _activeArr[i].getTextHint(i, length);
+      }
       return 0;
     }
     this.getTextHint = function(i, length) {
@@ -172,11 +170,7 @@ DwbHintObj = (function() {
       else {
         text = _letterSeq[i%l] + _letterSeq[l - 1 - (parseInt(i/l))];
       }
-      var content = document.createTextNode(text);
-      if (!this.textDesc) 
-        this.hint.appendChild(content);
-      else 
-        this.hint.insertBefore(content, this.textDesc);
+      this.hint.textContent = text;
     }
     this.matchText = function(input, matchHint) {
       if (matchHint) {
