@@ -520,6 +520,7 @@ struct _ViewStatus {
   char *hover_uri;
   GSList *allowed_plugins;
   PluginBlockerStatus pb_status;
+  GSList *plugin_refs;
 };
 struct _View {
   GtkWidget *vbox;

@@ -830,6 +830,7 @@ view_create_web_view() {
   status->hover_uri = NULL;
   status->progress = 0;
   status->allowed_plugins = NULL;
+  status->plugin_refs = NULL;
   status->pb_status = 0;
 
   for (int i=0; i<SIG_LAST; i++) 
