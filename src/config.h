@@ -533,13 +533,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  },
   { { "user-agent",			                         "The user agent string", },                                              
     SETTING_PER_VIEW,                CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_agent,  },
-#ifdef DWB_ADBLOCKER
-  { { "user-stylesheet-uri",			               "The uri of a stylsheet applied to every page", },                                     
-    SETTING_GLOBAL,  CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_stylesheet,  },
-#else
   { { "user-stylesheet-uri",			               "The uri of a stylsheet applied to every page", },                                     
     SETTING_BUILTIN,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  },
-#endif
   { { "zoom-step",			                         "The zoom step", },                                               
     SETTING_BUILTIN,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting,  },
   { { "custom-encoding",                         "The custom encoding of the view", },                                         

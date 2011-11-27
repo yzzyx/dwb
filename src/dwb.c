@@ -47,7 +47,6 @@ static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
 #ifdef DWB_ADBLOCKER
 static void dwb_set_adblock(GList *, WebSettings *);
-static void dwb_set_user_stylesheet(GList *, WebSettings *);
 #endif
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
@@ -135,18 +134,6 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
       adblock_disconnect(l);
   }
 }/*}}}*/
-void
-dwb_set_user_stylesheet(GList *gl, WebSettings *s) {
-  if (adblock_running()) {
-    adblock_set_user_stylesheet(s->arg.p);
-  }
-  else {
-    for (GList *l = dwb.state.views; l; l=l->next) {
-      dwb_webkit_setting(l, s);
-    }
-  }
-  //dwb_webkit_setting(gl, s);
-}
 #endif
 
 /* dwb_set_private_browsing  {{{ */
