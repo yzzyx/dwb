@@ -19,6 +19,7 @@
 #include <JavaScriptCore/JavaScript.h>
 #include <webkit/webkit.h>
 #include <glib-2.0/glib.h>
+#define JS_STRING_MAX 1024
 
 
 void
@@ -36,7 +37,7 @@ js_create_callback(WebKitWebFrame *frame, const char *name, JSObjectCallAsFuncti
  * {{{*/
 char *
 js_string_to_char(JSContextRef ctx, JSStringRef jsstring) {
-  size_t length = JSStringGetLength(jsstring) + 1;
+  size_t length = MIN(JSStringGetLength(jsstring), JS_STRING_MAX) + 1;
 
   char *ret = g_new(char, length);
   size_t written = JSStringGetUTF8CString(jsstring, ret, length);
