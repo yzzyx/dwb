@@ -67,6 +67,11 @@ view_link_select(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
     webkit_dom_dom_selection_set_base_and_extent(selection, node, start, thisnode, end, NULL);
   else 
     webkit_dom_dom_selection_set_base_and_extent(selection, thisnode, end, node, start, NULL);
+  g_object_unref(doc);
+  g_object_unref(range);
+  g_object_unref(selection);
+  g_object_unref(node);
+  g_object_unref(thisnode);
 }
 static gboolean
 view_caret_motion_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *other) {
@@ -78,6 +83,7 @@ view_caret_release_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *oth
   view_link_select(web, e, other);
   g_signal_handlers_disconnect_by_func(web, view_caret_release_cb, other);
   g_signal_handlers_disconnect_by_func(web, view_caret_motion_cb, other);
+  g_object_unref(other);
   return false;
 }
 static gboolean
@@ -104,6 +110,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     g_signal_connect(web, "button-release-event", G_CALLBACK(view_caret_release_cb), range);
     g_signal_connect(web, "motion-notify-event", G_CALLBACK(view_caret_motion_cb), range);
     ret = true; 
+    g_object_unref(selection);
   }
   else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
     char *clipboard = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
@@ -823,6 +830,7 @@ view_create_web_view() {
   status->hover_uri = NULL;
   status->progress = 0;
   status->allowed_plugins = NULL;
+  status->plugin_refs = NULL;
   status->pb_status = 0;
 
   for (int i=0; i<SIG_LAST; i++) 
