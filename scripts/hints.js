@@ -144,10 +144,6 @@ DwbHintObj = (function() {
     this.constructor(element, win, rect);
 
     this.betterMatch = function(input) {
-      var length = _activeArr.length;
-      for (var i=0;i<length; i++) {
-        _activeArr[i].getTextHint(i, length);
-      }
       return 0;
     }
     this.getTextHint = function(i, length) {
