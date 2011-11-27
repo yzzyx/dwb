@@ -510,7 +510,8 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     cbuffer[PBAR_LENGTH - length] = '\0';
     g_string_append_printf(string, "\u2595%ls%ls\u258f", buffer, cbuffer);
   }
-  dwb_set_status_bar_text(v->rstatus, string->str, NULL, NULL, true);
+  if (string->len > 0) 
+    dwb_set_status_bar_text(v->rstatus, string->str, NULL, NULL, true);
   g_string_free(string, true);
 }/*}}}*/
 

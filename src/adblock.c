@@ -64,7 +64,8 @@ typedef enum _AdblockAttribute {
 //  TP_FALSE,
 //  TP_UNKNOWN,
 //} ThirdParty;
-const static char *adblockscript = " function dwbAdblockBeforeLoad(e){\
+const static char *stylesheetscript = "function createStylesheet() {var s = document.createElement('style'); s.type='text/css'; s.innerHTML='%s';console.log(s.innerHTML);document.head.appendChild(s);}";
+const static char *adblockscript = "function dwbAdblockBeforeLoad(e){\
                                     console.log(e);\
                                 var i=%d; \
                                 if (e.srcElement instanceof HTMLScriptElement) \
@@ -75,7 +76,7 @@ const static char *adblockscript = " function dwbAdblockBeforeLoad(e){\
                                     i |= 1<<2;\
                                 else if (e.srcElement instanceof HTMLObjectElement || e.srcElement instanceof HTMLEmbedElement) \
                                     i |= 1<<3;\
-                                if (%s(i, e.url, e.srcElement.baseURI)) { console.log('block');e.preventDefault();  }\
+                                if (%s(i, e.url, e.srcElement.baseURI)) { e.preventDefault();  }\
                               }; window.addEventListener('beforeload', dwbAdblockBeforeLoad, true);";
 
 typedef struct _AdblockRule {
@@ -107,7 +108,6 @@ static gboolean _init = false;
 static char *_default_stylesheet;
 static char *_user_content;
 static char *_default_path;
-static GFileMonitor *_monitor;
 /*}}}*//*}}}*/
 
 
@@ -337,8 +337,8 @@ static void
 adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
   GSList *list;
+  WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
   if (status == WEBKIT_LOAD_COMMITTED) {
-    WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
 
     const char *name = "scheissWerbung";
     char *command = g_strdup_printf(adblockscript, AA_DOCUMENT, name);
@@ -361,14 +361,14 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     GRegex *regex = NULL;
     char *pattern, *escaped, *replaced = NULL;
     char *tmpreplaced = g_strdup(_css_exceptions->str);
-    char *path = g_build_filename(_default_path, host, NULL);
-    char *stylesheet_path = g_strconcat("file://", path, NULL);
-    g_free(path);
-    if (g_file_test(stylesheet_path+7, G_FILE_TEST_EXISTS)) {
-      adblock_set_stylesheet(gl, stylesheet_path);
-      return;
-    }
-    else {
+    //char *path = g_build_filename(_default_path, host, NULL);
+    //char *stylesheet_path = g_strconcat("file://", path, NULL);
+    //g_free(path);
+    //if (g_file_test(stylesheet_path+7, G_FILE_TEST_EXISTS)) {
+    //  adblock_set_stylesheet(gl, stylesheet_path);
+    //  return;
+    //}
+    //else {
       css_rule = g_string_new(NULL);
       /* get all subdomains */
       const char *subdomains[SUBDOMAIN_MAX];
@@ -419,21 +419,32 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
       else if (css_rule != NULL && css_rule->len > 0) {
         g_string_append(css_rule, _css_exceptions->str);
       }
-    }
+      g_string_append(css_rule, _css_rules->str);
+      if (css_rule->str[css_rule->len-1] == ',') 
+        g_string_erase(css_rule, css_rule->len-1, 1);
+      g_string_append(css_rule, "{display:none!important;}");
+      command = g_strdup_printf(stylesheetscript, css_rule->str);
+      dwb_execute_script(frame, command, false);
+      g_free(command);
+    //}
     /* If anything was found, create a new stylesheet */
-    if (css_rule != NULL && css_rule->len > 0) {
-      adblock_save_stylesheet(stylesheet_path + 7, css_rule->str);
-      adblock_set_stylesheet(gl, stylesheet_path);
-      g_string_free(css_rule, true);
-      /* The stylesheet_path should not be freed at this point, it is freed when
-       * navigating to another domain */
-      return;
-    }
-    else if (VIEW(gl)->status->current_stylesheet != _default_stylesheet) {
-      adblock_set_stylesheet(gl, _default_stylesheet);
-    }
-    g_free(stylesheet_path);
+    //if (css_rule != NULL && css_rule->len > 0) {
+    //  adblock_save_stylesheet(stylesheet_path + 7, css_rule->str);
+    //  adblock_set_stylesheet(gl, stylesheet_path);
+    //  g_string_free(css_rule, true);
+    //  /* The stylesheet_path should not be freed at this point, it is freed when
+    //   * navigating to another domain */
+    //  return;
+    //}
+    //else if (VIEW(gl)->status->current_stylesheet != _default_stylesheet) {
+    //  adblock_set_stylesheet(gl, _default_stylesheet);
+    //}
+    //g_free(stylesheet_path);
   }
+  else if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
+    dwb_execute_script(frame, "createStylesheet();", false);
+  }
+
 }/*}}}*/
 
 #if 0
@@ -495,6 +506,7 @@ adblock_save_stylesheet(const char *path, const char *additional) {
   g_string_free(buffer, true);
 }/*}}}*/
 
+#if 0
 /* adblock_user_stylesheet_changed_cb() GFileMonitorCallback {{{*/
 static void 
 adblock_user_stylesheet_changed_cb(GFileMonitor *monitor, GFile *file, GFile *other, GFileMonitorEvent event) {
@@ -502,6 +514,7 @@ adblock_user_stylesheet_changed_cb(GFileMonitor *monitor, GFile *file, GFile *ot
     adblock_set_user_stylesheet(GET_CHAR("user-stylesheet-uri"));
   }
 }/*}}}*/
+#endif
 
 /* adblock_set_stylesheet(GList *, char *uri) {{{*/
 static void 
@@ -522,21 +535,23 @@ adblock_set_user_stylesheet(const char *uri) {
   GError *error = NULL;
   if (uri != NULL) {
     scheme = g_uri_parse_scheme(uri);
-  }
-  if (!g_strcmp0(scheme, "file")) {
-    if (_user_content != NULL) 
-      g_free(_user_content);
-    _user_content = util_get_file_content(uri+7);
-    GFile *file = g_file_new_for_uri(uri);
-    _monitor = g_file_monitor_file(file, 0, NULL, &error);
-    if (error != NULL) {
-      fprintf(stderr, "Cannot create file monitor for %s : %s\n", uri, error->message);
-      g_clear_error(&error);
+    if (!g_strcmp0(scheme, "file")) {
+      if (_user_content != NULL) 
+        g_free(_user_content);
+      _user_content = util_get_file_content(uri+7);
+#if 0
+      GFile *file = g_file_new_for_uri(uri);
+      _monitor = g_file_monitor_file(file, 0, NULL, &error);
+      if (error != NULL) {
+        fprintf(stderr, "Cannot create file monitor for %s : %s\n", uri, error->message);
+        g_clear_error(&error);
+      }
+      else {
+        g_signal_connect(_monitor, "changed", G_CALLBACK(adblock_user_stylesheet_changed_cb), NULL);
+      }
+      g_object_unref(file);
+#endif
     }
-    else {
-      g_signal_connect(_monitor, "changed", G_CALLBACK(adblock_user_stylesheet_changed_cb), NULL);
-    }
-    g_object_unref(file);
   }
   else if (scheme != NULL) {
     fprintf(stderr, "Userstylsheets with scheme %s are currently not supported in combination with adblocker\n", scheme);
@@ -576,8 +591,8 @@ adblock_connect(GList *gl) {
       return;
   if (g_hash_table_size(_hider_rules) > 0 || _css_rules->len > 0 || _css_exceptions->len > 0) {
     VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
-    VIEW(gl)->status->signals[SIG_AD_FRAME_CREATED] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(adblock_frame_created_cb), gl);
-    adblock_set_stylesheet(gl, _default_stylesheet);
+    //VIEW(gl)->status->signals[SIG_AD_FRAME_CREATED] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(adblock_frame_created_cb), gl);
+    //adblock_set_stylesheet(gl, _default_stylesheet);
   }
 }/*}}}*/
 
@@ -862,8 +877,10 @@ adblock_end() {
   }
   if (_default_stylesheet != NULL)
     g_free(_default_stylesheet);
+#if 0
   if (_monitor != NULL)
     g_object_unref(_monitor);
+#endif
   if (_user_content != NULL)
     g_free(_user_content);
 }/*}}}*/
@@ -913,7 +930,7 @@ adblock_init() {
   g_mkdir_with_parents(_default_path, 0700);
 
   _default_stylesheet = g_strconcat("file://", _default_path, "/default.css", NULL);
-  adblock_set_user_stylesheet(GET_CHAR("user-stylesheet-uri"));
+  //adblock_set_user_stylesheet(GET_CHAR("user-stylesheet-uri"));
 
   _init = true;
   return true;
