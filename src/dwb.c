@@ -1271,7 +1271,7 @@ dwb_reload_layout(GList *gl, WebSettings *s) {
 static char *
 dwb_get_search_engine_uri(const char *uri, const char *text) {
   char *ret = NULL;
-  if (uri) {
+  if (uri != NULL && text != NULL) {
     GRegex *regex = g_regex_new(HINT_SEARCH_SUBMIT, 0, 0, NULL);
     char *escaped = g_uri_escape_string(text, NULL, true);
     ret = g_regex_replace(regex, uri, -1, 0, escaped, 0, NULL);
