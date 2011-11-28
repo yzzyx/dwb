@@ -480,12 +480,19 @@ commands_focus(KeyMap *km, Arg *arg) {
 /* commands_focus_view{{{*/
 DwbStatus
 commands_focus_nth_view(KeyMap *km, Arg *arg) {
+  static int running;
   if (!dwb.state.views->next) 
     return STATUS_ERROR;
   GList *l = g_list_nth(dwb.state.views, dwb.state.nummod);
   if (!l) 
     return STATUS_ERROR;
   dwb_focus_view(l);
+  if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
+    gtk_widget_show(dwb.gui.topbox);
+    if (running != 0) 
+      g_source_remove(running);
+    running = g_timeout_add(2000, (GSourceFunc)commands_hide_tabbar, &running);
+  }
   return STATUS_OK;
 }/*}}}*/
 
