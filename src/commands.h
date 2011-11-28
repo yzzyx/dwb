@@ -93,5 +93,8 @@ DwbStatus commands_open_editor(KeyMap *, Arg *);
 DwbStatus commands_insert_mode(KeyMap *, Arg *);
 DwbStatus commands_command_mode(KeyMap *, Arg *);
 DwbStatus commands_only(KeyMap *, Arg *);
+#ifdef DWB_ADBLOCKER
+DwbStatus commands_toggle_adblocker(KeyMap *, Arg *);
+#endif
 
 #endif

@@ -139,6 +139,7 @@ static KeyValue KEYS[] = {
   { "toggle_plugins_host",      {   "ph",           0 }, }, 
   { "toggle_plugins_uri_tmp",   {   "ptu",           0 }, }, 
   { "toggle_plugins_host_tmp",  {   "pth",           0 }, }, 
+  { "toggle_adblocker",         {   "a",           GDK_CONTROL_MASK }, }, 
   { "new_view",                 {   "V",            0 }, }, 
   { "new_window",               {   "W",            0 }, }, 
   { "save",                     {   "sf",            0 }, }, 
@@ -432,6 +433,10 @@ static FunctionMap FMAP [] = {
     (Func) commands_toggle_plugin_blocker, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP } }, 
   { { "toggle_plugins_uri_tmp", "Toggle block content for current url for this session" },   1, 
     (Func) commands_toggle_plugin_blocker, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP } }, 
+#ifdef DWB_ADBLOCKER
+  { { "toggle_adblocker", "Toggle adblocker" },   1, 
+    (Func) commands_toggle_adblocker, NULL,       POST_SM,    { 0 } }, 
+#endif
   { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, 
     (Func) commands_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 } }, 
   { { "print",                 "Print current page" },                         1, 

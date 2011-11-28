@@ -45,9 +45,6 @@ static void dwb_set_startpage(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
-#ifdef DWB_ADBLOCKER
-static void dwb_set_adblock(GList *, WebSettings *);
-#endif
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
@@ -123,7 +120,7 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
 
 #ifdef DWB_ADBLOCKER
 /* dwb_set_adblock {{{*/
-static void
+void
 dwb_set_adblock(GList *gl, WebSettings *s) {
   if (s->arg.b) {
     for (GList *l = dwb.state.views; l; l=l->next) 

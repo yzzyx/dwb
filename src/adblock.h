@@ -23,9 +23,8 @@
 #include "dwb.h"
 
 gboolean adblock_init();
+gboolean adblock_running();
 void adblock_end();
-void adblock_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, 
-    WebKitNetworkRequest  *, WebKitNetworkResponse *, GList *gl);
 void adblock_connect(GList *gl);
 void adblock_disconnect(GList *gl);
 void adblock_set_user_stylesheet(const char *file);

@@ -550,11 +550,13 @@ If a string value is set to
 the default value will be used. The settings in detail are: 
 .TP
 .BR adblocker
-Block advertisements using a filterlist. The filter can be specified in
-.IR $XDG_CONFIG_HOME/dwb/adblock .
-Regular expressions can be used by putting a '@' at the beginning of the line. 
-default value:
+Block advertisements using a filterlist, see also 
+.IR adblocker-filterlist
 .IR false .
+.TP
+.BR adblocker-filterlist
+A path to a adblock plus compatible filterlist for the adblocker.
+.IR NULL .
 .TP
 .BR auto-load-images  
 Load images automatically. Possible values: true/false, 

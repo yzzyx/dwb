@@ -374,6 +374,7 @@ enum Signal {
 #ifdef DWB_ADBLOCKER
   SIG_AD_LOAD_STATUS,
   SIG_AD_FRAME_CREATED,
+  SIG_AD_RESOURCE_REQUEST,
 #endif
 
   SIG_PLUGINS_LOAD,
@@ -796,5 +797,8 @@ void dwb_set_open_mode(Open);
 
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
+#ifdef DWB_ADBLOCKER
+void dwb_set_adblock(GList *, WebSettings *);
+#endif
 
 #endif

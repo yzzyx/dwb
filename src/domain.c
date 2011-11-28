@@ -76,7 +76,8 @@ domain_match(char **domains, const char *host, const char *base_domain) {
 
 const char *
 domain_get_base_for_host(const char *host) {
-  g_return_val_if_fail(host != NULL, NULL);
+  if (host == NULL)
+    return NULL;
   g_return_val_if_fail(_tld_table != NULL, NULL);
 
   const char *cur_domain = host;
