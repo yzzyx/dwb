@@ -74,7 +74,10 @@ const static char *adblockscript = "function dwbAdblockBeforeLoad(e){\
                                     i |= 1<<2;\
                                 else if (e.srcElement instanceof HTMLObjectElement || e.srcElement instanceof HTMLEmbedElement) \
                                     i |= 1<<3;\
-                                var url = /^https?:\\/\\//.test(e.url) ? e.url : e.srcElement.baseURI + e.url;\
+                                var base = e.srcElement.baseURI;\
+                                if (base.charAt(base.length-1) == '/' && e.url.charAt(0) == '/') \
+                                    base = base.substring(0, base.length-1);\
+                                var url = /^https?:\\/\\//.test(e.url) ? e.url : base + e.url;\
                                 if (%s(i, url, e.srcElement.baseURI)) { e.preventDefault();  }\
                               }; window.addEventListener('beforeload', dwbAdblockBeforeLoad, true);";
 
@@ -226,6 +229,7 @@ adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObje
   SoupURI *suri = NULL, *sbaseuri = NULL;
   gboolean ret = false;
   gboolean thirdparty;
+
   if(argc == 3 && JSValueIsNumber(ctx, argv[0])) {
     int options = (int)JSValueToNumber(ctx, argv[0], &exc);
     if (exc != NULL) 

@@ -1,12 +1,66 @@
-#!/bin/bash
+#!/bin/bash 
 
-URL=${1:-https://easylist-downloads.adblockplus.org/easylist.txt}
+# Filterlist, uncomment to download lists, mutliple lists are supported, but
+# don't choose to many lists since it slows down the adblocker
+URLS=(
 
-UNSUPPORTED="[\$,~]{1}(xbl|ping|xmlhttprequest|dtd|elemhide|other|collapse|donottrack)(,|$)|[\$,]object-subrequest(,|$)"
+# Easylist
+# Easylist English
+https://easylist-downloads.adblockplus.org/easylist.txt
+
+# Easylist Privacy, blocks tracking
+#https://easylist-downloads.adblockplus.org/easyprivacy.txt
+
+# Easylist Without element hiding
+#https://easylist-downloads.adblockplus.org/easylist_noelemhide.txt
+
+# Easylist additional subscriptions
+# Easylist Germany
+https://easylist-downloads.adblockplus.org/easylistgermany.txt
+
+# Easylist Italy
+#https://easylist-downloads.adblockplus.org/easylistitaly.txt
+
+# Easylist Dutch
+#http://dutchadblockfilters.googlecode.com/svn/trunk/AdBlock_Dutch_hide.txt
+
+# Easylist French
+#http://lian.info.tm/liste_fr.txt
+
+# Easylist China
+#http://adblock-chinalist.googlecode.com/svn/trunk/adblock.txt
+
+# Easylist Bulgaria
+#http://stanev.org/abp/adblock_bg.txt
+
+# Easylist Indonesia
+#http://indonesianadblockrules.googlecode.com/hg/subscriptions/abpindo.txt
+
+# Easylist Finland
+#http://www.wiltteri.net/wiltteri.txt
+
+# Easylist Greece 
+#http://www.void.gr/kargig/void-gr-filters.txt
+
+# Adversity
+# Adversity English list
+#https://adversity.googlecode.com/hg/Adversity.txt  
+
+# Adversity Privacy
+#https://adversity.googlecode.com/hg/Adversity-Tracking.txt
+
+# Fanboy
+# Fanboy English list
+#http://www.fanboy.co.nz/adblock/fanboy-adblock.txt
+
+# Fanboy Tracking list
+#http://www.fanboy.co.nz/adblock/fanboy-tracking.txt
+
+)
+
+UNSUPPORTED="[\$,~]{1}(xbl|ping|xmlhttprequest|dtd|elemhide|other|collapse|donottrack|popup)(,|$)|[\$,]object-subrequest(,|$)"
 CONFIG=${XDG_CONFIG_HOME}/dwb/settings
 
-TMP=$(mktemp)
-wget -O ${TMP} ${URL} &>/dev/null
 declare PROFILE
 while read; do 
   if [[ ${REPLY} =~ ^\[ ]]; then 
@@ -26,9 +80,22 @@ fi
 
 echo "Saving filterlist as ${DEST}"
 
-BEFORE=( $(wc -l "${TMP}") )
+rm ${DEST}
+AFTER=0
+BEFORE=0
+REMOVED=0
+TOTAL=0
+for URL in ${URLS[@]}; do 
+  TMP=$(mktemp)
+  echo "Grabbing ${URL}"
+  wget -O ${TMP} ${URL} &>/dev/null
+  BEFORE=( $(wc -l "${TMP}") )
 
-sed -r "/${UNSUPPORTED}/d" "${TMP}" > ${DEST}
-rm ${TMP}
-AFTER=( $(wc -l "${DEST}") )
-printf "Removed $((${BEFORE} - ${AFTER})) unsupported of ${BEFORE} filters\n"
+  ((BEFORE+=TOTAL))
+  sed -r "/${UNSUPPORTED}/d" "${TMP}" >> ${DEST}
+  rm ${TMP}
+  AFTER=( $(wc -l "${DEST}") )
+  ((REMOVED=BEFORE-AFTER))
+  TOTAL=${BEFORE}
+done
+printf "Removed $((REMOVED)) unsupported of ${BEFORE} filters\n"
