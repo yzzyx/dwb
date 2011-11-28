@@ -93,5 +93,7 @@ DwbStatus commands_open_editor(KeyMap *, Arg *);
 DwbStatus commands_insert_mode(KeyMap *, Arg *);
 DwbStatus commands_command_mode(KeyMap *, Arg *);
 DwbStatus commands_only(KeyMap *, Arg *);
+DwbStatus commands_toggle_bars(KeyMap *, Arg *);
+DwbStatus commands_presentation_mode(KeyMap *, Arg *);
 
 #endif

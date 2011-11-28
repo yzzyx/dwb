@@ -591,6 +591,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
 /* view_entry_size_allocate_cb {{{*/
 void 
 view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
+  dwb.misc.bar_height = rect->height;
   gtk_widget_set_size_request(v->entry, -1, rect->height);
   g_signal_handlers_disconnect_by_func(entry, view_entry_size_allocate_cb, v);
 }/*}}}*/
@@ -932,7 +933,10 @@ view_create_web_view() {
   gtk_widget_show(v->bottombox);
   gtk_widget_show_all(v->scroll);
   gtk_widget_show_all(v->tabevent);
-  g_signal_connect(v->bottombox, "size-allocate", G_CALLBACK(view_entry_size_allocate_cb), v);
+  if (dwb.misc.bar_height != 0) 
+    gtk_widget_set_size_request(v->entry, -1, dwb.misc.bar_height);
+  else 
+    g_signal_connect(v->bottombox, "size-allocate", G_CALLBACK(view_entry_size_allocate_cb), v);
 
   return v;
 } /*}}}*/
@@ -1004,7 +1008,8 @@ view_remove(GList *g) {
     if (gl == dwb.state.fview) {
       if ( !(dwb.state.fview = dwb.state.fview->prev) ) {
         dwb.state.fview = g_list_first(dwb.state.views)->next;
-        gtk_widget_show_all(dwb.gui.topbox);
+        if (dwb.state.bar_visible & BAR_VIS_TOP) 
+          gtk_widget_show_all(dwb.gui.topbox);
       }
     }
   }
@@ -1134,8 +1139,6 @@ view_add(const char *uri, gboolean background) {
     dwb_unfocus();
     dwb_focus(ret);
   }
-
-
 
   view_init_signals(ret);
   view_init_settings(ret);

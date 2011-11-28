@@ -84,6 +84,10 @@ focus_prev Focus previous view
 push_master Push to master area
 toggle_bottomstack Toggle bottomstack
 fullscreen Toggle fullscreen
+toggle_bars Toggle tabbar and statusbar
+toggle_topbar Toggle tabbar
+toggle_bottombar Toggle bottombar
+presentation_mode Toggle presentation mode
 
 # completion Completion
 buffers Show all open tabs

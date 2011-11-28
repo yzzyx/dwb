@@ -125,6 +125,7 @@
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
 #define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL, false)
+#define BOOLEAN(X)                  (!(!(X)))
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 
@@ -241,6 +242,10 @@ typedef enum {
   HIDE_TB_ALWAYS    = 0x03,
   HIDE_TB_TILED     = 0x05,
 } TabBarVisible;
+typedef enum {
+  BAR_VIS_TOP = 1<<0,
+  BAR_VIS_STATUS = 1<<1,
+} BarVisibility;
 
 typedef enum {
   NORMAL_MODE           = 1<<0,
@@ -490,6 +495,7 @@ struct _State {
 
   TabBarVisible tabbar_visible;
   gboolean fullscreen;
+  BarVisibility bar_visible;
 };
 
 typedef enum _SettingsApply {
@@ -623,6 +629,7 @@ struct _Misc {
 
   char *pbbackground;
   gboolean top_statusbar;
+  int bar_height;
   int synctimer;
 };
 struct _Files {

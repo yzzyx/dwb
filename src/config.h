@@ -153,12 +153,24 @@ static KeyValue KEYS[] = {
   { "fullscreen",             {   "F11",         GDK_CONTROL_MASK }, }, 
   { "pass_through",           {   "i",        GDK_CONTROL_MASK }, }, 
   { "open_editor",            {   "e",        GDK_CONTROL_MASK }, }, 
+  { "toggle_bars",            {   "xx",        0 }, }, 
+  { "toggle_topbar",            {   "xt",        0 }, }, 
+  { "toggle_bottombar",            {   "xb",        0 }, }, 
+  { "presentation_mode",            {   "F12",        GDK_CONTROL_MASK }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
   { { "add_view",              "Add a new view",                    }, 1, 
     (Func)commands_add_view,            NULL,                              ALWAYS_SM,     { .p = NULL }, },
+  { { "toggle_bars",    "Toggle visibility of status and tabbar" },                 1, 
+    (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  } }, 
+  { { "toggle_topbar",    "Toggle visibility of tabbar" },                 1, 
+    (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_TOP  } }, 
+  { { "toggle_bottombar",    "Toggle visibility of statusbar" },                 1, 
+    (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS } }, 
+  { { "presentation_mode",    "Toggle presentation mode" },                 1, 
+    (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  } }, 
   { { "allow_cookie",          "Cookie allowed",                    }, 1, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, 

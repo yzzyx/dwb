@@ -1056,8 +1056,10 @@ dwb_eval_tabbar_visible(const char *arg) {
 /* dwb_toggle_tabbar() {{{*/
 void
 dwb_toggle_tabbar(void) {
+  if (! (dwb.state.bar_visible & BAR_VIS_TOP)) 
+    return;
   gboolean visible = gtk_widget_get_visible(dwb.gui.topbox);
-  if (visible ) {
+  if (visible) {
     if (dwb.state.tabbar_visible != HIDE_TB_NEVER && 
         (dwb.state.tabbar_visible == HIDE_TB_ALWAYS || (HIDE_TB_TILED && !(dwb.state.layout & MAXIMIZED)))) {
       gtk_widget_hide(dwb.gui.topbox);
@@ -1172,6 +1174,10 @@ dwb_entry_set_text(const char *text) {
 /* dwb_focus_entry() {{{*/
 void 
 dwb_focus_entry() {
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) {
+    gtk_widget_show(CURRENT_VIEW()->statusbox);
+    gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
+  }
   gtk_widget_show(dwb.gui.entry);
   gtk_widget_grab_focus(dwb.gui.entry);
   gtk_widget_set_can_focus(CURRENT_WEBVIEW_WIDGET(), false);
@@ -1183,7 +1189,10 @@ void
 dwb_focus_scroll(GList *gl) {
   if (gl == NULL)
     return;
+
   View *v = gl->data;
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS))
+    gtk_widget_hide(v->statusbox);
   gtk_widget_set_can_focus(v->web, true);
   gtk_widget_grab_focus(v->web);
   gtk_widget_hide(dwb.gui.entry);
@@ -2944,6 +2953,8 @@ dwb_init() {
   dwb.state.last_cookies = NULL;
   dwb.state.fullscreen = false;
 
+  dwb.state.bar_visible = BAR_VIS_TOP | BAR_VIS_STATUS;
+
   dwb.comps.completions = NULL; 
   dwb.comps.active_comp = NULL;
   dwb.comps.view = NULL;
@@ -2953,6 +2964,7 @@ dwb_init() {
   dwb.misc.proxyuri = NULL;
   dwb.misc.scripts = NULL;
   dwb.misc.synctimer = 0;
+  dwb.misc.bar_height = 0;
 
   char *path = util_get_data_file(PLUGIN_FILE);
   if (path) {

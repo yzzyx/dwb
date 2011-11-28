@@ -449,13 +449,29 @@ commands_push_master(KeyMap *km, Arg *arg) {
   return view_push_master(arg);
 }/*}}}*/
 
+static gboolean
+commands_hide_tabbar(int *running) {
+  if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
+    gtk_widget_hide(dwb.gui.topbox);
+  }
+  *running = 0;
+  return false;
+}
+
 /* commands_focus(KeyMap *km, Arg *arg) {{{*/
 DwbStatus 
 commands_focus(KeyMap *km, Arg *arg) {
+  static int running;
   if (dwb.state.views->next) {
     int pos = modulo(g_list_position(dwb.state.views, dwb.state.fview) + NUMMOD * arg->n, g_list_length(dwb.state.views));
     GList *g = g_list_nth(dwb.state.views, pos);
     dwb_focus_view(g);
+    if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
+      gtk_widget_show(dwb.gui.topbox);
+      if (running != 0) 
+        g_source_remove(running);
+      running = g_timeout_add(2000, (GSourceFunc)commands_hide_tabbar, &running);
+    }
     return STATUS_OK;
   }
   return STATUS_ERROR;
@@ -842,4 +858,24 @@ commands_only(KeyMap *km, Arg *arg) {
   }
   return ret;
 }/*}}}*/
+/* commands_toggle_bars {{{*/
+DwbStatus
+commands_toggle_bars(KeyMap *km, Arg *arg) {
+  dwb.state.bar_visible ^= arg->n;
+  if (dwb.state.tabbar_visible != HIDE_TB_ALWAYS && (dwb.state.tabbar_visible == HIDE_TB_NEVER || (HIDE_TB_TILED && (dwb.state.layout & MAXIMIZED)))) {
+    gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
+  }
+  for (GList *l = dwb.state.views; l; l=l->next) {
+    gtk_widget_set_visible(VIEW(l)->statusbox, dwb.state.bar_visible & BAR_VIS_STATUS);
+  }
+  return STATUS_OK;
+}/*}}}*/
+DwbStatus
+commands_presentation_mode(KeyMap *km, Arg *arg) {
+  if (! dwb.state.fullscreen)
+    dwb.state.bar_visible = BAR_VIS_TOP | BAR_VIS_STATUS;
+  commands_fullscreen(km, arg);
+  commands_toggle_bars(km, arg);
+  return STATUS_OK;
+}
 /*}}}*/
