@@ -470,7 +470,6 @@ adblock_disconnect(GList *gl) {
   }
 }/*}}}*/
 
-
 /* adblock_connect() {{{*/
 void 
 adblock_connect(GList *gl) {
@@ -589,6 +588,7 @@ adblock_rule_parse(char *pattern) {
         else if (!strcmp(o, "object")) {
           attributes |= (AA_OBJECT << inverse);
         }
+#if 0
         else if (!strcmp(o, "xbl")) {
           adblock_warn_ignored("Adblock option 'xbl' isn't supported", pattern);
           goto error_out;
@@ -601,21 +601,9 @@ adblock_rule_parse(char *pattern) {
           adblock_warn_ignored("Adblock option 'xmlhttprequest' isn't supported", pattern);
           goto error_out;
         }
-        else if (!strcmp(o, "object-subrequest")) {
-          if (! inverse) {
-            adblock_warn_ignored("Adblock option 'object-subrequest' isn't supported", pattern);
-            goto error_out;
-          }
-        }
         else if (!strcmp(o, "dtd")) {
           adblock_warn_ignored("Adblock option 'dtd' isn't supported", pattern);
           goto error_out;
-        }
-        else if (!strcmp(o, "subdocument")) {
-          attributes |= (AA_SUBDOCUMENT << inverse);
-        }
-        else if (!strcmp(o, "document")) {
-          attributes |= (AA_DOCUMENT << inverse);
         }
         else if (!strcmp(o, "elemhide")) {
           adblock_warn_ignored("Adblock option 'elemhide' isn't supported", pattern);
@@ -633,6 +621,19 @@ adblock_rule_parse(char *pattern) {
           adblock_warn_ignored("Adblock option 'donottrack' isn't supported", pattern);
           goto error_out;
         }
+#endif
+        else if (!strcmp(o, "object-subrequest")) {
+          if (! inverse) {
+            adblock_warn_ignored("Adblock option 'object-subrequest' isn't supported", pattern);
+            goto error_out;
+          }
+        }
+        else if (!strcmp(o, "subdocument")) {
+          attributes |= (AA_SUBDOCUMENT << inverse);
+        }
+        else if (!strcmp(o, "document")) {
+          attributes |= (AA_DOCUMENT << inverse);
+        }
         else if (!strcmp(o, "match-case"))
           option |= AO_MATCH_CASE;
         else if (!strcmp(o, "third-party")) {
@@ -645,6 +646,12 @@ adblock_rule_parse(char *pattern) {
         }
         else if (g_str_has_prefix(o, "domain=")) {
           domains = g_strsplit(options_arr[i] + 7, "|", -1);
+        }
+        else {
+          char warning[256];
+          snprintf(warning, 255, "Adblock option '%s' isn't supported", o);
+          adblock_warn_ignored(warning, pattern);
+          goto error_out;
         }
       }
       tmp = tmp_a;

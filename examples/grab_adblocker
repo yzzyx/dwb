@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 # Filterlist, uncomment to download lists, mutliple lists are supported, but
-# don't choose to many lists since it slows down the adblocker
+# don't choose too many lists since it will down the adblocker
 URLS=(
 
 # Easylist
@@ -102,4 +102,7 @@ for URL in ${URLS[@]}; do
   ((REMOVED=BEFORE-AFTER))
   TOTAL=${BEFORE}
 done
-printf "Removed $((REMOVED)) unsupported of ${BEFORE} filters\n"
+echo "Removed ${REMOVED} unsupported of ${BEFORE} filters."
+echo "Removing comments."
+sed -i "/^[!\[]/d" "${DEST}"
+echo "Done."
