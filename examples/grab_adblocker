@@ -6,7 +6,7 @@ URLS=(
 
 # Easylist
 # Easylist English
-https://easylist-downloads.adblockplus.org/easylist.txt
+#https://easylist-downloads.adblockplus.org/easylist.txt
 
 # Easylist Privacy, blocks tracking
 #https://easylist-downloads.adblockplus.org/easyprivacy.txt
@@ -16,7 +16,7 @@ https://easylist-downloads.adblockplus.org/easylist.txt
 
 # Easylist additional subscriptions
 # Easylist Germany
-https://easylist-downloads.adblockplus.org/easylistgermany.txt
+#https://easylist-downloads.adblockplus.org/easylistgermany.txt
 
 # Easylist Italy
 #https://easylist-downloads.adblockplus.org/easylistitaly.txt
@@ -58,6 +58,10 @@ https://easylist-downloads.adblockplus.org/easylistgermany.txt
 
 )
 
+if [ ${#URLS[@]} -eq 0 ]; then 
+  echo "No urls specified, you must uncomment at least one url." 
+  exit 1
+fi
 UNSUPPORTED="[\$,~]{1}(xbl|ping|xmlhttprequest|dtd|elemhide|other|collapse|donottrack|popup)(,|$)|[\$,]object-subrequest(,|$)"
 CONFIG=${XDG_CONFIG_HOME}/dwb/settings
 
