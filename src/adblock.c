@@ -349,6 +349,8 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
   GSList *list;
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
+  WebKitDOMStyleSheetList *slist = NULL;
+  WebKitDOMStyleSheet *ssheet = NULL;
   if (status == WEBKIT_LOAD_COMMITTED) {
     const char *name = "dwbGoAndBlockAdsFromTheMainFrameCallback";
     js_create_callback(frame, name, (JSObjectCallAsFunctionCallback)adblock_js_callback);
@@ -433,12 +435,13 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
         g_string_erase(css_rule, css_rule->len-1, 1);
       g_string_append(css_rule, "{display:none!important;}");
       WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-      WebKitDOMStyleSheetList *slist = webkit_dom_document_get_style_sheets(doc);
-      if (slist != NULL) {
-        WebKitDOMStyleSheet *ssheet = webkit_dom_style_sheet_list_item(slist, 0);
+      slist = webkit_dom_document_get_style_sheets(doc);
+      if (slist) {
+        ssheet = webkit_dom_style_sheet_list_item(slist, 0);
+      }
+      if (ssheet) {
         webkit_dom_css_style_sheet_insert_rule((void*)ssheet, css_rule->str, 0, NULL);
         g_object_unref(ssheet);
-        g_object_unref(slist);
       }
       else {
         WebKitDOMElement *style = webkit_dom_document_create_element(doc, "style", NULL);
@@ -448,6 +451,8 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
         g_object_unref(style);
         g_object_unref(head);
       }
+      if (slist)
+        g_object_unref(slist);
       g_object_unref(doc);
       g_string_free(css_rule, true);
     }
