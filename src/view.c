@@ -923,6 +923,10 @@ view_create_web_view() {
     gtk_box_pack_start(GTK_BOX(v->vbox), v->bottombox, false, false, 0);
   }
 
+  if (dwb.misc.bar_height != 0) 
+    gtk_widget_set_size_request(v->entry, -1, dwb.misc.bar_height);
+  else 
+    g_signal_connect(v->bottombox, "size-allocate", G_CALLBACK(view_entry_size_allocate_cb), v);
   gtk_widget_show(v->vbox);
   gtk_widget_show(v->lstatus);
   gtk_widget_show(v->entry);
@@ -930,13 +934,9 @@ view_create_web_view() {
   gtk_widget_show(v->rstatus);
   gtk_widget_show(status_hbox);
   gtk_widget_show(v->statusbox);
-  gtk_widget_show(v->bottombox);
+  gtk_widget_show_all(v->bottombox);
   gtk_widget_show_all(v->scroll);
   gtk_widget_show_all(v->tabevent);
-  if (dwb.misc.bar_height != 0) 
-    gtk_widget_set_size_request(v->entry, -1, dwb.misc.bar_height);
-  else 
-    g_signal_connect(v->bottombox, "size-allocate", G_CALLBACK(view_entry_size_allocate_cb), v);
 
   return v;
 } /*}}}*/
