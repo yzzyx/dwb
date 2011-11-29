@@ -20,7 +20,7 @@ install-man: all
 
 install-data: all
 	install -Dm 644 $(JSDIR)/hints.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js
-	install -Dm 644 $(JSDIR)/autoscroll.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/autoscroll.js
+	install -Dm 644 $(JSDIR)/autoscroll.all.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/autoscroll.all.js
 	install -Dm 644 $(LIBDIR)/$(INFO_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(INFO_FILE)
 	install -Dm 644 $(LIBDIR)/$(HEAD_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(HEAD_FILE)
 	install -Dm 644 $(LIBDIR)/$(SETTINGS_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(SETTINGS_FILE)

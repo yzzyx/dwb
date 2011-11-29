@@ -48,6 +48,7 @@ static gboolean view_entry_keyrelease_cb(GtkWidget *, GdkEventKey *);
 static gboolean view_entry_keypress_cb(GtkWidget *, GdkEventKey *, GList *);
 static gboolean view_tab_button_press_cb(GtkWidget *, GdkEventButton *, GList *);
 static gboolean view_entry_activate(GList *gl, GdkEventKey *e);
+static void view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *, GList *);
 
 /* WEB_VIEW_CALL_BACKS {{{*/
 
@@ -169,6 +170,18 @@ static gboolean
 view_close_web_view_cb(WebKitWebView *web, GList *gl) {
   view_remove(gl);
   return true;
+}/*}}}*/
+
+/* view_frame_committed_cb {{{*/
+static void 
+view_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
+  dwb_execute_script(frame, dwb.misc.allscripts, false);
+}/*}}}*/
+
+/* view_frame_created_cb {{{*/
+static void 
+view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
+  g_signal_connect(frame, "load-committed", G_CALLBACK(view_frame_committed_cb), gl);
 }/*}}}*/
 
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
@@ -796,6 +809,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
   v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
   v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
+  v->status->signals[SIG_FRAME_CREATED]         = g_signal_connect(v->web, "frame-created",                         G_CALLBACK(view_frame_created_cb), gl);
 
   v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(view_load_status_cb), gl);
   v->status->signals[SIG_LOAD_ERROR]            = g_signal_connect(v->web, "load-error",                            G_CALLBACK(view_load_error_cb), gl);

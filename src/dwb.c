@@ -2628,19 +2628,22 @@ dwb_init_settings() {
 void 
 dwb_init_scripts() {
   FREE(dwb.misc.scripts);
-  GString *buffer = g_string_new(NULL);
+  GString *normalbuffer = g_string_new(NULL);
+  GString *allbuffer    = g_string_new(NULL);
 
   setlocale(LC_NUMERIC, "C");
   /* user scripts */
-  util_get_directory_content(&buffer, dwb.files.scriptdir);
+  util_get_directory_content(&normalbuffer, dwb.files.scriptdir, "js");
+  util_get_directory_content(&allbuffer, dwb.files.scriptdir, "all.js");
 
   /* systemscripts */
   char *dir = NULL;
   if ( (dir = util_get_system_data_dir("scripts")) ) {
-    util_get_directory_content(&buffer, dir);
+    util_get_directory_content(&normalbuffer, dir, "js");
+    util_get_directory_content(&allbuffer, dir, "all.js");
     g_free(dir);
   }
-  g_string_append_printf(buffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\", %s);", 
+  g_string_append_printf(normalbuffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\", %s);", 
       GET_CHAR("hint-letter-seq"),
       GET_CHAR("hint-font"),
       GET_CHAR("hint-style"), 
@@ -2651,8 +2654,11 @@ dwb_init_scripts() {
       GET_CHAR("hint-border"), 
       GET_DOUBLE("hint-opacity"),
       GET_BOOL("hint-highlight-links") ? "true" : "false");
-  dwb.misc.scripts = buffer->str;
-  g_string_free(buffer, false);
+  g_string_append(normalbuffer, allbuffer->str);
+  dwb.misc.scripts = normalbuffer->str;
+  dwb.misc.allscripts = allbuffer->str;
+  g_string_free(normalbuffer, false);
+  g_string_free(allbuffer, false);
 }/*}}}*/
 
 /* dwb_init_style() {{{*/

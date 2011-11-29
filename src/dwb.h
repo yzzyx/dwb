@@ -357,6 +357,7 @@ enum Signal {
   SIG_ENTRY_KEY_RELEASE,
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
+  SIG_FRAME_CREATED, 
 
   SIG_PLUGINS_LOAD,
   SIG_PLUGINS_FRAME_LOAD,
@@ -599,7 +600,10 @@ struct _Gui {
 struct _Misc {
   const char *name;
   const char *prog_path;
+  /* applied to the mainframe */
   char *scripts;
+  /* applied to all frames */
+  char *allscripts;
   const char *profile;
   const char *default_search;
   SoupSession *soupsession;

@@ -260,26 +260,34 @@ util_get_directory_entries(const char *path, const char *text) {
 }/*}}}*/
 /*util_get_directory_content(GString **, const char *filename) {{{*/
 void 
-util_get_directory_content(GString **buffer, const char *dirname) {
+util_get_directory_content(GString **buffer, const char *dirname, const char *extension) {
   GDir *dir;
   char *content;
   GError *error = NULL;
   char *filename, *filepath;
+  char *firstdot;
 
   if ( (dir = g_dir_open(dirname, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
-      if (filename[0] != '.') {
-        filepath = g_build_filename(dirname, filename, NULL);
-        if (g_file_get_contents(filepath, &content, NULL, &error)) {
-          g_string_append((*buffer), content);
-        }
-        else {
-          fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
-          g_clear_error(&error);
-        }
-        FREE(filepath);
-        FREE(content);
+      if (*filename == '.') 
+        continue;
+      if (extension) {
+        firstdot = strchr(filename, '.');
+        if (!firstdot)
+          continue;
+        if (strcmp(firstdot+1, extension))
+          continue;
       }
+      filepath = g_build_filename(dirname, filename, NULL);
+      if (g_file_get_contents(filepath, &content, NULL, &error)) {
+        g_string_append((*buffer), content);
+      }
+      else {
+        fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
+        g_clear_error(&error);
+      }
+      FREE(filepath);
+      FREE(content);
     }
     g_dir_close (dir);
   }
