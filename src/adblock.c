@@ -59,28 +59,6 @@ typedef enum _AdblockAttribute {
 } AdblockAttribute;
 #define AA_FRAME (AA_SUBDOCUMENT | (AA_SUBDOCUMENT<<ADBLOCK_INVERSE)) 
 
-//typedef enum _ThirdParty {
-//  TP_TRUE,
-//  TP_FALSE,
-//  TP_UNKNOWN,
-//} ThirdParty;
-const static char *adblockscript = "function dwbAdblockBeforeLoad(e){\
-                                var i=%d; \
-                                if (e.srcElement instanceof HTMLScriptElement) \
-                                    i |= 1<<0; \
-                                else if (e.srcElement instanceof HTMLImageElement) \
-                                    i |= 1<<1; \
-                                else if (e.srcElement instanceof HTMLLinkElement && (e.srcElement.rel == 'stylesheet' || e.srcElement.type == 'text/css')) \
-                                    i |= 1<<2;\
-                                else if (e.srcElement instanceof HTMLObjectElement || e.srcElement instanceof HTMLEmbedElement) \
-                                    i |= 1<<3;\
-                                var base = e.srcElement.baseURI;\
-                                if (base.charAt(base.length-1) == '/' && e.url.charAt(0) == '/') \
-                                    base = base.substring(0, base.length-1);\
-                                var url = /^https?:\\/\\//.test(e.url) ? e.url : base + e.url;\
-                                if (%s(i, url, e.srcElement.baseURI)) { e.preventDefault();  }\
-                              }; window.addEventListener('beforeload', dwbAdblockBeforeLoad, true);";
-
 typedef struct _AdblockRule {
   GRegex *pattern;
   AdblockOption options;
@@ -95,6 +73,7 @@ typedef struct _AdblockElementHider {
 } AdblockElementHider;
 /*}}}*/
 
+static JSValueRef adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
 
 /* Static variables {{{*/
 static GPtrArray *_simple_rules;
@@ -230,70 +209,129 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
   return match;
 }/*}}}*//*}}}*/
 
-
-/* LOAD_CALLBACKS {{{*/
 /* adblock_js_callback {{{*/
-JSValueRef 
+static JSValueRef 
 adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
-  JSValueRef exc = NULL;
-  char *uri = NULL, *baseuri = NULL;
+  if (argc != 1 || ! JSValueIsObject(ctx, argv[0]))
+    return JSValueMakeBoolean(ctx, false);
+  char *tagname = NULL;
+  char *baseuri = NULL;
+  char *tmpuri = NULL;
+  char *uri = NULL;
+  char *rel = NULL; 
+  char *type = NULL;
   SoupURI *suri = NULL, *sbaseuri = NULL;
-  gboolean ret = false;
-  gboolean thirdparty;
+  JSValueRef exc = NULL;
+  JSObjectRef event = JSValueToObject(ctx, argv[0], &exc);
+  if (exc != NULL)
+    return NULL;
+  
 
-  if(argc == 3 && JSValueIsNumber(ctx, argv[0])) {
-    int options = (int)JSValueToNumber(ctx, argv[0], &exc);
-    if (exc != NULL) 
-      return JSValueMakeBoolean(ctx, false);
+  JSObjectRef srcElement = js_get_object_property(ctx, event, "srcElement"); 
+  if (srcElement == NULL)
+    return JSValueMakeBoolean(ctx, false);
+  baseuri = js_get_string_property(ctx, srcElement, "baseURI");
+  if (baseuri == NULL)
+    goto error_out;
+  tmpuri = js_get_string_property(ctx, event, "url");
+  if (tmpuri == NULL)
+    goto error_out;
 
-    uri = js_value_to_char(ctx, argv[1]); 
-    if (uri == NULL) 
-      return JSValueMakeBoolean(ctx, false);
+  int attributes = (int)js_get_double_property(ctx, function, "attributes");
 
-    baseuri = js_value_to_char(ctx, argv[2]);
-    if (baseuri == NULL) 
-      goto error_out;
+  tagname = js_get_string_property(ctx, srcElement, "tagName");
+  if (!g_strcmp0(tagname, "IMG"))
+    attributes |= AA_IMAGE;
+  else if (!g_strcmp0(tagname, "SCRIPT"))
+    attributes |= AA_SCRIPT;
+  else if (!g_strcmp0(tagname, "LINK")  ) {
+    rel  = js_get_string_property(ctx, srcElement, "rel");
+    type  = js_get_string_property(ctx, srcElement, "type");
+    if (!g_strcmp0(rel, "stylesheet") || !g_strcmp0(type, "text/css")) {
+      attributes |= AA_STYLESHEET;
+    }
+    FREE(rel);
+    FREE(type);
+  }
+  else if (!g_strcmp0(tagname, "OBJECT") || ! g_strcmp0(tagname, "EMBED")) {
+    attributes |= AA_OBJECT;
+  }
 
-    SoupURI *suri = soup_uri_new(uri);
-    if (suri == NULL) 
-      goto error_out;
-    SoupURI *sbaseuri = soup_uri_new(baseuri);
-    if (sbaseuri == NULL) 
-      goto error_out;
+  /* Check for relative paths.
+   * WebKit will only handle http(s), so it is not required to check for other
+   * schemes
+   */
+  if (! g_regex_match_simple("^https?://", tmpuri, 0, 0)) {
+    int offset = *tmpuri == '/' && g_str_has_suffix(baseuri, "/") ? 1 : 0;
+    uri = g_strconcat(baseuri, tmpuri+offset, NULL);
+    g_free(tmpuri);
+  }
+  else 
+    uri = tmpuri;
 
-    const char *host = soup_uri_get_host(suri);
-    if (host == NULL)
-      goto error_out;
-    const char *basehost = soup_uri_get_host(sbaseuri);
-    if (basehost == NULL)
-      goto error_out;
+  suri = soup_uri_new(uri);
+  if (suri == NULL) 
+    goto error_out;
+  sbaseuri = soup_uri_new(baseuri);
+  if (sbaseuri == NULL) 
+    goto error_out;
 
-    const char *domain = domain_get_base_for_host(host);
-    const char *basedomain = domain_get_base_for_host(basehost);
-    thirdparty = g_strcmp0(domain, basedomain);
-    if (!adblock_match(_exceptions, uri, host, domain, basehost, basedomain, options, thirdparty)) {
-      if (adblock_match(_rules, uri, host, domain, basehost, basedomain, options, thirdparty)) {
-        ret = true;
+  /* FIXME: soup_uri_get_host is just used to get parse the uri */
+  const char *host = soup_uri_get_host(suri);
+  if (host == NULL)
+    goto error_out;
+  const char *basehost = soup_uri_get_host(sbaseuri);
+  if (basehost == NULL)
+    goto error_out;
+  
+  const char *domain = domain_get_base_for_host(host);
+  const char *basedomain = domain_get_base_for_host(basehost);
+  gboolean thirdparty = g_strcmp0(domain, basedomain);
+  if (!adblock_match(_exceptions, uri, host, domain, basehost, basedomain, attributes, thirdparty)) {
+    if (adblock_match(_rules, uri, host, domain, basehost, basedomain, attributes, thirdparty)) {
+      JSObjectRef prevent = js_get_object_property(ctx, event, "preventDefault");
+      if (prevent) {
+        JSObjectCallAsFunction(ctx, prevent, event, 0, NULL, NULL);
       }
     }
   }
+
+
 error_out:
-  if (uri != NULL)      g_free(uri);
-  if (baseuri != NULL)  g_free(baseuri);
-  if (suri != NULL)     soup_uri_free(suri); 
-  if (sbaseuri != NULL) soup_uri_free(sbaseuri); 
-  return JSValueMakeBoolean(ctx, ret);
+  if (suri != NULL) soup_uri_free(suri);
+  if (sbaseuri != NULL) soup_uri_free(sbaseuri);
+  if (tagname) g_free(tagname);
+  if (baseuri) g_free(baseuri);
+  if (uri)     g_free(uri);
+
+
+  return NULL;
 }/*}}}*/
 
+/* LOAD_CALLBACKS {{{*/
+/* js_create_callback {{{*/
+static void
+adblock_create_js_callback(WebKitWebFrame *frame, JSObjectCallAsFunctionCallback function, int attr) {
+  JSContextRef ctx = webkit_web_frame_get_global_context(frame);
+  JSObjectRef globalObject = JSContextGetGlobalObject(ctx);
+  JSObjectRef newcall = JSObjectMakeFunctionWithCallback(ctx, NULL, function);
+  JSStringRef jsattr = JSStringCreateWithUTF8CString("attributes");
+  JSObjectSetProperty(ctx, newcall, jsattr, JSValueMakeNumber(ctx, attr), 
+      kJSPropertyAttributeDontDelete | kJSPropertyAttributeDontEnum | kJSPropertyAttributeReadOnly, NULL);
+  JSStringRelease(jsattr);
+  JSValueRef val = js_get_object_property(ctx, globalObject, "addEventListener");
+  if (val) {
+    JSStringRef beforeLoadString = JSStringCreateWithUTF8CString("beforeload");
+    JSValueRef values[3] = { JSValueMakeString(ctx, beforeLoadString), newcall, JSValueMakeBoolean(ctx, true), };
+    JSObjectCallAsFunction(ctx, JSValueToObject(ctx, val, NULL), globalObject, 3,  values, NULL);
+    JSStringRelease(beforeLoadString);
+  }
+}/*}}}*/
 
 /* adblock_frame_load_committed_cb {{{*/
 static void 
 adblock_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
-  const char *name = "dwbGoAndBlockAdsFromThisFrameCallback";
-  js_create_callback(frame, name, (JSObjectCallAsFunctionCallback)adblock_js_callback);
-  char *command = g_strdup_printf(adblockscript, AA_SUBDOCUMENT, name);
-  dwb_execute_script(frame, command, false);
-  g_free(command);
+  adblock_create_js_callback(frame, (JSObjectCallAsFunctionCallback)adblock_js_callback, AA_SUBDOCUMENT);
 }/*}}}*/
 
 /* adblock_frame_created_cb {{{*/
@@ -302,6 +340,7 @@ adblock_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
   g_signal_connect(frame, "load-committed", G_CALLBACK(adblock_frame_load_committed_cb), gl);
 }/*}}}*/
 
+/* adblock_resource_request_cb {{{*/
 static void 
 adblock_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
@@ -340,9 +379,8 @@ adblock_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame,
       webkit_network_request_set_uri(request, "about:blank");
     }
   }
-
+}/*}}}*/
  
-}
 /* adblock_load_status_cb(WebKitWebView *, GParamSpec *, GList *) {{{*/
 static void
 adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
@@ -352,20 +390,16 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   WebKitDOMStyleSheetList *slist = NULL;
   WebKitDOMStyleSheet *ssheet = NULL;
   if (status == WEBKIT_LOAD_COMMITTED) {
-    const char *name = "dwbGoAndBlockAdsFromTheMainFrameCallback";
-    js_create_callback(frame, name, (JSObjectCallAsFunctionCallback)adblock_js_callback);
-    char *command = g_strdup_printf(adblockscript, AA_DOCUMENT, name);
-    dwb_execute_script(frame, command, false);
-    g_free(command);
+    adblock_create_js_callback(frame, (JSObjectCallAsFunctionCallback)adblock_js_callback, AA_DOCUMENT);
   }
   else if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
     /* Get hostname and base_domain */
-    AdblockElementHider *hider;
     WebKitWebDataSource *datasource = webkit_web_frame_get_data_source(frame);
     WebKitNetworkRequest *request = webkit_web_data_source_get_request(datasource);
 
     SoupMessage *msg = webkit_network_request_get_message(request);
-    g_return_if_fail(msg != NULL);
+    if (msg == NULL)
+      return;
 
     SoupURI *suri = soup_message_get_uri(msg);
     g_return_if_fail(suri != NULL);
@@ -375,11 +409,12 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     g_return_if_fail(host != NULL);
     g_return_if_fail(base_domain != NULL);
 
-    GString *css_rule = NULL;
-    GRegex *regex = NULL;
+    AdblockElementHider *hider;
     char *pattern, *escaped, *replaced = NULL;
     char *tmpreplaced = g_strdup(_css_exceptions->str);
-    css_rule = g_string_new(NULL);
+    GString *css_rule = g_string_new(NULL);
+    GRegex *regex = NULL;
+
     /* get all subdomains */
     const char *subdomains[SUBDOMAIN_MAX];
     char *nextdot = NULL;
@@ -394,6 +429,7 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
         break;
     }
     subdomains[uc++] = NULL;
+
 
     for (int i=0; subdomains[i]; i++) {
       list = g_hash_table_lookup(_hider_rules, subdomains[i]);
@@ -423,7 +459,6 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     if (replaced != NULL) {
       g_string_append(css_rule, replaced);
       g_string_append_c(css_rule, ',');
-      g_free(replaced);
     }
     /* No exception-exceptions found, so we take all exceptions */
     else if (css_rule == NULL || css_rule->len == 0) {
@@ -456,6 +491,7 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
       g_object_unref(doc);
       g_string_free(css_rule, true);
     }
+    g_free(tmpreplaced);
   }
 }/*}}}*//*}}}*/
 

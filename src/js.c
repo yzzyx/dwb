@@ -19,18 +19,53 @@
 #include <JavaScriptCore/JavaScript.h>
 #include <webkit/webkit.h>
 #include <glib-2.0/glib.h>
+#include "js.h"
 #define JS_STRING_MAX 1024
 
+/* js_get_object_property {{{*/
+JSObjectRef 
+js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
+  JSValueRef exc = NULL;
+  JSObjectRef ret;
+  JSStringRef buffer = JSStringCreateWithUTF8CString(name);
+  JSValueRef val = JSObjectGetProperty(ctx, arg, buffer, &exc);
+  JSStringRelease(buffer);
+  if (exc != NULL || !JSValueIsObject(ctx, val)) 
+    return NULL;
 
-/* js_create_callback {{{*/
-void
-js_create_callback(WebKitWebFrame *frame, const char *name, JSObjectCallAsFunctionCallback function) {
-  JSContextRef ctx = webkit_web_frame_get_global_context(frame);
-  JSStringRef jsname = JSStringCreateWithUTF8CString(name);
-  JSObjectRef jsfunction = JSObjectMakeFunctionWithCallback(ctx, jsname, function);
-  JSObjectSetProperty(ctx, JSContextGetGlobalObject(ctx), jsname, jsfunction, 
-      kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, NULL);
-  JSStringRelease(jsname);
+  ret = JSValueToObject(ctx, val, &exc);
+  if (exc != NULL)
+    return NULL;
+  return ret;
+
+}/*}}}*/
+
+/* js_get_string_property {{{*/
+char * 
+js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
+  JSValueRef exc = NULL;
+  JSStringRef buffer = JSStringCreateWithUTF8CString(name);
+  JSValueRef val = JSObjectGetProperty(ctx, arg, buffer, &exc);
+  JSStringRelease(buffer);
+  if (exc != NULL || !JSValueIsString(ctx, val) )
+    return NULL;
+  return js_value_to_char(ctx, val);
+}/*}}}*/
+
+/* js_get_double_property {{{*/
+double  
+js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
+  double ret;
+  JSValueRef exc = NULL;
+  JSStringRef buffer = JSStringCreateWithUTF8CString(name);
+  JSValueRef val = JSObjectGetProperty(ctx, arg, buffer, &exc);
+  JSStringRelease(buffer);
+  if (exc != NULL || !JSValueIsNumber(ctx, val) )
+    return 0;
+  ret = JSValueToNumber(ctx, val, &exc);
+  if (exc != NULL)
+    return 0;
+  return ret;
 }/*}}}*/
 
 /* js_string_to_char 

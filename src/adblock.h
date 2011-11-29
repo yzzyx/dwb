@@ -28,7 +28,6 @@ void adblock_end();
 void adblock_connect(GList *gl);
 void adblock_disconnect(GList *gl);
 void adblock_set_user_stylesheet(const char *file);
-JSValueRef adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
 
 #endif // ADBLOCK_H
 #endif // DWB_ADBLOCKER

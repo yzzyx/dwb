@@ -28,6 +28,7 @@
 #include "html.h"
 #include "plugins.h"
 #include "local.h"
+#include "js.h"
 #ifdef DWB_ADBLOCKER
 #include "adblock.h"
 #include "domain.h"
@@ -1457,29 +1458,19 @@ dwb_update_hints(GdkEventKey *e) {
 char *
 dwb_execute_script(WebKitWebFrame *frame, const char *com, gboolean ret) {
   JSValueRef eval_ret;
-  size_t length;
-  char *retval;
 
   JSContextRef context = webkit_web_frame_get_global_context(frame);
   g_return_val_if_fail(context != NULL, NULL);
-  JSStringRef text = JSStringCreateWithUTF8CString(com);
 
   JSObjectRef global_object = JSContextGetGlobalObject(context);
   g_return_val_if_fail(global_object != NULL, NULL);
 
+  JSStringRef text = JSStringCreateWithUTF8CString(com);
   eval_ret = JSEvaluateScript(context, text, global_object, NULL, 0, NULL);
   JSStringRelease(text);
 
-  if (eval_ret) {
-    if (ret) {
-      JSStringRef string = JSValueToStringCopy(context, eval_ret, NULL);
-      length = JSStringGetMaximumUTF8CStringSize(string);
-      retval = g_new(char, length+1);
-      JSStringGetUTF8CString(string, retval, length);
-      JSStringRelease(string);
-      memset(retval+length, '\0', 1);
-      return retval;
-    }
+  if (eval_ret && ret) {
+    return js_value_to_char(context, eval_ret);
   }
   return NULL;
 }

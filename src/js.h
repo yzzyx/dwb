@@ -19,7 +19,11 @@
 #ifndef JS_H
 #define JS_H
 
-void js_create_callback(WebKitWebFrame *frame, const char *name, JSObjectCallAsFunctionCallback function);
 char * js_string_to_char(JSContextRef ctx, JSStringRef jsstring);
 char * js_value_to_char(JSContextRef ctx, JSValueRef value);
+JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
+JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
+char * js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name);
+double  js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *name);
+
 #endif
