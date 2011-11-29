@@ -289,7 +289,7 @@ error_out:
 /* adblock_frame_load_committed_cb {{{*/
 static void 
 adblock_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
-  const char *name = "scheissWerbung";
+  const char *name = "dwbGoAndBlockAdsFromThisFrameCallback";
   js_create_callback(frame, name, (JSObjectCallAsFunctionCallback)adblock_js_callback);
   char *command = g_strdup_printf(adblockscript, AA_SUBDOCUMENT, name);
   dwb_execute_script(frame, command, false);
@@ -350,10 +350,9 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   GSList *list;
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
   if (status == WEBKIT_LOAD_COMMITTED) {
-    const char *name = "scheissWerbung";
-    char *command = g_strdup_printf(adblockscript, AA_DOCUMENT, name);
-
+    const char *name = "dwbGoAndBlockAdsFromTheMainFrameCallback";
     js_create_callback(frame, name, (JSObjectCallAsFunctionCallback)adblock_js_callback);
+    char *command = g_strdup_printf(adblockscript, AA_DOCUMENT, name);
     dwb_execute_script(frame, command, false);
     g_free(command);
   }
@@ -435,11 +434,21 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
       g_string_append(css_rule, "{display:none!important;}");
       WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
       WebKitDOMStyleSheetList *slist = webkit_dom_document_get_style_sheets(doc);
-      WebKitDOMStyleSheet *ssheet = webkit_dom_style_sheet_list_item(slist, 0);
-      webkit_dom_css_style_sheet_insert_rule((void*)ssheet, css_rule->str, 0, NULL);
+      if (slist != NULL) {
+        WebKitDOMStyleSheet *ssheet = webkit_dom_style_sheet_list_item(slist, 0);
+        webkit_dom_css_style_sheet_insert_rule((void*)ssheet, css_rule->str, 0, NULL);
+        g_object_unref(ssheet);
+        g_object_unref(slist);
+      }
+      else {
+        WebKitDOMElement *style = webkit_dom_document_create_element(doc, "style", NULL);
+        WebKitDOMHTMLHeadElement *head = webkit_dom_document_get_head(doc);
+        webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(style), css_rule->str, NULL);
+        webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(style), NULL);
+        g_object_unref(style);
+        g_object_unref(head);
+      }
       g_object_unref(doc);
-      g_object_unref(slist);
-      g_object_unref(ssheet);
       g_string_free(css_rule, true);
     }
   }
@@ -588,40 +597,6 @@ adblock_rule_parse(char *pattern) {
         else if (!strcmp(o, "object")) {
           attributes |= (AA_OBJECT << inverse);
         }
-#if 0
-        else if (!strcmp(o, "xbl")) {
-          adblock_warn_ignored("Adblock option 'xbl' isn't supported", pattern);
-          goto error_out;
-        }
-        else if (!strcmp(o, "ping")) {
-          adblock_warn_ignored("Adblock option 'ping' isn't supported", pattern);
-          goto error_out;
-        }
-        else if (!strcmp(o, "xmlhttprequest")) {
-          adblock_warn_ignored("Adblock option 'xmlhttprequest' isn't supported", pattern);
-          goto error_out;
-        }
-        else if (!strcmp(o, "dtd")) {
-          adblock_warn_ignored("Adblock option 'dtd' isn't supported", pattern);
-          goto error_out;
-        }
-        else if (!strcmp(o, "elemhide")) {
-          adblock_warn_ignored("Adblock option 'elemhide' isn't supported", pattern);
-          goto error_out;
-        }
-        else if (!strcmp(o, "other")) {
-          adblock_warn_ignored("Adblock option 'other' isn't supported", pattern);
-          goto error_out;
-        }
-        else if (!strcmp(o, "collapse")) {
-          adblock_warn_ignored("Adblock option 'collapse' isn't supported", pattern);
-          goto error_out;
-        }
-        else if (!strcmp(o, "donottrack")) {
-          adblock_warn_ignored("Adblock option 'donottrack' isn't supported", pattern);
-          goto error_out;
-        }
-#endif
         else if (!strcmp(o, "object-subrequest")) {
           if (! inverse) {
             adblock_warn_ignored("Adblock option 'object-subrequest' isn't supported", pattern);
@@ -648,6 +623,8 @@ adblock_rule_parse(char *pattern) {
           domains = g_strsplit(options_arr[i] + 7, "|", -1);
         }
         else {
+          /*  currently unsupported  xbl, ping, xmlhttprequest, dtd, elemhide,
+           *  other, collapse, donottrack, object-subrequest, popup */
           char warning[256];
           snprintf(warning, 255, "Adblock option '%s' isn't supported", o);
           adblock_warn_ignored(warning, pattern);

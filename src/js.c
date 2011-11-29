@@ -22,6 +22,7 @@
 #define JS_STRING_MAX 1024
 
 
+/* js_create_callback {{{*/
 void
 js_create_callback(WebKitWebFrame *frame, const char *name, JSObjectCallAsFunctionCallback function) {
   JSContextRef ctx = webkit_web_frame_get_global_context(frame);
@@ -30,7 +31,7 @@ js_create_callback(WebKitWebFrame *frame, const char *name, JSObjectCallAsFuncti
   JSObjectSetProperty(ctx, JSContextGetGlobalObject(ctx), jsname, jsfunction, 
       kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, NULL);
   JSStringRelease(jsname);
-}
+}/*}}}*/
 
 /* js_string_to_char 
  * Converts a JSStringRef, return a newly allocated char.
