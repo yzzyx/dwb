@@ -24,7 +24,6 @@
 
 static GHashTable *_tld_table;
 
-/* taken from libsoup */
 gboolean 
 domain_match(char **domains, const char *host, const char *base_domain) {
   g_return_val_if_fail(domains != NULL, false);
@@ -34,8 +33,13 @@ domain_match(char **domains, const char *host, const char *base_domain) {
 
   const char *subdomains[SUBDOMAIN_MAX];
   int sdc = 0;
-  gboolean found = false;
+
   gboolean domain_exc = false;
+  gboolean has_positive = false;
+  gboolean has_exception = false;
+  gboolean found_positive = false;
+  gboolean found_exception = false;
+
   char *real_domain;
   char *nextdot;
   /* extract subdomains */
@@ -52,28 +56,33 @@ domain_match(char **domains, const char *host, const char *base_domain) {
   /* TODO Maybe replace this with a hashtable 
    * in most cases the loop runs at most 9 times, 3 times each
    * */
-  for (int j=0; subdomains[j]; j++) {
-    for (int k=0; domains[k]; k++) {
+  for (int k=0; domains[k]; k++) {
+    for (int j=0; subdomains[j]; j++) {
       real_domain = domains[k];
       if (*real_domain == '~') {
         domain_exc = true;
         real_domain++;
+        has_exception = true;
       }
-      else 
+      else {
         domain_exc = false;
+        has_positive = true;
+      }
 
       if (!g_strcmp0(subdomains[j], real_domain)) {
-        /* Exceptions will be ignored immediately */
         if (domain_exc) {
-          return false;
+          found_exception = true;
         }
-        found = true;
+        else {
+          found_positive = true;
+        }
       }
-      else if (domain_exc) 
-        found = true;
     }
   }
-  return found;
+  if ((has_positive && found_positive && !found_exception) || (has_exception && !has_positive && !found_exception))
+    return true;
+
+  return false;
 }/*}}}*/
 
 const char *
