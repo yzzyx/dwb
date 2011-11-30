@@ -626,7 +626,6 @@ adblock_rule_parse(char *filterlist) {
       attributes = 0;
       rule = NULL;
       domain_arr = NULL;
-      /* TODO parse options */ 
       /* Exception */
       tmp = pattern;
       if (tmp[0] == '@' && tmp[1] == '@') {
@@ -665,7 +664,10 @@ adblock_rule_parse(char *filterlist) {
             attributes |= (AA_SUBDOCUMENT << inverse);
           }
           else if (!strcmp(o, "document")) {
-            attributes |= (AA_DOCUMENT << inverse);
+            if (exception) 
+              attributes |= (AA_DOCUMENT << inverse);
+            else 
+              adblock_warn_ignored("Adblock option 'document' can only be applied to exception rules", pattern);
           }
           else if (!strcmp(o, "match-case"))
             option |= AO_MATCH_CASE;
@@ -733,6 +735,7 @@ adblock_rule_parse(char *filterlist) {
         if (option & AO_BEGIN || option & AO_BEGIN_DOMAIN) {
           g_string_append_c(buffer, '^');
         }
+        /*  FIXME: possibly use g_regex_escape_string */
         for (const char *regexp_tmp = tmp; *regexp_tmp; regexp_tmp++ ) {
           switch (*regexp_tmp) {
             case '^' : g_string_append(buffer, "([\\x00-\\x24\\x26-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x80]|$)");
