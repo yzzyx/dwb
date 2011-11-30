@@ -3,7 +3,6 @@
 #include "view.h"
 
 #define ALLOWED(g)   (VIEW(g)->status->allowed_plugins)
-#define PLUGIN_REFS(g)   (VIEW(g)->status->allowed_plugins)
 #define PLUGIN_IMAGE_SIZE    "48px"
 
 static void 
@@ -21,8 +20,6 @@ plugins_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) 
     g_free(display);
     g_free(display_value);
   }
-  g_object_unref(parent);
-  g_object_unref(el);
 }
 
 static char *
@@ -59,14 +56,6 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
 
     g_object_set_data((gpointer)div, "dwb-plugin-element", element);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(div), "click", G_CALLBACK(plugins_onclick_cb), false, gl);
-    PLUGIN_REFS(gl) = g_slist_append(PLUGIN_REFS(gl), div);
-    PLUGIN_REFS(gl) = g_slist_append(PLUGIN_REFS(gl), element);
-
-    g_object_unref(parent);
-    g_object_unref(doc);
-    g_object_unref(win);
-    g_object_unref(style);
-    g_object_unref(div);
     return display;
   }
   return NULL;
@@ -86,9 +75,6 @@ plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl
 
     plugins_create_click_element(element, gl);
   }
-  g_free(type);
-  g_free(tagname);
-  g_object_unref(element);
   return true;
 }
 
@@ -97,13 +83,6 @@ plugins_remove_all(GList *gl) {
   if (ALLOWED(gl) != NULL) {
     ALLOWED(gl) = g_slist_remove_all(ALLOWED(gl), ALLOWED(gl)->data);
     ALLOWED(gl) = NULL;
-  }
-  if (PLUGIN_REFS(gl) != NULL) {
-    for (GSList *l = PLUGIN_REFS(gl); l; l=l->next) {
-      g_object_unref(l->data);
-    }
-    g_slist_free(PLUGIN_REFS(gl));
-    PLUGIN_REFS(gl) = NULL;
   }
 }
 
@@ -117,8 +96,6 @@ plugins_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
     WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeload", G_CALLBACK(plugins_before_load_cb), true, gl);
-    g_object_unref(doc);
-    PLUGIN_REFS(gl) = g_slist_append(PLUGIN_REFS(gl), win);
   }
 }
 
@@ -139,12 +116,8 @@ plugins_frame_load_status_cb(WebKitWebFrame *frame, GList *gl) {
         WebKitDOMDOMWindow *win = webkit_dom_html_iframe_element_get_content_window(iframe);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeload", G_CALLBACK(plugins_before_load_cb), true, gl);
       }
-      g_free(iframesrc);
-      g_object_unref(iframe);
     }
-    g_object_unref(frames);
   }
-  g_object_unref(doc);
 }
 void
 plugins_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
@@ -165,40 +138,26 @@ plugins_find_in_frames(WebKitDOMDocument *doc, char *selector) {
     element = (void*)webkit_dom_node_list_item(list, i);
     source = webkit_dom_html_object_element_get_data(WEBKIT_DOM_HTML_OBJECT_ELEMENT(element));
     if (!strcmp(selector, source)) 
-      goto clean;
-    g_object_unref(element);
-    g_free(source);
-    source = NULL;
+      return element;
   }
-  g_object_unref(list);
   list = webkit_dom_document_get_elements_by_tag_name(doc, "embed");
   for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
     element = (void*)webkit_dom_node_list_item(list, i);
     source = webkit_dom_html_embed_element_get_src(WEBKIT_DOM_HTML_EMBED_ELEMENT(element));
     if (!strcmp(selector, source)) 
-      goto clean;
-    g_object_unref(element);
-    g_free(source);
-    source = NULL;
+      return element;
   }
-  g_object_unref(list);
   list = webkit_dom_document_get_elements_by_tag_name(doc, "iframe");
   if (list != NULL) {
     for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
       iframe = (void*)webkit_dom_node_list_item(list, i);
       document = webkit_dom_html_iframe_element_get_content_document(iframe);
       element = plugins_find_in_frames(document, selector);
-      g_object_unref(iframe);
-      g_object_unref(document);
       if (element != NULL)
-        break;
+        return element;
     }
   }
-
-clean:
-  FREE(source);
-  g_object_unref(list);
-  return element;
+  return NULL;
 }
 
 GtkWidget * 
@@ -212,9 +171,7 @@ plugins_create_plugin_widget_cb(WebKitWebView *wv, char *mimetype, char *uri, GH
       webkit_dom_element_set_attribute(element, "style", "display:none!important", NULL);
       g_object_set_data((gpointer)element, "dwb-plugin-display", display);
     }
-    g_object_unref(element);
   }
-  g_object_unref(doc);
   return NULL;
 }
 void 

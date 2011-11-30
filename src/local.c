@@ -19,7 +19,6 @@ local_load_directory_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, "dwb_local_checkbox");
   webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), dwb.state.hidden_files);
   webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(local_toggle_hidden_cb), false, gl);
-  g_object_unref(doc);
   g_signal_handlers_disconnect_by_func(wv, local_load_directory_cb, gl);
 }/*}}}*/
 

@@ -607,7 +607,6 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
   if (info->id != NULL) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
     e = webkit_dom_document_get_element_by_id(doc, info->id);
-    g_object_unref(doc);
     if (e == NULL && (e = info->element) == NULL ) {
       goto clean;
     }
@@ -621,14 +620,9 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
     webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(e), content);
 
 clean:
-  if (e != NULL && e != info->element)
-    g_object_unref(e);
   unlink(info->filename);
   g_free(info->filename);
-  if (info->element != NULL)
-    g_object_unref(info->element);
   FREE(info->id);
-  FREE(info->tagname);
   g_free(info);
 }/*}}}*/
 
@@ -650,9 +644,6 @@ dwb_get_active_input(WebKitDOMDocument *doc) {
   else {
     ret = active;
   }
-  if (d != NULL)
-    g_object_unref(d);
-  g_free(tagname);
   return ret;
 }/*}}}*/
 
@@ -670,7 +661,6 @@ dwb_open_in_editor(void) {
     return STATUS_ERROR;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
   WebKitDOMElement *active = dwb_get_active_input(doc);
-  g_object_unref(doc);
   
   if (active == NULL) 
     return STATUS_ERROR;
@@ -787,10 +777,10 @@ dwb_follow_selection() {
   WebKitDOMDOMWindow *window = webkit_dom_document_get_default_view(doc);
   WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(window);
   if (selection == NULL)  
-    goto error_out;
+    return;
   range = webkit_dom_dom_selection_get_range_at(selection, 0, NULL);
   if (range == NULL) 
-    goto error_out;
+    return;
 
   WebKitDOMNode *document_element = WEBKIT_DOM_NODE(webkit_dom_document_get_document_element(doc));
   n = webkit_dom_range_get_start_container(range, NULL); 
@@ -801,15 +791,7 @@ dwb_follow_selection() {
     }
     tmp = n;
     n = webkit_dom_node_get_parent_node(tmp);
-    g_object_unref(tmp);
   }
-  g_object_unref(range);
-  g_object_unref(document_element);
-  g_free(href);
-error_out:
-  g_object_unref(window);
-  g_object_unref(doc);
-  g_object_unref(selection);
 }/*}}}*/
 
 /* dwb_open_startpage(GList *) {{{*/

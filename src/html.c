@@ -79,9 +79,7 @@ html_remove_item_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
     else if (!strcmp(uri, "dwb://downloads")) {
       dwb_remove_download(navigation);
     }
-    g_free(navigation);
   }
-  g_object_unref(target);
   return false;
 }
 void
@@ -92,7 +90,6 @@ html_load_status_cb(WebKitWebView *web, GParamSpec *p, GList *gl) {
     WebKitDOMHTMLElement *body = webkit_dom_document_get_body(doc);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(body), "click", G_CALLBACK(html_remove_item_cb), true, gl);
     g_signal_handlers_disconnect_by_func(web, html_load_status_cb, gl);
-    g_object_unref(doc);
   }
   else if (s == WEBKIT_LOAD_FAILED) {
     g_signal_handlers_disconnect_by_func(web, html_load_status_cb, gl);
@@ -148,14 +145,11 @@ html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView
     }
     else  
       value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(el));
-    g_free(type);
   }
   else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(el)) {
     value = webkit_dom_html_select_element_get_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(el));
   }
   dwb_set_setting(id, value);
-  g_free(value);
-  g_free(id);
   return true;
 }
 gboolean
@@ -170,7 +164,6 @@ html_keydown_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
     WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
     if (target != NULL) {
       webkit_dom_element_blur(WEBKIT_DOM_ELEMENT(target));
-      g_object_unref(target);
       return true;
     }
   }
@@ -184,7 +177,6 @@ html_focus_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
     dwb_change_mode(INSERT_MODE);
     ret = true;
   }
-  g_free(type);
   return ret;
 }
 void
@@ -213,8 +205,6 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
     }
   }
   FREE(value);
-  g_object_unref(doc);
-  g_object_unref(win);
 }
 void 
 html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
@@ -246,8 +236,6 @@ html_key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) 
   char *value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
   dwb_set_key(id, value);
-  g_free(value);
-  g_free(id);
   return true;
 }
 static gboolean
@@ -281,8 +269,6 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
         g_free(value);
       }
     }
-    g_object_unref(doc);
-    g_object_unref(win);
     g_signal_handlers_disconnect_by_func(wv, html_keys_load_cb, table);
     doc = webkit_web_view_get_dom_document(wv);
   }
