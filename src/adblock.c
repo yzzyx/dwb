@@ -542,237 +542,254 @@ adblock_warn_ignored(const char *message, const char *rule) {
   fprintf(stderr, "Adblock warning: Rule %s will be ignored\n", rule);
 }/*}}}*/
 
-/* adblock_rule_parse(char *pattern) return: DwbStatus {{{*/
-DwbStatus
-adblock_rule_parse(char *pattern) {
-  DwbStatus ret = STATUS_OK;
+/* adblock_rule_parse(char *filterlist)  {{{*/
+static void
+adblock_rule_parse(char *filterlist) {
+  char *content = util_get_file_content(filterlist);
+  char **lines = g_strsplit(content, "\n", -1);
+  char *pattern;
   GError *error = NULL;
-  char **domain_list;
-  GRegexCompileFlags regex_flags = G_REGEX_OPTIMIZE | G_REGEX_CASELESS;
-  if (pattern == NULL)
-    return STATUS_IGNORE;
-  g_strstrip(pattern);
-  if (strlen(pattern) == 0) 
-    return STATUS_IGNORE;
-  if (pattern[0] == '!' || pattern[0] == '[') {
-    return STATUS_IGNORE;
-  }
-  char *tmp = NULL;
-  char *tmp_a = NULL, *tmp_b = NULL, *tmp_c = NULL;
-  /* Element hiding rules */
-  if ( (tmp = strstr(pattern, "##")) != NULL) {
-    /* Match domains */
-    if (pattern[0] != '#') {
-      // TODO domain hashtable
-      char *domains = g_strndup(pattern, tmp-pattern);
-      AdblockElementHider *hider = adblock_element_hider_new();
-      domain_list = g_strsplit(domains, ",", -1);
-      hider->domains = domain_list;
-      
-      hider->selector = g_strdup(tmp+2);
-      char *domain;
-      GSList *list;
-      gboolean hider_exc = true;
-      for (; *domain_list; domain_list++) {
-        domain = *domain_list;
-        if (*domain == '~')
-          domain++;
-        else 
-          hider_exc = false;
-        list = g_hash_table_lookup(_hider_rules, domain);
-        if (list == NULL) {
-          list = g_slist_append(list, hider);
-          g_hash_table_insert(_hider_rules, g_strdup(domain), list);
+  char **domain_arr = NULL;
+  char *domains;
+  const char *domain;
+  const char *tmp;
+  const char *option_string;
+  const char *o;
+  char *tmp_a, *tmp_b, *tmp_c;
+  int length = 0;
+  int option, attributes, inverse;
+  gboolean exception;
+  GRegex *rule;
+  char **options_arr;
+  char warning[256];
+  for (int i=0; lines[i] != NULL; i++) {
+    pattern = lines[i];
+
+    //DwbStatus ret = STATUS_OK;
+    GRegexCompileFlags regex_flags = G_REGEX_OPTIMIZE | G_REGEX_CASELESS;
+    if (pattern == NULL)
+      break;
+    //return STATUS_IGNORE;
+    g_strstrip(pattern);
+    if (strlen(pattern) == 0) 
+      break;
+    //return STATUS_IGNORE;
+    if (pattern[0] == '!' || pattern[0] == '[') {
+      break;
+      //return STATUS_IGNORE;
+    }
+    tmp = tmp_a = tmp_b = tmp_c = NULL;
+    /* Element hiding rules */
+    if ( (tmp = strstr(pattern, "##")) != NULL) {
+      /* Match domains */
+      if (*pattern != '#') {
+        domains = g_strndup(pattern, tmp-pattern);
+        AdblockElementHider *hider = adblock_element_hider_new();
+        domain_arr = g_strsplit(domains, ",", -1);
+        hider->domains = domain_arr;
+
+        hider->selector = g_strdup(tmp+2);
+        GSList *list;
+        gboolean hider_exc = true;
+        for (; *domain_arr; domain_arr++) {
+          domain = *domain_arr;
+          if (*domain == '~')
+            domain++;
+          else 
+            hider_exc = false;
+          list = g_hash_table_lookup(_hider_rules, domain);
+          if (list == NULL) {
+            list = g_slist_append(list, hider);
+            g_hash_table_insert(_hider_rules, g_strdup(domain), list);
+          }
+          else 
+            list = g_slist_append(list, hider);
         }
-        else 
-          list = g_slist_append(list, hider);
+        hider->exception = hider_exc;
+        if (hider_exc) {
+          g_string_append(_css_exceptions, tmp + 2);
+          g_string_append_c(_css_exceptions, ',');
+        }
+        _hider_list = g_slist_append(_hider_list, hider);
+        g_free(domains);
       }
-      hider->exception = hider_exc;
-      if (hider_exc) {
-        g_string_append(_css_exceptions, tmp + 2);
-        g_string_append_c(_css_exceptions, ',');
+      /* general rules */
+      else {
+        g_string_append(_css_rules, tmp + 2);
+        g_string_append_c(_css_rules, ',');
       }
-      _hider_list = g_slist_append(_hider_list, hider);
-      g_free(domains);
     }
-    /* general rules */
-    else {
-      g_string_append(_css_rules, tmp + 2);
-      g_string_append_c(_css_rules, ',');
-    }
-  }
-  /*  Request patterns */
-  else { 
-    gboolean exception = false;
-    char *options = NULL;
-    int option = 0;
-    int attributes = 0;
-    void *rule = NULL;
-    char **domains = NULL;
-    /* TODO parse options */ 
-    /* Exception */
-    tmp = pattern;
-    if (tmp[0] == '@' && tmp[1] == '@') {
-      exception = true;
-      tmp +=2;
-    }
-    options = strstr(tmp, "$");
-    if (options != NULL) {
-      tmp_a = g_strndup(tmp, options - tmp);
-      char **options_arr = g_strsplit(options+1, ",", -1);
-      int inverse = 0;
-      char *o;
-      for (int i=0; options_arr[i] != NULL; i++) {
+    /*  Request patterns */
+    else { 
+      exception = false;
+      option = 0;
+      attributes = 0;
+      rule = NULL;
+      domain_arr = NULL;
+      /* TODO parse options */ 
+      /* Exception */
+      tmp = pattern;
+      if (tmp[0] == '@' && tmp[1] == '@') {
+        exception = true;
+        tmp +=2;
+      }
+      option_string = strstr(tmp, "$");
+      if (option_string != NULL) {
+        tmp_a = g_strndup(tmp, option_string - tmp);
+        options_arr = g_strsplit(option_string+1, ",", -1);
         inverse = 0;
-        o = options_arr[i];
-        /*  attributes */
-        if (*o == '~') {
-          inverse = ADBLOCK_INVERSE;
-          o++;
-        }
-        if (!strcmp(o, "script"))
-          attributes |= (AA_SCRIPT << inverse);
-        else if (!strcmp(o, "image"))
-          attributes |= (AA_IMAGE << inverse);
-        else if (!strcmp(o, "stylesheet"))
-          attributes |= (AA_STYLESHEET << inverse);
-        else if (!strcmp(o, "object")) {
-          attributes |= (AA_OBJECT << inverse);
-        }
-        else if (!strcmp(o, "object-subrequest")) {
-          if (! inverse) {
-            adblock_warn_ignored("Adblock option 'object-subrequest' isn't supported", pattern);
+        for (int i=0; options_arr[i] != NULL; i++) {
+          inverse = 0;
+          o = options_arr[i];
+          /*  attributes */
+          if (*o == '~') {
+            inverse = ADBLOCK_INVERSE;
+            o++;
+          }
+          if (!strcmp(o, "script"))
+            attributes |= (AA_SCRIPT << inverse);
+          else if (!strcmp(o, "image"))
+            attributes |= (AA_IMAGE << inverse);
+          else if (!strcmp(o, "stylesheet"))
+            attributes |= (AA_STYLESHEET << inverse);
+          else if (!strcmp(o, "object")) {
+            attributes |= (AA_OBJECT << inverse);
+          }
+          else if (!strcmp(o, "object-subrequest")) {
+            if (! inverse) {
+              adblock_warn_ignored("Adblock option 'object-subrequest' isn't supported", pattern);
+              goto error_out;
+            }
+          }
+          else if (!strcmp(o, "subdocument")) {
+            attributes |= (AA_SUBDOCUMENT << inverse);
+          }
+          else if (!strcmp(o, "document")) {
+            attributes |= (AA_DOCUMENT << inverse);
+          }
+          else if (!strcmp(o, "match-case"))
+            option |= AO_MATCH_CASE;
+          else if (!strcmp(o, "third-party")) {
+            if (inverse) {
+              option |= AO_NOTHIRDPARTY;
+            }
+            else {
+              option |= AO_THIRDPARTY;
+            }
+          }
+          else if (g_str_has_prefix(o, "domain=")) {
+            domain_arr = g_strsplit(options_arr[i] + 7, "|", -1);
+          }
+          else {
+            /*  currently unsupported  xbl, ping, xmlhttprequest, dtd, elemhide,
+             *  other, collapse, donottrack, object-subrequest, popup */
+            snprintf(warning, 255, "Adblock option '%s' isn't supported", o);
+            adblock_warn_ignored(warning, pattern);
             goto error_out;
           }
         }
-        else if (!strcmp(o, "subdocument")) {
-          attributes |= (AA_SUBDOCUMENT << inverse);
-        }
-        else if (!strcmp(o, "document")) {
-          attributes |= (AA_DOCUMENT << inverse);
-        }
-        else if (!strcmp(o, "match-case"))
-          option |= AO_MATCH_CASE;
-        else if (!strcmp(o, "third-party")) {
-          if (inverse) {
-            option |= AO_NOTHIRDPARTY;
-          }
-          else {
-            option |= AO_THIRDPARTY;
-          }
-        }
-        else if (g_str_has_prefix(o, "domain=")) {
-          domains = g_strsplit(options_arr[i] + 7, "|", -1);
+        tmp = tmp_a;
+        g_strfreev(options_arr);
+      }
+      length = strlen(tmp);
+      /* Beginning of pattern / domain */
+      if (length > 0 && tmp[0] == '|') {
+        if (length > 1 && tmp[1] == '|') {
+          option |= AO_BEGIN_DOMAIN;
+          tmp += 2;
+          length -= 2;
         }
         else {
-          /*  currently unsupported  xbl, ping, xmlhttprequest, dtd, elemhide,
-           *  other, collapse, donottrack, object-subrequest, popup */
-          char warning[256];
-          snprintf(warning, 255, "Adblock option '%s' isn't supported", o);
-          adblock_warn_ignored(warning, pattern);
+          option |= AO_BEGIN;
+          tmp++;
+          length--;
+        }
+      }
+      /* End of pattern */
+      if (length > 0 && tmp[length-1] == '|') {
+        tmp_b = g_strndup(tmp, length-1);
+        tmp = tmp_b;
+        option |= AO_END;
+        length--;
+      }
+      /* Regular Expression */
+      if (length > 0 && tmp[0] == '/' && tmp[length-1] == '/') {
+        tmp_c = g_strndup(tmp+1, length-2);
+
+        if ( (option & AO_MATCH_CASE) != 0) 
+          regex_flags &= ~G_REGEX_CASELESS;
+        rule = g_regex_new(tmp_c, regex_flags, 0, &error);
+
+        FREE(tmp_c);
+        if (error != NULL) {
+          adblock_warn_ignored("Invalid regular expression", pattern);
+          //ret = STATUS_ERROR;
+          g_clear_error(&error);
           goto error_out;
         }
       }
-      tmp = tmp_a;
-      g_strfreev(options_arr);
-    }
-    int length = strlen(tmp);
-    /* Beginning of pattern / domain */
-    if (length > 0 && tmp[0] == '|') {
-      if (length > 1 && tmp[1] == '|') {
-        option |= AO_BEGIN_DOMAIN;
-        tmp += 2;
-        length -= 2;
-      }
       else {
-        option |= AO_BEGIN;
-        tmp++;
-        length--;
-      }
-    }
-    /* End of pattern */
-    if (length > 0 && tmp[length-1] == '|') {
-      tmp_b = g_strndup(tmp, length-1);
-      tmp = tmp_b;
-      option |= AO_END;
-      length--;
-    }
-    /* Regular Expression */
-    if (length > 0 && tmp[0] == '/' && tmp[length-1] == '/') {
-      tmp_c = g_strndup(tmp+1, length-2);
-
-      if ( (option & AO_MATCH_CASE) != 0) 
-        regex_flags &= ~G_REGEX_CASELESS;
-      rule = g_regex_new(tmp_c, regex_flags, 0, &error);
-
-      FREE(tmp_c);
-      if (error != NULL) {
-        adblock_warn_ignored("Invalid regular expression", pattern);
-        ret = STATUS_ERROR;
-        g_clear_error(&error);
-        goto error_out;
-      }
-    }
-    else {
-      GString *buffer = g_string_new(NULL);
-      if (option & AO_BEGIN || option & AO_BEGIN_DOMAIN) {
-        g_string_append_c(buffer, '^');
-      }
-      for (char *regexp_tmp = tmp; *regexp_tmp; regexp_tmp++ ) {
-        switch (*regexp_tmp) {
-          case '^' : g_string_append(buffer, "([\\x00-\\x24\\x26-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x80]|$)");
-                     break;
-          case '*' : g_string_append(buffer, ".*");
-                     break;
-          case '?' : 
-          case '{' : 
-          case '}' : 
-          case '(' : 
-          case ')' : 
-          case '[' : 
-          case ']' : 
-          case '+' : 
-          case '.' : 
-          case '\\' : 
-          case '|' : g_string_append_c(buffer, '\\');
-          default  : g_string_append_c(buffer, *regexp_tmp);
+        GString *buffer = g_string_new(NULL);
+        if (option & AO_BEGIN || option & AO_BEGIN_DOMAIN) {
+          g_string_append_c(buffer, '^');
+        }
+        for (const char *regexp_tmp = tmp; *regexp_tmp; regexp_tmp++ ) {
+          switch (*regexp_tmp) {
+            case '^' : g_string_append(buffer, "([\\x00-\\x24\\x26-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x80]|$)");
+                       break;
+            case '*' : g_string_append(buffer, ".*");
+                       break;
+            case '?' : 
+            case '{' : 
+            case '}' : 
+            case '(' : 
+            case ')' : 
+            case '[' : 
+            case ']' : 
+            case '+' : 
+            case '.' : 
+            case '\\' : 
+            case '|' : g_string_append_c(buffer, '\\');
+            default  : g_string_append_c(buffer, *regexp_tmp);
+          }
+        }
+        if (option & AO_END) {
+          g_string_append_c(buffer, '$');
+        }
+        if ( (option & AO_MATCH_CASE) != 0) 
+          regex_flags &= ~G_REGEX_CASELESS;
+        rule = g_regex_new(buffer->str, regex_flags, 0, &error);
+        g_string_free(buffer, true);
+        if (error != NULL) {
+          fprintf(stderr, "dwb warning: ignoring adblock rule %s: %s\n", pattern, error->message);
+          g_clear_error(&error);
+          goto error_out;
         }
       }
-      if (option & AO_END) {
-        g_string_append_c(buffer, '$');
+      AdblockRule *adrule = adblock_rule_new();
+      adrule->attributes = attributes;
+      adrule->pattern = rule;
+      adrule->options = option;
+      adrule->domains = domain_arr;
+      if (!(attributes & ~(AA_MAINFRAME | AA_FRAME))) {
+        if (exception) 
+          g_ptr_array_add(_simple_exceptions, adrule);
+        else 
+          g_ptr_array_add(_simple_rules, adrule);
       }
-      if ( (option & AO_MATCH_CASE) != 0) 
-        regex_flags &= ~G_REGEX_CASELESS;
-      rule = g_regex_new(buffer->str, regex_flags, 0, &error);
-      if (error != NULL) {
-        fprintf(stderr, "dwb warning: ignoring adblock rule %s: %s\n", pattern, error->message);
-        ret = STATUS_ERROR;
-        g_clear_error(&error);
+      else {
+        if (exception) 
+          g_ptr_array_add(_exceptions, adrule);
+        else 
+          g_ptr_array_add(_rules, adrule);
       }
-      g_string_free(buffer, true);
     }
-    AdblockRule *adrule = adblock_rule_new();
-    adrule->attributes = attributes;
-    adrule->pattern = rule;
-    adrule->options = option;
-    adrule->domains = domains;
-    if (!(attributes & ~(AA_MAINFRAME | AA_FRAME))) {
-      if (exception) 
-        g_ptr_array_add(_simple_exceptions, adrule);
-      else 
-        g_ptr_array_add(_simple_rules, adrule);
-    }
-    else {
-      if (exception) 
-        g_ptr_array_add(_exceptions, adrule);
-      else 
-        g_ptr_array_add(_rules, adrule);
-    }
-  }
 error_out:
-  FREE(tmp_a);
-  FREE(tmp_b);
-  return ret;
+    FREE(tmp_a);
+    FREE(tmp_b);
+  }
+  g_strfreev(lines);
+  g_free(content);
 }/*}}}*/
 
 /* adblock_end() {{{*/
@@ -821,15 +838,7 @@ adblock_init() {
   _css_exceptions     = g_string_new(NULL);
   _css_rules          = g_string_new(NULL);
   domain_init();
-
-
-  char *content = util_get_file_content(filterlist);
-  char **lines = g_strsplit(content, "\n", -1);
-  for (int i=0; lines[i] != NULL; i++) {
-    adblock_rule_parse(lines[i]);
-  }
-  g_strfreev(lines);
-  g_free(content);
+  adblock_rule_parse(filterlist);
 
   _init = true;
   return true;

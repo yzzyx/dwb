@@ -69,6 +69,8 @@ domain_match(char **domains, const char *host, const char *base_domain) {
         }
         found = true;
       }
+      else if (domain_exc) 
+        found = true;
     }
   }
   return found;
