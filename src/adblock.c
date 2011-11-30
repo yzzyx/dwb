@@ -58,6 +58,7 @@ typedef enum _AdblockAttribute {
   /* inverse */
 } AdblockAttribute;
 #define AA_FRAME (AA_SUBDOCUMENT | (AA_SUBDOCUMENT<<ADBLOCK_INVERSE)) 
+#define AA_MAINFRAME (AA_DOCUMENT | (AA_DOCUMENT<<ADBLOCK_INVERSE)) 
 
 typedef struct _AdblockRule {
   GRegex *pattern;
@@ -755,7 +756,7 @@ adblock_rule_parse(char *pattern) {
     adrule->pattern = rule;
     adrule->options = option;
     adrule->domains = domains;
-    if (!(attributes & ~(AA_DOCUMENT | AA_FRAME))) {
+    if (!(attributes & ~(AA_MAINFRAME | AA_FRAME))) {
       if (exception) 
         g_ptr_array_add(_simple_exceptions, adrule);
       else 
