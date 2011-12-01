@@ -34,7 +34,6 @@
 #include "domain.h"
 #endif
 
-
 /* DECLARATIONS {{{*/
 static void dwb_webkit_setting(GList *, WebSettings *);
 static void dwb_webview_property(GList *, WebSettings *);
