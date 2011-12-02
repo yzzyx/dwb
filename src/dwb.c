@@ -2708,17 +2708,18 @@ dwb_init_gui() {
 #if _HAS_GTK3
   gtk_window_set_has_resize_grip(GTK_WINDOW(dwb.gui.window), false);
   GtkCssProvider *provider = gtk_css_provider_get_default();
-  gtk_css_provider_load_from_data(provider, 
-      "GtkScrollbar { \
+  GString *buffer = g_string_new("GtkEntry {background-image: none; }");
+  if (! dwb.misc.scrollbars) {
+    g_string_append(buffer, "GtkScrollbar { \
         -GtkRange-slider-width: 0; \
         -GtkRange-trough-border: 0; \
         }\
-        GtkEntry { \
-          background-image: none;\
-        }\
         GtkScrolledWindow {\
           -GtkScrolledWindow-scrollbar-spacing : 0;\
-        }", -1, NULL);
+        }");
+  }
+  gtk_css_provider_load_from_data(provider, buffer->str, -1, NULL);
+  g_string_free(buffer, true);
   GdkScreen *screen = gdk_screen_get_default();
   gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 #endif
@@ -2885,6 +2886,8 @@ dwb_init_vars() {
   dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
   dwb.misc.scroll_step = GET_DOUBLE("scroll-step");
   dwb.misc.top_statusbar = GET_BOOL("top-statusbar");
+  dwb.misc.scrollbars = GET_BOOL("scrollbars");
+
   dwb.state.tabbar_visible = dwb_eval_tabbar_visible(GET_CHAR("hide-tabbar"));
   dwb.state.cookies_allowed = GET_BOOL("cookies");
 
@@ -2962,11 +2965,11 @@ dwb_init() {
 
   dwb_init_key_map();
   dwb_init_style();
+  dwb_init_vars();
   dwb_init_gui();
   dwb_init_scripts();
 
   dwb_soup_init();
-  dwb_init_vars();
 
   if (dwb.state.layout & BOTTOM_STACK) {
     Arg a = { .n = dwb.state.layout };

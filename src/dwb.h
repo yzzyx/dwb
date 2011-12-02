@@ -633,6 +633,7 @@ struct _Misc {
 
   char *pbbackground;
   gboolean top_statusbar;
+  gboolean scrollbars;
   int bar_height;
   int synctimer;
 };

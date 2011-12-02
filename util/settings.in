@@ -72,6 +72,7 @@ factor text Zoom factor of the tiling area
 hide-tabbar text Whether to hide the tabbar  (never, always, tiled)
 layout select @normal_maximized @normal @bottomstack_maximized @bottomstack The default layout (Normal, Bottomstack, Maximized)
 message-delay text Time messages are shown, in seconds
+scrollbars checkbox Whether scrollbars should be enabled
 size text Tiling area size in percent
 tabbed-browsing checkbox Whether to enable tabbed browsing
 top-statusbar checkbox Whether to have the statusbar on top

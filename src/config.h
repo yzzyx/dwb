@@ -699,6 +699,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR, { .p = "Normal MAXIMIZED" },  (S_Func)dwb_set_dummy,  },
   { { "top-statusbar",                                  "Whether to have the statusbar on top", },     
     SETTING_GLOBAL,  BOOLEAN, { .b = false },  (S_Func)dwb_set_dummy,  },
+  { { "scrollbars",                                  "Whether scrollbars should be enabled", },     
+    SETTING_GLOBAL,  BOOLEAN, { .b = false },  (S_Func)dwb_set_dummy,  },
   { { "mail-client",                            "Program used for mailto:-urls", },                                            
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e mutt 'dwb_uri'" }, (S_Func)dwb_set_dummy,  }, 
   { { "ftp-client",                            "Program used for ftp", },                                            

@@ -893,9 +893,11 @@ view_create_web_view() {
   gtk_container_add(GTK_CONTAINER(v->scroll), v->web);
 
 #if !_HAS_GTK3
-  WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
-  g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(v->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+  if (! dwb.misc.scrollbars) {
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
+    g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(v->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+  }
 #endif
 
 
