@@ -244,6 +244,10 @@ Focus nth view or first, if n is ommitted.
 Show all open tabs. (command 
 .BR buffers ).
 .TP
+.BR [n]Control-P
+Protect tab [n]. Closing this tab must be confirmed (command 
+.BR protect ).
+.TP
 .BR f 
 Show hints (command 
 .BR hint_mode ).
@@ -1243,6 +1247,22 @@ The foreground color of the tab of a not focused view. Possible values: an rgb
 color-string,
 default value:
 .IR #cccccc .
+.TP 
+.BR tab-normal-fg-color
+The foreground color of the tab of a not focused view. Possible values: an rgb
+color-string,
+default value:
+.IR #cccccc .
+.TP 
+.BR tab-protected-color
+The color of the tabnumber of protected tabs. Possible values: an rgb color-string,
+default value:
+.IR #ff0000 .
+.TP 
+.BR tab-number-color
+The color of the tabnumber. Possible values: an rgb color-string,
+default value:
+.IR #ff0000 .
 .TP 
 .BR tabbed-browsing
 Enable tabbed-browsing. If disabled, all new window/new tab requests will be
