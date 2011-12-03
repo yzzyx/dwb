@@ -1012,7 +1012,6 @@ view_remove(GList *gl) {
   if (!dwb.state.views->next) {
     return;
   }
-  /* FIXME: if dwb.state.nummod == 0, the wrong tab is closed */
   if (dwb.state.nummod >= 0) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
   }

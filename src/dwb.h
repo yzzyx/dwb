@@ -79,7 +79,7 @@
 #define false 0
 #endif
 #ifndef true
-#define !false
+#define true !false
 #endif
 
 #if _HAS_GTK3 
