@@ -103,7 +103,6 @@
 /* MAKROS {{{*/ 
 #define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
 #define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X)) 
-#define NN(X)       ( ((X) == 0) ? 1 : (X) )
 
 //#define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
 #define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
@@ -148,7 +147,7 @@
 #define GET_BOOL(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.b)
 #define GET_INT(prop)               (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.i)
 #define GET_DOUBLE(prop)            (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.d)
-#define NUMMOD                      (dwb.state.nummod < 1 ? 1 : dwb.state.nummod)
+#define NUMMOD                      (dwb.state.nummod < 0 ? 1 : dwb.state.nummod)
 
 #ifdef DWB_DEBUG
 #define PRINT_DEBUG(...) do { \

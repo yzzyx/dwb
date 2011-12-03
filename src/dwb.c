@@ -555,8 +555,8 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir) {
   switch (dir) {
     case  SCROLL_TOP:      scroll = lower; break;
     case  SCROLL_BOTTOM:   scroll = upper; break;
-    case  SCROLL_PERCENT:  scroll = upper * dwb.state.nummod / 100; break;
-    default:        scroll = value + sign * inc * NN(dwb.state.nummod); break;
+    case  SCROLL_PERCENT:  scroll = upper * (dwb.state.nummod < 0 ? 0 : dwb.state.nummod) / 100; break;
+    default:        scroll = value + sign * inc * NUMMOD; break;
   }
 
   scroll = scroll < lower ? lower : scroll > upper ? upper : scroll;
@@ -1869,7 +1869,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
 /* dwb_clean_key_buffer() {{{*/
 void 
 dwb_clean_key_buffer() {
-  dwb.state.nummod = 0;
+  dwb.state.nummod = -1;
   g_string_truncate(dwb.state.buffer, 0);
 }/*}}}*/
 
@@ -1924,7 +1924,7 @@ dwb_eval_key(GdkEventKey *e) {
   /* nummod */
   if (DIGIT(e)) {
     keynum = e->keyval - GDK_KEY_0;
-    if (dwb.state.nummod) {
+    if (dwb.state.nummod >= 0) {
       dwb.state.nummod = MIN(10*dwb.state.nummod + keynum, 314159);
     }
     else {
@@ -2263,7 +2263,7 @@ dwb_get_scripts() {
 static void 
 dwb_clean_vars() {
   dwb.state.mode = NORMAL_MODE;
-  dwb.state.nummod = 0;
+  dwb.state.nummod = -1;
   dwb.state.nv = OPEN_NORMAL;
   dwb.state.type = 0;
   dwb.state.scriptlock = 0;

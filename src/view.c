@@ -962,7 +962,7 @@ view_push_master(Arg *arg) {
   if (arg && arg->p) {
     gl = arg->p;
   }
-  else if (dwb.state.nummod) {
+  else if (dwb.state.nummod >= 0) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
     if (!gl) {
       return STATUS_ERROR;
@@ -1013,7 +1013,7 @@ view_remove(GList *gl) {
     return;
   }
   /* FIXME: if dwb.state.nummod == 0, the wrong tab is closed */
-  if (dwb.state.nummod) {
+  if (dwb.state.nummod >= 0) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
   }
   else if (gl == NULL) 

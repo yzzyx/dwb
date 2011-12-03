@@ -161,7 +161,7 @@ commands_search(KeyMap *km, Arg *arg) {
 DwbStatus  
 commands_resize_master(KeyMap *km, Arg *arg) { 
   DwbStatus ret = STATUS_OK;
-  int inc = dwb.state.nummod == 0 ? arg->n : dwb.state.nummod * arg->n;
+  int inc = dwb.state.nummod < 0 ? arg->n : dwb.state.nummod * arg->n;
   int size = dwb.state.size + inc;
   if (size > 90 || size < 10) {
     size = size > 90 ? 90 : 10;
@@ -298,10 +298,9 @@ DwbStatus
 commands_zoom_in(KeyMap *km, Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-  int limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
   DwbStatus ret = STATUS_OK;
 
-  for (int i=0; i<limit; i++) {
+  for (int i=0; i<NUMMOD; i++) {
     if ((webkit_web_view_get_zoom_level(web) > 4.0)) {
       ret = STATUS_ERROR;
       break;
@@ -316,10 +315,9 @@ DwbStatus
 commands_zoom_out(KeyMap *km, Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-  int limit = dwb.state.nummod < 1 ? 1 : dwb.state.nummod;
   DwbStatus ret = STATUS_OK;
 
-  for (int i=0; i<limit; i++) {
+  for (int i=0; i<NUMMOD; i++) {
     if ((webkit_web_view_get_zoom_level(web) < 0.25)) {
       ret = STATUS_ERROR;
       break;
@@ -887,7 +885,7 @@ commands_presentation_mode(KeyMap *km, Arg *arg) {
 }
 DwbStatus
 commands_toggle_protected(KeyMap *km, Arg *arg) {
-  GList *gl = dwb.state.nummod == 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod);
+  GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod);
   VIEW(gl)->status->protect = !VIEW(gl)->status->protect;
   dwb_tab_label_set_text(gl, NULL);
   return STATUS_OK;
