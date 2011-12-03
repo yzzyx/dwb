@@ -1114,6 +1114,10 @@ GList *
 view_add(const char *uri, gboolean background) {
   GList *ret = NULL;
 
+  if (!dwb.misc.tabbed_browsing && dwb.state.views) {
+    dwb_new_window(uri);
+    return NULL;
+  }
   View *v = view_create_web_view();
   if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
