@@ -1,0 +1,114 @@
+#!/bin/bash 
+
+# Filterlist, uncomment to download lists, mutliple lists are supported, but
+# don't choose too many lists since it will slow down the adblocker
+URLS=(
+
+# Easylist
+# Easylist English
+#https://easylist-downloads.adblockplus.org/easylist.txt
+
+# Easylist Privacy, blocks tracking
+#https://easylist-downloads.adblockplus.org/easyprivacy.txt
+
+# Easylist Without element hiding
+#https://easylist-downloads.adblockplus.org/easylist_noelemhide.txt
+
+# Easylist additional subscriptions
+# Easylist Germany
+#https://easylist-downloads.adblockplus.org/easylistgermany.txt
+
+# Easylist Italy
+#https://easylist-downloads.adblockplus.org/easylistitaly.txt
+
+# Easylist Dutch
+#http://dutchadblockfilters.googlecode.com/svn/trunk/AdBlock_Dutch_hide.txt
+
+# Easylist French
+#http://lian.info.tm/liste_fr.txt
+
+# Easylist China
+#http://adblock-chinalist.googlecode.com/svn/trunk/adblock.txt
+
+# Easylist Bulgaria
+#http://stanev.org/abp/adblock_bg.txt
+
+# Easylist Indonesia
+#http://indonesianadblockrules.googlecode.com/hg/subscriptions/abpindo.txt
+
+# Easylist Finland
+#http://www.wiltteri.net/wiltteri.txt
+
+# Easylist Greece 
+#http://www.void.gr/kargig/void-gr-filters.txt
+
+# Adversity
+# Adversity English list
+#https://adversity.googlecode.com/hg/Adversity.txt  
+
+# Adversity Privacy
+#https://adversity.googlecode.com/hg/Adversity-Tracking.txt
+
+# Fanboy
+# Fanboy English list
+#http://www.fanboy.co.nz/adblock/fanboy-adblock.txt
+
+# Fanboy Tracking list
+#http://www.fanboy.co.nz/adblock/fanboy-tracking.txt
+
+)
+
+if [ ${#URLS[@]} -eq 0 ]; then 
+  echo "No urls specified, you must uncomment at least one url." 
+  exit 1
+fi
+UNSUPPORTED="[\$,~]{1}(xbl|ping|xmlhttprequest|dtd|elemhide|other|collapse|donottrack|popup)(,|$)|[\$,]object-subrequest(,|$)"
+CONFIG=${XDG_CONFIG_HOME}/dwb/settings
+
+declare PROFILE
+# Parse settings
+while read; do 
+  if [[ ${REPLY} =~ ^\[ ]]; then 
+    PROFILE=${REPLY:1:$((${#REPLY}-2))}
+  fi
+  if [ "${PROFILE}" = "default" ]  && [[ ${REPLY} =~ ^adblocker-filterlist ]]; then 
+    DEST=${REPLY//*=/}
+    break
+  fi
+done < ${CONFIG}
+
+if [ ! ${DEST} ]; then 
+  DEST=${XDG_CONFIG_HOME}/dwb/adblock_default
+  echo "No setting 'adblocker-filterlist' found for profile default, using '${DEST}'"
+  sed -i "0,/adblocker-filterlist/s#^adblocker-filterlist=.*#adblocker-filterlist=${DEST}#" ${CONFIG}
+fi
+
+echo "Saving filterlist as ${DEST}"
+
+if [ -e  ${DEST} ]; then 
+  rm ${DEST}
+fi
+
+AFTER=0
+BEFORE=0
+REMOVED=0
+TOTAL=0
+
+# Download the filterlists
+for URL in ${URLS[@]}; do 
+  TMP=$(mktemp)
+  echo "Grabbing ${URL}"
+  wget -O ${TMP} ${URL} &>/dev/null
+  BEFORE=( $(wc -l "${TMP}") )
+
+  ((BEFORE+=TOTAL))
+  sed -r "/${UNSUPPORTED}/d" "${TMP}" >> ${DEST}
+  rm ${TMP}
+  AFTER=( $(wc -l "${DEST}") )
+  ((REMOVED=BEFORE-AFTER))
+  TOTAL=${BEFORE}
+done
+echo "Removed ${REMOVED} unsupported of ${BEFORE} filters."
+echo "Removing comments."
+sed -i "/^[!\[]/d" "${DEST}"
+echo "Done."

@@ -18,6 +18,9 @@
 
 #include "commands.h"
 #include "local.h"
+#ifdef DWB_ADBLOCKER
+#include "adblock.h"
+#endif
 
 static int inline dwb_floor(double x) { 
   return x >= 0 ? (int) x : (int) x - 1;
@@ -715,6 +718,20 @@ commands_toggle_scripts(KeyMap *km, Arg *arg) {
   commands_toggle(arg, dwb.files.scripts_allow, &dwb.fc.tmp_scripts, "Scripts");
   return STATUS_OK;
 }/*}}}*/
+
+#ifdef DWB_ADBLOCKER
+/* commands_toggle_adblocker {{{ */
+DwbStatus 
+commands_toggle_adblocker(KeyMap *km, Arg *arg) {
+  gboolean running = adblock_running();
+  WebSettings *s = g_hash_table_lookup(dwb.settings, "adblocker");
+  s->arg.b = !running;
+  dwb_set_adblock(NULL, s);
+
+  dwb_set_normal_message(dwb.state.fview, true, "Adblocker %s", running ? "disabled" : "enabled");
+  return STATUS_OK;
+}/*}}}*/
+#endif
 
 /* commands_new_window_or_view{{{*/
 DwbStatus 

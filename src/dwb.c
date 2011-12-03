@@ -29,7 +29,11 @@
 #include "html.h"
 #include "plugins.h"
 #include "local.h"
-
+#include "js.h"
+#ifdef DWB_ADBLOCKER
+#include "adblock.h"
+#include "domain.h"
+#endif
 
 /* DECLARATIONS {{{*/
 static void dwb_webkit_setting(GList *, WebSettings *);
@@ -42,7 +46,6 @@ static void dwb_set_startpage(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
-static void dwb_set_adblock(GList *, WebSettings *);
 static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
@@ -99,7 +102,7 @@ dwb_set_dummy(GList *gl, WebSettings *s) {
   return;
 }/*}}}*/
 
-/* dwb_set_adblock {{{*/
+/* dwb_set_plugin_blocker {{{*/
 static void
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
@@ -113,12 +116,20 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   }
 }/*}}}*/
 
+#ifdef DWB_ADBLOCKER
 /* dwb_set_adblock {{{*/
-static void
+void
 dwb_set_adblock(GList *gl, WebSettings *s) {
-  View *v = gl->data;
-  v->status->adblocker = s->arg.b;
+  if (s->arg.b) {
+    for (GList *l = dwb.state.views; l; l=l->next) 
+      adblock_connect(l);
+  }
+  else {
+    for (GList *l = dwb.state.views; l; l=l->next) 
+      adblock_disconnect(l);
+  }
 }/*}}}*/
+#endif
 
 /* dwb_set_private_browsing  {{{ */
 static void
@@ -233,6 +244,7 @@ dwb_set_user_agent(GList *gl, WebSettings *s) {
   dwb_webkit_setting(gl, s);
   g_hash_table_insert(dwb.settings, g_strdup("user-agent"), s);
 }/*}}}*/
+
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
 static void
@@ -480,7 +492,8 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     cbuffer[PBAR_LENGTH - length] = '\0';
     g_string_append_printf(string, "\u2595%ls%ls\u258f", buffer, cbuffer);
   }
-  dwb_set_status_bar_text(v->rstatus, string->str, NULL, NULL, true);
+  if (string->len > 0) 
+    dwb_set_status_bar_text(v->rstatus, string->str, NULL, NULL, true);
   g_string_free(string, true);
 }/*}}}*/
 
@@ -807,9 +820,18 @@ dwb_open_startpage(GList *gl) {
 static DwbStatus
 dwb_apply_settings(WebSettings *s) {
   DwbStatus ret = STATUS_OK;
-  for (GList *l = dwb.state.views; l; l=l->next) 
-    if (s->func) 
-      ret = s->func(l, s);
+  if (s->apply & SETTING_ONINIT) 
+    return ret;
+  else if (s->apply & SETTING_GLOBAL) {
+    if (s->func)
+      s->func(NULL, s);
+  }
+  else {
+    for (GList *l = dwb.state.views; l; l=l->next) {
+      if (s->func) 
+        s->func(l, s);
+    }
+  }
   dwb_change_mode(NORMAL_MODE, false);
   return ret;
 }/*}}}*/
@@ -993,28 +1015,6 @@ dwb_history_forward() {
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
   webkit_web_view_go_to_back_forward_item(w, item);
   return STATUS_OK;
-}/*}}}*/
-
-/* dwb_block_ad (GList *, const char *uri)        return: gboolean{{{*/
-gboolean 
-dwb_block_ad(GList *gl, const char *uri) {
-  if (!VIEW(gl)->status->adblocker) 
-    return false;
-
-  /* PRINT_DEBUG(uri); */
-  for (GList *l = dwb.fc.adblock; l; l=l->next) {
-    char *data = l->data;
-    if (data != NULL) {
-      if (data[0] == '@') {
-        if (g_regex_match_simple(data + 1, uri, 0, 0) )
-          return true;
-      }
-      else if (strstr(uri, data)) {
-        return true;
-      }
-    }
-  }
-  return false;
 }/*}}}*/
 
 /* dwb_eval_tabbar_visible (const char *) {{{*/
@@ -1474,29 +1474,19 @@ dwb_update_hints(GdkEventKey *e) {
 char *
 dwb_execute_script(WebKitWebFrame *frame, const char *com, gboolean ret) {
   JSValueRef eval_ret;
-  size_t length;
-  char *retval;
 
   JSContextRef context = webkit_web_frame_get_global_context(frame);
   g_return_val_if_fail(context != NULL, NULL);
-  JSStringRef text = JSStringCreateWithUTF8CString(com);
 
   JSObjectRef global_object = JSContextGetGlobalObject(context);
   g_return_val_if_fail(global_object != NULL, NULL);
 
+  JSStringRef text = JSStringCreateWithUTF8CString(com);
   eval_ret = JSEvaluateScript(context, text, global_object, NULL, 0, NULL);
   JSStringRelease(text);
 
-  if (eval_ret) {
-    if (ret) {
-      JSStringRef string = JSValueToStringCopy(context, eval_ret, NULL);
-      length = JSStringGetMaximumUTF8CStringSize(string);
-      retval = g_new(char, length+1);
-      JSStringGetUTF8CString(string, retval, length);
-      JSStringRelease(string);
-      memset(retval+length, '\0', 1);
-      return retval;
-    }
+  if (eval_ret && ret) {
+    return js_value_to_char(context, eval_ret);
   }
   return NULL;
 }
@@ -2303,13 +2293,17 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.mimetypes, (void_func)dwb_navigation_free);
   dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
-  dwb_free_list(dwb.fc.adblock, (void_func)dwb_free);
 
-  util_rmdir(dwb.files.cachedir, true);
   if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
     unlink(dwb.files.fifo);
   }
   gtk_widget_destroy(dwb.gui.window);
+#ifdef DWB_ADBLOCKER
+  adblock_end();
+#endif
+#ifdef DWB_DOMAIN_SERVICE
+  domain_end();
+#endif
   return true;
 }/*}}}*/
 
@@ -2842,7 +2836,6 @@ dwb_init_files() {
   else 
     dwb.misc.default_search = NULL;
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
-  dwb.fc.adblock = dwb_init_file_content(dwb.fc.adblock, dwb.files.adblock, (Content_Func)dwb_return);
 
   FREE(path);
   FREE(profile_path);
@@ -2858,6 +2851,7 @@ dwb_handle_signal(int s) {
   else if (s == SIGSEGV) {
     fprintf(stderr, "Received SIGSEGV, trying to clean up.\n");
     session_save(NULL);
+    dwb_clean_up();
     exit(EXIT_FAILURE);
   }
 }
@@ -2967,6 +2961,9 @@ dwb_init() {
   dwb_init_vars();
   dwb_init_gui();
   dwb_init_scripts();
+#ifdef DWB_ADBLOCKER
+  adblock_init();
+#endif
 
   dwb_soup_init();
 

@@ -151,13 +151,31 @@
 
 #ifdef DWB_DEBUG
 #define PRINT_DEBUG(...) do { \
-    fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s():\t", __FILE__, __LINE__, __func__); \
+    fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s()\t", __FILE__, __LINE__, __func__); \
     fprintf(stderr, __VA_ARGS__);\
     fprintf(stderr, "\n"); \
-  } while(0)
+  } while(0);
+#define DEBUG_TIMED(limit, code) do { \
+  GTimer *__debug_timer = g_timer_new(); \
+  for (int i=0; i<limit; i++) { (code); }\
+  gulong __debug_micro = 0;\
+  gdouble __debug_elapsed = g_timer_elapsed(__debug_timer, &__debug_micro);\
+  PRINT_DEBUG("timer: \033[32m%s\033[0m: elapsed: %f, micro: %lu", #code, __debug_elapsed, __debug_micro);\
+  g_timer_destroy(__debug_timer); \
+} while(0);
+GTimer *__timer;
+#define TIMER_START do {__timer = g_timer_new();g_timer_start(__timer);puts("hallo timer");}while(0)
+#define TIMER_END do{ gulong __debug_micro = 0; gdouble __debug_elapsed = g_timer_elapsed(__timer, &__debug_micro);\
+  PRINT_DEBUG("\033[33mtimer:\033[0m elapsed: %f, micro: %lu", __debug_elapsed, __debug_micro);\
+  g_timer_destroy(__timer); \
+} while(0)
 
 #else 
 #define PRINT_DEBUG(message, ...) 
+#define DEBUG_TIMED(limit, code)
+#define TIMER_START
+#define TIMER_END
+
 #endif
 #define BPKB 1024
 #define BPMB 1048576
@@ -171,6 +189,7 @@ typedef enum _DwbStatus {
   STATUS_OK, 
   STATUS_ERROR, 
   STATUS_END,
+  STATUS_IGNORE, 
 } DwbStatus;
 
 
@@ -357,6 +376,11 @@ enum Signal {
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
   SIG_FRAME_CREATED, 
+#ifdef DWB_ADBLOCKER
+  SIG_AD_LOAD_STATUS,
+  SIG_AD_FRAME_CREATED,
+  SIG_AD_RESOURCE_REQUEST,
+#endif
 
   SIG_PLUGINS_LOAD,
   SIG_PLUGINS_FRAME_LOAD,
@@ -499,10 +523,10 @@ struct _State {
 };
 
 typedef enum _SettingsApply {
-  SETTING_BUILTIN = 1<<0,
-  SETTING_GLOBAL = 1<<1,
-  SETTING_ONINIT = 1<<2,
-  SETTING_PER_VIEW = 1<<3,
+  SETTING_BUILTIN   = 1<<0,
+  SETTING_GLOBAL    = 1<<1,
+  SETTING_ONINIT    = 1<<2,
+  SETTING_PER_VIEW  = 1<<3,
 } SettingsApply;
 struct _WebSettings {
   Navigation n;
@@ -517,7 +541,6 @@ struct _ViewStatus {
   char *search_string;
   GList *downloads;
   char *mimetype;
-  gboolean adblocker;
   gulong signals[SIG_LAST];
   int progress;
   SslState ssl;
@@ -526,7 +549,6 @@ struct _ViewStatus {
   char *hover_uri;
   GSList *allowed_plugins;
   PluginBlockerStatus pb_status;
-  GSList *plugin_refs;
   gboolean protect;
 };
 struct _View {
@@ -765,7 +787,6 @@ CompletionType dwb_eval_completion_type(void);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
-gboolean dwb_block_ad(GList *gl, const char *);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);
@@ -788,5 +809,8 @@ void dwb_set_open_mode(Open);
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
+#ifdef DWB_ADBLOCKER
+void dwb_set_adblock(GList *, WebSettings *);
+#endif
 
 #endif
