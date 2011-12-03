@@ -528,6 +528,7 @@ struct _ViewStatus {
   GSList *allowed_plugins;
   PluginBlockerStatus pb_status;
   GSList *plugin_refs;
+  gboolean protect;
 };
 struct _View {
   GtkWidget *vbox;
@@ -570,6 +571,7 @@ struct _Color {
   char *settings_bg_color;
   char *settings_fg_color;
   char *tab_number_color;
+  char *tab_protected_color;
   char *allow_color;
   char *block_color;
 };
@@ -715,6 +717,7 @@ void dwb_set_normal_message(GList *, gboolean, const char *, ...);
 void dwb_set_error_message(GList *, const char *, ...);
 gboolean dwb_confirm(GList *, char *, ...);
 void dwb_set_status_text(GList *, const char *, DwbColor *,  PangoFontDescription *);
+void dwb_tab_label_set_text(GList *, const char *);
 void dwb_set_status_bar_text(GtkWidget *, const char *, DwbColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
@@ -785,5 +788,6 @@ void dwb_set_open_mode(Open);
 
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
+gboolean dwb_confirm(GList *gl, char *prompt, ...);
 
 #endif

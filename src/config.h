@@ -157,6 +157,7 @@ static KeyValue KEYS[] = {
   { "toggle_topbar",            {   "xt",        0 }, }, 
   { "toggle_bottombar",            {   "xb",        0 }, }, 
   { "presentation_mode",            {   "F12",        GDK_CONTROL_MASK }, }, 
+  { "protect",            {   "P",        GDK_CONTROL_MASK }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -171,6 +172,8 @@ static FunctionMap FMAP [] = {
     (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS } }, 
   { { "presentation_mode",    "Toggle presentation mode" },                 1, 
     (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  } }, 
+  { { "protect",    "Protect/unprotect this tab" },                 1, 
+    (Func) commands_toggle_protected,                                   NULL,     ALWAYS_SM,    { .n = 0  } }, 
   { { "allow_cookie",          "Cookie allowed",                    }, 1, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, 
@@ -593,6 +596,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
   { { "tab-number-color",                        "Color of the number in the tab", },                      
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#7ac5cd"         },    (S_Func) dwb_reload_layout,  },
+  { { "tab-protected-color",                        "Color of the number in the tab", },                      
+    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         },    (S_Func) dwb_reload_layout,  },
   { { "hide-tabbar",                             "Whether to hide the tabbar (never, always, tiled)", },                      
     SETTING_GLOBAL,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar,  },
   { { "tabbed-browsing",                         "Whether to enable tabbed browsing", },                                  

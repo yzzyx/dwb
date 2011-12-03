@@ -64,9 +64,6 @@ static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *
 
 static gboolean dwb_eval_key(GdkEventKey *);
 
-
-static void dwb_tab_label_set_text(GList *, const char *);
-
 static void dwb_save_quickmark(const char *);
 static void dwb_open_quickmark(const char *);
 
@@ -1645,12 +1642,13 @@ dwb_open_quickmark(const char *key) {
 }/*}}}*/
 
 /* dwb_tab_label_set_text {{{*/
-static void
+void
 dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+  const char *color = !v->status->protect ? dwb.color.tab_number_color : dwb.color.tab_protected_color;
   char *escaped = g_markup_printf_escaped("[<span foreground=\"%s\">%d</span>] %s", 
-      dwb.color.tab_number_color, 
+      color,
       g_list_position(dwb.state.views, gl), 
       uri ? uri : "about:blank");
   gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
@@ -2676,6 +2674,7 @@ dwb_init_style() {
   DWB_COLOR_PARSE(&dwb.color.prompt, GET_CHAR("prompt-color"));
 
   dwb.color.tab_number_color = GET_CHAR("tab-number-color");
+  dwb.color.tab_protected_color = GET_CHAR("tab-protected-color");
   dwb.color.allow_color = GET_CHAR("status-allowed-color");
   dwb.color.block_color = GET_CHAR("status-blocked-color");
 

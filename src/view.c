@@ -840,6 +840,7 @@ view_create_web_view() {
   status->allowed_plugins = NULL;
   status->plugin_refs = NULL;
   status->pb_status = 0;
+  status->protect = false;
 
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
@@ -1007,25 +1008,29 @@ view_push_master(Arg *arg) {
 
 /* view_remove (void) {{{*/
 void
-view_remove(GList *g) {
-  GList *gl = NULL;
+view_remove(GList *gl) {
   if (!dwb.state.views->next) {
     return;
   }
-  if (g || dwb.state.nummod == 0) {
-    gl = g != NULL ? g : dwb.state.fview;
-    if (gl == dwb.state.fview) {
-      if ( !(dwb.state.fview = dwb.state.fview->prev) ) {
-        dwb.state.fview = g_list_first(dwb.state.views)->next;
-        if (dwb.state.bar_visible & BAR_VIS_TOP) 
-          gtk_widget_show_all(dwb.gui.topbox);
-      }
-    }
-  }
-  else if (dwb.state.nummod) {
+  /* FIXME: if dwb.state.nummod == 0, the wrong tab is closed */
+  if (dwb.state.nummod) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod);
   }
+  else if (gl == NULL) 
+    gl = dwb.state.fview;
   View *v = gl->data;
+  /* Check for protected tab */
+  if (v->status->protect && !dwb_confirm(dwb.state.fview, "Really close tab %d [y/n]?", g_list_position(dwb.state.views, gl))) {
+    CLEAR_COMMAND_TEXT(dwb.state.fview);
+    return;
+  }
+  if (gl == dwb.state.fview) {
+    if ( !(dwb.state.fview = dwb.state.fview->prev) ) {
+      dwb.state.fview = g_list_first(dwb.state.views)->next;
+      if (dwb.state.bar_visible & BAR_VIS_TOP) 
+        gtk_widget_show_all(dwb.gui.topbox);
+    }
+  }
   if (gl == dwb.state.views) {
     if (dwb.state.views->next) {
       gtk_widget_reparent(VIEW(dwb.state.views->next)->vbox, dwb.gui.left);

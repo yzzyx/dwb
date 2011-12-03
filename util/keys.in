@@ -85,8 +85,9 @@ push_master Push to master area
 toggle_bottomstack Toggle bottomstack
 fullscreen Toggle fullscreen
 toggle_bars Toggle tabbar and statusbar
-toggle_topbar Toggle tabbar
 toggle_bottombar Toggle bottombar
+toggle_topbar Toggle tabbar
+protect Protect/unprotect tab 
 presentation_mode Toggle presentation mode
 
 # completion Completion

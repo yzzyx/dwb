@@ -61,6 +61,7 @@ tab-active-fg-color text Foreground color of the active tab
 tab-normal-bg-color text Background color of the normal tab
 tab-normal-fg-color text Foreground color of the normal tab
 tab-number-color text Color of the tabnumber
+tab-protected-color text Color of the tabnumber for protected tabs
 
 # lt Layout
 background-tabs checkbox Whether to open tabs in background

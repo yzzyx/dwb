@@ -885,4 +885,11 @@ commands_presentation_mode(KeyMap *km, Arg *arg) {
   commands_toggle_bars(km, arg);
   return STATUS_OK;
 }
+DwbStatus
+commands_toggle_protected(KeyMap *km, Arg *arg) {
+  GList *gl = dwb.state.nummod == 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod);
+  VIEW(gl)->status->protect = !VIEW(gl)->status->protect;
+  dwb_tab_label_set_text(gl, NULL);
+  return STATUS_OK;
+}
 /*}}}*/
