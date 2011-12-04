@@ -148,16 +148,16 @@ adblock_do_match(AdblockRule *rule, const char *uri) {
   return false;
 }/*}}}*/
 
-/* adblock_match(GPtrArray *, SoupURI *, const char *base_domain, * AdblockAttribute, gboolean thirdparty) 
+/* adblock_match(GPtrArray *, SoupURI *, const char *base_domain, * AdblockAttribute, gboolean thirdparty)  {{{
  * Params: 
- * array      - the filtes array
+ * array      - the filter array
  * uri        - the uri to check
  * uri_host   - the hostname of the request
  * uri_base   - the domainname of the request
  * host       - the hostname of the page
  * domain     - the domainname of the page
- * thirdparty - the domainname of the page
- * {{{*/
+ * thirdparty - thirdparty request ? 
+ * */
 gboolean                
 adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const char *uri_base, const char *host, const char *domain, AdblockAttribute attributes, gboolean thirdparty) {
   if (array->len == 0)
@@ -210,8 +210,9 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
     }
   }
   return match;
-}/*}}}*//*}}}*/
+}/*}}}*/
 
+/* adblock_prepare_match (const char *uri, const char *baseURI, AdblockAttribute attributes {{{ */
 static gboolean
 adblock_prepare_match(const char *uri, const char *baseURI, AdblockAttribute attributes) {
   char *realuri = NULL;
@@ -260,7 +261,10 @@ error_out:
   if (sbaseuri != NULL) soup_uri_free(sbaseuri);
   if (suri != NULL) soup_uri_free(suri);
   return ret;
-}
+}/*}}}*//*}}}*/
+
+
+/* LOAD_CALLBACKS {{{*/
 /* adblock_js_callback {{{*/
 static JSValueRef 
 adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
@@ -320,6 +324,34 @@ error_out:
   return NULL;
 }/*}}}*/
 
+/* js_create_callback {{{*/
+static void
+adblock_create_js_callback(WebKitWebFrame *frame, JSObjectCallAsFunctionCallback function, int attr) {
+  JSContextRef ctx = webkit_web_frame_get_global_context(frame);
+  JSObjectRef globalObject = JSContextGetGlobalObject(ctx);
+  JSObjectRef newcall = JSObjectMakeFunctionWithCallback(ctx, NULL, function);
+  JSValueRef val = js_get_object_property(ctx, globalObject, "addEventListener");
+  if (val) {
+    JSStringRef beforeLoadString = JSStringCreateWithUTF8CString("beforeload");
+    JSValueRef values[3] = { JSValueMakeString(ctx, beforeLoadString), newcall, JSValueMakeBoolean(ctx, true), };
+    JSObjectCallAsFunction(ctx, JSValueToObject(ctx, val, NULL), globalObject, 3,  values, NULL);
+    JSStringRelease(beforeLoadString);
+  }
+}/*}}}*/
+
+/* adblock_frame_load_committed_cb {{{*/
+static void 
+adblock_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
+  adblock_create_js_callback(frame, (JSObjectCallAsFunctionCallback)adblock_js_callback, AA_SUBDOCUMENT);
+}/*}}}*/
+
+/* adblock_frame_created_cb {{{*/
+void 
+adblock_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
+  g_signal_connect(frame, "load-committed", G_CALLBACK(adblock_frame_load_committed_cb), gl);
+}/*}}}*/
+
+/* adblock_before_load_cb  (domcallback) {{{*/
 static gboolean
 adblock_before_load_cb(WebKitDOMElement *win, WebKitDOMEvent *event, GList *gl) {
   WebKitDOMElement *src = (void*)webkit_dom_event_get_src_element(event);
@@ -358,34 +390,6 @@ adblock_before_load_cb(WebKitDOMElement *win, WebKitDOMEvent *event, GList *gl) 
     webkit_dom_event_prevent_default(event);
   }
   return true;
-}
-
-/* LOAD_CALLBACKS {{{*/
-/* js_create_callback {{{*/
-static void
-adblock_create_js_callback(WebKitWebFrame *frame, JSObjectCallAsFunctionCallback function, int attr) {
-  JSContextRef ctx = webkit_web_frame_get_global_context(frame);
-  JSObjectRef globalObject = JSContextGetGlobalObject(ctx);
-  JSObjectRef newcall = JSObjectMakeFunctionWithCallback(ctx, NULL, function);
-  JSValueRef val = js_get_object_property(ctx, globalObject, "addEventListener");
-  if (val) {
-    JSStringRef beforeLoadString = JSStringCreateWithUTF8CString("beforeload");
-    JSValueRef values[3] = { JSValueMakeString(ctx, beforeLoadString), newcall, JSValueMakeBoolean(ctx, true), };
-    JSObjectCallAsFunction(ctx, JSValueToObject(ctx, val, NULL), globalObject, 3,  values, NULL);
-    JSStringRelease(beforeLoadString);
-  }
-}/*}}}*/
-
-/* adblock_frame_load_committed_cb {{{*/
-static void 
-adblock_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
-  adblock_create_js_callback(frame, (JSObjectCallAsFunctionCallback)adblock_js_callback, AA_SUBDOCUMENT);
-}/*}}}*/
-
-/* adblock_frame_created_cb {{{*/
-void 
-adblock_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  g_signal_connect(frame, "load-committed", G_CALLBACK(adblock_frame_load_committed_cb), gl);
 }/*}}}*/
 
 /* adblock_resource_request_cb {{{*/
@@ -514,7 +518,7 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     else if (css_rule == NULL || css_rule->len == 0) {
       g_string_append(css_rule, _css_exceptions->str);
     }
-    if (css_rule->len > 1) {
+    if (css_rule != NULL && css_rule->len > 1) {
       g_string_append(css_rule, _css_rules->str);
       if (css_rule->str[css_rule->len-1] == ',') 
         g_string_erase(css_rule, css_rule->len-1, 1);
@@ -552,6 +556,7 @@ gboolean
 adblock_running() {
   return _init && GET_BOOL("adblocker");
 }
+
 /* adblock_disconnect(GList *) {{{*/
 void 
 adblock_disconnect(GList *gl) {
@@ -627,7 +632,7 @@ adblock_rule_parse(char *filterlist) {
       break;
       //return STATUS_IGNORE;
     }
-    tmp = tmp_a = tmp_b = tmp_c = NULL;
+    tmp_a = tmp_b = tmp_c = NULL;
     /* Element hiding rules */
     if ( (tmp = strstr(pattern, "##")) != NULL) {
       /* Match domains */
@@ -651,8 +656,10 @@ adblock_rule_parse(char *filterlist) {
             list = g_slist_append(list, hider);
             g_hash_table_insert(_hider_rules, g_strdup(domain), list);
           }
-          else 
+          else {
             list = g_slist_append(list, hider);
+            (void) list;
+          }
         }
         hider->exception = hider_exc;
         if (hider_exc) {
@@ -685,7 +692,6 @@ adblock_rule_parse(char *filterlist) {
       if (option_string != NULL) {
         tmp_a = g_strndup(tmp, option_string - tmp);
         options_arr = g_strsplit(option_string+1, ",", -1);
-        inverse = 0;
         for (int i=0; options_arr[i] != NULL; i++) {
           inverse = 0;
           o = options_arr[i];
