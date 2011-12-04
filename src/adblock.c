@@ -57,10 +57,7 @@ typedef enum _AdblockAttribute {
   AA_OTHER              = 1<<12,
   /* inverse */
 } AdblockAttribute;
-#define AA_FRAME (AA_SUBDOCUMENT | (AA_SUBDOCUMENT<<ADBLOCK_INVERSE)) 
-#define AA_MAINFRAME (AA_DOCUMENT | (AA_DOCUMENT<<ADBLOCK_INVERSE)) 
-#define AA_CLEAR_FRAME(X) (X & ~(AA_FRAME|AA_MAINFRAME))
-#define AA_CLEAR_ATTR(X) (X & (AA_FRAME|AA_MAINFRAME))
+#define AA_CLEAR_FRAME(X) (X & ~(AA_SUBDOCUMENT|AA_DOCUMENT))
 
 typedef struct _AdblockRule {
   GRegex *pattern;
@@ -186,8 +183,7 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
 
   for (int i=0; i<array->len; i++) {
     rule = g_ptr_array_index(array, i);
-    if ( (attributes & AA_DOCUMENT && (!(rule->attributes & AA_DOCUMENT) || (rule->attributes & (AA_DOCUMENT<<ADBLOCK_INVERSE))))
-      || (attributes & AA_SUBDOCUMENT && (!(rule->attributes & AA_SUBDOCUMENT) || rule->attributes & (AA_SUBDOCUMENT << ADBLOCK_INVERSE)) ) )
+    if ( (attributes & AA_DOCUMENT && !(rule->attributes & AA_DOCUMENT)) || (attributes & AA_SUBDOCUMENT && !(rule->attributes & AA_SUBDOCUMENT)) )
       continue;
 
     /* If exception attributes exists, check if exception is matched */
@@ -276,10 +272,11 @@ adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObje
   char *rel = NULL; 
   char *type = NULL;
   JSValueRef exc = NULL;
+  AdblockAttribute attributes = AA_SUBDOCUMENT;
+
   JSObjectRef event = JSValueToObject(ctx, argv[0], &exc);
   if (exc != NULL)
     return NULL;
-  
 
   JSObjectRef srcElement = js_get_object_property(ctx, event, "srcElement"); 
   if (srcElement == NULL)
@@ -291,7 +288,6 @@ adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObje
   if (tmpuri == NULL)
     goto error_out;
 
-  int attributes = AA_SUBDOCUMENT;
 
   tagname = js_get_string_property(ctx, srcElement, "tagName");
   if (!g_strcmp0(tagname, "IMG"))
@@ -371,10 +367,6 @@ adblock_create_js_callback(WebKitWebFrame *frame, JSObjectCallAsFunctionCallback
   JSContextRef ctx = webkit_web_frame_get_global_context(frame);
   JSObjectRef globalObject = JSContextGetGlobalObject(ctx);
   JSObjectRef newcall = JSObjectMakeFunctionWithCallback(ctx, NULL, function);
-  JSStringRef jsattr = JSStringCreateWithUTF8CString("attributes");
-  JSObjectSetProperty(ctx, newcall, jsattr, JSValueMakeNumber(ctx, attr), 
-      kJSPropertyAttributeDontDelete | kJSPropertyAttributeDontEnum | kJSPropertyAttributeReadOnly, NULL);
-  JSStringRelease(jsattr);
   JSValueRef val = js_get_object_property(ctx, globalObject, "addEventListener");
   if (val) {
     JSStringRef beforeLoadString = JSStringCreateWithUTF8CString("beforeload");
@@ -718,11 +710,11 @@ adblock_rule_parse(char *filterlist) {
             }
           }
           else if (!strcmp(o, "subdocument")) {
-            attributes |= (AA_SUBDOCUMENT << inverse);
+            attributes |= inverse ? AA_DOCUMENT : AA_SUBDOCUMENT;
           }
           else if (!strcmp(o, "document")) {
             if (exception) 
-              attributes |= (AA_DOCUMENT << inverse);
+              attributes |= inverse ? AA_DOCUMENT : AA_SUBDOCUMENT;
             else 
               adblock_warn_ignored("Adblock option 'document' can only be applied to exception rules", pattern);
           }
@@ -828,12 +820,14 @@ adblock_rule_parse(char *filterlist) {
       }
       AdblockRule *adrule = adblock_rule_new();
       adrule->attributes = attributes;
-      if (! (attributes & (AA_FRAME | AA_MAINFRAME)) )
-          adrule->attributes |= AA_SUBDOCUMENT | AA_DOCUMENT;
       adrule->pattern = rule;
       adrule->options = option;
       adrule->domains = domain_arr;
-      if (!(attributes & ~(AA_MAINFRAME | AA_FRAME))) {
+
+      if (! (attributes & (AA_DOCUMENT | AA_SUBDOCUMENT)) )
+          adrule->attributes |= AA_SUBDOCUMENT | AA_DOCUMENT;
+
+      if (!(attributes & ~(AA_SUBDOCUMENT | AA_DOCUMENT))) {
         if (exception) 
           g_ptr_array_add(_simple_exceptions, adrule);
         else 
