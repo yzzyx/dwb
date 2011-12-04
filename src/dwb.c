@@ -287,7 +287,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   gboolean ret = false;
   Mode mode = CLEAN_MODE(dwb.state.mode);
 
-  char *key = util_keyval_to_char(e->keyval);
+  char *key = NULL;
   if (e->keyval == GDK_KEY_Escape) {
     dwb_change_mode(NORMAL_MODE, true);
     ret = false;
@@ -302,13 +302,13 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
     }
   }
   else if (mode == QUICK_MARK_SAVE) {
-    if (key) {
+    if ((key = util_keyval_to_char(e->keyval, true))) {
       dwb_save_quickmark(key);
     }
     ret = true;
   }
   else if (mode == QUICK_MARK_OPEN) {
-    if (key) {
+    if ((key = util_keyval_to_char(e->keyval, true))) {
       dwb_open_quickmark(key);
     }
     ret = true;
@@ -1453,7 +1453,7 @@ dwb_update_hints(GdkEventKey *e) {
     return false;
   }
   else {
-    val = util_keyval_to_char(e->keyval);
+    val = util_keyval_to_char(e->keyval, true);
     snprintf(input, BUFFER_LENGTH - 1, "%s%s", GET_TEXT(), val ? val : "");
     com = g_strdup_printf("DwbHintObj.updateHints(\"%s\", %d)", input, MIN(dwb.state.hint_type, HINT_T_URL));
     FREE(val);
@@ -1839,7 +1839,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
     return false;
   }
 
-  char *key = util_keyval_to_char(e->keyval);
+  char *key = util_keyval_to_char(e->keyval, false);
   gboolean ret = false;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
@@ -1901,7 +1901,7 @@ dwb_eval_key(GdkEventKey *e) {
     case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); return true;
     case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return true;
   }
-  char *key = util_keyval_to_char(keyval);
+  char *key = util_keyval_to_char(keyval, true);
   if (key) {
     mod_mask = CLEAN_STATE(e);
   }

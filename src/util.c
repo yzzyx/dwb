@@ -94,16 +94,19 @@ dwb_modmask_to_string(guint modmask) {
 }/*}}}*/
 /* util_keyval_to_char (guint keyval)      return: char * (alloc) {{{*/
 char *
-util_keyval_to_char(guint keyval) {
+util_keyval_to_char(guint keyval, gboolean ignore_whitespace) {
   char *key = dwb_malloc(6);
   guint32 unichar;
   int length;
   if ( (unichar = gdk_keyval_to_unicode(keyval)) ) {
-    if ( (length = g_unichar_to_utf8(unichar, key)) ) {
+    if (ignore_whitespace && !g_unichar_isgraph(unichar))
+      goto error_out;
+    if ( (length = g_unichar_to_utf8(unichar, key))) {
       memset(&key[length], '\0', 6-length); 
       return key;
     }
   }
+error_out:
   FREE(key);
   return NULL;
 }/*}}}*/
