@@ -23,12 +23,7 @@
 #include "adblock.h"
 #include "js.h"
 
-#define LINE_SIZE 1024
 
-#define ADBLOCK_INVERSE 15
-/* clear upper bits, last attribute may be 1<<14 */
-#define ADBLOCK_CLEAR_UPPER 0x7fff
-#define ADBLOCK_CLEAR_LOWER 0x3fff8000
 
 /* DECLARATIONS {{{*/
 /* Type definitions {{{*/
@@ -58,6 +53,11 @@ typedef enum _AdblockAttribute {
   /* inverse */
 } AdblockAttribute;
 #define AA_CLEAR_FRAME(X) (X & ~(AA_SUBDOCUMENT|AA_DOCUMENT))
+
+#define AB_INVERSE 15
+/* clear upper bits, last attribute may be 1<<14 */
+#define AB_CLEAR_UPPER 0x7fff
+#define AB_CLEAR_LOWER 0x3fff8000
 
 typedef struct _AdblockRule {
   GRegex *pattern;
@@ -185,10 +185,10 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
     if ( (attributes & AA_DOCUMENT && !(rule->attributes & AA_DOCUMENT)) || (attributes & AA_SUBDOCUMENT && !(rule->attributes & AA_SUBDOCUMENT)) )
       continue;
     /* If exception attributes exists, check if exception is matched */
-    if (AA_CLEAR_FRAME(rule->attributes) & ADBLOCK_CLEAR_LOWER && (AA_CLEAR_FRAME(rule->attributes) == (AA_CLEAR_FRAME(attributes)<<ADBLOCK_INVERSE))) 
+    if (AA_CLEAR_FRAME(rule->attributes) & AB_CLEAR_LOWER && (AA_CLEAR_FRAME(rule->attributes) == (AA_CLEAR_FRAME(attributes)<<AB_INVERSE))) 
       continue;
     /* If attribute restriction exists, check if attribute is matched */
-    if (AA_CLEAR_FRAME(rule->attributes) & ADBLOCK_CLEAR_UPPER && (AA_CLEAR_FRAME(rule->attributes) != AA_CLEAR_FRAME(attributes))) {
+    if (AA_CLEAR_FRAME(rule->attributes) & AB_CLEAR_UPPER && (AA_CLEAR_FRAME(rule->attributes) != AA_CLEAR_FRAME(attributes))) {
       continue;
     }
     if (rule->domains && !domain_match(rule->domains, host, domain)) {
@@ -259,7 +259,131 @@ error_out:
   if (sbaseuri != NULL) soup_uri_free(sbaseuri);
   if (suri != NULL) soup_uri_free(suri);
   return ret;
-}/*}}}*//*}}}*/
+}/*}}}*/
+
+/* adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {{{*/
+void 
+adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
+  GSList *list;
+  WebKitDOMStyleSheetList *slist = NULL;
+  WebKitDOMStyleSheet *ssheet = NULL;
+  WebKitWebView *wv = WEBVIEW(gl);
+
+  WebKitWebDataSource *datasource = webkit_web_frame_get_data_source(frame);
+  WebKitNetworkRequest *request = webkit_web_data_source_get_request(datasource);
+
+  SoupMessage *msg = webkit_network_request_get_message(request);
+  if (msg == NULL)
+    return;
+
+  SoupURI *suri = soup_message_get_uri(msg);
+  g_return_if_fail(suri != NULL);
+
+  const char *host = soup_uri_get_host(suri);
+  const char *base_domain = domain_get_base_for_host(host);
+  g_return_if_fail(host != NULL);
+  g_return_if_fail(base_domain != NULL);
+
+  AdblockElementHider *hider;
+  char *pattern, *escaped, *replaced = NULL;
+  char *tmpreplaced = g_strdup(_css_exceptions->str);
+  GString *css_rule = g_string_new(NULL);
+  GRegex *regex = NULL;
+
+  /* get all subdomains */
+  const char *subdomains[SUBDOMAIN_MAX];
+  char *nextdot = NULL;
+  int uc = 0;
+  const char *tmphost = host;
+  subdomains[uc++] = tmphost;
+  while (tmphost != base_domain) {
+    nextdot = strchr(tmphost, '.');
+    tmphost = nextdot + 1;
+    subdomains[uc++] = tmphost;
+    if (uc == SUBDOMAIN_MAX-1)
+      break;
+  }
+  subdomains[uc++] = NULL;
+
+
+  for (int i=0; subdomains[i]; i++) {
+    list = g_hash_table_lookup(_hider_rules, subdomains[i]);
+    if (list) {
+      for (GSList *l = list; l; l=l->next) {
+        hider = l->data;
+        if (hider->exception) {
+          escaped = g_regex_escape_string(hider->selector, -1);
+          pattern = g_strdup_printf("(?<=^|,)%s,?", escaped);
+          regex = g_regex_new(pattern, 0, 0, NULL);
+          replaced = g_regex_replace(regex, tmpreplaced, -1, 0, "", 0, NULL);
+          g_free(tmpreplaced);
+          tmpreplaced = replaced;
+          g_free(escaped);
+          g_free(pattern);
+          g_regex_unref(regex);
+        }
+        else if (domain_match(hider->domains, host, base_domain)) {
+          g_string_append(css_rule, hider->selector);
+          g_string_append_c(css_rule, ',');
+        }
+      }
+      break;
+    }
+  }
+  /* Adding replaced exceptions */
+  if (replaced != NULL) {
+    g_string_append(css_rule, replaced);
+    g_string_append_c(css_rule, ',');
+  }
+  /* No exception-exceptions found, so we take all exceptions */
+  else if (css_rule == NULL || css_rule->len == 0) {
+    g_string_append(css_rule, _css_exceptions->str);
+  }
+  if ((css_rule != NULL && css_rule->len > 1) || (_css_rules != NULL && _css_rules->len > 1)) {
+    g_string_append(css_rule, _css_rules->str);
+    if (css_rule->str[css_rule->len-1] == ',') 
+      g_string_erase(css_rule, css_rule->len-1, 1);
+    g_string_append(css_rule, "{display:none!important;}");
+    if (frame == webkit_web_view_get_main_frame(wv)) {
+      WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+      slist = webkit_dom_document_get_style_sheets(doc);
+      if (slist) {
+        ssheet = webkit_dom_style_sheet_list_item(slist, 0);
+      }
+      if (ssheet) {
+        webkit_dom_css_style_sheet_insert_rule((void*)ssheet, css_rule->str, 0, NULL);
+      }
+      else {
+        WebKitDOMElement *style = webkit_dom_document_create_element(doc, "style", NULL);
+        WebKitDOMHTMLHeadElement *head = webkit_dom_document_get_head(doc);
+        webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(style), css_rule->str, NULL);
+        webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(style), NULL);
+      }
+    }
+    else {
+      const char *css = css_rule->str;
+      /* Escape css_rule, at least ' and \ must be escaped, maybe some more? */
+      for (int pos = 0; *css; pos++, css++) {
+        if (*css == '\'' || *css == '\\')  {
+          g_string_insert_c(css_rule, pos, '\\');
+          pos++;
+          css++;
+        }
+      }
+      char *script = g_strdup_printf(
+          "var st=document.createElement('style');\
+          document.head.appendChild(st);\
+          document.styleSheets[document.styleSheets.length-1].insertRule('%s', 0);", 
+          css_rule->str);
+      dwb_execute_script(frame, script, false);
+      g_free(script);
+    }
+    g_string_free(css_rule, true);
+  }
+  g_free(tmpreplaced);
+
+}/*}}}*/
+/*}}}*/
 
 
 /* LOAD_CALLBACKS {{{*/
@@ -343,10 +467,19 @@ adblock_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
   adblock_create_js_callback(frame, (JSObjectCallAsFunctionCallback)adblock_js_callback, AA_SUBDOCUMENT);
 }/*}}}*/
 
+static void 
+adblock_frame_load_status_cb(WebKitWebFrame *frame, GParamSpec *p, GList *gl) {
+  WebKitLoadStatus status = webkit_web_frame_get_load_status(frame);
+  if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
+    adblock_apply_element_hider(frame, gl);
+  }
+}
+
 /* adblock_frame_created_cb {{{*/
 void 
 adblock_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
   g_signal_connect(frame, "load-committed", G_CALLBACK(adblock_frame_load_committed_cb), gl);
+  g_signal_connect(frame, "notify::load-status", G_CALLBACK(adblock_frame_load_status_cb), gl);
 }/*}}}*/
 
 /* adblock_before_load_cb  (domcallback) {{{*/
@@ -435,115 +568,15 @@ adblock_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame,
 static void
 adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
-  GSList *list;
-  WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
-  WebKitDOMStyleSheetList *slist = NULL;
-  WebKitDOMStyleSheet *ssheet = NULL;
   if (status == WEBKIT_LOAD_COMMITTED) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
     WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeload", G_CALLBACK(adblock_before_load_cb), true, gl);
   }
   else if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
+    adblock_apply_element_hider(frame, gl);
     /* Get hostname and base_domain */
-    WebKitWebDataSource *datasource = webkit_web_frame_get_data_source(frame);
-    WebKitNetworkRequest *request = webkit_web_data_source_get_request(datasource);
-
-    SoupMessage *msg = webkit_network_request_get_message(request);
-    if (msg == NULL)
-      return;
-
-    SoupURI *suri = soup_message_get_uri(msg);
-    g_return_if_fail(suri != NULL);
-
-    const char *host = soup_uri_get_host(suri);
-    const char *base_domain = domain_get_base_for_host(host);
-    g_return_if_fail(host != NULL);
-    g_return_if_fail(base_domain != NULL);
-
-    AdblockElementHider *hider;
-    char *pattern, *escaped, *replaced = NULL;
-    char *tmpreplaced = g_strdup(_css_exceptions->str);
-    GString *css_rule = g_string_new(NULL);
-    GRegex *regex = NULL;
-
-    /* get all subdomains */
-    const char *subdomains[SUBDOMAIN_MAX];
-    char *nextdot = NULL;
-    int uc = 0;
-    const char *tmphost = host;
-    subdomains[uc++] = tmphost;
-    while (tmphost != base_domain) {
-      nextdot = strchr(tmphost, '.');
-      tmphost = nextdot + 1;
-      subdomains[uc++] = tmphost;
-      if (uc == SUBDOMAIN_MAX-1)
-        break;
-    }
-    subdomains[uc++] = NULL;
-
-
-    for (int i=0; subdomains[i]; i++) {
-      list = g_hash_table_lookup(_hider_rules, subdomains[i]);
-      if (list) {
-        for (GSList *l = list; l; l=l->next) {
-          hider = l->data;
-          if (hider->exception) {
-            escaped = g_regex_escape_string(hider->selector, -1);
-            pattern = g_strdup_printf("(?<=^|,)%s,?", escaped);
-            regex = g_regex_new(pattern, 0, 0, NULL);
-            replaced = g_regex_replace(regex, tmpreplaced, -1, 0, "", 0, NULL);
-            g_free(tmpreplaced);
-            tmpreplaced = replaced;
-            g_free(escaped);
-            g_free(pattern);
-            g_regex_unref(regex);
-          }
-          else if (domain_match(hider->domains, host, base_domain)) {
-            g_string_append(css_rule, hider->selector);
-            g_string_append_c(css_rule, ',');
-          }
-        }
-        break;
-      }
-    }
-    /* Adding replaced exceptions */
-    if (replaced != NULL) {
-      g_string_append(css_rule, replaced);
-      g_string_append_c(css_rule, ',');
-    }
-    /* No exception-exceptions found, so we take all exceptions */
-    else if (css_rule == NULL || css_rule->len == 0) {
-      g_string_append(css_rule, _css_exceptions->str);
-    }
-    if (css_rule != NULL && css_rule->len > 1) {
-      g_string_append(css_rule, _css_rules->str);
-      if (css_rule->str[css_rule->len-1] == ',') 
-        g_string_erase(css_rule, css_rule->len-1, 1);
-      g_string_append(css_rule, "{display:none!important;}");
-      WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-      slist = webkit_dom_document_get_style_sheets(doc);
-      if (slist) {
-        ssheet = webkit_dom_style_sheet_list_item(slist, 0);
-      }
-      if (ssheet) {
-        webkit_dom_css_style_sheet_insert_rule((void*)ssheet, css_rule->str, 0, NULL);
-        g_object_unref(ssheet);
-      }
-      else {
-        WebKitDOMElement *style = webkit_dom_document_create_element(doc, "style", NULL);
-        WebKitDOMHTMLHeadElement *head = webkit_dom_document_get_head(doc);
-        webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(style), css_rule->str, NULL);
-        webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(style), NULL);
-        g_object_unref(style);
-        g_object_unref(head);
-      }
-      if (slist)
-        g_object_unref(slist);
-      g_object_unref(doc);
-      g_string_free(css_rule, true);
-    }
-    g_free(tmpreplaced);
   }
 }/*}}}*//*}}}*/
 
@@ -695,7 +728,7 @@ adblock_rule_parse(char *filterlist) {
           o = options_arr[i];
           /*  attributes */
           if (*o == '~') {
-            inverse = ADBLOCK_INVERSE;
+            inverse = AB_INVERSE;
             o++;
           }
           if (!strcmp(o, "script"))
@@ -899,7 +932,6 @@ adblock_init() {
   _css_rules          = g_string_new(NULL);
   domain_init();
   adblock_rule_parse(filterlist);
-
   _init = true;
   return true;
 }/*}}}*//*}}}*/
