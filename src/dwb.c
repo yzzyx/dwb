@@ -289,7 +289,10 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 
   char *key = NULL;
   if (e->keyval == GDK_KEY_Escape) {
-    dwb_change_mode(NORMAL_MODE, true);
+    if (dwb.state.mode & COMPLETION_MODE)
+      completion_clean_completion(true);
+    else 
+      dwb_change_mode(NORMAL_MODE, true);
     ret = false;
   }
   else if (mode & PASS_THROUGH) {
@@ -2026,7 +2029,7 @@ dwb_normal_mode(gboolean clean) {
     completion_clean_path_completion();
   }
   if (mode & COMPLETION_MODE) {
-    completion_clean_completion();
+    completion_clean_completion(false);
   }
   if (mode & AUTO_COMPLETE) {
     completion_clean_autocompletion();

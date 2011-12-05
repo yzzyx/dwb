@@ -22,6 +22,7 @@ static GList * completion_update_completion(GtkWidget *box, GList *comps, GList 
 static GList * completion_get_simple_completion(GList *gl);
 
 typedef gboolean (*Match_Func)(char*, const char*);
+static char *_typed;
 
 /* GUI_FUNCTIONS {{{*/
 /* completion_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
@@ -72,6 +73,7 @@ static GList *
 completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, void *data, const char *value) {
   Navigation *n;
   const char *input = GET_TEXT();
+  _typed = g_strdup(input);
   Match_Func func = word_beginnings ? (Match_Func)g_str_has_prefix : (Match_Func)util_strcasestr;
 
   for (GList *l = gl; l; l=l->next) {
@@ -167,7 +169,7 @@ completion_update_completion(GtkWidget *box, GList *comps, GList *active, int ma
 /* STANDARD_COMPLETION {{{*/
 /* dwb_clean_completion() {{{*/
 void 
-completion_clean_completion() {
+completion_clean_completion(gboolean set_text) {
   for (GList *l = dwb.comps.completions; l; l=l->next) {
     FREE(l->data);
   }
@@ -177,6 +179,12 @@ completion_clean_completion() {
   dwb.comps.view = NULL;
   dwb.comps.completions = NULL;
   dwb.comps.active_comp = NULL;
+  if (set_text)
+    dwb_entry_set_text(_typed);
+  if (_typed != NULL) {
+    g_free(_typed);
+    _typed = NULL;
+  }
   dwb.state.mode &= ~(COMPLETION_MODE|COMPLETE_PATH|COMPLETE_BUFFER);
 }/*}}}*/
 
@@ -308,7 +316,7 @@ completion_get_current_history(int back) {
 
 static void
 completion_buffer_exec(GList *gl) {
-  completion_clean_completion();
+  completion_clean_completion(false);
   dwb_focus_view(gl);
   dwb_change_mode(NORMAL_MODE, true);
 }

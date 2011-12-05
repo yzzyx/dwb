@@ -35,7 +35,7 @@ struct _Completion {
   void *data;
 };
 
-void completion_clean_completion(void);
+void completion_clean_completion(gboolean);
 void completion_clean_autocompletion(void);
 void completion_clean_path_completion(void);
 void completion_set_entry_text(Completion *);

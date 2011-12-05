@@ -660,7 +660,7 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e, GList *gl) {
     }
   }
   else if (mode & COMPLETION_MODE && !DWB_TAB_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
-    completion_clean_completion();
+    completion_clean_completion(false);
   }
   else if (mode == FIND_MODE) {
     return false;
