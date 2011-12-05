@@ -162,7 +162,6 @@ gboolean
 adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const char *uri_base, const char *host, const char *domain, AdblockAttribute attributes, gboolean thirdparty) {
   if (array->len == 0)
     return false;
-  gboolean match = false;
   const char *base_start = strstr(uri, uri_base);
   const char *uri_start = strstr(uri, uri_host);
   const char *suburis[SUBDOMAIN_MAX];
@@ -185,7 +184,6 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
     rule = g_ptr_array_index(array, i);
     if ( (attributes & AA_DOCUMENT && !(rule->attributes & AA_DOCUMENT)) || (attributes & AA_SUBDOCUMENT && !(rule->attributes & AA_SUBDOCUMENT)) )
       continue;
-
     /* If exception attributes exists, check if exception is matched */
     if (AA_CLEAR_FRAME(rule->attributes) & ADBLOCK_CLEAR_LOWER && (AA_CLEAR_FRAME(rule->attributes) == (AA_CLEAR_FRAME(attributes)<<ADBLOCK_INVERSE))) 
       continue;
@@ -201,15 +199,15 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
       continue;
     if (rule->options & AO_BEGIN_DOMAIN) {
       for (int i=0; suburis[i]; i++) {
-        if ( (match = adblock_do_match(rule, suburis[i])) ) 
-          return match;
+        if ( adblock_do_match(rule, suburis[i]) ) 
+          return true;
       }
     }
     else if ((match = adblock_do_match(rule, uri))) {
-      break;
+      return true;
     }
   }
-  return match;
+  return false;
 }/*}}}*/
 
 /* adblock_prepare_match (const char *uri, const char *baseURI, AdblockAttribute attributes {{{ */
