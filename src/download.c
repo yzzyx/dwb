@@ -254,6 +254,8 @@ download_start() {
   const char *uri = webkit_download_get_uri(dwb.state.download);
   char *command = NULL;
   char *tmppath = NULL;
+  const char *last_slash;
+  char path_buffer[PATH_MAX+1];
   gboolean external = GET_BOOL("download-use-external-program");
   gboolean clean = true;
   
@@ -306,6 +308,10 @@ download_start() {
           goto error_out;
         }
         fullpath = external ? g_strdup(path) : g_strconcat("file://", path, NULL);
+        if ((last_slash = strrchr(path, '/'))) {
+          strncpy(path_buffer, path, last_slash - path);
+          path = path_buffer;
+        }
       }
       lastaction = DL_ACTION_DOWNLOAD;
     }

@@ -57,8 +57,7 @@ typedef enum _AdblockAttribute {
   AA_OTHER              = 1<<12,
   /* inverse */
 } AdblockAttribute;
-#define AA_FRAME (AA_SUBDOCUMENT | (AA_SUBDOCUMENT<<ADBLOCK_INVERSE)) 
-#define AA_MAINFRAME (AA_DOCUMENT | (AA_DOCUMENT<<ADBLOCK_INVERSE)) 
+#define AA_CLEAR_FRAME(X) (X & ~(AA_SUBDOCUMENT|AA_DOCUMENT))
 
 typedef struct _AdblockRule {
   GRegex *pattern;
@@ -149,19 +148,20 @@ adblock_do_match(AdblockRule *rule, const char *uri) {
   return false;
 }/*}}}*/
 
-/* adblock_match(GPtrArray *, SoupURI *, const char *base_domain, * AdblockAttribute, gboolean thirdparty) 
+/* adblock_match(GPtrArray *, SoupURI *, const char *base_domain, * AdblockAttribute, gboolean thirdparty)  {{{
  * Params: 
- * array      - the filtes array
+ * array      - the filter array
  * uri        - the uri to check
  * uri_host   - the hostname of the request
  * uri_base   - the domainname of the request
  * host       - the hostname of the page
  * domain     - the domainname of the page
- * thirdparty - the domainname of the page
- * {{{*/
+ * thirdparty - thirdparty request ? 
+ * */
 gboolean                
 adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const char *uri_base, const char *host, const char *domain, AdblockAttribute attributes, gboolean thirdparty) {
-  gboolean match = false;
+  if (array->len == 0)
+    return false;
   const char *base_start = strstr(uri, uri_base);
   const char *uri_start = strstr(uri, uri_host);
   const char *suburis[SUBDOMAIN_MAX];
@@ -182,13 +182,14 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
 
   for (int i=0; i<array->len; i++) {
     rule = g_ptr_array_index(array, i);
-    if (attributes) {
-      /* If exception attributes exists, check if exception is matched */
-      if (rule->attributes & ADBLOCK_CLEAR_LOWER && rule->attributes & (attributes<<ADBLOCK_INVERSE)) 
-        continue;
-      /* If attribute restriction exists, check if attribute is matched */
-      if (rule->attributes & ADBLOCK_CLEAR_UPPER && ! (rule->attributes & attributes) ) 
-        continue;
+    if ( (attributes & AA_DOCUMENT && !(rule->attributes & AA_DOCUMENT)) || (attributes & AA_SUBDOCUMENT && !(rule->attributes & AA_SUBDOCUMENT)) )
+      continue;
+    /* If exception attributes exists, check if exception is matched */
+    if (AA_CLEAR_FRAME(rule->attributes) & ADBLOCK_CLEAR_LOWER && (AA_CLEAR_FRAME(rule->attributes) == (AA_CLEAR_FRAME(attributes)<<ADBLOCK_INVERSE))) 
+      continue;
+    /* If attribute restriction exists, check if attribute is matched */
+    if (AA_CLEAR_FRAME(rule->attributes) & ADBLOCK_CLEAR_UPPER && (AA_CLEAR_FRAME(rule->attributes) != AA_CLEAR_FRAME(attributes))) {
+      continue;
     }
     if (rule->domains && !domain_match(rule->domains, host, domain)) {
       continue;
@@ -198,18 +199,70 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
       continue;
     if (rule->options & AO_BEGIN_DOMAIN) {
       for (int i=0; suburis[i]; i++) {
-        if ( (match = adblock_do_match(rule, suburis[i])) ) 
-          return match;
+        if ( adblock_do_match(rule, suburis[i]) ) 
+          return true;
       }
     }
-    else if ((match = adblock_do_match(rule, uri))) {
-      break;
+    else if (adblock_do_match(rule, uri)) {
+      return true;
     }
-
   }
-  return match;
+  return false;
+}/*}}}*/
+
+/* adblock_prepare_match (const char *uri, const char *baseURI, AdblockAttribute attributes {{{ */
+static gboolean
+adblock_prepare_match(const char *uri, const char *baseURI, AdblockAttribute attributes) {
+  char *realuri = NULL;
+  SoupURI *suri = NULL, *sbaseuri = NULL;
+  gboolean ret = false;
+
+  if (! g_regex_match_simple("^https?://", uri, 0, 0)) {
+    gboolean last_slash = g_str_has_suffix(baseURI, "/");
+    if (*uri == '/' && last_slash) 
+      realuri = g_strconcat(baseURI, uri+1, NULL);
+    else if (*uri != '/' && !last_slash)
+      realuri = g_strconcat(baseURI, "/", uri, NULL);
+    else 
+      realuri = g_strconcat(baseURI, uri, NULL);
+  }
+  else 
+    realuri = g_strdup(uri);
+
+  /* FIXME: soup_uri_get_host is just used to get parse the uri */
+  suri = soup_uri_new(realuri);
+  if (suri == NULL) 
+    goto error_out;
+  const char *host = soup_uri_get_host(suri);
+  if (host == NULL)
+    goto error_out;
+
+  sbaseuri = soup_uri_new(baseURI);
+  if (sbaseuri == NULL) 
+    goto error_out;
+
+  const char *basehost = soup_uri_get_host(sbaseuri);
+  if (basehost == NULL)
+    goto error_out;
+  
+  const char *domain = domain_get_base_for_host(host);
+  const char *basedomain = domain_get_base_for_host(basehost);
+  gboolean thirdparty = g_strcmp0(domain, basedomain);
+
+  if (!adblock_match(_exceptions, realuri, host, domain, basehost, basedomain, attributes, thirdparty)) {
+    if (adblock_match(_rules, realuri, host, domain, basehost, basedomain, attributes, thirdparty)) {
+      ret = true;
+    }
+  }
+error_out:
+  if (realuri != NULL) g_free(realuri);
+  if (sbaseuri != NULL) soup_uri_free(sbaseuri);
+  if (suri != NULL) soup_uri_free(suri);
+  return ret;
 }/*}}}*//*}}}*/
 
+
+/* LOAD_CALLBACKS {{{*/
 /* adblock_js_callback {{{*/
 static JSValueRef 
 adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
@@ -218,15 +271,14 @@ adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObje
   char *tagname = NULL;
   char *baseuri = NULL;
   char *tmpuri = NULL;
-  char *uri = NULL;
   char *rel = NULL; 
   char *type = NULL;
-  SoupURI *suri = NULL, *sbaseuri = NULL;
   JSValueRef exc = NULL;
+  AdblockAttribute attributes = AA_SUBDOCUMENT;
+
   JSObjectRef event = JSValueToObject(ctx, argv[0], &exc);
   if (exc != NULL)
     return NULL;
-  
 
   JSObjectRef srcElement = js_get_object_property(ctx, event, "srcElement"); 
   if (srcElement == NULL)
@@ -238,7 +290,6 @@ adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObje
   if (tmpuri == NULL)
     goto error_out;
 
-  int attributes = (int)js_get_double_property(ctx, function, "attributes");
 
   tagname = js_get_string_property(ctx, srcElement, "tagName");
   if (!g_strcmp0(tagname, "IMG"))
@@ -258,68 +309,25 @@ adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObje
     attributes |= AA_OBJECT;
   }
 
-  /* Check for relative paths.
-   * WebKit will only handle http(s), so it is not required to check for other
-   * schemes
-   */
-  if (! g_regex_match_simple("^https?://", tmpuri, 0, 0)) {
-    int offset = *tmpuri == '/' && g_str_has_suffix(baseuri, "/") ? 1 : 0;
-    uri = g_strconcat(baseuri, tmpuri+offset, NULL);
-    g_free(tmpuri);
-  }
-  else 
-    uri = tmpuri;
-
-  suri = soup_uri_new(uri);
-  if (suri == NULL) 
-    goto error_out;
-  sbaseuri = soup_uri_new(baseuri);
-  if (sbaseuri == NULL) 
-    goto error_out;
-
-  /* FIXME: soup_uri_get_host is just used to get parse the uri */
-  const char *host = soup_uri_get_host(suri);
-  if (host == NULL)
-    goto error_out;
-  const char *basehost = soup_uri_get_host(sbaseuri);
-  if (basehost == NULL)
-    goto error_out;
-  
-  const char *domain = domain_get_base_for_host(host);
-  const char *basedomain = domain_get_base_for_host(basehost);
-  gboolean thirdparty = g_strcmp0(domain, basedomain);
-  if (!adblock_match(_exceptions, uri, host, domain, basehost, basedomain, attributes, thirdparty)) {
-    if (adblock_match(_rules, uri, host, domain, basehost, basedomain, attributes, thirdparty)) {
-      JSObjectRef prevent = js_get_object_property(ctx, event, "preventDefault");
-      if (prevent) {
-        JSObjectCallAsFunction(ctx, prevent, event, 0, NULL, NULL);
-      }
+  if (adblock_prepare_match(tmpuri, baseuri, attributes)) {
+    JSObjectRef prevent = js_get_object_property(ctx, event, "preventDefault");
+    if (prevent) {
+      JSObjectCallAsFunction(ctx, prevent, event, 0, NULL, NULL);
     }
   }
-
-
 error_out:
-  if (suri != NULL) soup_uri_free(suri);
-  if (sbaseuri != NULL) soup_uri_free(sbaseuri);
   if (tagname) g_free(tagname);
   if (baseuri) g_free(baseuri);
-  if (uri)     g_free(uri);
-
-
+  if (tmpuri) g_free(tmpuri);
   return NULL;
 }/*}}}*/
 
-/* LOAD_CALLBACKS {{{*/
 /* js_create_callback {{{*/
 static void
 adblock_create_js_callback(WebKitWebFrame *frame, JSObjectCallAsFunctionCallback function, int attr) {
   JSContextRef ctx = webkit_web_frame_get_global_context(frame);
   JSObjectRef globalObject = JSContextGetGlobalObject(ctx);
   JSObjectRef newcall = JSObjectMakeFunctionWithCallback(ctx, NULL, function);
-  JSStringRef jsattr = JSStringCreateWithUTF8CString("attributes");
-  JSObjectSetProperty(ctx, newcall, jsattr, JSValueMakeNumber(ctx, attr), 
-      kJSPropertyAttributeDontDelete | kJSPropertyAttributeDontEnum | kJSPropertyAttributeReadOnly, NULL);
-  JSStringRelease(jsattr);
   JSValueRef val = js_get_object_property(ctx, globalObject, "addEventListener");
   if (val) {
     JSStringRef beforeLoadString = JSStringCreateWithUTF8CString("beforeload");
@@ -339,6 +347,47 @@ adblock_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
 void 
 adblock_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
   g_signal_connect(frame, "load-committed", G_CALLBACK(adblock_frame_load_committed_cb), gl);
+}/*}}}*/
+
+/* adblock_before_load_cb  (domcallback) {{{*/
+static gboolean
+adblock_before_load_cb(WebKitDOMElement *win, WebKitDOMEvent *event, GList *gl) {
+  WebKitDOMElement *src = (void*)webkit_dom_event_get_src_element(event);
+  char *tagname = webkit_dom_element_get_tag_name(src);
+  const char *url = NULL;
+  AdblockAttribute attributes = AA_DOCUMENT;
+
+  WebKitDOMDocument *doc = webkit_dom_dom_window_get_document(WEBKIT_DOM_DOM_WINDOW(win));
+  char *baseURI = webkit_dom_document_get_document_uri(doc);
+
+  if (webkit_dom_element_has_attribute(src, "src")) 
+    url = webkit_dom_element_get_attribute(src, "src");
+  else if (webkit_dom_element_has_attribute(src, "href")) 
+    url = webkit_dom_element_get_attribute(src, "href");
+  else if (webkit_dom_element_has_attribute(src, "data")) 
+    url = webkit_dom_element_get_attribute(src, "data");
+  if (url == NULL) 
+    return false;
+
+  if (!g_strcmp0(tagname, "IMG")) {
+    attributes |= AA_IMAGE;
+  }
+  else if (!g_strcmp0(tagname, "SCRIPT"))
+    attributes |= AA_SCRIPT;
+  else if (!g_strcmp0(tagname, "LINK")  ) {
+    char *rel  = webkit_dom_html_link_element_get_rel((void*)src);
+    char *type  = webkit_dom_element_get_attribute(src, "type");
+    if (!g_strcmp0(rel, "stylesheet") || !g_strcmp0(type, "text/css")) {
+      attributes |= AA_STYLESHEET;
+    }
+  }
+  else if (!g_strcmp0(tagname, "OBJECT") || ! g_strcmp0(tagname, "EMBED")) {
+    attributes |= AA_OBJECT;
+  }
+  if (adblock_prepare_match(url, baseURI, attributes)) {
+    webkit_dom_event_prevent_default(event);
+  }
+  return true;
 }/*}}}*/
 
 /* adblock_resource_request_cb {{{*/
@@ -391,7 +440,9 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   WebKitDOMStyleSheetList *slist = NULL;
   WebKitDOMStyleSheet *ssheet = NULL;
   if (status == WEBKIT_LOAD_COMMITTED) {
-    adblock_create_js_callback(frame, (JSObjectCallAsFunctionCallback)adblock_js_callback, AA_DOCUMENT);
+    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+    WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeload", G_CALLBACK(adblock_before_load_cb), true, gl);
   }
   else if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
     /* Get hostname and base_domain */
@@ -465,7 +516,7 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
     else if (css_rule == NULL || css_rule->len == 0) {
       g_string_append(css_rule, _css_exceptions->str);
     }
-    if (css_rule->len > 1) {
+    if (css_rule != NULL && css_rule->len > 1) {
       g_string_append(css_rule, _css_rules->str);
       if (css_rule->str[css_rule->len-1] == ',') 
         g_string_erase(css_rule, css_rule->len-1, 1);
@@ -503,6 +554,7 @@ gboolean
 adblock_running() {
   return _init && GET_BOOL("adblocker");
 }
+
 /* adblock_disconnect(GList *) {{{*/
 void 
 adblock_disconnect(GList *gl) {
@@ -578,7 +630,7 @@ adblock_rule_parse(char *filterlist) {
       break;
       //return STATUS_IGNORE;
     }
-    tmp = tmp_a = tmp_b = tmp_c = NULL;
+    tmp_a = tmp_b = tmp_c = NULL;
     /* Element hiding rules */
     if ( (tmp = strstr(pattern, "##")) != NULL) {
       /* Match domains */
@@ -602,8 +654,10 @@ adblock_rule_parse(char *filterlist) {
             list = g_slist_append(list, hider);
             g_hash_table_insert(_hider_rules, g_strdup(domain), list);
           }
-          else 
+          else {
             list = g_slist_append(list, hider);
+            (void) list;
+          }
         }
         hider->exception = hider_exc;
         if (hider_exc) {
@@ -636,7 +690,6 @@ adblock_rule_parse(char *filterlist) {
       if (option_string != NULL) {
         tmp_a = g_strndup(tmp, option_string - tmp);
         options_arr = g_strsplit(option_string+1, ",", -1);
-        inverse = 0;
         for (int i=0; options_arr[i] != NULL; i++) {
           inverse = 0;
           o = options_arr[i];
@@ -661,11 +714,11 @@ adblock_rule_parse(char *filterlist) {
             }
           }
           else if (!strcmp(o, "subdocument")) {
-            attributes |= (AA_SUBDOCUMENT << inverse);
+            attributes |= inverse ? AA_DOCUMENT : AA_SUBDOCUMENT;
           }
           else if (!strcmp(o, "document")) {
             if (exception) 
-              attributes |= (AA_DOCUMENT << inverse);
+              attributes |= inverse ? AA_DOCUMENT : AA_SUBDOCUMENT;
             else 
               adblock_warn_ignored("Adblock option 'document' can only be applied to exception rules", pattern);
           }
@@ -774,7 +827,11 @@ adblock_rule_parse(char *filterlist) {
       adrule->pattern = rule;
       adrule->options = option;
       adrule->domains = domain_arr;
-      if (!(attributes & ~(AA_MAINFRAME | AA_FRAME))) {
+
+      if (! (attributes & (AA_DOCUMENT | AA_SUBDOCUMENT)) )
+          adrule->attributes |= AA_SUBDOCUMENT | AA_DOCUMENT;
+
+      if (!(attributes & ~(AA_SUBDOCUMENT | AA_DOCUMENT))) {
         if (exception) 
           g_ptr_array_add(_simple_exceptions, adrule);
         else 
