@@ -2300,6 +2300,7 @@ dwb_clean_up() {
   if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
     unlink(dwb.files.fifo);
   }
+  util_rmdir(dwb.files.cachedir, true);
   gtk_widget_destroy(dwb.gui.window);
 #ifdef DWB_ADBLOCKER
   adblock_end();
