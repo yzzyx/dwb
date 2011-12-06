@@ -418,6 +418,7 @@ view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
     if ( (old = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
       gdk_pixbuf_unref(old);
     gtk_image_set_from_pixbuf(GTK_IMAGE(v->tabicon), rescale);
+    gdk_pixbuf_unref(pb);
   }
 }/* }}} */
 
