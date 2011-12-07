@@ -845,6 +845,7 @@ view_create_web_view() {
   status->progress = 0;
   status->allowed_plugins = NULL;
   status->protect = false;
+  status->style = NULL;
 
   v->plugins = plugins_new();
   for (int i=0; i<SIG_LAST; i++) 
