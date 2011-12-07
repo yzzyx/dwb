@@ -1396,7 +1396,7 @@ dwb_evaluate_hints(const char *buffer) {
   }
   else if  (!strcmp(buffer, "_dwb_click_")) {
     dwb.state.scriptlock = 1;
-    if (dwb.state.nv != OPEN_DOWNLOAD) {
+    if ( !(dwb.state.nv & OPEN_DOWNLOAD) ) {
       dwb_change_mode(NORMAL_MODE, true);
       ret = STATUS_END;
     }

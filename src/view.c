@@ -268,7 +268,7 @@ view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwor
 
   v->status->mimetype = g_strdup(mimetype);
 
-  if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv == OPEN_DOWNLOAD) {
+  if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv & OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
     webkit_web_policy_decision_download(policy);
     return true;
