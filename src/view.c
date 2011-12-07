@@ -384,7 +384,7 @@ view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
 /* view_create_plugin_widget_cb {{{*/
 static GtkWidget * 
 view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *param, GList *gl) {
-  VIEW(gl)->status->pb_status |= PLUGIN_STATUS_HAS_PLUGIN;
+  VIEW(gl)->plugins->status |= PLUGIN_STATUS_HAS_PLUGIN;
   return NULL;
 }/*}}}*/
 
@@ -509,10 +509,10 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
       }
-      if (v->status->pb_status & PLUGIN_STATUS_ENABLED) 
+      if (v->plugins->status & PLUGIN_STATUS_ENABLED) 
         plugins_connect(gl);
       v->status->ssl = SSL_NONE;
-      v->status->pb_status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
+      v->plugins->status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       /* This is more or less a dummy call, to compile the script and speed up
@@ -530,7 +530,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", true, NULL);
         v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
       }
-      if (v->status->pb_status & PLUGIN_STATUS_ENABLED 
+      if (v->plugins->status & PLUGIN_STATUS_ENABLED 
           && ( (host != NULL || (host = dwb_get_host(web))) 
           && (dwb_get_allowed(dwb.files.plugins_allow, host) || dwb_get_allowed(dwb.files.plugins_allow, uri)
             || g_list_find_custom(dwb.fc.tmp_plugins, host, (GCompareFunc)strcmp) || g_list_find_custom(dwb.fc.tmp_plugins, uri, (GCompareFunc)strcmp) )
@@ -844,9 +844,9 @@ view_create_web_view() {
   status->hover_uri = NULL;
   status->progress = 0;
   status->allowed_plugins = NULL;
-  status->pb_status = 0;
   status->protect = false;
 
+  v->plugins = plugins_new();
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
   v->status = status;
@@ -1070,6 +1070,7 @@ view_remove(GList *gl) {
 
   /*  clean up */ 
   dwb_source_remove(gl);
+  plugins_free(v->plugins);
   FREE(v->status);
   FREE(v);
 

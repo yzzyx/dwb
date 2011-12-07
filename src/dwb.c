@@ -108,11 +108,11 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
   if (s->arg.b) {
     plugins_connect(gl);
-    v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_DISABLED) | PLUGIN_STATUS_ENABLED;
+    v->plugins->status ^= (v->plugins->status & PLUGIN_STATUS_DISABLED) | PLUGIN_STATUS_ENABLED;
   }
   else {
     plugins_disconnect(gl);
-    v->status->pb_status ^= (v->status->pb_status & PLUGIN_STATUS_ENABLED) | PLUGIN_STATUS_DISABLED;
+    v->plugins->status ^= (v->plugins->status & PLUGIN_STATUS_ENABLED) | PLUGIN_STATUS_DISABLED;
   }
 }/*}}}*/
 
@@ -479,8 +479,8 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
       : "[<span foreground='%s'><s>S</s></span>]";
     g_string_append_printf(string, format,  v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY ? dwb.color.allow_color : dwb.color.block_color);
   }
-  if ((v->status->pb_status & PLUGIN_STATUS_ENABLED) &&  (v->status->pb_status & PLUGIN_STATUS_HAS_PLUGIN)) {
-    if (v->status->pb_status & PLUGIN_STATUS_DISCONNECTED) 
+  if ((v->plugins->status & PLUGIN_STATUS_ENABLED) &&  (v->plugins->status & PLUGIN_STATUS_HAS_PLUGIN)) {
+    if (v->plugins->status & PLUGIN_STATUS_DISCONNECTED) 
       g_string_append_printf(string, "[<span foreground='%s'>P</span>]",  dwb.color.allow_color);
     else 
       g_string_append_printf(string, "[<span foreground='%s'><s>P</s></span>]",  dwb.color.block_color);

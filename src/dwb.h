@@ -535,6 +535,13 @@ struct _WebSettings {
   Arg arg;
   S_Func func;
 };
+struct _Plugins {
+  GSList *elements;
+  GSList *clicks;
+  int created;
+  int max;
+  PluginBlockerStatus status;
+};
 struct _ViewStatus {
   guint message_id;
   gboolean add_history;
@@ -548,8 +555,8 @@ struct _ViewStatus {
   int tab_height;
   char *hover_uri;
   GSList *allowed_plugins;
-  PluginBlockerStatus pb_status;
   gboolean protect;
+  WebKitDOMElement *style;
 };
 struct _View {
   GtkWidget *vbox;
@@ -569,6 +576,7 @@ struct _View {
   GtkWidget *bottombox;
   ViewStatus *status;
   GHashTable *setting;
+  Plugins *plugins;
 };
 struct _Color {
   DwbColor active_fg;

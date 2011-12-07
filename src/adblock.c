@@ -265,8 +265,6 @@ error_out:
 void 
 adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
   GSList *list;
-  WebKitDOMStyleSheetList *slist = NULL;
-  WebKitDOMStyleSheet *ssheet = NULL;
   WebKitWebView *wv = WEBVIEW(gl);
 
   WebKitWebDataSource *datasource = webkit_web_frame_get_data_source(frame);
@@ -346,19 +344,14 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
     g_string_append(css_rule, "{display:none!important;}");
     if (frame == webkit_web_view_get_main_frame(wv)) {
       WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-      slist = webkit_dom_document_get_style_sheets(doc);
-      if (slist) {
-        ssheet = webkit_dom_style_sheet_list_item(slist, 0);
+      if (VIEW(gl)->status->style == NULL) {
+        WebKitDOMDocument *doc = webkit_web_view_get_dom_document(WEBVIEW(gl));
+        VIEW(gl)->status->style = webkit_dom_document_create_element(doc, "style", NULL);
       }
-      if (ssheet) {
-        webkit_dom_css_style_sheet_insert_rule((void*)ssheet, css_rule->str, 0, NULL);
-      }
-      else {
-        WebKitDOMElement *style = webkit_dom_document_create_element(doc, "style", NULL);
-        WebKitDOMHTMLHeadElement *head = webkit_dom_document_get_head(doc);
-        webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(style), css_rule->str, NULL);
-        webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(style), NULL);
-      }
+      WebKitDOMHTMLHeadElement *head = webkit_dom_document_get_head(doc);
+      webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->status->style), css_rule->str, NULL);
+      webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(VIEW(gl)->status->style), NULL);
+      g_object_unref(head);
     }
     else {
       const char *css = css_rule->str;
@@ -489,6 +482,7 @@ adblock_before_load_cb(WebKitDOMElement *win, WebKitDOMEvent *event, GList *gl) 
   char *tagname = webkit_dom_element_get_tag_name(src);
   const char *url = NULL;
   AdblockAttribute attributes = AA_DOCUMENT;
+  gboolean ret = false;
 
   WebKitDOMDocument *doc = webkit_dom_dom_window_get_document(WEBKIT_DOM_DOM_WINDOW(win));
   char *baseURI = webkit_dom_document_get_document_uri(doc);
@@ -500,7 +494,7 @@ adblock_before_load_cb(WebKitDOMElement *win, WebKitDOMEvent *event, GList *gl) 
   else if (webkit_dom_element_has_attribute(src, "data")) 
     url = webkit_dom_element_get_attribute(src, "data");
   if (url == NULL) 
-    return false;
+    goto error_out;
 
   if (!g_strcmp0(tagname, "IMG")) {
     attributes |= AA_IMAGE;
@@ -513,6 +507,8 @@ adblock_before_load_cb(WebKitDOMElement *win, WebKitDOMEvent *event, GList *gl) 
     if (!g_strcmp0(rel, "stylesheet") || !g_strcmp0(type, "text/css")) {
       attributes |= AA_STYLESHEET;
     }
+    g_free(rel);
+    g_free(type);
   }
   else if (!g_strcmp0(tagname, "OBJECT") || ! g_strcmp0(tagname, "EMBED")) {
     attributes |= AA_OBJECT;
@@ -520,7 +516,12 @@ adblock_before_load_cb(WebKitDOMElement *win, WebKitDOMEvent *event, GList *gl) 
   if (adblock_prepare_match(url, baseURI, attributes)) {
     webkit_dom_event_prevent_default(event);
   }
-  return true;
+  ret = true;
+error_out:
+  g_object_unref(src);
+  g_free(tagname);
+  g_free(baseURI);
+  return ret;
 }/*}}}*/
 
 /* adblock_resource_request_cb {{{*/
@@ -603,6 +604,10 @@ adblock_disconnect(GList *gl) {
   if (v->status->signals[SIG_AD_RESOURCE_REQUEST] > 0) {
     g_signal_handler_disconnect(WEBVIEW(gl), (VIEW(gl)->status->signals[SIG_AD_RESOURCE_REQUEST]));
     v->status->signals[SIG_AD_RESOURCE_REQUEST] = 0;
+  }
+  if (VIEW(gl)->status->style != NULL) {
+    g_object_unref(VIEW(gl)->status->style);
+    VIEW(gl)->status->style = NULL;
   }
 }/*}}}*/
 
