@@ -96,8 +96,6 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     g_object_unref(style);
     g_object_unref(parent);
     v->plugins->created++;
-
-    g_free(new_style);
     return display;
   }
   return NULL;
