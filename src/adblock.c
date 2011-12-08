@@ -745,12 +745,6 @@ adblock_rule_parse(char *filterlist) {
           else if (!strcmp(o, "object")) {
             attributes |= (AA_OBJECT << inverse);
           }
-          else if (!strcmp(o, "object-subrequest")) {
-            if (! inverse) {
-              adblock_warn_ignored("Adblock option 'object-subrequest' isn't supported", pattern);
-              goto error_out;
-            }
-          }
           else if (!strcmp(o, "subdocument")) {
             attributes |= inverse ? AA_DOCUMENT : AA_SUBDOCUMENT;
           }
@@ -773,9 +767,12 @@ adblock_rule_parse(char *filterlist) {
           else if (g_str_has_prefix(o, "domain=")) {
             domain_arr = g_strsplit(options_arr[i] + 7, "|", -1);
           }
-          else {
+          /* Unsupported should only be ignored if they are actually rules, not
+           * exceptions */
+          else if ((inverse && exception) || (!inverse && !exception)) {
             /*  currently unsupported  xbl, ping, xmlhttprequest, dtd, elemhide,
-             *  other, collapse, donottrack, object-subrequest, popup */
+             *  other, collapse, donottrack, object-subrequest, popup 
+             *  */
             snprintf(warning, 255, "Adblock option '%s' isn't supported", o);
             adblock_warn_ignored(warning, pattern);
             goto error_out;

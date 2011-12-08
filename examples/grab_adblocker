@@ -62,11 +62,18 @@ if [ ${#URLS[@]} -eq 0 ]; then
   echo "No urls specified, you must uncomment at least one url." 
   exit 1
 fi
-UNSUPPORTED="[\$,~]{1}(xbl|ping|xmlhttprequest|dtd|elemhide|other|collapse|donottrack|popup)(,|$)|[\$,]object-subrequest(,|$)"
-CONFIG=${XDG_CONFIG_HOME}/dwb/settings
+
+# General not supported filterlists
+_USP="object-subrequest|ping|xbl|xmlhttprequest|dtd|elemhide|other|collapse|donottrack|popup"
+# Only remove rules, not exceptions
+UNSUPPORTED="(^@@.*[\$,]~(${_USP})($|,))"
+UNSUPPORTED+="|(^[^@].*[\$,](${_USP})($|,))"
+
 
 declare PROFILE
 # Parse settings
+CONFIG=${XDG_CONFIG_HOME}/dwb/settings
+
 while read; do 
   if [[ ${REPLY} =~ ^\[ ]]; then 
     PROFILE=${REPLY:1:$((${#REPLY}-2))}
