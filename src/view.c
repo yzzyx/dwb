@@ -1065,9 +1065,10 @@ view_remove(GList *gl) {
   gtk_widget_destroy(v->web);
   gtk_widget_destroy(v->scroll);
   gtk_widget_destroy(v->vbox);
+
   dwb.gui.entry = NULL;
   dwb_focus(dwb.state.fview);
-  gtk_container_remove(GTK_CONTAINER(dwb.gui.topbox), v->tabevent);
+  gtk_widget_destroy(v->tabevent);
 
   /*  clean up */ 
   dwb_source_remove(gl);
@@ -1126,9 +1127,9 @@ view_add(const char *uri, gboolean background) {
     return NULL;
   }
   View *v = view_create_web_view();
+  gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
   if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
-    gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
     gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
     gtk_box_insert(GTK_BOX(dwb.gui.right), v->vbox, true, true, 0, p-1);
     dwb.state.views = g_list_insert(dwb.state.views, v, p);
@@ -1156,7 +1157,6 @@ view_add(const char *uri, gboolean background) {
       gtk_widget_reparent(views->vbox, dwb.gui.right);
       gtk_box_reorder_child(GTK_BOX(dwb.gui.right), views->vbox, 0);
     }
-    gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
     gtk_box_insert(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0, 0);
     dwb.state.views = g_list_prepend(dwb.state.views, v);
     ret = dwb.state.views;

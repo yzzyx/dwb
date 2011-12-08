@@ -41,7 +41,6 @@ static void dwb_webview_property(GList *, WebSettings *);
 static void dwb_set_background_tab(GList *, WebSettings *);
 static void dwb_set_scripts(GList *, WebSettings *);
 static void dwb_set_user_agent(GList *, WebSettings *);
-static void dwb_set_dummy(GList *, WebSettings *);
 static void dwb_set_startpage(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
@@ -96,12 +95,6 @@ static char *restore = NULL;
 #include "config.h"
 
 /* SETTINGS_FUNCTIONS{{{*/
-/* dwb_set_dummy{{{*/
-static void
-dwb_set_dummy(GList *gl, WebSettings *s) {
-  return;
-}/*}}}*/
-
 /* dwb_set_plugin_blocker {{{*/
 static void
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
