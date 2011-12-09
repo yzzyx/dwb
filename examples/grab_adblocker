@@ -99,10 +99,6 @@ http://www.fanboy.co.nz/adblock/fanboy-tracking.txt
 #  echo "No urls specified, you must uncomment at least one url." 
 #  exit 1
 #fi
-if ! test -z $(pgrep dwb); then 
-  echo "Please close all instances of dwb before running $0."
-  exit 1
-fi
 
 # General not supported filterlists
 _USP="object-subrequest|ping|xbl|xmlhttprequest|dtd|elemhide|other|collapse|donottrack|popup"
@@ -126,6 +122,13 @@ while read; do
 done < ${CONFIG}
 
 if [ ! ${DEST} ]; then 
+  if ! test -z $(pgrep -U $(id -u) dwb); then 
+    cat << ! 
+You haven't set 'adblocker-filterlist' in dwb yet. You can either set the path
+in dwb or close all instances of dwb and run this script again.
+!
+    exit 1
+  fi
   DEST=${XDG_CONFIG_HOME}/dwb/adblock_default
   echo "No setting 'adblocker-filterlist' found for profile default, using '${DEST}'"
   sed -i "0,/adblocker-filterlist/s#^adblocker-filterlist=.*#adblocker-filterlist=${DEST}#" ${CONFIG}
