@@ -55,11 +55,52 @@ URLS=(
 
 # Fanboy Tracking list
 #http://www.fanboy.co.nz/adblock/fanboy-tracking.txt
-
 )
 
-if [ ${#URLS[@]} -eq 0 ]; then 
-  echo "No urls specified, you must uncomment at least one url." 
+
+DESCRIPTION_INTERACTIVE=(
+"Easylist English"
+"Easylist privacy, blocks tracking"
+"Easylist without element hiding"
+"Easylist Germany"
+"Easylist Italy"
+"Easylist Dutch"
+"Easylist French"
+"Easylist China"
+"Easylist Bulgaria"
+"Easylist Indonesia"
+"Easylist Finland"
+"Easylist Greece"
+"Adversity English list"
+"Adversity Privacy"
+"Fanboy English list"
+"Fanboy Tracking list"
+)
+URLS_INTERACTIVE=(
+https://easylist-downloads.adblockplus.org/easylist.txt
+https://easylist-downloads.adblockplus.org/easyprivacy.txt
+https://easylist-downloads.adblockplus.org/easylist_noelemhide.txt
+https://easylist-downloads.adblockplus.org/easylistgermany.txt
+https://easylist-downloads.adblockplus.org/easylistitaly.txt
+http://dutchadblockfilters.googlecode.com/svn/trunk/AdBlock_Dutch_hide.txt
+http://lian.info.tm/liste_fr.txt
+http://adblock-chinalist.googlecode.com/svn/trunk/adblock.txt
+http://stanev.org/abp/adblock_bg.txt
+http://indonesianadblockrules.googlecode.com/hg/subscriptions/abpindo.txt
+http://www.wiltteri.net/wiltteri.txt
+http://www.void.gr/kargig/void-gr-filters.txt
+https://adversity.googlecode.com/hg/Adversity.txt  
+https://adversity.googlecode.com/hg/Adversity-Tracking.txt
+http://www.fanboy.co.nz/adblock/fanboy-adblock.txt
+http://www.fanboy.co.nz/adblock/fanboy-tracking.txt
+)
+
+#if [ ${#URLS[@]} -eq 0 ]; then 
+#  echo "No urls specified, you must uncomment at least one url." 
+#  exit 1
+#fi
+if ! test -z $(pgrep dwb); then 
+  echo "Please close all instances of dwb before running $0."
   exit 1
 fi
 
@@ -90,7 +131,7 @@ if [ ! ${DEST} ]; then
   sed -i "0,/adblocker-filterlist/s#^adblocker-filterlist=.*#adblocker-filterlist=${DEST}#" ${CONFIG}
 fi
 
-echo "Saving filterlist as ${DEST}"
+echo -e "The filterlist will be saved as ${DEST}\n"
 
 if [ -e  ${DEST} ]; then 
   rm ${DEST}
@@ -101,11 +142,10 @@ BEFORE=0
 REMOVED=0
 TOTAL=0
 
-# Download the filterlists
-for URL in ${URLS[@]}; do 
-  TMP=$(mktemp)
-  echo "Grabbing ${URL}"
-  wget -O ${TMP} ${URL} &>/dev/null
+get_list() {
+  local TMP=$(mktemp)
+  echo "Grabbing ${1}"
+  wget -O ${TMP} ${1} &>/dev/null
   BEFORE=( $(wc -l "${TMP}") )
 
   ((BEFORE+=TOTAL))
@@ -114,7 +154,37 @@ for URL in ${URLS[@]}; do
   AFTER=( $(wc -l "${DEST}") )
   ((REMOVED=BEFORE-AFTER))
   TOTAL=${BEFORE}
-done
+}
+
+# Download the filterlists
+if [ $# -gt 0 ]; then 
+  URLS=$@
+fi
+if [ ${#URLS[@]} -gt 0 ]; then 
+  for URL in ${URLS[@]}; do 
+    get_list ${URL}
+  done
+else 
+  OLDPS3=$PS3
+  echo -e "Choose filterlists:\n"
+  PS3="Comma-separated list: "
+  select blub in "${DESCRIPTION_INTERACTIVE[@]}"; do 
+    echo
+    REPURL=( ${REPLY//,/ } )
+    for n in ${REPURL[@]}; do 
+      if [ ! ${URLS_INTERACTIVE[$((n-1))]} ]; then
+        echo "Choose appropriate numbers next time."
+        exit 1
+      fi
+    done
+    for n in ${REPURL[@]}; do
+      get_list ${URLS_INTERACTIVE[$((n-1))]}
+    done
+    break
+  done
+  PS3=${OLDPS3}
+fi
+
 echo "Removed ${REMOVED} unsupported of ${BEFORE} filters."
 echo "Removing comments."
 sed -i "/^[!\[]/d" "${DEST}"
