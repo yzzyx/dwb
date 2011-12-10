@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdlib.h>
+#include "dwb.h"
+#include "util.h"
+#include "view.h"
 #include "session.h"
 
 /* session_get_groups()                 return  char  ** (alloc){{{*/

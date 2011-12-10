@@ -16,6 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <errno.h>
+#include <sys/time.h>
+#include "dwb.h"
 #include "util.h"
 
 /* util_string_replace(const char *haystack, const char *needle, const char  *replace)      return: char * (alloc){{{*/
@@ -34,7 +40,7 @@ char *
 util_string_replace(const char *haystack, const char *needle, const char *replacemant) {
   char **token;
   char *ret = NULL;
-  if ( haystack && needle && (token = g_regex_split_simple(needle, haystack, 0, 0)) && strcmp(token[0], haystack)) {
+  if ( haystack && needle && (token = g_regex_split_simple(needle, haystack, 0, 0)) && g_strcmp0(token[0], haystack)) {
     ret = g_strconcat(token[0], replacemant, token[1], NULL);
     g_strfreev(token);
   }
@@ -142,7 +148,7 @@ util_char_to_arg(char *value, DwbType type) {
       }
     }
     if (type == BOOLEAN) {
-      if(!g_ascii_strcasecmp(value, "false") || !strcmp(value, "0")) {
+      if(!g_ascii_strcasecmp(value, "false") || !g_strcmp0(value, "0")) {
         ret->b = false;
       }
       else {
@@ -163,7 +169,7 @@ util_char_to_arg(char *value, DwbType type) {
       }
     }
     else if (type == CHAR) {
-      ret->p = !value || (value && !strcmp(value, "null")) ? NULL : g_strdup(value);
+      ret->p = !value || (value && !g_strcmp0(value, "null")) ? NULL : g_strdup(value);
     }
     else if (type == COLOR_CHAR) {
       int length = strlen(value);
@@ -202,36 +208,36 @@ util_arg_to_char(Arg *arg, DwbType type) {
 /* util_navigation_sort_first {{{*/
 int
 util_navigation_compare_first(Navigation *a, Navigation *b) {
-  return (strcmp(a->first, b->first));
+  return (g_strcmp0(a->first, b->first));
 }/*}}}*/
 /* util_navigation_sort_first {{{*/
 int
 util_navigation_compare_second(Navigation *a, Navigation *b) {
-  return (strcmp(a->second, b->second));
+  return (g_strcmp0(a->second, b->second));
 }/*}}}*/
 int 
 util_quickmark_compare(Quickmark *a, Quickmark *b) {
-  return strcmp(a->key, b->key);
+  return g_strcmp0(a->key, b->key);
 }
 /* util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
 int
 util_keymap_sort_first(KeyMap *a, KeyMap *b) {
-  return strcmp(a->map->n.first, b->map->n.first);
+  return g_strcmp0(a->map->n.first, b->map->n.first);
 }/*}}}*/
 /* util_keymap_sort_second(KeyMap *, KeyMap *) {{{*/
 int
 util_keymap_sort_second(KeyMap *a, KeyMap *b) {
-  return strcmp(a->map->n.second, b->map->n.second);
+  return g_strcmp0(a->map->n.second, b->map->n.second);
 }/*}}}*/
 /* util_web_settings_sort_first(WebSettings *a, WebSettings *b) {{{*/
 int
 util_web_settings_sort_first(WebSettings *a, WebSettings *b) {
-  return strcmp(a->n.first, b->n.first);
+  return g_strcmp0(a->n.first, b->n.first);
 }/*}}}*/
 /* util_web_settings_sort_second (WebSettings *a, WebSettings *b) {{{*/
 int
 util_web_settings_sort_second(WebSettings *a, WebSettings *b) {
-  return strcmp(a->n.second, b->n.second);
+  return g_strcmp0(a->n.second, b->n.second);
 }/*}}}*/
 
 /* util_get_directory_entries(const char *)   return: GList * {{{*/
@@ -258,7 +264,7 @@ util_get_directory_entries(const char *path, const char *text) {
     }
     g_dir_close(dir);
   }
-  list = g_list_sort(list, (GCompareFunc)strcmp);
+  list = g_list_sort(list, (GCompareFunc)g_strcmp0);
   return list;
 }/*}}}*/
 /*util_get_directory_content(GString **, const char *filename) {{{*/
@@ -278,7 +284,7 @@ util_get_directory_content(GString **buffer, const char *dirname, const char *ex
         firstdot = strchr(filename, '.');
         if (!firstdot)
           continue;
-        if (strcmp(firstdot+1, extension))
+        if (g_strcmp0(firstdot+1, extension))
           continue;
       }
       filepath = g_build_filename(dirname, filename, NULL);
@@ -596,7 +602,7 @@ util_domain_from_uri(const char *uri) {
 /* util_compare_path(char *uri)      return: char* {{{*/
 int
 util_compare_path(const char *a, const char *b) {
-  return strcmp(g_strrstr(a, "/"), g_strrstr(b, "/"));
+  return g_strcmp0(g_strrstr(a, "/"), g_strrstr(b, "/"));
 }/*}}}*/
 
 /* util_basename(const char *path)       return: char * {{{*/

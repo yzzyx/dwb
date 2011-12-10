@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <string.h>
 #include "dwb.h"
 #include "html.h"
 #include "util.h"
@@ -67,16 +86,16 @@ html_remove_item_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
   if (webkit_dom_element_has_attribute((void*)target, "navigation")) {
     char *navigation = webkit_dom_element_get_attribute(WEBKIT_DOM_ELEMENT(target), "navigation");
     const char *uri = webkit_web_view_get_uri(WEBVIEW(gl));
-    if (!strcmp(uri, "dwb://history")) {
+    if (!g_strcmp0(uri, "dwb://history")) {
       dwb_remove_history(navigation);
     }
-    else if (!strcmp(uri, "dwb://bookmarks")) {
+    else if (!g_strcmp0(uri, "dwb://bookmarks")) {
       dwb_remove_bookmark(navigation);
     }
-    else if (!strcmp(uri, "dwb://quickmarks")) {
+    else if (!g_strcmp0(uri, "dwb://quickmarks")) {
       dwb_remove_quickmark(navigation);
     }
-    else if (!strcmp(uri, "dwb://downloads")) {
+    else if (!g_strcmp0(uri, "dwb://downloads")) {
       dwb_remove_download(navigation);
     }
   }
@@ -135,7 +154,7 @@ html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView
   char *type;
   if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(el)) {
     type = webkit_dom_element_get_attribute(el, "type");
-    if (!strcmp(type, "checkbox")) {
+    if (!g_strcmp0(type, "checkbox")) {
       /* We need to dup "true" and "false", otherwise g_strstrip in
        * util_char_to_arg will cause a segfault */
       if (webkit_dom_html_input_element_get_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(el)) ) 
@@ -173,7 +192,7 @@ gboolean
 html_focus_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   char *type = webkit_dom_element_get_attribute(el, "type");
   gboolean ret = false;
-  if (!strcmp(type, "text")) {
+  if (!g_strcmp0(type, "text")) {
     dwb_change_mode(INSERT_MODE);
     ret = true;
   }
@@ -270,7 +289,6 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
       }
     }
     g_signal_handlers_disconnect_by_func(wv, html_keys_load_cb, table);
-    doc = webkit_web_view_get_dom_document(wv);
   }
 }
 DwbStatus
@@ -335,7 +353,7 @@ html_load(GList *gl, const char *uri) {
   gboolean ret = false;
   for (int i=0; i<LENGTH(table); i++) {
     if (!strncmp(table[i].uri, uri, strlen(table[i].uri))) {
-      strncpy(current_uri, uri, BUFFER_LENGTH - 1);
+      g_strlcpy(current_uri, uri, BUFFER_LENGTH - 1);
       if (table[i].func(gl, &table[i]) == STATUS_OK)  {
         ret = true;
         break;

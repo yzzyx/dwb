@@ -19,9 +19,6 @@
 #ifndef COMPLETION_H
 #define COMPLETION_H
 
-#include "dwb.h"
-#include "commands.h"
-#include "util.h"
 
 #define COMP_EVENT_BOX(X)    (((Completion*)((X)->data))->event)
 

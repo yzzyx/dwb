@@ -20,8 +20,6 @@
 #ifndef ADBLOCK_H
 #define ADBLOCK_H
 
-#include "dwb.h"
-
 gboolean adblock_init();
 gboolean adblock_running();
 void adblock_end();

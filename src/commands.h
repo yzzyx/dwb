@@ -19,14 +19,6 @@
 #ifndef COMMANDS_H
 #define COMMANDS_H
 
-#include "dwb.h"
-#include "commands.h"
-#include "completion.h"
-#include "util.h"
-#include "view.h"
-#include "session.h"
-#include "soup.h"
-#include "html.h"
 
 void commands_simple_command(KeyMap *km);
 void commands_add_view(KeyMap *, Arg *);

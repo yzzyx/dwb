@@ -16,6 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <string.h>
+#include <gdk/gdkkeysyms.h> 
+#include "dwb.h"
+#include "commands.h"
+#include "completion.h"
+#include "util.h"
+#include "download.h"
+#include "session.h"
 #include "view.h"
 #include "html.h"
 #include "plugins.h"
@@ -54,6 +62,14 @@ static gboolean view_entry_activate(GList *gl, GdkEventKey *e);
 static void view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *, GList *);
 
 /* WEB_VIEW_CALL_BACKS {{{*/
+
+/* view_main_frame_committed_cb {{{*/
+void
+view_main_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
+  if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {
+    dwb_change_mode(NORMAL_MODE, true);
+  }
+}/*}}}*/
 
 /* view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
 void 
@@ -285,9 +301,6 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   gboolean ret = false;
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
-  if (dwb.state.mode == INSERT_MODE && gl == dwb.state.fview) {
-    dwb_change_mode(NORMAL_MODE, true);
-  }
   if (g_str_has_prefix(uri, "dwb://")) {
     if (!html_load(gl, uri)) {
       fprintf(stderr, "Error loadings %s, maybe some files are missing.\n", uri);
@@ -511,8 +524,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       }
       if (v->plugins->status & PLUGIN_STATUS_ENABLED) 
         plugins_connect(gl);
-      v->status->ssl = SSL_NONE;
-      v->plugins->status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       /* This is more or less a dummy call, to compile the script and speed up
@@ -826,6 +837,8 @@ view_init_signals(GList *gl) {
   /* v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl); */
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);
+  WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
+  v->status->signals[SIG_MAIN_FRAME_COMMITTED]  = g_signal_connect(frame, "load-committed", G_CALLBACK(view_main_frame_committed_cb), gl);
 
   /* WebInspector */
   WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(v->web));

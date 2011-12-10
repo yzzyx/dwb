@@ -19,13 +19,6 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-#include "dwb.h"
-#include "commands.h"
-#include "completion.h"
-#include "util.h"
-#include "download.h"
-#include "session.h"
-
 GList * view_add(const char *uri, gboolean background);
 void view_remove(GList *gl);
 DwbStatus view_push_master(Arg *);

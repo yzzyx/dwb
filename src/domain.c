@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #ifdef DWB_DOMAIN_SERVICE
-#include <glib-2.0/glib.h>
 #include <string.h>
+#include "dwb.h"
 #include "util.h"
 #include "domain.h"
 #include "tlds.h"

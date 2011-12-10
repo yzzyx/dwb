@@ -1,3 +1,28 @@
+/*
+ * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include <string.h>
+#include <sys/stat.h>
+#include <pwd.h>
+#include <grp.h>
+#include <inttypes.h>
+#include "dwb.h"
+#include "util.h"
 #include "local.h"
 #include "commands.h"
 
@@ -56,9 +81,9 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
     int up = 0;
     char *tmppath = NULL;
     for (int i = g_strv_length(components)-1; i>=0; i--) {
-      if (!strcmp(components[i], "..")) 
+      if (!g_strcmp0(components[i], "..")) 
         up++;
-      else if (! strcmp(components[i], "."))
+      else if (! g_strcmp0(components[i], "."))
         continue;
       else if (up > 0) 
         up--;

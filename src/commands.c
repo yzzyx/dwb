@@ -16,6 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include "dwb.h"
+#include "completion.h"
+#include "util.h"
+#include "view.h"
+#include "session.h"
+#include "soup.h"
+#include "html.h"
 #include "commands.h"
 #include "local.h"
 #ifdef DWB_ADBLOCKER
@@ -85,7 +92,7 @@ commands_focus_input(KeyMap *km, Arg *a) {
   char *value;
   DwbStatus ret = STATUS_OK;
 
-  if ((value = dwb_execute_script(MAIN_FRAME(), "DwbHintObj.focusInput()", true)) && !strcmp(value, "_dwb_no_input_")) {
+  if ((value = dwb_execute_script(MAIN_FRAME(), "DwbHintObj.focusInput()", true)) && !g_strcmp0(value, "_dwb_no_input_")) {
     ret = STATUS_ERROR;
   }
   FREE(value);
@@ -98,7 +105,7 @@ DwbStatus
 commands_add_search_field(KeyMap *km, Arg *a) {
   char *value;
   if ( (value = dwb_execute_script(MAIN_FRAME(), "DwbHintObj.addSearchEngine()", true)) ) {
-    if (!strcmp(value, "_dwb_no_hints_")) {
+    if (!g_strcmp0(value, "_dwb_no_hints_")) {
       return STATUS_ERROR;
     }
   }
@@ -223,7 +230,7 @@ commands_allow_cookie(KeyMap *km, Arg *arg) {
     for (GSList *l = dwb.state.last_cookies; l; l=l->next) {
       SoupCookie *c = l->data;
       const char *domain = soup_cookie_get_domain(c);
-      if ( ! dwb.fc.cookies_allow || ! g_list_find_custom(dwb.fc.cookies_allow, domain, (GCompareFunc) strcmp) ) {
+      if ( ! dwb.fc.cookies_allow || ! g_list_find_custom(dwb.fc.cookies_allow, domain, (GCompareFunc) g_strcmp0) ) {
         dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, g_strdup(domain));
         util_file_add(dwb.files.cookies_allow, domain, true, -1);
         g_string_append_printf(buffer, "%s ", domain);
@@ -686,8 +693,8 @@ commands_toggle(Arg *arg, const char *filename, GList **tmp, const char *message
   if (block != NULL) {
     if (arg->n & ALLOW_TMP) {
       GList *l;
-      if ( (l = g_list_find_custom(*tmp, block, (GCompareFunc)strcmp)) ) {
-        free(l->data);
+      if ( (l = g_list_find_custom(*tmp, block, (GCompareFunc)g_strcmp0)) ) {
+        g_free(l->data);
         *tmp = g_list_delete_link(*tmp, l);
         allowed = false;
       }

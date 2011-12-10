@@ -17,6 +17,8 @@
  */
 
 #ifdef DWB_ADBLOCKER
+#include <string.h>
+#include <JavaScriptCore/JavaScript.h>
 #include "dwb.h"
 #include "util.h"
 #include "domain.h"

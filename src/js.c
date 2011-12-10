@@ -17,8 +17,7 @@
  */
 
 #include <JavaScriptCore/JavaScript.h>
-#include <webkit/webkit.h>
-#include <glib-2.0/glib.h>
+#include "dwb.h"
 #include "js.h"
 #define JS_STRING_MAX 1024
 

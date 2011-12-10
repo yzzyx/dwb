@@ -16,7 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "download.h"
+#include <string.h>
+#include "dwb.h"
+#include "util.h"
 
 typedef struct _DwbDownloadStatus {
   guint blue;
@@ -44,7 +46,7 @@ download_get_command_from_mimetype(char *mimetype) {
     return NULL;
   for (GList *l = dwb.fc.mimetypes; l; l=l->next) {
     Navigation *n = l->data;
-    if (!strcmp(n->first, mimetype)) {
+    if (!g_strcmp0(n->first, mimetype)) {
       command = n->second;
       break;
     }
@@ -309,7 +311,7 @@ download_start() {
         }
         fullpath = external ? g_strdup(path) : g_strconcat("file://", path, NULL);
         if ((last_slash = strrchr(path, '/'))) {
-          strncpy(path_buffer, path, last_slash - path);
+          g_strlcpy(path_buffer, path, last_slash - path);
           path = path_buffer;
         }
       }

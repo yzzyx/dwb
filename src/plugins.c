@@ -1,4 +1,22 @@
-#include "plugins.h"
+/*
+ * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#include "dwb.h"
 #include "util.h"
 #include "view.h"
 
@@ -106,7 +124,7 @@ plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl
   char *tagname = webkit_dom_element_get_tag_name(element);
   char *type = webkit_dom_element_get_attribute(element, "type");
 
-  if ( (!strcmp(type, "application/x-shockwave-flash") 
+  if ( (!g_strcmp0(type, "application/x-shockwave-flash") 
         && (! g_ascii_strcasecmp(tagname, "object") || ! g_ascii_strcasecmp(tagname, "embed")) ) 
       && ! g_slist_find(ALLOWED(gl), element) ) {
     VIEW(gl)->plugins->status |= PLUGIN_STATUS_HAS_PLUGIN;
@@ -157,14 +175,14 @@ plugins_frame_load_status_cb(WebKitWebFrame *frame, GList *gl) {
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
   const char *src = webkit_web_frame_get_uri(frame);
 
-  if (strcmp(src, "about:blank")) {
+  if (g_strcmp0(src, "about:blank")) {
     /* We have to find the correct frame, but there is no access from the web_frame
      * to the Htmlelement */
     WebKitDOMNodeList *frames = webkit_dom_document_query_selector_all(doc, "iframe, frame", NULL);
     for (int i=0; i<webkit_dom_node_list_get_length(frames); i++) {
       WebKitDOMHTMLIFrameElement *iframe = (void*)webkit_dom_node_list_item(frames, i);
       char *iframesrc = webkit_dom_html_iframe_element_get_src(iframe);
-      if (!strcmp(src, iframesrc)) {
+      if (!g_strcmp0(src, iframesrc)) {
         WebKitDOMDOMWindow *win = webkit_dom_html_iframe_element_get_content_window(iframe);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeload", G_CALLBACK(plugins_before_load_cb), true, gl);
       }
@@ -192,7 +210,7 @@ plugins_find_in_frames(WebKitDOMDocument *doc, char *selector) {
   for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
     element = (void*)webkit_dom_node_list_item(list, i);
     source = webkit_dom_html_object_element_get_data(WEBKIT_DOM_HTML_OBJECT_ELEMENT(element));
-    if (!strcmp(selector, source)) {
+    if (!g_strcmp0(selector, source)) {
       g_free(source);
       return element;
     }
@@ -203,7 +221,7 @@ plugins_find_in_frames(WebKitDOMDocument *doc, char *selector) {
   for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
     element = (void*)webkit_dom_node_list_item(list, i);
     source = webkit_dom_html_embed_element_get_src(WEBKIT_DOM_HTML_EMBED_ELEMENT(element));
-    if (!strcmp(selector, source)) {
+    if (!g_strcmp0(selector, source)) {
       g_free(source);
       return element;
     }

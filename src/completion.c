@@ -16,6 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <string.h>
+#include <libgen.h>
+#include <gdk/gdkkeysyms.h> 
+#include "dwb.h"
+#include "commands.h"
+#include "util.h"
 #include "completion.h"
 
 static GList * completion_update_completion(GtkWidget *box, GList *comps, GList *active, int max, int back);
@@ -536,7 +542,7 @@ completion_get_path(GList *list, char *text) {
   if ( ( prefix = g_str_has_prefix(text, "file://")) ) 
     text += 7;
 
-  strncpy(d_tmp, text, PATH_MAX - 1);
+  g_strlcpy(d_tmp, text, PATH_MAX - 1);
   char *d_name = dirname(d_tmp);
   char *b_name = util_basename(text);
   char *d_current = g_get_current_dir();
@@ -551,12 +557,12 @@ completion_get_path(GList *list, char *text) {
   else 
     g_free(d_current);
 
-  if (!strcmp(d_name, ".")) {
+  if (!g_strcmp0(d_name, ".")) {
     completion_complete(0, 0);
     return NULL;
   }
   if (g_file_test(text, G_FILE_TEST_IS_DIR)) {
-    strncpy(path, text, BUFFER_LENGTH - 1);
+    g_strlcpy(path, text, BUFFER_LENGTH - 1);
     char path_last = path[strlen(path) - 1];
     if (path_last != '/' && path_last != '.') {
       if (prefix) 
@@ -566,7 +572,7 @@ completion_get_path(GList *list, char *text) {
     }
   }
   else if (g_file_test(d_name, G_FILE_TEST_IS_DIR)) {
-    strncpy(path, d_name, BUFFER_LENGTH - 1);
+    g_strlcpy(path, d_name, BUFFER_LENGTH - 1);
   }
   if ( (dir = g_dir_open(path, 'r', NULL)) ) {
     while ( (filename = g_dir_read_name(dir)) ) {
@@ -580,7 +586,7 @@ completion_get_path(GList *list, char *text) {
           list = g_list_prepend(list, store);
         }
         else {
-          free(store);
+          g_free(store);
         }
         FREE(newpath);
       }
@@ -599,12 +605,12 @@ completion_init_path_completion(int back) {
   dwb.comps.path_completion = dwb.comps.active_path = g_list_append(NULL, g_strdup(text));
   if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
     GList *list = completion_get_binaries(NULL, text);
-    list = g_list_sort(list, (GCompareFunc)strcmp);
+    list = g_list_sort(list, (GCompareFunc)g_strcmp0);
     dwb.comps.path_completion = g_list_concat(dwb.comps.path_completion, list);
   }
   else  {
     dwb.comps.path_completion = completion_get_path(dwb.comps.path_completion, text);
-    dwb.comps.path_completion = g_list_sort(dwb.comps.path_completion, (GCompareFunc)strcmp);
+    dwb.comps.path_completion = g_list_sort(dwb.comps.path_completion, (GCompareFunc)g_strcmp0);
   }
   if (g_list_length(dwb.comps.path_completion) == 1) {
     completion_clean_path_completion();

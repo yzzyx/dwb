@@ -16,6 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <fcntl.h>
+#include <sys/file.h>
+#include "dwb.h"
+#include "util.h"
 #include "soup.h"
 static SoupCookieJar *jar;
 

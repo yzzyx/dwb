@@ -19,7 +19,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include "dwb.h"
 
 // strings
 char * util_string_replace(const char *haystack, const char *needle, const char *replacemant);

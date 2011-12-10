@@ -18,30 +18,9 @@
 
 #ifndef DWB_H
 #define DWB_H
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <wchar.h>
-#include <libgen.h>
-#include <inttypes.h>
-#include <sys/file.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <libsoup/soup.h>
-#include <pwd.h>
-#include <grp.h>
-#include <locale.h>
-#include <stdarg.h>
-#include <dirent.h>
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
-#include <JavaScriptCore/JavaScript.h>
 #include <gdk/gdkkeysyms.h> 
-
-
 
 #ifndef NAME
 #define NAME "dwb"
@@ -366,6 +345,7 @@ enum Signal {
   SIG_LOAD_STATUS,
   SIG_LOAD_ERROR,
   SIG_LOAD_STATUS_AFTER,
+  SIG_MAIN_FRAME_COMMITTED,
   SIG_PROGRESS,
   SIG_TITLE,
   SIG_URI,
@@ -795,6 +775,7 @@ CompletionType dwb_eval_completion_type(void);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
 void dwb_clean_load_end(GList *);
+void dwb_clean_load_begin(GList *);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *);

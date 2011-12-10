@@ -19,9 +19,6 @@
 #ifndef DOWNLOAD_H
 #define DOWNLOAD_H
 
-#include "dwb.h"
-#include "util.h"
-
 
 void download_get_path(GList *, WebKitDownload *);
 void download_start(void);

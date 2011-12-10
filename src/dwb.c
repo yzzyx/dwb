@@ -1,5 +1,4 @@
 /*
- *
  * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,6 +16,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
+#include <ctype.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <locale.h>
+#include <JavaScriptCore/JavaScript.h>
 #include "dwb.h"
 #include "soup.h"
 #include "completion.h"
@@ -247,7 +254,7 @@ dwb_webkit_setting(GList *gl, WebSettings *s) {
     case DOUBLE:  g_object_set(settings, s->n.first, s->arg.d, NULL); break;
     case INTEGER: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
     case BOOLEAN: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
-    case CHAR:    g_object_set(settings, s->n.first, !s->arg.p || !strcmp(s->arg.p, "null") ? NULL : (char*)s->arg.p  , NULL); break;
+    case CHAR:    g_object_set(settings, s->n.first, !s->arg.p || !g_strcmp0(s->arg.p, "null") ? NULL : (char*)s->arg.p  , NULL); break;
     default: return;
   }
 }/*}}}*/
@@ -676,9 +683,9 @@ dwb_open_in_editor(void) {
     ret = STATUS_ERROR;
     goto clean;
   }
-  if (! strcmp(tagname, "INPUT")) 
+  if (! g_strcmp0(tagname, "INPUT")) 
     value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(active));
-  else if (!strcmp(tagname, "TEXTAREA"))
+  else if (! g_strcmp0(tagname, "TEXTAREA"))
     value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(active));
   if (value == NULL) {
     ret = STATUS_ERROR;
@@ -933,7 +940,7 @@ dwb_get_allowed(const char *filename, const char *data) {
   if (content) {
     char **lines = g_strsplit(content, "\n", -1);
     for (int i=0; i<g_strv_length(lines); i++) {
-      if (!strcmp(lines[i], data)) {
+      if (!g_strcmp0(lines[i], data)) {
         ret = true; 
         break;
       }
@@ -962,7 +969,7 @@ dwb_toggle_allowed(const char *filename, const char *data) {
   else if (content) {
     char **lines = g_strsplit(content, "\n", -1);
     for (int i=0; i<g_strv_length(lines); i++) {
-      if (strlen(lines[i]) && strcmp(lines[i], data)) {
+      if (strlen(lines[i]) && g_strcmp0(lines[i], data)) {
         g_string_append_printf(buffer, "%s\n", lines[i]);
       }
     }
@@ -1058,6 +1065,16 @@ dwb_eval_completion_type(void) {
   }
 }/*}}}*/
 
+/* dwb_clean_load_begin {{{*/
+void 
+dwb_clean_load_begin(GList *gl) {
+  View *v = gl->data;
+  v->status->ssl = SSL_NONE;
+  v->plugins->status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
+  if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {  
+    dwb_change_mode(NORMAL_MODE, true);
+  }
+}/*}}}*/
 /* dwb_clean_load_end(GList *) {{{*/
 void 
 dwb_clean_load_end(GList *gl) {
@@ -1066,9 +1083,11 @@ dwb_clean_load_end(GList *gl) {
     g_free(v->status->mimetype);
     v->status->mimetype = NULL;
   }
+#if 0
   if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {  
     dwb_change_mode(NORMAL_MODE, true);
   }
+#endif
 }/*}}}*/
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
@@ -1273,7 +1292,7 @@ dwb_get_search_engine(const char *uri, gboolean force) {
     char **token = g_strsplit(uri, " ", 2);
     for (GList *l = dwb.fc.searchengines; l; l=l->next) {
       Navigation *n = l->data;
-      if (!strcmp(token[0], n->first)) {
+      if (!g_strcmp0(token[0], n->first)) {
         ret = dwb_get_search_engine_uri(n->second, token[1]);
         break;
       }
@@ -1376,25 +1395,25 @@ dwb_layout_from_char(const char *desc) {
 DwbStatus 
 dwb_evaluate_hints(const char *buffer) {
   DwbStatus ret = STATUS_OK;
-  if (!strcmp(buffer, "undefined")) 
+  if (!g_strcmp0(buffer, "undefined")) 
     return ret;
-  else if (!strcmp("_dwb_no_hints_", buffer)) {
+  else if (!g_strcmp0("_dwb_no_hints_", buffer)) {
     dwb_set_error_message(dwb.state.fview, NO_HINTS);
     dwb_change_mode(NORMAL_MODE, false);
     ret = STATUS_ERROR;
   }
-  else if (!strcmp(buffer, "_dwb_input_")) {
+  else if (!g_strcmp0(buffer, "_dwb_input_")) {
     dwb_change_mode(INSERT_MODE);
     ret = STATUS_END;
   }
-  else if  (!strcmp(buffer, "_dwb_click_")) {
+  else if  (!g_strcmp0(buffer, "_dwb_click_")) {
     dwb.state.scriptlock = 1;
     if ( !(dwb.state.nv & OPEN_DOWNLOAD) ) {
       dwb_change_mode(NORMAL_MODE, true);
       ret = STATUS_END;
     }
   }
-  else  if (!strcmp(buffer, "_dwb_check_")) {
+  else  if (!g_strcmp0(buffer, "_dwb_check_")) {
     dwb_change_mode(NORMAL_MODE, true);
     ret = STATUS_END;
   }
@@ -1493,7 +1512,7 @@ void
 dwb_prepend_navigation_with_argument(GList **fc, const char *first, const char *second) {
   for (GList *l = (*fc); l; l=l->next) {
     Navigation *n = l->data;
-    if (!strcmp(first, n->first)) {
+    if (!g_strcmp0(first, n->first)) {
       dwb_navigation_free(n);
       (*fc) = g_list_delete_link((*fc), l);
       break;
@@ -1509,7 +1528,7 @@ void
 dwb_append_navigation_with_argument(GList **fc, const char *first, const char *second) {
   for (GList *l = (*fc); l; l=l->next) {
     Navigation *n = l->data;
-    if (!strcmp(first, n->first)) {
+    if (!g_strcmp0(first, n->first)) {
       dwb_navigation_free(n);
       (*fc) = g_list_delete_link((*fc), l);
       break;
@@ -1582,8 +1601,8 @@ dwb_save_quickmark(const char *key) {
     const char *title = webkit_web_view_get_title(w);
     for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
       Quickmark *q = l->data;
-      if (!strcmp(key, q->key)) {
-        if (strcmp(uri, q->nav->first)) {
+      if (!g_strcmp0(key, q->key)) {
+        if (g_strcmp0(uri, q->nav->first)) {
           if (!dwb_confirm(dwb.state.fview, "Overwrite quickmark %s : %s [y/n]?", q->key, q->nav->first)) {
             dwb_set_error_message(dwb.state.fview, "Aborted saving quickmark %s : %s", key, uri);
             dwb_change_mode(NORMAL_MODE, false);
@@ -1614,7 +1633,7 @@ dwb_open_quickmark(const char *key) {
   gboolean found = false;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
-    if (!strcmp(key, q->key)) {
+    if (!g_strcmp0(key, q->key)) {
       dwb_load_uri(NULL, q->nav->first);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
       found = true;
@@ -1649,7 +1668,7 @@ dwb_update_status(GList *gl) {
   char *filename = NULL;
   WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
   const char *title = webkit_web_view_get_title(w);
-  if (!title && v->status->mimetype && strcmp(v->status->mimetype, "text/html")) {
+  if (!title && v->status->mimetype && g_strcmp0(v->status->mimetype, "text/html")) {
     const char *uri = webkit_web_view_get_uri(w);
     filename = g_path_get_basename(uri);
     title = filename;
@@ -1759,7 +1778,7 @@ dwb_load_uri(GList *gl, const char *arg) {
     return;
   }
   /* Check if uri is a regular file */
-  if (g_str_has_prefix(arg, "file://") || !strcmp(arg, "about:blank")) {
+  if (g_str_has_prefix(arg, "file://") || !g_strcmp0(arg, "about:blank")) {
     webkit_web_view_load_uri(web, arg);
     return;
   }
@@ -1841,7 +1860,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
     if (km->map->entry) {
-      if (!strcmp(key, km->key) && CLEAN_STATE(e) == km->mod) {
+      if (!g_strcmp0(key, km->key) && CLEAN_STATE(e) == km->mod) {
         km->map->func(&km, &km->map->arg);
         ret = true;
         break;
@@ -2128,7 +2147,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
         g_free(value);
       }
     }
-    else if (!strcmp(line, "close\n")) {
+    else if (!g_strcmp0(line, "close\n")) {
       g_io_channel_shutdown(channel, true, NULL);
       FREE(line);
       break;
@@ -2437,7 +2456,7 @@ dwb_str_to_key(char *str) {
     else if (!g_ascii_strcasecmp(string[i], "Shift")) {
       key.mod |= GDK_SHIFT_MASK;
     }
-    else if (!strcmp(string[i], "[n]")) {
+    else if (!g_strcmp0(string[i], "[n]")) {
       key.mod |= DWB_NUMMOD_MASK;
     }
     else {
@@ -2457,7 +2476,7 @@ static GList *
 dwb_keymap_delete(GList *gl, KeyValue key) {
   for (GList *l = gl; l; l=l->next) {
     KeyMap *km = l->data;
-    if (!strcmp(km->map->n.first, key.id)) {
+    if (!g_strcmp0(km->map->n.first, key.id)) {
       gl = g_list_delete_link(gl, l);
       break;
     }
@@ -2471,7 +2490,7 @@ GList *
 dwb_keymap_add(GList *gl, KeyValue key) {
   gl = dwb_keymap_delete(gl, key);
   for (int i=0; i<LENGTH(FMAP); i++) {
-    if (!strcmp(FMAP[i].n.first, key.id)) {
+    if (!g_strcmp0(FMAP[i].n.first, key.id)) {
       KeyMap *keymap = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = &FMAP[i];
       keymap->key = key.key.str ? key.key.str : "";
@@ -2561,7 +2580,7 @@ dwb_read_settings() {
     char *key = g_strdup(DWB_SETTINGS[j].n.first);
     for (int i=0; i<numkeys; i++) {
       char *value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
-      if (!strcmp(keys[i], DWB_SETTINGS[j].n.first)) {
+      if (!g_strcmp0(keys[i], DWB_SETTINGS[j].n.first)) {
         WebSettings *s = dwb_malloc(sizeof(WebSettings));
         *s = DWB_SETTINGS[j];
         if ( (arg = util_char_to_arg(value, s->type)) ) {
@@ -2995,7 +3014,7 @@ dwb_parse_command_line(const char *line) {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     m = l->data;
-    if (!strcmp(m->map->n.first, token[0])) {
+    if (!g_strcmp0(m->map->n.first, token[0])) {
       if (m->map->prop & CP_HAS_MODE) 
         dwb_change_mode(NORMAL_MODE, true);
       Arg a = m->map->arg;
@@ -3120,16 +3139,18 @@ main(int argc, char *argv[]) {
           session_list();
           argr--;
         }
-        else if (argv[i][1] == 'p' && argv[++i]) {
+        else if (argv[i][1] == 'p' && argv[i+1]) {
           dwb.misc.profile = argv[i];
+          i++;
           argr -= 2;
         }
         else if (argv[i][1] == 'n') {
           single = true;
           argr -=1;
         }
-        else if (argv[i][1] == 'e' && argv[++i]) {
+        else if (argv[i][1] == 'e' && argv[i+1]) {
           dwb.gui.wid = strtol(argv[i], NULL, 10);
+          i++;
         }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {

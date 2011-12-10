@@ -18,9 +18,6 @@
 
 #ifndef SESSION_H
 #define SESSION_H
-#include "dwb.h"
-#include "util.h"
-#include "view.h"
 
 gboolean session_save(const char *);
 gboolean session_restore(const char *);

@@ -19,9 +19,6 @@
 #ifndef COOKIES_H
 #define COOKIES_H
 
-#include "dwb.h"
-#include "util.h"
-
 DwbStatus dwb_soup_set_cookie_accept_policy(const char *);
 void dwb_soup_cookies_set_accept_policy(Arg *);
 void dwb_soup_save_cookies(GSList *);
