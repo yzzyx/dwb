@@ -139,7 +139,7 @@ static KeyValue KEYS[] = {
   { "toggle_plugins_host",      {   "ph",           0 }, }, 
   { "toggle_plugins_uri_tmp",   {   "ptu",           0 }, }, 
   { "toggle_plugins_host_tmp",  {   "pth",           0 }, }, 
-  { "toggle_adblocker",         {   "a",           GDK_CONTROL_MASK }, }, 
+  { "toggle_adblocker",         {   "ta",           0 }, }, 
   { "new_view",                 {   "V",            0 }, }, 
   { "new_window",               {   "W",            0 }, }, 
   { "save",                     {   "sf",            0 }, }, 

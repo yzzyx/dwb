@@ -121,6 +121,7 @@ scripts Toggle 'enable-scripts'
 spell_checking Toggle 'enable-spell-checking'
 autoload_images Toggle 'auto-load-images'
 autoresize_window Toggle 'auto-resize-window'
+toggle_adblocker Toggle use of the adblocker
 toggle_plugins_host Toggle plugin blocker for current host
 toggle_plugins_uri Toggle plugin blocker for current uri
 toggle_plugins_host_tmp Toggle plugin blocker for current domain for this session
