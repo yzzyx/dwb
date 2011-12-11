@@ -61,6 +61,7 @@ static void dwb_follow_selection(void);
 static void dwb_set_single_instance(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
+static void dwb_save_key_value(const char *file, const char *key, const char *value);
 
 static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 
@@ -850,9 +851,10 @@ dwb_set_setting(const char *key, char *value) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
       if ( (a = util_char_to_arg(value, s->type))) {
         s->arg = *a;
-        if (dwb_apply_settings(s) != STATUS_ERROR) 
+        if (dwb_apply_settings(s) != STATUS_ERROR) {
           dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
-        dwb_save_settings();
+          dwb_save_key_value(dwb.files.settings, key, value);
+        }
       }
       else {
         dwb_set_error_message(dwb.state.fview, "No valid value.");
@@ -884,6 +886,7 @@ dwb_set_key(const char *prop, char *val) {
 
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
+  dwb_save_key_value(dwb.files.keys, prop, val);
 
   dwb_change_mode(NORMAL_MODE, false);
 }/*}}}*/
@@ -2323,6 +2326,27 @@ dwb_clean_up() {
   return true;
 }/*}}}*/
 
+static void dwb_save_key_value(const char *file, const char *key, const char *value) {
+  GKeyFile *keyfile = g_key_file_new();
+  GError *error = NULL;
+  char *content;
+
+  if (!g_key_file_load_from_file(keyfile, file, G_KEY_FILE_KEEP_COMMENTS, &error)) {
+    fprintf(stderr, "No keysfile found, creating a new file.\n");
+    g_clear_error(&error);
+  }
+  g_key_file_set_value(keyfile, dwb.misc.profile, key, value);
+  if ( (content = g_key_file_to_data(keyfile, NULL, &error)) ) {
+    util_set_file_content(file, content);
+    g_free(content);
+  }
+  if (error) {
+    fprintf(stderr, "Couldn't save keyfile: %s", error->message);
+    g_clear_error(&error);
+  }
+  g_key_file_free(keyfile);
+}
+
 /* dwb_save_keys() {{{*/
 static void
 dwb_save_keys() {
@@ -3182,8 +3206,7 @@ main(int argc, char *argv[]) {
           argr--;
         }
         else if (argv[i][1] == 'p' && argv[i+1]) {
-          dwb.misc.profile = argv[i];
-          i++;
+          dwb.misc.profile = argv[++i];
           argr -= 2;
         }
         else if (argv[i][1] == 'n') {
@@ -3191,8 +3214,7 @@ main(int argc, char *argv[]) {
           argr -=1;
         }
         else if (argv[i][1] == 'e' && argv[i+1]) {
-          dwb.gui.wid = strtol(argv[i], NULL, 10);
-          i++;
+          dwb.gui.wid = strtol(argv[++i], NULL, 10);
         }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
