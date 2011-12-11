@@ -496,6 +496,7 @@ struct _State {
   DownloadAction dl_action;
   char *download_command;
   char *mimetype_request;
+  int download_ref_count;
 
   TabBarVisible tabbar_visible;
   gboolean fullscreen;

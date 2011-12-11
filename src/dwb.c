@@ -2407,6 +2407,23 @@ dwb_save_files(gboolean end_session) {
 /* dwb_end() {{{*/
 gboolean
 dwb_end() {
+  for (GList *l = dwb.state.views; l; l=l->next) {
+    if (VIEW(l)->status->protect) {
+      if (!dwb_confirm(dwb.state.fview, "There are protected tabs, really close [y/n]?")) {
+        CLEAR_COMMAND_TEXT(dwb.state.fview);
+        return false;
+      }
+      break;
+    }
+  }
+  if (dwb.state.download_ref_count > 0) {
+    if (!dwb_confirm(dwb.state.fview, "There are unfinished downloads, really close [y/n]?")) {
+      CLEAR_COMMAND_TEXT(dwb.state.fview);
+      return false;
+    }
+  }
+      
+  if (dwb.state.download_ref_count > 0)
   dwb.state.mode = NORMAL_MODE;
   if (dwb_save_files(true)) {
     if (dwb_clean_up()) {
@@ -2415,6 +2432,13 @@ dwb_end() {
     }
   }
   return false;
+}/*}}}*/
+
+/* dwb_delete_event_cb {{{*/
+gboolean
+dwb_delete_event_cb(GtkWidget *w) {
+  dwb_end();
+  return true;
 }/*}}}*/
 /* }}} */
 
@@ -2735,7 +2759,7 @@ dwb_init_gui() {
 
   gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), GET_INT("default-width"), GET_INT("default-height"));
   gtk_window_set_geometry_hints(GTK_WINDOW(dwb.gui.window), NULL, NULL, GDK_HINT_MIN_SIZE);
-  g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_end), NULL);
+  g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_delete_event_cb), NULL);
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
   DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
@@ -2860,10 +2884,8 @@ dwb_init_files() {
 /* signals {{{*/
 static void
 dwb_handle_signal(int s) {
-  if (s == SIGALRM || s == SIGFPE || s == SIGILL || s == SIGINT || s == SIGQUIT || s == SIGTERM) {
-    dwb_end();
+  if (((s == SIGTERM || s == SIGINT) && dwb_end()) || s == SIGFPE || s == SIGILL || s == SIGQUIT) 
     exit(EXIT_SUCCESS);
-  }
   else if (s == SIGSEGV) {
     fprintf(stderr, "Received SIGSEGV, trying to clean up.\n");
     session_save(NULL);
@@ -2952,6 +2974,7 @@ dwb_init() {
   dwb.state.last_cookie = NULL;
   dwb.state.last_cookies = NULL;
   dwb.state.fullscreen = false;
+  dwb.state.download_ref_count = 0;
 
   dwb.state.bar_visible = BAR_VIS_TOP | BAR_VIS_STATUS;
 

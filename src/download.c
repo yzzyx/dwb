@@ -199,6 +199,7 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
       dwb.state.mimetype_request = NULL;
     }
     g_free(dstatus);
+    dwb.state.download_ref_count--;
   }
 }/*}}}*/
 
@@ -337,6 +338,7 @@ download_start() {
       g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(download_progress_cb), s);
       g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(download_status_cb), s);
       webkit_download_start(dwb.state.download);
+      dwb.state.download_ref_count++;
     }
     FREE(lastdir);
     if (dwb.state.dl_action != DL_ACTION_EXECUTE) {
