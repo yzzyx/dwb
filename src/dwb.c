@@ -2728,6 +2728,7 @@ dwb_init_style() {
 static void 
 dwb_init_gui() {
   /* Window */
+  char *tabbarpos;
   if (dwb.gui.wid == 0) 
     dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   else 
@@ -2764,9 +2765,23 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
   DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 
+  tabbarpos = GET_CHAR("tabbar-position");
+  if (!g_ascii_strcasecmp(tabbarpos, "top"))
+    dwb.gui.tbp = TBP_TOP;
+  else if (!g_ascii_strcasecmp(tabbarpos, "bottom"))
+    dwb.gui.tbp = TBP_BOTTOM;
+  else if (!g_ascii_strcasecmp(tabbarpos, "left"))
+    dwb.gui.tbp = TBP_LEFT;
+  else if (!g_ascii_strcasecmp(tabbarpos, "right"))
+    dwb.gui.tbp = TBP_RIGHT;
+
   /* Main */
   dwb.gui.vbox = gtk_vbox_new(false, 1);
-  dwb.gui.topbox = gtk_hbox_new(true, 1);
+  /* if (dwb.gui.tbp == TBP_TOP || dwb.gui.tbp == TBP_BOTTOM)  */
+     dwb.gui.topbox = gtk_hbox_new(true, 1);
+   /* else 
+    *   dwb.gui.topbox = gtk_vbox_new(true, 1);
+    * */
   dwb.gui.paned = gtk_hpaned_new();
   dwb.gui.left = gtk_vbox_new(true, 0);
   dwb.gui.right = gtk_vbox_new(true, 1);
@@ -2785,7 +2800,11 @@ dwb_init_gui() {
   gtk_paned_pack2(GTK_PANED(dwb.gui.paned), dwb.gui.right, true, true);
 
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.downloadbar, false, false, 0);
-  gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
+  if (dwb.gui.tbp == TBP_BOTTOM) 
+    gtk_box_pack_end(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
+  else 
+    gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
+
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), paned_event, true, true, 0);
 
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);

@@ -218,6 +218,13 @@ typedef enum  {
 } CompletionType;
 
 typedef enum {
+  TBP_TOP,
+  TBP_BOTTOM,
+  TBP_LEFT, /* TODO implement left right */
+  TBP_RIGHT,
+} TabbarPosition;
+
+typedef enum {
   PLUGIN_STATUS_DISABLED      = 1<<0,
   PLUGIN_STATUS_ENABLED       = 1<<1,
   PLUGIN_STATUS_CONNECTED     = 1<<2,
@@ -608,6 +615,7 @@ struct _Gui {
   int width;
   int height;
   guint wid;
+  TabbarPosition tbp;
 };
 struct _Misc {
   const char *name;

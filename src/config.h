@@ -607,6 +607,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR,      { .p = "never"         },      (S_Func) dwb_set_hide_tabbar,  },
   { { "tabbed-browsing",                         "Whether to enable tabbed browsing", },                                  
     SETTING_GLOBAL,  BOOLEAN,      { .b = true         },      NULL,  },
+  { { "tabbar-position",                         "Position of the tabbar", },                                  
+    SETTING_GLOBAL,  CHAR,        { .p = "top"         },      NULL,  },
   { { "sync-history",                            "Interval to save history to hdd or 0 to directly write to hdd", },                                  
     SETTING_GLOBAL|SETTING_ONINIT,  INTEGER,      { .i = 0         },      (S_Func) dwb_set_sync_interval,  },
 

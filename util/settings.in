@@ -75,6 +75,7 @@ layout select @normal_maximized @normal @bottomstack_maximized @bottomstack The 
 message-delay text Time messages are shown, in seconds
 scrollbars checkbox Whether scrollbars should be enabled
 size text Tiling area size in percent
+tabbar-position select @top @bottom Whether to enable tabbed browsing
 tabbed-browsing checkbox Whether to enable tabbed browsing
 top-statusbar checkbox Whether to have the statusbar on top
 user-stylesheet-uri text The uri of a stylesheet applied to every page
