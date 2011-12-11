@@ -524,6 +524,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       }
       if (v->plugins->status & PLUGIN_STATUS_ENABLED) 
         plugins_connect(gl);
+      dwb_clean_load_begin(gl);
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       /* This is more or less a dummy call, to compile the script and speed up
