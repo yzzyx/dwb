@@ -323,7 +323,7 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_KEY_Return) {
     dwb_follow_selection();
   }
-  else if (DWB_TAB_KEY(e)) {
+  else if (dwb.state.mode & AUTO_COMPLETE && DWB_TAB_KEY(e)) {
     completion_autocomplete(dwb.keymap, e);
     ret = true;
   }
