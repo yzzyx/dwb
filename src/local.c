@@ -129,16 +129,16 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
       fprintf(stderr, "stat failed for %s\n", fullpath);
       continue;
     }
-    strftime(date, 49, "%x", localtime(&st.st_mtime));
-    strftime(time, 49, "%X", localtime(&st.st_mtime));
+    strftime(date, 50, "%x", localtime(&st.st_mtime));
+    strftime(time, 50, "%X", localtime(&st.st_mtime));
     if (st.st_size > BPGB) 
-      snprintf(size, 49, "%.1fG", (double)st.st_size / BPGB);
+      snprintf(size, 50, "%.1fG", (double)st.st_size / BPGB);
     else if (st.st_size > BPMB) 
-      snprintf(size, 49, "%.1fM", (double)st.st_size / BPMB);
+      snprintf(size, 50, "%.1fM", (double)st.st_size / BPMB);
     else if (st.st_size > BPKB) 
-      snprintf(size, 49, "%.1fK", (double)st.st_size / BPKB);
+      snprintf(size, 50, "%.1fK", (double)st.st_size / BPKB);
     else 
-      snprintf(size, 49, "%lu", st.st_size);
+      snprintf(size, 50, "%lu", st.st_size);
 
     char perm[11];
     int bits = 0;

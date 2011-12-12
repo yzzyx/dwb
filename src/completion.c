@@ -55,11 +55,12 @@ completion_get_completion_item(const char  *left, const char *right, const char 
   c->mlabel = gtk_label_new(middle);
   c->event = gtk_event_box_new();
   c->data = data;
-  GtkWidget *hbox = gtk_hbox_new(middle != NULL ? true : false, 0);
+  gboolean expand = middle != NULL && right != NULL;
+  GtkWidget *hbox = gtk_hbox_new(expand, 0);
 
   gtk_box_pack_start(GTK_BOX(hbox), c->llabel, true, true, 5);
-  gtk_box_pack_start(GTK_BOX(hbox), c->mlabel, middle != NULL ? true : false , true, 5);
-  gtk_box_pack_start(GTK_BOX(hbox), c->rlabel, true, true, 5);
+  gtk_box_pack_start(GTK_BOX(hbox), c->mlabel, middle != NULL, true, 5);
+  gtk_box_pack_start(GTK_BOX(hbox), c->rlabel, right != NULL, true, 5);
 
   gtk_label_set_ellipsize(GTK_LABEL(c->llabel), PANGO_ELLIPSIZE_MIDDLE);
   gtk_label_set_ellipsize(GTK_LABEL(c->rlabel), PANGO_ELLIPSIZE_MIDDLE);
@@ -448,13 +449,17 @@ static GList *
 completion_init_autocompletion(GList *gl) {
   View *v =  CURRENT_VIEW();
   GList *ret = NULL;
+  char buffer[128];
 
   v->autocompletion = gtk_hbox_new(true, 2);
   int i=0;
   for (GList *l=gl; l; l=l->next, i++) {
     KeyMap *m = l->data;
     if (!m->map->entry) {
-      Completion *c = completion_get_completion_item(m->key, m->map->n.second, NULL, m);
+      snprintf(buffer, 128, "%s  <span style='italic'>%s</span>", m->key, m->map->n.second);
+      Completion *c = completion_get_completion_item(NULL, NULL, NULL, m);
+      gtk_label_set_use_markup(GTK_LABEL(c->llabel), true);
+      gtk_label_set_markup(GTK_LABEL(c->llabel), buffer);
       ret = g_list_append(ret, c);
       if (i<5) {
         gtk_widget_show_all(c->event);
