@@ -399,7 +399,7 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
   
   va_start(arg_list, text);
   char message[STRING_LENGTH];
-  vsnprintf(message, STRING_LENGTH - 1, text, arg_list);
+  vsnprintf(message, STRING_LENGTH, text, arg_list);
   va_end(arg_list);
 
   dwb_set_status_bar_text(v->lstatus, message, &dwb.color.active_fg, dwb.font.fd_active, false);
@@ -417,7 +417,7 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
 
   va_start(arg_list, error);
   char message[STRING_LENGTH];
-  vsnprintf(message, STRING_LENGTH - 1, error, arg_list);
+  vsnprintf(message, STRING_LENGTH, error, arg_list);
   va_end(arg_list);
 
   dwb_source_remove(gl);
@@ -1472,7 +1472,7 @@ dwb_update_hints(GdkEventKey *e) {
   }
   else {
     val = util_keyval_to_char(e->keyval, true);
-    snprintf(input, BUFFER_LENGTH - 1, "%s%s", GET_TEXT(), val ? val : "");
+    snprintf(input, BUFFER_LENGTH, "%s%s", GET_TEXT(), val ? val : "");
     com = g_strdup_printf("DwbHintObj.updateHints(\"%s\", %d)", input, MIN(dwb.state.hint_type, HINT_T_URL));
     FREE(val);
   }
@@ -1581,7 +1581,7 @@ dwb_confirm(GList *gl, char *prompt, ...) {
 
   va_start(arg_list, prompt);
   char message[STRING_LENGTH];
-  vsnprintf(message, STRING_LENGTH - 1, prompt, arg_list);
+  vsnprintf(message, STRING_LENGTH, prompt, arg_list);
   va_end(arg_list);
   dwb_source_remove(gl);
   dwb_set_status_bar_text(VIEW(gl)->lstatus, message, &dwb.color.prompt, dwb.font.fd_active, false);
