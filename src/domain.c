@@ -118,6 +118,9 @@ domain_get_base_for_host(const char *host) {
     pprev_domain = prev_domain;
     prev_domain = cur_domain;
     cur_domain = nextdot + 1;
+
+    PRINT_DEBUG(nextdot);
+
     nextdot = strchr(cur_domain, '.');
   }
   if (ret == NULL) 

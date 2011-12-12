@@ -32,7 +32,7 @@
 #define VERSION "0.0.18"
 #endif
 #ifndef COPYRIGHT
-#define COPYRIGHT "© 2010-2011 Stefan Bolte"
+#define COPYRIGHT "© 2010-2011 portix"
 #endif
 
 #define PBAR_LENGTH   20
@@ -83,7 +83,6 @@
 #define LENGTH(X)   (sizeof(X)/sizeof(X[0]))
 #define GLENGTH(X)  (sizeof(X)/g_array_get_element_size(X)) 
 
-//#define CLEAN_STATE(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_BUTTON1_MASK) & ~(GDK_BUTTON2_MASK) & ~(GDK_BUTTON3_MASK) & ~(GDK_BUTTON4_MASK) & ~(GDK_BUTTON5_MASK) & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK))
 #define CLEAN_STATE_WITH_SHIFT(X) (X->state & ~(GDK_LOCK_MASK) & ~(GDK_MOD2_MASK) &~(GDK_MOD3_MASK) & ~(GDK_MOD5_MASK) & ~(GDK_SUPER_MASK) & ~(GDK_HYPER_MASK) & ~(GDK_META_MASK))
 #define CLEAN_STATE(X) (CLEAN_STATE_WITH_SHIFT(X) & ~(GDK_SHIFT_MASK))
 #define CLEAN_SHIFT(X) (X->state & ~(GDK_SHIFT_MASK) & ~(GDK_LOCK_MASK))
@@ -110,8 +109,8 @@
 #define FOO                         puts("bar")
 
 #define IS_WORD_CHAR(c)           (isalnum(c) || ((c) == '_')) 
-// compare string a and b, without newline in string b
 
+/* compare string a and b, without newline in string b */
 #define STRCMP_SKIP_NEWLINE(a, b)   (strncmp((a), (b), strstr((b), "\n") - (b)))
 #define STRCMP_FIRST_WORD(a, b)     (strncmp((a), (b), MAX(strstr((a), " ") - a, strstr((b), " ") - b)))
 
@@ -143,7 +142,7 @@
   g_timer_destroy(__debug_timer); \
 } while(0);
 GTimer *__timer;
-#define TIMER_START do {__timer = g_timer_new();g_timer_start(__timer);puts("hallo timer");}while(0)
+#define TIMER_START do {__timer = g_timer_new();g_timer_start(__timer);}while(0)
 #define TIMER_END do{ gulong __debug_micro = 0; gdouble __debug_elapsed = g_timer_elapsed(__timer, &__debug_micro);\
   PRINT_DEBUG("\033[33mtimer:\033[0m elapsed: %f, micro: %lu", __debug_elapsed, __debug_micro);\
   g_timer_destroy(__timer); \
@@ -159,8 +158,6 @@ GTimer *__timer;
 #define BPKB 1024
 #define BPMB 1048576
 #define BPGB 1073741824
-
-
 
 /*}}}*/
 
@@ -299,12 +296,6 @@ typedef enum {
   DL_ACTION_DOWNLOAD  = 0x01,
   DL_ACTION_EXECUTE   = 0x02,
 } DownloadAction;
-
-#define APPEND  0x01
-#define PREPEND  0x02
-
-#define NO_ERROR 0 
-#define ERROR -1
 
 typedef enum {
   ALLOW_HOST  = 1<<0,
