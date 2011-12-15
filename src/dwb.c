@@ -2447,8 +2447,6 @@ dwb_end() {
     }
   }
       
-  if (dwb.state.download_ref_count > 0)
-  dwb.state.mode = NORMAL_MODE;
   if (dwb_save_files(true)) {
     if (dwb_clean_up()) {
       gtk_main_quit();
