@@ -225,8 +225,8 @@ commands_show_settings(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_allow_cookie(KeyMap *km, Arg *arg) {
   GSList *asked = NULL, *allowed = NULL;
+  int length;
   if (dwb.state.last_cookies) {
-    int count = 0;
     GString *buffer = g_string_new(NULL);
     for (GSList *l = dwb.state.last_cookies; l; l=l->next) {
       SoupCookie *c = l->data;
@@ -241,19 +241,19 @@ commands_allow_cookie(KeyMap *km, Arg *arg) {
           util_file_add(dwb.files.cookies_allow, domain, true, -1);
           g_string_append_printf(buffer, "%s ", domain);
           allowed = g_slist_prepend(allowed, c);
-          count++;
         }
         asked = g_slist_prepend(asked, (char*)domain);
+        CLEAR_COMMAND_TEXT(dwb.state.fview);
       }
       else {
         allowed = g_slist_prepend(allowed, c);
       }
     }
     dwb_soup_save_cookies(allowed);
-    dwb.state.last_cookies = NULL;
-    dwb_set_normal_message(dwb.state.fview, true, "Allowed domain%s: %s", count == 1 ? "" : "s", buffer->str);
-    dwb_update_status_text(dwb.state.fview, NULL);
-
+    length = g_slist_length(allowed);
+    if (length > 0) {
+      dwb_set_normal_message(dwb.state.fview, true, "Allowed domain%s: %s", length == 1 ? "" : "s", buffer->str);
+    }
     g_string_free(buffer, true);
     g_slist_free(asked);
     g_slist_free(allowed);
