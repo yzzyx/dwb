@@ -1559,6 +1559,9 @@ dwb_prepend_navigation(GList *gl, GList **fc) {
 /* dwb_confirm_snooper {{{*/
 static gboolean
 dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
+  /*  only handle keypress */
+  if (e->type == GDK_KEY_RELEASE) 
+    return false;
   switch (e->keyval) {
     case GDK_KEY_y:       *state = 1; break;
     case GDK_KEY_n:       *state = 0; break;
@@ -2431,6 +2434,8 @@ dwb_save_files(gboolean end_session) {
 /* dwb_end() {{{*/
 gboolean
 dwb_end() {
+  if (dwb.state.mode & CONFIRM) 
+    return false;
   for (GList *l = dwb.state.views; l; l=l->next) {
     if (VIEW(l)->status->protect) {
       if (!dwb_confirm(dwb.state.fview, "There are protected tabs, really close [y/n]?")) {

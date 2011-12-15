@@ -224,24 +224,40 @@ commands_show_settings(KeyMap *km, Arg *arg) {
 /* commands_allow_cookie {{{*/
 DwbStatus
 commands_allow_cookie(KeyMap *km, Arg *arg) {
+  GSList *asked = NULL, *allowed = NULL;
   if (dwb.state.last_cookies) {
     int count = 0;
     GString *buffer = g_string_new(NULL);
     for (GSList *l = dwb.state.last_cookies; l; l=l->next) {
       SoupCookie *c = l->data;
       const char *domain = soup_cookie_get_domain(c);
-      if ( ! dwb.fc.cookies_allow || ! g_list_find_custom(dwb.fc.cookies_allow, domain, (GCompareFunc) g_strcmp0) ) {
-        dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, g_strdup(domain));
-        util_file_add(dwb.files.cookies_allow, domain, true, -1);
-        g_string_append_printf(buffer, "%s ", domain);
-        count++;
+      if ( ! dwb.fc.cookies_allow || g_list_find_custom(dwb.fc.cookies_allow, domain, (GCompareFunc) g_strcmp0) == NULL ) {
+        /* only ask once, if it was already prompted for this domain and allowed it will be handled
+         * in the else clause */
+        if (g_slist_find_custom(asked, domain, (GCompareFunc)g_strcmp0))
+          continue;
+        if (dwb_confirm(dwb.state.fview, "Allow cookies for domain %s [y/n]", domain)) {
+          dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, g_strdup(domain));
+          util_file_add(dwb.files.cookies_allow, domain, true, -1);
+          g_string_append_printf(buffer, "%s ", domain);
+          allowed = g_slist_prepend(allowed, c);
+          count++;
+        }
+        asked = g_slist_prepend(asked, (char*)domain);
+      }
+      else {
+        allowed = g_slist_prepend(allowed, c);
       }
     }
-    dwb_soup_save_cookies(dwb.state.last_cookies);
+    dwb_soup_save_cookies(allowed);
     dwb.state.last_cookies = NULL;
     dwb_set_normal_message(dwb.state.fview, true, "Allowed domain%s: %s", count == 1 ? "" : "s", buffer->str);
-    g_string_free(buffer, true);
     dwb_update_status_text(dwb.state.fview, NULL);
+
+    g_string_free(buffer, true);
+    g_slist_free(asked);
+    g_slist_free(allowed);
+
     return STATUS_OK;
   }
   return STATUS_ERROR;
