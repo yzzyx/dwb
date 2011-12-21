@@ -930,4 +930,11 @@ commands_toggle_protected(KeyMap *km, Arg *arg) {
   dwb_tab_label_set_text(gl, NULL);
   return STATUS_OK;
 }
+DwbStatus
+commands_toggle_locked(KeyMap *km, Arg *arg) {
+  GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod);
+  VIEW(gl)->status->lock = !VIEW(gl)->status->lock;
+  dwb_tab_label_set_text(gl, NULL);
+  return STATUS_OK;
+}
 /*}}}*/

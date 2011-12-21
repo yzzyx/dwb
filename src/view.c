@@ -301,6 +301,25 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   gboolean ret = false;
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
+  /* Check if tab is locked */
+  if (VIEW(gl)->status->lock) {
+    WebKitWebFrame *mainframe = webkit_web_view_get_main_frame(web);
+    WebKitWebDataSource *datasource = webkit_web_frame_get_data_source(mainframe);
+    WebKitNetworkRequest *initial_request = webkit_web_data_source_get_request(datasource);
+
+    SoupMessage *initial_msg = webkit_network_request_get_message(initial_request);
+    SoupURI *initial_uri = soup_message_get_uri(initial_msg); 
+    const char *initial_host = soup_uri_get_host(initial_uri);
+
+    SoupMessage *msg = webkit_network_request_get_message(request);
+    SoupURI *suri = soup_message_get_uri(msg);
+    const char *host = soup_uri_get_host(suri);
+    if (g_strcmp0(initial_host, host)) {
+      dwb_set_error_message(dwb.state.fview, "Locked to domain %s, request aborted.", host);
+      webkit_web_policy_decision_ignore(policy);
+      return true;
+    }
+  }
   if (g_str_has_prefix(uri, "dwb://")) {
     if (!html_load(gl, uri)) {
       fprintf(stderr, "Error loadings %s, maybe some files are missing.\n", uri);
@@ -860,6 +879,7 @@ view_create_web_view() {
   status->allowed_plugins = NULL;
   status->protect = false;
   status->style = NULL;
+  status->lock = false;
 
   v->plugins = plugins_new();
   for (int i=0; i<SIG_LAST; i++) 

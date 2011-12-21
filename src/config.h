@@ -158,7 +158,8 @@ static KeyValue KEYS[] = {
   { "toggle_topbar",            {   "xt",        0 }, }, 
   { "toggle_bottombar",            {   "xb",        0 }, }, 
   { "presentation_mode",            {   "F12",        GDK_CONTROL_MASK }, }, 
-  { "protect",            {   "P",        GDK_CONTROL_MASK }, }, 
+  { "protect",                {   "P",        GDK_CONTROL_MASK }, }, 
+  { "lock",                   {   "L",        GDK_CONTROL_MASK }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -175,6 +176,8 @@ static FunctionMap FMAP [] = {
     (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  } }, 
   { { "protect",    "Protect/unprotect this tab" },                 1, 
     (Func) commands_toggle_protected,                                   NULL,     ALWAYS_SM,    { .n = 0  } }, 
+  { { "lock",    "Lock/unlock this tab" },                 1, 
+    (Func) commands_toggle_locked,                                   NULL,     ALWAYS_SM,    { .n = 0  } }, 
   { { "allow_cookie",          "Cookie allowed",                    }, 1, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, 

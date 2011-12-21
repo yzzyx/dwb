@@ -535,6 +535,7 @@ struct _ViewStatus {
   char *hover_uri;
   GSList *allowed_plugins;
   gboolean protect;
+  gboolean lock;
   WebKitDOMElement *style;
 };
 struct _View {
