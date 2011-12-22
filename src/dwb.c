@@ -2302,8 +2302,10 @@ dwb_clean_up() {
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
     FREE(m);
+    m = NULL;
   }
   g_list_free(dwb.keymap);
+  dwb.keymap = NULL;
   g_hash_table_remove_all(dwb.settings);
 
   dwb_free_list(dwb.fc.bookmarks, (void_func)dwb_navigation_free);
@@ -3086,7 +3088,6 @@ dwb_parse_command_line(const char *line) {
     if (!g_strcmp0(m->map->n.first, token[0])) {
       if (m->map->prop & CP_HAS_MODE) 
         dwb_change_mode(NORMAL_MODE, true);
-      Arg a = m->map->arg;
       if (token[1]) {
         g_strstrip(token[1]);
         m->map->arg.p = token[1];
@@ -3097,12 +3098,12 @@ dwb_parse_command_line(const char *line) {
       else {
         commands_simple_command(m);
       }
-      m->map->arg = a;
       break;
     }
   }
   g_strfreev(token);
-  if (m != NULL && !(m->map->prop & CP_HAS_MODE)) {
+  /* Check for dwb.keymap is necessary for commands that quit dwb. */
+  if (dwb.keymap != NULL && m != NULL && !(m->map->prop & CP_HAS_MODE)) {
     dwb_change_mode(NORMAL_MODE, true);
   }
 }/*}}}*/

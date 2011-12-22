@@ -85,6 +85,7 @@ CFLAGS += --ansi
 CFLAGS += -std=c99
 CFLAGS += -D_POSIX_SOURCE
 CFLAGS += -O2
+CFLAGS += -g
 CFLAGS += -D_BSD_SOURCE
 #defines
 CFLAGS += -DNAME=\"$(NAME)\" 
