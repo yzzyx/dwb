@@ -359,6 +359,7 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, DwbColor *fg,  PangoFontDescription *fd, gboolean markup) {
+  //puts("status");
   if (markup) {
     char *escaped =  g_markup_escape_text(text, -1);
     gtk_label_set_markup(GTK_LABEL(label), text);
@@ -1640,8 +1641,8 @@ dwb_open_quickmark(const char *key) {
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!g_strcmp0(key, q->key)) {
-      dwb_load_uri(NULL, q->nav->first);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
+      dwb_load_uri(NULL, q->nav->first);
       found = true;
       break;
     }

@@ -199,17 +199,6 @@ view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
 static gboolean 
 view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {
-#if 0
-  if (gl == dwb.state.fview && !(strncmp(message, "_dwb_input_mode_", 16))) {
-    dwb_insert_mode(NULL);
-  }
-  else if (gl == dwb.state.fview && !(strncmp(message, "_dwb_normal_mode_", 17))) {
-    dwb_change_mode(NORMAL_MODE, true);
-  }
-  if (!strncmp(message, "_dwb_no_input_", 14)) {
-    dwb_set_error_message(gl, "No input found in current context");
-  }
-#endif
   return true;
 }/*}}}*/
 
@@ -315,7 +304,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     SoupURI *suri = soup_message_get_uri(msg);
     const char *host = soup_uri_get_host(suri);
     if (g_strcmp0(initial_host, host)) {
-      dwb_set_error_message(dwb.state.fview, "Locked to domain %s, request aborted.", host);
+      dwb_set_error_message(dwb.state.fview, "Locked to domain %s, request aborted.", initial_host);
       webkit_web_policy_decision_ignore(policy);
       return true;
     }
@@ -351,25 +340,31 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   }
   GError *error = NULL;
 
-  if ((reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED || reason == WEBKIT_WEB_NAVIGATION_REASON_BACK_FORWARD || reason == WEBKIT_WEB_NAVIGATION_REASON_RELOAD) 
-      && (local_check_directory(gl, uri, reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED,  &error))) {
-    if (error != NULL) {
-      dwb_set_error_message(gl, error->message);
-      g_clear_error(&error);
-    }
-    webkit_web_policy_decision_ignore(policy);
-    return true;
-  }
-  else if (reason == WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED) {
-    if (dwb.state.mode == SEARCH_FIELD_MODE) {
-      webkit_web_policy_decision_ignore(policy);
-      dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, HINT_SEARCH_SUBMIT) 
-        ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
-        : g_strdup(uri);
-      dwb_save_searchengine();
-      webkit_web_policy_decision_ignore(policy);
-      return true;
-    }
+  switch (reason) {
+    /* special handler for filesystem browsing */
+    case WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED:
+    case WEBKIT_WEB_NAVIGATION_REASON_BACK_FORWARD:
+    case WEBKIT_WEB_NAVIGATION_REASON_RELOAD:
+        if (local_check_directory(gl, uri, reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED,  &error)) {
+          if (error != NULL) {
+            dwb_set_error_message(gl, error->message);
+            g_clear_error(&error);
+          }
+          webkit_web_policy_decision_ignore(policy);
+          return true;
+        }
+    case WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED: 
+        if (dwb.state.mode == SEARCH_FIELD_MODE) {
+          webkit_web_policy_decision_ignore(policy);
+          dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, HINT_SEARCH_SUBMIT) 
+            ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
+            : g_strdup(uri);
+          dwb_save_searchengine();
+          webkit_web_policy_decision_ignore(policy);
+          return true;
+        }
+    default: break;
+
   }
 
   /* mailto, ftp */
@@ -397,21 +392,6 @@ view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame,
     WebKitWebPolicyDecision *decision, GList *gl) {
   return false;
 }/*}}}*/
-
-#if 0
-/* view_resource_request_cb{{{*/
-static void 
-view_resource_request_cb(WebKitWebView *web, WebKitWebFrame *frame,
-    WebKitWebResource *resource, WebKitNetworkRequest *request,
-    WebKitNetworkResponse *response, GList *gl) {
-  if (frame == webkit_web_view_get_main_frame(web) && webkit_web_frame_get_load_status(frame) == WEBKIT_LOAD_PROVISIONAL)
-    return;
-  if (dwb_block_ad(gl, webkit_network_request_get_uri(request))) {
-    webkit_network_request_set_uri(request, "about:blank");
-    return;
-  }
-}/*}}}*/
-#endif
 
 /* view_create_plugin_widget_cb {{{*/
 static GtkWidget * 
@@ -740,9 +720,10 @@ view_entry_activate(GList *gl, GdkEventKey *e) {
                               break;
     default : break;
   }
+  CLEAR_COMMAND_TEXT(gl);
   dwb_load_uri(NULL, GET_TEXT());
   dwb_prepend_navigation_with_argument(&dwb.fc.commands, GET_TEXT(), NULL);
-  dwb_change_mode(NORMAL_MODE, true);
+  dwb_change_mode(NORMAL_MODE, false);
   return true;
 }
 /*}}}*/
