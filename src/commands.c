@@ -507,7 +507,7 @@ commands_focus_nth_view(KeyMap *km, Arg *arg) {
   static int running;
   if (!dwb.state.views->next) 
     return STATUS_ERROR;
-  GList *l = g_list_nth(dwb.state.views, dwb.state.nummod);
+  GList *l = g_list_nth(dwb.state.views, dwb.state.nummod - 1);
   if (!l) 
     return STATUS_ERROR;
   dwb_focus_view(l);

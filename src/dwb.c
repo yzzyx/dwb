@@ -1664,7 +1664,7 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
   char *escaped = g_markup_printf_escaped("%c<span foreground=\"%s\">%d</span>%c %s", 
       sep1,
       color,
-      g_list_position(dwb.state.views, gl), 
+      g_list_position(dwb.state.views, gl) + 1, 
       sep2,
       uri ? uri : "about:blank");
   gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
