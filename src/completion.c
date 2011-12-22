@@ -29,6 +29,8 @@ static GList * completion_get_simple_completion(GList *gl);
 
 typedef gboolean (*Match_Func)(char*, const char*);
 static char *_typed;
+static int _last_buf;
+static gboolean _leading0 = false;
 
 /* GUI_FUNCTIONS {{{*/
 /* completion_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
@@ -186,13 +188,20 @@ completion_clean_completion(gboolean set_text) {
   dwb.comps.view = NULL;
   dwb.comps.completions = NULL;
   dwb.comps.active_comp = NULL;
-  if (set_text)
+  if (set_text && _typed != NULL)
     dwb_entry_set_text(_typed);
   if (_typed != NULL) {
     g_free(_typed);
     _typed = NULL;
   }
-  dwb.state.mode &= ~(COMPLETION_MODE|COMPLETE_PATH|COMPLETE_BUFFER);
+  if (dwb.state.mode & COMPLETE_BUFFER) {
+    _last_buf = 0;
+    _leading0 = false;
+    dwb.state.mode &= ~COMPLETE_BUFFER;
+    dwb_change_mode(NORMAL_MODE, true);
+  }
+  else 
+    dwb.state.mode &= ~(COMPLETION_MODE|COMPLETE_PATH);
 }/*}}}*/
 
 /* completion_show_completion(int back) {{{*/
@@ -332,9 +341,27 @@ void
 completion_buffer_key_press(GdkEventKey *e) {
   if (DWB_TAB_KEY(e)) 
     completion_complete(COMP_BUFFER, e->state & GDK_SHIFT_MASK);
-  else if (e->keyval >= GDK_KEY_0 && e->keyval < 48 + g_list_length(dwb.comps.completions)) {
-    GList *gl = g_list_nth(dwb.comps.completions, e->keyval - GDK_KEY_0);
-    completion_buffer_exec(COMPLETION_BUFFER_GET_PRIVATE(gl));
+  else if (DIGIT(e)) {
+    int value = e->keyval - GDK_KEY_0;
+    int length = g_list_length(dwb.state.views);
+    if (length < 10) {
+      if (value != 0 && value <= length) 
+        completion_buffer_exec(g_list_nth(dwb.state.views, value-1));
+    }
+    else {
+      _last_buf = 10*_last_buf + value;
+      if (_last_buf > length) {
+        completion_clean_completion(false);
+        dwb_change_mode(NORMAL_MODE, true);
+        return;
+      }
+      if (_last_buf != 0) {
+        if ((_last_buf < 10 && _leading0 == true) || _last_buf >= 10) 
+          completion_buffer_exec(g_list_nth(dwb.state.views, _last_buf-1));
+      }
+      else 
+        _leading0 = true;
+    }
   }
 }
 void
@@ -348,14 +375,13 @@ completion_eval_buffer_completion(void) {
 static GList *
 completion_complete_buffer() {
   GList *list = NULL;
-  int i=0;
+  int i=1;
+  const char *format = g_list_length(dwb.state.views) > 10 ? "%02d : %s" : "%d : %s";
   for (GList *l = dwb.state.views;l; l=l->next) {
-    if (l == dwb.state.fview) 
-      continue;
     WebKitWebView *wv = WEBVIEW(l);
     const char *title = webkit_web_view_get_title(wv);
     const char *uri = webkit_web_view_get_uri(wv);
-    char *text = g_strdup_printf("%c : %s", i+48, title != NULL ? title : uri);
+    char *text = g_strdup_printf(format, i, title != NULL ? title : uri);
     Completion *c = completion_get_completion_item(text, uri, NULL, l);
     g_free(text);
     gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
