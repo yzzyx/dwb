@@ -280,6 +280,7 @@ DwbStatus
 commands_quickmark(KeyMap *km, Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
     dwb_set_open_mode(arg->i);
+  dwb_focus_entry();
   dwb.state.mode = arg->n;
   return STATUS_OK;
 }/*}}}*/

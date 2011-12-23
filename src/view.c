@@ -643,7 +643,9 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e, GList *gl) {
   /*  Handled by activate-callback */
   if (e->keyval == GDK_KEY_Return)
     return view_entry_activate(gl, e);
-  if (mode & COMPLETE_BUFFER) {
+  if (mode == QUICK_MARK_SAVE) 
+    return false;
+  else if (mode & COMPLETE_BUFFER) {
     completion_buffer_key_press(e);
     return true;
   }
@@ -715,6 +717,10 @@ view_entry_activate(GList *gl, GdkEventKey *e) {
                               dwb_end();
                               return true;
     case COMPLETE_BUFFER:     completion_eval_buffer_completion();
+                              return true;
+    case QUICK_MARK_SAVE:     dwb_save_quickmark(GET_TEXT());
+                              return true;
+    case QUICK_MARK_OPEN:     dwb_open_quickmark(GET_TEXT());
                               return true;
     case COMPLETE_PATH:       completion_clean_path_completion();
                               break;

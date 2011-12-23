@@ -212,6 +212,7 @@ typedef enum  {
   COMP_PATH         = 0x09,
   COMP_CUR_HISTORY  = 0x0a,
   COMP_BUFFER       = 0x0b,
+  COMP_QUICKMARK    = 0x0c,
 } CompletionType;
 
 typedef enum {
@@ -265,8 +266,9 @@ typedef enum {
   SAVE_SESSION          = 1<<15,
   COMPLETE_PATH         = 1<<16,
   COMPLETE_BUFFER       = 1<<17,
-  PASS_THROUGH          = 1<<18,
-  CONFIRM               = 1<<19,
+  COMPLETE_QUICKMARKS   = 1<<18,
+  PASS_THROUGH          = 1<<19,
+  CONFIRM               = 1<<20,
 } Mode;
 
 
@@ -799,6 +801,8 @@ void dwb_set_open_mode(Open);
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
+void dwb_save_quickmark(const char *);
+void dwb_open_quickmark(const char *);
 #ifdef DWB_ADBLOCKER
 void dwb_set_adblock(GList *, WebSettings *);
 #endif

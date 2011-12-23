@@ -329,6 +329,24 @@ completion_get_current_history(int back) {
     list = g_list_reverse(list);
   return list;
 }/*}}}*/
+static  GList *
+completion_get_quickmarks(int back) {
+  GList *list = NULL;
+  Quickmark *q;
+  const char *input = GET_TEXT();
+  _typed = g_strdup(input);
+  for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
+    q = l->data;
+    if (g_str_has_prefix(q->key, input)) {
+      Completion *c = completion_get_completion_item(q->key, q->nav->second, NULL, NULL);
+      gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
+      list = g_list_append(list, c);
+    }
+  }
+  if (back)
+    list = g_list_reverse(list);
+  return list;
+}
 
 static void
 completion_buffer_exec(GList *gl) {
@@ -417,6 +435,7 @@ completion_complete(CompletionType type, int back) {
       case COMP_USERSCRIPT:  dwb.comps.completions = completion_get_simple_completion(dwb.misc.userscripts); break;
       case COMP_INPUT:       dwb.comps.completions = completion_get_simple_completion(dwb.fc.commands); break;
       case COMP_SEARCH:      dwb.comps.completions = completion_get_simple_completion(dwb.fc.se_completion); break;
+      case COMP_QUICKMARK:   dwb.comps.completions = completion_get_quickmarks(back); break;
       case COMP_PATH:        completion_path(); return STATUS_OK;
       case COMP_BUFFER:      dwb.comps.completions = completion_complete_buffer(); break;
       default:               dwb.comps.completions = completion_get_normal_completion(); break;
