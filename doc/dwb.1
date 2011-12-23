@@ -244,8 +244,13 @@ Focus nth view or first, if n is ommitted.
 Show all open tabs. (command 
 .BR buffers ).
 .TP
-.BR [n]Control-P
+.BR [n]C-P
 Protect tab [n]. Closing this tab must be confirmed (command 
+.BR protect ).
+.TP
+.BR [n]C-L
+Lock tab [n]. Locking a tab will lock this tab to the current domain, it's not
+possible to navigate to another domain until unlocked. 
 .BR protect ).
 .TP
 .BR f 
