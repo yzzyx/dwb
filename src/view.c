@@ -620,6 +620,17 @@ view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
 /* Entry */
 /* dwb_entry_keyrelease_cb {{{*/
 static gboolean 
+view_entry_insert_text_cb(GtkWidget* entry, char *new_text, int length, gpointer position, GList *gl) { 
+  const char *text = GET_TEXT();
+  int newlen = strlen(text) + length + 1;
+  char buffer[newlen];
+  snprintf(buffer, newlen, "%s%s", text, new_text);
+  if (dwb.state.mode == QUICK_MARK_OPEN) {
+    return dwb_update_find_quickmark(buffer);
+  }
+  return false;
+}
+static gboolean 
 view_entry_keyrelease_cb(GtkWidget* entry, GdkEventKey *e) { 
   if (dwb.state.mode == HINT_MODE) {
     if (e->keyval == GDK_KEY_BackSpace) {
@@ -839,6 +850,7 @@ view_init_signals(GList *gl) {
 
   v->status->signals[SIG_ENTRY_KEY_PRESS]       = g_signal_connect(v->entry, "key-press-event",                     G_CALLBACK(view_entry_keypress_cb), gl);
   v->status->signals[SIG_ENTRY_KEY_RELEASE]     = g_signal_connect(v->entry, "key-release-event",                   G_CALLBACK(view_entry_keyrelease_cb), gl);
+  v->status->signals[SIG_ENTRY_INSERT_TEXT]     = g_signal_connect(v->entry, "insert-text",                         G_CALLBACK(view_entry_insert_text_cb), gl);
   /* v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl); */
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);

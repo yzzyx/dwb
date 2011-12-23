@@ -69,7 +69,6 @@ static void dwb_reload_layout(GList *,  WebSettings *);
 static char * dwb_test_userscript(const char *);
 
 static void dwb_open_channel(const char *);
-static gboolean dwb_update_find_quickmark(void);
 static void dwb_open_si_channel(void);
 static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
 
@@ -345,9 +344,6 @@ static gboolean
 dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
   if (DWB_TAB_KEY(e)) {
     return true;
-  }
-  if (dwb.state.mode == QUICK_MARK_OPEN) {
-    return dwb_update_find_quickmark();
   }
   return false;
 }/*}}}*/
@@ -1656,8 +1652,7 @@ dwb_open_quickmark(const char *key) {
 }/*}}}*/
 
 gboolean
-dwb_update_find_quickmark() {
-  const char *text = GET_TEXT();
+dwb_update_find_quickmark(const char *text) {
   int found = 0;
   const Quickmark *lastfound = NULL;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {

@@ -353,6 +353,7 @@ enum Signal {
   SIG_VALUE_CHANGED,
   SIG_ENTRY_KEY_PRESS,
   SIG_ENTRY_KEY_RELEASE,
+  SIG_ENTRY_INSERT_TEXT,
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
   SIG_FRAME_CREATED, 
@@ -803,6 +804,7 @@ DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
 void dwb_save_quickmark(const char *);
 void dwb_open_quickmark(const char *);
+gboolean dwb_update_find_quickmark(const char *text);
 #ifdef DWB_ADBLOCKER
 void dwb_set_adblock(GList *, WebSettings *);
 #endif
