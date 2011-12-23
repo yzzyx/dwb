@@ -159,7 +159,8 @@ static KeyValue KEYS[] = {
   { "toggle_bottombar",            {   "xb",        0 }, }, 
   { "presentation_mode",            {   "F12",        GDK_CONTROL_MASK }, }, 
   { "protect",                {   "P",        GDK_CONTROL_MASK }, }, 
-  { "lock",                   {   "L",        GDK_CONTROL_MASK }, }, 
+  { "lock_uri",                {   "Lu",        0 }, }, 
+  { "lock_domain",                {   "Ld",        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -175,9 +176,11 @@ static FunctionMap FMAP [] = {
   { { "presentation_mode",    "Toggle presentation mode" },                 1, 
     (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  } }, 
   { { "protect",    "Protect/unprotect this tab" },                 1, 
-    (Func) commands_toggle_protected,                                   NULL,     ALWAYS_SM,    { .n = 0  } }, 
-  { { "lock",    "Lock/unlock this tab" },                 1, 
-    (Func) commands_toggle_locked,                                   NULL,     ALWAYS_SM,    { .n = 0  } }, 
+    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_PROTECT } }, 
+  { { "lock_domain",    "Lock/unlock domain for this tab" },                 1, 
+    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_LOCK_DOMAIN  } }, 
+  { { "lock_uri",    "Lock/unlock uri for this tab" },                 1, 
+    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_LOCK_URI  } }, 
   { { "allow_cookie",          "Cookie allowed",                    }, 1, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, 

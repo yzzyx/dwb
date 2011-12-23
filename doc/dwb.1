@@ -248,10 +248,15 @@ Show all open tabs. (command
 Protect tab [n]. Closing this tab must be confirmed (command 
 .BR protect ).
 .TP
-.BR [n]C-L
+.BR [n]Ld
 Lock tab [n]. Locking a tab will lock this tab to the current domain, it's not
 possible to navigate to another domain until unlocked. 
-.BR protect ).
+.BR lock_domain ).
+.TP
+.BR [n]Lu
+Lock tab [n]. Locking a tab will lock this tab to the current uri, it's not
+possible to navigate to another uri until unlocked. 
+.BR lock_uri ).
 .TP
 .BR f 
 Show hints (command 

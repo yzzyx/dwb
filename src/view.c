@@ -292,7 +292,16 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
   /* Check if tab is locked */
-  if (VIEW(gl)->status->lock) {
+  if (LP_LOCKED_URI(VIEW(gl))) {
+    const char *initial_uri = webkit_web_view_get_uri(web);
+    if (g_strcmp0(uri, initial_uri)) {
+      dwb_set_error_message(dwb.state.fview, "Locked to domain %s, request aborted.", initial_uri);
+      webkit_web_policy_decision_ignore(policy);
+      return true;
+    }
+
+  }
+  else if (LP_LOCKED_DOMAIN(VIEW(gl))) {
     const char *host, *initial_host;
     WebKitWebFrame *mainframe = webkit_web_view_get_main_frame(web);
     WebKitWebDataSource *datasource = webkit_web_frame_get_data_source(mainframe);
@@ -877,9 +886,10 @@ view_create_web_view() {
   status->hover_uri = NULL;
   status->progress = 0;
   status->allowed_plugins = NULL;
-  status->protect = false;
+  //status->protect = false;
   status->style = NULL;
-  status->lock = false;
+  //status->lock = false;
+  status->lockprotect = 0;
 
   v->plugins = plugins_new();
   for (int i=0; i<SIG_LAST; i++) 
@@ -1053,13 +1063,13 @@ view_remove(GList *gl) {
     return;
   }
   if (dwb.state.nummod >= 0) {
-    gl = g_list_nth(dwb.state.views, dwb.state.nummod);
+    gl = g_list_nth(dwb.state.views, dwb.state.nummod - 1);
   }
   else if (gl == NULL) 
     gl = dwb.state.fview;
   View *v = gl->data;
   /* Check for protected tab */
-  if (v->status->protect && !dwb_confirm(dwb.state.fview, "Really close tab %d [y/n]?", g_list_position(dwb.state.views, gl))) {
+  if (LP_PROTECTED(v) && !dwb_confirm(dwb.state.fview, "Really close tab %d [y/n]?", g_list_position(dwb.state.views, gl) + 1) ) {
     CLEAR_COMMAND_TEXT(dwb.state.fview);
     return;
   }

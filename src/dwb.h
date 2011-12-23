@@ -231,6 +231,15 @@ typedef enum {
 } PluginBlockerStatus;
 
 typedef enum {
+  LP_PROTECT          = 1<<0,
+  LP_LOCK_DOMAIN      = 1<<1,
+  LP_LOCK_URI         = 1<<2,
+} LockProtect;
+#define LP_PROTECTED(v) ((v)->status->lockprotect & LP_PROTECT)
+#define LP_LOCKED_DOMAIN(v) ((v)->status->lockprotect & LP_LOCK_DOMAIN)
+#define LP_LOCKED_URI(v) ((v)->status->lockprotect & LP_LOCK_URI)
+
+typedef enum {
   HINT_T_ALL        = 0,
   HINT_T_LINKS      = 1,
   HINT_T_IMAGES     = 2,
@@ -537,8 +546,7 @@ struct _ViewStatus {
   int tab_height;
   char *hover_uri;
   GSList *allowed_plugins;
-  gboolean protect;
-  gboolean lock;
+  unsigned int lockprotect;
   WebKitDOMElement *style;
 };
 struct _View {

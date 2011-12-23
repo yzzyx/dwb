@@ -1410,7 +1410,7 @@ dwb_evaluate_hints(const char *buffer) {
   else if  (!g_strcmp0(buffer, "_dwb_click_")) {
     dwb.state.scriptlock = 1;
     if ( !(dwb.state.nv & OPEN_DOWNLOAD) ) {
-      dwb_change_mode(NORMAL_MODE, true);
+      dwb_change_mode(NORMAL_MODE, false);
       ret = STATUS_END;
     }
   }
@@ -1681,15 +1681,28 @@ void
 dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-  const char *color = !v->status->protect ? dwb.color.tab_number_color : dwb.color.tab_protected_color;
-  const char sep1 = v->status->lock ? '>' : '\0';
-  const char sep2 = v->status->lock ? '<' : '\0';
-  char *escaped = g_markup_printf_escaped("[<span foreground=\"%s\">%d</span>] %c%s%c", 
-      color,
+  char buf[4] = { 0 };
+  int i=0;
+  char sep1 = 0, sep2 = 0;
+  if (v->status->lockprotect != 0) {
+    sep1 = '[';
+    sep2 = ']';
+    if (LP_PROTECTED(v)) 
+      buf[i++] = 'p';
+    if (LP_LOCKED_DOMAIN(v)) 
+      buf[i++] = 'd';
+    if (LP_LOCKED_URI(v)) 
+      buf[i++] = 'u';
+    buf[i++] = '\0';
+  }
+  char *escaped = g_markup_printf_escaped("[<span foreground='%s'>%d</span>]%c<span foreground='%s'>%s</span>%c %s", 
+      dwb.color.tab_number_color,
       g_list_position(dwb.state.views, gl) + 1, 
       sep1,
-      uri ? uri : "about:blank",
-      sep2);
+      dwb.color.tab_protected_color,
+      buf, 
+      sep2,
+      uri ? uri : "about:blank");
   gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
 
   g_free(escaped);
@@ -2465,7 +2478,7 @@ dwb_end() {
   if (dwb.state.mode & CONFIRM) 
     return false;
   for (GList *l = dwb.state.views; l; l=l->next) {
-    if (VIEW(l)->status->protect) {
+    if (LP_PROTECTED(VIEW(l))) {
       if (!dwb_confirm(dwb.state.fview, "There are protected tabs, really close [y/n]?")) {
         CLEAR_COMMAND_TEXT(dwb.state.fview);
         return false;
