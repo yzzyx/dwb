@@ -99,7 +99,15 @@ completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, vo
 /* dwb_completion_set_text(Completion *) {{{*/
 void
 completion_set_entry_text(Completion *c) {
-  const char *text = gtk_label_get_text(GTK_LABEL(c->llabel));
+  const char *text; 
+  CompletionType type = dwb_eval_completion_type();
+  switch (type) {
+    case COMP_QUICKMARK: text = c->data; 
+                         break;
+    default: text = gtk_label_get_text(GTK_LABEL(c->llabel));
+             break;
+  }
+  
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
 
@@ -333,12 +341,20 @@ static  GList *
 completion_get_quickmarks(int back) {
   GList *list = NULL;
   Quickmark *q;
+  char *escaped = NULL;
   const char *input = GET_TEXT();
   _typed = g_strdup(input);
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     q = l->data;
     if (g_str_has_prefix(q->key, input)) {
-      Completion *c = completion_get_completion_item(q->key, q->nav->second, NULL, NULL);
+      Completion *c = completion_get_completion_item(NULL, q->nav->first, NULL, q->key);
+      escaped = g_markup_printf_escaped("%s\t\t<span style='italic'>%s</span>", q->key, q->nav->second);
+      if (escaped != NULL) {
+        gtk_label_set_markup(GTK_LABEL(c->llabel), escaped);
+        g_free(escaped);
+      }
+      else 
+        gtk_label_set_text(GTK_LABEL(c->llabel), q->key);
       gtk_box_pack_start(GTK_BOX(CURRENT_VIEW()->compbox), c->event, false, false, 0);
       list = g_list_append(list, c);
     }
