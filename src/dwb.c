@@ -1682,14 +1682,14 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
   const char *color = !v->status->protect ? dwb.color.tab_number_color : dwb.color.tab_protected_color;
-  const char sep1 = v->status->lock ? '>' : '[';
-  const char sep2 = v->status->lock ? '<' : ']';
-  char *escaped = g_markup_printf_escaped("%c<span foreground=\"%s\">%d</span>%c %s", 
-      sep1,
+  const char sep1 = v->status->lock ? '>' : '\0';
+  const char sep2 = v->status->lock ? '<' : '\0';
+  char *escaped = g_markup_printf_escaped("[<span foreground=\"%s\">%d</span>] %c%s%c", 
       color,
       g_list_position(dwb.state.views, gl) + 1, 
-      sep2,
-      uri ? uri : "about:blank");
+      sep1,
+      uri ? uri : "about:blank",
+      sep2);
   gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
 
   g_free(escaped);

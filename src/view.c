@@ -28,6 +28,7 @@
 #include "html.h"
 #include "plugins.h"
 #include "local.h"
+#include "soup.h"
 #ifdef DWB_ADBLOCKER
 #include "adblock.h"
 #endif
@@ -292,24 +293,14 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
 
   /* Check if tab is locked */
   if (VIEW(gl)->status->lock) {
-    const char *host = NULL, *initial_host = NULL;
+    const char *host, *initial_host;
     WebKitWebFrame *mainframe = webkit_web_view_get_main_frame(web);
     WebKitWebDataSource *datasource = webkit_web_frame_get_data_source(mainframe);
     WebKitNetworkRequest *initial_request = webkit_web_data_source_get_request(datasource);
 
-    SoupMessage *initial_msg = webkit_network_request_get_message(initial_request);
-    if (initial_msg != NULL) {
-      SoupURI *initial_uri = soup_message_get_uri(initial_msg); 
-      if (initial_uri != NULL)
-        initial_host = soup_uri_get_host(initial_uri);
-    }
+    initial_host = dwb_soup_get_host_from_request(initial_request);
+    host         = dwb_soup_get_host_from_request(request);
 
-    SoupMessage *msg = webkit_network_request_get_message(request);
-    if (msg != NULL) {
-      SoupURI *suri = soup_message_get_uri(msg);
-      if (suri != NULL)
-        host = soup_uri_get_host(suri);
-    }
     if (g_strcmp0(initial_host, host)) {
       dwb_set_error_message(dwb.state.fview, "Locked to domain %s, request aborted.", initial_host);
       webkit_web_policy_decision_ignore(policy);
