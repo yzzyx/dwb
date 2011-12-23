@@ -649,6 +649,9 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e, GList *gl) {
   Mode mode = dwb.state.mode;
   gboolean ret = false;
   gboolean complete = (mode == DOWNLOAD_GET_PATH || (mode & COMPLETE_PATH));
+  gboolean set_text = false;
+  if (dwb.state.mode & QUICK_MARK_OPEN) 
+    set_text = true;
   /*  Handled by activate-callback */
   if (e->keyval == GDK_KEY_Return)
     return view_entry_activate(gl, e);
@@ -683,7 +686,7 @@ view_entry_keypress_cb(GtkWidget* entry, GdkEventKey *e, GList *gl) {
     }
   }
   else if (mode & COMPLETION_MODE && !DWB_TAB_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
-    completion_clean_completion(false);
+    completion_clean_completion(set_text);
   }
   else if (mode == FIND_MODE) {
     return false;

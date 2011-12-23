@@ -1651,6 +1651,7 @@ dwb_open_quickmark(const char *key) {
   dwb_change_mode(NORMAL_MODE, false);
 }/*}}}*/
 
+/* dwb_update_find_quickmark (const char *) {{{*/
 gboolean
 dwb_update_find_quickmark(const char *text) {
   int found = 0;
@@ -1662,6 +1663,10 @@ dwb_update_find_quickmark(const char *text) {
       found++;
     }
   }
+  if (found == 0) {
+    dwb_set_error_message(dwb.state.fview, "No such quickmark: %s", text);
+    dwb_change_mode(NORMAL_MODE, true);
+  }
   if (lastfound != NULL && found == 1 && !g_strcmp0(text, lastfound->key)) {
     dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", lastfound->key, lastfound->nav->first);
     dwb_load_uri(NULL, lastfound->nav->first);
@@ -1669,7 +1674,7 @@ dwb_update_find_quickmark(const char *text) {
     return true;
   }
   return false;
-}
+}/*}}}*/
 
 /* dwb_tab_label_set_text {{{*/
 void
