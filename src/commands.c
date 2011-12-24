@@ -280,6 +280,7 @@ DwbStatus
 commands_quickmark(KeyMap *km, Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
     dwb_set_open_mode(arg->i);
+  dwb_focus_entry();
   dwb.state.mode = arg->n;
   return STATUS_OK;
 }/*}}}*/
@@ -507,7 +508,7 @@ commands_focus_nth_view(KeyMap *km, Arg *arg) {
   static int running;
   if (!dwb.state.views->next) 
     return STATUS_ERROR;
-  GList *l = g_list_nth(dwb.state.views, dwb.state.nummod);
+  GList *l = g_list_nth(dwb.state.views, dwb.state.nummod - 1);
   if (!l) 
     return STATUS_ERROR;
   dwb_focus_view(l);
@@ -923,10 +924,19 @@ commands_presentation_mode(KeyMap *km, Arg *arg) {
   commands_toggle_bars(km, arg);
   return STATUS_OK;
 }
+#if 0
 DwbStatus
 commands_toggle_protected(KeyMap *km, Arg *arg) {
-  GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod);
+  GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod-1);
   VIEW(gl)->status->protect = !VIEW(gl)->status->protect;
+  dwb_tab_label_set_text(gl, NULL);
+  return STATUS_OK;
+}
+#endif
+DwbStatus
+commands_toggle_lock_protect(KeyMap *km, Arg *arg) {
+  GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod-1);
+  VIEW(gl)->status->lockprotect ^= arg->n;
   dwb_tab_label_set_text(gl, NULL);
   return STATUS_OK;
 }

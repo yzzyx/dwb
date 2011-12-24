@@ -74,10 +74,6 @@ static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *
 
 static gboolean dwb_eval_key(GdkEventKey *);
 
-static void dwb_save_quickmark(const char *);
-static void dwb_open_quickmark(const char *);
-
-
 static void dwb_init_key_map(void);
 static void dwb_init_settings(void);
 static void dwb_init_style(void);
@@ -305,18 +301,18 @@ dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
       ret = false;
     }
   }
-  else if (mode == QUICK_MARK_SAVE) {
-    if ((key = util_keyval_to_char(e->keyval, true))) {
-      dwb_save_quickmark(key);
-    }
-    ret = true;
-  }
-  else if (mode == QUICK_MARK_OPEN) {
-    if ((key = util_keyval_to_char(e->keyval, true))) {
-      dwb_open_quickmark(key);
-    }
-    ret = true;
-  }
+  //else if (mode == QUICK_MARK_SAVE) {
+  //  if ((key = util_keyval_to_char(e->keyval, true))) {
+  //    dwb_save_quickmark(key);
+  //  }
+  //  ret = true;
+  //}
+  //else if (mode == QUICK_MARK_OPEN) {
+//    if ((key = util_keyval_to_char(e->keyval, true))) {
+//      dwb_open_quickmark(key);
+//    }
+    //ret = false;
+  //}
   else if (gtk_widget_has_focus(dwb.gui.entry) || mode & COMPLETION_MODE) {
     ret = false;
   }
@@ -359,6 +355,7 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, DwbColor *fg,  PangoFontDescription *fd, gboolean markup) {
+  //puts("status");
   if (markup) {
     char *escaped =  g_markup_escape_text(text, -1);
     gtk_label_set_markup(GTK_LABEL(label), text);
@@ -1060,11 +1057,12 @@ dwb_toggle_tabbar(void) {
 CompletionType 
 dwb_eval_completion_type(void) {
   switch (CLEAN_MODE(dwb.state.mode)) {
-    case SETTINGS_MODE:  return COMP_SETTINGS;
-    case KEY_MODE:       return COMP_KEY;
-    case COMMAND_MODE:   return COMP_COMMAND;
-    case COMPLETE_BUFFER: return COMP_BUFFER;
-    default:            return COMP_NONE;
+    case SETTINGS_MODE:         return COMP_SETTINGS;
+    case KEY_MODE:              return COMP_KEY;
+    case COMMAND_MODE:          return COMP_COMMAND;
+    case COMPLETE_BUFFER:       return COMP_BUFFER;
+    case QUICK_MARK_OPEN:       return COMP_QUICKMARK;
+    default:                    return COMP_NONE;
   }
 }/*}}}*/
 
@@ -1412,7 +1410,7 @@ dwb_evaluate_hints(const char *buffer) {
   else if  (!g_strcmp0(buffer, "_dwb_click_")) {
     dwb.state.scriptlock = 1;
     if ( !(dwb.state.nv & OPEN_DOWNLOAD) ) {
-      dwb_change_mode(NORMAL_MODE, true);
+      dwb_change_mode(NORMAL_MODE, CURRENT_VIEW()->status->message_id == 0);
       ret = STATUS_END;
     }
   }
@@ -1599,8 +1597,9 @@ dwb_confirm(GList *gl, char *prompt, ...) {
 }/*}}}*/
 
 /* dwb_save_quickmark(const char *key) {{{*/
-static void 
+void 
 dwb_save_quickmark(const char *key) {
+  dwb_focus_scroll(dwb.state.fview);
   WebKitWebView *w = WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web);
   const char *uri = webkit_web_view_get_uri(w);
   if (uri && strlen(uri)) {
@@ -1634,14 +1633,14 @@ dwb_save_quickmark(const char *key) {
 }/*}}}*/
 
 /* dwb_open_quickmark(const char *key){{{*/
-static void 
+void 
 dwb_open_quickmark(const char *key) {
   gboolean found = false;
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     Quickmark *q = l->data;
     if (!g_strcmp0(key, q->key)) {
-      dwb_load_uri(NULL, q->nav->first);
       dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", key, q->nav->first);
+      dwb_load_uri(NULL, q->nav->first);
       found = true;
       break;
     }
@@ -1652,15 +1651,57 @@ dwb_open_quickmark(const char *key) {
   dwb_change_mode(NORMAL_MODE, false);
 }/*}}}*/
 
+/* dwb_update_find_quickmark (const char *) {{{*/
+gboolean
+dwb_update_find_quickmark(const char *text) {
+  int found = 0;
+  const Quickmark *lastfound = NULL;
+  for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
+    Quickmark *q = l->data;
+    if (g_str_has_prefix(q->key, text)) {
+      lastfound = q;
+      found++;
+    }
+  }
+  if (found == 0) {
+    dwb_set_error_message(dwb.state.fview, "No such quickmark: %s", text);
+    dwb_change_mode(NORMAL_MODE, true);
+  }
+  if (lastfound != NULL && found == 1 && !g_strcmp0(text, lastfound->key)) {
+    dwb_set_normal_message(dwb.state.fview, true, "Loading quickmark %s: %s", lastfound->key, lastfound->nav->first);
+    dwb_load_uri(NULL, lastfound->nav->first);
+    dwb_change_mode(NORMAL_MODE, false);
+    return true;
+  }
+  return false;
+}/*}}}*/
+
 /* dwb_tab_label_set_text {{{*/
 void
 dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-  const char *color = !v->status->protect ? dwb.color.tab_number_color : dwb.color.tab_protected_color;
-  char *escaped = g_markup_printf_escaped("[<span foreground=\"%s\">%d</span>] %s", 
-      color,
-      g_list_position(dwb.state.views, gl), 
+  char buf[4] = { 0 };
+  int i=0;
+  char sep1 = 0, sep2 = 0;
+  if (v->status->lockprotect != 0) {
+    sep1 = '[';
+    sep2 = ']';
+    if (LP_PROTECTED(v)) 
+      buf[i++] = 'p';
+    if (LP_LOCKED_DOMAIN(v)) 
+      buf[i++] = 'd';
+    if (LP_LOCKED_URI(v)) 
+      buf[i++] = 'u';
+    buf[i++] = '\0';
+  }
+  char *escaped = g_markup_printf_escaped("[<span foreground='%s'>%d</span>]%c<span foreground='%s'>%s</span>%c %s", 
+      dwb.color.tab_number_color,
+      g_list_position(dwb.state.views, gl) + 1, 
+      sep1,
+      dwb.color.tab_protected_color,
+      buf, 
+      sep2,
       uri ? uri : "about:blank");
   gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
 
@@ -2439,7 +2480,7 @@ dwb_end() {
   if (dwb.state.mode & CONFIRM) 
     return false;
   for (GList *l = dwb.state.views; l; l=l->next) {
-    if (VIEW(l)->status->protect) {
+    if (LP_PROTECTED(VIEW(l))) {
       if (!dwb_confirm(dwb.state.fview, "There are protected tabs, really close [y/n]?")) {
         CLEAR_COMMAND_TEXT(dwb.state.fview);
         return false;

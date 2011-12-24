@@ -81,6 +81,8 @@ increase_master Increase master area
 focus_next Focus next view
 focus_nth_view Focus nth view
 focus_prev Focus previous view
+lock_domain Lock tab to current domain
+lock_uri Lock tab to current uri
 push_master Push to master area
 toggle_bottomstack Toggle bottomstack
 fullscreen Toggle fullscreen

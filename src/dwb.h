@@ -212,6 +212,7 @@ typedef enum  {
   COMP_PATH         = 0x09,
   COMP_CUR_HISTORY  = 0x0a,
   COMP_BUFFER       = 0x0b,
+  COMP_QUICKMARK    = 0x0c,
 } CompletionType;
 
 typedef enum {
@@ -228,6 +229,15 @@ typedef enum {
   PLUGIN_STATUS_DISCONNECTED  = 1<<3,
   PLUGIN_STATUS_HAS_PLUGIN    = 1<<4,
 } PluginBlockerStatus;
+
+typedef enum {
+  LP_PROTECT          = 1<<0,
+  LP_LOCK_DOMAIN      = 1<<1,
+  LP_LOCK_URI         = 1<<2,
+} LockProtect;
+#define LP_PROTECTED(v) ((v)->status->lockprotect & LP_PROTECT)
+#define LP_LOCKED_DOMAIN(v) ((v)->status->lockprotect & LP_LOCK_DOMAIN)
+#define LP_LOCKED_URI(v) ((v)->status->lockprotect & LP_LOCK_URI)
 
 typedef enum {
   HINT_T_ALL        = 0,
@@ -265,8 +275,9 @@ typedef enum {
   SAVE_SESSION          = 1<<15,
   COMPLETE_PATH         = 1<<16,
   COMPLETE_BUFFER       = 1<<17,
-  PASS_THROUGH          = 1<<18,
-  CONFIRM               = 1<<19,
+  COMPLETE_QUICKMARKS   = 1<<18,
+  PASS_THROUGH          = 1<<19,
+  CONFIRM               = 1<<20,
 } Mode;
 
 
@@ -351,6 +362,7 @@ enum Signal {
   SIG_VALUE_CHANGED,
   SIG_ENTRY_KEY_PRESS,
   SIG_ENTRY_KEY_RELEASE,
+  SIG_ENTRY_INSERT_TEXT,
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
   SIG_FRAME_CREATED, 
@@ -534,7 +546,7 @@ struct _ViewStatus {
   int tab_height;
   char *hover_uri;
   GSList *allowed_plugins;
-  gboolean protect;
+  unsigned int lockprotect;
   WebKitDOMElement *style;
 };
 struct _View {
@@ -798,6 +810,9 @@ void dwb_set_open_mode(Open);
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
+void dwb_save_quickmark(const char *);
+void dwb_open_quickmark(const char *);
+gboolean dwb_update_find_quickmark(const char *text);
 #ifdef DWB_ADBLOCKER
 void dwb_set_adblock(GList *, WebSettings *);
 #endif

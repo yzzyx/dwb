@@ -23,6 +23,19 @@
 #include "soup.h"
 static SoupCookieJar *jar;
 
+/* dwb_soup_get_host_from_request(WebKitNetworkRequest ) {{{*/
+const char *
+dwb_soup_get_host_from_request(WebKitNetworkRequest *request) {
+  const char *host = NULL;
+  SoupMessage *msg = webkit_network_request_get_message(request);
+  if (msg != NULL) {
+    SoupURI *suri = soup_message_get_uri(msg);
+    if (suri != NULL)
+      host = soup_uri_get_host(suri);
+  }
+  return host;
+}/*}}}*/
+
 /* dwb_soup_save_cookies(cookies) {{{*/
 void 
 dwb_soup_save_cookies(GSList *cookies) {
