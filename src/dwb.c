@@ -1410,7 +1410,7 @@ dwb_evaluate_hints(const char *buffer) {
   else if  (!g_strcmp0(buffer, "_dwb_click_")) {
     dwb.state.scriptlock = 1;
     if ( !(dwb.state.nv & OPEN_DOWNLOAD) ) {
-      dwb_change_mode(NORMAL_MODE, false);
+      dwb_change_mode(NORMAL_MODE, CURRENT_VIEW()->status->message_id == 0);
       ret = STATUS_END;
     }
   }
