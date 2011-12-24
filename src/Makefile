@@ -16,10 +16,10 @@ $(TARGET): $(OBJ)
 
 debug: $(DTARGET)
 
-#%.d: %.c %.h
+#%.d: %.c %.h tlds.h 
 #	@echo "$(CC) -MM $@"
 #	@$(CC) $(CFLAGS) -MM $< -o $@
-#	
+	
 
 %.do: %.c
 	@echo "${CC} $<"
@@ -43,6 +43,13 @@ domain.o: tlds.h
 
 domain.do: tlds.h
 
+
+dependencies: $(DEPS)
+
+deps: 
+	$(MAKE) -B dependencies
+
+
 #
 #tlds.h: effective_tld_names.dat
 #	@echo gen tlds.h
@@ -62,4 +69,4 @@ clean:
 	$(RM) *.o  *.do $(TARGET) $(DTARGET) *.d
 	$(RM) tlds.h
 
-.PHONY: clean all cgdb 
+.PHONY: clean all cgdb deps

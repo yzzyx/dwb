@@ -124,8 +124,8 @@ DCFLAGS += -O0
 MFLAGS=--no-print-directory
 
 #Input 
-SOURCE = $(wildcard $(SRCDIR)/*.c) 
-HDR = $(SOURCE:%.c=%.h) 
+SOURCE = $(wildcard *.c) 
+HDR = $(wildcard *.h) 
 
 # OUTPUT 
 # Objects
