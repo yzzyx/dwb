@@ -159,8 +159,8 @@ static KeyValue KEYS[] = {
   { "toggle_bottombar",            {   "xb",        0 }, }, 
   { "presentation_mode",            {   "F12",        GDK_CONTROL_MASK }, }, 
   { "protect",                {   "P",        GDK_CONTROL_MASK }, }, 
-  { "lock_uri",                {   "Lu",        0 }, }, 
-  { "lock_domain",                {   "Ld",        0 }, }, 
+  { "lock_uri",                {   "xu",        0 }, }, 
+  { "lock_domain",                {   "xd",        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
