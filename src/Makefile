@@ -19,7 +19,7 @@ debug: $(DTARGET)
 #%.d: %.c %.h tlds.h 
 #	@echo "$(CC) -MM $@"
 #	@$(CC) $(CFLAGS) -MM $< -o $@
-	
+
 
 %.do: %.c
 	@echo "${CC} $<"
@@ -34,7 +34,7 @@ tlds.h: tlds.in
 	@echo "#ifndef TLDS_H" > $@
 	@echo "#define TLDS_H" >> $@
 	@echo "static char *TLDS_EFFECTIVE[] = {" >> $@
-	@sed '/^\/\/\|^\s*$$/d;s/^/\t"/;s/$$/",/' $< >> $@
+	@sed '/^\/\//d;/^[[:space:]]*$$/d;s/^/	"/;s/$$/",/' $< >> $@
 	@echo "NULL," >> $@
 	@echo "};" >> $@
 	@echo "#endif" >> $@
@@ -56,7 +56,7 @@ deps:
 #	@echo "#ifndef TLDS_H" > $@
 #	@echo "#define TLDS_H" >> $@
 #	@echo "static char *effective_tlds[] = {" >> $@
-#	@sed '/^\/\/\|^\s*$$/d;s/\(.*\)/\t"\1",/' $< >> $@
+#	@sed '/^\/\//d;/^[[:space:]]*$$/d;s/\(.*\)/	"\1",/' $< >> $@
 #	@echo -e "\tNULL," >> $@
 #	@echo "};" >> $@
 #	@echo "#endif" >> $@
