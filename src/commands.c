@@ -67,7 +67,7 @@ commands_simple_command(KeyMap *km) {
 /* commands_add_view(KeyMap *, Arg *) {{{*/
 void 
 commands_add_view(KeyMap *km, Arg *arg) {
-  view_add(arg->p, false);
+  view_add(NULL, false);
 }/*}}}*/
 
 /* commands_set_setting {{{*/
