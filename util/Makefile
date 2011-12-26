@@ -8,11 +8,11 @@ all: $(OUTFILES)
 
 $(KEYS): keys.in
 	@echo gen keys.html
-	@$(shell ./generate_keys.sh $< $@)
-	
+	@awk -f generate_keys.awk $< > $@
+
 $(SETTINGS): settings.in
 	@echo gen settings.html
-	@$(shell ./generate_settings.sh $< $@)
+	@awk -f generate_settings.awk $< > $@
 
 clean: 
 	$(RM) $(OUTFILES)
