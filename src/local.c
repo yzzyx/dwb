@@ -218,7 +218,7 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
         <div class='dwb_local_header_date'>%s</div>\
         <div class='dwb_local_header_time'>%s</div>\
         <div class='%s'><a href='%s'>%s</a></div></div>", 
-        perm, st.st_nlink, user, group, size, date, time, class, fullpath, printname == NULL ? filename: printname);
+        perm, (int64_t)st.st_nlink, user, group, size, date, time, class, fullpath, printname == NULL ? filename: printname);
     FREE(printname);
 
   }
