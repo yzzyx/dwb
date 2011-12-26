@@ -156,7 +156,7 @@ util_char_to_arg(char *value, DwbType type) {
       }
     }
     else if (type == INTEGER) {
-      int n = strtol(value, NULL, 10);
+      long n = strtol(value, NULL, 10);
       if (n != LONG_MAX &&  n != LONG_MIN && !errno ) {
         ret->i = n;
       }
