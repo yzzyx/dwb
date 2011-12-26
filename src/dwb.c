@@ -355,7 +355,6 @@ dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
 /* dwb_set_status_bar_text(GList *gl, const char *text, GdkColor *fg,  PangoFontDescription *fd) {{{*/
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, DwbColor *fg,  PangoFontDescription *fd, gboolean markup) {
-  //puts("status");
   if (markup) {
     char *escaped =  g_markup_escape_text(text, -1);
     gtk_label_set_markup(GTK_LABEL(label), text);
@@ -982,12 +981,12 @@ dwb_toggle_allowed(const char *filename, const char *data) {
   return !allowed;
 }/*}}}*/
 
-/* dwb_history_back {{{*/
+/* dwb_history{{{*/
 DwbStatus
-dwb_history_back() {
+dwb_history(Arg *a) {
   WebKitWebView *w = CURRENT_WEBVIEW();
 
-  if (!webkit_web_view_can_go_back(w)) 
+  if ( (a->i == -1 && !webkit_web_view_can_go_back(w)) || (a->i == 1 && !webkit_web_view_can_go_forward(w))) 
     return STATUS_ERROR;
 
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
@@ -995,29 +994,35 @@ dwb_history_back() {
   if (bf_list == NULL) 
     return STATUS_ERROR;
 
-  int n = MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
-  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, -n);
-  webkit_web_view_go_to_back_forward_item(w, item);
+  int n = a->i == -1 ? MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD) : MAX(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
+  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, a->i * n);
+  if (a->n == OPEN_NORMAL) {
+    webkit_web_view_go_to_back_forward_item(w, item);
+  }
+  else {
+    const char *uri = webkit_web_history_item_get_uri(item);
+    if (a->n == OPEN_NEW_VIEW) {
+      view_add(uri, dwb.state.background_tabs);
+    }
+    if (a->n == OPEN_NEW_WINDOW) {
+      dwb_new_window(uri);
+    }
+  }
   return STATUS_OK;
+}/*}}}*/
+
+/* dwb_history_back {{{*/
+DwbStatus
+dwb_history_back() {
+  Arg a = { .n = OPEN_NORMAL, .i = -1 };
+  return dwb_history(&a);
 }/*}}}*/
 
 /* dwb_history_forward{{{*/
 DwbStatus
 dwb_history_forward() {
-  WebKitWebView *w = CURRENT_WEBVIEW();
-
-  if (!webkit_web_view_can_go_forward(w))
-    return STATUS_ERROR;
-
-  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(w);
-
-  if (bf_list == NULL) 
-    return STATUS_ERROR;
-
-  int n = MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
-  WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, n);
-  webkit_web_view_go_to_back_forward_item(w, item);
-  return STATUS_OK;
+  Arg a = { .n = OPEN_NORMAL, .i = 1 };
+  return dwb_history(&a);
 }/*}}}*/
 
 /* dwb_eval_tabbar_visible (const char *) {{{*/

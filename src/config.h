@@ -46,6 +46,10 @@ static KeyValue KEYS[] = {
   { "hint_mode_primary",        {   ";Y",         0,                   },  },  
   { "history_back",             {   "H",         0,                   },  },  
   { "history_forward",          {   "L",         0,                   },  },  
+  { "history_back_nv",             {   "th",         0,                   },  },  
+  { "history_forward_nv",          {   "tl",         0,                   },  },  
+  { "history_back_nw",             {   "wh",         0,                   },  },  
+  { "history_forward_nw",          {   "wl",         0,                   },  },  
   { "insert_mode",              {   "i",         0,                   },  },  
   { "increase_master",          {   "gl",         0,                  },  },  
   { "decrease_master",          {   "gh",         0,                  },  },  
@@ -161,6 +165,7 @@ static KeyValue KEYS[] = {
   { "protect",                {   "P",        GDK_CONTROL_MASK }, }, 
   { "lock_uri",                {   "xu",        0 }, }, 
   { "lock_domain",                {   "xd",        0 }, }, 
+  { "back_new_tab",                {   "xb",        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -240,9 +245,17 @@ static FunctionMap FMAP [] = {
   { { "hint_mode_download",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, },
   { { "history_back",          "Go Back",                           }, 1, 
-    (Func)commands_history_back,        "Beginning of History",            ALWAYS_SM, },
+    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, { .n = OPEN_NORMAL, .i = -1 } },
   { { "history_forward",       "Go Forward",                        }, 1, 
-    (Func)commands_history_forward,     "End of History",                  ALWAYS_SM, },
+    (Func)commands_history,     "End of History",                  ALWAYS_SM, { .n = OPEN_NORMAL, .i = 1 } },
+  { { "history_back_nv",          "Go Back",                           }, 1, 
+    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, { .n = OPEN_NEW_VIEW, .i = -1 } },
+  { { "history_forward_nv",       "Go Forward",                        }, 1, 
+    (Func)commands_history,     "End of History",                  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .i = 1 } },
+  { { "history_back_nw",          "Go Back",                           }, 1, 
+    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .i = -1 } },
+  { { "history_forward_nw",       "Go Forward",                        }, 1, 
+    (Func)commands_history,     "End of History",                  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .i = 1 } },
   { { "increase_master",       "Increase master area",              }, 1, 
     (Func)commands_resize_master,       "Cannot increase further",         ALWAYS_SM,    { .n = -5 } },
   { { "insert_mode",           "Insert Mode",                       }, CP_COMMANDLINE | CP_HAS_MODE, 
@@ -731,6 +744,8 @@ static WebSettings DWB_SETTINGS[] = {
   { { "adblocker-filterlist",                    "Path to a filterlist", },                   
     SETTING_GLOBAL,  CHAR, { .p = NULL }, NULL,   }, 
 #endif
+  { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
+    SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
 };/*}}}*/

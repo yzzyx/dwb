@@ -388,12 +388,8 @@ commands_set_orientation(KeyMap *km, Arg *arg) {
 
 /* History {{{*/
 DwbStatus 
-commands_history_back(KeyMap *km, Arg *arg) {
-  return dwb_history_back();
-}
-DwbStatus 
-commands_history_forward(KeyMap *km, Arg *arg) {
-  return dwb_history_forward();
+commands_history(KeyMap *km, Arg *arg) {
+  return dwb_history(arg);
 }/*}}}*/
 
 /* commands_open(KeyMap *km, Arg *arg) {{{*/

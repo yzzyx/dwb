@@ -11,6 +11,10 @@ find_next Find next
 find_previous Find previous
 history_back Go back
 history_forward Go forward
+history_back_nv Go back in a new tab
+history_forward_nv Go forward in a new tab
+history_back_nw Go back in a new tab
+history_forward_nw Go forward in a new tab
 reload Reload current page
 reload_bypass_cache Reload without using any cached data
 stop_loading Stop loading current page

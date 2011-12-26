@@ -756,6 +756,7 @@ void dwb_save_searchengine(void);
 char * dwb_execute_script(WebKitWebFrame *, const char *, gboolean);
 void dwb_resize(double );
 void dwb_toggle_tabbar(void);
+DwbStatus dwb_history(Arg *a);
 DwbStatus dwb_history_back(void);
 DwbStatus dwb_history_forward(void);
 void dwb_scroll(GList *, double, ScrollDirection);
