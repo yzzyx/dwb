@@ -108,7 +108,7 @@
 
 #define FOO                         puts("bar")
 
-#define IS_WORD_CHAR(c)           (isalnum(c) || ((c) == '_')) 
+#define IS_WORD_CHAR(c)           (isalnum((int)c) || ((c) == '_')) 
 
 /* compare string a and b, without newline in string b */
 #define STRCMP_SKIP_NEWLINE(a, b)   (strncmp((a), (b), strstr((b), "\n") - (b)))
