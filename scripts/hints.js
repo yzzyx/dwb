@@ -1,44 +1,47 @@
-String.prototype.isInt = function() { return !isNaN(parseInt(this)); }
-String.prototype.isLower = function() { return this == this.toLowerCase(); }
-DwbHintObj = (function() {
-  _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
-  _font = "bold 10px monospace";
-  _style = "letter";
-  _fgColor = "#ffffff";
-  _bgColor = "#000088";
-  _activeColor = "#00ff00";
-  _normalColor = "#ffff99";
-  _hintBorder = "2px dashed #000000";
-  _hintOpacity = 0.65;
-  _elements = [];
-  _activeArr = [];
-  _lastInput = null;
-  _lastPosition = 0;
-  _activeInput = null;
-  _new_tab = false;
-  _styles = 0;
-  _active = null;
-  _markHints = false;
-  _bigFont = null;
-  _hintTypes = [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]",  // HINT_T_ALL
+String.prototype.isInt = function () { 
+  return !isNaN(parseInt(this, 10)); 
+};
+String.prototype.isLower = function () { 
+  return this == this.toLowerCase(); 
+};
+DwbHintObj = (function () {
+  var _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
+  var _font = "bold 10px monospace";
+  var _style = "letter";
+  var _fgColor = "#ffffff";
+  var _bgColor = "#000088";
+  var _activeColor = "#00ff00";
+  var _normalColor = "#ffff99";
+  var _hintBorder = "2px dashed #000000";
+  var _hintOpacity = 0.65;
+  var _elements = [];
+  var _activeArr = [];
+  var _lastInput = null;
+  var _lastPosition = 0;
+  var _activeInput = null;
+  var _new_tab = false;
+  var _styles = 0;
+  var _active = null;
+  var _markHints = false;
+  var _bigFont = null;
+  var _hintTypes = [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]",  // HINT_T_ALL
                  "a",  // HINT_T_LINKS
                  "img",  // HINT_T_IMAGES
                  "input[type=text], input[type=password], input[type=search], textarea",  // HINT_T_EDITABLE
-                 "[src], [href]",  // HINT_T_URL
+                 "[src], [href]"  // HINT_T_URL
                ];
-  const HintTypes = {
+  var HintTypes = {
     HINT_T_ALL : 0,
     HINT_T_LINKS : 1,
     HINT_T_IMAGES : 2,
     HINT_T_EDITABLE : 3,
-    HINT_T_URL : 4,
+    HINT_T_URL : 4
   };
 
   const __newHint = function(element, win, rect) {
     this.element = element;
     this.overlay = null;
     this.win = win;
-    var leftpos, toppos;
     var scrollY = win.scrollY;
     var scrollX = win.scrollX;
     var hint = __createElement("div");
@@ -66,33 +69,34 @@ DwbHintObj = (function() {
       overlay.style.display = "block";
       overlay.style.cursor = "pointer";
       this.overlay = overlay;
-    }
+    };
     this.hint = hint;
-  }
+  };
   const __createElement = function(tagname) {
-    element = document.createElement(tagname);
+    var element = document.createElement(tagname);
     if (!element.style) {
       var namespace = document.getElementsByTagName('html')[0].getAttribute('xmlns') || "http://www.w3.org/1999/xhtml";
       element = document.createElementNS(namespace, tagname);
     }
     return element;
-  }
+  };
   const __numberHint = function (element, win, rect) {
     this.constructor = __newHint;
     this.constructor(element, win, rect);
     var topobj = this;
 
     this.getStart = function(n) {
-      var start = parseInt(Math.log(n) / Math.log(10))*10;
-      if (n > 10*start-start) 
+      var start = parseInt(Math.log(n) / Math.log(10), 10)*10;
+      if (n > 10*start-start) {
         start*=10;
+      }
       return Math.max(start, 1);
-    }
+    };
     this.getTextHint = function (i, length) {
       var e = this.element;
-      start = this.getStart(length);
+      var start = this.getStart(length);
       this.hint.textContent = start+i;
-    }
+    };
 
     this.betterMatch = function(input) {
       var length = _activeArr.length;
@@ -103,10 +107,10 @@ DwbHintObj = (function() {
       var ret = 0;
       for (var i=0; i<length; i++) {
         var e = _activeArr[i];
-        if (input && bestposition != 0) {
+        if (input && bestposition !== 0) {
           var content = e.element.textContent.toLowerCase().split(" ");
           for (var cl=0; cl<content.length; cl++) {
-            if (content[cl].toLowerCase().indexOf(input) == 0) {
+            if (content[cl].toLowerCase().indexOf(input) === 0) {
               if (cl < bestposition) {
                 ret = i;
                 bestposition = cl;
@@ -117,11 +121,11 @@ DwbHintObj = (function() {
         }
       }
       
-      for (var i=0;i<length; i++) {
-        _activeArr[i].getTextHint(i, length);
+      for (var k=0;k<length; k++) {
+        _activeArr[k].getTextHint(k, length);
       }
       return ret;
-    }
+    };
     this.matchText = function(input, matchHint) {
       var ret = false;
       if (matchHint) {
@@ -130,14 +134,14 @@ DwbHintObj = (function() {
       }
       else {
         var inArr = input.split(" ");
-        for (var i=0; i<inArr.length; i++) {
-          if (!this.element.textContent.toLowerCase().match(inArr[i].toLowerCase())) {
+        for (var j=0; j<inArr.length; j++) {
+          if (!this.element.textContent.toLowerCase().match(inArr[j].toLowerCase())) {
             return false;
           }
         }
         return true;
       }
-    }
+    };
   };
   const __letterHint = function (element, win, rect) {
     this.constructor = __newHint;
@@ -145,7 +149,7 @@ DwbHintObj = (function() {
 
     this.betterMatch = function(input) {
       return 0;
-    }
+    };
     this.getTextHint = function(i, length) {
       var text;
       var l = _letterSeq.length;
@@ -164,13 +168,13 @@ DwbHintObj = (function() {
         }
       }
       else {
-        text = _letterSeq[i%l] + _letterSeq[l - 1 - (parseInt(i/l))];
+        text = _letterSeq[i%l] + _letterSeq[l - 1 - (parseInt(i/l, 10))];
       }
       this.hint.textContent = text;
-    }
+    };
     this.matchText = function(input, matchHint) {
       if (matchHint) {
-        return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) == 0);
+        return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) === 0);
       }
       else {
         var inArr = input.split(" ");
@@ -182,14 +186,14 @@ DwbHintObj = (function() {
         }
         return true;
       }
-    }
-  }
+    };
+  };
 
   const __mouseEvent = function (e, ev) {
     var mouseEvent = document.createEvent("MouseEvent");
     mouseEvent.initMouseEvent(ev, true, true, e.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
     e.dispatchEvent(mouseEvent);
-  }
+  };
   const __clickElement = function (element, ev) {
     if (ev) {
       __mouseEvent(element, ev);
@@ -198,17 +202,19 @@ DwbHintObj = (function() {
       __mouseEvent(element, "click");
       __mouseEvent(element, "mousedown");
     }
-  }
+  };
   const __getActive = function () {
     return _active;
-  }
+  };
   const __setActive = function (element) {
     var active = __getActive();
     if (active) {
-      if (_markHints) 
+      if (_markHints) {
         active.overlay.style.background = _normalColor;
-      else if (active.overlay) 
+      }
+      else if (active.overlay) {
         active.overlay.parentNode.removeChild(active.overlay);
+      }
       active.hint.style.font = _font;
 
     }
@@ -216,33 +222,36 @@ DwbHintObj = (function() {
     if (!_active.overlay) {
       _active.createOverlay();
     }
-    if (!_markHints)
+    if (!_markHints) {
       _active.hint.parentNode.appendChild(_active.overlay);
+    }
     _active.overlay.style.background = _activeColor;
     _active.hint.style.fontSize = _bigFont;
-  }
+  };
   const __hexToRgb = function (color) {
     var rgb;
-    if (color[0] !== '#')
+    if (color[0] !== '#') {
       return color;
+    }
     if (color.length == 4) {
       rgb = /#([0-9a-f])([0-9a-f])([0-9a-f])/i.exec(color);
       for (var i=1; i<=3; i++) {
-        var v = parseInt("0x" + rgb[i])+1;
+        var v = parseInt("0x" + rgb[i], 10)+1;
         rgb[i] = v*v-1;
       }
     }
     else {
       rgb  = /#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(color);
-      for (var i=1; i<=3; i++) {
-        rgb[i] = parseInt("0x" + rgb[i]);
+      for (var j=1; j<=3; j++) {
+        rgb[j] = parseInt("0x" + rgb[j], 16);
       }
     }
     return "rgba(" + rgb.slice(1) + "," +  _hintOpacity/2 + ")";
-  }
+  };
   const __createStyleSheet = function(doc) {
-    if (doc.hasStyleSheet) 
+    if (doc.hasStyleSheet) {
       return;
+    }
     styleSheet = __createElement("style");
     styleSheet.innerHTML += ".dwb_hint { " +
       "position:absolute; z-index:20000;" +
@@ -255,7 +264,7 @@ DwbHintObj = (function() {
       ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + _normalColor + ";}";
     doc.head.appendChild(styleSheet);
     doc.hasStyleSheet = true;
-  }
+  };
 
   const __createHints = function(win, constructor, type) {
     try {
@@ -266,8 +275,9 @@ DwbHintObj = (function() {
       var hints = doc.createDocumentFragment();
       for (var i=0;i < res.length; i++) {
         e = res[i];
-        if ((r = __getVisibility(e, win)) == null) 
+        if ((r = __getVisibility(e, win)) === null) {
           continue;
+        }
         if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
           __createHints(e.contentWindow, constructor, type);
         }
@@ -286,17 +296,19 @@ DwbHintObj = (function() {
     catch(exc) {
       console.error(exc);
     }
-  }
+  };
   const __showHints = function (type, new_tab) {
-    if (document.activeElement) 
+    if (document.activeElement) {
       document.activeElement.blur();
+    }
 
     _new_tab = new_tab;
     __createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
     var l = _elements.length;
 
-    if (l == 0) 
+    if (l === 0) {
       return "_dwb_no_hints_";
+    }
     else if (l == 1)  {
       return  __evaluate(_elements[0].element, type);
     }
@@ -307,7 +319,8 @@ DwbHintObj = (function() {
     }
     _activeArr = _elements;
     __setActive(_elements[0]);
-  }
+    return null;
+  };
   const __updateHints = function(input, type) {
     var array = [];
     var matchHint = false;
@@ -328,8 +341,9 @@ DwbHintObj = (function() {
           input = input.match(/[0-9]+/g).join("");
           matchHint = true;
         }
-        else 
+        else {
           input = input.match(/[^0-9]+/g).join("");
+        }
       }
       else if (_style == "letter") {
         var lowerSeq = _letterSeq.toLowerCase();
@@ -355,8 +369,7 @@ DwbHintObj = (function() {
       }
     }
     _activeArr = array;
-    active = array[0];
-    if (array.length == 0) {
+    if (array.length === 0) {
       __clear();
       return "_dwb_no_hints_";
     }
@@ -367,7 +380,8 @@ DwbHintObj = (function() {
       _lastPosition = array[0].betterMatch(input);
       __setActive(array[_lastPosition]);
     }
-  }
+    return null;
+  };
   const __getVisibility = function (e, win) {
     var style = win.getComputedStyle(e, null);
     if ((style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none" ) ) {
@@ -381,21 +395,24 @@ DwbHintObj = (function() {
       return null;
     }
     return r;
-  }
+  };
   const __clear = function() {
     var p;
     try {
       if (_elements) {
         for (var i=0; i<_elements.length; i++) {
           var e = _elements[i];
-          if (p = e.hint.parentNode) 
+          if ( (p = e.hint.parentNode) ) {
             p.removeChild(e.hint);
-          if (e.overlay != undefined && (p = e.overlay.parentNode)) 
+          }
+          if (e.overlay != undefined && (p = e.overlay.parentNode)) {
             p.removeChild(e.overlay);
+          }
         }
       }
-      if(! _markHints && _active)
+      if(! _markHints && _active) {
         _active.element.removeAttribute("dwb_highlight");
+      }
     }
     catch (e) { 
       console.error(e); 
@@ -405,12 +422,12 @@ DwbHintObj = (function() {
     _active = null;
     _lastPosition = 0;
     _lastInput = null;
-  }
+  };
   const __evaluate = function (e, type) {
     var ret = null;
-    var type;
-    if (e.type) 
+    if (e.type) {
       type = e.type.toLowerCase();
+    }
     var tagname = e.tagName.toLowerCase();
     if (_new_tab && e.target == "_blank") {
       e.target = null;
@@ -419,6 +436,7 @@ DwbHintObj = (function() {
       switch (type) {
         case HintTypes.HINT_T_IMAGES:  ret = e.src; break;
         case HintTypes.HINT_T_URL:     ret = e.hasAttribute("href") ? e.href : e.src; break;
+        default: break;
       }
     }
     else if (tagname && (tagname == "input" || tagname == "textarea") ) {
@@ -437,10 +455,12 @@ DwbHintObj = (function() {
       }
     }
     else {
-      if (tagname == "a" || e.hasAttribute("onclick")) 
+      if (tagname == "a" || e.hasAttribute("onclick")) {
         __clickElement(e, "click");
-      else if (e.hasAttribute("onmousedown")) 
+      }
+      else if (e.hasAttribute("onmousedown")) {
         __clickElement(e, "mousedown");
+      }
       else {
         __clickElement(e);
       }
@@ -448,49 +468,47 @@ DwbHintObj = (function() {
     }
     __clear();
     return ret;
-  }
+  };
   const __focusNext = function()  {
-    var newpos = _lastPosition == _activeArr.length-1 ? 0 : _lastPosition + 1;
-    active = _activeArr[newpos];
-    __setActive(active);
+    var newpos = _lastPosition === _activeArr.length-1 ? 0 : _lastPosition + 1;
+    __setActive(_activeArr[newpos]);
     _lastPosition = newpos;
-  }
+  };
   const __focusPrev = function()  {
-    var newpos = _lastPosition == 0 ? _activeArr.length-1 : _lastPosition - 1;
-    active = _activeArr[newpos];
-    __setActive(active);
+    var newpos = _lastPosition === 0 ? _activeArr.length-1 : _lastPosition - 1;
+    __setActive(_activeArr[newpos]);
     _lastPosition = newpos;
-  }
+  };
   const __addSearchEngine = function() {
     try {
       __createStyleSheet(document);
       var hints = document.createDocumentFragment();
       var res = document.body.querySelectorAll("form");
-      var r;
+      var r, e;
 
       for (var i=0; i<res.length; i++) {
         var els = res[i].elements;
         for (var j=0; j<els.length; j++) {
-          if (((r = __getVisibility(els[j], window)) != null) && (els[j].type == "text" || els[j].type == "search")) {
-            var e = new __letterHint(els[j], window, r);
+          if (((r = __getVisibility(els[j], window)) !== null) && (els[j].type === "text" || els[j].type === "search")) {
+            e = new __letterHint(els[j], window, r);
             hints.appendChild(e.hint);
             e.hint.style.visibility = "hidden";
             _elements.push(e);
           }
         }
       }
-      if (_elements.length == 0) {
+      if (_elements.length === 0) {
         return "_dwb_no_hints_";
       }
       if (_markHints) {
-        for (var i=0; i<_elements.length; i++) {
-          var e = _elements[i];
+        for (var k=0; k<_elements.length; k++) {
+          e = _elements[k];
           e.createOverlay();
           hints.appendChild(e.overlay);
         }
       }
       else {
-        var e = _elements[0];
+        e = _elements[0];
         e.createOverlay();
         hints.appendChild(e.overlay);
       }
@@ -498,10 +516,11 @@ DwbHintObj = (function() {
       __setActive(_elements[0]);
       _activeArr = _elements;
     }
-    catch (e) {
-      console.error(e);
+    catch (exc) {
+      console.error(exc);
     }
-  }
+    return null;
+  };
   const __submitSearchEngine = function (string) {
     var e = __getActive().element;
     e.value = string;
@@ -512,10 +531,10 @@ DwbHintObj = (function() {
       return e.name;
     }
     return null;
-  }
+  };
   const __focusInput = function() {
     var res = document.body.querySelectorAll('input[type=text], input[type=password], textarea');
-    if (res.length == 0) {
+    if (res.length === 0) {
       return "_dwb_no_input_";
     }
     styles = document.styleSheets[0];
@@ -534,7 +553,8 @@ DwbHintObj = (function() {
       }
     }
     _activeInput.focus();
-  }
+    return null;
+  };
   const __init = function (letter_seq, font, style,
           fg_color, bg_color, active_color, normal_color, border,  opacity, markHints) {
         _letterSeq  = letter_seq;
@@ -548,7 +568,7 @@ DwbHintObj = (function() {
         _hintOpacity = opacity;
         _markHints = markHints;
         _bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
-  }
+  };
 
 
   return {
@@ -596,6 +616,6 @@ DwbHintObj = (function() {
       function (letter_seq, font, style,
           fg_color, bg_color, active_color, normal_color, border,  opacity, highlightLinks) {
         __init(letter_seq, font, style, fg_color, bg_color, active_color, normal_color, border,  opacity, highlightLinks); 
-      }, 
-  }
+      }
+  };
 })();
