@@ -2476,7 +2476,7 @@ dwb_save_files(gboolean end_session) {
   /* Save command history */
   if (!GET_BOOL("enable-private-browsing") && g_list_length(dwb.fc.commands) > 0) {
     GString *buffer = g_string_new(NULL);
-    int limit = GET_INT("command-history-max");
+    int limit = GET_INT("navigation-history-max");
     int i = 0;
     for (GList *l = dwb.fc.commands; l && i<limit; l=l->next, i++) {
       Navigation *n = l->data;
