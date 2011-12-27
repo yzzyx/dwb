@@ -197,7 +197,7 @@ typedef gboolean (*Command_f)(void*);
 typedef gboolean (*Func)(void *, void*);
 typedef void (*void_func)(void*);
 typedef DwbStatus (*S_Func)(void *, WebSettings *);
-typedef void *(*Content_Func)(const char *);
+typedef void *(*Content_Func)(void *);
 
 typedef enum  {
   COMP_NONE         = 0x00,
@@ -662,6 +662,7 @@ struct _Misc {
 };
 struct _Files {
   const char *bookmarks;
+  const char *command_history;
   const char *cookies;
   const char *cookies_allow;
   const char *download_path;

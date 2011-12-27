@@ -748,8 +748,10 @@ view_entry_activate(GList *gl, GdkEventKey *e) {
     default : break;
   }
   CLEAR_COMMAND_TEXT(gl);
-  dwb_load_uri(NULL, GET_TEXT());
-  dwb_prepend_navigation_with_argument(&dwb.fc.commands, GET_TEXT(), NULL);
+  const char *text = GET_TEXT();
+  dwb_load_uri(NULL, text);
+  if (text != NULL && *text)
+    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
   dwb_change_mode(NORMAL_MODE, false);
   return true;
 }

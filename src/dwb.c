@@ -1902,11 +1902,14 @@ dwb_update_layout(gboolean background) {
 /* dwb_eval_editing_key(GdkEventKey *) {{{*/
 gboolean 
 dwb_eval_editing_key(GdkEventKey *e) {
-  if (!(ALPHA(e) || DIGIT(e))) {
+  if (DIGIT(e)) {
     return false;
   }
 
   char *key = util_keyval_to_char(e->keyval, false);
+  if (key == NULL) {
+    key = g_strdup(gdk_keyval_name(e->keyval));
+  }
   gboolean ret = false;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
@@ -2470,6 +2473,19 @@ dwb_save_files(gboolean end_session) {
   if (dwb.misc.synctimer > 0) {
     dwb_sync_history(NULL);
   }
+  /* Save command history */
+  if (!GET_BOOL("enable-private-browsing") && g_list_length(dwb.fc.commands) > 0) {
+    GString *buffer = g_string_new(NULL);
+    int limit = GET_INT("command-history-max");
+    int i = 0;
+    for (GList *l = dwb.fc.commands; l && i<limit; l=l->next, i++) {
+      Navigation *n = l->data;
+      g_string_append_printf(buffer, "%s\n", n->first);
+    }
+    if (buffer->len > 0) 
+      util_set_file_content(dwb.files.command_history, buffer->str);
+    g_string_free(buffer, true);
+  }
 
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
@@ -2903,7 +2919,9 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
     char **token = g_strsplit(content, "\n", 0);
     int length = MAX(g_strv_length(token) - 1, 0);
     for (int i=0;  i < length; i++) {
-      gl = g_list_append(gl, func(token[i]));
+      void *value = func(token[i]);
+      if (value != NULL)
+        gl = g_list_append(gl, value);
     }
     g_free(content);
     g_strfreev(token);
@@ -2935,11 +2953,12 @@ dwb_init_files() {
   cachedir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
   dwb.files.cachedir = util_check_directory(cachedir);
 
-  dwb.files.bookmarks     = g_build_filename(profile_path, "bookmarks",     NULL);
-  dwb.files.history       = g_build_filename(profile_path, "history",       NULL);
-  dwb.files.stylesheet    = g_build_filename(profile_path, "stylesheet",    NULL);
-  dwb.files.quickmarks    = g_build_filename(profile_path, "quickmarks",    NULL);
-  dwb.files.session       = g_build_filename(profile_path, "session",       NULL);
+  dwb.files.bookmarks       = g_build_filename(profile_path, "bookmarks",     NULL);
+  dwb.files.history         = g_build_filename(profile_path, "history",       NULL);
+  dwb.files.stylesheet      = g_build_filename(profile_path, "stylesheet",    NULL);
+  dwb.files.quickmarks      = g_build_filename(profile_path, "quickmarks",    NULL);
+  dwb.files.session         = g_build_filename(profile_path, "session",       NULL);
+  dwb.files.command_history = g_build_filename(profile_path, "navigate.history",       NULL);
   dwb.files.searchengines = g_build_filename(path, "searchengines", NULL);
   dwb.files.keys          = g_build_filename(path, "keys",          NULL);
   dwb.files.settings      = g_build_filename(path, "settings",      NULL);
@@ -2961,6 +2980,8 @@ dwb_init_files() {
   dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files.searchengines, (Content_Func)dwb_get_search_completion);
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
+  dwb.fc.commands = dwb_init_file_content(dwb.fc.commands, dwb.files.command_history, (Content_Func)dwb_navigation_new_from_line);
+  dwb.state.last_com_history = g_list_last(dwb.fc.commands);
   dwb.fc.tmp_scripts = NULL;
   dwb.fc.tmp_plugins = NULL;
   dwb.fc.downloads   = NULL;

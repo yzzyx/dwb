@@ -488,8 +488,12 @@ Navigation *
 dwb_navigation_new_from_line(const char *text) {
   char **line;
   Navigation *nv = NULL;
+  if (text == NULL)
+    return NULL;
+  while (isspace(*text))
+    text++;
 
-  if (text) {
+  if (*text != '\0') {
     line = g_strsplit(text, " ", 2);
     nv = dwb_navigation_new(line[0], line[1]);
     g_strfreev(line);

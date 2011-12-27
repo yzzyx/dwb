@@ -722,6 +722,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  INTEGER, { .i = 2          }, (S_Func) dwb_set_message_delay,  },
   { { "history-length",                          "Length of the browsing history", },                                          
     SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) dwb_set_history_length,  },
+  { { "navigation-history-max",                          "Length of the browsing history", },                                          
+    SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) NULL,  },
   { { "size",                                    "Tiling area size in percent", },                     
     SETTING_GLOBAL,  INTEGER, { .i = 30          }, NULL,  },
   { { "factor",                                  "Zoom factor of the tiling area", },                  
