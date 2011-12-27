@@ -588,10 +588,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,   },
   { { "active-bg-color",                         "Background color of the active view", },                              
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
-  { { "normal-fg-color",                         "Foreground color of inactive views", },                            
-    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#cccccc"         },    (S_Func) dwb_reload_layout,  },
-  { { "normal-bg-color",                         "Background color of inactive views", },                            
-    SETTING_GLOBAL,  COLOR_CHAR, { .p = "#505050"         },    (S_Func) dwb_reload_layout,  },
 
   { { "tab-active-fg-color",                     "Foreground color of the active tab", },                           
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,  },

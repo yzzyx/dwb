@@ -54,7 +54,7 @@ commands_simple_command(KeyMap *km) {
       dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
     }
     else if (km->map->hide == ALWAYS_SM) {
-      CLEAR_COMMAND_TEXT(dwb.state.fview);
+      CLEAR_COMMAND_TEXT();
       gtk_widget_hide(dwb.gui.entry);
     }
   }
@@ -229,7 +229,7 @@ commands_allow_cookie(KeyMap *km, Arg *arg) {
           allowed = g_slist_prepend(allowed, c);
         }
         asked = g_slist_prepend(asked, (char*)domain);
-        CLEAR_COMMAND_TEXT(dwb.state.fview);
+        CLEAR_COMMAND_TEXT();
       }
       else {
         allowed = g_slist_prepend(allowed, c);
@@ -664,7 +664,7 @@ commands_toggle(Arg *arg, const char *filename, GList **tmp, const char *message
     }
   }
   else 
-    CLEAR_COMMAND_TEXT(dwb.state.fview);
+    CLEAR_COMMAND_TEXT();
 }
 
 DwbStatus 
@@ -846,9 +846,7 @@ DwbStatus
 commands_toggle_bars(KeyMap *km, Arg *arg) {
   dwb.state.bar_visible ^= arg->n;
   gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
-  for (GList *l = dwb.state.views; l; l=l->next) {
-    gtk_widget_set_visible(VIEW(l)->statusbox, dwb.state.bar_visible & BAR_VIS_STATUS);
-  }
+  gtk_widget_set_visible(dwb.gui.statusbox, dwb.state.bar_visible & BAR_VIS_STATUS);
   return STATUS_OK;
 }/*}}}*/
 DwbStatus

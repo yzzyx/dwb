@@ -101,7 +101,7 @@
 #define FOCUSED_FRAME()             (webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()))  
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
-#define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL, false)
+#define CLEAR_COMMAND_TEXT()       dwb_set_status_bar_text(dwb.gui.lstatus, NULL, NULL, NULL, false)
 #define BOOLEAN(X)                  (!(!(X)))
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
@@ -496,6 +496,8 @@ struct _State {
   char *mimetype_request;
   int download_ref_count;
 
+  guint message_id;
+
   gboolean fullscreen;
   BarVisibility bar_visible;
 };
@@ -521,7 +523,6 @@ struct _Plugins {
   PluginBlockerStatus status;
 };
 struct _ViewStatus {
-  guint message_id;
   gboolean add_history;
   char *search_string;
   GList *downloads;
@@ -537,21 +538,12 @@ struct _ViewStatus {
   WebKitDOMElement *style;
 };
 struct _View {
-  GtkWidget *vbox;
   GtkWidget *web;
   GtkWidget *tabevent;
   GtkWidget *tabbox;
   GtkWidget *tabicon;
   GtkWidget *tablabel;
-  GtkWidget *statusbox;
-  GtkWidget *urilabel;
-  GtkWidget *rstatus;
-  GtkWidget *lstatus;
   GtkWidget *scroll; 
-  GtkWidget *entry;
-  GtkWidget *autocompletion;
-  GtkWidget *compbox;
-  GtkWidget *bottombox;
   ViewStatus *status;
   GHashTable *setting;
   Plugins *plugins;
@@ -559,8 +551,6 @@ struct _View {
 struct _Color {
   DwbColor active_fg;
   DwbColor active_bg;
-  DwbColor normal_fg;
-  DwbColor normal_bg;
   DwbColor ssl_trusted;
   DwbColor ssl_untrusted;
   DwbColor tab_active_fg;
@@ -575,8 +565,6 @@ struct _Color {
   DwbColor normal_c_bg;
   DwbColor download_fg;
   DwbColor download_bg;
-  char *settings_bg_color;
-  char *settings_fg_color;
   char *tab_number_color;
   char *tab_protected_color;
   char *allow_color;
@@ -598,8 +586,17 @@ struct _Gui {
   GtkWidget *vbox;
   GtkWidget *topbox;
   GtkWidget *mainbox;
-  GtkWidget *entry;
   GtkWidget *downloadbar;
+  /* Statusbar */
+  GtkWidget *statusbox;
+  GtkWidget *urilabel;
+  GtkWidget *rstatus;
+  GtkWidget *lstatus;
+  GtkWidget *entry;
+  GtkWidget *autocompletion;
+  GtkWidget *compbox;
+  GtkWidget *bottombox;
+
   int width;
   int height;
   guint wid;
@@ -632,6 +629,8 @@ struct _Misc {
   gboolean tabbed_browsing;
   gboolean private_browsing;
 
+  gboolean top_statusbar;
+
   double scroll_step;
 
   char *startpage;
@@ -640,10 +639,9 @@ struct _Misc {
   int tab_height;
 
   char *pbbackground;
-  gboolean top_statusbar;
   gboolean scrollbars;
-  int bar_height;
   int synctimer;
+  int bar_height;
 };
 struct _Files {
   const char *bookmarks;
@@ -721,7 +719,7 @@ void dwb_focus_scroll(GList *);
 gboolean dwb_update_search(gboolean forward);
 
 void dwb_set_normal_message(GList *, gboolean, const char *, ...);
-void dwb_set_error_message(GList *, const char *, ...);
+void dwb_set_error_message(GList *gl, const char *, ...);
 gboolean dwb_confirm(GList *, char *, ...);
 void dwb_set_status_text(GList *, const char *, DwbColor *,  PangoFontDescription *);
 void dwb_tab_label_set_text(GList *, const char *);
@@ -748,7 +746,7 @@ DwbStatus dwb_history_forward(void);
 void dwb_scroll(GList *, double, ScrollDirection);
 
 void dwb_focus(GList *);
-void dwb_source_remove(GList *);
+void dwb_source_remove();
 gboolean dwb_spawn(GList *, const char *, const char *uri);
 
 int dwb_entry_position_word_back(int position);
@@ -800,6 +798,7 @@ gboolean dwb_confirm(GList *gl, char *prompt, ...);
 void dwb_save_quickmark(const char *);
 void dwb_open_quickmark(const char *);
 gboolean dwb_update_find_quickmark(const char *text);
+gboolean dwb_entry_activate(GdkEventKey *e);
 #ifdef DWB_ADBLOCKER
 void dwb_set_adblock(GList *, WebSettings *);
 #endif

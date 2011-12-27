@@ -24,11 +24,7 @@ void view_remove(GList *gl);
 DwbStatus view_push_master(Arg *);
 void view_set_active_style(View *);
 void view_set_normal_style(View *);
-#if _HAS_GTK3
-void view_modify_style(View *, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
-#else
-void view_modify_style(View *, DwbColor *fg, DwbColor *bg, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
-#endif /* _HAS_GTK3 */
+void view_modify_style(View *, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
 
 GtkWidget * dwb_web_view_create_plugin_widget_cb(WebKitWebView *, char *, char *, GHashTable *, GList *);
 #endif

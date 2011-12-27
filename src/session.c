@@ -130,13 +130,13 @@ session_restore(const char *name) {
     g_strfreev(line);
   }
   g_strfreev(lines);
-  gtk_widget_show_all(dwb.gui.window);
+  //gtk_widget_show_all(dwb.gui.window);
 
   if (!dwb.state.views) 
     view_add(NULL, false);
 
-  dwb_unfocus();
-  dwb_focus(dwb.state.views);
+  //dwb_unfocus();
+  dwb_focus(dwb.state.fview);
   FREE(uri);
   return true;
 }/*}}}*/
