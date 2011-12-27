@@ -156,7 +156,7 @@ util_char_to_arg(char *value, DwbType type) {
       }
     }
     else if (type == INTEGER) {
-      int n = strtol(value, NULL, 10);
+      long n = strtol(value, NULL, 10);
       if (n != LONG_MAX &&  n != LONG_MIN && !errno ) {
         ret->i = n;
       }
@@ -672,9 +672,9 @@ util_strcasestr(const char *haystack, const char *needle) {
   if (needle == NULL || ! *needle )
     return (char *) haystack;
   for (; *haystack; haystack++) {
-    if (tolower(*haystack) == tolower(*needle)) {
+    if (tolower((int)*haystack) == tolower((int)*needle)) {
       const char *h = haystack, *n = needle;
-      for (; *h && *n && tolower(*h) == tolower(*n); ++h, ++n);
+      for (; *h && *n && tolower((int)*h) == tolower((int)*n); ++h, ++n);
       if (! *n ) 
         return (char*)haystack;
     }

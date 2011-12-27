@@ -12,23 +12,29 @@ clean:
 	@echo Cleaning 
 	@for dir in $(SUBDIRS); do $(MAKE) clean -C $$dir; done
 
-install: all install-man install-data 
-	install -Dm 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
+install: all install-man install-data
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 
 install-man: all
-	install -Dm 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
+	install -d $(DESTDIR)$(MAN1DIR)
+	install -m 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
 
 install-data: all
-	install -Dm 644 $(JSDIR)/hints.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js
-	install -Dm 644 $(LIBDIR)/$(INFO_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(INFO_FILE)
-	install -Dm 644 $(LIBDIR)/$(HEAD_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(HEAD_FILE)
-	install -Dm 644 $(LIBDIR)/$(SETTINGS_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(SETTINGS_FILE)
-	install -Dm 644 $(LIBDIR)/$(KEY_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(KEY_FILE)
-	install -Dm 644 $(LIBDIR)/$(PLUGIN_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(PLUGIN_FILE)
-	install -Dm 644 $(LIBDIR)/$(ERROR_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(ERROR_FILE)
-	install -Dm 644 $(LIBDIR)/$(LOCAL_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(LOCAL_FILE)
-	install -Dm 644 $(SHAREDIR)/dwb.png $(DESTDIR)$(DATADIR)/pixmaps/dwb.png
-	install -Dm 644 $(SHAREDIR)/dwb.desktop $(DESTDIR)$(DATADIR)/applications/dwb.desktop
+	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts
+	install -m 644 $(JSDIR)/hints.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/scripts/hints.js
+	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)
+	install -m 644 $(LIBDIR)/$(INFO_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(INFO_FILE)
+	install -m 644 $(LIBDIR)/$(HEAD_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(HEAD_FILE)
+	install -m 644 $(LIBDIR)/$(SETTINGS_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(SETTINGS_FILE)
+	install -m 644 $(LIBDIR)/$(KEY_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(KEY_FILE)
+	install -m 644 $(LIBDIR)/$(PLUGIN_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(PLUGIN_FILE)
+	install -m 644 $(LIBDIR)/$(ERROR_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(ERROR_FILE)
+	install -m 644 $(LIBDIR)/$(LOCAL_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(LOCAL_FILE)
+	install -d $(DESTDIR)$(DATADIR)/pixmaps
+	install -m 644 $(SHAREDIR)/dwb.png $(DESTDIR)$(DATADIR)/pixmaps/dwb.png
+	install -d $(DESTDIR)$(DATADIR)/applications
+	install -m 644 $(SHAREDIR)/dwb.desktop $(DESTDIR)$(DATADIR)/applications/dwb.desktop
 
 uninstall: uninstall-man uninstall-data
 	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"

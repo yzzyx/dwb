@@ -218,7 +218,7 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
         <div class='dwb_local_header_date'>%s</div>\
         <div class='dwb_local_header_time'>%s</div>\
         <div class='%s'><a href='%s'>%s</a></div></div>", 
-        perm, st.st_nlink, user, group, size, date, time, class, fullpath, printname == NULL ? filename: printname);
+        perm, (int64_t)st.st_nlink, user, group, size, date, time, class, fullpath, printname == NULL ? filename: printname);
     FREE(printname);
 
   }
@@ -239,7 +239,9 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
 
   char *local_file = util_get_data_file(LOCAL_FILE);
   char *filecontent = util_get_file_content(local_file);
-
+  if (filecontent == NULL) /* File doesn't exist or is a directory */
+    return;
+  
   char *favicon = dwb_get_stock_item_base64_encoded("gtk-harddisk");
   /*  title, favicon, toppath, content */
   char *page = g_strdup_printf(filecontent, orig_path, favicon, path_buffer->str, buffer->str);
