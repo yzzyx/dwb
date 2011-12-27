@@ -761,15 +761,7 @@ view_entry_activate(GList *gl, GdkEventKey *e) {
 static gboolean
 view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
   if (e->button == 1 && e->type == GDK_BUTTON_PRESS) {
-    Arg a = { .p = gl };
-    if ((dwb.state.layout & MAXIMIZED) ) {
-      dwb_focus_view(gl);
-    }
-    else {
-      dwb_unfocus();
-      dwb_focus(gl);
-      view_push_master(&a);
-    }
+    dwb_focus_view(gl);
     return true;
   }
   else if (e->button == 3 && e->type == GDK_BUTTON_PRESS) {
@@ -1003,61 +995,6 @@ view_create_web_view() {
   return v;
 } /*}}}*/
 
-/* view_push_master (Arg *) {{{*/
-DwbStatus 
-view_push_master(Arg *arg) {
-  GList *gl = NULL, *l = NULL;
-  View *old = NULL, *new;
-  if (!dwb.state.views->next) {
-    return STATUS_ERROR;
-  }
-  if (arg && arg->p) {
-    gl = arg->p;
-  }
-  else if (dwb.state.nummod >= 0) {
-    gl = g_list_nth(dwb.state.views, dwb.state.nummod);
-    if (!gl) {
-      return STATUS_ERROR;
-    }
-    CLEAR_COMMAND_TEXT(dwb.state.views);
-    view_set_normal_style(CURRENT_VIEW());
-  }
-  else {
-    gl = dwb.state.fview;
-  }
-  if (gl == dwb.state.views) {
-    old = gl->data;
-    l = dwb.state.views->next;
-    new = l->data;
-    gtk_widget_reparent(old->vbox, dwb.gui.right);
-    gtk_box_reorder_child(GTK_BOX(dwb.gui.right), old->vbox, 0);
-    gtk_widget_reparent(new->vbox, dwb.gui.left);
-    dwb.state.views = g_list_remove_link(dwb.state.views, l);
-    dwb.state.views = g_list_concat(l, dwb.state.views);
-    dwb_unfocus();
-    dwb_focus(l);
-  }
-  else {
-    old = dwb.state.views->data;
-    new = gl->data;
-    gtk_widget_reparent(new->vbox, dwb.gui.left);
-    gtk_widget_reparent(old->vbox, dwb.gui.right);
-    gtk_box_reorder_child(GTK_BOX(dwb.gui.right), old->vbox, 0);
-    dwb.state.views = g_list_remove_link(dwb.state.views, gl);
-    dwb.state.views = g_list_concat(gl, dwb.state.views);
-    dwb_focus(dwb.state.views);
-  }
-  if (dwb.state.layout & MAXIMIZED) {
-    gtk_widget_show(dwb.gui.left);
-    gtk_widget_hide(dwb.gui.right);
-    gtk_widget_show(new->vbox);
-    gtk_widget_hide(old->vbox);
-  }
-  gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), new->tabevent, -1);
-  dwb_update_layout(false);
-  return STATUS_OK;
-}/*}}}*/
-
 /* view_remove (void) {{{*/
 void
 view_remove(GList *gl) {
@@ -1082,11 +1019,13 @@ view_remove(GList *gl) {
         gtk_widget_show_all(dwb.gui.topbox);
     }
   }
+#if 0
   if (gl == dwb.state.views) {
     if (dwb.state.views->next) {
       gtk_widget_reparent(VIEW(dwb.state.views->next)->vbox, dwb.gui.left);
     }
   }
+#endif
 
   /* Get History for the undo list */
   WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
@@ -1125,19 +1064,7 @@ view_remove(GList *gl) {
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
   gl = NULL;
 
-  /* Update MAXIMIZED layout */ 
-  if (dwb.state.layout & MAXIMIZED) {
-    gtk_widget_show(CURRENT_VIEW()->vbox);
-    if (dwb.state.fview == dwb.state.views) {
-      gtk_widget_hide(dwb.gui.right);
-      gtk_widget_show(dwb.gui.left);
-    }
-    else {
-      gtk_widget_show(dwb.gui.right);
-      gtk_widget_hide(dwb.gui.left);
-    }
-  }
-  dwb_update_layout(false);
+  gtk_widget_show(CURRENT_VIEW()->vbox);
 }/*}}}*/
 
 /* view_ssl_state (GList *gl) {{{*/
@@ -1174,10 +1101,11 @@ view_add(const char *uri, gboolean background) {
   }
   View *v = view_create_web_view();
   gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
-  if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
+  //if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
+  if (dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
     gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
-    gtk_box_insert(GTK_BOX(dwb.gui.right), v->vbox, true, true, 0, p-1);
+    gtk_box_insert(GTK_BOX(dwb.gui.mainbox), v->vbox, true, true, 0, p);
     dwb.state.views = g_list_insert(dwb.state.views, v, p);
     ret = dwb.state.fview->next;
 
@@ -1187,26 +1115,14 @@ view_add(const char *uri, gboolean background) {
     }
     else {
       gtk_widget_hide(VIEW(dwb.state.fview)->vbox);
-      if (dwb.state.views == dwb.state.fview) {
-        gtk_widget_hide(dwb.gui.left);
-        gtk_widget_show(dwb.gui.right);
-      }
       dwb_unfocus();
       dwb_focus(ret);
     }
   }
   else {
-    /* reorder */
-    if (dwb.state.views) {
-      View *views = dwb.state.views->data;
-      CLEAR_COMMAND_TEXT(dwb.state.views);
-      gtk_widget_reparent(views->vbox, dwb.gui.right);
-      gtk_box_reorder_child(GTK_BOX(dwb.gui.right), views->vbox, 0);
-    }
-    gtk_box_insert(GTK_BOX(dwb.gui.left), v->vbox, true, true, 0, 0);
+    gtk_box_pack_start(GTK_BOX(dwb.gui.mainbox), v->vbox, true, true, 0);
     dwb.state.views = g_list_prepend(dwb.state.views, v);
     ret = dwb.state.views;
-    dwb_unfocus();
     dwb_focus(ret);
   }
 
@@ -1217,7 +1133,7 @@ view_add(const char *uri, gboolean background) {
     adblock_connect(ret);
 #endif
 
-  dwb_update_layout(background);
+  //dwb_update_layout(background);
   if (uri != NULL) {
     dwb_load_uri(ret, uri);
   }

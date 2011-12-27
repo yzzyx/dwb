@@ -167,20 +167,6 @@ commands_search(KeyMap *km, Arg *arg) {
   return ret;
 }
 
-/*commands_resize_master {{{*/
-DwbStatus  
-commands_resize_master(KeyMap *km, Arg *arg) { 
-  DwbStatus ret = STATUS_OK;
-  int inc = dwb.state.nummod < 0 ? arg->n : dwb.state.nummod * arg->n;
-  int size = dwb.state.size + inc;
-  if (size > 90 || size < 10) {
-    size = size > 90 ? 90 : 10;
-    ret = STATUS_ERROR;
-  }
-  dwb_resize(size);
-  return ret;
-}/*}}}*/
-
 /* commands_show_hints {{{*/
 DwbStatus
 commands_show_hints(KeyMap *km, Arg *arg) {
@@ -370,6 +356,7 @@ commands_set_zoom_level(KeyMap *km, Arg *arg) {
 }/*}}}*/
 
 /* commands_set_orientation(KeyMap *km, Arg *arg) {{{*/
+#if 0
 DwbStatus 
 commands_set_orientation(KeyMap *km, Arg *arg) {
   Layout l;
@@ -385,6 +372,7 @@ commands_set_orientation(KeyMap *km, Arg *arg) {
   dwb_resize(dwb.state.size);
   return STATUS_OK;
 }/*}}}*/
+#endif
 
 /* History {{{*/
 DwbStatus 
@@ -417,57 +405,10 @@ commands_open_startpage(KeyMap *km, Arg *arg) {
   return dwb_open_startpage(NULL);
 } /*}}}*/
 
-/* commands_toggle_maximized {{{*/
-void 
-commands_maximized_hide(View *v, View *no) {
-  if (dwb.misc.factor != 1.0) {
-    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
-  }
-  if (v != dwb.state.fview->data) {
-    gtk_widget_hide(v->vbox);
-  }
-}
-void 
-commands_maximized_show(View *v) {
-  if (dwb.misc.factor != 1.0 && v != dwb.state.views->data) {
-    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), dwb.misc.factor);
-  }
-  gtk_widget_show(v->vbox);
-}
-
-void 
-commands_toggle_maximized(KeyMap *km, Arg *arg) {
-  dwb.state.layout ^= MAXIMIZED;
-  if (dwb.state.layout & MAXIMIZED) {
-    g_list_foreach(dwb.state.views,  (GFunc)commands_maximized_hide, NULL);
-    if  (dwb.state.views == dwb.state.fview) {
-      gtk_widget_hide(dwb.gui.right);
-    }
-    else if (dwb.state.views->next) {
-      gtk_widget_hide(dwb.gui.left);
-    }
-  }
-  else {
-    if (dwb.state.views->next) {
-      gtk_widget_show(dwb.gui.right);
-    }
-    gtk_widget_show(dwb.gui.left);
-    g_list_foreach(dwb.state.views,  (GFunc)commands_maximized_show, NULL);
-  }
-  dwb_resize(dwb.state.size);
-  dwb_toggle_tabbar();
-}/*}}}*/
-
 /* commands_remove_view(KeyMap *km, Arg *arg) {{{*/
 void 
 commands_remove_view(KeyMap *km, Arg *arg) {
   view_remove(NULL);
-}/*}}}*/
-
-/* commands_push_master {{{*/
-DwbStatus 
-commands_push_master(KeyMap *km, Arg *arg) {
-  return view_push_master(arg);
 }/*}}}*/
 
 static gboolean
@@ -904,9 +845,7 @@ commands_only(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_toggle_bars(KeyMap *km, Arg *arg) {
   dwb.state.bar_visible ^= arg->n;
-  if (dwb.state.tabbar_visible != HIDE_TB_ALWAYS && (dwb.state.tabbar_visible == HIDE_TB_NEVER || (HIDE_TB_TILED && (dwb.state.layout & MAXIMIZED)))) {
-    gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
-  }
+  gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
   for (GList *l = dwb.state.views; l; l=l->next) {
     gtk_widget_set_visible(VIEW(l)->statusbox, dwb.state.bar_visible & BAR_VIS_STATUS);
   }

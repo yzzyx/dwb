@@ -135,15 +135,8 @@ session_restore(const char *name) {
   if (!dwb.state.views) 
     view_add(NULL, false);
 
-  if (dwb.state.layout & MAXIMIZED && dwb.state.views) {
-    gtk_widget_hide(dwb.gui.right);
-    for (GList *l = dwb.state.views->next; l; l=l->next) {
-      gtk_widget_hide(((View*)l->data)->vbox);
-    }
-  }
   dwb_unfocus();
   dwb_focus(dwb.state.views);
-  dwb_update_layout(false);
   FREE(uri);
   return true;
 }/*}}}*/

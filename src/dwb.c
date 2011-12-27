@@ -52,7 +52,6 @@ static void dwb_set_startpage(GList *, WebSettings *);
 static void dwb_set_message_delay(GList *, WebSettings *);
 static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
-static void dwb_set_hide_tabbar(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
@@ -62,8 +61,6 @@ static void dwb_set_single_instance(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
-
-static TabBarVisible dwb_eval_tabbar_visible(const char *arg);
 
 static void dwb_reload_layout(GList *,  WebSettings *);
 static char * dwb_test_userscript(const char *);
@@ -143,13 +140,6 @@ dwb_set_cookie_accept_policy(GList *gl, WebSettings *s) {
     return STATUS_ERROR;
   }
   return STATUS_OK;
-}/*}}}*/
-
-/* dwb_set_hide_tabbar{{{*/
-static void
-dwb_set_hide_tabbar(GList *gl, WebSettings *s) {
-  dwb.state.tabbar_visible = dwb_eval_tabbar_visible(s->arg.p);
-  dwb_toggle_tabbar();
 }/*}}}*/
 
 /* dwb_set_sync_interval{{{*/
@@ -914,18 +904,8 @@ dwb_get_host(WebKitWebView *web) {
 void
 dwb_focus_view(GList *gl) {
   if (gl != dwb.state.fview) {
-    if (dwb.state.layout & MAXIMIZED) { 
-      if (gl == dwb.state.views) {
-        gtk_widget_hide(dwb.gui.right);
-        gtk_widget_show(dwb.gui.left);
-      }
-      else {
-        gtk_widget_hide(dwb.gui.left);
-        gtk_widget_show(dwb.gui.right);
-      }
-      gtk_widget_show(((View *)gl->data)->vbox);
-      gtk_widget_hide(((View *)dwb.state.fview->data)->vbox);
-    }
+    gtk_widget_show(VIEW(gl)->vbox);
+    gtk_widget_hide(VIEW(dwb.state.fview)->vbox);
     dwb_unfocus();
     dwb_focus(gl);
   }
@@ -1026,39 +1006,6 @@ dwb_history_forward() {
   return dwb_history(&a);
 }/*}}}*/
 
-/* dwb_eval_tabbar_visible (const char *) {{{*/
-static TabBarVisible 
-dwb_eval_tabbar_visible(const char *arg) {
-  if (!strcasecmp(arg, "never")) {
-    return HIDE_TB_NEVER;
-  }
-  else if (!strcasecmp(arg, "always")) {
-    return HIDE_TB_ALWAYS;
-  }
-  else if (!strcasecmp(arg, "tiled")) {
-    return HIDE_TB_TILED;
-  }
-  return 0;
-}/*}}}*/
-
-/* dwb_toggle_tabbar() {{{*/
-void
-dwb_toggle_tabbar(void) {
-  if (! (dwb.state.bar_visible & BAR_VIS_TOP)) 
-    return;
-  gboolean visible = gtk_widget_get_visible(dwb.gui.topbox);
-  if (visible) {
-    if (dwb.state.tabbar_visible != HIDE_TB_NEVER && 
-        (dwb.state.tabbar_visible == HIDE_TB_ALWAYS || (HIDE_TB_TILED && !(dwb.state.layout & MAXIMIZED)))) {
-      gtk_widget_hide(dwb.gui.topbox);
-    }
-  }
-  else if (dwb.state.tabbar_visible != HIDE_TB_ALWAYS && 
-      (dwb.state.tabbar_visible == HIDE_TB_NEVER || (HIDE_TB_TILED && (dwb.state.layout & MAXIMIZED)))) {
-      gtk_widget_show(dwb.gui.topbox);
-  }
-}/*}}}*/
-
 /* dwb_eval_completion_type {{{*/
 CompletionType 
 dwb_eval_completion_type(void) {
@@ -1082,6 +1029,7 @@ dwb_clean_load_begin(GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
   }
 }/*}}}*/
+
 /* dwb_clean_load_end(GList *) {{{*/
 void 
 dwb_clean_load_end(GList *gl) {
@@ -1250,16 +1198,6 @@ dwb_spawn(GList *gl, const char *prop, const char *uri) {
   }
 }/*}}}*/
 
-/* dwb_resize(double size) {{{*/
-void
-dwb_resize(double size) {
-  int fact = dwb.state.layout & BOTTOM_STACK;
-
-  gtk_widget_set_size_request(dwb.gui.left,  (100 - size) * (fact^1),  (100 - size) *  fact);
-  gtk_widget_set_size_request(dwb.gui.right, size * (fact^1), size * fact);
-  dwb.state.size = size;
-}/*}}}*/
-
 /* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
 static void 
 dwb_reload_layout(GList *gl, WebSettings *s) {
@@ -1371,31 +1309,6 @@ dwb_save_searchengine(void) {
     dwb_set_error_message(dwb.state.fview, "No keyword specified, aborting.");
   }
   g_free(text);
-}/*}}}*/
-
-/* dwb_layout_from_char {{{*/
-static Layout
-dwb_layout_from_char(const char *desc) {
-  char **token = g_strsplit(desc, " ", 0);
-  int i=0;
-  Layout layout = 0;
-  while (token[i]) {
-    if (!(layout & BOTTOM_STACK) && !g_ascii_strcasecmp(token[i], "normal")) {
-      layout |= NORMAL_LAYOUT;
-    }
-    else if (!(layout & NORMAL_LAYOUT) && !g_ascii_strcasecmp(token[i], "bottomstack")) {
-      layout |= BOTTOM_STACK;
-    }
-    else if (!g_ascii_strcasecmp(token[i], "maximized")) {
-      layout |= MAXIMIZED;
-    }
-    else {
-      layout = NORMAL_LAYOUT;
-    }
-    i++;
-  }
-  g_strfreev(token);
-  return layout;
 }/*}}}*/
 
 /* dwb_evaluate_hints(const char *buffer)  return DwbStatus {{{*/
@@ -1575,7 +1488,6 @@ dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
   dwb.state.mode &= ~CONFIRM;
   return true;
 }/*}}}*/
-
 
 /* dwb_confirm()  return confirmed (gboolean) {{{
  * yes / no confirmation
@@ -1864,40 +1776,6 @@ dwb_load_uri(GList *gl, const char *arg) {
   }
   webkit_web_view_load_uri(web, uri);
   FREE(uri);
-}/*}}}*/
-
-/* dwb_update_layout() {{{*/
-void
-dwb_update_layout(gboolean background) {
-  gboolean visible = gtk_widget_get_visible(dwb.gui.right);
-  WebKitWebView *w;
-
-  if (! (dwb.state.layout & MAXIMIZED)) {
-    if (dwb.state.views->next) {
-      if (!visible) {
-        gtk_widget_show_all(dwb.gui.right);
-        gtk_widget_hide(((View*)dwb.state.views->next->data)->entry);
-      }
-      w = WEBVIEW(dwb.state.views->next);
-      if (dwb.misc.factor != 1.0) {
-        webkit_web_view_set_zoom_level(w, dwb.misc.factor);
-        webkit_web_view_set_full_content_zoom(w, GET_BOOL("full-content-zoom"));
-      }
-    }
-    else if (visible) {
-      gtk_widget_hide(dwb.gui.right);
-    }
-
-    w = WEBVIEW(dwb.state.views);
-    webkit_web_view_set_zoom_level(w, 1.0);
-    dwb_resize(dwb.state.size);
-  }
-  /* update tab label */
-  for (GList *gl = dwb.state.views; gl; gl = gl->next) {
-    View *v = gl->data;
-    const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-    dwb_tab_label_set_text(gl, title);
-  }
 }/*}}}*/
 
 /* dwb_eval_editing_key(GdkEventKey *) {{{*/
@@ -2874,22 +2752,19 @@ dwb_init_gui() {
    /* else 
     *   dwb.gui.topbox = gtk_vbox_new(true, 1);
     * */
-  dwb.gui.paned = gtk_hpaned_new();
-  dwb.gui.left = gtk_vbox_new(true, 0);
-  dwb.gui.right = gtk_vbox_new(true, 1);
+  dwb.gui.mainbox = gtk_vbox_new(true, 0);
 
   /* Paned */
-  GtkWidget *paned_event = gtk_event_box_new(); 
-  DWB_WIDGET_OVERRIDE_BACKGROUND(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
-  DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.paned, GTK_STATE_NORMAL, &dwb.color.normal_bg);
-  DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
-  gtk_container_add(GTK_CONTAINER(paned_event), dwb.gui.paned);
+  //DWB_WIDGET_OVERRIDE_BACKGROUND(paned_event, GTK_STATE_NORMAL, &dwb.color.normal_bg);
+  //DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.mainbox, GTK_STATE_NORMAL, &dwb.color.normal_bg);
+  //DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.paned, GTK_STATE_PRELIGHT, &dwb.color.active_bg);
+  //gtk_container_add(GTK_CONTAINER(paned_event), dwb.gui.paned);
   /* Downloadbar */
   dwb.gui.downloadbar = gtk_hbox_new(false, 3);
 
   /* Pack */
-  gtk_paned_pack1(GTK_PANED(dwb.gui.paned), dwb.gui.left, true, true);
-  gtk_paned_pack2(GTK_PANED(dwb.gui.paned), dwb.gui.right, true, true);
+  //gtk_paned_pack1(GTK_PANED(dwb.gui.paned), dwb.gui.left, true, true);
+  //gtk_paned_pack2(GTK_PANED(dwb.gui.paned), dwb.gui.right, true, true);
 
   gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.downloadbar, false, false, 0);
   if (dwb.gui.tbp == TBP_BOTTOM) 
@@ -2897,13 +2772,11 @@ dwb_init_gui() {
   else 
     gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
 
-  gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), paned_event, true, true, 0);
+  gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.mainbox, true, true, 0);
 
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);
 
-  gtk_widget_show(dwb.gui.left);
-  gtk_widget_show(dwb.gui.paned);
-  gtk_widget_show(paned_event);
+  gtk_widget_show(dwb.gui.mainbox);
   gtk_widget_show_all(dwb.gui.topbox);
 
   gtk_widget_show(dwb.gui.vbox);
@@ -3035,7 +2908,6 @@ dwb_init_vars() {
   dwb.misc.top_statusbar = GET_BOOL("top-statusbar");
   dwb.misc.scrollbars = GET_BOOL("scrollbars");
 
-  dwb.state.tabbar_visible = dwb_eval_tabbar_visible(GET_CHAR("hide-tabbar"));
   dwb.state.cookies_allowed = GET_BOOL("cookies");
 
   dwb.state.complete_history = GET_BOOL("complete-history");
@@ -3046,7 +2918,6 @@ dwb_init_vars() {
   dwb.state.background_tabs = GET_BOOL("background-tabs");
 
   dwb.state.size = GET_INT("size");
-  dwb.state.layout = dwb_layout_from_char(GET_CHAR("layout"));
   dwb.state.buffer = g_string_new(NULL);
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }/*}}}*/
@@ -3122,10 +2993,6 @@ dwb_init() {
 
   dwb_soup_init();
 
-  if (dwb.state.layout & BOTTOM_STACK) {
-    Arg a = { .n = dwb.state.layout };
-    commands_set_orientation(NULL, &a);
-  }
   gboolean restore_success = false;
   if (restore) 
     restore_success = session_restore(restore);
@@ -3138,7 +3005,6 @@ dwb_init() {
     view_add(NULL, false);
   }
   g_signal_connect(VIEW(dwb.state.fview)->tablabel, "size-allocate", G_CALLBACK(dwb_tab_size_cb), NULL);
-  dwb_toggle_tabbar();
 } /*}}}*/ /*}}}*/
 
 /* FIFO {{{*/

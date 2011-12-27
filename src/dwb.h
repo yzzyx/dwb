@@ -248,11 +248,7 @@ typedef enum {
   HINT_T_CLIPBOARD  = 5,
   HINT_T_PRIMARY    = 6,
 } HintType;
-typedef enum {
-  HIDE_TB_NEVER     = 0x02,
-  HIDE_TB_ALWAYS    = 0x03,
-  HIDE_TB_TILED     = 0x05,
-} TabBarVisible;
+
 typedef enum {
   BAR_VIS_TOP = 1<<0,
   BAR_VIS_STATUS = 1<<1,
@@ -286,13 +282,6 @@ typedef enum {
   ALWAYS_SM     = 0x01,
   POST_SM       = 0x02,
 } ShowMessage;
-
-
-typedef enum { 
-  NORMAL_LAYOUT    = 0,
-  BOTTOM_STACK     = 1<<0 ,
-  MAXIMIZED        = 1<<1 ,
-} Layout;
 
 typedef enum { 
   CHAR        = 0x01,
@@ -494,7 +483,6 @@ struct _State {
   gboolean hidden_files;
   gboolean view_in_background;
 
-  Layout layout;
   GList *last_com_history;
 
   GList *undo_list;
@@ -508,7 +496,6 @@ struct _State {
   char *mimetype_request;
   int download_ref_count;
 
-  TabBarVisible tabbar_visible;
   gboolean fullscreen;
   BarVisibility bar_visible;
 };
@@ -610,9 +597,7 @@ struct _Gui {
   GtkWidget *window;
   GtkWidget *vbox;
   GtkWidget *topbox;
-  GtkWidget *paned;
-  GtkWidget *right;
-  GtkWidget *left;
+  GtkWidget *mainbox;
   GtkWidget *entry;
   GtkWidget *downloadbar;
   int width;
@@ -743,7 +728,7 @@ void dwb_tab_label_set_text(GList *, const char *);
 void dwb_set_status_bar_text(GtkWidget *, const char *, DwbColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
-void dwb_update_layout(gboolean);
+void dwb_update_layout();
 void dwb_unfocus(void);
 
 DwbStatus dwb_prepend_navigation(GList *, GList **);
