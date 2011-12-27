@@ -490,7 +490,7 @@ dwb_navigation_new_from_line(const char *text) {
   Navigation *nv = NULL;
   if (text == NULL)
     return NULL;
-  while (isspace(*text))
+  while (g_ascii_isspace(*text))
     text++;
 
   if (*text != '\0') {

@@ -464,7 +464,6 @@ struct _State {
   DwbType type;
   HintType hint_type;
   guint scriptlock;
-  int size;
   GHashTable *settings_hash;
   gboolean forward_search;
   gboolean background_tabs;
@@ -508,6 +507,7 @@ typedef enum _SettingsApply {
   SETTING_ONINIT    = 1<<2,
   SETTING_PER_VIEW  = 1<<3,
 } SettingsApply;
+
 struct _WebSettings {
   Navigation n;
   SettingsApply apply;
@@ -617,7 +617,6 @@ struct _Misc {
   GIOChannel *si_channel;
   GList *userscripts;
 
-  double factor;
   int max_c_items;
   int message_delay;
   int history_length;
@@ -726,7 +725,6 @@ void dwb_tab_label_set_text(GList *, const char *);
 void dwb_set_status_bar_text(GtkWidget *, const char *, DwbColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
-void dwb_update_layout();
 void dwb_unfocus(void);
 
 DwbStatus dwb_prepend_navigation(GList *, GList **);
@@ -738,7 +736,6 @@ gboolean dwb_search(Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
 char * dwb_execute_script(WebKitWebFrame *, const char *, gboolean);
-void dwb_resize(double );
 void dwb_toggle_tabbar(void);
 DwbStatus dwb_history(Arg *a);
 DwbStatus dwb_history_back(void);
@@ -795,12 +792,17 @@ void dwb_set_open_mode(Open);
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
+
 void dwb_save_quickmark(const char *);
 void dwb_open_quickmark(const char *);
 gboolean dwb_update_find_quickmark(const char *text);
+
 gboolean dwb_entry_activate(GdkEventKey *e);
 #ifdef DWB_ADBLOCKER
 void dwb_set_adblock(GList *, WebSettings *);
 #endif
+
+gboolean dwb_eval_key(GdkEventKey *);
+void dwb_follow_selection(void);
 
 #endif

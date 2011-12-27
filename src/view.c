@@ -840,7 +840,6 @@ view_remove(GList *gl) {
   gtk_widget_destroy(v->web);
   gtk_widget_destroy(v->scroll);
 
-  dwb.gui.entry = NULL;
   dwb_focus(dwb.state.fview);
   gtk_widget_destroy(v->tabevent);
 
@@ -854,6 +853,7 @@ view_remove(GList *gl) {
   gl = NULL;
 
   gtk_widget_show(CURRENT_VIEW()->scroll);
+  CLEAR_COMMAND_TEXT();
 }/*}}}*/
 
 /* view_ssl_state (GList *gl) {{{*/

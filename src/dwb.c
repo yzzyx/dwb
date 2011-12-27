@@ -57,7 +57,6 @@ static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
-static void dwb_follow_selection(void);
 static void dwb_set_single_instance(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
@@ -70,7 +69,6 @@ static void dwb_open_channel(const char *);
 static void dwb_open_si_channel(void);
 static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
 
-static gboolean dwb_eval_key(GdkEventKey *);
 
 static void dwb_init_key_map(void);
 static void dwb_init_settings(void);
@@ -265,80 +263,6 @@ static void
 dwb_reload_scripts(GList *gl, WebSettings *s) {
   dwb_init_scripts();
 } /*}}}*/
-/*}}}*/
-
-/* CALLBACKS {{{*/
-
-/* dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {{{*/
-static gboolean 
-dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {
-  gboolean ret = false;
-  Mode mode = CLEAN_MODE(dwb.state.mode);
-
-  char *key = NULL;
-  if (e->keyval == GDK_KEY_Escape) {
-    if (dwb.state.mode & COMPLETION_MODE)
-      completion_clean_completion(true);
-    else 
-      dwb_change_mode(NORMAL_MODE, true);
-    ret = false;
-  }
-  else if (mode & PASS_THROUGH) {
-    ret = false;
-  }
-  else if (mode == INSERT_MODE) {
-    if (CLEAN_STATE(e) & GDK_MODIFIER_MASK) {
-      dwb_eval_key(e);
-      ret = false;
-    }
-  }
-  //else if (mode == QUICK_MARK_SAVE) {
-  //  if ((key = util_keyval_to_char(e->keyval, true))) {
-  //    dwb_save_quickmark(key);
-  //  }
-  //  ret = true;
-  //}
-  //else if (mode == QUICK_MARK_OPEN) {
-//    if ((key = util_keyval_to_char(e->keyval, true))) {
-//      dwb_open_quickmark(key);
-//    }
-    //ret = false;
-  //}
-  else if (gtk_widget_has_focus(dwb.gui.entry) || mode & COMPLETION_MODE) {
-    ret = false;
-  }
-  else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_KEY_Return) {
-    dwb_follow_selection();
-  }
-  else if (dwb.state.mode & AUTO_COMPLETE && DWB_TAB_KEY(e)) {
-    completion_autocomplete(dwb.keymap, e);
-    ret = true;
-  }
-  else {
-    if (mode & AUTO_COMPLETE) {
-      if (DWB_TAB_KEY(e)) {
-        completion_autocomplete(NULL, e);
-      }
-      else if (e->keyval == GDK_KEY_Return) {
-        completion_eval_autocompletion();
-        return true;
-      }
-    }
-    ret = dwb_eval_key(e);
-  }
-  FREE(key);
-  return ret;
-}/*}}}*/
-
-/* dwb_key_release_cb {{{*/
-static gboolean 
-dwb_key_release_cb(GtkWidget *w, GdkEventKey *e, View *v) {
-  if (DWB_TAB_KEY(e)) {
-    return true;
-  }
-  return false;
-}/*}}}*/
-
 /*}}}*/
 
 /* COMMAND_TEXT {{{*/
@@ -768,7 +692,7 @@ dwb_sync_history(gpointer data) {
 }/*}}}*/
 
 /* dwb_follow_selection() {{{*/
-static void 
+void 
 dwb_follow_selection() {
   char *href = NULL;
   WebKitDOMNode *n = NULL, *tmp;
@@ -1858,7 +1782,7 @@ dwb_entry_activate(GdkEventKey *e) {
   return true;
 }
 /* dwb_eval_key(GdkEventKey *e) {{{*/
-static gboolean
+gboolean
 dwb_eval_key(GdkEventKey *e) {
   gboolean ret = false;
   int keyval = e->keyval;
@@ -2449,12 +2373,6 @@ dwb_end() {
   return false;
 }/*}}}*/
 
-/* dwb_delete_event_cb {{{*/
-gboolean
-dwb_delete_event_cb(GtkWidget *w) {
-  dwb_end();
-  return true;
-}/*}}}*/
 /* }}} */
 
 /* KEYS {{{*/
@@ -2787,9 +2705,9 @@ dwb_init_gui() {
 
   gtk_window_set_default_size(GTK_WINDOW(dwb.gui.window), GET_INT("default-width"), GET_INT("default-height"));
   gtk_window_set_geometry_hints(GTK_WINDOW(dwb.gui.window), NULL, NULL, GDK_HINT_MIN_SIZE);
-  g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(dwb_delete_event_cb), NULL);
-  g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(dwb_key_press_cb), NULL);
-  g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(dwb_key_release_cb), NULL);
+  g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(callback_delete_event), NULL);
+  g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(callback_key_press), NULL);
+  g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(callback_key_release), NULL);
   DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 
   tabbarpos = GET_CHAR("tabbar-position");
@@ -2931,20 +2849,20 @@ dwb_init_files() {
   dwb.files.quickmarks      = g_build_filename(profile_path, "quickmarks",    NULL);
   dwb.files.session         = g_build_filename(profile_path, "session",       NULL);
   dwb.files.command_history = g_build_filename(profile_path, "navigate.history",       NULL);
-  dwb.files.searchengines = g_build_filename(path, "searchengines", NULL);
-  dwb.files.keys          = g_build_filename(path, "keys",          NULL);
-  dwb.files.settings      = g_build_filename(path, "settings",      NULL);
-  dwb.files.mimetypes     = g_build_filename(path, "mimetypes",      NULL);
-  dwb.files.cookies       = g_build_filename(profile_path, "cookies",       NULL);
-  dwb.files.cookies_allow = g_build_filename(profile_path, "cookies.allow", NULL);
-  dwb.files.adblock       = g_build_filename(path, "adblock",      NULL);
-  dwb.files.scripts_allow  = g_build_filename(profile_path, "scripts.allow",      NULL);
-  dwb.files.plugins_allow  = g_build_filename(profile_path, "plugins.allow",      NULL);
+  dwb.files.searchengines   = g_build_filename(path, "searchengines", NULL);
+  dwb.files.keys            = g_build_filename(path, "keys",          NULL);
+  dwb.files.settings        = g_build_filename(path, "settings",      NULL);
+  dwb.files.mimetypes       = g_build_filename(path, "mimetypes",      NULL);
+  dwb.files.cookies         = g_build_filename(profile_path, "cookies",       NULL);
+  dwb.files.cookies_allow   = g_build_filename(profile_path, "cookies.allow", NULL);
+  dwb.files.adblock         = g_build_filename(path, "adblock",      NULL);
+  dwb.files.scripts_allow   = g_build_filename(profile_path, "scripts.allow",      NULL);
+  dwb.files.plugins_allow   = g_build_filename(profile_path, "plugins.allow",      NULL);
 
-  scripts                 = g_build_filename(path, "scripts",      NULL);
-  dwb.files.scriptdir     = util_check_directory(scripts);
-  userscripts             = g_build_filename(path, "userscripts",   NULL);
-  dwb.files.userscripts   = util_check_directory(userscripts);
+  scripts                   = g_build_filename(path, "scripts",      NULL);
+  dwb.files.scriptdir       = util_check_directory(scripts);
+  userscripts               = g_build_filename(path, "userscripts",   NULL);
+  dwb.files.userscripts     = util_check_directory(userscripts);
 
   dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
@@ -2998,7 +2916,6 @@ static void
 dwb_init_vars() {
   dwb.misc.message_delay = GET_INT("message-delay");
   dwb.misc.history_length = GET_INT("history-length");
-  dwb.misc.factor = GET_DOUBLE("factor");
   dwb.misc.startpage = GET_CHAR("startpage");
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
   dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
@@ -3015,7 +2932,6 @@ dwb_init_vars() {
   dwb.state.complete_userscripts = GET_BOOL("complete-userscripts");
   dwb.state.background_tabs = GET_BOOL("background-tabs");
 
-  dwb.state.size = GET_INT("size");
   dwb.state.buffer = g_string_new(NULL);
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
 }/*}}}*/
@@ -3055,6 +2971,7 @@ dwb_init() {
   dwb.state.last_cookies = NULL;
   dwb.state.fullscreen = false;
   dwb.state.download_ref_count = 0;
+  dwb.state.message_id = 0;
 
   dwb.state.bar_visible = BAR_VIS_TOP | BAR_VIS_STATUS;
 

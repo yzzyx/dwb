@@ -134,10 +134,6 @@ Quit (command
 Undo closing last view (command
 .BR undo ).
 .TP
-.BR gm 
-Toggle Maximized Layout (command 
-.BR toggle_maximized ).
-.TP
 .BR C-h
 Open the default startpage (command
 .BR open_start_page ).
@@ -197,10 +193,6 @@ Open quickmark in a new view (command
 .BR wb[:graph:]
 Open quickmark in a new window (command
 .BR open_quickmark_nw ).
-.TP
-.BR tb
-Toggle layout Normalstack <-> Bottomstack (command
-.BR toggle_bottomstack ).
 .TP
 .BR gl 
 Enlarge masterarea (command 
@@ -1029,11 +1021,6 @@ The color for prompt-messages. Possible values: an rgb color-string,
 default value:
 .IR #00ff00 .
 .TP 
-.BR factor
-The zoom level of stacked views. Possible values: zoom level (decimal),
-default value:
-.IR 0.3 .
-.TP 
 .BR font
 The font used for the ui. Possible values: a font description
 string,
@@ -1136,12 +1123,6 @@ The foreground color of the statusbar in insertmode. Possible values: an rgb
 color-string,
 default value:
 .IR #000000 .
-.TP 
-.BR layout
-The default layout. Possible values: Normal / Normal Maximized / Bottomstack /
-Bottomstack Maximized / Maximized (same as Normal Maximized),
-default value:
-.IR Normal\ Maximized .
 .TP
 .BR mail-client
 The email program that is used for mailto:-urls. 
@@ -1235,11 +1216,6 @@ Only one instance of dwb per user. This option will be overridden by the
 commandlineoption -n. Possible values: true/false,
 default value:
 .IR false .
-.TP 
-.BR size
-The size of the stacked area. Possible values: size in percent (integer),
-default value:
-.IR 30 .
 .TP 
 .BR ssl-strict
 Whether to allow only save ssl-certificates.

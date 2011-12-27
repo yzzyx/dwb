@@ -118,3 +118,68 @@ callback_entry_size(GtkWidget *w, GdkRectangle *a) {
   gtk_widget_set_size_request(dwb.gui.entry, -1, a->height);
   g_signal_handlers_disconnect_by_func(w, callback_entry_size, NULL);
 }/*}}}*/
+
+/* dwb_delete_event_cb {{{*/
+gboolean
+callback_delete_event(GtkWidget *w) {
+  dwb_end();
+  return true;
+}/*}}}*/
+
+/* dwb_key_press_cb(GtkWidget *w, GdkEventKey *e, View *v) {{{*/
+gboolean 
+callback_key_press(GtkWidget *w, GdkEventKey *e) {
+  gboolean ret = false;
+  Mode mode = CLEAN_MODE(dwb.state.mode);
+
+  char *key = NULL;
+  if (e->keyval == GDK_KEY_Escape) {
+    if (dwb.state.mode & COMPLETION_MODE)
+      completion_clean_completion(true);
+    else 
+      dwb_change_mode(NORMAL_MODE, true);
+    ret = false;
+  }
+  else if (mode & PASS_THROUGH) {
+    ret = false;
+  }
+  else if (mode == INSERT_MODE) {
+    if (CLEAN_STATE(e) & GDK_MODIFIER_MASK) {
+      dwb_eval_key(e);
+      ret = false;
+    }
+  }
+  else if (gtk_widget_has_focus(dwb.gui.entry) || mode & COMPLETION_MODE) {
+    ret = false;
+  }
+  else if (webkit_web_view_has_selection(CURRENT_WEBVIEW()) && e->keyval == GDK_KEY_Return) {
+    dwb_follow_selection();
+  }
+  else if (dwb.state.mode & AUTO_COMPLETE && DWB_TAB_KEY(e)) {
+    completion_autocomplete(dwb.keymap, e);
+    ret = true;
+  }
+  else {
+    if (mode & AUTO_COMPLETE) {
+      if (DWB_TAB_KEY(e)) {
+        completion_autocomplete(NULL, e);
+      }
+      else if (e->keyval == GDK_KEY_Return) {
+        completion_eval_autocompletion();
+        return true;
+      }
+    }
+    ret = dwb_eval_key(e);
+  }
+  FREE(key);
+  return ret;
+}/*}}}*/
+
+/* dwb_key_release_cb {{{*/
+gboolean 
+callback_key_release(GtkWidget *w, GdkEventKey *e) {
+  if (DWB_TAB_KEY(e)) {
+    return true;
+  }
+  return false;
+}/*}}}*/
