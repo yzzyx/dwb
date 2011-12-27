@@ -566,10 +566,11 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir) {
   double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
 
   switch (dir) {
-    case  SCROLL_TOP:      scroll = lower; break;
-    case  SCROLL_BOTTOM:   scroll = upper; break;
-    case  SCROLL_PERCENT:  scroll = upper * (dwb.state.nummod < 0 ? 0 : dwb.state.nummod) / 100; break;
-    default:        scroll = value + sign * inc * NUMMOD; break;
+    case  SCROLL_TOP:      scroll = dwb.state.nummod < 0 ? lower : (upper * dwb.state.nummod)/100;
+                           break;
+    case  SCROLL_BOTTOM:   scroll = dwb.state.nummod < 0 ? upper : (upper * dwb.state.nummod)/100;
+                           break;
+    default:               scroll = value + sign * inc * NUMMOD; break;
   }
 
   scroll = scroll < lower ? lower : scroll > upper ? upper : scroll;

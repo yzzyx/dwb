@@ -62,6 +62,14 @@ Scroll [n times] left (command:
 Scroll [n times] right (command 
 .BR scroll_right).
 .TP
+.BR [n]gg
+Scroll to the top or to n% of the page (command 
+.BR scroll_top).
+.TP
+.BR [n]G
+Scroll to the bottom or to n% of the page (command 
+.BR scroll_bottom).
+.TP
 .BR  [n]C-f
 Scroll [n] pages down (command
 .BR scroll_page_down ).
@@ -78,9 +86,6 @@ Scroll [n] half pages down (command
 Scroll [n] half pages up (command
 .BR scroll_halfpage_up  ).
 .TP 
-.BR [n]%
-Scroll to [n] percent of the document (command
-.BR scroll_percent ).
 .TP
 .B : 
 Enter Commandmode.
