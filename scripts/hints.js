@@ -4,6 +4,7 @@ String.prototype.isInt = function () {
 String.prototype.isLower = function () { 
   return this == this.toLowerCase(); 
 };
+DwbHintObj = {};
 DwbHintObj = (function () {
   var _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
   var _font = "bold 10px monospace";
@@ -20,7 +21,6 @@ DwbHintObj = (function () {
   var _lastPosition = 0;
   var _activeInput = null;
   var _new_tab = false;
-  var _styles = 0;
   var _active = null;
   var _markHints = false;
   var _bigFont = null;
@@ -38,7 +38,7 @@ DwbHintObj = (function () {
     HINT_T_URL : 4
   };
 
-  const __newHint = function(element, win, rect) {
+  var __newHint = function(element, win, rect) {
     this.element = element;
     this.overlay = null;
     this.win = win;
@@ -54,7 +54,7 @@ DwbHintObj = (function () {
 
     hint.className =  "dwb_hint";
     this.createOverlay = function() {
-      var w, h;
+      var h;
       var comptop = toppos - scrollY;
       var compleft = leftpos - scrollX;
       var height = rect.height;
@@ -72,7 +72,7 @@ DwbHintObj = (function () {
     };
     this.hint = hint;
   };
-  const __createElement = function(tagname) {
+  var __createElement = function(tagname) {
     var element = document.createElement(tagname);
     if (!element.style) {
       var namespace = document.getElementsByTagName('html')[0].getAttribute('xmlns') || "http://www.w3.org/1999/xhtml";
@@ -80,10 +80,9 @@ DwbHintObj = (function () {
     }
     return element;
   };
-  const __numberHint = function (element, win, rect) {
-    this.constructor = __newHint;
-    this.constructor(element, win, rect);
-    var topobj = this;
+  var __numberHint = function (element, win, rect) {
+    this.varructor = __newHint;
+    this.varructor(element, win, rect);
 
     this.getStart = function(n) {
       var start = parseInt(Math.log(n) / Math.log(10), 10)*10;
@@ -93,23 +92,23 @@ DwbHintObj = (function () {
       return Math.max(start, 1);
     };
     this.getTextHint = function (i, length) {
-      var e = this.element;
       var start = this.getStart(length);
       this.hint.textContent = start+i;
     };
 
     this.betterMatch = function(input) {
       var length = _activeArr.length;
+      var i, cl;
       if (input.isInt()) {
         return 0;
       }
       var bestposition = 37;
       var ret = 0;
-      for (var i=0; i<length; i++) {
+      for (i=0; i<length; i++) {
         var e = _activeArr[i];
         if (input && bestposition !== 0) {
           var content = e.element.textContent.toLowerCase().split(" ");
-          for (var cl=0; cl<content.length; cl++) {
+          for (cl=0; cl<content.length; cl++) {
             if (content[cl].toLowerCase().indexOf(input) === 0) {
               if (cl < bestposition) {
                 ret = i;
@@ -121,21 +120,21 @@ DwbHintObj = (function () {
         }
       }
       
-      for (var k=0;k<length; k++) {
-        _activeArr[k].getTextHint(k, length);
+      for (i=0;i<length; i++) {
+        _activeArr[i].getTextHint(i, length);
       }
       return ret;
     };
     this.matchText = function(input, matchHint) {
-      var ret = false;
+      var i;
       if (matchHint) {
         var regEx = new RegExp('^' + input);
         return regEx.test(this.hint.textContent);
       }
       else {
         var inArr = input.split(" ");
-        for (var j=0; j<inArr.length; j++) {
-          if (!this.element.textContent.toLowerCase().match(inArr[j].toLowerCase())) {
+        for (i=0; i<inArr.length; i++) {
+          if (!this.element.textContent.toLowerCase().match(inArr[i].toLowerCase())) {
             return false;
           }
         }
@@ -143,9 +142,9 @@ DwbHintObj = (function () {
       }
     };
   };
-  const __letterHint = function (element, win, rect) {
-    this.constructor = __newHint;
-    this.constructor(element, win, rect);
+  var __letterHint = function (element, win, rect) {
+    this.varructor = __newHint;
+    this.varructor(element, win, rect);
 
     this.betterMatch = function(input) {
       return 0;
@@ -173,13 +172,13 @@ DwbHintObj = (function () {
       this.hint.textContent = text;
     };
     this.matchText = function(input, matchHint) {
+      var i;
       if (matchHint) {
         return (this.hint.textContent.toLowerCase().indexOf(input.toLowerCase()) === 0);
       }
       else {
         var inArr = input.split(" ");
-        var match = true;
-        for (var i=0; i<inArr.length; i++) {
+        for (i=0; i<inArr.length; i++) {
           if (!this.element.textContent.toUpperCase().match(inArr[i])) {
             return false;
           }
@@ -189,12 +188,12 @@ DwbHintObj = (function () {
     };
   };
 
-  const __mouseEvent = function (e, ev) {
+  var __mouseEvent = function (e, ev) {
     var mouseEvent = document.createEvent("MouseEvent");
     mouseEvent.initMouseEvent(ev, true, true, e.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
     e.dispatchEvent(mouseEvent);
   };
-  const __clickElement = function (element, ev) {
+  var __clickElement = function (element, ev) {
     if (ev) {
       __mouseEvent(element, ev);
     }
@@ -203,10 +202,10 @@ DwbHintObj = (function () {
       __mouseEvent(element, "mousedown");
     }
   };
-  const __getActive = function () {
+  var __getActive = function () {
     return _active;
   };
-  const __setActive = function (element) {
+  var __setActive = function (element) {
     var active = __getActive();
     if (active) {
       if (_markHints) {
@@ -228,27 +227,27 @@ DwbHintObj = (function () {
     _active.overlay.style.background = _activeColor;
     _active.hint.style.fontSize = _bigFont;
   };
-  const __hexToRgb = function (color) {
-    var rgb;
+  var __hexToRgb = function (color) {
+    var rgb, i;
     if (color[0] !== '#') {
       return color;
     }
     if (color.length == 4) {
       rgb = /#([0-9a-f])([0-9a-f])([0-9a-f])/i.exec(color);
-      for (var i=1; i<=3; i++) {
+      for (i=1; i<=3; i++) {
         var v = parseInt("0x" + rgb[i], 10)+1;
         rgb[i] = v*v-1;
       }
     }
     else {
       rgb  = /#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(color);
-      for (var j=1; j<=3; j++) {
-        rgb[j] = parseInt("0x" + rgb[j], 16);
+      for (i=1; i<=3; i++) {
+        rgb[i] = parseInt("0x" + rgb[i], 16);
       }
     }
     return "rgba(" + rgb.slice(1) + "," +  _hintOpacity/2 + ")";
   };
-  const __createStyleSheet = function(doc) {
+  var __createStyleSheet = function(doc) {
     if (doc.hasStyleSheet) {
       return;
     }
@@ -266,23 +265,24 @@ DwbHintObj = (function () {
     doc.hasStyleSheet = true;
   };
 
-  const __createHints = function(win, constructor, type) {
+  var __createHints = function(win, varructor, type) {
+    var i;
     try {
       var doc = win.document;
       var res = doc.body.querySelectorAll(_hintTypes[type]); 
       var e, r;
       __createStyleSheet(doc);
       var hints = doc.createDocumentFragment();
-      for (var i=0;i < res.length; i++) {
+      for (i=0;i < res.length; i++) {
         e = res[i];
         if ((r = __getVisibility(e, win)) === null) {
           continue;
         }
         if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
-          __createHints(e.contentWindow, constructor, type);
+          __createHints(e.contentWindow, varructor, type);
         }
         else {
-          var element = new constructor(e, win, r);
+          var element = new varructor(e, win, r);
           _elements.push(element);
           hints.appendChild(element.hint);
           if (_markHints) {
@@ -297,7 +297,8 @@ DwbHintObj = (function () {
       console.error(exc);
     }
   };
-  const __showHints = function (type, new_tab) {
+  var __showHints = function (type, new_tab) {
+    var i;
     if (document.activeElement) {
       document.activeElement.blur();
     }
@@ -313,7 +314,7 @@ DwbHintObj = (function () {
       return  __evaluate(_elements[0].element, type);
     }
 
-    for (var i=0; i<l; i++) {
+    for (i=0; i<l; i++) {
       var e =_elements[i];
       e.getTextHint(i, l);
     }
@@ -321,7 +322,8 @@ DwbHintObj = (function () {
     __setActive(_elements[0]);
     return null;
   };
-  const __updateHints = function(input, type) {
+  var __updateHints = function(input, type) {
+    var i;
     var array = [];
     var matchHint = false;
     if (!_activeArr.length) {
@@ -359,7 +361,7 @@ DwbHintObj = (function () {
         }
       }
     }
-    for (var i=0; i<_activeArr.length; i++) {
+    for (i=0; i<_activeArr.length; i++) {
       var e = _activeArr[i];
       if (e.matchText(input, matchHint)) {
         array.push(e);
@@ -382,7 +384,7 @@ DwbHintObj = (function () {
     }
     return null;
   };
-  const __getVisibility = function (e, win) {
+  var __getVisibility = function (e, win) {
     var style = win.getComputedStyle(e, null);
     if ((style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none" ) ) {
       return null;
@@ -396,11 +398,11 @@ DwbHintObj = (function () {
     }
     return r;
   };
-  const __clear = function() {
-    var p;
+  var __clear = function() {
+    var p, i;
     try {
       if (_elements) {
-        for (var i=0; i<_elements.length; i++) {
+        for (i=0; i<_elements.length; i++) {
           var e = _elements[i];
           if ( (p = e.hint.parentNode) ) {
             p.removeChild(e.hint);
@@ -423,7 +425,7 @@ DwbHintObj = (function () {
     _lastPosition = 0;
     _lastInput = null;
   };
-  const __evaluate = function (e, type) {
+  var __evaluate = function (e, type) {
     var ret = null;
     if (e.type) {
       type = e.type.toLowerCase();
@@ -469,26 +471,27 @@ DwbHintObj = (function () {
     __clear();
     return ret;
   };
-  const __focusNext = function()  {
+  var __focusNext = function()  {
     var newpos = _lastPosition === _activeArr.length-1 ? 0 : _lastPosition + 1;
     __setActive(_activeArr[newpos]);
     _lastPosition = newpos;
   };
-  const __focusPrev = function()  {
+  var __focusPrev = function()  {
     var newpos = _lastPosition === 0 ? _activeArr.length-1 : _lastPosition - 1;
     __setActive(_activeArr[newpos]);
     _lastPosition = newpos;
   };
-  const __addSearchEngine = function() {
+  var __addSearchEngine = function() {
+    var i, j;
     try {
       __createStyleSheet(document);
       var hints = document.createDocumentFragment();
       var res = document.body.querySelectorAll("form");
       var r, e;
 
-      for (var i=0; i<res.length; i++) {
+      for (i=0; i<res.length; i++) {
         var els = res[i].elements;
-        for (var j=0; j<els.length; j++) {
+        for (j=0; j<els.length; j++) {
           if (((r = __getVisibility(els[j], window)) !== null) && (els[j].type === "text" || els[j].type === "search")) {
             e = new __letterHint(els[j], window, r);
             hints.appendChild(e.hint);
@@ -501,8 +504,8 @@ DwbHintObj = (function () {
         return "_dwb_no_hints_";
       }
       if (_markHints) {
-        for (var k=0; k<_elements.length; k++) {
-          e = _elements[k];
+        for (i=0; i<_elements.length; i++) {
+          e = _elements[i];
           e.createOverlay();
           hints.appendChild(e.overlay);
         }
@@ -521,7 +524,7 @@ DwbHintObj = (function () {
     }
     return null;
   };
-  const __submitSearchEngine = function (string) {
+  var __submitSearchEngine = function (string) {
     var e = __getActive().element;
     e.value = string;
     e.form.submit();
@@ -532,7 +535,8 @@ DwbHintObj = (function () {
     }
     return null;
   };
-  const __focusInput = function() {
+  var __focusInput = function() {
+    var i;
     var res = document.body.querySelectorAll('input[type=text], input[type=password], textarea');
     if (res.length === 0) {
       return "_dwb_no_input_";
@@ -543,7 +547,7 @@ DwbHintObj = (function () {
       _activeInput = res[0];
     }
     else {
-      for (var i=0; i<res.length; i++) {
+      for (i=0; i<res.length; i++) {
         if (res[i] == _activeInput) {
           if (!(_activeInput = res[i+1])) {
             _activeInput = res[0];
@@ -555,7 +559,7 @@ DwbHintObj = (function () {
     _activeInput.focus();
     return null;
   };
-  const __init = function (letter_seq, font, style,
+  var __init = function (letter_seq, font, style,
           fg_color, bg_color, active_color, normal_color, border,  opacity, markHints) {
         _letterSeq  = letter_seq;
         _font = font;
