@@ -403,18 +403,11 @@ util_check_directory(char *filename) {
 char *
 util_get_system_data_dir(const char *dir) {
   char *path = NULL;
-  const char *dirs;
-
-  const char *const *config = g_get_system_data_dirs();
-  int i = 0;
-
-  while ( (dirs = config[i++]) ) {
-    path = g_build_filename(dirs, dwb.misc.name, dir, NULL);
-    if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-      return path;
-    }
-    FREE(path);
+  path = g_build_filename(SYSTEM_DATA_DIR, dwb.misc.name, dir, NULL);
+  if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
+    return path;
   }
+  FREE(path);
   return NULL;
 }/*}}}*/
 

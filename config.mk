@@ -18,6 +18,23 @@ VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo
 NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REAL_NAME)"; fi)
 BUILDDATE=`date +%Y.%m.%d`
 
+# Targets
+TARGET = $(REAL_NAME)
+DTARGET=$(TARGET)_d
+
+
+# target directories
+PREFIX=/usr
+BINDIR=$(PREFIX)/bin
+DATAROOTDIR=$(PREFIX)/share
+DATADIR=$(DATAROOTDIR)
+
+# manpages
+MANFILE=$(REAL_NAME).1
+MANDIR=$(DATAROOTDIR)/man
+MAN1DIR=$(MANDIR)/man1
+
+# Compiler
 CC ?= gcc
 
 GTK3LIBS=gtk+-3.0 webkitgtk-3.0 
@@ -100,6 +117,8 @@ CFLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
 CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
 CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 CFLAGS += -DLOCAL_FILE=\"$(LOCAL_FILE)\"
+CFLAGS += -DSYSTEM_DATA_DIR=\"$(DATADIR)\"
+
 ifneq (${DISABLE_ADBLOCKER}, 1)
 CFLAGS += -DDWB_ADBLOCKER
 CFLAGS += -DDWB_DOMAIN_SERVICE
@@ -134,18 +153,3 @@ HDR = $(wildcard *.h)
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
 DOBJ = $(patsubst %.c, %.do, $(wildcard *.c))
 
-# Targets
-TARGET = $(REAL_NAME)
-DTARGET=$(TARGET)_d
-
-
-# target directories
-PREFIX=/usr
-BINDIR=$(PREFIX)/bin
-DATAROOTDIR=$(PREFIX)/share
-DATADIR=$(DATAROOTDIR)
-
-# manpages
-MANFILE=$(REAL_NAME).1
-MANDIR=$(DATAROOTDIR)/man
-MAN1DIR=$(MANDIR)/man1
