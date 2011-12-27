@@ -4,8 +4,7 @@ String.prototype.isInt = function () {
 String.prototype.isLower = function () { 
   return this == this.toLowerCase(); 
 };
-DwbHintObj = {};
-DwbHintObj = (function () {
+var DwbHintObj = (function () {
   var _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
   var _font = "bold 10px monospace";
   var _style = "letter";
@@ -54,13 +53,12 @@ DwbHintObj = (function () {
 
     hint.className =  "dwb_hint";
     this.createOverlay = function() {
-      var h;
       var comptop = toppos - scrollY;
       var compleft = leftpos - scrollX;
       var height = rect.height;
       var width = rect.width;
-      h = comptop > 0 ? height : height + comptop;
-      overlay = __createElement("div");
+      var h = height + Math.max(0, comptop);
+      var overlay = __createElement("div");
       overlay.className = "dwb_overlay_normal";
       overlay.style.width = (compleft > 0 ? width : width + compleft) + "px";
       overlay.style.height = (comptop > 0 ? height : height + comptop) + "px";
@@ -251,7 +249,7 @@ DwbHintObj = (function () {
     if (doc.hasStyleSheet) {
       return;
     }
-    styleSheet = __createElement("style");
+    var styleSheet = __createElement("style");
     styleSheet.innerHTML += ".dwb_hint { " +
       "position:absolute; z-index:20000;" +
       "background:" + _bgColor  + ";" + 
@@ -391,8 +389,8 @@ DwbHintObj = (function () {
     }
     var r = e.getBoundingClientRect();
 
-    var height = window.innerHeight ? window.innerHeight : document.body.offsetHeight;
-    var width = window.innerWidth ? window.innerWidth : document.body.offsetWidth;
+    var height = window.innerHeight || document.body.offsetHeight;
+    var width = window.innerWidth || document.body.offsetWidth;
     if (!r || r.top > height || r.bottom < 0 || r.left > width ||  r.right < 0 || !e.getClientRects()[0]) {
       return null;
     }
@@ -407,7 +405,7 @@ DwbHintObj = (function () {
           if ( (p = e.hint.parentNode) ) {
             p.removeChild(e.hint);
           }
-          if (e.overlay != undefined && (p = e.overlay.parentNode)) {
+          if (e.overlay && (p = e.overlay.parentNode)) {
             p.removeChild(e.overlay);
           }
         }
@@ -416,8 +414,8 @@ DwbHintObj = (function () {
         _active.element.removeAttribute("dwb_highlight");
       }
     }
-    catch (e) { 
-      console.error(e); 
+    catch (exc) { 
+      console.error(exc); 
     }
     _elements = [];
     _activeArr = [];
@@ -541,7 +539,7 @@ DwbHintObj = (function () {
     if (res.length === 0) {
       return "_dwb_no_input_";
     }
-    styles = document.styleSheets[0];
+    var styles = document.styleSheets[0];
     styles.insertRule('input:focus { outline: 2px solid #1793d1; }', 0);
     if (!_activeInput) {
       _activeInput = res[0];
@@ -549,9 +547,7 @@ DwbHintObj = (function () {
     else {
       for (i=0; i<res.length; i++) {
         if (res[i] == _activeInput) {
-          if (!(_activeInput = res[i+1])) {
-            _activeInput = res[0];
-          }
+          _activeInput = res[i+1] || res[0];
           break;
         }
       }
