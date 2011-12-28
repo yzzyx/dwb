@@ -853,6 +853,7 @@ view_remove(GList *gl) {
   gl = NULL;
 
   gtk_widget_show(CURRENT_VIEW()->scroll);
+  dwb_update_layout();
   CLEAR_COMMAND_TEXT();
 }/*}}}*/
 
@@ -923,7 +924,7 @@ view_add(const char *uri, gboolean background) {
     adblock_connect(ret);
 #endif
 
-  //dwb_update_layout(background);
+  dwb_update_layout();
   if (uri != NULL) {
     dwb_load_uri(ret, uri);
   }

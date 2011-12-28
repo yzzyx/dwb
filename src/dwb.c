@@ -1588,6 +1588,15 @@ dwb_update_status(GList *gl) {
 
   FREE(filename);
 }/*}}}*/
+/* dwb_update_layout(GList *gl) {{{*/
+void 
+dwb_update_layout() {
+  for (GList *gl = dwb.state.views; gl; gl = gl->next) {
+    View *v = gl->data;
+    const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+    dwb_tab_label_set_text(gl, title);
+  }
+}/*}}}*/
 
 /* dwb_focus(GList *gl) {{{*/
 void 

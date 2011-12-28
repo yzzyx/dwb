@@ -97,6 +97,7 @@ PLUGIN_FILE=pluginblocker.asc
 # CFLAGS
 CFLAGS += -Wall
 CFLAGS += -pipe
+CFLAGS += -pedantic
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
 CFLAGS += --ansi
 CFLAGS += -std=c99

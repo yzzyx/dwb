@@ -806,5 +806,6 @@ void dwb_set_adblock(GList *, WebSettings *);
 
 gboolean dwb_eval_key(GdkEventKey *);
 void dwb_follow_selection(void);
+void dwb_update_layout(void);
 
 #endif
