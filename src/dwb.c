@@ -1789,7 +1789,7 @@ dwb_entry_activate(GdkEventKey *e) {
   const char *text = GET_TEXT();
   dwb_load_uri(NULL, text);
   if (text != NULL && *text)
-    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
+    dwb_prepend_navigation_with_argument(&dwb.fc.navigations, text, NULL);
   dwb_change_mode(NORMAL_MODE, false);
   return true;
 }
@@ -2334,11 +2334,11 @@ dwb_save_files(gboolean end_session) {
     dwb_sync_history(NULL);
   }
   /* Save command history */
-  if (!GET_BOOL("enable-private-browsing") && g_list_length(dwb.fc.commands) > 0) {
+  if (!GET_BOOL("enable-private-browsing") && g_list_length(dwb.fc.navigations) > 0) {
     GString *buffer = g_string_new(NULL);
     int limit = GET_INT("navigation-history-max");
     int i = 0;
-    for (GList *l = dwb.fc.commands; l && i<limit; l=l->next, i++) {
+    for (GList *l = dwb.fc.navigations; l && i<limit; l=l->next, i++) {
       Navigation *n = l->data;
       g_string_append_printf(buffer, "%s\n", n->first);
     }
@@ -2882,8 +2882,8 @@ dwb_init_files() {
   dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files.searchengines, (Content_Func)dwb_get_search_completion);
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
-  dwb.fc.commands = dwb_init_file_content(dwb.fc.commands, dwb.files.command_history, (Content_Func)dwb_navigation_new_from_line);
-  dwb.state.last_com_history = g_list_last(dwb.fc.commands);
+  dwb.fc.navigations = dwb_init_file_content(dwb.fc.navigations, dwb.files.command_history, (Content_Func)dwb_navigation_new_from_line);
+  dwb.state.last_com_history = g_list_last(dwb.fc.navigations);
   dwb.fc.tmp_scripts = NULL;
   dwb.fc.tmp_plugins = NULL;
   dwb.fc.downloads   = NULL;

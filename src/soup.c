@@ -53,6 +53,8 @@ dwb_soup_save_cookies(GSList *cookies) {
 /* dwb_test_cookie_allowed(const char *)     return:  gboolean{{{*/
 static gboolean 
 dwb_soup_test_cookie_allowed(SoupCookie *cookie) {
+  g_return_val_if_fail(cookie != NULL, false);
+  g_return_val_if_fail(cookie->domain != NULL, false);
   for (GList *l = dwb.fc.cookies_allow; l; l=l->next) {
     if (l->data && soup_cookie_domain_matches(cookie, l->data)) {
       return true;

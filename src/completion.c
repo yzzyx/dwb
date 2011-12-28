@@ -246,7 +246,7 @@ completion_get_normal_completion() {
   if (dwb.state.complete_searchengines) 
     list = completion_init_completion(list, dwb.fc.se_completion, false, NULL, "Searchengine");
   if (dwb.state.complete_commands) 
-    list = completion_init_completion(list, dwb.fc.commands, true, NULL, "Commandline");
+    list = completion_init_completion(list, dwb.fc.navigations, true, NULL, "Commandline");
   if (dwb.state.complete_bookmarks) 
     list = completion_init_completion(list, dwb.fc.bookmarks, false, NULL, "Bookmark");
   if (dwb.state.complete_history) 
@@ -445,7 +445,7 @@ completion_complete(CompletionType type, int back) {
       case COMP_CUR_HISTORY: dwb.comps.completions = completion_get_current_history(back); break;
       case COMP_HISTORY:     dwb.comps.completions = completion_get_simple_completion(dwb.fc.history); break;
       case COMP_USERSCRIPT:  dwb.comps.completions = completion_get_simple_completion(dwb.misc.userscripts); break;
-      case COMP_INPUT:       dwb.comps.completions = completion_get_simple_completion(dwb.fc.commands); break;
+      case COMP_INPUT:       dwb.comps.completions = completion_get_simple_completion(dwb.fc.navigations); break;
       case COMP_SEARCH:      dwb.comps.completions = completion_get_simple_completion(dwb.fc.se_completion); break;
       case COMP_QUICKMARK:   dwb.comps.completions = completion_get_quickmarks(back); break;
       case COMP_PATH:        completion_path(); return STATUS_OK;

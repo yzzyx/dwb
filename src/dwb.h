@@ -682,7 +682,7 @@ struct _FileContent {
   GList *keys;
   GList *settings;
   GList *cookies_allow;
-  GList *commands;
+  GList *navigations;
   GList *mimetypes;
   GList *adblock;
   GList *tmp_scripts;

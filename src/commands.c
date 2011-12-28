@@ -569,14 +569,14 @@ DwbStatus
 commands_entry_history_back(KeyMap *km, Arg *a) {
   Navigation *n = NULL;
 
-  if (!dwb.fc.commands)
+  if (!dwb.fc.navigations)
     return STATUS_ERROR;
 
   if (! dwb.state.last_com_history  ) {
-    dwb.state.last_com_history = dwb.fc.commands;
+    dwb.state.last_com_history = dwb.fc.navigations;
     n = dwb.state.last_com_history->data;
     char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
+    dwb_prepend_navigation_with_argument(&dwb.fc.navigations, text, NULL);
     FREE(text);
   }
   else if ( dwb.state.last_com_history && dwb.state.last_com_history->next ) {

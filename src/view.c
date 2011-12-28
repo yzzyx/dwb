@@ -50,7 +50,7 @@ static void view_hovering_over_link_cb(WebKitWebView *, char *, char *, GList *)
 static gboolean view_mime_type_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, char *, WebKitWebPolicyDecision *, GList *);
 static gboolean view_navigation_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
 static gboolean view_new_window_policy_cb(WebKitWebView *, WebKitWebFrame *, WebKitNetworkRequest *, WebKitWebNavigationAction *, WebKitWebPolicyDecision *, GList *);
-/* static void view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *); */
+//static void view_resource_request_cb(WebKitWebView *, WebKitWebFrame *, WebKitWebResource *, WebKitNetworkRequest *, WebKitNetworkResponse *, GList *);
 static gboolean view_scroll_cb(GtkWidget *, GdkEventScroll *, GList *);
 static gboolean view_value_changed_cb(GtkAdjustment *, GList *);
 static void view_title_cb(WebKitWebView *, GParamSpec *, GList *);
@@ -68,6 +68,22 @@ view_main_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
   }
 }/*}}}*/
+#if 0
+static void 
+view_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitWebResource *resource, WebKitNetworkRequest *request, WebKitNetworkResponse *response, GList *gl) {
+  if (request) {
+    SoupMessage *msg = webkit_network_request_get_message(request);
+    if (msg && msg->request_headers) {
+      SoupMessageHeadersIter iter;
+      soup_message_headers_iter_init(&iter, msg->response_headers);
+      const char *value, *key;
+      while (soup_message_headers_iter_next(&iter, &key, &value))
+        printf("%s %s\n", key, value), key, value;;
+
+    }
+  }
+}
+#endif
 
 /* view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
 void 
@@ -694,7 +710,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_MIME_TYPE]             = g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(view_mime_type_policy_cb), gl);
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
-  /* v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl); */
+  //v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
   v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_FRAME_CREATED]         = g_signal_connect(v->web, "frame-created",                         G_CALLBACK(view_frame_created_cb), gl);
 
