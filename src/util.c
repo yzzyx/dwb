@@ -545,11 +545,6 @@ dwb_quickmark_free(Quickmark *q) {
 
 /* dwb_true, dwb_false {{{*/
 gboolean
-dwb_false() {
-  return false;
-}
-
-gboolean
 dwb_true() {
   return true;
 }/*}}}*/

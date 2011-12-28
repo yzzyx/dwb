@@ -903,7 +903,8 @@ view_add(const char *uri, gboolean background) {
       gtk_widget_hide(v->scroll);
     }
     else {
-      gtk_widget_hide(VIEW(dwb.state.fview)->scroll);
+      if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )
+        gtk_widget_hide(VIEW(dwb.state.fview)->scroll);
       dwb_unfocus();
       dwb_focus(ret);
     }

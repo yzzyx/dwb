@@ -73,7 +73,6 @@ int util_quickmark_compare(Quickmark *a, Quickmark *b);
 
 // useless
 gboolean dwb_true(void);
-gboolean dwb_false(void);
 char * dwb_return(const char *);
 
 void * dwb_malloc(size_t);

@@ -161,6 +161,7 @@ static KeyValue KEYS[] = {
   { "lock_uri",                {   "xu",        0 }, }, 
   { "lock_domain",                {   "xd",        0 }, }, 
   { "back_new_tab",                {   "xb",        0 }, }, 
+  { "visible",                {   "xv",        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -181,6 +182,8 @@ static FunctionMap FMAP [] = {
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_LOCK_DOMAIN  } }, 
   { { "lock_uri",    "Lock/unlock uri for this tab" },                 1, 
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_LOCK_URI  } }, 
+  { { "visible",    "Lock/unlock uri for this tab" },                 1, 
+    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_VISIBLE  } }, 
   { { "allow_cookie",          "Cookie allowed",                    }, 1, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
   { { "bookmark",              "Bookmark current page",             }, 1, 

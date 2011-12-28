@@ -234,10 +234,12 @@ typedef enum {
   LP_PROTECT          = 1<<0,
   LP_LOCK_DOMAIN      = 1<<1,
   LP_LOCK_URI         = 1<<2,
+  LP_VISIBLE          = 1<<3,
 } LockProtect;
 #define LP_PROTECTED(v) ((v)->status->lockprotect & LP_PROTECT)
 #define LP_LOCKED_DOMAIN(v) ((v)->status->lockprotect & LP_LOCK_DOMAIN)
 #define LP_LOCKED_URI(v) ((v)->status->lockprotect & LP_LOCK_URI)
+#define LP_VISIBLE(v) ((v)->status->lockprotect & LP_VISIBLE)
 
 typedef enum {
   HINT_T_ALL        = 0,

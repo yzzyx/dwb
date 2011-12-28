@@ -95,6 +95,7 @@ toggle_bottombar Toggle bottombar
 toggle_topbar Toggle tabbar
 protect Protect/unprotect tab 
 presentation_mode Toggle presentation mode
+visible Toggle visibility of a tab
 
 # completion Completion
 buffers Show all open tabs

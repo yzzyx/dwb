@@ -828,7 +828,8 @@ void
 dwb_focus_view(GList *gl) {
   if (gl != dwb.state.fview) {
     gtk_widget_show(VIEW(gl)->scroll);
-    gtk_widget_hide(VIEW(dwb.state.fview)->scroll);
+    if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )
+      gtk_widget_hide(VIEW(dwb.state.fview)->scroll);
     dwb_unfocus();
     dwb_focus(gl);
   }
@@ -1522,7 +1523,7 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
   char progress[11] = { 0 };
-  char buf[4] = { 0 };
+  char buf[45] = { 0 };
   int i=0;
   char sep1 = 0, sep2 = 0;
   if (v->status->lockprotect != 0) {
@@ -1534,6 +1535,8 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
       buf[i++] = 'd';
     if (LP_LOCKED_URI(v)) 
       buf[i++] = 'u';
+    if (LP_VISIBLE(v)) 
+      buf[i++] = 'v';
     buf[i++] = '\0';
   }
   if (v->status->progress != 0) {
@@ -2727,7 +2730,7 @@ dwb_init_gui() {
    /* else 
     *   dwb.gui.topbox = gtk_vbox_new(true, 1);
     * */
-  dwb.gui.mainbox = gtk_hbox_new(true, 0);
+  dwb.gui.mainbox = gtk_hbox_new(true, 1);
 
   /* Downloadbar */
   dwb.gui.downloadbar = gtk_hbox_new(false, 3);
