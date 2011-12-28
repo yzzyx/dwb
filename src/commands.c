@@ -869,6 +869,8 @@ commands_toggle_protected(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_toggle_lock_protect(KeyMap *km, Arg *arg) {
   GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod-1);
+  if (gl == NULL)
+    return STATUS_ERROR;
   View *v = VIEW(gl);
   v->status->lockprotect ^= arg->n;
   dwb_tab_label_set_text(gl, NULL);
