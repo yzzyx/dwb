@@ -995,7 +995,7 @@ dwb_history(Arg *a) {
   if (bf_list == NULL) 
     return STATUS_ERROR;
 
-  int n = a->i == -1 ? MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD) : MAX(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
+  int n = a->i == -1 ? MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD) : MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, a->i * n);
   if (a->n == OPEN_NORMAL) {
     webkit_web_view_go_to_back_forward_item(w, item);
