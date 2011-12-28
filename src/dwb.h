@@ -326,6 +326,13 @@ enum {
   CA_URI,
 } ClipboardAction;
 
+typedef enum {
+  COOKIE_STORE_SESSION,
+  COOKIE_STORE_PERSISTENT,
+  COOKIE_STORE_NEVER,
+} CookieStorePolicy;
+
+
 enum Signal {
   SIG_FIRST = 0, 
   SIG_BUTTON_PRESS,
@@ -471,9 +478,7 @@ struct _State {
   gboolean background_tabs;
 
   SoupCookieJar *cookiejar;
-  SoupCookie *last_cookie;
-  GSList *last_cookies;
-  gboolean cookies_allowed;
+  CookieStorePolicy cookie_store_policy;
 
   gboolean complete_history;
   gboolean complete_bookmarks;
@@ -740,6 +745,7 @@ void dwb_save_searchengine(void);
 char * dwb_execute_script(WebKitWebFrame *, const char *, gboolean);
 void dwb_toggle_tabbar(void);
 DwbStatus dwb_history(Arg *a);
+void dwb_reload(void);
 DwbStatus dwb_history_back(void);
 DwbStatus dwb_history_forward(void);
 void dwb_scroll(GList *, double, ScrollDirection);

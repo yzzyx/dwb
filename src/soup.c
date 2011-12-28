@@ -22,8 +22,25 @@
 #include "util.h"
 #include "soup.h"
 static SoupCookieJar *jar;
+static guint changed_id;
+static SoupCookieJar *tmpJar;
+
+/*{{{*/
+GSList *
+dwb_soup_get_last_cookies() {
+  return soup_cookie_jar_all_cookies(tmpJar);
+}/*}}}*/
 
 /* dwb_soup_get_host_from_request(WebKitNetworkRequest ) {{{*/
+void 
+dwb_soup_clean() {
+  GSList *all_cookies = soup_cookie_jar_all_cookies(tmpJar);
+  for (GSList *l = all_cookies; l; l=l->next) {
+    soup_cookie_jar_delete_cookie(tmpJar, l->data);
+  }
+  soup_cookies_free(all_cookies);
+}
+
 const char *
 dwb_soup_get_host_from_request(WebKitNetworkRequest *request) {
   const char *host = NULL;
@@ -84,11 +101,15 @@ dwb_soup_set_cookie_accept_policy(const char *policy) {
   return ret;
 }/*}}}*/
 
-/* dwb_soup_cookie_compare(SoupCookie *, SoupCookie *) {{{*/
-int 
-dwb_soup_cookie_compare(SoupCookie *a, SoupCookie *b) {
-  return ! soup_cookie_equal(a, b);
-}/*}}}*/
+CookieStorePolicy 
+dwb_soup_get_cookie_store_policy(const char *policy) {
+  if (! g_ascii_strcasecmp(policy, "persistent")) 
+    return COOKIE_STORE_PERSISTENT;
+  else if (! g_ascii_strcasecmp(policy, "never")) 
+    return COOKIE_STORE_NEVER;
+  else
+    return COOKIE_STORE_SESSION;
+}
 
 static void 
 dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new, gpointer *p) {
@@ -99,14 +120,18 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
     soup_cookie_jar_delete_cookie(j, old);
   }
   if (new) {
-    if (dwb.state.cookies_allowed || dwb_soup_test_cookie_allowed(new)) {
+    if (dwb.state.cookie_store_policy == COOKIE_STORE_PERSISTENT || dwb_soup_test_cookie_allowed(new)) {
+      g_signal_handler_block(jar, changed_id);
       soup_cookie_jar_add_cookie(j, soup_cookie_copy(new));
+      g_signal_handler_unblock(jar, changed_id);
     }
-#if 0
-    else if (! g_slist_find_custom(dwb.state.last_cookies, new, (GCompareFunc)dwb_soup_cookie_compare ) && ! dwb_block_ad(dwb.state.fview, soup_cookie_get_domain(new))){
-#endif
-    else if (! g_slist_find_custom(dwb.state.last_cookies, new, (GCompareFunc)dwb_soup_cookie_compare )) {
-      dwb.state.last_cookies = g_slist_append(dwb.state.last_cookies, soup_cookie_copy(new));
+    else { 
+      soup_cookie_jar_add_cookie(tmpJar, soup_cookie_copy(new));
+      if (dwb.state.cookie_store_policy == COOKIE_STORE_NEVER) {
+        g_signal_handler_block(jar, changed_id);
+        soup_cookie_jar_delete_cookie(jar, new);
+        g_signal_handler_unblock(jar, changed_id);
+      }
     }
   }
   g_object_unref(j);
@@ -118,6 +143,7 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
 void
 dwb_soup_init_cookies(SoupSession *s) {
   jar = soup_cookie_jar_new(); 
+  tmpJar = soup_cookie_jar_new();
   dwb_soup_set_cookie_accept_policy(GET_CHAR("cookies-accept-policy"));
   SoupCookieJar *old_cookies = soup_cookie_jar_text_new(dwb.files.cookies, true);
   GSList *l = soup_cookie_jar_all_cookies(old_cookies);
@@ -127,7 +153,7 @@ dwb_soup_init_cookies(SoupSession *s) {
   soup_cookies_free(l);
   g_object_unref(old_cookies);
   soup_session_add_feature(s, SOUP_SESSION_FEATURE(jar));
-  g_signal_connect(jar, "changed", G_CALLBACK(dwb_soup_cookie_changed_cb), NULL);
+  changed_id = g_signal_connect(jar, "changed", G_CALLBACK(dwb_soup_cookie_changed_cb), NULL);
 }/*}}}*/
 
 /* dwb_init_proxy{{{*/

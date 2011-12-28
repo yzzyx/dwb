@@ -212,9 +212,10 @@ DwbStatus
 commands_allow_cookie(KeyMap *km, Arg *arg) {
   GSList *asked = NULL, *allowed = NULL;
   int length;
-  if (dwb.state.last_cookies) {
+  GSList *last_cookies = dwb_soup_get_last_cookies();
+  if (last_cookies) {
     GString *buffer = g_string_new(NULL);
-    for (GSList *l = dwb.state.last_cookies; l; l=l->next) {
+    for (GSList *l = last_cookies; l; l=l->next) {
       SoupCookie *c = l->data;
       const char *domain = soup_cookie_get_domain(c);
       if ( ! dwb.fc.cookies_allow || g_list_find_custom(dwb.fc.cookies_allow, domain, (GCompareFunc) g_strcmp0) == NULL ) {
@@ -226,13 +227,13 @@ commands_allow_cookie(KeyMap *km, Arg *arg) {
           dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, g_strdup(domain));
           util_file_add(dwb.files.cookies_allow, domain, true, -1);
           g_string_append_printf(buffer, "%s ", domain);
-          allowed = g_slist_prepend(allowed, c);
+          allowed = g_slist_prepend(allowed, soup_cookie_copy(c));
         }
         asked = g_slist_prepend(asked, (char*)domain);
         CLEAR_COMMAND_TEXT();
       }
       else {
-        allowed = g_slist_prepend(allowed, c);
+        allowed = g_slist_prepend(allowed, soup_cookie_copy(c));
       }
     }
     dwb_soup_save_cookies(allowed);
@@ -242,8 +243,10 @@ commands_allow_cookie(KeyMap *km, Arg *arg) {
     }
     g_string_free(buffer, true);
     g_slist_free(asked);
+    /* The cookies must not be freed, the are stolen by the cookiejar  */
     g_slist_free(allowed);
 
+    soup_cookies_free(last_cookies);
     return STATUS_OK;
   }
   return STATUS_ERROR;
@@ -274,10 +277,7 @@ commands_quickmark(KeyMap *km, Arg *arg) {
 /* commands_reload(KeyMap *km, Arg *){{{*/
 DwbStatus
 commands_reload(KeyMap *km, Arg *arg) {
-  const char *path = webkit_web_view_get_uri(CURRENT_WEBVIEW());
-  if ( !local_check_directory(dwb.state.fview, path, false, NULL) ) {
-    webkit_web_view_reload(CURRENT_WEBVIEW());
-  }
+  dwb_reload();
   return STATUS_OK;
 }/*}}}*/
 
@@ -779,7 +779,7 @@ commands_execute_userscript(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_toggle_hidden_files(KeyMap *km, Arg *arg) {
   dwb.state.hidden_files = !dwb.state.hidden_files;
-  commands_reload(km, arg);
+  dwb_reload();
   return STATUS_OK;
 }/*}}}*/
 

@@ -19,6 +19,8 @@
 #ifndef COOKIES_H
 #define COOKIES_H
 
+void dwb_soup_clean(void);
+GSList * dwb_soup_get_last_cookies(void);
 const char * dwb_soup_get_host_from_request(WebKitNetworkRequest *);
 DwbStatus dwb_soup_set_cookie_accept_policy(const char *);
 void dwb_soup_cookies_set_accept_policy(Arg *);
@@ -27,5 +29,6 @@ void dwb_soup_init_cookies(SoupSession *);
 void dwb_soup_init_proxy();
 void dwb_soup_init_session_features();
 void dwb_soup_init();
+CookieStorePolicy dwb_soup_get_cookie_store_policy(const char *policy);
 
 #endif

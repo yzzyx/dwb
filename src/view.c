@@ -371,6 +371,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
           webkit_web_policy_decision_ignore(policy);
           return true;
         }
+        dwb_soup_clean();
     case WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED: 
         if (dwb.state.mode == SEARCH_FIELD_MODE) {
           webkit_web_policy_decision_ignore(policy);

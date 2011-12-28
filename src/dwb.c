@@ -55,6 +55,7 @@ static void dwb_set_history_length(GList *, WebSettings *);
 static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
+static void dwb_set_cookies(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_set_single_instance(GList *, WebSettings *);
@@ -124,6 +125,11 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
 }/*}}}*/
 #endif
 
+/* dwb_set_cookies */
+static void
+dwb_set_cookies(GList *gl, WebSettings *s) {
+  dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(s->arg.p);
+}/*}}}*/
 /* dwb_set_private_browsing  {{{ */
 static void
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
@@ -885,6 +891,14 @@ dwb_toggle_allowed(const char *filename, const char *data) {
 
   return !allowed;
 }/*}}}*/
+
+void
+dwb_reload(void) {
+  const char *path = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+  if ( !local_check_directory(dwb.state.fview, path, false, NULL) ) {
+    webkit_web_view_reload(CURRENT_WEBVIEW());
+  }
+}
 
 /* dwb_history{{{*/
 DwbStatus
@@ -1652,11 +1666,7 @@ dwb_load_uri(GList *gl, const char *arg) {
   /*  get resolved uri */
   char *uri = NULL; 
 
-  /* free cookie of last visited website */
-  if (dwb.state.last_cookies) {
-    soup_cookies_free(dwb.state.last_cookies); 
-    dwb.state.last_cookies = NULL;
-  }
+  dwb_soup_clean();
   /* Check if uri is a html-string */
   if (dwb.state.type == HTML_STRING) {
     webkit_web_view_load_string(web, arg, "text/html", NULL, NULL);
@@ -2935,7 +2945,7 @@ dwb_init_vars() {
   dwb.misc.scrollbars = GET_BOOL("scrollbars");
   dwb.misc.top_statusbar = GET_BOOL("top-statusbar");
 
-  dwb.state.cookies_allowed = GET_BOOL("cookies");
+  dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(GET_CHAR("cookies-store-policy"));
 
   dwb.state.complete_history = GET_BOOL("complete-history");
   dwb.state.complete_bookmarks = GET_BOOL("complete-bookmarks");
@@ -2979,8 +2989,6 @@ dwb_init() {
   dwb_clean_vars();
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
-  dwb.state.last_cookie = NULL;
-  dwb.state.last_cookies = NULL;
   dwb.state.fullscreen = false;
   dwb.state.download_ref_count = 0;
   dwb.state.message_id = 0;
