@@ -587,9 +587,9 @@ static WebSettings DWB_SETTINGS[] = {
   { { "scroll-step",			                     "Whether to open tabs in background", },                                 
     SETTING_GLOBAL,      DOUBLE,    { .d = 0         }, (S_Func) dwb_init_vars,  },
 
-  { { "active-fg-color",                         "Foreground color of the active view", },                              
+  { { "foreground-color",                         "Foreground color of the active view", },                              
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,   },
-  { { "active-bg-color",                         "Background color of the active view", },                              
+  { { "background-color",                         "Background color of the active view", },                              
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#000000"         },    (S_Func) dwb_reload_layout,  },
 
   { { "tab-active-fg-color",                     "Foreground color of the active tab", },                           

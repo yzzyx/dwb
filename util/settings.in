@@ -42,10 +42,10 @@ sans-serif-font-family text Sans serif font family used to display text
 serif-font-family text Serif font family used to display text
 
 # colors Colors
-active-bg-color text Background color of the active view
+foreground-color text Foreground color of the statusbar
+background-color text Background color of the statusbar
 active-completion-bg-color text Background color of the active completion item
 active-completion-fg-color text Foreground color of the active completion item
-active-fg-color text Foreground color of the active view
 error-color text Color for error messages
 normal-bg-color text Background color of the normal view
 normal-completion-bg-color text Background color of normal completion items

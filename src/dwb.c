@@ -74,6 +74,7 @@ static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *
 static void dwb_init_key_map(void);
 static void dwb_init_settings(void);
 static void dwb_init_style(void);
+static void dwb_apply_style(void);
 static void dwb_init_gui(void);
 static void dwb_init_vars(void);
 
@@ -1148,8 +1149,9 @@ dwb_reload_layout(GList *gl, WebSettings *s) {
     else {
       view_set_normal_style(v);
     }
-    DWB_WIDGET_OVERRIDE_FONT(dwb.gui.entry, dwb.font.fd_entry);
   }
+  dwb_init_style();
+  dwb_apply_style();
 }/*}}}*/
 
 /* dwb_get_search_engine_uri(const char *uri) {{{*/
@@ -2635,8 +2637,8 @@ static void
 dwb_init_style() {
   /* Colors  */
   /* Statusbar */
-  DWB_COLOR_PARSE(&dwb.color.active_fg, GET_CHAR("active-fg-color"));
-  DWB_COLOR_PARSE(&dwb.color.active_bg, GET_CHAR("active-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.active_fg, GET_CHAR("foreground-color"));
+  DWB_COLOR_PARSE(&dwb.color.active_bg, GET_CHAR("background-color"));
 
   /* Tabs */
   DWB_COLOR_PARSE(&dwb.color.tab_active_fg, GET_CHAR("tab-active-fg-color"));
@@ -2689,6 +2691,8 @@ dwb_apply_style() {
   DWB_WIDGET_OVERRIDE_FONT(dwb.gui.rstatus, dwb.font.fd_active);
   DWB_WIDGET_OVERRIDE_FONT(dwb.gui.urilabel, dwb.font.fd_active);
   DWB_WIDGET_OVERRIDE_FONT(dwb.gui.lstatus, dwb.font.fd_active);
+
+  DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 }
 
 /* dwb_init_gui() {{{*/
@@ -2730,7 +2734,6 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.window, "delete-event", G_CALLBACK(callback_delete_event), NULL);
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(callback_key_press), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(callback_key_release), NULL);
-  DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 
   tabbarpos = GET_CHAR("tabbar-position");
   if (!g_ascii_strcasecmp(tabbarpos, "top"))
