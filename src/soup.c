@@ -25,10 +25,51 @@ static SoupCookieJar *_jar;
 static guint _changed_id;
 static SoupCookieJar *_tmpJar;
 
-/* dwb_soup_get_last_cookies() {{{*/
-GSList *
-dwb_soup_get_last_cookies() {
-  return soup_cookie_jar_all_cookies(_tmpJar);
+/* dwb_soup_allow_cookie(GList *, const char, CookieStorePolicy) {{{*/
+GList *
+dwb_soup_allow_cookie(GList *whitelist, const char *filename, CookieStorePolicy policy) {
+  GSList *last_cookies = soup_cookie_jar_all_cookies(_tmpJar);
+  if (last_cookies == NULL)
+    return whitelist;
+
+  GString *buffer = g_string_new(NULL);
+  GSList *asked = NULL, *allowed = NULL;
+  int length;
+  for (GSList *l = last_cookies; l; l=l->next) {
+    SoupCookie *c = l->data;
+    const char *domain = soup_cookie_get_domain(c);
+    if ( whitelist == NULL || g_list_find_custom(whitelist, domain, (GCompareFunc) g_strcmp0) == NULL ) {
+      /* only ask once, if it was already prompted for this domain and allowed it will be handled
+       * in the else clause */
+      if (g_slist_find_custom(asked, domain, (GCompareFunc)g_strcmp0))
+        continue;
+      if (dwb_confirm(dwb.state.fview, "Allow %s cookies for domain %s [y/n]", policy == COOKIE_STORE_PERSISTENT ? "persistent" : "session", domain)) {
+        /* Cookies MUST be appended, otherwise the start of the whitelist changes */
+        whitelist = g_list_append(whitelist, g_strdup(domain));
+        util_file_add(filename, domain, true, -1);
+        g_string_append_printf(buffer, "%s ", domain);
+        allowed = g_slist_prepend(allowed, soup_cookie_copy(c));
+      }
+      asked = g_slist_prepend(asked, (char*)domain);
+      CLEAR_COMMAND_TEXT();
+    }
+    else {
+      allowed = g_slist_prepend(allowed, soup_cookie_copy(c));
+    }
+  }
+  if (policy == COOKIE_STORE_PERSISTENT) 
+    dwb_soup_save_cookies(allowed);
+  length = g_slist_length(allowed);
+  if (length > 0) {
+    dwb_set_normal_message(dwb.state.fview, true, "Allowed domain%s: %s", length == 1 ? "" : "s", buffer->str);
+  }
+  g_string_free(buffer, true);
+  g_slist_free(asked);
+  /* The cookies itself must not be freed, they are stolen by the cookiejar  */
+  g_slist_free(allowed);
+
+  soup_cookies_free(last_cookies);
+  return whitelist;
 }/*}}}*/
 
 /* dwb_soup_clean() {{{*/
@@ -70,10 +111,10 @@ dwb_soup_save_cookies(GSList *cookies) {
 
 /* dwb_test_cookie_allowed(const char *)     return:  gboolean{{{*/
 static gboolean 
-dwb_soup_test_cookie_allowed(SoupCookie *cookie) {
+dwb_soup_test_cookie_allowed(GList *list, SoupCookie *cookie) {
   g_return_val_if_fail(cookie != NULL, false);
   g_return_val_if_fail(cookie->domain != NULL, false);
-  for (GList *l = dwb.fc.cookies_allow; l; l=l->next) {
+  for (GList *l = list; l; l=l->next) {
     if (l->data && soup_cookie_domain_matches(cookie, l->data)) {
       return true;
     }
@@ -123,14 +164,12 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
     soup_cookie_jar_delete_cookie(j, old);
   }
   if (new) {
-    if (dwb.state.cookie_store_policy == COOKIE_STORE_PERSISTENT || dwb_soup_test_cookie_allowed(new)) {
-      g_signal_handler_block(jar, _changed_id);
+    if (dwb.state.cookie_store_policy == COOKIE_STORE_PERSISTENT || dwb_soup_test_cookie_allowed(dwb.fc.cookies_allow, new)) {
       soup_cookie_jar_add_cookie(j, soup_cookie_copy(new));
-      g_signal_handler_unblock(jar, _changed_id);
     }
     else { 
       soup_cookie_jar_add_cookie(_tmpJar, soup_cookie_copy(new));
-      if (dwb.state.cookie_store_policy == COOKIE_STORE_NEVER) {
+      if (dwb.state.cookie_store_policy == COOKIE_STORE_NEVER && !dwb_soup_test_cookie_allowed(dwb.fc.cookies_session_allow, new) ) {
         g_signal_handler_block(jar, _changed_id);
         soup_cookie_jar_delete_cookie(jar, new);
         g_signal_handler_unblock(jar, _changed_id);

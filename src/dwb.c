@@ -2237,6 +2237,7 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.mimetypes, (void_func)dwb_navigation_free);
   dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
+  dwb_free_list(dwb.fc.cookies_session_allow, (void_func)dwb_free);
 
   dwb_soup_end();
 #ifdef DWB_ADBLOCKER
@@ -2882,6 +2883,7 @@ dwb_init_files() {
   dwb.files.mimetypes       = g_build_filename(path, "mimetypes",      NULL);
   dwb.files.cookies         = g_build_filename(profile_path, "cookies",       NULL);
   dwb.files.cookies_allow   = g_build_filename(profile_path, "cookies.allow", NULL);
+  dwb.files.cookies_session_allow   = g_build_filename(profile_path, "cookies_session.allow", NULL);
   dwb.files.adblock         = g_build_filename(path, "adblock",      NULL);
   dwb.files.scripts_allow   = g_build_filename(profile_path, "scripts.allow",      NULL);
   dwb.files.plugins_allow   = g_build_filename(profile_path, "plugins.allow",      NULL);
@@ -2908,6 +2910,7 @@ dwb_init_files() {
   else 
     dwb.misc.default_search = NULL;
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
+  dwb.fc.cookies_session_allow = dwb_init_file_content(dwb.fc.cookies_session_allow, dwb.files.cookies_session_allow, (Content_Func)dwb_return);
 
   FREE(path);
   FREE(profile_path);

@@ -320,9 +320,17 @@ Toggle "view source" (command
 .BR view_source ). 
 .TP
 .BR CC 
-Allow cookie for the current web-page. The domain will be saved in 
-.IR cookies.allow
-(command
+Allow persistent cookie for the current website. The domain will be saved in  
+.IR cookies.allow .
+Cookies that are allowed by the cookies.allow whitelist are stored in
+$XDG_CONFIG_HOME/dwb/$profilename/cookies.  (command
+.BR allow_cookie ).
+.TP
+.BR CS 
+Allow session cookie for the current website. The domain will be saved in 
+.IR cookies_session.allow .
+This is only useful if 'cookies-store-policy' is set to 'never', see
+cookies-store-policy for details. (command
 .BR allow_cookie ).
 .TP
 .BR yy
@@ -955,9 +963,25 @@ default value:
 .IR false .
 .TP 
 .BR cookies-store-policy
-The storage policy for cookies, possible values are 'session', 'persistent' and 'never'.
-default value:
-.IR Session .
+The storage policy for cookies, possible values are 
+.IR session , 
+.IR persistent , 
+and 
+.IR never . 
+If set to 
+.I session
+all session cookies are accepted, only cookies with a matching domain in
+cookies.allow will be stored persistently.
+If set to 
+.I persistent 
+all cookies are stored persistently. 
+If set to 
+.I never 
+the cookies allowed by cookies_session.allow are allowed for the current
+session and cookies allowed by cookies.allow are save persistently, all other
+cookies are rejected. 
+Default value:
+.IR session .
 .TP 
 .BR cookies-accept-policy
 The accept policy for cookies. 

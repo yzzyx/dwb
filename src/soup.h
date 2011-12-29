@@ -20,7 +20,7 @@
 #define COOKIES_H
 
 void dwb_soup_clean(void);
-GSList * dwb_soup_get_last_cookies(void);
+GList * dwb_soup_allow_cookie(GList *, const char *, CookieStorePolicy);
 const char * dwb_soup_get_host_from_request(WebKitNetworkRequest *);
 DwbStatus dwb_soup_set_cookie_accept_policy(const char *);
 void dwb_soup_cookies_set_accept_policy(Arg *);

@@ -330,6 +330,8 @@ typedef enum {
   COOKIE_STORE_SESSION,
   COOKIE_STORE_PERSISTENT,
   COOKIE_STORE_NEVER,
+  COOKIE_ALLOW_SESSION,
+  COOKIE_ALLOW_PERSISTENT,
 } CookieStorePolicy;
 
 
@@ -654,6 +656,7 @@ struct _Files {
   const char *command_history;
   const char *cookies;
   const char *cookies_allow;
+  const char *cookies_session_allow;
   const char *download_path;
   const char *fifo;
   const char *history;
@@ -687,6 +690,7 @@ struct _FileContent {
   GList *keys;
   GList *settings;
   GList *cookies_allow;
+  GList *cookies_session_allow;
   GList *navigations;
   GList *mimetypes;
   GList *adblock;

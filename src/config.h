@@ -19,6 +19,7 @@
 static KeyValue KEYS[] = {
   { "add_view",                 {   "ga",         0,                  },  },  
   { "allow_cookie",             {   "CC",         0,                   },  },  
+  { "allow_session_cookie",     {   "CS",         0,                   },  },  
   { "bookmark",                 {   "M",         0,                   },  },  
   { "bookmarks",                {   "gb",        0,                   },  },  
   { "bookmarks_nv",             {   "gB",        0,                   },  },  
@@ -185,7 +186,9 @@ static FunctionMap FMAP [] = {
   { { "visible",    "Lock/unlock uri for this tab" },                 1, 
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_VISIBLE  } }, 
   { { "allow_cookie",          "Cookie allowed",                    }, 1, 
-    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, },
+    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, { .n = COOKIE_ALLOW_PERSISTENT } },
+  { { "allow_session_cookie",          "Cookie allowed",                    }, 1, 
+    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, { .n = COOKIE_ALLOW_SESSION } },
   { { "bookmark",              "Bookmark current page",             }, 1, 
     (Func)commands_bookmark,            NO_URL,                            POST_SM, },
   { { "bookmarks",             "Bookmarks",                         }, 0,
