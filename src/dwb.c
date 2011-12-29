@@ -1539,7 +1539,7 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
   char progress[11] = { 0 };
-  char buf[45] = { 0 };
+  char buf[5] = { 0 };
   int i=0;
   char sep1 = 0, sep2 = 0;
   if (v->status->lockprotect != 0) {
@@ -2238,17 +2238,19 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
 
-  if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
-    unlink(dwb.files.fifo);
-  }
-  util_rmdir(dwb.files.cachedir, true);
-  gtk_widget_destroy(dwb.gui.window);
+  dwb_soup_end();
 #ifdef DWB_ADBLOCKER
   adblock_end();
 #endif
 #ifdef DWB_DOMAIN_SERVICE
   domain_end();
 #endif
+
+  if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
+    unlink(dwb.files.fifo);
+  }
+  util_rmdir(dwb.files.cachedir, true);
+  gtk_widget_destroy(dwb.gui.window);
   return true;
 }/*}}}*/
 
@@ -2918,7 +2920,6 @@ dwb_handle_signal(int s) {
     exit(EXIT_SUCCESS);
   else if (s == SIGSEGV) {
     fprintf(stderr, "Received SIGSEGV, trying to clean up.\n");
-    session_save(NULL);
     dwb_clean_up();
     exit(EXIT_FAILURE);
   }

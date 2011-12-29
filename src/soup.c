@@ -21,26 +21,27 @@
 #include "dwb.h"
 #include "util.h"
 #include "soup.h"
-static SoupCookieJar *jar;
-static guint changed_id;
-static SoupCookieJar *tmpJar;
+static SoupCookieJar *_jar;
+static guint _changed_id;
+static SoupCookieJar *_tmpJar;
 
-/*{{{*/
+/* dwb_soup_get_last_cookies() {{{*/
 GSList *
 dwb_soup_get_last_cookies() {
-  return soup_cookie_jar_all_cookies(tmpJar);
+  return soup_cookie_jar_all_cookies(_tmpJar);
+}/*}}}*/
+
+/* dwb_soup_clean() {{{*/
+void 
+dwb_soup_clean() {
+  GSList *all_cookies = soup_cookie_jar_all_cookies(_tmpJar);
+  for (GSList *l = all_cookies; l; l=l->next) {
+    soup_cookie_jar_delete_cookie(_tmpJar, l->data);
+  }
+  soup_cookies_free(all_cookies);
 }/*}}}*/
 
 /* dwb_soup_get_host_from_request(WebKitNetworkRequest ) {{{*/
-void 
-dwb_soup_clean() {
-  GSList *all_cookies = soup_cookie_jar_all_cookies(tmpJar);
-  for (GSList *l = all_cookies; l; l=l->next) {
-    soup_cookie_jar_delete_cookie(tmpJar, l->data);
-  }
-  soup_cookies_free(all_cookies);
-}
-
 const char *
 dwb_soup_get_host_from_request(WebKitNetworkRequest *request) {
   const char *host = NULL;
@@ -97,10 +98,11 @@ dwb_soup_set_cookie_accept_policy(const char *policy) {
     apo = 0;
     ret = STATUS_ERROR;
   }
-  soup_cookie_jar_set_accept_policy(jar, apo);
+  soup_cookie_jar_set_accept_policy(_jar, apo);
   return ret;
 }/*}}}*/
 
+/* dwb_soup_get_cookie_store_policy(const char *policy) {{{*/
 CookieStorePolicy 
 dwb_soup_get_cookie_store_policy(const char *policy) {
   if (! g_ascii_strcasecmp(policy, "persistent")) 
@@ -109,8 +111,9 @@ dwb_soup_get_cookie_store_policy(const char *policy) {
     return COOKIE_STORE_NEVER;
   else
     return COOKIE_STORE_SESSION;
-}
+}/*}}}*/
 
+/*dwb_soup_cookie_changed_cb {{{*/
 static void 
 dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new, gpointer *p) {
   int fd = open(dwb.files.cookies, 0);
@@ -121,39 +124,39 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
   }
   if (new) {
     if (dwb.state.cookie_store_policy == COOKIE_STORE_PERSISTENT || dwb_soup_test_cookie_allowed(new)) {
-      g_signal_handler_block(jar, changed_id);
+      g_signal_handler_block(jar, _changed_id);
       soup_cookie_jar_add_cookie(j, soup_cookie_copy(new));
-      g_signal_handler_unblock(jar, changed_id);
+      g_signal_handler_unblock(jar, _changed_id);
     }
     else { 
-      soup_cookie_jar_add_cookie(tmpJar, soup_cookie_copy(new));
+      soup_cookie_jar_add_cookie(_tmpJar, soup_cookie_copy(new));
       if (dwb.state.cookie_store_policy == COOKIE_STORE_NEVER) {
-        g_signal_handler_block(jar, changed_id);
+        g_signal_handler_block(jar, _changed_id);
         soup_cookie_jar_delete_cookie(jar, new);
-        g_signal_handler_unblock(jar, changed_id);
+        g_signal_handler_unblock(jar, _changed_id);
       }
     }
   }
   g_object_unref(j);
   flock(fd, LOCK_UN);
   close(fd);
-}
+}/*}}}*/
 
 /* dwb_soup_init_cookies {{{*/
 void
 dwb_soup_init_cookies(SoupSession *s) {
-  jar = soup_cookie_jar_new(); 
-  tmpJar = soup_cookie_jar_new();
+  _jar = soup_cookie_jar_new(); 
+  _tmpJar = soup_cookie_jar_new();
   dwb_soup_set_cookie_accept_policy(GET_CHAR("cookies-accept-policy"));
   SoupCookieJar *old_cookies = soup_cookie_jar_text_new(dwb.files.cookies, true);
   GSList *l = soup_cookie_jar_all_cookies(old_cookies);
   for (; l; l=l->next ) {
-    soup_cookie_jar_add_cookie(jar, soup_cookie_copy(l->data)); 
+    soup_cookie_jar_add_cookie(_jar, soup_cookie_copy(l->data)); 
   }
   soup_cookies_free(l);
   g_object_unref(old_cookies);
-  soup_session_add_feature(s, SOUP_SESSION_FEATURE(jar));
-  changed_id = g_signal_connect(jar, "changed", G_CALLBACK(dwb_soup_cookie_changed_cb), NULL);
+  soup_session_add_feature(s, SOUP_SESSION_FEATURE(_jar));
+  _changed_id = g_signal_connect(_jar, "changed", G_CALLBACK(dwb_soup_cookie_changed_cb), NULL);
 }/*}}}*/
 
 /* dwb_init_proxy{{{*/
@@ -173,6 +176,7 @@ dwb_soup_init_proxy() {
   soup_uri_free(uri);
 }/*}}}*/
 
+/* dwb_soup_init_session_features() {{{*/
 void 
 dwb_soup_init_session_features() {
   char *cert = GET_CHAR("ssl-ca-cert");
@@ -183,7 +187,17 @@ dwb_soup_init_session_features() {
   g_object_set(dwb.misc.soupsession, SOUP_SESSION_SSL_STRICT, GET_BOOL("ssl-strict"), NULL);
   //soup_session_add_feature(dwb.misc.soupsession, SOUP_SESSION_FEATURE(soup_content_sniffer_new()));
   //soup_session_add_feature_by_type(webkit_get_default_session(), SOUP_TYPE_CONTENT_SNIFFER);
-}
+}/*}}}*/
+
+/* dwb_soup_end(() {{{*/
+void
+dwb_soup_end() {
+  g_object_unref(_tmpJar);
+  g_object_unref(_jar);
+  FREE(dwb.misc.proxyuri);
+}/*}}}*/
+
+/* dwb_soup_init() {{{*/
 void 
 dwb_soup_init() {
   dwb.misc.soupsession = webkit_get_default_session();
@@ -194,4 +208,4 @@ dwb_soup_init() {
   SoupLogger *sl = soup_logger_new(SOUP_LOGGER_LOG_HEADERS, -1);
   soup_session_add_feature(dwb.misc.soupsession, sl);
 #endif
-}
+}/*}}}*/
