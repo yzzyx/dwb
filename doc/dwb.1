@@ -331,7 +331,12 @@ Allow session cookie for the current website. The domain will be saved in
 .IR cookies_session.allow .
 This is only useful if 'cookies-store-policy' is set to 'never', see
 cookies-store-policy for details. (command
-.BR allow_cookie ).
+.BR allow_session_cookie ).
+.TP
+.BR CT 
+Allow session cookie for the current website temporarily. The domain will not be
+saved to a whitelist and the cookie will not be saved persitent. (command
+.BR allow_session_cookie_tmp ).
 .TP
 .BR yy
 Yank the current url to clipboard

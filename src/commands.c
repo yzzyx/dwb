@@ -210,10 +210,18 @@ commands_show_settings(KeyMap *km, Arg *arg) {
 /* commands_allow_cookie {{{*/
 DwbStatus
 commands_allow_cookie(KeyMap *km, Arg *arg) {
-  if (arg->n == COOKIE_ALLOW_PERSISTENT) 
-    dwb.fc.cookies_allow = dwb_soup_allow_cookie(dwb.fc.cookies_allow, dwb.files.cookies_allow, arg->n);
-  else 
-    dwb.fc.cookies_session_allow = dwb_soup_allow_cookie(dwb.fc.cookies_session_allow, dwb.files.cookies_session_allow, arg->n);
+  switch (arg->n) {
+    case COOKIE_ALLOW_PERSISTENT: 
+      return dwb_soup_allow_cookie(&dwb.fc.cookies_allow, dwb.files.cookies_allow, arg->n);
+    case COOKIE_ALLOW_SESSION:
+      return dwb_soup_allow_cookie(&dwb.fc.cookies_session_allow, dwb.files.cookies_session_allow, arg->n);
+    case COOKIE_ALLOW_SESSION_TMP:
+      dwb_soup_allow_cookie_tmp();
+      break;
+    default: 
+      break;
+
+  }
   return STATUS_OK;
 }/*}}}*/
 

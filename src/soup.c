@@ -26,26 +26,47 @@ static guint _changed_id;
 static SoupCookieJar *_tmpJar;
 
 /* dwb_soup_allow_cookie(GList *, const char, CookieStorePolicy) {{{*/
-GList *
-dwb_soup_allow_cookie(GList *whitelist, const char *filename, CookieStorePolicy policy) {
+void
+dwb_soup_allow_cookie_tmp() {
+  GSList *last_cookies = soup_cookie_jar_all_cookies(_tmpJar);
+  const char *domain;
+  SoupCookie *c;
+  for (GSList *l = last_cookies; l; l=l->next) {
+    c = l->data;
+    domain = soup_cookie_get_domain(c);
+    if ( g_list_find_custom(dwb.fc.cookies_session_allow, domain, (GCompareFunc)g_strcmp0)  == NULL ) {
+      dwb.fc.cookies_session_allow = g_list_append(dwb.fc.cookies_session_allow, g_strdup(domain));
+      soup_cookie_jar_add_cookie(_jar, soup_cookie_copy(c));
+    }
+  }
+  soup_cookies_free(last_cookies);
+  dwb_reload();
+}
+DwbStatus
+dwb_soup_allow_cookie(GList **whitelist, const char *filename, CookieStorePolicy policy) {
+  DwbStatus ret = STATUS_ERROR;
+
   GSList *last_cookies = soup_cookie_jar_all_cookies(_tmpJar);
   if (last_cookies == NULL)
-    return whitelist;
+    return ret;
 
+  int length;
+  const char *domain;
+  SoupCookie *c;
   GString *buffer = g_string_new(NULL);
   GSList *asked = NULL, *allowed = NULL;
-  int length;
+
   for (GSList *l = last_cookies; l; l=l->next) {
-    SoupCookie *c = l->data;
-    const char *domain = soup_cookie_get_domain(c);
-    if ( whitelist == NULL || g_list_find_custom(whitelist, domain, (GCompareFunc) g_strcmp0) == NULL ) {
+    c = l->data;
+    domain = soup_cookie_get_domain(c);
+    if ( *whitelist == NULL || g_list_find_custom(*whitelist, domain, (GCompareFunc) g_strcmp0) == NULL ) {
       /* only ask once, if it was already prompted for this domain and allowed it will be handled
        * in the else clause */
       if (g_slist_find_custom(asked, domain, (GCompareFunc)g_strcmp0))
         continue;
       if (dwb_confirm(dwb.state.fview, "Allow %s cookies for domain %s [y/n]", policy == COOKIE_STORE_PERSISTENT ? "persistent" : "session", domain)) {
         /* Cookies MUST be appended, otherwise the start of the whitelist changes */
-        whitelist = g_list_append(whitelist, g_strdup(domain));
+        *whitelist = g_list_append(*whitelist, g_strdup(domain));
         util_file_add(filename, domain, true, -1);
         g_string_append_printf(buffer, "%s ", domain);
         allowed = g_slist_prepend(allowed, soup_cookie_copy(c));
@@ -57,19 +78,24 @@ dwb_soup_allow_cookie(GList *whitelist, const char *filename, CookieStorePolicy 
       allowed = g_slist_prepend(allowed, soup_cookie_copy(c));
     }
   }
-  if (policy == COOKIE_STORE_PERSISTENT) 
-    dwb_soup_save_cookies(allowed);
   length = g_slist_length(allowed);
   if (length > 0) {
     dwb_set_normal_message(dwb.state.fview, true, "Allowed domain%s: %s", length == 1 ? "" : "s", buffer->str);
+    ret = STATUS_OK;
   }
-  g_string_free(buffer, true);
-  g_slist_free(asked);
-  /* The cookies itself must not be freed, they are stolen by the cookiejar  */
+  if (policy == COOKIE_STORE_PERSISTENT) 
+    dwb_soup_save_cookies(allowed);
+  /* Save all cookies to the jar */
+  for (GSList *l = allowed; l; l=l->next)
+    soup_cookie_jar_add_cookie(_jar, l->data);
+  /* soup_cookie_jar_add_cookie steals the cookie, it must no be freed */
   g_slist_free(allowed);
 
+  dwb_reload();
+  g_string_free(buffer, true);
+  g_slist_free(asked);
   soup_cookies_free(last_cookies);
-  return whitelist;
+  return ret;
 }/*}}}*/
 
 /* dwb_soup_clean() {{{*/
@@ -102,7 +128,7 @@ dwb_soup_save_cookies(GSList *cookies) {
   flock(fd, LOCK_EX);
   SoupCookieJar *jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
   for (GSList *l=cookies; l; l=l->next) {
-    soup_cookie_jar_add_cookie(jar, l->data);
+    soup_cookie_jar_add_cookie(jar, soup_cookie_copy(l->data));
   }
   g_object_unref(jar);
   flock(fd, LOCK_UN);

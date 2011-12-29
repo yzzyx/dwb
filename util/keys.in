@@ -147,6 +147,7 @@ proxy Toggle proxy
 # misc Miscellaneous
 allow_cookie Allow persistent cookies for current site
 allow_session_cookie Allow session cookies for current site
+allow_session_cookie_tmp Allow session cookies for current site temporarily
 execute_userscript Execute userscript
 focus_input Focus the next input
 new_view New view for next navigation
