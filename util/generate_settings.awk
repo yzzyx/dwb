@@ -10,7 +10,8 @@ $1 == "#" {
 $2 == "select" {
 	id = $1; $1 = ""; $2 = ""; options = ""
 	for (i = 3; $i ~ /^@/ && i <= NF; ++i) {
-		value = gensub(/_/, " ", "g", substr($i, 2))
+    value = substr($i, 2)
+		gsub(/_/, " ", value)
 		options = options "<option>" value "</option>"
 		$i = ""
 	}
