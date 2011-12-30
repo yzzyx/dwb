@@ -1080,41 +1080,6 @@ dwb_focus_scroll(GList *gl) {
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
 
-/* dwb_entry_position_word_back(int position)      return position{{{*/
-int 
-dwb_entry_position_word_back(int position) {
-  char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-
-  if (position == 0) {
-    return position;
-  }
-  int old = position;
-  while (IS_WORD_CHAR(text[position-1]) ) {
-    --position;
-  }
-  while (isblank(text[position-1])) {
-    --position;
-  }
-  if (old == position) {
-    --position;
-  }
-  return position;
-}/*}}}*/
-
-/* dwb_com_entry_history_forward(int) {{{*/
-int 
-dwb_entry_position_word_forward(int position) {
-  char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-
-  int old = position;
-  while ( IS_WORD_CHAR(text[++position]) );
-  while ( isblank(text[++position]) );
-  if (old == position) {
-    position++;
-  }
-  return position;
-}/*}}}*/
-
 /* dwb_handle_mail(const char *uri)        return: true if it is a mail-address{{{*/
 gboolean 
 dwb_spawn(GList *gl, const char *prop, const char *uri) {

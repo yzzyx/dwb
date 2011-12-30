@@ -760,10 +760,6 @@ void dwb_focus(GList *);
 void dwb_source_remove();
 gboolean dwb_spawn(GList *, const char *, const char *uri);
 
-int dwb_entry_position_word_back(int position);
-int dwb_entry_position_word_forward(int position);
-void dwb_entry_set_text(const char *text);
-
 void dwb_set_proxy(GList *, WebSettings *);
 
 void dwb_new_window(const char *uri);

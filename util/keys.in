@@ -57,6 +57,7 @@ entry_history_back Command history back
 entry_history_forward Command history forward
 entry_delete_letter Delete a single letter
 entry_delete_line Delete to the beginning of the line
+entry_delete_line_end Delete to the end of the line
 entry_delete_word Delete word
 entry_word_back Move cursor back on word
 entry_word_forward Move cursor forward on word

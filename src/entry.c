@@ -40,7 +40,7 @@ entry_history_forward(GList **last) {
   return STATUS_OK;
 }/*}}}*/
 
-/*  entry_history_back(GList **list, GList **last) {{{ */
+/* entry_history_back(GList **list, GList **last) {{{ */
 DwbStatus
 entry_history_back(GList **list, GList **last) {
   char *text = NULL;
@@ -88,4 +88,10 @@ entry_set_text(const char *text) {
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
 }/*}}}*/
 
-
+/* entry_move_cursor_step(GtkMovementStep, int step, gboolean delete)  {{{*/
+void 
+entry_move_cursor_step(GtkMovementStep step, int stepcount, gboolean del) {
+  g_signal_emit_by_name(dwb.gui.entry, "move-cursor", step, stepcount, del);
+  if (del)
+    gtk_editable_delete_selection(GTK_EDITABLE(dwb.gui.entry));
+}/*}}}*/

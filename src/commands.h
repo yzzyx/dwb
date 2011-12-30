@@ -26,13 +26,11 @@ DwbStatus commands_add_search_field(KeyMap *, Arg *);
 DwbStatus commands_allow_cookie(KeyMap *, Arg *);
 DwbStatus commands_bookmark(KeyMap *, Arg *);
 DwbStatus commands_bookmarks(KeyMap *, Arg *);
-DwbStatus commands_entry_delete_letter(KeyMap *, Arg *);
-DwbStatus commands_entry_delete_line(KeyMap *, Arg *);
-DwbStatus commands_entry_delete_word(KeyMap *, Arg *);
+
+DwbStatus commands_entry_movement(KeyMap *, Arg *);
 DwbStatus commands_entry_history_back(KeyMap *, Arg *);
 DwbStatus commands_entry_history_forward(KeyMap *, Arg *);
-DwbStatus commands_entry_word_back(KeyMap *, Arg *);
-DwbStatus commands_entry_word_forward(KeyMap *, Arg *);
+
 DwbStatus commands_execute_userscript(KeyMap *, Arg *);
 DwbStatus commands_find(KeyMap *, Arg *);
 DwbStatus commands_search(KeyMap *, Arg *);

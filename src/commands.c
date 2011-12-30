@@ -462,65 +462,12 @@ commands_paste(KeyMap *km, Arg *arg) {
   return STATUS_ERROR;
 }/*}}}*/
 
-/* commands_entry_delete_word {{{*/
-DwbStatus 
-commands_entry_delete_word(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  char *text = g_strdup(GET_TEXT());
 
-  if (position > 0) {
-    int new = dwb_entry_position_word_back(position);
-    util_cut_text(text, new,  position);
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
-    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), new);
-    FREE(text);
-  }
+DwbStatus
+commands_entry_movement(KeyMap *m, Arg *a) {
+  entry_move_cursor_step(a->n, a->i, a->b);
   return STATUS_OK;
-}/*}}}*/
-
-/* commands_entry_delete_letter {{{*/
-DwbStatus 
-commands_entry_delete_letter(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  char *text = g_strdup(GET_TEXT());
-
-  if (position > 0) {
-    util_cut_text(text, position-1,  position);
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
-    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), position-1);
-    FREE(text);
-  }
-  return STATUS_OK;
-}/*}}}*/
-
-/* commands_entry_delete_line {{{*/
-DwbStatus 
-commands_entry_delete_line(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), &text[position]);
-  FREE(text);
-  return STATUS_OK;
-}/*}}}*/
-
-/* commands_entry_word_forward {{{*/
-DwbStatus 
-commands_entry_word_forward(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-
-  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), dwb_entry_position_word_forward(position));
-  return STATUS_OK;
-}/*}}}*/
-
-/* commands_entry_word_back {{{*/
-DwbStatus 
-commands_entry_word_back(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-
-  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), dwb_entry_position_word_back(position));
-  return STATUS_OK;
-}/*}}}*/
+}
 
 /* commands_entry_history_forward {{{*/
 DwbStatus 
