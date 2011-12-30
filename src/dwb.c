@@ -38,6 +38,7 @@
 #include "local.h"
 #include "js.h"
 #include "callback.h"
+#include "entry.h"
 #ifdef DWB_ADBLOCKER
 #include "adblock.h"
 #include "domain.h"
@@ -131,6 +132,7 @@ static void
 dwb_set_cookies(GList *gl, WebSettings *s) {
   dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(s->arg.p);
 }/*}}}*/
+
 /* dwb_set_private_browsing  {{{ */
 static void
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
@@ -420,6 +422,18 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+void
+dwb_glist_prepend_unique(GList **list, char *text) {
+  for (GList *l = (*list); l; l=l->next) {
+    if (!g_strcmp0(text, l->data)) {
+      g_free(l->data);
+      (*list) = g_list_delete_link((*list), l);
+      break;
+    }
+  }
+  (*list) = g_list_prepend((*list), text);
+}/*}}}*/
 
 /* dwb_set_open_mode(Open) {{{*/
 void
@@ -914,7 +928,7 @@ dwb_history(Arg *a) {
   if (bf_list == NULL) 
     return STATUS_ERROR;
 
-  int n = a->i == -1 ? MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD) : MAX(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD);
+  int n = a->i == -1 ? MIN(webkit_web_back_forward_list_get_back_length(bf_list), NUMMOD) : MIN(webkit_web_back_forward_list_get_forward_length(bf_list), NUMMOD);
   WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, a->i * n);
   if (a->n == OPEN_NORMAL) {
     webkit_web_view_go_to_back_forward_item(w, item);
@@ -1050,25 +1064,6 @@ dwb_get_default_settings() {
     g_hash_table_insert(ret, value, new);
   }
   return ret;
-}/*}}}*/
-
-/* dwb_entry_set_text(const char *) {{{*/
-void 
-dwb_entry_set_text(const char *text) {
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
-  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
-}/*}}}*/
-
-/* dwb_focus_entry() {{{*/
-void 
-dwb_focus_entry() {
-  if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) {
-    gtk_widget_show(dwb.gui.statusbox);
-  }
-  gtk_widget_show(dwb.gui.entry);
-  gtk_widget_grab_focus(dwb.gui.entry);
-  gtk_widget_set_can_focus(CURRENT_WEBVIEW_WIDGET(), false);
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
 }/*}}}*/
 
 /* dwb_focus_scroll (GList *){{{*/
@@ -1801,7 +1796,7 @@ dwb_entry_activate(GdkEventKey *e) {
   const char *text = GET_TEXT();
   dwb_load_uri(NULL, text);
   if (text != NULL && *text)
-    dwb_prepend_navigation_with_argument(&dwb.fc.navigations, text, NULL);
+    dwb_glist_prepend_unique(&dwb.fc.navigations, g_strdup(text));
   dwb_change_mode(NORMAL_MODE, false);
   return true;
 }
@@ -1943,7 +1938,7 @@ dwb_insert_mode(void) {
 static DwbStatus 
 dwb_command_mode(void) {
   dwb_set_normal_message(dwb.state.fview, false, ":");
-  dwb_focus_entry();
+  entry_focus();
   dwb.state.mode = COMMAND_MODE;
   return STATUS_OK;
 }/*}}}*/
@@ -2199,7 +2194,6 @@ dwb_clean_vars() {
   dwb.state.nv = OPEN_NORMAL;
   dwb.state.type = 0;
   dwb.state.scriptlock = 0;
-  dwb.state.last_com_history = NULL;
   dwb.state.dl_action = DL_ACTION_DOWNLOAD;
   if (dwb.state.mimetype_request) {
     g_free(dwb.state.mimetype_request);
@@ -2238,6 +2232,8 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
   dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
   dwb_free_list(dwb.fc.cookies_session_allow, (void_func)dwb_free);
+  dwb_free_list(dwb.fc.navigations, (void_func)dwb_free);
+  dwb_free_list(dwb.fc.commands, (void_func)dwb_free);
 
   dwb_soup_end();
 #ifdef DWB_ADBLOCKER
@@ -2340,6 +2336,21 @@ dwb_save_settings() {
   g_key_file_free(keyfile);
 }/*}}}*/
 
+/*{{{*/
+static void
+dwb_save_list(GList *list, const char *filename, int limit) {
+  if (g_list_length(list) > 0) {
+    GString *buffer = g_string_new(NULL);
+    int i = 0;
+    for (GList *l = list; l; l=l->next, i++) {
+      g_string_append_printf(buffer, "%s\n", (char*)l->data);
+    }
+    if (buffer->len > 0) 
+      util_set_file_content(filename, buffer->str);
+    g_string_free(buffer, true);
+  }
+}/*}}}*/
+
 /* dwb_save_files() {{{*/
 gboolean 
 dwb_save_files(gboolean end_session) {
@@ -2349,19 +2360,10 @@ dwb_save_files(gboolean end_session) {
     dwb_sync_history(NULL);
   }
   /* Save command history */
-  if (!GET_BOOL("enable-private-browsing") && g_list_length(dwb.fc.navigations) > 0) {
-    GString *buffer = g_string_new(NULL);
-    int limit = GET_INT("navigation-history-max");
-    int i = 0;
-    for (GList *l = dwb.fc.navigations; l && i<limit; l=l->next, i++) {
-      Navigation *n = l->data;
-      g_string_append_printf(buffer, "%s\n", n->first);
-    }
-    if (buffer->len > 0) 
-      util_set_file_content(dwb.files.command_history, buffer->str);
-    g_string_free(buffer, true);
+  if (! dwb.misc.private_browsing) {
+    dwb_save_list(dwb.fc.navigations, dwb.files.navigation_history, GET_INT("navigation-history-max"));
+    dwb_save_list(dwb.fc.commands, dwb.files.command_history, GET_INT("navigation-history-max"));
   }
-
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
     session_save(NULL);
@@ -2868,6 +2870,16 @@ dwb_init_files() {
   char *profile_path = util_check_directory(g_build_filename(path, dwb.misc.profile, NULL));
   char *userscripts, *scripts, *cachedir;
 
+  dwb.fc.bookmarks = NULL;
+  dwb.fc.history = NULL;
+  dwb.fc.quickmarks = NULL;
+  dwb.fc.searchengines = NULL;
+  dwb.fc.se_completion = NULL;
+  dwb.fc.mimetypes = NULL;
+  dwb.fc.navigations = NULL;
+  dwb.fc.commands = NULL;
+
+
   cachedir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
   dwb.files.cachedir = util_check_directory(cachedir);
 
@@ -2876,7 +2888,8 @@ dwb_init_files() {
   dwb.files.stylesheet      = g_build_filename(profile_path, "stylesheet",    NULL);
   dwb.files.quickmarks      = g_build_filename(profile_path, "quickmarks",    NULL);
   dwb.files.session         = g_build_filename(profile_path, "session",       NULL);
-  dwb.files.command_history = g_build_filename(profile_path, "navigate.history",       NULL);
+  dwb.files.navigation_history = g_build_filename(profile_path, "navigate.history",       NULL);
+  dwb.files.command_history = g_build_filename(profile_path, "commands.history",       NULL);
   dwb.files.searchengines   = g_build_filename(path, "searchengines", NULL);
   dwb.files.keys            = g_build_filename(path, "keys",          NULL);
   dwb.files.settings        = g_build_filename(path, "settings",      NULL);
@@ -2899,8 +2912,8 @@ dwb_init_files() {
   dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (Content_Func)dwb_navigation_new_from_line); 
   dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files.searchengines, (Content_Func)dwb_get_search_completion);
   dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
-  dwb.fc.navigations = dwb_init_file_content(dwb.fc.navigations, dwb.files.command_history, (Content_Func)dwb_navigation_new_from_line);
-  dwb.state.last_com_history = g_list_last(dwb.fc.navigations);
+  dwb.fc.navigations = dwb_init_file_content(dwb.fc.navigations, dwb.files.navigation_history, (Content_Func)dwb_return);
+  dwb.fc.commands = dwb_init_file_content(dwb.fc.commands, dwb.files.command_history, (Content_Func)dwb_return);
   dwb.fc.tmp_scripts = NULL;
   dwb.fc.tmp_plugins = NULL;
   dwb.fc.downloads   = NULL;
@@ -2957,7 +2970,6 @@ dwb_init_vars() {
   dwb.state.complete_history = GET_BOOL("complete-history");
   dwb.state.complete_bookmarks = GET_BOOL("complete-bookmarks");
   dwb.state.complete_searchengines = GET_BOOL("complete-searchengines");
-  dwb.state.complete_commands = GET_BOOL("complete-commands");
   dwb.state.complete_userscripts = GET_BOOL("complete-userscripts");
   dwb.state.background_tabs = GET_BOOL("background-tabs");
 
@@ -3073,6 +3085,7 @@ dwb_parse_command_line(const char *line) {
     }
   }
   g_strfreev(token);
+  dwb_glist_prepend_unique(&dwb.fc.commands, g_strdup(line));
   /* Check for dwb.keymap is necessary for commands that quit dwb. */
   if (dwb.keymap != NULL && m != NULL && !(m->map->prop & CP_HAS_MODE)) {
     dwb_change_mode(NORMAL_MODE, true);

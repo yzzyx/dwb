@@ -38,16 +38,17 @@ plugins_free(Plugins *p) {
   if (p == NULL) 
     return;
   if (p->clicks != NULL) {
-    for (GSList *l = p->elements; l; l=l->next) 
-      g_object_unref(l->data);
     for (GSList *l = p->clicks; l; l=l->next) 
       g_object_unref(l->data);
-    g_slist_free(p->elements);
     g_slist_free(p->clicks);
-    g_free(p);
   }
+  if (p->elements != NULL) {
+    for (GSList *l = p->elements; l; l=l->next) 
+      g_object_unref(l->data);
+    g_slist_free(p->elements);
+  }
+  g_free(p);
 }
-WebKitDOMElement *_div = NULL;
 static void 
 plugins_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) {
   WebKitDOMElement *e = g_object_get_data((gpointer)element, "dwb-plugin-element");

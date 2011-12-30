@@ -25,6 +25,7 @@
 #include "html.h"
 #include "commands.h"
 #include "local.h"
+#include "entry.h"
 #ifdef DWB_ADBLOCKER
 #include "adblock.h"
 #endif
@@ -74,7 +75,7 @@ commands_add_view(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_set_setting(KeyMap *km, Arg *arg) {
   dwb.state.mode = SETTINGS_MODE;
-  dwb_focus_entry();
+  entry_focus();
   return STATUS_OK;
 }/*}}}*/
 
@@ -82,7 +83,7 @@ commands_set_setting(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_set_key(KeyMap *km, Arg *arg) {
   dwb.state.mode = KEY_MODE;
-  dwb_focus_entry();
+  entry_focus();
   return STATUS_OK;
 }/*}}}*/
 
@@ -111,7 +112,7 @@ commands_add_search_field(KeyMap *km, Arg *a) {
   }
   dwb.state.mode = SEARCH_FIELD_MODE;
   dwb_set_normal_message(dwb.state.fview, false, "Keyword:");
-  dwb_focus_entry();
+  entry_focus();
   FREE(value);
   return STATUS_OK;
 
@@ -155,7 +156,7 @@ commands_find(KeyMap *km, Arg *arg) {
     g_free(v->status->search_string);
     v->status->search_string = NULL;
   }
-  dwb_focus_entry();
+  entry_focus();
   return STATUS_OK;
 }/*}}}*/
 
@@ -188,7 +189,7 @@ commands_show_hints(KeyMap *km, Arg *arg) {
     }
     dwb.state.mode = HINT_MODE;
     dwb.state.hint_type = arg->i;
-    dwb_focus_entry();
+    entry_focus();
   }
   return ret;
 }/*}}}*/
@@ -242,7 +243,7 @@ DwbStatus
 commands_quickmark(KeyMap *km, Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
     dwb_set_open_mode(arg->i);
-  dwb_focus_entry();
+  entry_focus();
   dwb.state.mode = arg->n;
   return STATUS_OK;
 }/*}}}*/
@@ -365,9 +366,9 @@ commands_open(KeyMap *km, Arg *arg) {
     dwb_load_uri(NULL, arg->p);
   }
   else {
-    dwb_focus_entry();
+    entry_focus();
     if (arg->n & SET_URL)
-      dwb_entry_set_text(arg->p ? arg->p : CURRENT_URL());
+      entry_set_text(arg->p ? arg->p : CURRENT_URL());
   }
   return STATUS_OK;
 } /*}}}*/
@@ -524,43 +525,19 @@ commands_entry_word_back(KeyMap *km, Arg *a) {
 /* commands_entry_history_forward {{{*/
 DwbStatus 
 commands_entry_history_forward(KeyMap *km, Arg *a) {
-  Navigation *n = NULL;
-  GList *l;
-  if ( (l = g_list_last(dwb.state.last_com_history)) && dwb.state.last_com_history->prev ) {
-      n = dwb.state.last_com_history->prev->data;
-      dwb.state.last_com_history = dwb.state.last_com_history->prev;
-  }
-  if (n) {
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), n->first);
-    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
-  }
-  return STATUS_OK;
+  if (dwb.state.mode == COMMAND_MODE) 
+    return entry_history_forward(&dwb.state.last_com_history);
+  else 
+    return entry_history_forward(&dwb.state.last_nav_history);
 }/*}}}*/
 
 /* commands_entry_history_back {{{*/
 DwbStatus 
 commands_entry_history_back(KeyMap *km, Arg *a) {
-  Navigation *n = NULL;
-
-  if (!dwb.fc.navigations)
-    return STATUS_ERROR;
-
-  if (! dwb.state.last_com_history  ) {
-    dwb.state.last_com_history = dwb.fc.navigations;
-    n = dwb.state.last_com_history->data;
-    char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-    dwb_prepend_navigation_with_argument(&dwb.fc.navigations, text, NULL);
-    FREE(text);
-  }
-  else if ( dwb.state.last_com_history && dwb.state.last_com_history->next ) {
-    n = dwb.state.last_com_history->next->data;
-    dwb.state.last_com_history = dwb.state.last_com_history->next;
-  }
-  if (n) {
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), n->first);
-    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
-  }
-  return STATUS_OK;
+  if (dwb.state.mode == COMMAND_MODE) 
+    return entry_history_back(&dwb.fc.commands, &dwb.state.last_com_history);
+  else 
+    return entry_history_back(&dwb.fc.navigations, &dwb.state.last_nav_history);
 }/*}}}*/
 
 /* commands_save_session {{{*/
@@ -574,7 +551,7 @@ commands_save_session(KeyMap *km, Arg *arg) {
   }
   else {
     dwb.state.mode = arg->n;
-    dwb_focus_entry();
+    entry_focus();
     dwb_set_normal_message(dwb.state.fview, false, "Session name:");
   }
   return STATUS_OK;
@@ -589,7 +566,7 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
     dwb_set_open_mode(arg->n);
   completion_complete(COMP_BOOKMARK, 0);
-  dwb_focus_entry();
+  entry_focus();
   if (dwb.comps.active_comp != NULL) {
     completion_set_entry_text((Completion*)dwb.comps.active_comp->data);
   }
@@ -741,7 +718,7 @@ commands_execute_userscript(KeyMap *km, Arg *arg) {
     g_free(path);
   }
   else {
-    dwb_focus_entry();
+    entry_focus();
     completion_complete(COMP_USERSCRIPT, 0);
   }
 

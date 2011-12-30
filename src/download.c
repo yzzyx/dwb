@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include "dwb.h"
+#include "entry.h"
 #include "util.h"
 
 typedef struct _DwbDownloadStatus {
@@ -367,7 +368,7 @@ download_entry_set_directory() {
     
   char *newdir = current_dir[strlen(current_dir) - 1] != '/' ? g_strdup_printf("%s/", current_dir) : g_strdup(current_dir);
 
-  dwb_entry_set_text(newdir);
+  entry_set_text(newdir);
 
   FREE(current_dir);
   FREE(newdir);
@@ -380,7 +381,7 @@ download_entry_set_spawn_command(const char *command) {
     command = download_get_command_from_mimetype(dwb.state.mimetype_request);
   }
   dwb_set_normal_message(dwb.state.fview, false, "Spawn (%s):", dwb.state.mimetype_request ? dwb.state.mimetype_request : "???");
-  dwb_entry_set_text(command ? command : "");
+  entry_set_text(command ? command : "");
 }/*}}}*/
 
 /* download_get_path {{{*/
@@ -394,7 +395,7 @@ download_get_path(GList *gl, WebKitDownload *d) {
   }
 
   char *command = download_get_command_from_mimetype(dwb.state.mimetype_request);
-  dwb_focus_entry();
+  entry_focus();
   dwb.state.mode = DOWNLOAD_GET_PATH;
   dwb.state.download = d;
   if ( lastaction != DL_ACTION_DOWNLOAD && 

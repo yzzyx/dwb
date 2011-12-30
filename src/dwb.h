@@ -207,7 +207,6 @@ typedef enum  {
   COMP_KEY          = 0x04,
   COMP_COMMAND      = 0x05,
   COMP_USERSCRIPT   = 0x06,
-  COMP_INPUT        = 0x07,
   COMP_SEARCH       = 0x08,
   COMP_PATH         = 0x09,
   COMP_CUR_HISTORY  = 0x0a,
@@ -486,13 +485,13 @@ struct _State {
   gboolean complete_history;
   gboolean complete_bookmarks;
   gboolean complete_searchengines;
-  gboolean complete_commands;
   gboolean complete_userscripts;
 
   gboolean hidden_files;
   gboolean view_in_background;
 
   GList *last_com_history;
+  GList *last_nav_history;
 
   GList *undo_list;
 
@@ -654,6 +653,7 @@ struct _Misc {
 };
 struct _Files {
   const char *bookmarks;
+  const char *navigation_history;
   const char *command_history;
   const char *cookies;
   const char *cookies_allow;
@@ -693,6 +693,7 @@ struct _FileContent {
   GList *cookies_allow;
   GList *cookies_session_allow;
   GList *navigations;
+  GList *commands;
   GList *mimetypes;
   GList *adblock;
   GList *tmp_scripts;
@@ -724,7 +725,6 @@ DwbStatus dwb_change_mode(Mode, ...);
 void dwb_load_uri(GList *gl, const char *);
 void dwb_execute_user_script(KeyMap *km, Arg *a);
 
-void dwb_focus_entry(void);
 void dwb_focus_scroll(GList *);
 
 gboolean dwb_update_search(gboolean forward);
@@ -741,6 +741,7 @@ void dwb_unfocus(void);
 
 DwbStatus dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const char *, const char *);
+void dwb_glist_prepend_unique(GList **, char *);
 
 Navigation * dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *);
 gboolean dwb_update_hints(GdkEventKey *);

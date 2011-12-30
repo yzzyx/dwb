@@ -22,6 +22,7 @@
 #include "dwb.h"
 #include "commands.h"
 #include "util.h"
+#include "entry.h"
 #include "completion.h"
 
 static GList * completion_update_completion(GtkWidget *box, GList *comps, GList *active, int max, int back);
@@ -197,7 +198,7 @@ completion_clean_completion(gboolean set_text) {
   dwb.comps.completions = NULL;
   dwb.comps.active_comp = NULL;
   if (set_text && _typed != NULL)
-    dwb_entry_set_text(_typed);
+    entry_set_text(_typed);
   if (_typed != NULL) {
     g_free(_typed);
     _typed = NULL;
@@ -245,8 +246,6 @@ completion_get_normal_completion() {
     list = completion_init_completion(list, dwb.misc.userscripts, false, NULL, "Userscript");
   if (dwb.state.complete_searchengines) 
     list = completion_init_completion(list, dwb.fc.se_completion, false, NULL, "Searchengine");
-  if (dwb.state.complete_commands) 
-    list = completion_init_completion(list, dwb.fc.navigations, true, NULL, "Commandline");
   if (dwb.state.complete_bookmarks) 
     list = completion_init_completion(list, dwb.fc.bookmarks, false, NULL, "Bookmark");
   if (dwb.state.complete_history) 
@@ -424,7 +423,7 @@ completion_complete_buffer() {
   }
   if (list != NULL) {
     dwb.state.mode = COMPLETE_BUFFER;
-    dwb_focus_entry();
+    entry_focus();
   }
   return list;
 }/*}}}*/
@@ -445,7 +444,6 @@ completion_complete(CompletionType type, int back) {
       case COMP_CUR_HISTORY: dwb.comps.completions = completion_get_current_history(back); break;
       case COMP_HISTORY:     dwb.comps.completions = completion_get_simple_completion(dwb.fc.history); break;
       case COMP_USERSCRIPT:  dwb.comps.completions = completion_get_simple_completion(dwb.misc.userscripts); break;
-      case COMP_INPUT:       dwb.comps.completions = completion_get_simple_completion(dwb.fc.navigations); break;
       case COMP_SEARCH:      dwb.comps.completions = completion_get_simple_completion(dwb.fc.se_completion); break;
       case COMP_QUICKMARK:   dwb.comps.completions = completion_get_quickmarks(back); break;
       case COMP_PATH:        completion_path(); return STATUS_OK;
@@ -699,7 +697,7 @@ completion_complete_path(int back) {
     dwb.comps.active_path = g_list_first(dwb.comps.path_completion);
   }
   if (dwb.comps.active_path && dwb.comps.active_path->data) {
-    dwb_entry_set_text(dwb.comps.active_path->data);
+    entry_set_text(dwb.comps.active_path->data);
   }
 }/*}}}*/
 /*}}}*/
