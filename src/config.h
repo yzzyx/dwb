@@ -113,6 +113,7 @@ static KeyValue KEYS[] = {
   { "paste_primary_nw",         {   "wP",           0, }, }, 
   /* entry  shortcuts */
   { "entry_delete_word",        {   "w",            GDK_CONTROL_MASK, }, }, 
+  { "entry_delete_word_forward",{   "e",            GDK_CONTROL_MASK, }, }, 
   { "entry_delete_letter",      {   "h",            GDK_CONTROL_MASK, }, }, 
   { "entry_delete_line",        {   "u",            GDK_CONTROL_MASK, }, }, 
   { "entry_delete_line_end",    {   "e",            GDK_CONTROL_MASK, }, }, 
@@ -372,8 +373,10 @@ static FunctionMap FMAP [] = {
     (Func)commands_reload_scripts,              NULL,                              ALWAYS_SM },
 
   /* Entry editing */
-  { { "entry_delete_word",      "Command line: Delete word in", },                      0,  
+  { { "entry_delete_word",      "Command line: Delete word back", },                      0,  
     (Func)commands_entry_movement,        NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = true }, true, }, 
+  { { "entry_delete_word_forward",      "Command line: Delete word forward", },                      0,  
+    (Func)commands_entry_movement,        NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = true }, true, }, 
   { { "entry_delete_letter",    "Command line: Delete a single letter", },           0,  
     (Func)commands_entry_movement,          NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_LOGICAL_POSITIONS, .i = -1, .b = true }, true, }, 
   { { "entry_delete_line",      "Command line: Delete to beginning of the line", },  0,  
