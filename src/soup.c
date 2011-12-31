@@ -65,7 +65,6 @@ dwb_soup_allow_cookie(GList **whitelist, const char *filename, CookieStorePolicy
       if (g_slist_find_custom(asked, domain, (GCompareFunc)g_strcmp0))
         continue;
       if (dwb_confirm(dwb.state.fview, "Allow %s cookies for domain %s [y/n]", policy == COOKIE_STORE_PERSISTENT ? "persistent" : "session", domain)) {
-        /* Cookies MUST be appended, otherwise the start of the whitelist changes */
         *whitelist = g_list_append(*whitelist, g_strdup(domain));
         util_file_add(filename, domain, true, -1);
         g_string_append_printf(buffer, "%s ", domain);

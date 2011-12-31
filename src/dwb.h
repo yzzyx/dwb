@@ -159,6 +159,8 @@ GTimer *__timer;
 #define BPMB 1048576
 #define BPGB 1073741824
 
+#define DEFAULT_WIDGET_PACKING "dtws"
+
 /*}}}*/
 
 typedef enum _DwbStatus {
@@ -213,13 +215,6 @@ typedef enum  {
   COMP_BUFFER       = 0x0b,
   COMP_QUICKMARK    = 0x0c,
 } CompletionType;
-
-typedef enum {
-  TBP_TOP,
-  TBP_BOTTOM,
-  TBP_LEFT, /* TODO implement left right */
-  TBP_RIGHT,
-} TabbarPosition;
 
 typedef enum {
   PLUGIN_STATUS_DISABLED      = 1<<0,
@@ -609,7 +604,6 @@ struct _Gui {
   int width;
   int height;
   guint wid;
-  TabbarPosition tbp;
 };
 struct _Misc {
   const char *name;
@@ -636,8 +630,6 @@ struct _Misc {
 
   gboolean tabbed_browsing;
   gboolean private_browsing;
-
-  gboolean top_statusbar;
 
   double scroll_step;
 

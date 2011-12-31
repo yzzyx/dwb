@@ -85,7 +85,10 @@ char * util_basename(const char *);
 
 gboolean util_file_add(const char *filename, const char *text, int, int);
 gboolean util_file_add_navigation(const char *, const Navigation *, int, int);
+
 void gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gint padding, int position);
+void gtk_widget_remove_from_parent(GtkWidget *);
+
 char * util_strcasestr(const char *haystack, const char *needle);
 int util_file_remove_line(const char *, const char *);
 Arg * util_arg_new(void);

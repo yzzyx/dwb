@@ -615,8 +615,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ff0000"         },    (S_Func) dwb_reload_layout,  },
   { { "tabbed-browsing",                         "Whether to enable tabbed browsing", },                                  
     SETTING_GLOBAL,  BOOLEAN,      { .b = true         },      NULL,  },
-  { { "tabbar-position",                         "Position of the tabbar", },                                  
-    SETTING_GLOBAL,  CHAR,        { .p = "top"         },      NULL,  },
   { { "sync-history",                            "Interval to save history to hdd or 0 to directly write to hdd", },                                  
     SETTING_GLOBAL|SETTING_ONINIT,  INTEGER,      { .i = 0         },      (S_Func) dwb_set_sync_interval,  },
 
@@ -679,6 +677,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  BOOLEAN,    { .b = true },          (S_Func)dwb_set_single_instance,  }, 
   { { "save-session",                            "Whether to automatically save sessions", },                                       
     SETTING_GLOBAL,  BOOLEAN,    { .b = true },          NULL,  }, 
+  { { "widget-packing",                            "Packing of the main widgets", },                                       
+    SETTING_GLOBAL,  CHAR,    { .p = "dtws" },           (S_Func)dwb_set_widget_packing,  }, 
   
 
   /* downloads */
@@ -715,8 +715,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) NULL,  },
   { { "command-history-max",                          "Length of the command history", },                                          
     SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) NULL,  },
-  { { "top-statusbar",                                  "Whether to have the statusbar on top", },     
-    SETTING_GLOBAL,  BOOLEAN, { .b = false },  NULL,  },
   { { "scrollbars",                                  "Whether scrollbars should be enabled", },     
     SETTING_GLOBAL,  BOOLEAN, { .b = false },  NULL,  },
   { { "mail-client",                            "Program used for mailto:-urls", },                                            

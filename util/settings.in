@@ -73,10 +73,9 @@ factor text Zoom factor of the tiling area
 hide-tabbar text Whether to hide the tabbar  (never, always, tiled)
 message-delay text Time messages are shown, in seconds
 scrollbars checkbox Whether scrollbars should be enabled
-tabbar-position select @top @bottom Whether to enable tabbed browsing
 tabbed-browsing checkbox Whether to enable tabbed browsing
-top-statusbar checkbox Whether to have the statusbar on top
 user-stylesheet-uri text The uri of a stylesheet applied to every page
+widget-packing text Packing of the main widgets (t=tabbar, w=webview, s=statusbar, d=downloadbar)
 
 # hints Hints
 hint-active-color text Color of active links in hintmode

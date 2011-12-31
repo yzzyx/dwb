@@ -1326,21 +1326,31 @@ opened in a new window.
 default value:
 .IR true .
 .TP 
-.BR tabbar-position
-Position of the tabbar, possible values: top, bottom;
-default value:
-.IR top .
-.TP 
-.BR top-statusbar 
-Whether to have the statusbar on top.
-default value:
-.IR false .
-.TP 
 .BR use-fifo
 Use a fifo to communicate with dwb, e.g. sending "open <url>" to the fifo would
 load the url in the current view,
 default value:
 .IR false .
+.TP 
+.BR widget-packing
+A string consisting of 4 characters: 
+.BR d , 
+.BR w , 
+.B s 
+and 
+.BR t . 
+The order of the widgets correspond the the order of characters in the string
+where 
+.B d
+corresponds to the download bar, 
+.B t
+to the tab bar, 
+.B w
+to the webview and
+.B s
+to the statusbar, 
+default value:
+.IR dtws .
 
 .SH FILES
 .SS Scripts

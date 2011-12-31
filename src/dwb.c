@@ -57,12 +57,14 @@ static void dwb_set_plugin_blocker(GList *, WebSettings *);
 static void dwb_set_sync_interval(GList *, WebSettings *);
 static void dwb_set_private_browsing(GList *, WebSettings *);
 static void dwb_set_cookies(GList *, WebSettings *);
+static DwbStatus dwb_set_widget_packing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
 static void dwb_reload_scripts(GList *, WebSettings *);
 static void dwb_set_single_instance(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
+static DwbStatus dwb_pack(const char *layout, gboolean rebuild);
 
 static void dwb_reload_layout(GList *,  WebSettings *);
 static char * dwb_test_userscript(const char *);
@@ -131,6 +133,17 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
 static void
 dwb_set_cookies(GList *gl, WebSettings *s) {
   dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(s->arg.p);
+}/*}}}*/
+
+/* dwb_set_cookies */
+static DwbStatus
+dwb_set_widget_packing(GList *gl, WebSettings *s) {
+  if (dwb_pack(s->arg.p, true) != STATUS_OK) {
+    g_free(s->arg.p);
+    s->arg.p = g_strdup(DEFAULT_WIDGET_PACKING);
+    return STATUS_ERROR;
+  }
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_private_browsing  {{{ */
@@ -758,8 +771,8 @@ dwb_apply_settings(WebSettings *s) {
   if (s->apply & SETTING_ONINIT) 
     return ret;
   else if (s->apply & SETTING_GLOBAL) {
-    if (s->func)
-      s->func(NULL, s);
+    if (s->func) 
+      ret = s->func(NULL, s);
   }
   else {
     for (GList *l = dwb.state.views; l; l=l->next) {
@@ -785,6 +798,9 @@ dwb_set_setting(const char *key, char *value) {
         if (dwb_apply_settings(s) != STATUS_ERROR) {
           dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
           dwb_save_key_value(dwb.files.settings, key, value);
+        }
+        else {
+          dwb_set_error_message(dwb.state.fview, "Error setting value.");
         }
       }
       else {
@@ -2665,11 +2681,79 @@ dwb_apply_style() {
   DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 }
 
+static DwbStatus
+dwb_pack(const char *layout, gboolean rebuild) {
+  DwbStatus ret = STATUS_OK;
+  const char *default_layout = DEFAULT_WIDGET_PACKING;
+  if (layout == NULL) {
+    layout = default_layout;
+    ret = STATUS_ERROR;
+  }
+  while (g_ascii_isspace(*layout))
+    layout++;
+  if (strlen(layout) != 4) {
+    layout = default_layout;
+    ret = STATUS_ERROR;
+  }
+
+  const char *valid_chars = default_layout;
+  char buf[5];
+  strncpy(buf, layout, 4);
+  buf[4] = '\0';
+  char *matched;
+  while (*valid_chars) {
+    if ((matched = strchr(buf, *valid_chars)) == NULL) {
+      ret = STATUS_ERROR;
+      layout = default_layout;
+      break;
+    }
+    *matched = 'x';
+    valid_chars++;
+  }
+  const char *bak = layout;
+
+  if (rebuild) {
+    gtk_widget_remove_from_parent(dwb.gui.topbox);
+    gtk_widget_remove_from_parent(dwb.gui.downloadbar);
+    gtk_widget_remove_from_parent(dwb.gui.mainbox);
+    gtk_widget_remove_from_parent(dwb.gui.statusbox);
+    gtk_widget_remove_from_parent(dwb.gui.bottombox);
+  }
+  gboolean wv = false;
+  while (*bak) {
+    switch (*bak) {
+      case 't': 
+        gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
+        break;
+      case 'd': 
+        gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.downloadbar, false, false, 0);
+        break;
+      case 'w': 
+        gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.mainbox, true, true, 0);
+        wv = true;
+        break;
+      case 's': 
+        if (! wv) {
+          gtk_box_pack_start(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
+          gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
+        }
+        else {
+          gtk_box_pack_end(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
+          gtk_box_pack_end(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
+        }
+        break;
+      default: break;
+    }
+    bak++;
+
+  }
+  return ret;
+}
+
 /* dwb_init_gui() {{{*/
 static void 
 dwb_init_gui() {
   /* Window */
-  char *tabbarpos;
   if (dwb.gui.wid == 0) 
     dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   else 
@@ -2705,23 +2789,10 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.window, "key-press-event", G_CALLBACK(callback_key_press), NULL);
   g_signal_connect(dwb.gui.window, "key-release-event", G_CALLBACK(callback_key_release), NULL);
 
-  tabbarpos = GET_CHAR("tabbar-position");
-  if (!g_ascii_strcasecmp(tabbarpos, "top"))
-    dwb.gui.tbp = TBP_TOP;
-  else if (!g_ascii_strcasecmp(tabbarpos, "bottom"))
-    dwb.gui.tbp = TBP_BOTTOM;
-  else if (!g_ascii_strcasecmp(tabbarpos, "left"))
-    dwb.gui.tbp = TBP_LEFT;
-  else if (!g_ascii_strcasecmp(tabbarpos, "right"))
-    dwb.gui.tbp = TBP_RIGHT;
 
   /* Main */
   dwb.gui.vbox = gtk_vbox_new(false, 1);
-  /* if (dwb.gui.tbp == TBP_TOP || dwb.gui.tbp == TBP_BOTTOM)  */
-     dwb.gui.topbox = gtk_hbox_new(true, 1);
-   /* else 
-    *   dwb.gui.topbox = gtk_vbox_new(true, 1);
-    * */
+  dwb.gui.topbox = gtk_hbox_new(true, 1);
   dwb.gui.mainbox = gtk_hbox_new(true, 1);
 
   /* Downloadbar */
@@ -2758,25 +2829,7 @@ dwb_init_gui() {
   gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.rstatus, false, false, 0);
   gtk_container_add(GTK_CONTAINER(dwb.gui.statusbox), status_hbox);
 
-  /* Pack */
-  gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.downloadbar, false, false, 0);
-  if (dwb.gui.tbp == TBP_BOTTOM) 
-    gtk_box_pack_end(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
-  else 
-    gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
-
-  //gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
-  if (dwb.misc.top_statusbar) {
-    gtk_box_pack_start(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
-    gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
-  }
-  else {
-    gtk_box_pack_end(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
-    gtk_box_pack_end(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
-  }
-  //printf("%d\n", dwb.misc.top_statusbar);
-
-  gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.mainbox, true, true, 0);
+  dwb_pack(GET_CHAR("widget-packing"), false);
 
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);
 
@@ -2928,7 +2981,6 @@ dwb_init_vars() {
   dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
   dwb.misc.scroll_step = GET_DOUBLE("scroll-step");
   dwb.misc.scrollbars = GET_BOOL("scrollbars");
-  dwb.misc.top_statusbar = GET_BOOL("top-statusbar");
 
   dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(GET_CHAR("cookies-store-policy"));
 
