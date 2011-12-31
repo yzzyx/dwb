@@ -2735,12 +2735,11 @@ dwb_pack(const char *layout, gboolean rebuild) {
       case 's': 
         if (! wv) {
           gtk_box_pack_start(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
-          gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
         }
         else {
           gtk_box_pack_end(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
-          gtk_box_pack_end(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
         }
+        gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
         break;
       default: break;
     }
