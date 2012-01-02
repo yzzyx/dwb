@@ -863,6 +863,14 @@ view_remove(GList *gl) {
   /*  clean up */ 
   dwb_source_remove();
   plugins_free(v->plugins);
+  FREE(v->status->hover_uri);
+  FREE(v->status->mimetype);
+
+  if (v->status->style) {
+    WebKitDOMNode *parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(v->status->style));
+    webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(v->status->style), NULL);
+    g_object_unref(v->status->style);
+  }
   FREE(v->status);
   FREE(v);
 

@@ -943,15 +943,18 @@ Open new views in background.
 Possible values: true/false,
 default value:
 .IR false .
+.Tp
+.BR cache-model
+The cache model used by webkit, possible values are
+.B webbrowser 
+and 
+.BR documentviewer .
+Webbrowser increases loading speed but increases memory usage, documentviewer
+reduces reduces memory usage but also decreases browsing speed. Default Value
+.IR webbrowser .
 .TP 
 .BR complete-bookmarks
 Whether to complete bookmarks with tab-completion. Possible values: true/false,
-default value:
-.IR true .
-.TP 
-.BR complete-commands
-Whether to complete input history with tab-completion. Possible values:
-true/false,
 default value:
 .IR true .
 .TP 
