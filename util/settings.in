@@ -75,7 +75,7 @@ message-delay text Time messages are shown, in seconds
 scrollbars checkbox Whether scrollbars should be enabled
 tabbed-browsing checkbox Whether to enable tabbed browsing
 user-stylesheet-uri text The uri of a stylesheet applied to every page
-widget-packing text Packing of the main widgets (t=tabbar, w=webview, s=statusbar, d=downloadbar)
+widget-packing text Packing of the main widgets; t (T)=tabbar (hidden), w=webview, s (S)=statusbar (hidden), d=downloadbar
 
 # hints Hints
 hint-active-color text Color of active links in hintmode

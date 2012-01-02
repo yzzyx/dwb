@@ -3221,6 +3221,7 @@ main(int argc, char *argv[]) {
   gboolean single = false;
   int argr = argc;
 
+  webkit_set_cache_model(WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
   gtk_init(&argc, &argv);
 
   if (argc > 1) {
