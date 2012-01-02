@@ -22,8 +22,6 @@
 gboolean callback_entry_key_release(GtkWidget *, GdkEventKey *);
 gboolean callback_entry_key_press(GtkWidget *, GdkEventKey *);
 gboolean callback_entry_insert_text(GtkWidget *, GdkEventKey *);
-void callback_tab_size(GtkWidget *w, GtkAllocation *a);
-void callback_entry_size(GtkWidget *w, GtkAllocation *a);
 gboolean callback_delete_event(GtkWidget *w);
 gboolean callback_key_press(GtkWidget *w, GdkEventKey *e);
 gboolean callback_key_release(GtkWidget *w, GdkEventKey *e);

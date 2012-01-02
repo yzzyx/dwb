@@ -104,21 +104,6 @@ callback_entry_key_press(GtkWidget* entry, GdkEventKey *e) {
   return ret;
 }/*}}}*/
 
-/* callback_tab_size {{{*/
-void 
-callback_tab_size(GtkWidget *w, GdkRectangle *a, GList *gl) {
-  dwb.misc.tab_height = a->height;
-  g_signal_handlers_disconnect_by_func(w, callback_tab_size, NULL);
-}/*}}}*/
-
-/* callback_tab_size {{{*/
-void 
-callback_entry_size(GtkWidget *w, GdkRectangle *a) {
-  dwb.misc.bar_height = a->height;
-  gtk_widget_set_size_request(dwb.gui.entry, -1, a->height);
-  g_signal_handlers_disconnect_by_func(w, callback_entry_size, NULL);
-}/*}}}*/
-
 /* dwb_delete_event_cb {{{*/
 gboolean
 callback_delete_event(GtkWidget *w) {

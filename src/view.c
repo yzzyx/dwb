@@ -445,7 +445,7 @@ view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
   GdkPixbuf *pb = webkit_web_view_get_icon_pixbuf(web);
   GdkPixbuf *old, *rescale;
   if (pb) {
-    rescale = gdk_pixbuf_scale_simple(pb, dwb.misc.tab_height, dwb.misc.tab_height, GDK_INTERP_BILINEAR);
+    rescale = gdk_pixbuf_scale_simple(pb, dwb.misc.bar_height, dwb.misc.bar_height, GDK_INTERP_BILINEAR);
     if ( (old = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
       gdk_pixbuf_unref(old);
     gtk_image_set_from_pixbuf(GTK_IMAGE(v->tabicon), rescale);

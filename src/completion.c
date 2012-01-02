@@ -495,6 +495,8 @@ completion_clean_autocompletion() {
   gtk_widget_show(dwb.gui.entry);
   gtk_widget_show(dwb.gui.rstatus);
   gtk_widget_show(dwb.gui.urilabel);
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
+    gtk_widget_hide(dwb.gui.bottombox);
 
 }/*}}}*/
 
@@ -536,6 +538,8 @@ completion_autocomplete(GList *gl, GdkEventKey *e) {
     return;
   }
   if (! (dwb.state.mode & AUTO_COMPLETE) && gl) {
+    if (! gtk_widget_get_visible(dwb.gui.bottombox))
+      gtk_widget_show(dwb.gui.bottombox);
     dwb.state.mode |= AUTO_COMPLETE;
     dwb.comps.auto_c = completion_init_autocompletion(gl);
     dwb.comps.active_auto_c = g_list_first(dwb.comps.auto_c);

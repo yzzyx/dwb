@@ -502,7 +502,7 @@ struct _State {
   guint message_id;
 
   gboolean fullscreen;
-  BarVisibility bar_visible;
+  unsigned int bar_visible;
 };
 
 typedef enum _SettingsApply {
@@ -535,7 +535,6 @@ struct _ViewStatus {
   int progress;
   SslState ssl;
   ScriptState scripts;
-  int tab_height;
   char *hover_uri;
   GSList *allowed_plugins;
   unsigned int lockprotect;
@@ -636,7 +635,6 @@ struct _Misc {
   char *startpage;
   char *download_com;
   JSContextRef global_ctx;
-  int tab_height;
 
   char *pbbackground;
   gboolean scrollbars;

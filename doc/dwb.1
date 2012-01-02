@@ -1333,23 +1333,33 @@ default value:
 .IR false .
 .TP 
 .BR widget-packing
-A string consisting of 4 characters: 
+A string consisting of 4 characters, where possible characters are: 
 .BR d , 
 .BR w , 
-.B s 
+.B T , 
+.BR t , 
+.B S  
 and 
-.BR t . 
+.BR s .
 The order of the widgets correspond the the order of characters in the string
 where 
 .B d
 corresponds to the download bar, 
-.B t
-to the tab bar, 
+.B t 
+and 
+.B T
+to the tab bar where 
+.B T  
+means that the tabbar will not be visible, 
 .B w
 to the webview and
-.B s
-to the statusbar, 
-default value:
+.B s 
+and 
+.B S
+to the statusbar where 
+.B S
+means that the statusbar won't be visible.
+Default value:
 .IR dtws .
 
 .SH FILES

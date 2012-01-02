@@ -743,7 +743,7 @@ DwbStatus
 commands_toggle_bars(KeyMap *km, Arg *arg) {
   dwb.state.bar_visible ^= arg->n;
   gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
-  gtk_widget_set_visible(dwb.gui.statusbox, dwb.state.bar_visible & BAR_VIS_STATUS);
+  gtk_widget_set_visible(dwb.gui.bottombox, dwb.state.bar_visible & BAR_VIS_STATUS);
   return STATUS_OK;
 }/*}}}*/
 DwbStatus

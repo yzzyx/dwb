@@ -138,12 +138,13 @@ dwb_set_cookies(GList *gl, WebSettings *s) {
 /* dwb_set_cookies */
 static DwbStatus
 dwb_set_widget_packing(GList *gl, WebSettings *s) {
+  DwbStatus ret = STATUS_OK;
   if (dwb_pack(s->arg.p, true) != STATUS_OK) {
     g_free(s->arg.p);
     s->arg.p = g_strdup(DEFAULT_WIDGET_PACKING);
-    return STATUS_ERROR;
+    ret = STATUS_ERROR;
   }
-  return STATUS_OK;
+  return ret;
 }/*}}}*/
 
 /* dwb_set_private_browsing  {{{ */
@@ -1090,7 +1091,7 @@ dwb_focus_scroll(GList *gl) {
 
   View *v = gl->data;
   if (! (dwb.state.bar_visible & BAR_VIS_STATUS))
-    gtk_widget_hide(dwb.gui.statusbox);
+    gtk_widget_hide(dwb.gui.bottombox);
   gtk_widget_set_can_focus(v->web, true);
   gtk_widget_grab_focus(v->web);
   gtk_widget_hide(dwb.gui.entry);
@@ -2697,9 +2698,7 @@ dwb_pack(const char *layout, gboolean rebuild) {
   }
 
   const char *valid_chars = default_layout;
-  char buf[5];
-  strncpy(buf, layout, 4);
-  buf[4] = '\0';
+  char *buf = g_ascii_strdown(layout, 4);
   char *matched;
   while (*valid_chars) {
     if ((matched = strchr(buf, *valid_chars)) == NULL) {
@@ -2710,6 +2709,7 @@ dwb_pack(const char *layout, gboolean rebuild) {
     *matched = 'x';
     valid_chars++;
   }
+  g_free(buf);
   const char *bak = layout;
 
   if (rebuild) {
@@ -2724,6 +2724,11 @@ dwb_pack(const char *layout, gboolean rebuild) {
     switch (*bak) {
       case 't': 
         gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
+        dwb.state.bar_visible |= BAR_VIS_TOP;
+        break;
+      case 'T': 
+        gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.topbox, false, false, 0);
+        dwb.state.bar_visible &= ~BAR_VIS_TOP;
         break;
       case 'd': 
         gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.downloadbar, false, false, 0);
@@ -2740,12 +2745,26 @@ dwb_pack(const char *layout, gboolean rebuild) {
           gtk_box_pack_end(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
         }
         gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
+        dwb.state.bar_visible |= BAR_VIS_STATUS;
+        break;
+      case 'S': 
+        if (! wv) {
+          gtk_box_pack_start(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
+        }
+        else {
+          gtk_box_pack_end(GTK_BOX(dwb.gui.bottombox), dwb.gui.statusbox, false, false, 0);
+        }
+        gtk_box_pack_start(GTK_BOX(dwb.gui.vbox), dwb.gui.bottombox, false, false, 0);
+        dwb.state.bar_visible &= ~BAR_VIS_STATUS;
         break;
       default: break;
     }
     bak++;
 
   }
+  gtk_widget_show_all(dwb.gui.statusbox);
+  gtk_widget_set_visible(dwb.gui.bottombox, dwb.state.bar_visible & BAR_VIS_STATUS);
+  gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
   return ret;
 }
 
@@ -2828,13 +2847,9 @@ dwb_init_gui() {
   gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.rstatus, false, false, 0);
   gtk_container_add(GTK_CONTAINER(dwb.gui.statusbox), status_hbox);
 
-  dwb_pack(GET_CHAR("widget-packing"), false);
-
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);
 
   gtk_widget_show(dwb.gui.mainbox);
-  gtk_widget_show_all(dwb.gui.topbox);
-  gtk_widget_show_all(dwb.gui.bottombox);
 
   gtk_widget_show(dwb.gui.vbox);
   gtk_widget_show(dwb.gui.window);
@@ -2842,9 +2857,8 @@ dwb_init_gui() {
   g_signal_connect(dwb.gui.entry, "key-press-event",                     G_CALLBACK(callback_entry_key_press), NULL);
   g_signal_connect(dwb.gui.entry, "key-release-event",                   G_CALLBACK(callback_entry_key_release), NULL);
   g_signal_connect(dwb.gui.entry, "insert-text",                         G_CALLBACK(callback_entry_insert_text), NULL);
-  g_signal_connect(dwb.gui.bottombox, "size-allocate",                         G_CALLBACK(callback_entry_size), NULL);
-  dwb_apply_style();
 
+  dwb_apply_style();
 } /*}}}*/
 
 /* dwb_init_file_content {{{*/
@@ -3069,7 +3083,16 @@ dwb_init() {
   else if (!restore || !restore_success) {
     view_add(NULL, false);
   }
-  g_signal_connect(VIEW(dwb.state.fview)->tablabel, "size-allocate", G_CALLBACK(callback_tab_size), NULL);
+  PangoContext *pctx = gtk_widget_get_pango_context(VIEW(dwb.state.fview)->tablabel);
+  PangoLayout *layout = pango_layout_new(pctx);
+  int w = 0, h = 0;
+  pango_layout_set_text(layout, "a", -1);
+  pango_layout_set_font_description(layout, dwb.font.fd_active);
+  pango_layout_get_size(layout, &w, &h);
+  dwb.misc.bar_height = h/PANGO_SCALE;
+  dwb_pack(GET_CHAR("widget-packing"), false);
+  gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
+  g_object_unref(layout);
 } /*}}}*/ /*}}}*/
 
 /* FIFO {{{*/

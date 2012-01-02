@@ -71,12 +71,12 @@ entry_history_back(GList **list, GList **last) {
 void 
 entry_focus() {
   if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) {
-    gtk_widget_show(dwb.gui.statusbox);
+    gtk_widget_show_all(dwb.gui.bottombox);
   }
   gtk_widget_show(dwb.gui.entry);
   gtk_widget_grab_focus(dwb.gui.entry);
   gtk_widget_set_can_focus(CURRENT_WEBVIEW_WIDGET(), false);
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
+  gtk_editable_delete_text(GTK_EDITABLE(dwb.gui.entry), 0, -1);
   dwb.state.last_com_history = NULL;
   dwb.state.last_nav_history = NULL;
 }/*}}}*/
