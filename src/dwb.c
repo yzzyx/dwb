@@ -3060,6 +3060,9 @@ dwb_init() {
     dwb.misc.pbbackground = util_get_file_content(path);
     g_free(path);
   }
+  char *cache_model = GET_CHAR("cache-model");
+  if (!g_ascii_strcasecmp(cache_model, "documentviewer"))
+    webkit_set_cache_model(WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
 
   dwb_init_key_map();
   dwb_init_style();
@@ -3221,7 +3224,6 @@ main(int argc, char *argv[]) {
   gboolean single = false;
   int argr = argc;
 
-  webkit_set_cache_model(WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
   gtk_init(&argc, &argv);
 
   if (argc > 1) {

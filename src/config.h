@@ -679,6 +679,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  BOOLEAN,    { .b = true },          NULL,  }, 
   { { "widget-packing",                            "Packing of the main widgets", },                                       
     SETTING_GLOBAL,  CHAR,    { .p = "dtws" },           (S_Func)dwb_set_widget_packing,  }, 
+  { { "cache-model",                            "Packing of the main widgets", },                                       
+    SETTING_GLOBAL,  CHAR,    { .p = "webbrowser" },           NULL,  }, 
   
 
   /* downloads */
