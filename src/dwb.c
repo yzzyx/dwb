@@ -1719,7 +1719,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
-    if (km->map->entry) {
+    if (km->map->entry & EP_ENTRY) {
       if (!g_strcmp0(key, km->key) && CLEAN_STATE(e) == km->mod) {
         km->map->func(&km, &km->map->arg);
         ret = true;
@@ -1863,7 +1863,7 @@ dwb_eval_key(GdkEventKey *e) {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
-    if (km->map->entry) {
+    if (km->map->entry & EP_ENTRY) {
       continue;
     }
     gsize kl = strlen(km->key);
@@ -3117,7 +3117,7 @@ dwb_parse_command_line(const char *line) {
         g_strstrip(token[1]);
         m->map->arg.p = token[1];
       }
-      if (gtk_widget_has_focus(dwb.gui.entry) && m->map->entry) {
+      if (gtk_widget_has_focus(dwb.gui.entry) && (m->map->entry & EP_ENTRY)) {
         m->map->func(&m, &m->map->arg);
       }
       else {

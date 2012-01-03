@@ -216,6 +216,14 @@ typedef enum  {
   COMP_QUICKMARK    = 0x0c,
 } CompletionType;
 
+enum {
+  EP_NONE = 0,
+  EP_ENTRY = 1<<0,
+  EP_COMP_DEFAULT = 1<<1,
+
+} EntryProp;
+
+
 typedef enum {
   PLUGIN_STATUS_DISABLED      = 1<<0,
   PLUGIN_STATUS_ENABLED       = 1<<1,
@@ -438,7 +446,7 @@ struct _FunctionMap {
   const char *error; 
   ShowMessage hide;
   Arg arg;
-  gboolean entry;
+  unsigned int entry;
 };
 struct _KeyMap {
   const char *key;

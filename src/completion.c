@@ -293,7 +293,7 @@ completion_get_key_completion(gboolean entry) {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
-    if (!entry && (m->map->entry || !(m->map->prop & CP_COMMANDLINE))) {
+    if (!entry && ((m->map->entry & EP_ENTRY) || !(m->map->prop & CP_COMMANDLINE))) {
       continue;
     }
     Navigation n = m->map->n;
@@ -510,7 +510,7 @@ completion_init_autocompletion(GList *gl) {
   int i=0;
   for (GList *l=gl; l; l=l->next, i++) {
     KeyMap *m = l->data;
-    if (!m->map->entry) {
+    if (! (m->map->entry & EP_ENTRY) ) {
       snprintf(buffer, 128, "%s  <span style='italic'>%s</span>", m->key, m->map->n.second);
       Completion *c = completion_get_completion_item(NULL, NULL, NULL, m);
       gtk_label_set_use_markup(GTK_LABEL(c->llabel), true);
