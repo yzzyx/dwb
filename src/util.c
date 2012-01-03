@@ -680,3 +680,10 @@ util_strcasestr(const char *haystack, const char *needle) {
   }
   return NULL;
 }
+int 
+util_strlen_trailing_space(const char *str) {
+  int len;
+  for (len=0; *str != '\0'; str++, len++);
+  return len;
+
+}

@@ -115,6 +115,7 @@
 #define STRCMP_FIRST_WORD(a, b)     (strncmp((a), (b), MAX(strstr((a), " ") - a, strstr((b), " ") - b)))
 
 #define FREE(X)                     if ((X)) g_free((X))
+#define FREE0(X)                     ((X == NULL) ? NULL : (X = (g_free(X), NULL)))
 
 #define ALPHA(X)    ((X->keyval >= GDK_KEY_A && X->keyval <= GDK_KEY_Z) ||  (X->keyval >= GDK_KEY_a && X->keyval <= GDK_KEY_z) || X->keyval == GDK_KEY_space)
 #define DIGIT(X)   (X->keyval >= GDK_KEY_0 && X->keyval <= GDK_KEY_9)
@@ -202,26 +203,27 @@ typedef DwbStatus (*S_Func)(void *, WebSettings *);
 typedef void *(*Content_Func)(void *);
 
 typedef enum  {
-  COMP_NONE         = 0x00,
-  COMP_BOOKMARK     = 0x01,
-  COMP_HISTORY      = 0x02,
-  COMP_SETTINGS     = 0x03,
-  COMP_KEY          = 0x04,
-  COMP_COMMAND      = 0x05,
-  COMP_USERSCRIPT   = 0x06,
-  COMP_SEARCH       = 0x08,
-  COMP_PATH         = 0x09,
-  COMP_CUR_HISTORY  = 0x0a,
-  COMP_BUFFER       = 0x0b,
-  COMP_QUICKMARK    = 0x0c,
+  COMP_NONE         = 1,
+  COMP_BOOKMARK,
+  COMP_HISTORY,
+  COMP_SETTINGS,
+  COMP_KEY,
+  COMP_COMMAND,
+  COMP_USERSCRIPT,
+  COMP_SEARCH,
+  COMP_PATH,
+  COMP_CUR_HISTORY,
+  COMP_BUFFER,
+  COMP_QUICKMARK,
 } CompletionType;
 
 enum {
   EP_NONE = 0,
   EP_ENTRY = 1<<0,
   EP_COMP_DEFAULT = 1<<1,
-
+  EP_COMP_QUICKMARK = 1<<2,
 } EntryProp;
+#define EP_COMPLETION (EP_COMP_DEFAULT | EP_COMP_QUICKMARK)
 
 
 typedef enum {
@@ -276,8 +278,9 @@ typedef enum {
   COMPLETE_PATH         = 1<<16,
   COMPLETE_BUFFER       = 1<<17,
   COMPLETE_QUICKMARKS   = 1<<18,
-  PASS_THROUGH          = 1<<19,
-  CONFIRM               = 1<<20,
+  COMPLETE_COMMAND_MODE = 1<<19,
+  PASS_THROUGH          = 1<<20,
+  CONFIRM               = 1<<21,
 } Mode;
 
 

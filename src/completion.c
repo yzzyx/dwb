@@ -32,6 +32,8 @@ typedef gboolean (*Match_Func)(char*, const char*);
 static char *_typed;
 static int _last_buf;
 static gboolean _leading0 = false;
+static char *_current_command;
+static int _command_len;
 
 /* GUI_FUNCTIONS {{{*/
 /* completion_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
@@ -84,6 +86,10 @@ completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, vo
   Navigation *n;
   const char *input = GET_TEXT();
   _typed = g_strdup(input);
+  if (dwb.state.mode & COMMAND_MODE) 
+    input = strchr(input, ' ');
+  if (input == NULL)
+    input = "";
   Match_Func func = word_beginnings ? (Match_Func)g_str_has_prefix : (Match_Func)util_strcasestr;
 
   for (GList *l = gl; l; l=l->next) {
@@ -109,7 +115,15 @@ completion_set_entry_text(Completion *c) {
              break;
   }
   
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
+  if (dwb.state.mode & COMMAND_MODE && _current_command) {
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), _current_command);
+    int l = strlen(_current_command);
+    gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), " ", -1, &l);
+    gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &_command_len);
+  }
+  else {
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
+  }
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
 
 }/*}}}*/
@@ -199,10 +213,12 @@ completion_clean_completion(gboolean set_text) {
   dwb.comps.active_comp = NULL;
   if (set_text && _typed != NULL)
     entry_set_text(_typed);
-  if (_typed != NULL) {
-    g_free(_typed);
-    _typed = NULL;
-  }
+
+  FREE0(_current_command);
+  _command_len = 0;
+
+  FREE0(_typed);
+
   if (dwb.state.mode & COMPLETE_BUFFER) {
     _last_buf = 0;
     _leading0 = false;
@@ -242,10 +258,12 @@ static GList *
 completion_get_normal_completion() {
   GList *list = NULL;
 
-  if (dwb.state.complete_userscripts) 
-    list = completion_init_completion(list, dwb.misc.userscripts, false, NULL, "Userscript");
-  if (dwb.state.complete_searchengines) 
-    list = completion_init_completion(list, dwb.fc.se_completion, false, NULL, "Searchengine");
+  if (!(dwb.state.mode & COMMAND_MODE) ) {
+    if (dwb.state.complete_userscripts) 
+      list = completion_init_completion(list, dwb.misc.userscripts, false, NULL, "Userscript");
+    if (dwb.state.complete_searchengines) 
+      list = completion_init_completion(list, dwb.fc.se_completion, false, NULL, "Searchengine");
+  }
   if (dwb.state.complete_bookmarks) 
     list = completion_init_completion(list, dwb.fc.bookmarks, false, NULL, "Bookmark");
   if (dwb.state.complete_history) 
@@ -428,11 +446,50 @@ completion_complete_buffer() {
   return list;
 }/*}}}*/
 
+static gboolean
+completion_command_line() {
+  KeyMap *km = NULL;
+  gboolean ret = false;
+
+  const char *text = GET_TEXT();
+  while (g_ascii_isspace(*text))
+    text++;
+  char **token = g_strsplit(text, " ", 2);
+  if (dwb.state.mode & COMMAND_MODE) {
+    for (GList *l = dwb.keymap; l; l=l->next) {
+      km = l->data;
+      if (! g_strcmp0(token[0], km->map->n.first) && km->map->entry & EP_COMP_DEFAULT) {
+        ret = true;
+        break;
+      }
+    }
+  }
+  if (ret) {
+    _command_len = util_strlen_trailing_space(text);
+    if (_command_len > 0 && g_ascii_isspace(text[_command_len-1]))  {
+      _current_command = g_strdup(token[0]);
+      dwb.state.mode |= COMPLETE_COMMAND_MODE;
+      _command_len++;
+    }
+    else {
+      gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), " ", 1, &_command_len);
+      gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
+      ret = false;
+    }
+  }
+  g_strfreev(token);
+  return ret;
+}
 /* completion_complete {{{*/
 DwbStatus 
 completion_complete(CompletionType type, int back) {
   DwbStatus ret = STATUS_OK;
-  dwb.state.mode &= ~(COMPLETE_PATH | AUTO_COMPLETE);
+  if (dwb.state.mode & COMMAND_MODE) {
+    if (completion_command_line()) 
+      type = COMP_NONE;
+  }
+
+  dwb.state.mode &= ~(COMPLETE_PATH | AUTO_COMPLETE | COMPLETE_COMMAND_MODE);
   if ( !(dwb.state.mode & COMPLETION_MODE) ) {
     dwb.gui.compbox = gtk_vbox_new(true, 0);
     gtk_box_pack_start(GTK_BOX(dwb.gui.bottombox), dwb.gui.compbox, false, false, 0);

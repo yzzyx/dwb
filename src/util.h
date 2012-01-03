@@ -93,5 +93,6 @@ char * util_strcasestr(const char *haystack, const char *needle);
 int util_file_remove_line(const char *, const char *);
 Arg * util_arg_new(void);
 char * util_check_directory(char *);
+int util_strlen_trailing_space(const char *str);
 
 #endif
