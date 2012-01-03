@@ -103,10 +103,10 @@ struct HintMap hint_map[] = {
   { HINT_T_IMAGES, HINT_T_IMAGES }, 
   { HINT_T_EDITABLE, HINT_T_EDITABLE }, 
   { HINT_T_URL, HINT_T_URL }, 
-  { HINT_T_CLIPBOARD, HINT_T_CLIPBOARD }, 
-  { HINT_T_PRIMARY, HINT_T_PRIMARY }, 
-  { HINT_T_RAPID, HINT_T_ALL }, 
-  { HINT_T_RAPID_NW, HINT_T_ALL }, 
+  { HINT_T_CLIPBOARD, HINT_T_URL }, 
+  { HINT_T_PRIMARY, HINT_T_URL }, 
+  { HINT_T_RAPID, HINT_T_URL }, 
+  { HINT_T_RAPID_NW, HINT_T_URL }, 
 };
 
 
@@ -1310,13 +1310,15 @@ dwb_evaluate_hints(const char *buffer) {
                               ret = dwb_set_clipboard(buffer, GDK_SELECTION_PRIMARY);
                               break;
       case HINT_T_RAPID     : a = util_arg_new();
-                              a->n = OPEN_NEW_VIEW | OPEN_BACKGROUND;
+                              view_add((char *) buffer, true);
+                              a->n = OPEN_NORMAL;
                               a->i = HINT_T_RAPID;
                               dwb_show_hints(a);
                               break;
       case HINT_T_RAPID_NW     : a = util_arg_new();
-                              a->n = OPEN_NEW_WINDOW | OPEN_BACKGROUND;
-                              a->i = HINT_T_RAPID;
+                                 dwb_new_window((char*)buffer);
+                              a->n = OPEN_NORMAL;;
+                              a->i = HINT_T_RAPID_NW;
                               dwb_show_hints(a);
                               break;
       default : return ret;

@@ -327,7 +327,6 @@ typedef enum {
   SET_URL          = 1<<4, 
   OPEN_VIA_HINTS   = 1<<5,
   OPEN_EXPLICIT    = 1<<6,
-  OPEN_BACKGROUND  = 1<<7,
 } Open;
 
 enum {

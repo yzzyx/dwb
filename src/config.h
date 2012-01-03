@@ -324,11 +324,11 @@ static FunctionMap FMAP [] = {
 
   { { "hint_mode_rapid",          "Rapid hint mode",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
-    { .n = OPEN_NEW_VIEW | OPEN_BACKGROUND, .i = HINT_T_RAPID }, EP_NONE, { "rhints", "rhi", NULL }, },
+    { .n = OPEN_NORMAL, .i = HINT_T_RAPID }, EP_NONE, { "rhints", "rhi", NULL }, },
 
   { { "hint_mode_rapid_nw",          "Rapid hint mode",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
-    { .n = OPEN_NEW_WINDOW | OPEN_BACKGROUND, .i = HINT_T_RAPID_NW }, EP_NONE, { "wrhints", "wrhi", NULL }, },
+    { .n = OPEN_NORMAL, .i = HINT_T_RAPID_NW }, EP_NONE, { "wrhints", "wrhi", NULL }, },
   
   { { "hint_mode_download",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
