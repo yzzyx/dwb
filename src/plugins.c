@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,16 +38,17 @@ plugins_free(Plugins *p) {
   if (p == NULL) 
     return;
   if (p->clicks != NULL) {
-    for (GSList *l = p->elements; l; l=l->next) 
-      g_object_unref(l->data);
     for (GSList *l = p->clicks; l; l=l->next) 
       g_object_unref(l->data);
-    g_slist_free(p->elements);
     g_slist_free(p->clicks);
-    g_free(p);
   }
+  if (p->elements != NULL) {
+    for (GSList *l = p->elements; l; l=l->next) 
+      g_object_unref(l->data);
+    g_slist_free(p->elements);
+  }
+  g_free(p);
 }
-WebKitDOMElement *_div = NULL;
 static void 
 plugins_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) {
   WebKitDOMElement *e = g_object_get_data((gpointer)element, "dwb-plugin-element");

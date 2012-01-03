@@ -10,7 +10,7 @@ $(TARGET): $(OBJ)
 -include $(OBJ:.o=.d)
 -include $(DOBJ:.do=.dd)
 
-%.o: %.c %.h
+%.o: %.c %.h config.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CFLAGS) 
 
@@ -21,7 +21,7 @@ debug: $(DTARGET)
 #	@$(CC) $(CFLAGS) -MM $< -o $@
 
 
-%.do: %.c
+%.do: %.c %.h config.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(DCFLAGS) 
 

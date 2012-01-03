@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -490,7 +490,7 @@ dwb_navigation_new_from_line(const char *text) {
   Navigation *nv = NULL;
   if (text == NULL)
     return NULL;
-  while (isspace(*text))
+  while (isspace((int)*text))
     text++;
 
   if (*text != '\0') {
@@ -544,11 +544,6 @@ dwb_quickmark_free(Quickmark *q) {
 /*}}}*/
 
 /* dwb_true, dwb_false {{{*/
-gboolean
-dwb_false() {
-  return false;
-}
-
 gboolean
 dwb_true() {
   return true;
@@ -664,6 +659,13 @@ gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gi
   gtk_box_pack_start(box, child, expand, fill, padding);
   gtk_box_reorder_child(box, child, position);
 }
+void 
+gtk_widget_remove_from_parent(GtkWidget *widget) {
+  g_object_ref(widget);
+  GtkWidget *parent = gtk_widget_get_parent(widget);
+  gtk_container_remove(GTK_CONTAINER(parent), widget);
+}
+
 char * 
 util_strcasestr(const char *haystack, const char *needle) {
   if (needle == NULL || ! *needle )
@@ -677,4 +679,11 @@ util_strcasestr(const char *haystack, const char *needle) {
     }
   }
   return NULL;
+}
+int 
+util_strlen_trailing_space(const char *str) {
+  int len;
+  for (len=0; *str != '\0'; str++, len++);
+  return len;
+
 }

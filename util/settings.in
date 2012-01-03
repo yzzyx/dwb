@@ -14,8 +14,8 @@ zoom-level text The default zoom level
 zoom-step text The zoom step
 
 # session Network &amp Session
-cookies checkbox Whether to allow all cookies or only session cookies
 cookies-accept-policy select @always @never @nothirdparty The cookies to accept, affects also session cookies
+cookies-store-policy select @session @persistent @never The storage policy for cookies
 enable-dns-prefetching checkbox Whether webkit prefetches domain names
 proxy checkbox Whether to use a HTTP-proxy
 proxy-url text The HTTP-proxy url
@@ -42,10 +42,10 @@ sans-serif-font-family text Sans serif font family used to display text
 serif-font-family text Serif font family used to display text
 
 # colors Colors
-active-bg-color text Background color of the active view
+foreground-color text Foreground color of the statusbar
+background-color text Background color of the statusbar
 active-completion-bg-color text Background color of the active completion item
 active-completion-fg-color text Foreground color of the active completion item
-active-fg-color text Foreground color of the active view
 error-color text Color for error messages
 normal-bg-color text Background color of the normal view
 normal-completion-bg-color text Background color of normal completion items
@@ -71,14 +71,11 @@ enable-frame-flattening checkbox Whether to enable frame flattening
 enforce-96-dpi checkbox Enforce a resolution of 96 dpi
 factor text Zoom factor of the tiling area
 hide-tabbar text Whether to hide the tabbar  (never, always, tiled)
-layout select @normal_maximized @normal @bottomstack_maximized @bottomstack The default layout (Normal, Bottomstack, Maximized)
 message-delay text Time messages are shown, in seconds
 scrollbars checkbox Whether scrollbars should be enabled
-size text Tiling area size in percent
-tabbar-position select @top @bottom Whether to enable tabbed browsing
 tabbed-browsing checkbox Whether to enable tabbed browsing
-top-statusbar checkbox Whether to have the statusbar on top
 user-stylesheet-uri text The uri of a stylesheet applied to every page
+widget-packing text Packing of the main widgets; t (T)=tabbar (hidden), w=webview, s (S)=statusbar (hidden), d=downloadbar
 
 # hints Hints
 hint-active-color text Color of active links in hintmode
@@ -111,6 +108,7 @@ complete-searchengines checkbox Whether to enable tabcompletion for searchengine
 complete-userscripts checkbox Whether to enable tabcompletion for userscripts
 
 # misc Miscellaneous
+cache-model select @webbrowser @documentviewer The cache-model used by webkit 
 custom-encoding text The custom encoding of the view
 download-external-command text External application used for downloads
 download-directory text Default download directory

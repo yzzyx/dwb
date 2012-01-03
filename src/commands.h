@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,11 @@ DwbStatus commands_add_search_field(KeyMap *, Arg *);
 DwbStatus commands_allow_cookie(KeyMap *, Arg *);
 DwbStatus commands_bookmark(KeyMap *, Arg *);
 DwbStatus commands_bookmarks(KeyMap *, Arg *);
-DwbStatus commands_entry_delete_letter(KeyMap *, Arg *);
-DwbStatus commands_entry_delete_line(KeyMap *, Arg *);
-DwbStatus commands_entry_delete_word(KeyMap *, Arg *);
+
+DwbStatus commands_entry_movement(KeyMap *, Arg *);
 DwbStatus commands_entry_history_back(KeyMap *, Arg *);
 DwbStatus commands_entry_history_forward(KeyMap *, Arg *);
-DwbStatus commands_entry_word_back(KeyMap *, Arg *);
-DwbStatus commands_entry_word_forward(KeyMap *, Arg *);
+
 DwbStatus commands_execute_userscript(KeyMap *, Arg *);
 DwbStatus commands_find(KeyMap *, Arg *);
 DwbStatus commands_search(KeyMap *, Arg *);

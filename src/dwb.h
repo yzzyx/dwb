@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 #define VERSION "0.0.18"
 #endif
 #ifndef COPYRIGHT
-#define COPYRIGHT "© 2010-2011 portix"
+#define COPYRIGHT "© 2010-2012 portix"
 #endif
 
 #define PBAR_LENGTH   20
@@ -101,7 +101,7 @@
 #define FOCUSED_FRAME()             (webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()))  
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
-#define CLEAR_COMMAND_TEXT(X)       dwb_set_status_bar_text(VIEW(X)->lstatus, NULL, NULL, NULL, false)
+#define CLEAR_COMMAND_TEXT()       dwb_set_status_bar_text(dwb.gui.lstatus, NULL, NULL, NULL, false)
 #define BOOLEAN(X)                  (!(!(X)))
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
@@ -115,6 +115,7 @@
 #define STRCMP_FIRST_WORD(a, b)     (strncmp((a), (b), MAX(strstr((a), " ") - a, strstr((b), " ") - b)))
 
 #define FREE(X)                     if ((X)) g_free((X))
+#define FREE0(X)                     ((X == NULL) ? NULL : (X = (g_free(X), NULL)))
 
 #define ALPHA(X)    ((X->keyval >= GDK_KEY_A && X->keyval <= GDK_KEY_Z) ||  (X->keyval >= GDK_KEY_a && X->keyval <= GDK_KEY_z) || X->keyval == GDK_KEY_space)
 #define DIGIT(X)   (X->keyval >= GDK_KEY_0 && X->keyval <= GDK_KEY_9)
@@ -159,6 +160,8 @@ GTimer *__timer;
 #define BPMB 1048576
 #define BPGB 1073741824
 
+#define DEFAULT_WIDGET_PACKING "dtws"
+
 /*}}}*/
 
 typedef enum _DwbStatus {
@@ -200,27 +203,28 @@ typedef DwbStatus (*S_Func)(void *, WebSettings *);
 typedef void *(*Content_Func)(void *);
 
 typedef enum  {
-  COMP_NONE         = 0x00,
-  COMP_BOOKMARK     = 0x01,
-  COMP_HISTORY      = 0x02,
-  COMP_SETTINGS     = 0x03,
-  COMP_KEY          = 0x04,
-  COMP_COMMAND      = 0x05,
-  COMP_USERSCRIPT   = 0x06,
-  COMP_INPUT        = 0x07,
-  COMP_SEARCH       = 0x08,
-  COMP_PATH         = 0x09,
-  COMP_CUR_HISTORY  = 0x0a,
-  COMP_BUFFER       = 0x0b,
-  COMP_QUICKMARK    = 0x0c,
+  COMP_NONE         = 1,
+  COMP_BOOKMARK,
+  COMP_HISTORY,
+  COMP_SETTINGS,
+  COMP_KEY,
+  COMP_COMMAND,
+  COMP_USERSCRIPT,
+  COMP_SEARCH,
+  COMP_PATH,
+  COMP_CUR_HISTORY,
+  COMP_BUFFER,
+  COMP_QUICKMARK,
 } CompletionType;
 
-typedef enum {
-  TBP_TOP,
-  TBP_BOTTOM,
-  TBP_LEFT, /* TODO implement left right */
-  TBP_RIGHT,
-} TabbarPosition;
+enum {
+  EP_NONE = 0,
+  EP_ENTRY = 1<<0,
+  EP_COMP_DEFAULT = 1<<1,
+  EP_COMP_QUICKMARK = 1<<2,
+} EntryProp;
+#define EP_COMPLETION (EP_COMP_DEFAULT | EP_COMP_QUICKMARK)
+
 
 typedef enum {
   PLUGIN_STATUS_DISABLED      = 1<<0,
@@ -234,10 +238,12 @@ typedef enum {
   LP_PROTECT          = 1<<0,
   LP_LOCK_DOMAIN      = 1<<1,
   LP_LOCK_URI         = 1<<2,
+  LP_VISIBLE          = 1<<3,
 } LockProtect;
 #define LP_PROTECTED(v) ((v)->status->lockprotect & LP_PROTECT)
 #define LP_LOCKED_DOMAIN(v) ((v)->status->lockprotect & LP_LOCK_DOMAIN)
 #define LP_LOCKED_URI(v) ((v)->status->lockprotect & LP_LOCK_URI)
+#define LP_VISIBLE(v) ((v)->status->lockprotect & LP_VISIBLE)
 
 typedef enum {
   HINT_T_ALL        = 0,
@@ -248,11 +254,7 @@ typedef enum {
   HINT_T_CLIPBOARD  = 5,
   HINT_T_PRIMARY    = 6,
 } HintType;
-typedef enum {
-  HIDE_TB_NEVER     = 0x02,
-  HIDE_TB_ALWAYS    = 0x03,
-  HIDE_TB_TILED     = 0x05,
-} TabBarVisible;
+
 typedef enum {
   BAR_VIS_TOP = 1<<0,
   BAR_VIS_STATUS = 1<<1,
@@ -276,8 +278,9 @@ typedef enum {
   COMPLETE_PATH         = 1<<16,
   COMPLETE_BUFFER       = 1<<17,
   COMPLETE_QUICKMARKS   = 1<<18,
-  PASS_THROUGH          = 1<<19,
-  CONFIRM               = 1<<20,
+  COMPLETE_COMMAND_MODE = 1<<19,
+  PASS_THROUGH          = 1<<20,
+  CONFIRM               = 1<<21,
 } Mode;
 
 
@@ -286,13 +289,6 @@ typedef enum {
   ALWAYS_SM     = 0x01,
   POST_SM       = 0x02,
 } ShowMessage;
-
-
-typedef enum { 
-  NORMAL_LAYOUT    = 0,
-  BOTTOM_STACK     = 1<<0 ,
-  MAXIMIZED        = 1<<1 ,
-} Layout;
 
 typedef enum { 
   CHAR        = 0x01,
@@ -334,6 +330,16 @@ enum {
   CA_TITLE,
   CA_URI,
 } ClipboardAction;
+
+typedef enum {
+  COOKIE_STORE_SESSION,
+  COOKIE_STORE_PERSISTENT,
+  COOKIE_STORE_NEVER,
+  COOKIE_ALLOW_SESSION,
+  COOKIE_ALLOW_SESSION_TMP,
+  COOKIE_ALLOW_PERSISTENT,
+} CookieStorePolicy;
+
 
 enum Signal {
   SIG_FIRST = 0, 
@@ -425,6 +431,7 @@ struct _Arg {
   gpointer arg;
   gboolean b;
   char *e;
+  gboolean ro;
 };
 struct _Key {
   char *str;
@@ -443,7 +450,8 @@ struct _FunctionMap {
   const char *error; 
   ShowMessage hide;
   Arg arg;
-  gboolean entry;
+  unsigned int entry;
+  const char *alias[5];
 };
 struct _KeyMap {
   const char *key;
@@ -475,27 +483,23 @@ struct _State {
   DwbType type;
   HintType hint_type;
   guint scriptlock;
-  int size;
   GHashTable *settings_hash;
   gboolean forward_search;
   gboolean background_tabs;
 
   SoupCookieJar *cookiejar;
-  SoupCookie *last_cookie;
-  GSList *last_cookies;
-  gboolean cookies_allowed;
+  CookieStorePolicy cookie_store_policy;
 
   gboolean complete_history;
   gboolean complete_bookmarks;
   gboolean complete_searchengines;
-  gboolean complete_commands;
   gboolean complete_userscripts;
 
   gboolean hidden_files;
   gboolean view_in_background;
 
-  Layout layout;
   GList *last_com_history;
+  GList *last_nav_history;
 
   GList *undo_list;
 
@@ -508,9 +512,10 @@ struct _State {
   char *mimetype_request;
   int download_ref_count;
 
-  TabBarVisible tabbar_visible;
+  guint message_id;
+
   gboolean fullscreen;
-  BarVisibility bar_visible;
+  unsigned int bar_visible;
 };
 
 typedef enum _SettingsApply {
@@ -519,6 +524,7 @@ typedef enum _SettingsApply {
   SETTING_ONINIT    = 1<<2,
   SETTING_PER_VIEW  = 1<<3,
 } SettingsApply;
+
 struct _WebSettings {
   Navigation n;
   SettingsApply apply;
@@ -534,7 +540,6 @@ struct _Plugins {
   PluginBlockerStatus status;
 };
 struct _ViewStatus {
-  guint message_id;
   gboolean add_history;
   char *search_string;
   GList *downloads;
@@ -543,28 +548,18 @@ struct _ViewStatus {
   int progress;
   SslState ssl;
   ScriptState scripts;
-  int tab_height;
   char *hover_uri;
   GSList *allowed_plugins;
   unsigned int lockprotect;
   WebKitDOMElement *style;
 };
 struct _View {
-  GtkWidget *vbox;
   GtkWidget *web;
   GtkWidget *tabevent;
   GtkWidget *tabbox;
   GtkWidget *tabicon;
   GtkWidget *tablabel;
-  GtkWidget *statusbox;
-  GtkWidget *urilabel;
-  GtkWidget *rstatus;
-  GtkWidget *lstatus;
   GtkWidget *scroll; 
-  GtkWidget *entry;
-  GtkWidget *autocompletion;
-  GtkWidget *compbox;
-  GtkWidget *bottombox;
   ViewStatus *status;
   GHashTable *setting;
   Plugins *plugins;
@@ -572,8 +567,6 @@ struct _View {
 struct _Color {
   DwbColor active_fg;
   DwbColor active_bg;
-  DwbColor normal_fg;
-  DwbColor normal_bg;
   DwbColor ssl_trusted;
   DwbColor ssl_untrusted;
   DwbColor tab_active_fg;
@@ -588,8 +581,6 @@ struct _Color {
   DwbColor normal_c_bg;
   DwbColor download_fg;
   DwbColor download_bg;
-  char *settings_bg_color;
-  char *settings_fg_color;
   char *tab_number_color;
   char *tab_protected_color;
   char *allow_color;
@@ -610,15 +601,21 @@ struct _Gui {
   GtkWidget *window;
   GtkWidget *vbox;
   GtkWidget *topbox;
-  GtkWidget *paned;
-  GtkWidget *right;
-  GtkWidget *left;
-  GtkWidget *entry;
+  GtkWidget *mainbox;
   GtkWidget *downloadbar;
+  /* Statusbar */
+  GtkWidget *statusbox;
+  GtkWidget *urilabel;
+  GtkWidget *rstatus;
+  GtkWidget *lstatus;
+  GtkWidget *entry;
+  GtkWidget *autocompletion;
+  GtkWidget *compbox;
+  GtkWidget *bottombox;
+
   int width;
   int height;
   guint wid;
-  TabbarPosition tbp;
 };
 struct _Misc {
   const char *name;
@@ -635,7 +632,6 @@ struct _Misc {
   GIOChannel *si_channel;
   GList *userscripts;
 
-  double factor;
   int max_c_items;
   int message_delay;
   int history_length;
@@ -652,19 +648,19 @@ struct _Misc {
   char *startpage;
   char *download_com;
   JSContextRef global_ctx;
-  int tab_height;
 
   char *pbbackground;
-  gboolean top_statusbar;
   gboolean scrollbars;
-  int bar_height;
   int synctimer;
+  int bar_height;
 };
 struct _Files {
   const char *bookmarks;
+  const char *navigation_history;
   const char *command_history;
   const char *cookies;
   const char *cookies_allow;
+  const char *cookies_session_allow;
   const char *download_path;
   const char *fifo;
   const char *history;
@@ -698,6 +694,8 @@ struct _FileContent {
   GList *keys;
   GList *settings;
   GList *cookies_allow;
+  GList *cookies_session_allow;
+  GList *navigations;
   GList *commands;
   GList *mimetypes;
   GList *adblock;
@@ -730,24 +728,23 @@ DwbStatus dwb_change_mode(Mode, ...);
 void dwb_load_uri(GList *gl, const char *);
 void dwb_execute_user_script(KeyMap *km, Arg *a);
 
-void dwb_focus_entry(void);
 void dwb_focus_scroll(GList *);
 
 gboolean dwb_update_search(gboolean forward);
 
 void dwb_set_normal_message(GList *, gboolean, const char *, ...);
-void dwb_set_error_message(GList *, const char *, ...);
+void dwb_set_error_message(GList *gl, const char *, ...);
 gboolean dwb_confirm(GList *, char *, ...);
 void dwb_set_status_text(GList *, const char *, DwbColor *,  PangoFontDescription *);
 void dwb_tab_label_set_text(GList *, const char *);
 void dwb_set_status_bar_text(GtkWidget *, const char *, DwbColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
 void dwb_update_status(GList *gl);
-void dwb_update_layout(gboolean);
 void dwb_unfocus(void);
 
 DwbStatus dwb_prepend_navigation(GList *, GList **);
 void dwb_prepend_navigation_with_argument(GList **, const char *, const char *);
+void dwb_glist_prepend_unique(GList **, char *);
 
 Navigation * dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *);
 gboolean dwb_update_hints(GdkEventKey *);
@@ -755,20 +752,16 @@ gboolean dwb_search(Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);
 char * dwb_execute_script(WebKitWebFrame *, const char *, gboolean);
-void dwb_resize(double );
 void dwb_toggle_tabbar(void);
 DwbStatus dwb_history(Arg *a);
+void dwb_reload(void);
 DwbStatus dwb_history_back(void);
 DwbStatus dwb_history_forward(void);
 void dwb_scroll(GList *, double, ScrollDirection);
 
 void dwb_focus(GList *);
-void dwb_source_remove(GList *);
+void dwb_source_remove();
 gboolean dwb_spawn(GList *, const char *, const char *uri);
-
-int dwb_entry_position_word_back(int position);
-int dwb_entry_position_word_forward(int position);
-void dwb_entry_set_text(const char *text);
 
 void dwb_set_proxy(GList *, WebSettings *);
 
@@ -812,11 +805,19 @@ void dwb_set_open_mode(Open);
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
+
 void dwb_save_quickmark(const char *);
 void dwb_open_quickmark(const char *);
 gboolean dwb_update_find_quickmark(const char *text);
+
+gboolean dwb_entry_activate(GdkEventKey *e);
 #ifdef DWB_ADBLOCKER
 void dwb_set_adblock(GList *, WebSettings *);
 #endif
+
+gboolean dwb_eval_key(GdkEventKey *);
+void dwb_follow_selection(void);
+void dwb_update_layout(void);
+const char * dwb_parse_nummod(const char *);
 
 #endif

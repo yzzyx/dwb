@@ -57,7 +57,9 @@ entry_history_back Command history back
 entry_history_forward Command history forward
 entry_delete_letter Delete a single letter
 entry_delete_line Delete to the beginning of the line
+entry_delete_line_end Delete to the end of the line
 entry_delete_word Delete word
+entry_delete_word_forward Delete word forward
 entry_word_back Move cursor back on word
 entry_word_forward Move cursor forward on word
 download_set_execute Toggle between spawning an application and download path 
@@ -95,6 +97,7 @@ toggle_bottombar Toggle bottombar
 toggle_topbar Toggle tabbar
 protect Protect/unprotect tab 
 presentation_mode Toggle presentation mode
+visible Toggle visibility of a tab
 
 # completion Completion
 buffers Show all open tabs
@@ -144,7 +147,9 @@ plugins Toggle 'enable-plugins'
 proxy Toggle proxy
 
 # misc Miscellaneous
-allow_cookie Allow cookie for current site
+allow_cookie Allow persistent cookies for current site
+allow_session_cookie Allow session cookies for current site
+allow_session_cookie_tmp Allow session cookies for current site temporarily
 execute_userscript Execute userscript
 focus_input Focus the next input
 new_view New view for next navigation

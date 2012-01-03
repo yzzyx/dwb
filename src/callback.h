@@ -16,11 +16,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef SESSION_H
-#define SESSION_H
+#ifndef CALLBACKS_H
+#define CALLBACKS_H
 
-gboolean session_save(const char *);
-gboolean session_restore(const char *);
-void session_list(void);
-
+gboolean callback_entry_key_release(GtkWidget *, GdkEventKey *);
+gboolean callback_entry_key_press(GtkWidget *, GdkEventKey *);
+gboolean callback_entry_insert_text(GtkWidget *, GdkEventKey *);
+gboolean callback_delete_event(GtkWidget *w);
+gboolean callback_key_press(GtkWidget *w, GdkEventKey *e);
+gboolean callback_key_release(GtkWidget *w, GdkEventKey *e);
 #endif

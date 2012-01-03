@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include "html.h"
 #include "commands.h"
 #include "local.h"
+#include "entry.h"
 #ifdef DWB_ADBLOCKER
 #include "adblock.h"
 #endif
@@ -54,13 +55,15 @@ commands_simple_command(KeyMap *km) {
       dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
     }
     else if (km->map->hide == ALWAYS_SM) {
-      CLEAR_COMMAND_TEXT(dwb.state.fview);
+      CLEAR_COMMAND_TEXT();
       gtk_widget_hide(dwb.gui.entry);
     }
   }
   else if (ret == STATUS_ERROR) {
     dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
   }
+  if (! km->map->arg.ro)
+    km->map->arg.p = NULL;
   dwb_clean_key_buffer();
 }/*}}}*/
 
@@ -74,7 +77,7 @@ commands_add_view(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_set_setting(KeyMap *km, Arg *arg) {
   dwb.state.mode = SETTINGS_MODE;
-  dwb_focus_entry();
+  entry_focus();
   return STATUS_OK;
 }/*}}}*/
 
@@ -82,7 +85,7 @@ commands_set_setting(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_set_key(KeyMap *km, Arg *arg) {
   dwb.state.mode = KEY_MODE;
-  dwb_focus_entry();
+  entry_focus();
   return STATUS_OK;
 }/*}}}*/
 
@@ -111,7 +114,7 @@ commands_add_search_field(KeyMap *km, Arg *a) {
   }
   dwb.state.mode = SEARCH_FIELD_MODE;
   dwb_set_normal_message(dwb.state.fview, false, "Keyword:");
-  dwb_focus_entry();
+  entry_focus();
   FREE(value);
   return STATUS_OK;
 
@@ -155,7 +158,7 @@ commands_find(KeyMap *km, Arg *arg) {
     g_free(v->status->search_string);
     v->status->search_string = NULL;
   }
-  dwb_focus_entry();
+  entry_focus();
   return STATUS_OK;
 }/*}}}*/
 
@@ -166,20 +169,6 @@ commands_search(KeyMap *km, Arg *arg) {
     ret = STATUS_ERROR;
   return ret;
 }
-
-/*commands_resize_master {{{*/
-DwbStatus  
-commands_resize_master(KeyMap *km, Arg *arg) { 
-  DwbStatus ret = STATUS_OK;
-  int inc = dwb.state.nummod < 0 ? arg->n : dwb.state.nummod * arg->n;
-  int size = dwb.state.size + inc;
-  if (size > 90 || size < 10) {
-    size = size > 90 ? 90 : 10;
-    ret = STATUS_ERROR;
-  }
-  dwb_resize(size);
-  return ret;
-}/*}}}*/
 
 /* commands_show_hints {{{*/
 DwbStatus
@@ -202,7 +191,7 @@ commands_show_hints(KeyMap *km, Arg *arg) {
     }
     dwb.state.mode = HINT_MODE;
     dwb.state.hint_type = arg->i;
-    dwb_focus_entry();
+    entry_focus();
   }
   return ret;
 }/*}}}*/
@@ -224,43 +213,19 @@ commands_show_settings(KeyMap *km, Arg *arg) {
 /* commands_allow_cookie {{{*/
 DwbStatus
 commands_allow_cookie(KeyMap *km, Arg *arg) {
-  GSList *asked = NULL, *allowed = NULL;
-  int length;
-  if (dwb.state.last_cookies) {
-    GString *buffer = g_string_new(NULL);
-    for (GSList *l = dwb.state.last_cookies; l; l=l->next) {
-      SoupCookie *c = l->data;
-      const char *domain = soup_cookie_get_domain(c);
-      if ( ! dwb.fc.cookies_allow || g_list_find_custom(dwb.fc.cookies_allow, domain, (GCompareFunc) g_strcmp0) == NULL ) {
-        /* only ask once, if it was already prompted for this domain and allowed it will be handled
-         * in the else clause */
-        if (g_slist_find_custom(asked, domain, (GCompareFunc)g_strcmp0))
-          continue;
-        if (dwb_confirm(dwb.state.fview, "Allow cookies for domain %s [y/n]", domain)) {
-          dwb.fc.cookies_allow = g_list_append(dwb.fc.cookies_allow, g_strdup(domain));
-          util_file_add(dwb.files.cookies_allow, domain, true, -1);
-          g_string_append_printf(buffer, "%s ", domain);
-          allowed = g_slist_prepend(allowed, c);
-        }
-        asked = g_slist_prepend(asked, (char*)domain);
-        CLEAR_COMMAND_TEXT(dwb.state.fview);
-      }
-      else {
-        allowed = g_slist_prepend(allowed, c);
-      }
-    }
-    dwb_soup_save_cookies(allowed);
-    length = g_slist_length(allowed);
-    if (length > 0) {
-      dwb_set_normal_message(dwb.state.fview, true, "Allowed domain%s: %s", length == 1 ? "" : "s", buffer->str);
-    }
-    g_string_free(buffer, true);
-    g_slist_free(asked);
-    g_slist_free(allowed);
+  switch (arg->n) {
+    case COOKIE_ALLOW_PERSISTENT: 
+      return dwb_soup_allow_cookie(&dwb.fc.cookies_allow, dwb.files.cookies_allow, arg->n);
+    case COOKIE_ALLOW_SESSION:
+      return dwb_soup_allow_cookie(&dwb.fc.cookies_session_allow, dwb.files.cookies_session_allow, arg->n);
+    case COOKIE_ALLOW_SESSION_TMP:
+      dwb_soup_allow_cookie_tmp();
+      break;
+    default: 
+      break;
 
-    return STATUS_OK;
   }
-  return STATUS_ERROR;
+  return STATUS_OK;
 }/*}}}*/
 
 /* commands_bookmark {{{*/
@@ -280,7 +245,7 @@ DwbStatus
 commands_quickmark(KeyMap *km, Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
     dwb_set_open_mode(arg->i);
-  dwb_focus_entry();
+  entry_focus();
   dwb.state.mode = arg->n;
   return STATUS_OK;
 }/*}}}*/
@@ -288,10 +253,7 @@ commands_quickmark(KeyMap *km, Arg *arg) {
 /* commands_reload(KeyMap *km, Arg *){{{*/
 DwbStatus
 commands_reload(KeyMap *km, Arg *arg) {
-  const char *path = webkit_web_view_get_uri(CURRENT_WEBVIEW());
-  if ( !local_check_directory(dwb.state.fview, path, false, NULL) ) {
-    webkit_web_view_reload(CURRENT_WEBVIEW());
-  }
+  dwb_reload();
   return STATUS_OK;
 }/*}}}*/
 
@@ -370,6 +332,7 @@ commands_set_zoom_level(KeyMap *km, Arg *arg) {
 }/*}}}*/
 
 /* commands_set_orientation(KeyMap *km, Arg *arg) {{{*/
+#if 0
 DwbStatus 
 commands_set_orientation(KeyMap *km, Arg *arg) {
   Layout l;
@@ -385,6 +348,7 @@ commands_set_orientation(KeyMap *km, Arg *arg) {
   dwb_resize(dwb.state.size);
   return STATUS_OK;
 }/*}}}*/
+#endif
 
 /* History {{{*/
 DwbStatus 
@@ -404,9 +368,9 @@ commands_open(KeyMap *km, Arg *arg) {
     dwb_load_uri(NULL, arg->p);
   }
   else {
-    dwb_focus_entry();
+    entry_focus();
     if (arg->n & SET_URL)
-      dwb_entry_set_text(arg->p ? arg->p : CURRENT_URL());
+      entry_set_text(arg->p ? arg->p : CURRENT_URL());
   }
   return STATUS_OK;
 } /*}}}*/
@@ -417,57 +381,10 @@ commands_open_startpage(KeyMap *km, Arg *arg) {
   return dwb_open_startpage(NULL);
 } /*}}}*/
 
-/* commands_toggle_maximized {{{*/
-void 
-commands_maximized_hide(View *v, View *no) {
-  if (dwb.misc.factor != 1.0) {
-    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), 1.0);
-  }
-  if (v != dwb.state.fview->data) {
-    gtk_widget_hide(v->vbox);
-  }
-}
-void 
-commands_maximized_show(View *v) {
-  if (dwb.misc.factor != 1.0 && v != dwb.state.views->data) {
-    webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(v->web), dwb.misc.factor);
-  }
-  gtk_widget_show(v->vbox);
-}
-
-void 
-commands_toggle_maximized(KeyMap *km, Arg *arg) {
-  dwb.state.layout ^= MAXIMIZED;
-  if (dwb.state.layout & MAXIMIZED) {
-    g_list_foreach(dwb.state.views,  (GFunc)commands_maximized_hide, NULL);
-    if  (dwb.state.views == dwb.state.fview) {
-      gtk_widget_hide(dwb.gui.right);
-    }
-    else if (dwb.state.views->next) {
-      gtk_widget_hide(dwb.gui.left);
-    }
-  }
-  else {
-    if (dwb.state.views->next) {
-      gtk_widget_show(dwb.gui.right);
-    }
-    gtk_widget_show(dwb.gui.left);
-    g_list_foreach(dwb.state.views,  (GFunc)commands_maximized_show, NULL);
-  }
-  dwb_resize(dwb.state.size);
-  dwb_toggle_tabbar();
-}/*}}}*/
-
 /* commands_remove_view(KeyMap *km, Arg *arg) {{{*/
 void 
 commands_remove_view(KeyMap *km, Arg *arg) {
   view_remove(NULL);
-}/*}}}*/
-
-/* commands_push_master {{{*/
-DwbStatus 
-commands_push_master(KeyMap *km, Arg *arg) {
-  return view_push_master(arg);
 }/*}}}*/
 
 static gboolean
@@ -547,106 +464,29 @@ commands_paste(KeyMap *km, Arg *arg) {
   return STATUS_ERROR;
 }/*}}}*/
 
-/* commands_entry_delete_word {{{*/
-DwbStatus 
-commands_entry_delete_word(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  char *text = g_strdup(GET_TEXT());
 
-  if (position > 0) {
-    int new = dwb_entry_position_word_back(position);
-    util_cut_text(text, new,  position);
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
-    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), new);
-    FREE(text);
-  }
+DwbStatus
+commands_entry_movement(KeyMap *m, Arg *a) {
+  entry_move_cursor_step(a->n, a->i, a->b);
   return STATUS_OK;
-}/*}}}*/
-
-/* commands_entry_delete_letter {{{*/
-DwbStatus 
-commands_entry_delete_letter(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  char *text = g_strdup(GET_TEXT());
-
-  if (position > 0) {
-    util_cut_text(text, position-1,  position);
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
-    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), position-1);
-    FREE(text);
-  }
-  return STATUS_OK;
-}/*}}}*/
-
-/* commands_entry_delete_line {{{*/
-DwbStatus 
-commands_entry_delete_line(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), &text[position]);
-  FREE(text);
-  return STATUS_OK;
-}/*}}}*/
-
-/* commands_entry_word_forward {{{*/
-DwbStatus 
-commands_entry_word_forward(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-
-  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), dwb_entry_position_word_forward(position));
-  return STATUS_OK;
-}/*}}}*/
-
-/* commands_entry_word_back {{{*/
-DwbStatus 
-commands_entry_word_back(KeyMap *km, Arg *a) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-
-  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), dwb_entry_position_word_back(position));
-  return STATUS_OK;
-}/*}}}*/
+}
 
 /* commands_entry_history_forward {{{*/
 DwbStatus 
 commands_entry_history_forward(KeyMap *km, Arg *a) {
-  Navigation *n = NULL;
-  GList *l;
-  if ( (l = g_list_last(dwb.state.last_com_history)) && dwb.state.last_com_history->prev ) {
-      n = dwb.state.last_com_history->prev->data;
-      dwb.state.last_com_history = dwb.state.last_com_history->prev;
-  }
-  if (n) {
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), n->first);
-    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
-  }
-  return STATUS_OK;
+  if (dwb.state.mode == COMMAND_MODE) 
+    return entry_history_forward(&dwb.state.last_com_history);
+  else 
+    return entry_history_forward(&dwb.state.last_nav_history);
 }/*}}}*/
 
 /* commands_entry_history_back {{{*/
 DwbStatus 
 commands_entry_history_back(KeyMap *km, Arg *a) {
-  Navigation *n = NULL;
-
-  if (!dwb.fc.commands)
-    return STATUS_ERROR;
-
-  if (! dwb.state.last_com_history  ) {
-    dwb.state.last_com_history = dwb.fc.commands;
-    n = dwb.state.last_com_history->data;
-    char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
-    dwb_prepend_navigation_with_argument(&dwb.fc.commands, text, NULL);
-    FREE(text);
-  }
-  else if ( dwb.state.last_com_history && dwb.state.last_com_history->next ) {
-    n = dwb.state.last_com_history->next->data;
-    dwb.state.last_com_history = dwb.state.last_com_history->next;
-  }
-  if (n) {
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), n->first);
-    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
-  }
-  return STATUS_OK;
+  if (dwb.state.mode == COMMAND_MODE) 
+    return entry_history_back(&dwb.fc.commands, &dwb.state.last_com_history);
+  else 
+    return entry_history_back(&dwb.fc.navigations, &dwb.state.last_nav_history);
 }/*}}}*/
 
 /* commands_save_session {{{*/
@@ -660,7 +500,7 @@ commands_save_session(KeyMap *km, Arg *arg) {
   }
   else {
     dwb.state.mode = arg->n;
-    dwb_focus_entry();
+    entry_focus();
     dwb_set_normal_message(dwb.state.fview, false, "Session name:");
   }
   return STATUS_OK;
@@ -675,7 +515,7 @@ commands_bookmarks(KeyMap *km, Arg *arg) {
   if (dwb.state.nv == OPEN_NORMAL)
     dwb_set_open_mode(arg->n);
   completion_complete(COMP_BOOKMARK, 0);
-  dwb_focus_entry();
+  entry_focus();
   if (dwb.comps.active_comp != NULL) {
     completion_set_entry_text((Completion*)dwb.comps.active_comp->data);
   }
@@ -723,7 +563,7 @@ commands_toggle(Arg *arg, const char *filename, GList **tmp, const char *message
     }
   }
   else 
-    CLEAR_COMMAND_TEXT(dwb.state.fview);
+    CLEAR_COMMAND_TEXT();
 }
 
 DwbStatus 
@@ -827,7 +667,7 @@ commands_execute_userscript(KeyMap *km, Arg *arg) {
     g_free(path);
   }
   else {
-    dwb_focus_entry();
+    entry_focus();
     completion_complete(COMP_USERSCRIPT, 0);
   }
 
@@ -838,7 +678,7 @@ commands_execute_userscript(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_toggle_hidden_files(KeyMap *km, Arg *arg) {
   dwb.state.hidden_files = !dwb.state.hidden_files;
-  commands_reload(km, arg);
+  dwb_reload();
   return STATUS_OK;
 }/*}}}*/
 
@@ -904,12 +744,8 @@ commands_only(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_toggle_bars(KeyMap *km, Arg *arg) {
   dwb.state.bar_visible ^= arg->n;
-  if (dwb.state.tabbar_visible != HIDE_TB_ALWAYS && (dwb.state.tabbar_visible == HIDE_TB_NEVER || (HIDE_TB_TILED && (dwb.state.layout & MAXIMIZED)))) {
-    gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
-  }
-  for (GList *l = dwb.state.views; l; l=l->next) {
-    gtk_widget_set_visible(VIEW(l)->statusbox, dwb.state.bar_visible & BAR_VIS_STATUS);
-  }
+  gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
+  gtk_widget_set_visible(dwb.gui.bottombox, dwb.state.bar_visible & BAR_VIS_STATUS);
   return STATUS_OK;
 }/*}}}*/
 DwbStatus
@@ -920,20 +756,16 @@ commands_presentation_mode(KeyMap *km, Arg *arg) {
   commands_toggle_bars(km, arg);
   return STATUS_OK;
 }
-#if 0
-DwbStatus
-commands_toggle_protected(KeyMap *km, Arg *arg) {
-  GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod-1);
-  VIEW(gl)->status->protect = !VIEW(gl)->status->protect;
-  dwb_tab_label_set_text(gl, NULL);
-  return STATUS_OK;
-}
-#endif
 DwbStatus
 commands_toggle_lock_protect(KeyMap *km, Arg *arg) {
   GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod-1);
-  VIEW(gl)->status->lockprotect ^= arg->n;
+  if (gl == NULL)
+    return STATUS_ERROR;
+  View *v = VIEW(gl);
+  v->status->lockprotect ^= arg->n;
   dwb_tab_label_set_text(gl, NULL);
+  if (arg->n & LP_VISIBLE && gl != dwb.state.fview)
+    gtk_widget_set_visible(v->scroll, LP_VISIBLE(v));
   return STATUS_OK;
 }
 /*}}}*/

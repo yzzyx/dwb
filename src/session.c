@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -130,20 +130,13 @@ session_restore(const char *name) {
     g_strfreev(line);
   }
   g_strfreev(lines);
-  gtk_widget_show_all(dwb.gui.window);
+  //gtk_widget_show_all(dwb.gui.window);
 
   if (!dwb.state.views) 
     view_add(NULL, false);
 
-  if (dwb.state.layout & MAXIMIZED && dwb.state.views) {
-    gtk_widget_hide(dwb.gui.right);
-    for (GList *l = dwb.state.views->next; l; l=l->next) {
-      gtk_widget_hide(((View*)l->data)->vbox);
-    }
-  }
-  dwb_unfocus();
-  dwb_focus(dwb.state.views);
-  dwb_update_layout(false);
+  //dwb_unfocus();
+  dwb_focus(dwb.state.fview);
   FREE(uri);
   return true;
 }/*}}}*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,9 @@
 #ifndef COOKIES_H
 #define COOKIES_H
 
+void dwb_soup_clean(void);
+void dwb_soup_allow_cookie_tmp(void);
+DwbStatus dwb_soup_allow_cookie(GList **, const char *, CookieStorePolicy);
 const char * dwb_soup_get_host_from_request(WebKitNetworkRequest *);
 DwbStatus dwb_soup_set_cookie_accept_policy(const char *);
 void dwb_soup_cookies_set_accept_policy(Arg *);
@@ -26,6 +29,8 @@ void dwb_soup_save_cookies(GSList *);
 void dwb_soup_init_cookies(SoupSession *);
 void dwb_soup_init_proxy();
 void dwb_soup_init_session_features();
+void dwb_soup_end();
 void dwb_soup_init();
+CookieStorePolicy dwb_soup_get_cookie_store_policy(const char *policy);
 
 #endif
