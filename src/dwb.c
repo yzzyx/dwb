@@ -3122,6 +3122,7 @@ dwb_parse_command_line(const char *line) {
   char **token = g_strsplit(line, " ", 2);
   KeyMap *m = NULL;
   gboolean found;
+  int nummod;
 
   if (!token[0]) 
     return;
@@ -3132,7 +3133,8 @@ dwb_parse_command_line(const char *line) {
     found = false;
     m = l->data;
     bak = dwb_parse_nummod(bak);
-    if (!g_strcmp0(m->map->n.first, token[0])) 
+    nummod = dwb.state.nummod;
+    if (!g_strcmp0(m->map->n.first, bak)) 
       found = true;
     else {
       for (int i=0; m->map->alias[i]; i++) {
@@ -3145,6 +3147,7 @@ dwb_parse_command_line(const char *line) {
     if (found) {
       if (m->map->prop & CP_HAS_MODE) 
         dwb_change_mode(NORMAL_MODE, true);
+      dwb.state.nummod = nummod;
       if (token[1]) {
         g_strstrip(token[1]);
         m->map->arg.p = token[1];
