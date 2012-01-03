@@ -92,6 +92,26 @@ typedef struct _EditorInfo {
   char *tagname;
 } EditorInfo;
 
+typedef struct HintMap {
+  int type;
+  int arg;
+} _HintMap;
+
+struct HintMap hint_map[] = {
+  { HINT_T_ALL,   HINT_T_ALL }, 
+  { HINT_T_LINKS, HINT_T_LINKS }, 
+  { HINT_T_IMAGES, HINT_T_IMAGES }, 
+  { HINT_T_EDITABLE, HINT_T_EDITABLE }, 
+  { HINT_T_URL, HINT_T_URL }, 
+  { HINT_T_CLIPBOARD, HINT_T_CLIPBOARD }, 
+  { HINT_T_PRIMARY, HINT_T_PRIMARY }, 
+  { HINT_T_RAPID, HINT_T_ALL }, 
+  { HINT_T_RAPID_NW, HINT_T_ALL }, 
+};
+
+
+
+
 static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 static int MAX_COMPLETIONS = 11;
 static char *restore = NULL;
@@ -137,7 +157,7 @@ dwb_set_cookies(GList *gl, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
-/* dwb_set_cookies */
+/* dwb_set_cookies {{{  */
 static DwbStatus
 dwb_set_widget_packing(GList *gl, WebSettings *s) {
   DwbStatus ret = STATUS_OK;
@@ -883,6 +903,7 @@ dwb_focus_view(GList *gl) {
     gtk_widget_show(VIEW(gl)->scroll);
     if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )
       gtk_widget_hide(VIEW(dwb.state.fview)->scroll);
+    dwb_change_mode(NORMAL_MODE, true);
     dwb_unfocus();
     dwb_focus(gl);
   }
@@ -1257,7 +1278,7 @@ dwb_evaluate_hints(const char *buffer) {
     dwb_change_mode(INSERT_MODE);
     ret = STATUS_END;
   }
-  else if  (!g_strcmp0(buffer, "_dwb_click_")) {
+  else if  (!g_strcmp0(buffer, "_dwb_click_") && HINT_NOT_RAPID ) {
     dwb.state.scriptlock = 1;
     if ( !(dwb.state.nv & OPEN_DOWNLOAD) ) {
       dwb_change_mode(NORMAL_MODE, dwb.state.message_id == 0);
@@ -1288,6 +1309,16 @@ dwb_evaluate_hints(const char *buffer) {
       case HINT_T_PRIMARY   : dwb_change_mode(NORMAL_MODE, true);
                               ret = dwb_set_clipboard(buffer, GDK_SELECTION_PRIMARY);
                               break;
+      case HINT_T_RAPID     : a = util_arg_new();
+                              a->n = OPEN_NEW_VIEW | OPEN_BACKGROUND;
+                              a->i = HINT_T_RAPID;
+                              dwb_show_hints(a);
+                              break;
+      case HINT_T_RAPID_NW     : a = util_arg_new();
+                              a->n = OPEN_NEW_WINDOW | OPEN_BACKGROUND;
+                              a->i = HINT_T_RAPID;
+                              dwb_show_hints(a);
+                              break;
       default : return ret;
     }
     FREE(a);
@@ -1304,7 +1335,7 @@ dwb_update_hints(GdkEventKey *e) {
   gboolean ret = false;
 
   if (e->keyval == GDK_KEY_Return) {
-    com = g_strdup_printf("DwbHintObj.followActive(%d)", MIN(dwb.state.hint_type, HINT_T_URL));
+    com = g_strdup_printf("DwbHintObj.followActive(%d)", hint_map[dwb.state.hint_type].arg);
   }
   else if (DWB_TAB_KEY(e)) {
     if (e->state & GDK_SHIFT_MASK) {
@@ -1321,7 +1352,7 @@ dwb_update_hints(GdkEventKey *e) {
   else {
     val = util_keyval_to_char(e->keyval, true);
     snprintf(input, BUFFER_LENGTH, "%s%s", GET_TEXT(), val ? val : "");
-    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\", %d)", input, MIN(dwb.state.hint_type, HINT_T_URL));
+    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\", %d)", input, hint_map[dwb.state.hint_type].arg);
     FREE(val);
   }
   if (com) {
@@ -1335,6 +1366,32 @@ dwb_update_hints(GdkEventKey *e) {
   }
   return ret;
 }/*}}}*/
+
+DwbStatus 
+dwb_show_hints(Arg *arg) {
+  DwbStatus ret = STATUS_OK;
+  if (dwb.state.nv == OPEN_NORMAL) {
+    dwb_set_open_mode(arg->n | OPEN_VIA_HINTS);
+  }
+  if (dwb.state.mode != HINT_MODE) {
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
+    char *command = g_strdup_printf("DwbHintObj.showHints(%d)", hint_map[arg->i].arg);
+    char *jsret = dwb_execute_script(MAIN_FRAME(), command, true);
+    g_free(command);
+    if (jsret != NULL) {
+      ret = dwb_evaluate_hints(jsret);
+      g_free(jsret);
+      if (ret == STATUS_END) {
+        return ret;
+      }
+    }
+    dwb.state.mode = HINT_MODE;
+    dwb.state.hint_type = arg->i;
+    entry_focus();
+  }
+  return ret;
+
+}
 
 /* dwb_execute_script {{{*/
 char *

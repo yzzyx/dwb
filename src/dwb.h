@@ -253,7 +253,10 @@ typedef enum {
   HINT_T_URL        = 4,
   HINT_T_CLIPBOARD  = 5,
   HINT_T_PRIMARY    = 6,
+  HINT_T_RAPID      = 7,
+  HINT_T_RAPID_NW   = 8,
 } HintType;
+#define HINT_NOT_RAPID (dwb.state.hint_type != HINT_T_RAPID && dwb.state.hint_type != HINT_T_RAPID_NW)
 
 typedef enum {
   BAR_VIS_TOP = 1<<0,
@@ -324,6 +327,7 @@ typedef enum {
   SET_URL          = 1<<4, 
   OPEN_VIA_HINTS   = 1<<5,
   OPEN_EXPLICIT    = 1<<6,
+  OPEN_BACKGROUND  = 1<<7,
 } Open;
 
 enum {
@@ -748,6 +752,7 @@ void dwb_glist_prepend_unique(GList **, char *);
 
 Navigation * dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *);
 gboolean dwb_update_hints(GdkEventKey *);
+DwbStatus dwb_show_hints(Arg *);
 gboolean dwb_search(Arg *);
 void dwb_submit_searchengine(void);
 void dwb_save_searchengine(void);

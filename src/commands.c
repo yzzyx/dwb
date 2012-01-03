@@ -36,7 +36,6 @@ static int inline dwb_floor(double x) {
 static int inline modulo(int x, int y) {
   return x - dwb_floor((double)x/y)  * y;
 }
-
 /* commands.h {{{*/
 /* commands_simple_command(keyMap *km) {{{*/
 void 
@@ -173,27 +172,7 @@ commands_search(KeyMap *km, Arg *arg) {
 /* commands_show_hints {{{*/
 DwbStatus
 commands_show_hints(KeyMap *km, Arg *arg) {
-  DwbStatus ret = STATUS_OK;
-  if (dwb.state.nv == OPEN_NORMAL) {
-    dwb_set_open_mode(arg->n | OPEN_VIA_HINTS);
-  }
-  if (dwb.state.mode != HINT_MODE) {
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    char *command = g_strdup_printf("DwbHintObj.showHints(%d, %s)", MIN(arg->i, HINT_T_URL), arg->n != OPEN_NORMAL ? "true" : "false");
-    char *jsret = dwb_execute_script(MAIN_FRAME(), command, true);
-    g_free(command);
-    if (jsret != NULL) {
-      ret = dwb_evaluate_hints(jsret);
-      g_free(jsret);
-      if (ret == STATUS_END) {
-        return ret;
-      }
-    }
-    dwb.state.mode = HINT_MODE;
-    dwb.state.hint_type = arg->i;
-    entry_focus();
-  }
-  return ret;
+  return dwb_show_hints(arg);
 }/*}}}*/
 
 /* commands_show_keys(KeyMap *km, Arg *arg){{{*/

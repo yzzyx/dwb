@@ -466,6 +466,7 @@ var DwbHintObj = (function () {
       }
       ret = "_dwb_click_";
     }
+    console.log(ret);
     __clear();
     return ret;
   };

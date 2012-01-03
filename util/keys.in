@@ -39,6 +39,8 @@ hint_mode_url_nv Set hint's url in commandline, open in a new tab
 hint_mode_download Download via hints
 hint_mode_clipboard Save link location to clipboard
 hint_mode_primary Save link location to primary selection
+hint_mode_rapid Open new tabs in background rapidly
+hint_mode_rapid_nw Open new windows rapidly
 
 # bookmark_keys Bookmarks &amp Quickmarks
 bookmark Bookmark current page

@@ -46,6 +46,8 @@ static KeyValue KEYS[] = {
   { "hint_mode_nw",             {   "wf",         0,                   },  },  
   { "hint_mode_clipboard",      {   ";y",         0,                   },  },  
   { "hint_mode_primary",        {   ";Y",         0,                   },  },  
+  { "hint_mode_rapid",          {   ";r",         0,                   },  },  
+  { "hint_mode_rapid_nw",       {   ";R",         0,                   },  },  
   { "history_back",             {   "H",         0,                   },  },  
   { "history_forward",          {   "L",         0,                   },  },  
   { "history_back_nv",             {   "th",         0,                   },  },  
@@ -319,6 +321,14 @@ static FunctionMap FMAP [] = {
   { { "hint_mode_primary",          "Copy to primary",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_PRIMARY }, EP_NONE, { "phints", "phi", NULL }, },
+
+  { { "hint_mode_rapid",          "Rapid hint mode",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_NEW_VIEW | OPEN_BACKGROUND, .i = HINT_T_RAPID }, EP_NONE, { "rhints", "rhi", NULL }, },
+
+  { { "hint_mode_rapid_nw",          "Rapid hint mode",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_NEW_WINDOW | OPEN_BACKGROUND, .i = HINT_T_RAPID_NW }, EP_NONE, { "wrhints", "wrhi", NULL }, },
   
   { { "hint_mode_download",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
