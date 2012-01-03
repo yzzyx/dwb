@@ -466,7 +466,8 @@ completion_command_line() {
   }
   if (ret) {
     _command_len = util_strlen_trailing_space(text);
-    if (_command_len > 0 && g_ascii_isspace(text[_command_len-1]))  {
+    if ((_command_len > 0 && g_ascii_isspace(text[_command_len-1])) || token[1] != NULL)  {
+      FREE0(_current_command);
       _current_command = g_strdup(token[0]);
       dwb.state.mode |= COMPLETE_COMMAND_MODE;
       _command_len++;
