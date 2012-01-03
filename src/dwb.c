@@ -1738,6 +1738,23 @@ dwb_clean_key_buffer() {
   g_string_truncate(dwb.state.buffer, 0);
 }/*}}}*/
 
+const char *
+dwb_parse_nummod(const char *text) {
+  char num[6];
+  int i=0;
+  while (g_ascii_isspace(*text))
+    text++;
+  for (i=0; i<5 && g_ascii_isdigit(*text); i++, text++) {
+    num[i] = *text;
+  }
+  num[i] = '\0';
+  if (*num != '\0')
+    dwb.state.nummod = (int)strtol(num, NULL, 10);
+  while (g_ascii_isspace(*text)) text++; 
+  return text;
+
+}
+
 gboolean 
 dwb_entry_activate(GdkEventKey *e) {
   char **token = NULL;
@@ -3104,13 +3121,28 @@ void
 dwb_parse_command_line(const char *line) {
   char **token = g_strsplit(line, " ", 2);
   KeyMap *m = NULL;
+  gboolean found;
 
   if (!token[0]) 
     return;
+  const char *bak;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
+    bak = token[0];
+    found = false;
     m = l->data;
-    if (!g_strcmp0(m->map->n.first, token[0])) {
+    bak = dwb_parse_nummod(bak);
+    if (!g_strcmp0(m->map->n.first, token[0])) 
+      found = true;
+    else {
+      for (int i=0; m->map->alias[i]; i++) {
+        if (!g_strcmp0(m->map->alias[i], bak)) {
+          found = true;
+          break;
+        }
+      }
+    }
+    if (found) {
       if (m->map->prop & CP_HAS_MODE) 
         dwb_change_mode(NORMAL_MODE, true);
       if (token[1]) {

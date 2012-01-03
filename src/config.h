@@ -170,314 +170,617 @@ static KeyValue KEYS[] = {
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
   { { "add_view",              "Add a new view",                    }, 1, 
-    (Func)commands_add_view,            NULL,                              ALWAYS_SM,     { .p = NULL }, EP_NONE, },
+    (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+
   { { "toggle_bars",    "Toggle visibility of status and tabbar" },                 1, 
-    (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE, },
+    (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    
+    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE, { NULL }, },
+
   { { "toggle_topbar",    "Toggle visibility of tabbar" },                 1, 
-    (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_TOP  }, EP_NONE, },
+    (Func) commands_toggle_bars,                NULL,     ALWAYS_SM,    
+    { .n = BAR_VIS_TOP  },                  EP_NONE,  { NULL }, },
+
   { { "toggle_bottombar",    "Toggle visibility of statusbar" },                 1, 
-    (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS }, EP_NONE, },
+    (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    
+    { .n = BAR_VIS_STATUS }, EP_NONE, { NULL }, },
+
   { { "presentation_mode",    "Toggle presentation mode" },                 1, 
-    (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE, },
+    (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    
+    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE,  { NULL }, },
+
   { { "protect",    "Protect/unprotect this tab" },                 1, 
-    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_PROTECT }, EP_NONE, },
+    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
+    { .n = LP_PROTECT }, EP_NONE,  { "prot", NULL }, },
+
   { { "lock_domain",    "Lock/unlock domain for this tab" },                 1, 
-    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_LOCK_DOMAIN  }, EP_NONE, },
+    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
+    { .n = LP_LOCK_DOMAIN  }, EP_NONE,  { NULL }, },
+
   { { "lock_uri",    "Lock/unlock uri for this tab" },                 1, 
-    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_LOCK_URI  }, EP_NONE, },
+    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
+    { .n = LP_LOCK_URI  }, EP_NONE,  { NULL }, },
+
   { { "visible",    "Lock/unlock uri for this tab" },                 1, 
-    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    { .n = LP_VISIBLE  }, EP_NONE, },
+    (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
+    { .n = LP_VISIBLE  }, EP_NONE,  { NULL }, },
   { { "allow_cookie",          "Cookie allowed",                    }, 1, 
-    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, { .n = COOKIE_ALLOW_PERSISTENT }, EP_NONE, },
+    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, 
+    { .n = COOKIE_ALLOW_PERSISTENT }, EP_NONE,  { NULL }, },
+
   { { "allow_session_cookie",          "Cookie allowed",                    }, 1, 
-    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, { .n = COOKIE_ALLOW_SESSION }, EP_NONE, },
+    (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, 
+    { .n = COOKIE_ALLOW_SESSION }, EP_NONE, { NULL }, },
+  
   { { "allow_session_cookie_tmp",          "Cookie allowed",                    }, 1, 
-    (Func)commands_allow_cookie,        "No new domain in current context",   ALWAYS_SM, { .n = COOKIE_ALLOW_SESSION_TMP }, EP_NONE, },
+    (Func)commands_allow_cookie,        "No new domain in current context",   ALWAYS_SM, 
+    { .n = COOKIE_ALLOW_SESSION_TMP }, EP_NONE, { NULL }, },
+  
   { { "bookmark",              "Bookmark current page",             }, 1, 
-    (Func)commands_bookmark,            NO_URL,                            POST_SM,     {0},  EP_NONE },
-  { { "bookmarks",             "Bookmarks",                         }, 0,
-    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NORMAL }, EP_NONE, },
-  { { "bookmarks_nv",          "Bookmarks new tab",                }, 0,
-    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_VIEW }, EP_NONE, },
-  { { "bookmarks_nw",          "Bookmarks new window",              }, 0, 
-    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     { .n = OPEN_NEW_WINDOW}, EP_NONE, },
+    (Func)commands_bookmark,            NO_URL,                            POST_SM,     
+    {0},  EP_NONE, { "bmark", "bma", NULL }, },
+  
+  { { "bookmarks",             "Bookmarks",                         }, CP_COMMANDLINE|CP_HAS_MODE,
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     
+    { .n = OPEN_NORMAL }, EP_NONE, { "bmarks", "bmas", NULL }, },
+  
+  { { "bookmarks_nv",          "Bookmarks new tab",                }, CP_COMMANDLINE|CP_HAS_MODE,
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     
+    { .n = OPEN_NEW_VIEW }, EP_NONE, { "tabmarks", NULL }, },
+  
+  { { "bookmarks_nw",          "Bookmarks new window",              }, CP_COMMANDLINE|CP_HAS_MODE, 
+    (Func)commands_bookmarks,           "No Bookmarks",                    NEVER_SM,     
+    { .n = OPEN_NEW_WINDOW}, EP_NONE, { "winmarks", NULL }, },
+  
   { { "new_view",              "New view for next navigation",      }, 0, 
-    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_VIEW }, EP_NONE, },
+    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     
+    { .n = OPEN_NEW_VIEW }, EP_NONE, { NULL }, },
+  
   { { "new_window",            "New window for next navigation",    }, 0, 
-    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     { .n = OPEN_NEW_WINDOW }, EP_NONE, },
+    (Func)commands_new_window_or_view,  NULL,                              NEVER_SM,     
+    { .n = OPEN_NEW_WINDOW }, EP_NONE, { NULL }, },
+  
   { { "command_mode",          "Enter command mode",                }, 0, 
-    (Func)commands_command_mode,            NULL,                              POST_SM, {0}, EP_NONE, },
+    (Func)commands_command_mode,            NULL,                              POST_SM, 
+    {0}, EP_NONE, { NULL }, },
+  
   { { "find_backward",         "Find backward ",                    }, CP_COMMANDLINE|CP_HAS_MODE, 
-    (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = false }, EP_NONE, },
+    (Func)commands_find,                NO_URL,                            NEVER_SM,     
+    { .b = false }, EP_NONE, { "bfind", NULL }, },
+  
   { { "find_forward",          "Find forward ",                     }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_find,                NO_URL,                            NEVER_SM,     { .b = true }, EP_NONE, },
+    (Func)commands_find,                NO_URL,                            NEVER_SM,     
+    { .b = true }, EP_NONE, { "ffind",  NULL, }, },
+  
   { { "find_next",             "Find next",                         }, 1, 
-    (Func)commands_search,                  "No matches",                      ALWAYS_SM,     { .b = true }, EP_NONE, },
+    (Func)commands_search,                  "No matches",                      ALWAYS_SM,     
+    { .b = true }, EP_NONE, { "fnext", NULL, }, },
+  
   { { "find_previous",         "Find previous",                     }, 1, 
-    (Func)commands_search,                  "No matches",                      ALWAYS_SM,     { .b = false }, EP_NONE, },
+    (Func)commands_search,                  "No matches",                      ALWAYS_SM,     
+    { .b = false }, EP_NONE, { "fprev", NULL }, },
+  
   { { "focus_input",           "Focus input",                       }, 1, 
-    (Func)commands_focus_input,        "No input found in current context",      ALWAYS_SM, {0}, EP_NONE, },
+    (Func)commands_focus_input,        "No input found in current context",      ALWAYS_SM, 
+    {0}, EP_NONE, { NULL }, },
+  
   { { "focus_next",            "Focus next view",                   }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_focus,              "No other view",                   ALWAYS_SM,  { .n = 1 }, EP_NONE, },
+    (Func)commands_focus,              "No other view",                   ALWAYS_SM,  
+    { .n = 1 }, EP_NONE, { "tabnext", NULL }, },
+  
   { { "focus_prev",            "Focus previous view",               }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_focus,              "No other view",                   ALWAYS_SM,  { .n = -1 }, EP_NONE, },
+    (Func)commands_focus,              "No other view",                   ALWAYS_SM,  
+    { .n = -1 }, EP_NONE, { "tabprev", NULL }, },
+  
   { { "focus_nth_view",        "Focus nth view",                    }, 0, 
-    (Func)commands_focus_nth_view,       "No such view",                   ALWAYS_SM,  { 0 }, EP_NONE, },
+    (Func)commands_focus_nth_view,       "No such view",                   ALWAYS_SM,  
+    { 0 }, EP_NONE, { NULL }, },
+  
   { { "hint_mode",             "Follow hints",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_ALL }, EP_NONE, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_NORMAL, .i = HINT_T_ALL }, EP_NONE, { "hints", "hi",  NULL }, },
+  
   { { "hint_mode_links",       "Follow links",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          "No links",                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_LINKS }, EP_NONE, },
+    (Func)commands_show_hints,          "No links",                          NEVER_SM,    
+    { .n = OPEN_NORMAL, .i = HINT_T_LINKS }, EP_NONE, { "lhints", "lhi", NULL }, },
+  
   { { "hint_mode_images",       "Follow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          "No images",                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_IMAGES }, EP_NONE, },
+    (Func)commands_show_hints,          "No images",                          NEVER_SM,    
+    { .n = OPEN_NORMAL, .i = HINT_T_IMAGES }, EP_NONE, { "ihints", "ihi", NULL }, },
+  
   { { "hint_mode_images_nv",       "Follow images in new tab",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          "No images",                          NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_IMAGES }, EP_NONE, },
+    (Func)commands_show_hints,          "No images",                          NEVER_SM,    
+    { .n = OPEN_NEW_VIEW, .i = HINT_T_IMAGES }, EP_NONE, { "itabhints", "ithi", NULL }, },
+  
   { { "hint_mode_editable",       "Follow editable",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          "No editable elements",           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_EDITABLE }, EP_NONE, },
+    (Func)commands_show_hints,          "No editable elements",           NEVER_SM,    
+    { .n = OPEN_NORMAL, .i = HINT_T_EDITABLE }, EP_NONE, { "ehints", "ehi", NULL }, },
+  
   { { "hint_mode_url",            "hintopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_URL }, EP_NONE, },
+    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    
+    { .n = OPEN_NORMAL, .i = HINT_T_URL }, EP_NONE, { "uhints", "uhi", NULL }, },
+  
   { { "hint_mode_url_nv",         "hinttabopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_URL }, EP_NONE, },
+    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    
+    { .n = OPEN_NEW_VIEW, .i = HINT_T_URL }, EP_NONE, { "utabhints", "uthi",  NULL }, },
+  
   { { "hint_mode_nv",          "Follow hints in new tab",           }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_VIEW, .i = HINT_T_ALL }, EP_NONE, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_NEW_VIEW, .i = HINT_T_ALL }, EP_NONE, { "tabhints", "thi", NULL }, },
+  
   { { "hint_mode_nw",          "Follow hints in new window",         }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NEW_WINDOW, .i = HINT_T_ALL }, EP_NONE, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_NEW_WINDOW, .i = HINT_T_ALL }, EP_NONE, { "winhints", "whi", NULL }, },
+  
   { { "hint_mode_clipboard",          "Copy to clipboard",         }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_CLIPBOARD }, EP_NONE, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_NORMAL, .i = HINT_T_CLIPBOARD }, EP_NONE, { "chints", "chi", NULL }, },
+  
   { { "hint_mode_primary",          "Copy to primary",         }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_NORMAL, .i = HINT_T_PRIMARY }, EP_NONE, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_NORMAL, .i = HINT_T_PRIMARY }, EP_NONE, { "phints", "phi", NULL }, },
+  
   { { "hint_mode_download",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    { .n = OPEN_DOWNLOAD }, EP_NONE, },
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_DOWNLOAD }, EP_NONE, { "dhints",  }, },
+  
   { { "history_back",          "Go Back",                           }, 1, 
-    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, { .n = OPEN_NORMAL, .i = -1 }, EP_NONE, },
+    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, 
+    { .n = OPEN_NORMAL, .i = -1 }, EP_NONE, { "back", "ba", NULL }, },
+  
   { { "history_forward",       "Go Forward",                        }, 1, 
-    (Func)commands_history,     "End of History",                  ALWAYS_SM, { .n = OPEN_NORMAL, .i = 1 }, EP_NONE, },
+    (Func)commands_history,     "End of History",                  ALWAYS_SM, 
+    { .n = OPEN_NORMAL, .i = 1 }, EP_NONE, { "forward", "fo", NULL }, },
+  
   { { "history_back_nv",          "Go Back",                           }, 1, 
-    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, { .n = OPEN_NEW_VIEW, .i = -1 }, EP_NONE, },
+    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, 
+    { .n = OPEN_NEW_VIEW, .i = -1 }, EP_NONE, { "tabback", "tba", NULL }, },
+  
   { { "history_forward_nv",       "Go Forward",                        }, 1, 
-    (Func)commands_history,     "End of History",                  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .i = 1 }, EP_NONE, },
+    (Func)commands_history,     "End of History",                  ALWAYS_SM, 
+    { .n = OPEN_NEW_VIEW, .i = 1 }, EP_NONE, { "tabforward", "tfo", NULL }, },
+  
   { { "history_back_nw",          "Go Back",                           }, 1, 
-    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .i = -1 }, EP_NONE, },
+    (Func)commands_history,        "Beginning of History",            ALWAYS_SM, 
+    { .n = OPEN_NEW_WINDOW, .i = -1 }, EP_NONE, { "winback", "wba", NULL }, },
+  
   { { "history_forward_nw",       "Go Forward",                        }, 1, 
-    (Func)commands_history,     "End of History",                  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .i = 1 }, EP_NONE, },
+    (Func)commands_history,     "End of History",                  ALWAYS_SM, 
+    { .n = OPEN_NEW_WINDOW, .i = 1 }, EP_NONE, { "winforward", "wfo", NULL }, },
+  
   { { "insert_mode",           "Insert Mode",                       }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_insert_mode,             NULL,                              POST_SM, { 0 }, EP_NONE, },
+    (Func)commands_insert_mode,             NULL,                              POST_SM, 
+    { 0 }, EP_NONE, { NULL }, },
+  
   { { "load_html",             "Load html",                         }, 1, 
-    (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL }, EP_NONE, },
+    (Func)commands_open,           NULL,                       NEVER_SM,   
+    { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL }, EP_NONE, { NULL }, },
+  
   { { "load_html_nv",          "Load html new view",                }, 1, 
-    (Func)commands_open,           NULL,                       NEVER_SM,   { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL }, EP_NONE, },
+    (Func)commands_open,           NULL,                       NEVER_SM,   
+    { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL }, EP_NONE, { NULL }, },
+  
   { { "open",                  "open",                              }, 1, 
-    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL,      .p = NULL }, EP_COMP_DEFAULT, },
+    (Func)commands_open,                NULL,                 NEVER_SM,   
+    { .n = OPEN_NORMAL,      .p = NULL }, EP_COMP_DEFAULT, { "o", NULL }, },
+  
   { { "Open",                  "open",                              }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NORMAL | SET_URL, .p = NULL }, EP_COMP_DEFAULT, },
+    (Func)commands_open,                NULL,                 NEVER_SM,   
+    { .n = OPEN_NORMAL | SET_URL, .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
+  
   { { "open_nv",               "tabopen",                          }, 1, 
-    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW,     .p = NULL }, EP_COMP_DEFAULT, },
+    (Func)commands_open,                NULL,                 NEVER_SM,   
+    { .n = OPEN_NEW_VIEW,     .p = NULL }, EP_COMP_DEFAULT, { "t", "tabopen", NULL }, },
+  
   { { "Open_nv",               "tabopen",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL }, EP_COMP_DEFAULT, },
+    (Func)commands_open,                NULL,                 NEVER_SM,   
+    { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
+  
   { { "open_nw",               "winopen",                           }, 1, 
-    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW,     .p = NULL }, EP_COMP_DEFAULT, },
+    (Func)commands_open,                NULL,                 NEVER_SM,   
+    { .n = OPEN_NEW_WINDOW,     .p = NULL }, EP_COMP_DEFAULT, { "w", "winopen", NULL }, },
+  
   { { "Open_nw",               "winopen",                           }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_open,                NULL,                 NEVER_SM,   { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL }, EP_COMP_DEFAULT, },
+    (Func)commands_open,                NULL,                 NEVER_SM,   
+    { .n = OPEN_NEW_WINDOW | SET_URL,     .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
+  
   { { "open_quickmark",        "Open quickmark",                         }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_quickmark,           NO_URL,                            NEVER_SM,   { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, EP_NONE, },
+    (Func)commands_quickmark,           NO_URL,                            NEVER_SM,   
+    { .n = QUICK_MARK_OPEN, .i=OPEN_NORMAL }, EP_NONE, { "qmarks", NULL }, },
+  
   { { "open_quickmark_nv",     "Open quickmark in a new tab",                }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, EP_NONE, },
+    (Func)commands_quickmark,           NULL,                              NEVER_SM,    
+    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_VIEW }, EP_NONE, { "tabqmarks", NULL }, },
+  
   { { "open_quickmark_nw",     "Open quickmark in a new window",              }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_quickmark,           NULL,                              NEVER_SM,    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, EP_NONE, },
+    (Func)commands_quickmark,           NULL,                              NEVER_SM,    
+    { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, EP_NONE, { "winqmarks", NULL }, },
+  
   { { "open_start_page",       "Open startpage",                    }, 1, 
-    (Func)commands_open_startpage,      "No startpage set",                ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_open_startpage,      "No startpage set",                ALWAYS_SM, 
+    { 0 }, EP_NONE, { "home", NULL }, },
+  
   { { "quit",           "Quit dwb",               }, 1, 
-    (Func)commands_quit,         NULL,                   ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_quit,         NULL,                   ALWAYS_SM, 
+    { 0 }, EP_NONE, { "q", NULL }, },
+  
   { { "reload",                "Reload current page",                            }, 1, 
-    (Func)commands_reload,              NULL,                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_reload,              NULL,                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { "re", NULL }, },
+  
   { { "reload_bypass_cache",   "Reload current page without using any cached data",  }, 1, 
-    (Func)commands_reload_bypass_cache,       NULL,                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_reload_bypass_cache,       NULL,                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { "refull", NULL }, },
+  
   { { "stop_loading",   "Stop loading current page",  }, 1, 
-    (Func)commands_stop_loading,       NULL,                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_stop_loading,       NULL,                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { "st", "stop", NULL }, },
+  
   { { "remove_view",           "Close view",                        }, 1, 
-    (Func)commands_remove_view,         NULL,                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_remove_view,         NULL,                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { "close", NULL }, },
+  
   { { "only",           "Close other tabs except for current",                        }, 1, 
-    (Func)commands_only,         "No other view",                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_only,         "No other view",                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { NULL }, },
+  
   { { "save_quickmark",        "Save quickmark",    }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_quickmark,           NO_URL,                            NEVER_SM,    { .n = QUICK_MARK_SAVE }, EP_NONE, },
+    (Func)commands_quickmark,           NO_URL,                            NEVER_SM,    
+    { .n = QUICK_MARK_SAVE }, EP_NONE, { "quickmark", "qmark", NULL }, },
+  
   { { "save_search_field",     "Add a new searchengine",            }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_add_search_field,    "No input in current context",     POST_SM, { 0 }, EP_NONE, },
+    (Func)commands_add_search_field,    "No input in current context",     POST_SM, 
+    { 0 }, EP_NONE, { "sengine", NULL }, },
+  
   { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, 
-    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_BOTTOM }, EP_NONE, },
+    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    
+    { .n = SCROLL_BOTTOM }, EP_NONE, { "bottom", NULL }, },
+  
   { { "scroll_down",           "Scroll down",                       }, 1, 
-    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_DOWN, }, EP_NONE, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    
+    { .n = SCROLL_DOWN, }, EP_NONE, { "down", NULL }, },
+  
   { { "scroll_left",           "Scroll left",                       }, 1, 
-    (Func)commands_scroll,              "Left side of the page",           ALWAYS_SM,    { .n = SCROLL_LEFT }, EP_NONE, },
+    (Func)commands_scroll,              "Left side of the page",           ALWAYS_SM,    
+    { .n = SCROLL_LEFT }, EP_NONE, { "left",  NULL }, },
+  
   { { "scroll_halfpage_down",  "Scroll one-half page down",         }, 1, 
-    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_DOWN, }, EP_NONE, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    
+    { .n = SCROLL_HALF_PAGE_DOWN, }, EP_NONE, { "halfdown", NULL }, },
+  
   { { "scroll_halfpage_up",    "Scroll one-half page up",           }, 1, 
-    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_HALF_PAGE_UP, }, EP_NONE, },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    
+    { .n = SCROLL_HALF_PAGE_UP, }, EP_NONE, { "halfup", NULL }, },
+  
   { { "scroll_page_down",      "Scroll one page down",              }, 1, 
-    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    { .n = SCROLL_PAGE_DOWN, }, EP_NONE, },
+    (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    
+    { .n = SCROLL_PAGE_DOWN, }, EP_NONE, { "pagedown", NULL }, },
+  
   { { "scroll_page_up",        "Scroll one page up",                }, 1, 
-    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_PAGE_UP, }, EP_NONE, },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    
+    { .n = SCROLL_PAGE_UP, }, EP_NONE, { "pageup", NULL }, },
+  
   { { "scroll_right",          "Scroll left",                       }, 1, 
-    (Func)commands_scroll,              "Right side of the page",          ALWAYS_SM,    { .n = SCROLL_RIGHT }, EP_NONE, },
+    (Func)commands_scroll,              "Right side of the page",          ALWAYS_SM,    
+    { .n = SCROLL_RIGHT }, EP_NONE, { "right", NULL }, },
+  
   { { "scroll_top",            "Scroll to the top of the page",     }, 1, 
-    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    { .n = SCROLL_TOP }, EP_NONE, },
+    (Func)commands_scroll,              NULL,                              ALWAYS_SM,    
+    { .n = SCROLL_TOP }, EP_NONE, { "top", NULL }, },
+  
   { { "scroll_up",             "Scroll up",                         }, 1, 
-    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    { .n = SCROLL_UP, }, EP_NONE, },
-  { { "set_setting",    "Set setting",               }, 0, 
-    (Func)commands_set_setting,         NULL,                              NEVER_SM, { 0 }, EP_NONE, },
+    (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    
+    { .n = SCROLL_UP, }, EP_NONE, { "up", NULL }, },
+  
+  { { "set_setting",    "Set setting",               }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_set_setting,         NULL,                              NEVER_SM, 
+    { 0 }, EP_NONE, { "settings", NULL }, },
+  
   { { "set_key",               "Set keybinding",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
-    (Func)commands_set_key,             NULL,                              NEVER_SM,    { 0 }, EP_NONE, },
+    (Func)commands_set_key,             NULL,                              NEVER_SM,    
+    { 0 }, EP_NONE, { "keys", NULL }, },
+  
   { { "show_keys",             "Key configuration",                 }, 1, 
-    (Func)commands_show_keys,           NULL,                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_show_keys,           NULL,                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { "ssettings", NULL }, },
+  
   { { "show_settings",         "Settings configuration",                          }, 1, 
-    (Func)commands_show_settings,       NULL,                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_show_settings,       NULL,                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { "skeys", NULL }, },
+  
   { { "view_source",           "View source",                       }, 1, 
-    (Func)commands_view_source,         NULL,                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_view_source,         NULL,                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { "source", "so", NULL }, },
+  
   { { "zoom_in",               "Zoom in",                           }, 1, 
-    (Func)commands_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, 
+    { 0 }, EP_NONE, { "zi", NULL }, },
+  
   { { "zoom_normal",           "Zoom to 100%",                         }, 1, 
-    (Func)commands_set_zoom_level,      NULL,                              ALWAYS_SM,    { .d = 1.0,   .p = NULL }, EP_NONE, },
+    (Func)commands_set_zoom_level,      NULL,                              ALWAYS_SM,    
+    { .d = 1.0,   .p = NULL }, EP_NONE, { "zn", NULL }, },
+  
   { { "zoom_out",              "Zoom out",                          }, 1, 
-    (Func)commands_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, 
+    { 0 }, EP_NONE, { "zo", NULL }, },
+  
   /* yank and paste */
+  
   { { "yank",                  "Yank current url",                              }, 1, 
-    (Func)commands_yank,                 NO_URL,                 POST_SM,  { .p = GDK_NONE, .n = CA_URI }, EP_NONE, },
+    (Func)commands_yank,                 NO_URL,                 POST_SM,  
+    { .p = GDK_NONE, .n = CA_URI }, EP_NONE, { "yank", NULL }, },
+  
   { { "yank_primary",          "Yank current url to Primary selection",         }, 1, 
-    (Func)commands_yank,                 NO_URL,                 POST_SM,  { .p = GDK_SELECTION_PRIMARY, .n = CA_URI }, EP_NONE, },
+    (Func)commands_yank,                 NO_URL,                 POST_SM,  
+    { .p = GDK_SELECTION_PRIMARY, .n = CA_URI }, EP_NONE, { "pyank", NULL }, },
+  
   { { "yank_title",                  "Yank current title",                              }, 1, 
-    (Func)commands_yank,                 "No title",                 POST_SM,  { .p = GDK_NONE, .n = CA_TITLE }, EP_NONE, },
+    (Func)commands_yank,                 "No title",                 POST_SM,  
+    { .p = GDK_NONE, .n = CA_TITLE }, EP_NONE, { "tyank", NULL }, },
+  
   { { "yank_title_primary",          "Yank current title to Primary selection",         }, 1, 
-    (Func)commands_yank,                 "No title",                 POST_SM,  { .p = GDK_SELECTION_PRIMARY, .n = CA_TITLE }, EP_NONE, },
+    (Func)commands_yank,                 "No title",                 POST_SM,  
+    { .p = GDK_SELECTION_PRIMARY, .n = CA_TITLE }, EP_NONE, { "tpyank", NULL }, },
+  
   { { "paste",                 "Open url from clipboard",                             }, 1, 
-    (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_NONE }, EP_NONE, },
+    (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, 
+    { .n = OPEN_NORMAL, .p = GDK_NONE }, EP_NONE, { NULL }, },
+  
   { { "paste_primary",         "Open url from primary selection",           }, 1, 
-    (Func)commands_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY }, EP_NONE, },
+    (Func)commands_paste,               "No primary selection",  ALWAYS_SM, 
+    { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY }, EP_NONE, { "ppaste", NULL }, },
+  
   { { "paste_nv",              "Open url from clipboard in a new tab",                   }, 1, 
-    (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_NONE }, EP_NONE, },
+    (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, 
+    { .n = OPEN_NEW_VIEW, .p = GDK_NONE }, EP_NONE, { "tabpaste", NULL }, },
+  
   { { "paste_primary_nv",      "Open url from primary selection in a new window", }, 1, 
-    (Func)commands_paste,               "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY }, EP_NONE, },
+    (Func)commands_paste,               "No primary selection",  ALWAYS_SM, 
+    { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY }, EP_NONE, { "tabppaste", NULL }, },
+  
   { { "paste_nw",              "Open url from clipboard in a new window",                   }, 1, 
-    (Func)commands_paste,             "Clipboard is empty",    ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_NONE }, EP_NONE, },
+    (Func)commands_paste,             "Clipboard is empty",    ALWAYS_SM, 
+    { .n = OPEN_NEW_WINDOW, .p = GDK_NONE }, EP_NONE, { "winpaste", NULL }, },
+  
   { { "paste_primary_nw",      "Open url from primary selection in a new window", }, 1, 
-    (Func)commands_paste,             "No primary selection",  ALWAYS_SM, { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY }, EP_NONE, },
+    (Func)commands_paste,             "No primary selection",  ALWAYS_SM, 
+    { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY }, EP_NONE, { "winppaste", NULL }, },
+  
 
   { { "save_session",          "Save current session", },              1, 
-    (Func)commands_save_session,        NULL,                              ALWAYS_SM,  { .n = NORMAL_MODE }, EP_NONE, },
+    (Func)commands_save_session,        NULL,                              ALWAYS_SM,  
+    { .n = NORMAL_MODE }, EP_NONE, { "wq", NULL }, },
+  
   { { "save_named_session",    "Save current session with name", },    CP_COMMANDLINE|CP_HAS_MODE, 
-    (Func)commands_save_session,        NULL,                              POST_SM,  { .n = SAVE_SESSION }, EP_NONE, },
+    (Func)commands_save_session,        NULL,                              POST_SM,  
+    { .n = SAVE_SESSION }, EP_NONE, { "wqn", NULL }, },
+  
   { { "save",                  "Save all configuration files", },      1, 
-    (Func)commands_save_files,        NULL,                              POST_SM,  { .n = SAVE_SESSION }, EP_NONE, },
+    (Func)commands_save_files,        NULL,                              POST_SM,  
+    { .n = SAVE_SESSION }, EP_NONE, { NULL }, },
+  
   { { "undo",                  "Undo closing last tab", },             1, 
-    (Func)commands_undo,              "No more closed views",            POST_SM,  { 0 }, EP_NONE, },
+    (Func)commands_undo,              "No more closed views",            POST_SM,  
+    { 0 }, EP_NONE, { NULL }, },
+  
   { { "web_inspector",         "Open the webinspector", },             1, 
-    (Func)commands_web_inspector,              "Enable developer extras for the webinspector",           POST_SM, { 0 }, EP_NONE, },
+    (Func)commands_web_inspector,              "Enable developer extras for the webinspector",           POST_SM, 
+    { 0 }, EP_NONE, { "inspect", "insp", NULL }, },
+  
   { { "reload_scripts",         "Reload scripts", },             1, 
-    (Func)commands_reload_scripts,              NULL,                              ALWAYS_SM, { 0 }, EP_NONE, },
+    (Func)commands_reload_scripts,              NULL,                              ALWAYS_SM, 
+    { 0 }, EP_NONE, { NULL }, },
+  
 
   /* Entry editing */
   { { "entry_delete_word",      "Command line: Delete word back", },                      0,  
-    (Func)commands_entry_movement,        NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = true }, EP_ENTRY, },
+    (Func)commands_entry_movement,        NULL,        ALWAYS_SM,  
+    { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = true }, EP_ENTRY, { NULL }, },
+  
   { { "entry_delete_word_forward",      "Command line: Delete word forward", },                      0,  
-    (Func)commands_entry_movement,        NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = true }, EP_ENTRY, },
+    (Func)commands_entry_movement,        NULL,        ALWAYS_SM,  
+    { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = true }, EP_ENTRY, { NULL }, },
+  
   { { "entry_delete_letter",    "Command line: Delete a single letter", },           0,  
-    (Func)commands_entry_movement,          NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_LOGICAL_POSITIONS, .i = -1, .b = true }, EP_ENTRY, },
+    (Func)commands_entry_movement,          NULL,        ALWAYS_SM,  
+    { .n = GTK_MOVEMENT_LOGICAL_POSITIONS, .i = -1, .b = true }, EP_ENTRY, { NULL }, },
+  
   { { "entry_delete_line",      "Command line: Delete to beginning of the line", },  0,  
-    (Func)commands_entry_movement,            NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_BUFFER_ENDS, .i = -1, .b = true }, EP_ENTRY, },
+    (Func)commands_entry_movement,            NULL,        ALWAYS_SM,  
+    { .n = GTK_MOVEMENT_BUFFER_ENDS, .i = -1, .b = true }, EP_ENTRY, { NULL }, },
+  
   { { "entry_delete_line_end",      "Command line: Delete to end of the line", },  0,  
-    (Func)commands_entry_movement,            NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_BUFFER_ENDS, .i = 1, .b = true }, EP_ENTRY, },
+    (Func)commands_entry_movement,            NULL,        ALWAYS_SM,  
+    { .n = GTK_MOVEMENT_BUFFER_ENDS, .i = 1, .b = true }, EP_ENTRY, { NULL }, },
+  
   { { "entry_word_forward",     "Command line: Move cursor forward on word", },      0,  
-    (Func)commands_entry_movement,           NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = false }, EP_ENTRY, },
+    (Func)commands_entry_movement,           NULL,        ALWAYS_SM,  
+    { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = false }, EP_ENTRY, { NULL }, },
+  
   { { "entry_word_back",        "Command line: Move cursor back on word", },         0,  
-    (Func)commands_entry_movement,              NULL,        ALWAYS_SM,  { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = false }, EP_ENTRY, },
+    (Func)commands_entry_movement,              NULL,        ALWAYS_SM,  
+    { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = false }, EP_ENTRY, { NULL }, },
+  
   { { "entry_history_back",     "Command line: Command history back", },             0,  
-    (Func)commands_entry_history_back,           NULL,        ALWAYS_SM,  { 0 }, EP_ENTRY, },
+    (Func)commands_entry_history_back,           NULL,        ALWAYS_SM,  
+    { 0 }, EP_ENTRY, { NULL }, },
+  
   { { "entry_history_forward",  "Command line: Command history forward", },          0,  
-    (Func)commands_entry_history_forward,        NULL,        ALWAYS_SM,  { 0 }, EP_ENTRY, },
+    (Func)commands_entry_history_forward,        NULL,        ALWAYS_SM,  
+    { 0 }, EP_ENTRY, { NULL }, },
+  
   { { "download_set_execute",   "Downloads: toggle between spawning application/download path", }, 0, 
-    (Func)download_set_execute,        NULL,       ALWAYS_SM,  { 0 }, EP_ENTRY, },
+    (Func)download_set_execute,        NULL,       ALWAYS_SM,  
+    { 0 }, EP_ENTRY, { NULL }, },
+  
   { { "complete_history",       "Complete browsing history", },       0, 
-    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_HISTORY }, EP_ENTRY, },
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
+    { .n = COMP_HISTORY }, EP_ENTRY, { NULL }, },
+  
   { { "complete_bookmarks",     "Complete bookmarks", },              0, 
-    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_BOOKMARK }, EP_ENTRY, },
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
+    { .n = COMP_BOOKMARK }, EP_ENTRY, { NULL }, },
+  
   { { "complete_searchengines", "Complete searchengines", },          0, 
-    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_SEARCH }, EP_ENTRY, },
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
+    { .n = COMP_SEARCH }, EP_ENTRY, { NULL }, },
+  
   { { "complete_userscript",    "Complete userscripts", },            0, 
-    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_USERSCRIPT }, EP_ENTRY, },
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
+    { .n = COMP_USERSCRIPT }, EP_ENTRY, { NULL }, },
+  
   { { "complete_path",          "Complete local file path", },        0, 
-    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_PATH }, EP_ENTRY, },
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
+    { .n = COMP_PATH }, EP_ENTRY, { NULL }, },
+  
   { { "complete_current_history",          "Complete history of current tab", },        0, 
-    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     { .n = COMP_CUR_HISTORY }, EP_ENTRY, },
+    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
+    { .n = COMP_CUR_HISTORY }, EP_ENTRY, { NULL }, },
+  
   { { "buffers",                          "Buffer", },        CP_COMMANDLINE | CP_HAS_MODE,
-    (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     { .n = COMP_BUFFER }, EP_NONE, },
+    (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     
+    { .n = COMP_BUFFER }, EP_NONE, { NULL }, },
+  
 
+  
   { { "spell_checking",        "Setting: spell checking",         },   0, 
-    (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-spell-checking" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                              POST_SM,    
+    { .p = "enable-spell-checking" }, EP_NONE, { NULL }, },
+  
   { { "scripts",               "Setting: scripts",                },   1, 
-    (Func)commands_toggle_property,     NULL,                              POST_SM,    { .p = "enable-scripts" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                              POST_SM,    
+    { .p = "enable-scripts" }, EP_NONE, { NULL }, },
+  
   { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-shrink-images" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    
+    { .p = "auto-shrink-images" }, EP_NONE, { NULL }, },
+  
   { { "autoload_images",       "Toggle autoload images",          },   0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-load-images" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    
+    { .p = "auto-load-images" }, EP_NONE, { NULL }, },
+  
   { { "autoresize_window",     "Toggle autoresize window",        },   0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "auto-resize-window" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    
+    { .p = "auto-resize-window" }, EP_NONE, { NULL }, },
+  
   { { "caret_browsing",        "Toggle caret browsing",           },   0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-caret-browsing" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    
+    { .p = "enable-caret-browsing" }, EP_NONE, { NULL }, },
+  
   { { "default_context_menu",  "Toggle enable default context menu",           }, 0, 
-    (Func)commands_toggle_property,     NULL,       POST_SM,    { .p = "enable-default-context-menu" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,       POST_SM,    
+    { .p = "enable-default-context-menu" }, EP_NONE, { NULL }, },
+  
   { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, 
-    (Func)commands_toggle_property,     NULL,                  POST_SM, { .p = "enable-file-acces-from-file-uris" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                  POST_SM, 
+    { .p = "enable-file-acces-from-file-uris" }, EP_NONE, { NULL }, },
+  
   { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, 
-    (Func)commands_toggle_property,  NULL,   POST_SM, { .p = "enable-universal-file-acces-from-file-uris" }, EP_NONE, },
+    (Func)commands_toggle_property,  NULL,   POST_SM, 
+    { .p = "enable-universal-file-acces-from-file-uris" }, EP_NONE, { NULL }, },
+  
   { { "java_applets",          "Toggle java applets",             }, 0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-java-applets" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    
+    { .p = "enable-java-applets" }, EP_NONE, { NULL }, },
+  
   { { "plugins",               "Toggle plugins",                  }, 1, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-plugins" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    
+    { .p = "enable-plugins" }, EP_NONE, { NULL }, },
+  
   { { "private_browsing",      "Toggle private browsing",         }, 0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-private-browsing" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    
+    { .p = "enable-private-browsing" }, EP_NONE, { NULL }, },
+  
   { { "page_cache",            "Toggle page cache",               }, 0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    { .p = "enable-page-cache" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,                    POST_SM,    
+    { .p = "enable-page-cache" }, EP_NONE, { NULL }, },
+  
   { { "js_can_open_windows",   "Toggle Javascript can open windows automatically", }, 0, 
-    (Func)commands_toggle_property,     NULL,   POST_SM,    { .p = "javascript-can-open-windows-automatically" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,   POST_SM,    
+    { .p = "javascript-can-open-windows-automatically" }, EP_NONE, { NULL }, },
+  
   { { "enforce_96_dpi",        "Toggle enforce a resolution of 96 dpi", },    0, 
-    (Func)commands_toggle_property,     NULL,           POST_SM,    { .p = "enforce-96-dpi" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,           POST_SM,    
+    { .p = "enforce-96-dpi" }, EP_NONE, { NULL }, },
+  
   { { "print_backgrounds",     "Toggle print backgrounds", },      0,    
-    (Func)commands_toggle_property,    NULL,                    POST_SM,    { .p = "print-backgrounds" }, EP_NONE, },
+    (Func)commands_toggle_property,    NULL,                    POST_SM,    
+    { .p = "print-backgrounds" }, EP_NONE, { NULL }, },
+  
   { { "resizable_text_areas",  "Toggle resizable text areas", },   0,  
-    (Func)commands_toggle_property,      NULL,                    POST_SM,    { .p = "resizable-text-areas" }, EP_NONE, },
+    (Func)commands_toggle_property,      NULL,                    POST_SM,    
+    { .p = "resizable-text-areas" }, EP_NONE, { NULL }, },
+  
   { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   
-    (Func)commands_toggle_property,     NULL,              POST_SM,    { .p = "tab-key-cycles-through-elements" }, EP_NONE, },
+    (Func)commands_toggle_property,     NULL,              POST_SM,    
+    { .p = "tab-key-cycles-through-elements" }, EP_NONE, { NULL }, },
+  
   { { "proxy",                 "Toggle proxy",                    },        1,     
-    (Func)commands_toggle_proxy,        NULL,                    POST_SM,    { 0 }, EP_NONE, },
+    (Func)commands_toggle_proxy,        NULL,                    POST_SM,    
+    { 0 }, EP_NONE, { NULL }, },
+  
   { { "toggle_scripts_host", "Toggle block content for current host" },   1, 
-    (Func) commands_toggle_scripts, NULL,                  POST_SM,    { .n = ALLOW_HOST }, EP_NONE, },
+    (Func) commands_toggle_scripts, NULL,                  POST_SM,    
+    { .n = ALLOW_HOST }, EP_NONE, { "hscript",  NULL }, },
+  
   { { "toggle_scripts_uri",    "Toggle block content for current url" }, 1, 
-    (Func) commands_toggle_scripts, NULL,                POST_SM,    { .n = ALLOW_URI }, EP_NONE, },
+    (Func) commands_toggle_scripts, NULL,                POST_SM,    
+    { .n = ALLOW_URI }, EP_NONE, { "uscript", NULL }, },
+  
   { { "toggle_scripts_host_tmp", "Toggle block content for current host for this session" },  1, 
-    (Func) commands_toggle_scripts, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP }, EP_NONE, },
+    (Func) commands_toggle_scripts, NULL,      POST_SM,    
+    { .n = ALLOW_HOST | ALLOW_TMP }, EP_NONE, { "thscript", NULL }, },
+  
   { { "toggle_scripts_uri_tmp", "Toggle block content for current url for this session" },   1, 
-    (Func) commands_toggle_scripts, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP }, EP_NONE, },
+    (Func) commands_toggle_scripts, NULL,       POST_SM,    
+    { .n = ALLOW_URI | ALLOW_TMP }, EP_NONE, { "tuscript", NULL }, },
+  
   { { "toggle_plugins_host", "Toggle plugin blocker for current host" },   1, 
-    (Func) commands_toggle_plugin_blocker, NULL,                  POST_SM,    { .n = ALLOW_HOST }, EP_NONE, },
+    (Func) commands_toggle_plugin_blocker, NULL,                  POST_SM,    
+    { .n = ALLOW_HOST }, EP_NONE, { "hplugin", NULL }, },
+  
   { { "toggle_plugins_uri",    "Toggle plugin blocker for current url" }, 1, 
-    (Func) commands_toggle_plugin_blocker, NULL,                POST_SM,    { .n = ALLOW_URI }, EP_NONE, },
+    (Func) commands_toggle_plugin_blocker, NULL,                POST_SM,    
+    { .n = ALLOW_URI }, EP_NONE, { "uplugin", NULL }, },
+  
   { { "toggle_plugins_host_tmp", "Toggle block content for current domain for this session" },  1, 
-    (Func) commands_toggle_plugin_blocker, NULL,      POST_SM,    { .n = ALLOW_HOST | ALLOW_TMP }, EP_NONE, },
+    (Func) commands_toggle_plugin_blocker, NULL,      POST_SM,    
+    { .n = ALLOW_HOST | ALLOW_TMP }, EP_NONE, { "thplugin", NULL }, },
+  
   { { "toggle_plugins_uri_tmp", "Toggle block content for current url for this session" },   1, 
-    (Func) commands_toggle_plugin_blocker, NULL,       POST_SM,    { .n = ALLOW_URI | ALLOW_TMP }, EP_NONE, },
+    (Func) commands_toggle_plugin_blocker, NULL,       POST_SM,    
+    { .n = ALLOW_URI | ALLOW_TMP }, EP_NONE, { "tuplugin", NULL }, },
+  
 #ifdef DWB_ADBLOCKER
   { { "toggle_adblocker", "Toggle adblocker" },   1, 
-    (Func) commands_toggle_adblocker, NULL,       POST_SM,    { 0 }, EP_NONE, },
+    (Func) commands_toggle_adblocker, NULL,       POST_SM,    
+    { 0 }, EP_NONE, { "ads", NULL }, },
 #endif
+
   { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, 
-    (Func) commands_toggle_hidden_files, NULL,                  ALWAYS_SM,    { 0 }, EP_NONE, },
+    (Func) commands_toggle_hidden_files, NULL,                  ALWAYS_SM,    
+    { 0 }, EP_NONE, { "hidden", NULL }, },
+  
   { { "print",                 "Print current page" },                         1, 
-    (Func) commands_print, NULL,                             POST_SM,    { 0 }, EP_NONE, },
+    (Func) commands_print, NULL,                             POST_SM,    
+    { 0 }, EP_NONE, { "ha", NULL }, },
+  
   { { "execute_userscript",    "Execute userscript" },                 1, 
-    (Func) commands_execute_userscript, "No userscripts available",     NEVER_SM,    { 0 }, EP_NONE, },
+    (Func) commands_execute_userscript, "No userscripts available",     NEVER_SM,    
+    { 0 }, EP_NONE, { "script", NULL }, },
+  
   { { "fullscreen",    "Toggle fullscreen" },                 1, 
-    (Func) commands_fullscreen, NULL,     ALWAYS_SM,    { 0 }, EP_NONE, },
+    (Func) commands_fullscreen, NULL,     ALWAYS_SM,    
+    { 0 }, EP_NONE, { "fs", NULL }, },
+  
   { { "pass_through",    "Pass-through mode" },                 1, 
-    (Func) commands_pass_through, NULL,     POST_SM,    { 0 }, EP_NONE, },
+    (Func) commands_pass_through, NULL,     POST_SM,    
+    { 0 }, EP_NONE, { "pthrough", NULL }, },
+  
   { { "open_editor",    "Open external editor" },                 1, 
-    (Func) commands_open_editor, "No input focused",     NEVER_SM,    { 0 }, EP_NONE, },
+    (Func) commands_open_editor, "No input focused",     NEVER_SM,    
+    { 0 }, EP_NONE, { "editor", NULL }, },
+  
 };/*}}}*/
 
 /* SETTINGS_ARRAY {{{*/

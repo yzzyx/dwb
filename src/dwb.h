@@ -450,6 +450,7 @@ struct _FunctionMap {
   ShowMessage hide;
   Arg arg;
   unsigned int entry;
+  const char *alias[5];
 };
 struct _KeyMap {
   const char *key;
@@ -816,5 +817,6 @@ void dwb_set_adblock(GList *, WebSettings *);
 gboolean dwb_eval_key(GdkEventKey *);
 void dwb_follow_selection(void);
 void dwb_update_layout(void);
+const char * dwb_parse_nummod(const char *);
 
 #endif

@@ -107,6 +107,7 @@ completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, vo
 void
 completion_set_entry_text(Completion *c) {
   const char *text; 
+  int l;
   CompletionType type = dwb_eval_completion_type();
   switch (type) {
     case COMP_QUICKMARK: text = c->data; 
@@ -117,12 +118,18 @@ completion_set_entry_text(Completion *c) {
   
   if (dwb.state.mode & COMMAND_MODE && _current_command) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), _current_command);
-    int l = strlen(_current_command);
+    l = strlen(_current_command);
     gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), " ", -1, &l);
-    gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &_command_len);
+    gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &l);
   }
   else {
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
+    char buf[7];
+    gtk_editable_delete_text(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+    if (dwb.state.nummod > -1) {
+      l =  snprintf(buf, 7, "%d", dwb.state.nummod);
+      gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), buf, -1, &l);
+    }
+    gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &l);
   }
   gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
 
@@ -301,6 +308,19 @@ completion_get_settings_completion() {
   return list;
 }/*}}}*/
 
+static GList * 
+completion_create_key_completion(GList *l, const char *first, KeyMap *m) {
+  char *mod = dwb_modmask_to_string(m->mod);
+  char *value = g_strdup_printf("%s %s", mod, m->key);
+  Completion *c = completion_get_completion_item(first, m->map->n.second, value, m);
+  gtk_box_pack_start(GTK_BOX(dwb.gui.compbox), c->event, false, false, 0);
+  l = g_list_append(l, c);
+  FREE(value);
+  g_free(mod);
+  return l;
+
+}
+
 /*dwb_completion_get_keys()         return  GList *Completions{{{*/
 static GList * 
 completion_get_key_completion(gboolean entry) {
@@ -308,7 +328,25 @@ completion_get_key_completion(gboolean entry) {
   const char *input = GET_TEXT();
 
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_first);
+  input = dwb_parse_nummod(input);
 
+  /* check for aliases first */
+  for (GList *l = dwb.keymap; l; l=l->next) {
+    KeyMap *m = l->data;
+    if (!entry && ((m->map->entry & EP_ENTRY) || !(m->map->prop & CP_COMMANDLINE))) {
+      continue;
+    }
+    if (!entry) {
+      for (int i=0; m->map->alias[i] != NULL; i++) {
+        if (g_str_has_prefix(m->map->alias[i], input) || !g_strcmp0(input, m->map->alias[i]) ) {
+          list = completion_create_key_completion(list, m->map->alias[i], m);
+          break;
+        }
+      }
+    }
+  }
+
+  /* check for long commands */
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
     if (!entry && ((m->map->entry & EP_ENTRY) || !(m->map->prop & CP_COMMANDLINE))) {
@@ -316,13 +354,7 @@ completion_get_key_completion(gboolean entry) {
     }
     Navigation n = m->map->n;
     if (g_str_has_prefix(n.first, input)) {
-      char *mod = dwb_modmask_to_string(m->mod);
-      char *value = g_strdup_printf("%s %s", mod, m->key);
-      Completion *c = completion_get_completion_item(n.first, n.second, value, m);
-      gtk_box_pack_start(GTK_BOX(dwb.gui.compbox), c->event, false, false, 0);
-      list = g_list_append(list, c);
-      FREE(value);
-      g_free(mod);
+      list = completion_create_key_completion(list, n.first, m);
     }
   }
   return list;
@@ -455,12 +487,25 @@ completion_command_line() {
   while (g_ascii_isspace(*text))
     text++;
   char **token = g_strsplit(text, " ", 2);
+  const char *bak;
   if (dwb.state.mode & COMMAND_MODE) {
     for (GList *l = dwb.keymap; l; l=l->next) {
+      bak = token[0];
       km = l->data;
-      if (! g_strcmp0(token[0], km->map->n.first) && km->map->entry & EP_COMP_DEFAULT) {
+      while (g_ascii_isspace(*bak) || g_ascii_isdigit(*bak)) 
+        bak++;
+      if (! g_strcmp0(bak, km->map->n.first) && km->map->entry & EP_COMP_DEFAULT) {
         ret = true;
         break;
+      }
+      else {
+        for (int i=0; km->map->alias[i] != NULL; i++) {
+          if (! g_strcmp0(bak, km->map->alias[i]) && km->map->entry & EP_COMP_DEFAULT) {
+            ret = true;
+            break;
+          }
+        }
+        if (ret) break;
       }
     }
   }
