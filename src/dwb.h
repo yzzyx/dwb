@@ -431,6 +431,7 @@ struct _Arg {
   gpointer arg;
   gboolean b;
   char *e;
+  gboolean ro;
 };
 struct _Key {
   char *str;

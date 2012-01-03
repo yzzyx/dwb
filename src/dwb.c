@@ -3148,7 +3148,7 @@ dwb_parse_command_line(const char *line) {
       if (m->map->prop & CP_HAS_MODE) 
         dwb_change_mode(NORMAL_MODE, true);
       dwb.state.nummod = nummod;
-      if (token[1]) {
+      if (token[1] && ! m->map->arg.ro) {
         g_strstrip(token[1]);
         m->map->arg.p = token[1];
       }

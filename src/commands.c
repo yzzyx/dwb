@@ -62,6 +62,8 @@ commands_simple_command(KeyMap *km) {
   else if (ret == STATUS_ERROR) {
     dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
   }
+  if (! km->map->arg.ro)
+    km->map->arg.p = NULL;
   dwb_clean_key_buffer();
 }/*}}}*/
 

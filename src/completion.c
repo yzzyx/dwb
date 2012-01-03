@@ -517,11 +517,8 @@ completion_command_line() {
       dwb.state.mode |= COMPLETE_COMMAND_MODE;
       _command_len++;
     }
-    else {
-      gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), " ", 1, &_command_len);
-      gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
+    else 
       ret = false;
-    }
   }
   g_strfreev(token);
   return ret;

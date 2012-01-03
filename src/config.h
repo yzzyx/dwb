@@ -508,43 +508,43 @@ static FunctionMap FMAP [] = {
   
   { { "yank",                  "Yank current url",                              }, 1, 
     (Func)commands_yank,                 NO_URL,                 POST_SM,  
-    { .p = GDK_NONE, .n = CA_URI }, EP_NONE, { NULL }, },
+    { .p = GDK_NONE, .n = CA_URI, .ro = true }, EP_NONE, { NULL }, },
   
   { { "yank_primary",          "Yank current url to Primary selection",         }, 1, 
     (Func)commands_yank,                 NO_URL,                 POST_SM,  
-    { .p = GDK_SELECTION_PRIMARY, .n = CA_URI }, EP_NONE, { "pyank", NULL }, },
+    { .p = GDK_SELECTION_PRIMARY, .n = CA_URI, .ro = true }, EP_NONE, { "pyank", NULL }, },
   
   { { "yank_title",                  "Yank current title",                              }, 1, 
     (Func)commands_yank,                 "No title",                 POST_SM,  
-    { .p = GDK_NONE, .n = CA_TITLE }, EP_NONE, { "tyank", NULL }, },
+    { .p = GDK_NONE, .n = CA_TITLE, .ro = true }, EP_NONE, { "tyank", NULL }, },
   
   { { "yank_title_primary",          "Yank current title to Primary selection",         }, 1, 
     (Func)commands_yank,                 "No title",                 POST_SM,  
-    { .p = GDK_SELECTION_PRIMARY, .n = CA_TITLE }, EP_NONE, { "tpyank", NULL }, },
+    { .p = GDK_SELECTION_PRIMARY, .n = CA_TITLE, .ro = true }, EP_NONE, { "tpyank", NULL }, },
   
   { { "paste",                 "Open url from clipboard",                             }, 1, 
     (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, 
-    { .n = OPEN_NORMAL, .p = GDK_NONE }, EP_NONE, { NULL }, },
+    { .n = OPEN_NORMAL, .p = GDK_NONE, .ro = true }, EP_NONE, { NULL }, },
   
   { { "paste_primary",         "Open url from primary selection",           }, 1, 
     (Func)commands_paste,               "No primary selection",  ALWAYS_SM, 
-    { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY }, EP_NONE, { "ppaste", NULL }, },
+    { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY, .ro = true }, EP_NONE, { "ppaste", NULL }, },
   
   { { "paste_nv",              "Open url from clipboard in a new tab",                   }, 1, 
     (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, 
-    { .n = OPEN_NEW_VIEW, .p = GDK_NONE }, EP_NONE, { "tabpaste", NULL }, },
+    { .n = OPEN_NEW_VIEW, .p = GDK_NONE, .ro = true }, EP_NONE, { "tabpaste", NULL }, },
   
   { { "paste_primary_nv",      "Open url from primary selection in a new window", }, 1, 
     (Func)commands_paste,               "No primary selection",  ALWAYS_SM, 
-    { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY }, EP_NONE, { "tabppaste", NULL }, },
+    { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY, .ro = true }, EP_NONE, { "tabppaste", NULL }, },
   
   { { "paste_nw",              "Open url from clipboard in a new window",                   }, 1, 
     (Func)commands_paste,             "Clipboard is empty",    ALWAYS_SM, 
-    { .n = OPEN_NEW_WINDOW, .p = GDK_NONE }, EP_NONE, { "winpaste", NULL }, },
+    { .n = OPEN_NEW_WINDOW, .p = GDK_NONE, .ro = true }, EP_NONE, { "winpaste", NULL }, },
   
   { { "paste_primary_nw",      "Open url from primary selection in a new window", }, 1, 
     (Func)commands_paste,             "No primary selection",  ALWAYS_SM, 
-    { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY }, EP_NONE, { "winppaste", NULL }, },
+    { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY, .ro = true }, EP_NONE, { "winppaste", NULL }, },
   
 
   { { "save_session",          "Save current session", },              1, 
@@ -645,75 +645,75 @@ static FunctionMap FMAP [] = {
   
   { { "spell_checking",        "Setting: spell checking",         },   0, 
     (Func)commands_toggle_property,     NULL,                              POST_SM,    
-    { .p = "enable-spell-checking" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-spell-checking" }, EP_NONE, { NULL }, },
   
   { { "scripts",               "Setting: scripts",                },   1, 
     (Func)commands_toggle_property,     NULL,                              POST_SM,    
-    { .p = "enable-scripts" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-scripts" }, EP_NONE, { NULL }, },
   
   { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, 
     (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    { .p = "auto-shrink-images" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "auto-shrink-images" }, EP_NONE, { NULL }, },
   
   { { "autoload_images",       "Toggle autoload images",          },   0, 
     (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    { .p = "auto-load-images" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "auto-load-images" }, EP_NONE, { NULL }, },
   
   { { "autoresize_window",     "Toggle autoresize window",        },   0, 
     (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    { .p = "auto-resize-window" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "auto-resize-window" }, EP_NONE, { NULL }, },
   
   { { "caret_browsing",        "Toggle caret browsing",           },   0, 
     (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    { .p = "enable-caret-browsing" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-caret-browsing" }, EP_NONE, { NULL }, },
   
   { { "default_context_menu",  "Toggle enable default context menu",           }, 0, 
     (Func)commands_toggle_property,     NULL,       POST_SM,    
-    { .p = "enable-default-context-menu" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-default-context-menu" }, EP_NONE, { NULL }, },
   
   { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, 
     (Func)commands_toggle_property,     NULL,                  POST_SM, 
-    { .p = "enable-file-acces-from-file-uris" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-file-acces-from-file-uris" }, EP_NONE, { NULL }, },
   
   { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, 
     (Func)commands_toggle_property,  NULL,   POST_SM, 
-    { .p = "enable-universal-file-acces-from-file-uris" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-universal-file-acces-from-file-uris" }, EP_NONE, { NULL }, },
   
   { { "java_applets",          "Toggle java applets",             }, 0, 
     (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    { .p = "enable-java-applets" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-java-applets" }, EP_NONE, { NULL }, },
   
   { { "plugins",               "Toggle plugins",                  }, 1, 
     (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    { .p = "enable-plugins" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-plugins" }, EP_NONE, { NULL }, },
   
   { { "private_browsing",      "Toggle private browsing",         }, 0, 
     (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    { .p = "enable-private-browsing" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-private-browsing" }, EP_NONE, { NULL }, },
   
   { { "page_cache",            "Toggle page cache",               }, 0, 
     (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    { .p = "enable-page-cache" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enable-page-cache" }, EP_NONE, { NULL }, },
   
   { { "js_can_open_windows",   "Toggle Javascript can open windows automatically", }, 0, 
     (Func)commands_toggle_property,     NULL,   POST_SM,    
-    { .p = "javascript-can-open-windows-automatically" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "javascript-can-open-windows-automatically" }, EP_NONE, { NULL }, },
   
   { { "enforce_96_dpi",        "Toggle enforce a resolution of 96 dpi", },    0, 
     (Func)commands_toggle_property,     NULL,           POST_SM,    
-    { .p = "enforce-96-dpi" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "enforce-96-dpi" }, EP_NONE, { NULL }, },
   
   { { "print_backgrounds",     "Toggle print backgrounds", },      0,    
     (Func)commands_toggle_property,    NULL,                    POST_SM,    
-    { .p = "print-backgrounds" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "print-backgrounds" }, EP_NONE, { NULL }, },
   
   { { "resizable_text_areas",  "Toggle resizable text areas", },   0,  
     (Func)commands_toggle_property,      NULL,                    POST_SM,    
-    { .p = "resizable-text-areas" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "resizable-text-areas" }, EP_NONE, { NULL }, },
   
   { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   
     (Func)commands_toggle_property,     NULL,              POST_SM,    
-    { .p = "tab-key-cycles-through-elements" }, EP_NONE, { NULL }, },
+    {  .ro = true, .p = "tab-key-cycles-through-elements" }, EP_NONE, { NULL }, },
   
   { { "proxy",                 "Toggle proxy",                    },        1,     
     (Func)commands_toggle_proxy,        NULL,                    POST_SM,    
