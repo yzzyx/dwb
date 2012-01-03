@@ -45,22 +45,22 @@
 #endif
 
 /* DECLARATIONS {{{*/
-static void dwb_webkit_setting(GList *, WebSettings *);
-static void dwb_webview_property(GList *, WebSettings *);
-static void dwb_set_background_tab(GList *, WebSettings *);
-static void dwb_set_scripts(GList *, WebSettings *);
-static void dwb_set_user_agent(GList *, WebSettings *);
-static void dwb_set_startpage(GList *, WebSettings *);
-static void dwb_set_message_delay(GList *, WebSettings *);
-static void dwb_set_history_length(GList *, WebSettings *);
-static void dwb_set_plugin_blocker(GList *, WebSettings *);
-static void dwb_set_sync_interval(GList *, WebSettings *);
-static void dwb_set_private_browsing(GList *, WebSettings *);
-static void dwb_set_cookies(GList *, WebSettings *);
+static DwbStatus dwb_webkit_setting(GList *, WebSettings *);
+static DwbStatus dwb_webview_property(GList *, WebSettings *);
+static DwbStatus dwb_set_background_tab(GList *, WebSettings *);
+static DwbStatus dwb_set_scripts(GList *, WebSettings *);
+static DwbStatus dwb_set_user_agent(GList *, WebSettings *);
+static DwbStatus dwb_set_startpage(GList *, WebSettings *);
+static DwbStatus dwb_set_message_delay(GList *, WebSettings *);
+static DwbStatus dwb_set_history_length(GList *, WebSettings *);
+static DwbStatus dwb_set_plugin_blocker(GList *, WebSettings *);
+static DwbStatus dwb_set_sync_interval(GList *, WebSettings *);
+static DwbStatus dwb_set_private_browsing(GList *, WebSettings *);
+static DwbStatus dwb_set_cookies(GList *, WebSettings *);
 static DwbStatus dwb_set_widget_packing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
-static void dwb_reload_scripts(GList *, WebSettings *);
-static void dwb_set_single_instance(GList *, WebSettings *);
+static DwbStatus dwb_reload_scripts(GList *, WebSettings *);
+static DwbStatus dwb_set_single_instance(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
@@ -101,7 +101,7 @@ static char *restore = NULL;
 
 /* SETTINGS_FUNCTIONS{{{*/
 /* dwb_set_plugin_blocker {{{*/
-static void
+static DwbStatus
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
   if (s->arg.b) {
@@ -112,6 +112,7 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
     plugins_disconnect(gl);
     v->plugins->status ^= (v->plugins->status & PLUGIN_STATUS_ENABLED) | PLUGIN_STATUS_DISABLED;
   }
+  return STATUS_OK;
 }/*}}}*/
 
 #ifdef DWB_ADBLOCKER
@@ -130,9 +131,10 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
 #endif
 
 /* dwb_set_cookies */
-static void
+static DwbStatus
 dwb_set_cookies(GList *gl, WebSettings *s) {
   dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(s->arg.p);
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_cookies */
@@ -148,10 +150,11 @@ dwb_set_widget_packing(GList *gl, WebSettings *s) {
 }/*}}}*/
 
 /* dwb_set_private_browsing  {{{ */
-static void
+static DwbStatus
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
   dwb.misc.private_browsing = s->arg.b;
   dwb_webkit_setting(gl, s);
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_cookie_accept_policy {{{ */
@@ -165,7 +168,7 @@ dwb_set_cookie_accept_policy(GList *gl, WebSettings *s) {
 }/*}}}*/
 
 /* dwb_set_sync_interval{{{*/
-static void
+static DwbStatus
 dwb_set_sync_interval(GList *gl, WebSettings *s) {
   if (dwb.misc.synctimer > 0) {
     g_source_remove(dwb.misc.synctimer);
@@ -175,34 +178,39 @@ dwb_set_sync_interval(GList *gl, WebSettings *s) {
   if (s->arg.i > 0) {
     dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_history, NULL);
   }
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_startpage(GList *l, WebSettings *){{{*/
-static void 
+static DwbStatus 
 dwb_set_startpage(GList *l, WebSettings *s) {
   dwb.misc.startpage = s->arg.p;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_message_delay(GList *l, WebSettings *){{{*/
-static void 
+static DwbStatus 
 dwb_set_message_delay(GList *l, WebSettings *s) {
   dwb.misc.message_delay = s->arg.i;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_history_length(GList *l, WebSettings *){{{*/
-static void 
+static DwbStatus 
 dwb_set_history_length(GList *l, WebSettings *s) {
   dwb.misc.history_length = s->arg.i;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_background_tab (GList *, WebSettings *s) {{{*/
-static void 
+static DwbStatus 
 dwb_set_background_tab(GList *l, WebSettings *s) {
   dwb.state.background_tabs = s->arg.b;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_single_instance(GList *l, WebSettings *s){{{*/
-static void
+static DwbStatus
 dwb_set_single_instance(GList *l, WebSettings *s) {
   if (!s->arg.b) {
     if (dwb.misc.si_channel) {
@@ -214,10 +222,11 @@ dwb_set_single_instance(GList *l, WebSettings *s) {
   else if (!dwb.misc.si_channel) {
     dwb_open_si_channel();
   }
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_proxy{{{*/
-void
+DwbStatus
 dwb_set_proxy(GList *l, WebSettings *s) {
   if (s->arg.b) {
     SoupURI *uri = soup_uri_new(dwb.misc.proxyuri);
@@ -228,10 +237,11 @@ dwb_set_proxy(GList *l, WebSettings *s) {
     g_object_set(dwb.misc.soupsession, "proxy-uri", NULL, NULL);
   }
   dwb_set_normal_message(dwb.state.fview, true, "Set setting proxy: %s", s->arg.b ? "true" : "false");
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_scripts {{{*/
-void
+static DwbStatus
 dwb_set_scripts(GList *gl, WebSettings *s) {
   dwb_webkit_setting(gl, s);
   View *v = VIEW(gl);
@@ -239,10 +249,11 @@ dwb_set_scripts(GList *gl, WebSettings *s) {
     v->status->scripts = SCRIPTS_ALLOWED;
   else 
     v->status->scripts = SCRIPTS_BLOCKED;
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_user_agent {{{*/
-void
+static DwbStatus
 dwb_set_user_agent(GList *gl, WebSettings *s) {
   char *ua = s->arg.p;
   if (! ua) {
@@ -252,11 +263,12 @@ dwb_set_user_agent(GList *gl, WebSettings *s) {
   }
   dwb_webkit_setting(gl, s);
   g_hash_table_insert(dwb.settings, g_strdup("user-agent"), s);
+  return STATUS_OK;
 }/*}}}*/
 
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
-static void
+static DwbStatus
 dwb_webkit_setting(GList *gl, WebSettings *s) {
   WebKitWebSettings *settings = gl ? webkit_web_view_get_settings(WEBVIEW(gl)) : dwb.state.web_settings;
   switch (s->type) {
@@ -264,12 +276,13 @@ dwb_webkit_setting(GList *gl, WebSettings *s) {
     case INTEGER: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
     case BOOLEAN: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
     case CHAR:    g_object_set(settings, s->n.first, !s->arg.p || !g_strcmp0(s->arg.p, "null") ? NULL : (char*)s->arg.p  , NULL); break;
-    default: return;
+    default: return STATUS_OK;
   }
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_webview_property(GList, WebSettings){{{*/
-static void
+static DwbStatus
 dwb_webview_property(GList *gl, WebSettings *s) {
   WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
   switch (s->type) {
@@ -277,14 +290,16 @@ dwb_webview_property(GList *gl, WebSettings *s) {
     case INTEGER: g_object_set(web, s->n.first, s->arg.i, NULL); break;
     case BOOLEAN: g_object_set(web, s->n.first, s->arg.b, NULL); break;
     case CHAR:    g_object_set(web, s->n.first, (char*)s->arg.p, NULL); break;
-    default: return;
+    default: return STATUS_OK;
   }
+  return STATUS_OK;
 }/*}}}*/
 
 /*dwb_reload_scripts {{{  */
-static void 
+static DwbStatus 
 dwb_reload_scripts(GList *gl, WebSettings *s) {
   dwb_init_scripts();
+  return STATUS_OK;
 } /*}}}*/
 /*}}}*/
 

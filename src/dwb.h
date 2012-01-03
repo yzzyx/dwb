@@ -763,7 +763,7 @@ void dwb_focus(GList *);
 void dwb_source_remove();
 gboolean dwb_spawn(GList *, const char *, const char *uri);
 
-void dwb_set_proxy(GList *, WebSettings *);
+DwbStatus dwb_set_proxy(GList *, WebSettings *);
 
 void dwb_new_window(const char *uri);
 
