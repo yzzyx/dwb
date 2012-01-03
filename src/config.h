@@ -175,11 +175,11 @@ static FunctionMap FMAP [] = {
 
   { { "toggle_bars",    "Toggle visibility of status and tabbar" },                 1, 
     (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    
-    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE, { NULL }, },
+    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE, { "bars", NULL }, },
 
   { { "toggle_topbar",    "Toggle visibility of tabbar" },                 1, 
     (Func) commands_toggle_bars,                NULL,     ALWAYS_SM,    
-    { .n = BAR_VIS_TOP  },                  EP_NONE,  { NULL }, },
+    { .n = BAR_VIS_TOP  },                  EP_NONE,  { "tbar", NULL }, },
 
   { { "toggle_bottombar",    "Toggle visibility of statusbar" },                 1, 
     (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    
@@ -187,7 +187,7 @@ static FunctionMap FMAP [] = {
 
   { { "presentation_mode",    "Toggle presentation mode" },                 1, 
     (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    
-    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE,  { NULL }, },
+    { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE,  { "present", NULL }, },
 
   { { "protect",    "Protect/unprotect this tab" },                 1, 
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
@@ -195,26 +195,26 @@ static FunctionMap FMAP [] = {
 
   { { "lock_domain",    "Lock/unlock domain for this tab" },                 1, 
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
-    { .n = LP_LOCK_DOMAIN  }, EP_NONE,  { NULL }, },
+    { .n = LP_LOCK_DOMAIN  }, EP_NONE,  { "dlock", NULL }, },
 
   { { "lock_uri",    "Lock/unlock uri for this tab" },                 1, 
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
-    { .n = LP_LOCK_URI  }, EP_NONE,  { NULL }, },
+    { .n = LP_LOCK_URI  }, EP_NONE,  { "ulock", NULL }, },
 
-  { { "visible",    "Lock/unlock uri for this tab" },                 1, 
+  { { "visible",    "Toggle visibility for this tab" },                 1, 
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
     { .n = LP_VISIBLE  }, EP_NONE,  { NULL }, },
-  { { "allow_cookie",          "Cookie allowed",                    }, 1, 
+  { { "allow_cookie",          "Cookie allowed",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, 
-    { .n = COOKIE_ALLOW_PERSISTENT }, EP_NONE,  { NULL }, },
+    { .n = COOKIE_ALLOW_PERSISTENT }, EP_NONE,  { "cookie", NULL }, },
 
-  { { "allow_session_cookie",          "Cookie allowed",                    }, 1, 
+  { { "allow_session_cookie",          "Cookie allowed",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, 
-    { .n = COOKIE_ALLOW_SESSION }, EP_NONE, { NULL }, },
+    { .n = COOKIE_ALLOW_SESSION }, EP_NONE, { "scookie", NULL }, },
   
-  { { "allow_session_cookie_tmp",          "Cookie allowed",                    }, 1, 
+  { { "allow_session_cookie_tmp",          "Cookie allowed",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_allow_cookie,        "No new domain in current context",   ALWAYS_SM, 
-    { .n = COOKIE_ALLOW_SESSION_TMP }, EP_NONE, { NULL }, },
+    { .n = COOKIE_ALLOW_SESSION_TMP }, EP_NONE, { "tcookie", NULL }, },
   
   { { "bookmark",              "Bookmark current page",             }, 1, 
     (Func)commands_bookmark,            NO_URL,                            POST_SM,     
@@ -272,9 +272,9 @@ static FunctionMap FMAP [] = {
     (Func)commands_focus,              "No other view",                   ALWAYS_SM,  
     { .n = -1 }, EP_NONE, { "tabprev", NULL }, },
   
-  { { "focus_nth_view",        "Focus nth view",                    }, 0, 
+  { { "focus_nth_view",        "Focus nth view",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_focus_nth_view,       "No such view",                   ALWAYS_SM,  
-    { 0 }, EP_NONE, { NULL }, },
+    { 0 }, EP_NONE, { "tab", NULL }, },
   
   { { "hint_mode",             "Follow hints",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
@@ -350,7 +350,7 @@ static FunctionMap FMAP [] = {
   
   { { "insert_mode",           "Insert Mode",                       }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_insert_mode,             NULL,                              POST_SM, 
-    { 0 }, EP_NONE, { NULL }, },
+    { 0 }, EP_NONE, { "i", "insert", NULL }, },
   
   { { "load_html",             "Load html",                         }, 1, 
     (Func)commands_open,           NULL,                       NEVER_SM,   
@@ -430,7 +430,7 @@ static FunctionMap FMAP [] = {
   
   { { "save_search_field",     "Add a new searchengine",            }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_add_search_field,    "No input in current context",     POST_SM, 
-    { 0 }, EP_NONE, { "sengine", NULL }, },
+    { 0 }, EP_NONE, { "search", NULL }, },
   
   { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, 
     (Func)commands_scroll,              NULL,                              ALWAYS_SM,    
@@ -482,11 +482,11 @@ static FunctionMap FMAP [] = {
   
   { { "show_keys",             "Key configuration",                 }, 1, 
     (Func)commands_show_keys,           NULL,                              ALWAYS_SM, 
-    { 0 }, EP_NONE, { "ssettings", NULL }, },
+    { 0 }, EP_NONE, { "skeys", NULL }, },
   
   { { "show_settings",         "Settings configuration",                          }, 1, 
     (Func)commands_show_settings,       NULL,                              ALWAYS_SM, 
-    { 0 }, EP_NONE, { "skeys", NULL }, },
+    { 0 }, EP_NONE, { "ssettings", NULL }, },
   
   { { "view_source",           "View source",                       }, 1, 
     (Func)commands_view_source,         NULL,                              ALWAYS_SM, 
@@ -508,7 +508,7 @@ static FunctionMap FMAP [] = {
   
   { { "yank",                  "Yank current url",                              }, 1, 
     (Func)commands_yank,                 NO_URL,                 POST_SM,  
-    { .p = GDK_NONE, .n = CA_URI }, EP_NONE, { "yank", NULL }, },
+    { .p = GDK_NONE, .n = CA_URI }, EP_NONE, { NULL }, },
   
   { { "yank_primary",          "Yank current url to Primary selection",         }, 1, 
     (Func)commands_yank,                 NO_URL,                 POST_SM,  
@@ -561,7 +561,7 @@ static FunctionMap FMAP [] = {
   
   { { "undo",                  "Undo closing last tab", },             1, 
     (Func)commands_undo,              "No more closed views",            POST_SM,  
-    { 0 }, EP_NONE, { NULL }, },
+    { 0 }, EP_NONE, { "u", NULL }, },
   
   { { "web_inspector",         "Open the webinspector", },             1, 
     (Func)commands_web_inspector,              "Enable developer extras for the webinspector",           POST_SM, 
@@ -639,7 +639,7 @@ static FunctionMap FMAP [] = {
   
   { { "buffers",                          "Buffer", },        CP_COMMANDLINE | CP_HAS_MODE,
     (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     
-    { .n = COMP_BUFFER }, EP_NONE, { NULL }, },
+    { .n = COMP_BUFFER }, EP_NONE, { "bu", NULL }, },
   
 
   
@@ -767,7 +767,7 @@ static FunctionMap FMAP [] = {
   
   { { "execute_userscript",    "Execute userscript" },                 1, 
     (Func) commands_execute_userscript, "No userscripts available",     NEVER_SM,    
-    { 0 }, EP_NONE, { "script", NULL }, },
+    { 0 }, EP_NONE, { NULL }, },
   
   { { "fullscreen",    "Toggle fullscreen" },                 1, 
     (Func) commands_fullscreen, NULL,     ALWAYS_SM,    

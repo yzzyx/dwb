@@ -48,71 +48,102 @@ Note: all shortcuts are casesensitive, e.g. C-H means Control-Shift-h.
 .TP
 .BR [n]j
 Scroll [n times] down (command: 
-.BR scroll_down ).
+.BR scroll_down , 
+aliases: 
+.BR down ).
 .TP
 .BR [n]k
 Scroll [n times] up (command: 
-.BR scroll_up ).
+.BR scroll_up ,
+aliases:
+.BR up ).
 .TP
 .BR [n]h
 Scroll [n times] left (command: 
-.BR scroll_left ).
+.BR scroll_left ,
+aliases:
+.BR left ).
 .TP
 .BR [n]l
 Scroll [n times] right (command 
-.BR scroll_right).
+.BR scroll_right ,
+aliases:
+.BR right ).
 .TP
 .BR [n]gg
 Scroll to the top or to n% of the page (command 
-.BR scroll_top).
+.BR scroll_top ,
+aliases:
+.BR top ).
 .TP
 .BR [n]G
 Scroll to the bottom or to n% of the page (command 
-.BR scroll_bottom).
+.BR scroll_bottom ,
+aliases:
+.BR bottom ).
 .TP
 .BR  [n]C-f
 Scroll [n] pages down (command
-.BR scroll_page_down ).
+.BR scroll_page_down ,
+aliases:
+.BR pagedown ).
 .TP
 .BR [n]C-b
 Scroll [n] pages up (comman
-.BR scroll_page_up  ).
+.BR scroll_page_up  ,
+aliases:
+.BR pageup ).
 .TP
 .BR  [n]C-d
 Scroll [n] half pages down (command
-.BR scroll_halfpage_down ).
+.BR scroll_halfpage_down ,
+aliases:
+.BR halfdown ).
 .TP
 .BR [n]C-u
 Scroll [n] half pages up (command
-.BR scroll_halfpage_up  ).
-.TP 
+.BR scroll_halfpage_up  ,
+aliases:
+.BR halfup ).
 .TP
 .B : 
 Enter Commandmode.
 .TP
 .BR o 
 Open new url in the focused view (command
-.BR open ).
+.BR open ,
+aliases:
+.BR o ).
+.TP
 .BR go 
 Open url in the focused view, set the current url in the navigation bar.
 .TP
 .BR O 
 Open url in a new view (command 
-.BR open_nv ).
+.BR open_nv ,
+aliases:
+.BR tabopen , 
+.BR t ).
 .TP
 .BR gO 
 Open url in a new view, set the current url in the navigation bar.
 .TP
 .BR wo 
 Open url in a new instance (command 
-.BR open_nw ).
+.BR open_nw ,
+aliases:
+.BR winopen ,
+.BR w ).
 .TP
 .BR wO 
 Open url in a new window, set the current url in the navigation bar.
 .TP
 .BR i 
 Enter Insertmode (command 
-.BR insert_mode ).
+.BR insert_mode ,
+aliases:
+.BR i , 
+.BR insert ).
 .TP
 .BR ga 
 Add a new blank view (command
@@ -120,7 +151,9 @@ Add a new blank view (command
 .TP
 .BR d
 Close current view (command
-.BR remove_view ).
+.BR remove_view ,
+aliases:
+.BR close ).
 .TP
 .BR co
 Close all tabs except for the current one (command
@@ -128,103 +161,151 @@ Close all tabs except for the current one (command
 .TP
 .BR C-q
 Quit (command
-.BR quit ).
+.BR quit ,
+aliases:
+.BR q ).
 .TP
 .BR u
 Undo closing last view (command
-.BR undo ).
+.BR undo ,
+aliases:
+.BR u ).
 .TP
 .BR C-h
 Open the default startpage (command
-.BR open_start_page ).
+.BR open_start_page ,
+aliases:
+.BR home ).
 .TP
 .BR H  
 Go back (command 
-.BR history_back ).
+.BR history_back ,
+aliases:
+.BR back ,
+.BR ba ).
 .TP
 .BR L 
 Go forward (command 
-.BR history_forward ).
+.BR history_forward ,
+aliases:
+.BR forward , 
+.BR fo ).
 .TP
 .BR th  
 Go back in a new tab (command 
-.BR history_back_nv ).
+.BR history_back_nv ,
+aliases:
+.BR tabback ,
+.BR tba ).
 .TP
 .BR tl 
 Go forward in a new tab (command 
-.BR history_forward_nv ).
+.BR history_forward_nv ,
+aliases:
+.BR tabforward ,
+.BR tfo ).
 .TP
 .BR wh  
 Go back in a new window (command 
-.BR history_back_nw ).
+.BR history_back_nw ,
+aliases:
+.BR winback ,
+.BR wba ).
 .TP
 .BR wl 
 Go forward in a new window (command 
-.BR history_forward_nw ).
+.BR history_forward_nw ,
+aliases:
+.BR winforward ,
+.BR wfo ).
 .TP
 .BR M
 Add a bookmark (command
-.BR bookmark ).
+.BR bookmark ,
+aliases:
+.BR bmark , 
+.BR bma ).
 .TP 
 .B gb
 Show Bookmarks (command
-.BR bookmarks ).
+.BR bookmarks ,
+aliases:
+.BR bmarks ,
+.BR bmas ).
 .TP 
 .B gB
 Show Bookmarks, open bookmark in a new view (command
-.BR bookmarks_nv ).
+.BR bookmarks_nv ,
+aliases:
+.BR tabmarks ).
 .TP 
 .B wB
 Show Bookmarks, open bookmark in a new window (command
-.BR bookmarks_nw ).
+.BR bookmarks_nw ,
+aliases:
+.BR winmarks ).
 .TP
 .BR m
 Add a quickmark (command 
-.BR save_quickmark ).
+.BR save_quickmark ,
+aliases:
+.BR quickmark , 
+.BR qmark ).
 .TP
 .BR b
 Open quickmark (command 
-.BR open_quickmark ).
+.BR open_quickmark ,
+aliases:
+.BR qmarks ).
 .TP
-.BR B[:graph:]
+.BR B
 Open quickmark in a new view (command
-.BR open_quickmark_nv ).
+.BR open_quickmark_nv ,
+aliases:
+.BR tabqmarks ).
 .TP
 .BR wb[:graph:]
 Open quickmark in a new window (command
-.BR open_quickmark_nw ).
-.TP
-.BR gl 
-Enlarge masterarea (command 
-.BR increase_master ). 
-.TP
-.BR gh 
-Minimize masterarea (command 
-.BR decrease_master ). 
+.BR open_quickmark_nw ,
+aliases:
+.BR winqmarks ).
 .TP
 .BR r
 Reload focused view (command
-.BR reload ).
+.BR reload ,
+aliases:
+.BR re ).
 .TP
 .BR R
 Reload focused view without using any cached data (command
-.BR reload_bypass_cache ).
+.BR reload_bypass_cache ,
+aliases:
+.BR refull ).
 .TP
 .BR C-s
 Stop loading current page (command
-.BR stop_loading ).
+.BR stop_loading ,
+aliases:
+.BR stop ,
+.BR st ).
 .TP
-.BR [n]zi
+.BR [n]+
 Zoom in [n times] (command
-.BR zoom_in ). 
+.BR zoom_in ,
+aliases:
+.BR zi ).
 .TP
-.BR [n]zo
+.BR [n]-
 Zoom out [n times] (command 
-.BR zoom_out ). 
+.BR zoom_out ,
+aliases:
+.BR zo ).
 .TP
-.BR z=
+.BR =
 Zoom to 100% (command 
-.BR zoom_normal ).
+.BR zoom_normal ,
+aliases:
+.BR zn ).
 .TP
 .BR sf
 Save all configuration files (command
@@ -232,111 +313,168 @@ Save all configuration files (command
 .TP
 .BR ZZ
 Save current session and exit (command 
-.BR save_session ).
+.BR save_session ,
+aliases:
+.BR wq ).
 .TP
 .BR gZZ 
 Save current session with name and exit (command 
-.BR save_named_session ).
-.TP
-.BR gp
-Push current View to master area (command
-.BR push_master ).
+.BR save_named_session ,
+aliases:
+.BR wqn ).
 .TP
 .BR [n]J
 Cycle focus [n views] forwards. (command 
-.BR focus_next ).
+.BR focus_next ,
+aliases:
+.BR tabnext ).
 .TP
 .BR [n]K
 Cycle focus [n views] backwards. (command 
-.BR focus_prev ).
+.BR focus_prev ,
+aliases:
+.BR tabprev ).
 .TP
 .BR [n]T
 Focus nth view or first, if n is ommitted. 
+(command 
+.BR focus_nth_view ,
+aliases:
+.BR tab ).
 .TP
 .BR gt
 Show all open tabs. (command 
-.BR buffers ).
+.BR buffers ,
+aliases:
+.BR bu ).
 .TP
 .BR [n]C-P
 Protect tab [n]. Closing this tab must be confirmed (command 
-.BR protect ).
+.BR protect ,
+aliases:
+.BR prot ).
 .TP
 .BR [n]xd
 Lock tab [n]. Locking a tab will lock this tab to the current domain, it's not
 possible to navigate to another domain until unlocked. 
-.BR lock_domain ).
+.BR lock_domain ,
+aliases:
+.BR dlock ).
 .TP
 .BR [n]xu
 Lock tab [n]. Locking a tab will lock this tab to the current uri, it's not
 possible to navigate to another uri until unlocked. 
-.BR lock_uri ).
+.BR lock_uri ,
+aliases:
+.BR ulock ).
 .TP
 .BR f 
 Show hints (command 
-.BR hint_mode ).
+.BR hint_mode ,
+aliases:
+.BR hints , 
+.BR hi ).
 .TP
 .BR F
 Show hints, open link in a new view. (command
-.BR hint_mode_nv ).
+.BR hint_mode_nv ,
+aliases:
+.BR tabhints , 
+.BR thi ).
 .TP
 .BR wf
 Show hints, open link in a new view. (command
-.BR hint_mode_nw ).
+.BR hint_mode_nw ,
+aliases:
+.BR winhints ,
+.BR whi ).
 .TP
 .BR ;i 
 Follow image (command 
-.BR hint_mode_images ).
+.BR hint_mode_images ,
+aliases:
+.BR ihints ,
+ihi ).
 .TP
 .BR ;I 
 Follow image in a new tab (command 
-.BR hint_mode_images_nv ).
+.BR hint_mode_images_nv ,
+aliases:
+.BR itabhints ,
+.BR ithi ).
 .TP
 .BR ;e 
 Focus editable elements via hints (command 
-.BR hint_mode_editable ).
+.BR hint_mode_editable ,
+aliases:
+.BR ehints ,
+.BR ehi ).
 .TP
 .BR ;o 
 Set hint\'s url in commandline (command 
-.BR hint_mode_url ).
+.BR hint_mode_url ,
+aliases:
+.BR uhints ,
+.BR uhi ).
 .TP
 .BR ;O 
 Set hint\'s url in commandline, open in a new tab (command 
-.BR hint_mode_url_nv ).
+.BR hint_mode_url_nv ,
+aliases:
+.BR utabhints ,
+.BR uthi ).
 .TP
 .BR ;d 
 Download via hints (command 
-.BR hint_mode_download ).
+.BR hint_mode_download ,
+aliases:
+.BR dhints ).
 .TP
 .BR ;y 
 Save link location to clipboard (command 
-.BR hint_mode_clipboard ).
+.BR hint_mode_clipboard ,
+aliases:
+.BR chints ,
+.BR chi ).
 .TP
 .BR ;Y
 Save link location to primary selection (command 
-.BR hint_mode_primary ). 
+.BR hint_mode_primary ,
+aliases:
+.BR phints ,
+.BR phi ).
 .TP
 .BR gf 
 Toggle "view source" (command 
-.BR view_source ). 
+.BR view_source ,
+aliases:
+.BR source ,
+.BR so ).
 .TP
 .BR CC 
 Allow persistent cookie for the current website. The domain will be saved in  
 .IR cookies.allow .
 Cookies that are allowed by the cookies.allow whitelist are stored in
 $XDG_CONFIG_HOME/dwb/$profilename/cookies.  (command
-.BR allow_cookie ).
+.BR allow_cookie ,
+aliases:
+.BR cookie ).
 .TP
 .BR CS 
 Allow session cookie for the current website. The domain will be saved in 
 .IR cookies_session.allow .
 This is only useful if 'cookies-store-policy' is set to 'never', see
 cookies-store-policy for details. (command
-.BR allow_session_cookie ).
+.BR allow_session_cookie ,
+aliases:
+.BR scookie ).
 .TP
 .BR CT 
 Allow session cookie for the current website temporarily. The domain will not be
 saved to a whitelist and the cookie will not be saved persitent. (command
-.BR allow_session_cookie_tmp ).
+.BR allow_session_cookie_tmp ,
+aliases:
+.BR tcookie ).
 .TP
 .BR yy
 Yank the current url to clipboard
@@ -346,17 +484,23 @@ Yank the current url to clipboard
 .BR yY
 Yank the current url to primary
 selection (command 
-.BR yank_primary ).
+.BR yank_primary ,
+aliases:
+.BR pyank ).
 .TP
 .BR yt
 Yank the current title to clipboard
 (command 
-.BR yank_title ).
+.BR yank_title ,
+aliases:
+.BR tyank ).
 .TP
 .BR yT
 Yank the current title to primary
 selection (command 
-.BR yank_title_primary ).
+.BR yank_title_primary ,
+aliases:
+.BR tpyank ).
 .TP
 .BR pp
 Paste from clipboard (command 
@@ -364,43 +508,63 @@ Paste from clipboard (command
 .TP
 .BR pP
 Paste from primary selection (command
-.BR paste_primary ).
+.BR paste_primary ,
+aliases:
+.BR ppaste ).
 .TP
 .BR Pp
 Paste from clipboard and load in a new view (command 
-.BR paste_nv ).
+.BR paste_nv ,
+aliases:
+.BR tabpaste ).
 .TP
 .BR PP
 Paste from primary selection and load in a new view (command
-.BR paste_primary_nv ). 
+.BR paste_primary_nv ,
+aliases:
+.BR tabppaste ).
 .TP
 .BR wp
 Paste from clipboard and load in a new window (command 
-.BR paste_nw ).
+.BR paste_nw ,
+aliases:
+.BR winpaste ).
 .TP
 .BR wP
 Paste from primary selection and load in a new window (command
-.BR paste_primary_nw ). 
+.BR paste_primary_nw ,
+aliases:
+.BR winppaste ).
 .TP
 .BR gs
 Add a searchengine. Text fields can be focused via hints (command 
-.BR save_search_field ).
+.BR save_search_field ,
+aliases:
+.BR search ).
 .TP
 .BR Ss 
 Show settings (command
-.BR show_settings ).
+.BR show_settings ,
+aliases:
+.BR ssettings ).
 .TP
 .BR Sk 
 Show keys (command
-.BR show_keys ).
+.BR show_keys ,
+aliases:
+.BR skeys ).
 .TP
 .BR ss 
 Set setting (command
-.BR set_setting ).
+.BR set_setting ,
+aliases:
+.BR settings ).
 .TP
 .BR sk
 Set keyboard shortcut (command
-.BR set_key ).
+.BR set_key ,
+aliases:
+.BR keys ).
 .TP
 .BR C-p 
 Toggle proxy (command
@@ -408,39 +572,57 @@ Toggle proxy (command
 .TP
 .BR ta
 Toggle use of the adblocker (command 
-.BR toggle_adblocker ).
+.BR toggle_adblocker ,
+aliases:
+.BR ads ).
 .TP
 .BR tsh
 Toggle scripts for current host permanently (command
-.BR toggle_scripts_host ).
+.BR toggle_scripts_host ,
+aliases:
+.BR hscript ).
 .TP
 .BR tsu
 Toggle scripts for current url permanently (command
-.BR toggle_scripts_uri ).
+.BR toggle_scripts_uri ,
+aliases:
+.BR uscript ).
 .TP
 .BR tth
 Toggle scripts for current host temporarily (command
-.BR toggle_scripts_host_tmp ).
+.BR toggle_scripts_host_tmp ,
+aliases:
+.BR thscript ).
 .TP
 .BR ttu
 Toggle scripts for current url temporarily (command
-.BR toggle_scripts_uri_tmp ).
+.BR toggle_scripts_uri_tmp ,
+aliases:
+.BR tuscript ).
 .TP
 .BR ph
 Toggle plugins for current host permanently (command
-.BR toggle_plugins_host ).
+.BR toggle_plugins_host ,
+aliases:
+.BR hplugin ).
 .TP
 .BR pu
 Toggle plugins for current url permanently (command
-.BR toggle_plugins_uri ).
+.BR toggle_plugins_uri ,
+aliases:
+.BR uplugin ).
 .TP
 .BR pth
 Toggle plugins for current host temporarily (command
-.BR toggle_plugins_host_tmp ).
+.BR toggle_plugins_host_tmp ,
+aliases:
+.BR thplugin ).
 .TP
 .BR ptu
 Toggle plugins for current url temporarily (command
-.BR toggle_plugins_uri_tmp ).
+.BR toggle_plugins_uri_tmp ,
+aliases:
+.BR tuplugin ).
 .TP
 .BR V
 Next navigation action will be opened in a new view.
@@ -450,38 +632,76 @@ Next navigation action will be opened in a new window.
 .TP
 .BR eu
 Show userscripts (command 
-.BR execute_userscript ).
 .TP 
 .BR wi
 Show the webinspector. Note that 'enable-developer-extras' has to be set. 
+(commmand
+.BR web_inspector , 
+aliases: 
+.BR inspect ,
+.BR insp ).
 .TP 
 .BR C-e
 Open external editor for current input/textarea (command
-.BR open_editor ).
+.BR open_editor ,
+aliases:
+.BR editor ).
 .TP 
 .BR g.
-Toggle hidden files when browsing local filesystem.
+Toggle hidden files when browsing local filesystem. 
+(command 
+.BR open_editor ,
+aliases: 
+editor ).
 .TP 
 .BR C-F11
-Toggle fullscreen.
+Toggle fullscreen 
+(command 
+.BR fullscreen , 
+aliases: 
+.BR fs ).
 .TP 
 .BR C-F12
 Toggle presentation mode.
+(command 
+.BR presentation_mode , 
+aliases: 
+.BR present ).
 .TP 
 .BR xx
 Toggle visibility of tabbar and statusbar.
+(command 
+.BR toggle_bars , 
+aliases: 
+.BR bars ).
 .TP 
 .BR xt
 Toggle visibility of tabbar.
+(command 
+.BR toggle_bars , 
+aliases: 
+.BR tbar ).
 .TP 
 .BR xb
 Toggle visibility of statusbar.
+(command 
+.BR toggle_bottombar , 
+aliases: 
+.BR bbar ).
 .TP 
 .BR xv
 Toggle visibility of a tab.
+(command 
+.BR visible , 
+aliases: 
+.BR vis ).
 .TP 
 .BR C-M-p
 Print focused frame.
+(command 
+.BR print , 
+aliases: 
+.BR ha ).
 .TP
 .BR unbound 
 Toggle autoload images (command 
