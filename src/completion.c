@@ -308,6 +308,7 @@ completion_get_settings_completion() {
   return list;
 }/*}}}*/
 
+/* completion_create_key_completion(GList *l, const char *first, KeyMap *m) {{{*/
 static GList * 
 completion_create_key_completion(GList *l, const char *first, KeyMap *m) {
   char *mod = dwb_modmask_to_string(m->mod);
@@ -318,14 +319,14 @@ completion_create_key_completion(GList *l, const char *first, KeyMap *m) {
   FREE(value);
   g_free(mod);
   return l;
-
-}
+}/*}}}*/
 
 /*dwb_completion_get_keys()         return  GList *Completions{{{*/
 static GList * 
 completion_get_key_completion(gboolean entry) {
   GList *list = NULL;
   const char *input = GET_TEXT();
+  puts("blub");
 
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_first);
   input = dwb_parse_nummod(input);
@@ -492,7 +493,7 @@ completion_command_line() {
     for (GList *l = dwb.keymap; l; l=l->next) {
       bak = token[0];
       km = l->data;
-      while (g_ascii_isspace(*bak) || g_ascii_isdigit(*bak)) 
+      while (bak && (g_ascii_isspace(*bak) || g_ascii_isdigit(*bak))) 
         bak++;
       if (! g_strcmp0(bak, km->map->n.first) && km->map->entry & EP_COMP_DEFAULT) {
         ret = true;
