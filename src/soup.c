@@ -27,22 +27,6 @@ static guint _changed_id;
 static SoupCookieJar *_tmpJar;
 
 /* dwb_soup_allow_cookie(GList *, const char, CookieStorePolicy) {{{*/
-void
-dwb_soup_allow_cookie_tmp() {
-  GSList *last_cookies = soup_cookie_jar_all_cookies(_tmpJar);
-  const char *domain;
-  SoupCookie *c;
-  for (GSList *l = last_cookies; l; l=l->next) {
-    c = l->data;
-    domain = soup_cookie_get_domain(c);
-    if ( g_list_find_custom(dwb.fc.cookies_session_allow, domain, (GCompareFunc)g_strcmp0)  == NULL ) {
-      dwb.fc.cookies_session_allow = g_list_append(dwb.fc.cookies_session_allow, g_strdup(domain));
-      soup_cookie_jar_add_cookie(_jar, soup_cookie_copy(c));
-    }
-  }
-  soup_cookies_free(last_cookies);
-  dwb_reload();
-}
 static DwbStatus
 dwb_soup_allow_cookie_simple(GList **whitelist, const char *filename, CookieStorePolicy policy) {
   GSList *list = domain_get_cookie_domains(CURRENT_WEBVIEW());
@@ -63,6 +47,23 @@ dwb_soup_allow_cookie_simple(GList **whitelist, const char *filename, CookieStor
   g_slist_free(list);
 
   return STATUS_OK;
+}
+
+void
+dwb_soup_allow_cookie_tmp() {
+  GSList *last_cookies = domain_get_cookie_domains(CURRENT_WEBVIEW());
+  if (last_cookies == NULL)
+    return;
+  const char *domain;
+  for (GSList *l = last_cookies; l; l=l->next) {
+    domain = l->data;
+    if ( g_list_find_custom(dwb.fc.cookies_session_allow, domain, (GCompareFunc)g_strcmp0)  == NULL ) {
+      dwb.fc.cookies_session_allow = g_list_append(dwb.fc.cookies_session_allow, g_strdup(domain));
+    }
+  }
+  FREE0(last_cookies->data);
+  g_slist_free(last_cookies);
+  dwb_reload();
 }
 
 DwbStatus
