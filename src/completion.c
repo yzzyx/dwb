@@ -326,7 +326,6 @@ static GList *
 completion_get_key_completion(gboolean entry) {
   GList *list = NULL;
   const char *input = GET_TEXT();
-  puts("blub");
 
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_first);
   input = dwb_parse_nummod(input);

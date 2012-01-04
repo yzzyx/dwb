@@ -49,17 +49,22 @@ commands_simple_command(KeyMap *km) {
     completion_clean_autocompletion();
   }
 
-  if ((ret = func(km, arg)) == STATUS_OK) {
-    if (km->map->hide == NEVER_SM) {
-      dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
-    }
-    else if (km->map->hide == ALWAYS_SM) {
-      CLEAR_COMMAND_TEXT();
-      gtk_widget_hide(dwb.gui.entry);
-    }
-  }
-  else if (ret == STATUS_ERROR) {
-    dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
+  ret = func(km, arg);
+  switch (ret) {
+    case STATUS_OK:
+      if (km->map->hide == NEVER_SM) 
+        dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
+      else if (km->map->hide == ALWAYS_SM) {
+        CLEAR_COMMAND_TEXT();
+        gtk_widget_hide(dwb.gui.entry);
+      }
+      break;
+    case STATUS_ERROR: 
+      dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
+      break;
+    case STATUS_END: 
+      return;
+    default: break;
   }
   if (! km->map->arg.ro)
     km->map->arg.p = NULL;
