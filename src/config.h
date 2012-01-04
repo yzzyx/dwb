@@ -205,7 +205,7 @@ static FunctionMap FMAP [] = {
 
   { { "visible",    "Toggle visibility for this tab" },                 1, 
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
-    { .n = LP_VISIBLE  }, EP_NONE,  { NULL }, },
+    { .n = LP_VISIBLE  }, EP_NONE,  { "vis", NULL }, },
   { { "allow_cookie",          "Cookie allowed",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, 
     { .n = COOKIE_ALLOW_PERSISTENT }, EP_NONE,  { "cookie", NULL }, },

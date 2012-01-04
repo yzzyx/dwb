@@ -26,6 +26,7 @@
 void domain_init(void);
 void domain_end(void);
 
+GSList * domain_get_cookie_domains(WebKitWebView *wv);
 gboolean domain_match(char **, const char *, const char *);
 const char * domain_get_base_for_host(const char *host);
 #endif

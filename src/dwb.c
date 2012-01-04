@@ -901,6 +901,7 @@ void
 dwb_focus_view(GList *gl) {
   if (gl != dwb.state.fview) {
     gtk_widget_show(VIEW(gl)->scroll);
+    dwb_soup_clean();
     if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )
       gtk_widget_hide(VIEW(dwb.state.fview)->scroll);
     dwb_change_mode(NORMAL_MODE, true);

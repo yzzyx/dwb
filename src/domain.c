@@ -24,6 +24,36 @@
 
 static GHashTable *_tld_table;
 
+GSList *
+domain_get_cookie_domains(WebKitWebView *wv) {
+  GSList *ret = NULL;
+  WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
+  WebKitWebDataSource *data = webkit_web_frame_get_data_source(frame);
+  if (data == NULL)
+    return NULL;
+  WebKitNetworkRequest *request = webkit_web_data_source_get_request(data);
+  if (request == NULL)
+    return NULL;
+  SoupMessage *msg = webkit_network_request_get_message(request);
+  if (msg == NULL)
+    return NULL;
+  SoupURI *uri = soup_message_get_uri(msg);
+  if (uri == NULL)
+    return NULL;
+  const char *host = soup_uri_get_host(uri);
+  char *base_host = g_strconcat(".", host, NULL);
+  const char *base_domain = domain_get_base_for_host(base_host);
+  char *cur = base_host;
+  char *nextdot;
+  while (cur != base_domain) {
+    nextdot = strchr(cur, '.');
+    ret = g_slist_append(ret, nextdot);
+    cur = nextdot+1;
+    ret = g_slist_append(ret, cur);
+  }
+  return ret;
+}
+
 gboolean 
 domain_match(char **domains, const char *host, const char *base_domain) {
   g_return_val_if_fail(domains != NULL, false);
