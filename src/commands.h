@@ -21,7 +21,7 @@
 
 
 void commands_simple_command(KeyMap *km);
-void commands_add_view(KeyMap *, Arg *);
+DwbStatus commands_add_view(KeyMap *, Arg *);
 DwbStatus commands_add_search_field(KeyMap *, Arg *);
 DwbStatus commands_allow_cookie(KeyMap *, Arg *);
 DwbStatus commands_bookmark(KeyMap *, Arg *);
@@ -69,9 +69,8 @@ DwbStatus commands_yank(KeyMap *, Arg *);
 DwbStatus commands_zoom_in(KeyMap *, Arg *);
 DwbStatus commands_zoom_out(KeyMap *, Arg *);
 DwbStatus dwb_create_hints(Arg *);
-void commands_remove_view(KeyMap *, Arg *);
-void commands_set_zoom_level(KeyMap *, Arg *);
-void commands_toggle_maximized(KeyMap *, Arg *);
+DwbStatus commands_remove_view(KeyMap *, Arg *);
+DwbStatus commands_set_zoom_level(KeyMap *, Arg *);
 DwbStatus commands_toggle_hidden_files(KeyMap *, Arg *);
 DwbStatus commands_web_inspector(KeyMap *, Arg *);
 DwbStatus commands_quit(KeyMap *, Arg *);

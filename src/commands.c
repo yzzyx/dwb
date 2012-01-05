@@ -63,6 +63,7 @@ commands_simple_command(KeyMap *km) {
       dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
       break;
     case STATUS_END: 
+      dwb_clean_key_buffer();
       return;
     default: break;
   }
@@ -72,9 +73,10 @@ commands_simple_command(KeyMap *km) {
 }/*}}}*/
 
 /* commands_add_view(KeyMap *, Arg *) {{{*/
-void 
+DwbStatus 
 commands_add_view(KeyMap *km, Arg *arg) {
   view_add(arg->p, false);
+  return STATUS_OK;
 }/*}}}*/
 
 /* commands_set_setting {{{*/
@@ -309,30 +311,12 @@ commands_scroll(KeyMap *km, Arg *arg) {
 }/*}}}*/
 
 /* commands_set_zoom_level(KeyMap *km, Arg *arg) {{{*/
-void 
+DwbStatus 
 commands_set_zoom_level(KeyMap *km, Arg *arg) {
   GList *gl = arg->p ? arg->p : dwb.state.fview;
   webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(((View*)gl->data)->web), arg->d);
-}/*}}}*/
-
-/* commands_set_orientation(KeyMap *km, Arg *arg) {{{*/
-#if 0
-DwbStatus 
-commands_set_orientation(KeyMap *km, Arg *arg) {
-  Layout l;
-  if (arg->n) {
-    l = arg->n;
-  }
-  else {
-    dwb.state.layout ^= BOTTOM_STACK;
-    l = dwb.state.layout;
-  }
-  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.paned), l & BOTTOM_STACK );
-  gtk_orientable_set_orientation(GTK_ORIENTABLE(dwb.gui.right), (l & BOTTOM_STACK) ^ 1);
-  dwb_resize(dwb.state.size);
   return STATUS_OK;
 }/*}}}*/
-#endif
 
 /* History {{{*/
 DwbStatus 
@@ -366,9 +350,10 @@ commands_open_startpage(KeyMap *km, Arg *arg) {
 } /*}}}*/
 
 /* commands_remove_view(KeyMap *km, Arg *arg) {{{*/
-void 
+DwbStatus 
 commands_remove_view(KeyMap *km, Arg *arg) {
   view_remove(NULL);
+  return STATUS_OK;
 }/*}}}*/
 
 static gboolean
