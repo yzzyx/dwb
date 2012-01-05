@@ -749,9 +749,7 @@ view_create_web_view() {
   status->hover_uri = NULL;
   status->progress = 0;
   status->allowed_plugins = NULL;
-  //status->protect = false;
   status->style = NULL;
-  //status->lock = false;
   status->lockprotect = 0;
 
   v->plugins = plugins_new();
@@ -867,10 +865,6 @@ view_remove(GList *gl) {
   FREE(v->status->mimetype);
 
   if (v->status->style) {
-    WebKitDOMNode *parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(v->status->style));
-    if (parent && WEBKIT_DOM_IS_NODE(parent) && WEBKIT_DOM_IS_NODE(v->status->style)) {
-      webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(v->status->style), NULL);
-    }
     g_object_unref(v->status->style);
   }
   FREE(v->status);
