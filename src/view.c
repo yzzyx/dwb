@@ -879,6 +879,7 @@ view_remove(GList *gl) {
 
   gtk_widget_show(CURRENT_VIEW()->scroll);
   dwb_update_layout();
+  dwb_clean_key_buffer();
   CLEAR_COMMAND_TEXT();
 }/*}}}*/
 
