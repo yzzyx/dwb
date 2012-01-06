@@ -23,7 +23,7 @@ pass_through Go in pass-through mode, all keys are directly send to the webview
 view_source View page source
 zoom_in Zoom in
 zoom_out Zoom out
-zoom_normal Zoom to 100%
+zoom Zoom
 quit Quit dwb
 
 # hints Hints

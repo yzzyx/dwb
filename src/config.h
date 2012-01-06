@@ -85,7 +85,7 @@ static KeyValue KEYS[] = {
   { "toggle_bottomstack",       {   "tb",         0,  },  },  
   { "view_source",              {   "gf",         0,                  },  },  
   { "zoom_in",                  {   "+",         0,                  },  },  
-  { "zoom_normal",              {   "=",         0,                  },  },  
+  { "zoom",                     {   "=",         0,                  },  },  
   { "zoom_out",                 {   "-",         0,                  },  },  
   { "save_search_field",        {   "gs",         0,                  },  },  
   { "autoload_images",          {   NULL,           0,                  },  },
@@ -506,9 +506,9 @@ static FunctionMap FMAP [] = {
     (Func)commands_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, 
     { 0 }, EP_NONE, { "zi", NULL }, },
   
-  { { "zoom_normal",           "Zoom to 100%",                         }, 1, 
+  { { "zoom",                 "Zoom",                         }, 1, 
     (Func)commands_set_zoom_level,      NULL,                              ALWAYS_SM,    
-    { .d = 1.0,   .p = NULL }, EP_NONE, { "zn", NULL }, },
+    { .d = 1.0,   .p = NULL }, EP_NONE, { "zo", NULL }, },
   
   { { "zoom_out",              "Zoom out",                          }, 1, 
     (Func)commands_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, 
