@@ -637,8 +637,9 @@ adblock_warn_ignored(const char *message, const char *rule) {
 /* adblock_rule_parse(char *filterlist)  {{{*/
 static void
 adblock_rule_parse(char *filterlist) {
-  char *content = util_get_file_content(filterlist);
-  char **lines = g_strsplit(content, "\n", -1);
+  char **lines = util_get_lines(filterlist);
+  if (lines == NULL)
+    return;
   char *pattern;
   GError *error = NULL;
   char **domain_arr = NULL;
@@ -886,7 +887,6 @@ error_out:
     FREE(tmp_b);
   }
   g_strfreev(lines);
-  g_free(content);
 }/*}}}*/
 
 /* adblock_end() {{{*/

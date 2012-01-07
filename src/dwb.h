@@ -439,11 +439,16 @@ struct _Arg {
 struct _Key {
   char *str;
   guint mod;
+  int num;
 };
 struct _KeyValue {
   const char *id;
   Key key;
 };
+typedef struct _CustomCommand {
+  Key *key;
+  char **commands;
+} CustomCommand;
 
 
 struct _FunctionMap {
@@ -681,6 +686,7 @@ struct _Files {
   const char *scripts_allow;
   const char *plugins_allow;
   const char *cachedir;
+  const char *custom_keys;
 };
 // TODO implement plugins blocker, script blocker with File struct
 typedef struct _File {
@@ -715,6 +721,7 @@ struct _Dwb {
   State state;
   Completions comps;
   GList *keymap;
+  GSList *custom_commands;
   GHashTable *settings;
   Files files;
   FileContent fc;
@@ -823,5 +830,7 @@ gboolean dwb_eval_key(GdkEventKey *);
 void dwb_follow_selection(void);
 void dwb_update_layout(void);
 const char * dwb_parse_nummod(const char *);
+void dwb_init_custom_keys(gboolean);
+
 
 #endif

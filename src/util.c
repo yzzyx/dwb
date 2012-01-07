@@ -336,6 +336,16 @@ util_get_file_content(const char *filename) {
   }
   return content;
 }/*}}}*/
+char **
+util_get_lines(const char *filename) {
+  char **ret = NULL;
+  char *content = util_get_file_content(filename);
+  if (content) {
+    ret = g_strsplit(content, "\n", -1);
+    g_free(content);
+  }
+  return ret;
+}
 /* util_set_file_content(const char *filename, const char *content) {{{*/
 gboolean
 util_set_file_content(const char *filename, const char *content) {

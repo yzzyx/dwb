@@ -1932,13 +1932,25 @@ dwb_eval_key(GdkEventKey *e) {
       dwb.state.nummod = e->keyval - GDK_KEY_0;
     }
     if (mod_mask) {
+#define IS_NUMMOD(X)  (((X) & DWB_NUMMOD_MASK) && ((X) & ~DWB_NUMMOD_MASK) == mod_mask)
+      for (GSList *l = dwb.custom_commands; l; l=l->next) {
+        CustomCommand *c = l->data;
+        if (IS_NUMMOD(c->key->mod) || (c->key->mod == mod_mask && c->key->num == dwb.state.nummod)) {
+          for (int i=0; c->commands[i]; i++) {
+            dwb_parse_command_line(c->commands[i]);
+          }
+          break;
+        }
+      }
       for (GList *l = dwb.keymap; l; l=l->next) {
         KeyMap *km = l->data;
-        if ((km->mod & DWB_NUMMOD_MASK) && (km->mod & ~DWB_NUMMOD_MASK) == mod_mask) {
+        if (IS_NUMMOD(km->mod)) {
+        //if ((km->mod & DWB_NUMMOD_MASK) && (km->mod & ~DWB_NUMMOD_MASK) == mod_mask) {
           commands_simple_command(km);
           break;
         }
       }
+#undef IS_NUMMOD
     }
     FREE(key);
     return false;
@@ -1952,6 +1964,15 @@ dwb_eval_key(GdkEventKey *e) {
   int longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
+  for (GSList *l = dwb.custom_commands; l; l=l->next) {
+    CustomCommand *c = l->data;
+    if (c->key->num == dwb.state.nummod && !g_strcmp0(c->key->str, buf)) {
+      for (int i=0; c->commands[i]; i++) {
+        dwb_parse_command_line(c->commands[i]);
+      }
+      return true;
+    }
+  }
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
@@ -2285,6 +2306,17 @@ dwb_free_list(GList *list, void (*func)(void*)) {
   g_list_free(list);
 }/*}}}*/
 
+static void
+dwb_free_custom_keys() {
+  for (GSList *l = dwb.custom_commands; l; l=l->next) {
+    CustomCommand *c = l->data;
+    g_free(c->key);
+    g_strfreev(c->commands);
+  }
+  g_slist_free(dwb.custom_commands);
+  dwb.custom_commands = NULL;
+}
+
 /* dwb_clean_up() {{{*/
 gboolean
 dwb_clean_up() {
@@ -2308,6 +2340,7 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.cookies_session_allow, (void_func)dwb_free);
   dwb_free_list(dwb.fc.navigations, (void_func)dwb_free);
   dwb_free_list(dwb.fc.commands, (void_func)dwb_free);
+  dwb_free_custom_keys();
 
   dwb_soup_end();
 #ifdef DWB_ADBLOCKER
@@ -2484,7 +2517,11 @@ dwb_end() {
 Key 
 dwb_str_to_key(char *str) {
   Key key = { .mod = 0, .str = NULL };
+  if (str == NULL || *str == '\0')
+    return key;
+  g_strstrip(str);
   GString *buffer = g_string_new(NULL);
+  char *end;
 
   char **string = g_strsplit(str, " ", -1);
 
@@ -2524,6 +2561,9 @@ dwb_str_to_key(char *str) {
     }
   }
   key.str = buffer->str;
+  key.num = strtol(buffer->str, &end, 10);
+  if (end == buffer->str) 
+    key.num = -1;
 
   g_strfreev(string);
   g_string_free(buffer, false);
@@ -2956,18 +2996,16 @@ dwb_init_gui() {
 /* dwb_init_file_content {{{*/
 GList *
 dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
-  char *content = util_get_file_content(filename);
+  char **lines = util_get_lines(filename);
 
-  if (content) {
-    char **token = g_strsplit(content, "\n", 0);
-    int length = MAX(g_strv_length(token) - 1, 0);
+  if (lines) {
+    int length = MAX(g_strv_length(lines) - 1, 0);
     for (int i=0;  i < length; i++) {
-      void *value = func(token[i]);
+      void *value = func(lines[i]);
       if (value != NULL)
         gl = g_list_append(gl, value);
     }
-    g_free(content);
-    g_strfreev(token);
+    g_strfreev(lines);
   }
   return gl;
 }/*}}}*/
@@ -2987,7 +3025,7 @@ dwb_get_search_completion(const char *text) {
 }
 
 /* dwb_init_files() {{{*/
-static void
+static char *
 dwb_init_files() {
   char *path           = util_build_path();
   char *profile_path = util_check_directory(g_build_filename(path, dwb.misc.profile, NULL));
@@ -3023,6 +3061,7 @@ dwb_init_files() {
   dwb.files.adblock         = g_build_filename(path, "adblock",      NULL);
   dwb.files.scripts_allow   = g_build_filename(profile_path, "scripts.allow",      NULL);
   dwb.files.plugins_allow   = g_build_filename(profile_path, "plugins.allow",      NULL);
+  dwb.files.custom_keys     = g_build_filename(profile_path, "custom_keys",      NULL);
 
   scripts                   = g_build_filename(path, "scripts",      NULL);
   dwb.files.scriptdir       = util_check_directory(scripts);
@@ -3123,6 +3162,43 @@ dwb_get_stock_item_base64_encoded(const char *name) {
   return ret;
 }
 
+void
+dwb_init_custom_keys(gboolean reload) {
+  if (reload)
+    dwb_free_custom_keys();
+  char **lines = util_get_lines(dwb.files.custom_keys);
+  if (lines == NULL)
+    return;
+  const char *current_line;
+  GString *keybuf;
+  CustomCommand *command;
+
+  for (int i=0; lines[i]; i++) {
+    keybuf = g_string_new(NULL);
+    if (! *lines[i]) 
+      continue;
+    
+    current_line = lines[i];
+    while (*current_line && *current_line != ':') {
+      if (*current_line == '\\') 
+        current_line++;
+      g_string_append_c(keybuf, *current_line);
+      current_line++;
+    }
+    if (*current_line != ':')
+      continue;
+    current_line++;
+    
+    command = dwb_malloc(sizeof(command));
+    command->key = dwb_malloc(sizeof(Key));
+
+    *(command->key) = dwb_str_to_key(keybuf->str);
+    command->commands = g_strsplit(current_line, ";", -1);
+    dwb.custom_commands = g_slist_append(dwb.custom_commands, command);
+    g_string_free(keybuf, true);
+  }
+  g_strfreev(lines);
+}
 
 /* dwb_init() {{{*/
 static void 
@@ -3161,6 +3237,7 @@ dwb_init() {
   dwb_init_vars();
   dwb_init_gui();
   dwb_init_scripts();
+  dwb_init_custom_keys(false);
 #ifdef DWB_ADBLOCKER
   adblock_init();
 #endif
@@ -3194,6 +3271,8 @@ dwb_init() {
 /* dwb_parse_command_line(const char *line) {{{*/
 void 
 dwb_parse_command_line(const char *line) {
+  while (g_ascii_isspace(*line))
+    line++;
   char **token = g_strsplit(line, " ", 2);
   KeyMap *m = NULL;
   gboolean found;
@@ -3378,6 +3457,7 @@ main(int argc, char *argv[]) {
     }
   }
   dwb_init_files();
+
   dwb_init_settings();
   if (GET_BOOL("save-session") && argr == 1 && !restore && !single) {
     restore = "default";

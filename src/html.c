@@ -182,8 +182,11 @@ html_keydown_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   if (val == 13) {
     WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
     if (target != NULL) {
-      webkit_dom_element_blur(WEBKIT_DOM_ELEMENT(target));
-      return true;
+      char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
+      if (g_strcmp0(id, "dwb_custom_keys_area")) {
+        webkit_dom_element_blur(WEBKIT_DOM_ELEMENT(target));
+        return true;
+      }
     }
   }
   return false;
@@ -251,6 +254,17 @@ html_settings(GList *gl, HtmlTable *table) {
 }
 
 static gboolean
+html_custom_keys_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
+  WebKitDOMDocument *doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(target));
+  WebKitDOMElement *text_area = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_area");
+  char *value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(text_area));
+  util_set_file_content(dwb.files.custom_keys, value);
+  g_free(value);
+  dwb_init_custom_keys(true);
+  dwb_set_normal_message(dwb.state.fview, true, "Custom keys saved");
+  return true;
+}
+static gboolean
 html_key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
   char *value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
@@ -288,6 +302,12 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
         g_free(value);
       }
     }
+    WebKitDOMElement *textarea = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_area");
+    WebKitDOMElement *button = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_submit");
+    char *content = util_get_file_content(dwb.files.custom_keys);
+    webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(textarea), content);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(button), "click", G_CALLBACK(html_custom_keys_changed_cb), false, wv);
+    g_free(content);
     g_signal_handlers_disconnect_by_func(wv, html_keys_load_cb, table);
   }
 }
