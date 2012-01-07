@@ -2997,11 +2997,18 @@ dwb_init_gui() {
 GList *
 dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
   char **lines = util_get_lines(filename);
+  char *line;
+  void *value;
 
   if (lines) {
     int length = MAX(g_strv_length(lines) - 1, 0);
     for (int i=0;  i < length; i++) {
-      void *value = func(lines[i]);
+      line = lines[i];
+      while (g_ascii_isspace(*line))
+        line++;
+      if (*line == '\0')
+        continue;
+      value = func(line);
       if (value != NULL)
         gl = g_list_append(gl, value);
     }

@@ -500,7 +500,7 @@ dwb_navigation_new_from_line(const char *text) {
   Navigation *nv = NULL;
   if (text == NULL)
     return NULL;
-  while (isspace((int)*text))
+  while (g_ascii_isspace(*text))
     text++;
 
   if (*text != '\0') {
@@ -534,13 +534,16 @@ Quickmark *
 dwb_quickmark_new_from_line(const char *line) {
   Quickmark *q = NULL;
   char **token;
-  if (line) {
+  if (line) 
+    return NULL;
+  while (g_ascii_isspace(*line))
+    line++;
+  if (*line != '\0') {
     token = g_strsplit(line, " ", 3);
     q = dwb_quickmark_new(token[1], token[2], token[0]);
     g_strfreev(token);
   }
   return q;
-
 }/*}}}*/
 
 /* dwb_quickmark_free(Quickmark *q) {{{*/
