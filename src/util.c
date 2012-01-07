@@ -303,7 +303,7 @@ util_get_directory_content(GString **buffer, const char *dirname, const char *ex
 
 }/*}}}*/
 void 
-util_rmdir(const char *path, gboolean recursive) {
+util_rmdir(const char *path, gboolean only_content, gboolean recursive) {
   GDir *dir = g_dir_open(path, 0, NULL);
   if (dir == NULL) 
     return;
@@ -315,12 +315,12 @@ util_rmdir(const char *path, gboolean recursive) {
       unlink(fullpath);
     }
     else if (recursive) {
-      util_rmdir(fullpath, true);
+      util_rmdir(fullpath, false, true);
       rmdir(fullpath);
     }
     g_free(fullpath);
   }
-  if (filename == NULL) {
+  if (filename == NULL && !only_content) {
     rmdir(path);
   }
   g_dir_close(dir);

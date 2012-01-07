@@ -28,7 +28,7 @@ gboolean util_is_hex(const char *string);
 int util_test_connect(const char *uri);
 
 char * util_get_temp_filename(const char *);
-void util_rmdir(const char *path, gboolean recursive);
+void util_rmdir(const char *path, gboolean, gboolean recursive);
 
 // keys
 char * dwb_modmask_to_string(guint );
