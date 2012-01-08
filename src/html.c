@@ -169,6 +169,7 @@ html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView
     value = webkit_dom_html_select_element_get_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(el));
   }
   dwb_set_setting(id, value);
+  dwb_change_mode(NORMAL_MODE, false);
   return true;
 }
 gboolean

@@ -719,6 +719,7 @@ commands_toggle_bars(KeyMap *km, Arg *arg) {
   gtk_widget_set_visible(dwb.gui.bottombox, dwb.state.bar_visible & BAR_VIS_STATUS);
   return STATUS_OK;
 }/*}}}*/
+/* commands_presentation_mode {{{*/
 DwbStatus
 commands_presentation_mode(KeyMap *km, Arg *arg) {
   if (! dwb.state.fullscreen)
@@ -726,7 +727,8 @@ commands_presentation_mode(KeyMap *km, Arg *arg) {
   commands_fullscreen(km, arg);
   commands_toggle_bars(km, arg);
   return STATUS_OK;
-}
+}/*}}}*/
+/* commands_toggle_lock_protect {{{*/
 DwbStatus
 commands_toggle_lock_protect(KeyMap *km, Arg *arg) {
   GList *gl = dwb.state.nummod < 0 ? dwb.state.fview : g_list_nth(dwb.state.views, dwb.state.nummod-1);
@@ -738,7 +740,8 @@ commands_toggle_lock_protect(KeyMap *km, Arg *arg) {
   if (arg->n & LP_VISIBLE && gl != dwb.state.fview)
     gtk_widget_set_visible(v->scroll, LP_VISIBLE(v));
   return STATUS_OK;
-}
+}/*}}}*/
+/* commands_execute_javascript {{{*/
 DwbStatus
 commands_execute_javascript(KeyMap *km, Arg *arg) {
   static char *script;
@@ -750,5 +753,20 @@ commands_execute_javascript(KeyMap *km, Arg *arg) {
   }
   dwb_execute_script(webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()), script, false);
   return STATUS_OK;
-}
+}/*}}}*/
+/* commands_set {{{*/
+DwbStatus
+commands_set(KeyMap *km, Arg *arg) {
+  const char *command = util_str_chug(arg->p);
+  char **args = g_strsplit(command, " ", 2);
+  DwbStatus ret = dwb_set_setting(args[0], args[1]);
+  g_strfreev(args);
+  return ret;
+}/*}}}*/
+/* commands_set {{{*/
+DwbStatus
+commands_toggle_setting(KeyMap *km, Arg *arg) {
+  const char *command = util_str_chug(arg->p);
+  return dwb_toggle_setting(command);
+}/*}}}*/
 /*}}}*/

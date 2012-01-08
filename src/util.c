@@ -698,5 +698,11 @@ util_strlen_trailing_space(const char *str) {
   int len;
   for (len=0; *str != '\0'; str++, len++);
   return len;
+}
+const char *
+util_str_chug(const char *str) {
+  while (g_ascii_isspace(*str))
+    str++;
+  return str;
 
 }

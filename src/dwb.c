@@ -816,15 +816,49 @@ dwb_apply_settings(WebSettings *s) {
         s->func(l, s);
     }
   }
-  dwb_change_mode(NORMAL_MODE, false);
+  //dwb_change_mode(NORMAL_MODE, false);
+  return ret;
+}/*}}}*/
+
+DwbStatus
+dwb_toggle_setting(const char *key) {
+  WebSettings *s;
+  DwbStatus ret = STATUS_ERROR;
+  const char *value;
+
+  GHashTable *t = dwb.settings;
+  if (key) {
+    if  ( (s = g_hash_table_lookup(t, key)) ) {
+      if (s->type != BOOLEAN) {
+        dwb_set_error_message(dwb.state.fview, "Not a boolean value.");
+      }
+      else {
+        s->arg.b = !s->arg.b;
+        if (dwb_apply_settings(s) != STATUS_ERROR) {
+          value = s->arg.b ? "true" : "false";
+          dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, value);
+          dwb_save_key_value(dwb.files.settings, key, value);
+          ret = STATUS_OK;
+        }
+        else {
+          dwb_set_error_message(dwb.state.fview, "Error setting value.");
+        }
+      }
+    }
+    else {
+      dwb_set_error_message(dwb.state.fview, "No such setting: %s", key);
+    }
+  }
   return ret;
 }/*}}}*/
 
 /* dwb_set_setting(const char *){{{*/
-void
+DwbStatus
 dwb_set_setting(const char *key, char *value) {
   WebSettings *s;
   Arg *a = NULL;
+  DwbStatus ret = STATUS_ERROR;
+  
 
   GHashTable *t = dwb.settings;
   if (key) {
@@ -834,6 +868,7 @@ dwb_set_setting(const char *key, char *value) {
         if (dwb_apply_settings(s) != STATUS_ERROR) {
           dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
           dwb_save_key_value(dwb.files.settings, key, value);
+          ret = STATUS_OK;
         }
         else {
           dwb_set_error_message(dwb.state.fview, "Error setting value.");
@@ -847,9 +882,7 @@ dwb_set_setting(const char *key, char *value) {
       dwb_set_error_message(dwb.state.fview, "No such setting: %s", key);
     }
   }
-  dwb_change_mode(NORMAL_MODE, false);
-
-
+  return ret;
 }/*}}}*/
 
 /* dwb_set_key(const char *prop, char *val) {{{*/
@@ -1843,6 +1876,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case SETTINGS_MODE:       token = g_strsplit(GET_TEXT(), " ", 2);
                               dwb_set_setting(token[0], token[1]);
+                              dwb_change_mode(NORMAL_MODE, false);
                               g_strfreev(token);
                               return true;
     case KEY_MODE:            token = g_strsplit(GET_TEXT(), " ", 2);

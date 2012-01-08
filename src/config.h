@@ -88,20 +88,10 @@ static KeyValue KEYS[] = {
   { "zoom",                     {   "=",         0,                  },  },  
   { "zoom_out",                 {   "-",         0,                  },  },  
   { "save_search_field",        {   "gs",         0,                  },  },  
-  { "autoload_images",          {   NULL,           0,                  },  },
-  { "autoresize_window",        {   NULL,           0,                  },  },
-  { "autoshrink_images",        {   NULL,           0,                  },  },
-  { "caret_browsing",           {   NULL,           0,                  },  },
-  { "java_applets",             {   NULL,           0,                  },  },
-  { "plugins",                  {   NULL,           0,                  },  },
-  { "private_browsing",         {   NULL,           0,                  },  },
-  { "scripts",                  {   NULL,           0,                  },  },
-  { "spell_checking",           {   NULL,           0,                  },  },
   { "reload_scripts",           {   NULL,           0,                  },  },
   { "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
   { "focus_input",              {   "gi",           0, }, }, 
   { "set_setting",              {   "ss",           0, }, }, 
-  { "set_global_setting",       {   "sgs",           0, }, }, 
   { "set_key",                  {   "sk",           0, }, }, 
   { "yank",                     {   "yy",           0, }, }, 
   { "yank_primary",             {   "yY",           0, }, }, 
@@ -143,7 +133,6 @@ static KeyValue KEYS[] = {
   { "toggle_plugins_host",      {   "ph",           0 }, }, 
   { "toggle_plugins_uri_tmp",   {   "ptu",           0 }, }, 
   { "toggle_plugins_host_tmp",  {   "pth",           0 }, }, 
-  { "toggle_adblocker",         {   "ta",           0 }, }, 
   { "new_view",                 {   "V",            0 }, }, 
   { "new_window",               {   "W",            0 }, }, 
   { "save",                     {   "sf",            0 }, }, 
@@ -168,6 +157,8 @@ static KeyValue KEYS[] = {
   { "back_new_tab",                {   "xb",        0 }, }, 
   { "visible",                {   "xv",        0 }, }, 
   { "execute_javascript",     {   NULL,        0 }, }, 
+  { "set",                    {   NULL,        0 }, }, 
+  { "toggle_setting",                    {   NULL,        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -176,9 +167,17 @@ static FunctionMap FMAP [] = {
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
-  { { "execute_javascript",              "Add a new view",                    }, 1, 
+  { { "execute_javascript",              "Execute a javascript snippet",                    }, 1, 
     (Func)commands_execute_javascript,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { "exja", NULL }, },
+
+  { { "set",              "Set a setting",                    }, 1, 
+    (Func)commands_set,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "toggle_setting",              "Toggle a setting",                    }, 1, 
+    (Func)commands_toggle_setting,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { "toggle", "tog", NULL }, },
 
   { { "toggle_bars",    "Toggle visibility of status and tabbar" },                 1, 
     (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    
@@ -489,7 +488,7 @@ static FunctionMap FMAP [] = {
   
   { { "set_setting",    "Set setting",               }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_set_setting,         NULL,                              NEVER_SM, 
-    { 0 }, EP_NONE, { "settings", NULL }, },
+    { 0 }, EP_NONE, { "set", NULL }, },
   
   { { "set_key",               "Set keybinding",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_set_key,             NULL,                              NEVER_SM,    
@@ -662,74 +661,6 @@ static FunctionMap FMAP [] = {
     (Func)commands_toggle_property,     NULL,                              POST_SM,    
     {  .ro = true, .p = "enable-spell-checking" }, EP_NONE, { NULL }, },
   
-  { { "scripts",               "Setting: scripts",                },   1, 
-    (Func)commands_toggle_property,     NULL,                              POST_SM,    
-    {  .ro = true, .p = "enable-scripts" }, EP_NONE, { NULL }, },
-  
-  { { "auto_shrink_images",    "Toggle autoshrink images",        },   0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    {  .ro = true, .p = "auto-shrink-images" }, EP_NONE, { NULL }, },
-  
-  { { "autoload_images",       "Toggle autoload images",          },   0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    {  .ro = true, .p = "auto-load-images" }, EP_NONE, { NULL }, },
-  
-  { { "autoresize_window",     "Toggle autoresize window",        },   0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    {  .ro = true, .p = "auto-resize-window" }, EP_NONE, { NULL }, },
-  
-  { { "caret_browsing",        "Toggle caret browsing",           },   0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    {  .ro = true, .p = "enable-caret-browsing" }, EP_NONE, { NULL }, },
-  
-  { { "default_context_menu",  "Toggle enable default context menu",           }, 0, 
-    (Func)commands_toggle_property,     NULL,       POST_SM,    
-    {  .ro = true, .p = "enable-default-context-menu" }, EP_NONE, { NULL }, },
-  
-  { { "file_access_from_file_uris",     "Toggle file access from file uris",   }, 0, 
-    (Func)commands_toggle_property,     NULL,                  POST_SM, 
-    {  .ro = true, .p = "enable-file-acces-from-file-uris" }, EP_NONE, { NULL }, },
-  
-  { { "universal file_access_from_file_uris",   "Toggle universal file access from file uris",   }, 0, 
-    (Func)commands_toggle_property,  NULL,   POST_SM, 
-    {  .ro = true, .p = "enable-universal-file-acces-from-file-uris" }, EP_NONE, { NULL }, },
-  
-  { { "java_applets",          "Toggle java applets",             }, 0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    {  .ro = true, .p = "enable-java-applets" }, EP_NONE, { NULL }, },
-  
-  { { "plugins",               "Toggle plugins",                  }, 1, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    {  .ro = true, .p = "enable-plugins" }, EP_NONE, { NULL }, },
-  
-  { { "private_browsing",      "Toggle private browsing",         }, 0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    {  .ro = true, .p = "enable-private-browsing" }, EP_NONE, { NULL }, },
-  
-  { { "page_cache",            "Toggle page cache",               }, 0, 
-    (Func)commands_toggle_property,     NULL,                    POST_SM,    
-    {  .ro = true, .p = "enable-page-cache" }, EP_NONE, { NULL }, },
-  
-  { { "js_can_open_windows",   "Toggle Javascript can open windows automatically", }, 0, 
-    (Func)commands_toggle_property,     NULL,   POST_SM,    
-    {  .ro = true, .p = "javascript-can-open-windows-automatically" }, EP_NONE, { NULL }, },
-  
-  { { "enforce_96_dpi",        "Toggle enforce a resolution of 96 dpi", },    0, 
-    (Func)commands_toggle_property,     NULL,           POST_SM,    
-    {  .ro = true, .p = "enforce-96-dpi" }, EP_NONE, { NULL }, },
-  
-  { { "print_backgrounds",     "Toggle print backgrounds", },      0,    
-    (Func)commands_toggle_property,    NULL,                    POST_SM,    
-    {  .ro = true, .p = "print-backgrounds" }, EP_NONE, { NULL }, },
-  
-  { { "resizable_text_areas",  "Toggle resizable text areas", },   0,  
-    (Func)commands_toggle_property,      NULL,                    POST_SM,    
-    {  .ro = true, .p = "resizable-text-areas" }, EP_NONE, { NULL }, },
-  
-  { { "tab_cycle",             "Toggle tab cycles through elements", },  0,   
-    (Func)commands_toggle_property,     NULL,              POST_SM,    
-    {  .ro = true, .p = "tab-key-cycles-through-elements" }, EP_NONE, { NULL }, },
-  
   { { "proxy",                 "Toggle proxy",                    },        1,     
     (Func)commands_toggle_proxy,        NULL,                    POST_SM,    
     { 0 }, EP_NONE, { NULL }, },
@@ -766,12 +697,6 @@ static FunctionMap FMAP [] = {
     (Func) commands_toggle_plugin_blocker, NULL,       POST_SM,    
     { .n = ALLOW_URI | ALLOW_TMP }, EP_NONE, { "tuplugin", NULL }, },
   
-#ifdef DWB_ADBLOCKER
-  { { "toggle_adblocker", "Toggle adblocker" },   1, 
-    (Func) commands_toggle_adblocker, NULL,       POST_SM,    
-    { 0 }, EP_NONE, { "ads", NULL }, },
-#endif
-
   { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, 
     (Func) commands_toggle_hidden_files, NULL,                  ALWAYS_SM,    
     { 0 }, EP_NONE, { "hidden", NULL }, },
