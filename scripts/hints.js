@@ -148,25 +148,14 @@ var DwbHintObj = (function () {
       return 0;
     };
     this.getTextHint = function(i, length) {
-      var text;
+      var text = new String();
       var l = _letterSeq.length;
-      if (length <= l) {
-        text = _letterSeq[i];
+      var cur = i;
+      for (var j=0; j<Math.ceil(Math.log(length)/Math.log(l)); j++) {
+        text += _letterSeq[(cur%l)];
+        cur = Math.floor(cur/l);
       }
-      else if (length < 2*l) {
-        var rem = (length) % l;
-        var r = Math.floor(Math.sqrt(2*(rem)))+1;
-        if (i < l-r) {
-          text = _letterSeq[i];
-        }
-        else {
-          var newrem = i%(r*r);
-          text = _letterSeq[Math.floor( (newrem / r) + l - r )] + _letterSeq[l-newrem%r - 1];
-        }
-      }
-      else {
-        text = _letterSeq[i%l] + _letterSeq[l - 1 - (parseInt(i/l, 10))];
-      }
+
       this.hint.textContent = text;
     };
     this.matchText = function(input, matchHint) {
