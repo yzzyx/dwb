@@ -99,18 +99,27 @@ session_restore(const char *name) {
   }
   char  **lines = g_strsplit(group, "\n", -1);
   g_free(group);
-  GList *currentview, *lastview = NULL;
+  GList *currentview = NULL, *lastview = NULL;
   WebKitWebBackForwardList *bf_list = NULL;
   int last = 1;
   char *uri = NULL;
+  char *end;
+  int locked_state = 0;
 
   int length = g_strv_length(lines) - 1;
   for (int i=1; i<=length; i++) {
     char **line = g_strsplit(lines[i], " ", 4);
     if (line[0] && line[1] && line[2]) {
-      int current = strtol(line[0], NULL, 10);
+      int current = strtol(line[0], &end, 10);
+      if (current == 0 && *end == '|') {
+        locked_state = strtol(end+1, NULL, 10);
+        if (lastview != NULL)
+          VIEW(currentview)->status->lockprotect = locked_state;
+      }
+
       if (current <= last) {
         currentview = view_add(NULL, false);
+        locked_state = 0;
         bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(currentview));
         if (lastview) {
           session_load_webview(lastview, uri, last);
@@ -156,8 +165,11 @@ session_save(const char *name) {
     for (int i= -webkit_web_back_forward_list_get_back_length(bf_list); i<=webkit_web_back_forward_list_get_forward_length(bf_list); i++) {
       WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, i);
       if (item) {
-        g_string_append_printf(buffer, "%d %s %s\n", 
-            i, webkit_web_history_item_get_uri(item), webkit_web_history_item_get_title(item));
+        g_string_append_printf(buffer, "%d", i);
+        if (i == 0) 
+          g_string_append_printf(buffer, "|%d", VIEW(l)->status->lockprotect);
+        g_string_append_printf(buffer, " %s %s\n", 
+            webkit_web_history_item_get_uri(item), webkit_web_history_item_get_title(item));
       }
     }
   }
