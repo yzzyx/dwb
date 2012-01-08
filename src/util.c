@@ -534,7 +534,7 @@ Quickmark *
 dwb_quickmark_new_from_line(const char *line) {
   Quickmark *q = NULL;
   char **token;
-  if (line) 
+  if (line == NULL) 
     return NULL;
   while (g_ascii_isspace(*line))
     line++;
