@@ -1883,7 +1883,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               dwb_set_key(token[0], token[1]);
                               g_strfreev(token);
                               return true;
-    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT());
+    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), false);
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(); 
                               return true;
@@ -1971,7 +1971,7 @@ dwb_eval_key(GdkEventKey *e) {
         CustomCommand *c = l->data;
         if (IS_NUMMOD(c->key->mod) || (c->key->mod == mod_mask && c->key->num == dwb.state.nummod)) {
           for (int i=0; c->commands[i]; i++) {
-            dwb_parse_command_line(c->commands[i]);
+            dwb_parse_command_line(c->commands[i], false);
           }
           break;
         }
@@ -2002,7 +2002,7 @@ dwb_eval_key(GdkEventKey *e) {
     CustomCommand *c = l->data;
     if (c->key->num == dwb.state.nummod && !g_strcmp0(c->key->str, buf)) {
       for (int i=0; c->commands[i]; i++) {
-        dwb_parse_command_line(c->commands[i]);
+        dwb_parse_command_line(c->commands[i], false);
       }
       return true;
     }
@@ -2204,7 +2204,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
       break;
     }
     else {
-      dwb_parse_command_line(g_strchomp(line));
+      dwb_parse_command_line(g_strchomp(line), true);
     }
     g_io_channel_flush(out_channel, NULL);
     FREE(line);
@@ -3312,7 +3312,7 @@ dwb_init() {
 /* FIFO {{{*/
 /* dwb_parse_command_line(const char *line) {{{*/
 void 
-dwb_parse_command_line(const char *line) {
+dwb_parse_command_line(const char *line, gboolean clear) {
   while (g_ascii_isspace(*line))
     line++;
   char **token = g_strsplit(line, " ", 2);
@@ -3361,7 +3361,7 @@ dwb_parse_command_line(const char *line) {
   dwb_glist_prepend_unique(&dwb.fc.commands, g_strdup(line));
   /* Check for dwb.keymap is necessary for commands that quit dwb. */
   if (dwb.keymap != NULL && m != NULL && !(m->map->prop & CP_HAS_MODE)) {
-    dwb_change_mode(NORMAL_MODE, true);
+    dwb_change_mode(NORMAL_MODE, clear);
   }
 }/*}}}*/
 
@@ -3373,7 +3373,7 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
   g_io_channel_read_line(c, &line, NULL, NULL, NULL);
   if (line) {
     g_strstrip(line);
-    dwb_parse_command_line(line);
+    dwb_parse_command_line(line, false);
     g_io_channel_flush(c, NULL);
     g_free(line);
   }

@@ -172,11 +172,11 @@ static FunctionMap FMAP [] = {
     { .p = NULL },                          EP_NONE,    { "exja", NULL }, },
 
   { { "set",              "Set a setting",                    }, 1, 
-    (Func)commands_set,            NULL,                            ALWAYS_SM,     
+    (Func)commands_set,            "Invalid value",                            POST_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
   { { "toggle_setting",              "Toggle a setting",                    }, 1, 
-    (Func)commands_toggle_setting,            NULL,                            ALWAYS_SM,     
+    (Func)commands_toggle_setting,            "Invalid value",                            POST_SM,     
     { .p = NULL },                          EP_NONE,    { "toggle", "tog", NULL }, },
 
   { { "toggle_bars",    "Toggle visibility of status and tabbar" },                 1, 

@@ -779,7 +779,7 @@ DwbStatus dwb_set_proxy(GList *, WebSettings *);
 void dwb_new_window(const char *uri);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
-void dwb_parse_command_line(const char *);
+void dwb_parse_command_line(const char *, gboolean);
 GHashTable * dwb_get_default_settings(void);
 
 int dwb_end(void);
