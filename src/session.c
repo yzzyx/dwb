@@ -22,6 +22,11 @@
 #include "view.h"
 #include "session.h"
 
+typedef struct _SessionTab {
+  GList *gl;
+  unsigned int lock;
+} SessionTab;
+
 /* session_get_groups()                 return  char  ** (alloc){{{*/
 static char **
 session_get_groups() {
@@ -55,9 +60,23 @@ session_get_group(const char *name) {
   return content;
 }/*}}}*/
 
+void
+session_load_status_callback(WebKitWebView *wv, GParamSpec *p, SessionTab *tab) {
+  WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
+  switch (status) {
+    case WEBKIT_LOAD_FINISHED:  VIEW(tab->gl)->status->lockprotect = tab->lock;
+                                dwb_tab_label_set_text(tab->gl, NULL);
+    case WEBKIT_LOAD_FAILED:    g_signal_handlers_disconnect_by_func(wv, (GFunc)session_load_status_callback, tab);
+                                g_free(tab);
+                                break;
+    default: return;
+  }
+}
+
+
 /* session_load_webview(WebKitWebView *, char *, int *){{{*/
 static void
-session_load_webview(GList *gl, char *uri, int last) {
+session_load_webview(GList *gl, char *uri, int last, int lock_status) {
   if (last > 0) {
     for (int j=0; j<last; j++) {
       webkit_web_view_go_back(WEBVIEW(gl));
@@ -65,6 +84,12 @@ session_load_webview(GList *gl, char *uri, int last) {
   }
   else {
     dwb_load_uri(gl, uri);
+  }
+  if (lock_status > 0) {
+    SessionTab *tab = dwb_malloc(sizeof(SessionTab));
+    tab->gl = gl;
+    tab->lock = lock_status;
+    g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(session_load_status_callback), tab);
   }
 }/*}}}*/
 
@@ -113,16 +138,14 @@ session_restore(const char *name) {
       int current = strtol(line[0], &end, 10);
       if (current == 0 && *end == '|') {
         locked_state = strtol(end+1, NULL, 10);
-        if (lastview != NULL)
-          VIEW(currentview)->status->lockprotect = locked_state;
       }
 
       if (current <= last) {
         currentview = view_add(NULL, false);
-        locked_state = 0;
         bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(currentview));
         if (lastview) {
-          session_load_webview(lastview, uri, last);
+          session_load_webview(lastview, uri, last, locked_state);
+          locked_state = 0;
         }
         lastview = currentview;
       }
@@ -135,7 +158,7 @@ session_restore(const char *name) {
       uri = g_strdup(line[1]);
     }
     if (i == length && lastview)
-      session_load_webview(lastview, uri, last);
+      session_load_webview(lastview, uri, last, locked_state);
     g_strfreev(line);
   }
   g_strfreev(lines);
