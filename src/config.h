@@ -508,7 +508,7 @@ static FunctionMap FMAP [] = {
   
   { { "zoom",                 "Zoom",                         }, 1, 
     (Func)commands_set_zoom_level,      NULL,                              ALWAYS_SM,    
-    { .d = 1.0,   .p = NULL }, EP_NONE, { "zo", NULL }, },
+    { .d = 1.0,   .p = NULL }, EP_NONE, { "z", NULL }, },
   
   { { "zoom_out",              "Zoom out",                          }, 1, 
     (Func)commands_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, 
