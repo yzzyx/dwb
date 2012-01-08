@@ -934,7 +934,6 @@ adblock_init() {
   _hider_rules        = g_hash_table_new_full((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal, (GDestroyNotify)g_free, NULL);
   _css_exceptions     = g_string_new(NULL);
   _css_rules          = g_string_new(NULL);
-  domain_init();
   adblock_rule_parse(filterlist);
   _init = true;
   return true;

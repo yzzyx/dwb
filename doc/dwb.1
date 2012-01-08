@@ -719,6 +719,12 @@ aliases:
 .BR ha ).
 .TP
 .BR unbound 
+Execute a javascript snippet (command 
+.BR execute_javascript ,
+aliases: 
+.BR exja ).
+.TP
+.BR unbound 
 Toggle autoload images (command 
 .BR autoload_images ).
 .TP
@@ -827,6 +833,26 @@ Init completion completion for the history of the current tab.
 .TP
 .BR C-p
 Complete local path.
+
+.SS CUSTOM COMMANDS
+Custom commands are a sequence of dwb commands that can be bound to a shortcut.
+The syntax is
+.IP
+[shortcut]:[command];[command];...
+.P 
+where shortcut is the shortcut for the commandsequence, 
+.B : 
+may be escaped with
+.BR \e: 
+and command is of the form 
+.IP
+[numerical modifier][command or alias] [argument for the command]
+.P 
+for example
+.IP 
+Control W:tabopen http://example.com; 150zoom
+.P
+opens http://example.com in a new tab and zooms to 150%.
 
 .SH CUSTOMIZATION
 dwb can be  customized in a web interface (command 

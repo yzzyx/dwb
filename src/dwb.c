@@ -41,8 +41,8 @@
 #include "entry.h"
 #ifdef DWB_ADBLOCKER
 #include "adblock.h"
-#include "domain.h"
 #endif
+#include "domain.h"
 
 /* DECLARATIONS {{{*/
 static DwbStatus dwb_webkit_setting(GList *, WebSettings *);
@@ -3245,6 +3245,7 @@ dwb_init() {
   dwb_init_gui();
   dwb_init_scripts();
   dwb_init_custom_keys(false);
+  domain_init();
 #ifdef DWB_ADBLOCKER
   adblock_init();
 #endif

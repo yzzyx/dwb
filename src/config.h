@@ -167,6 +167,7 @@ static KeyValue KEYS[] = {
   { "lock_domain",                {   "xd",        0 }, }, 
   { "back_new_tab",                {   "xb",        0 }, }, 
   { "visible",                {   "xv",        0 }, }, 
+  { "execute_javascript",     {   NULL,        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -174,6 +175,10 @@ static FunctionMap FMAP [] = {
   { { "add_view",              "Add a new view",                    }, 1, 
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "execute_javascript",              "Add a new view",                    }, 1, 
+    (Func)commands_execute_javascript,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { "exja", NULL }, },
 
   { { "toggle_bars",    "Toggle visibility of status and tabbar" },                 1, 
     (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    

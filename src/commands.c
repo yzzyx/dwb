@@ -30,6 +30,7 @@
 #include "adblock.h"
 #endif
 
+
 static int inline dwb_floor(double x) { 
   return x >= 0 ? (int) x : (int) x - 1;
 }
@@ -736,6 +737,18 @@ commands_toggle_lock_protect(KeyMap *km, Arg *arg) {
   dwb_tab_label_set_text(gl, NULL);
   if (arg->n & LP_VISIBLE && gl != dwb.state.fview)
     gtk_widget_set_visible(v->scroll, LP_VISIBLE(v));
+  return STATUS_OK;
+}
+DwbStatus
+commands_execute_javascript(KeyMap *km, Arg *arg) {
+  static char *script;
+  if (arg->p == NULL && script == NULL)
+    return STATUS_ERROR;
+  if (arg->p) {
+    FREE0(script);
+    script = g_strdup(arg->p);
+  }
+  dwb_execute_script(webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()), script, false);
   return STATUS_OK;
 }
 /*}}}*/
