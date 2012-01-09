@@ -1883,7 +1883,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               dwb_set_key(token[0], token[1]);
                               g_strfreev(token);
                               return true;
-    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), false);
+    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), true);
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(); 
                               return true;
@@ -1965,11 +1965,12 @@ dwb_eval_key(GdkEventKey *e) {
     }
     if (mod_mask) {
 #define IS_NUMMOD(X)  (((X) & DWB_NUMMOD_MASK) && ((X) & ~DWB_NUMMOD_MASK) == mod_mask)
+      GSList *last = g_slist_last(dwb.custom_commands);
       for (GSList *l = dwb.custom_commands; l; l=l->next) {
         CustomCommand *c = l->data;
         if (IS_NUMMOD(c->key->mod) || (c->key->mod == mod_mask && c->key->num == dwb.state.nummod)) {
           for (int i=0; c->commands[i]; i++) {
-            dwb_parse_command_line(c->commands[i], false);
+            dwb_parse_command_line(c->commands[i], l == last);
           }
           break;
         }
@@ -1996,11 +1997,12 @@ dwb_eval_key(GdkEventKey *e) {
   int longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
+  GSList *last =  g_slist_last(dwb.custom_commands);
   for (GSList *l = dwb.custom_commands; l; l=l->next) {
     CustomCommand *c = l->data;
     if (c->key->num == dwb.state.nummod && !g_strcmp0(c->key->str, buf)) {
       for (int i=0; c->commands[i]; i++) {
-        dwb_parse_command_line(c->commands[i], false);
+        dwb_parse_command_line(c->commands[i], l == last);
       }
       return true;
     }
