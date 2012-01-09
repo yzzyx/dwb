@@ -110,33 +110,36 @@ aliases:
 Enter Commandmode.
 .TP
 .BR o 
-Open new url in the focused view (command
+Open new url in the focused tab (command
 .BR open ,
 aliases:
 .BR o ).
 .TP
 .BR go 
-Open url in the focused view, set the current url in the navigation bar.
+Open url in the focused tab, set the current url in the navigation bar (comand 
+.BR open_url ).
 .TP
 .BR O 
-Open url in a new view (command 
-.BR open_nv ,
+Open url in a new tab (command 
+.BR tabopen ,
 aliases:
-.BR tabopen , 
+.BR topen , 
 .BR t ).
 .TP
 .BR gO 
-Open url in a new view, set the current url in the navigation bar.
+Open url in a new tab, set the current url in the navigation bar (command 
+.IR tabopen_url ).
 .TP
 .BR wo 
 Open url in a new instance (command 
-.BR open_nw ,
-aliases:
 .BR winopen ,
+aliases:
+.BR wopen ,
 .BR w ).
 .TP
 .BR wO 
-Open url in a new window, set the current url in the navigation bar.
+Open url in a new window, set the current url in the navigation bar (command
+.BR winopen_url ).
 .TP
 .BR i 
 Enter Insertmode (command 
@@ -146,12 +149,12 @@ aliases:
 .BR insert ).
 .TP
 .BR ga 
-Add a new blank view (command
-.BR add_view ).
+Add a new blank tab (command
+.BR tab_new ).
 .TP
 .BR d
-Close current view (command
-.BR remove_view ,
+Close current tab (command
+.BR close_tab ,
 aliases:
 .BR close ).
 .TP
@@ -166,14 +169,14 @@ aliases:
 .BR q ).
 .TP
 .BR u
-Undo closing last view (command
+Undo closing last tab (command
 .BR undo ,
 aliases:
 .BR u ).
 .TP
 .BR C-h
 Open the default startpage (command
-.BR open_start_page ,
+.BR start_page ,
 aliases:
 .BR home ).
 .TP
@@ -193,28 +196,28 @@ aliases:
 .TP
 .BR th  
 Go back in a new tab (command 
-.BR history_back_nv ,
+.BR tab_hist_back,
 aliases:
 .BR tabback ,
 .BR tba ).
 .TP
 .BR tl 
 Go forward in a new tab (command 
-.BR history_forward_nv ,
+.BR tab_hist_forward ,
 aliases:
 .BR tabforward ,
 .BR tfo ).
 .TP
 .BR wh  
 Go back in a new window (command 
-.BR history_back_nw ,
+.BR win_hist_back ,
 aliases:
 .BR winback ,
 .BR wba ).
 .TP
 .BR wl 
 Go forward in a new window (command 
-.BR history_forward_nw ,
+.BR win_hist_forward ,
 aliases:
 .BR winforward ,
 .BR wfo ).
@@ -234,14 +237,14 @@ aliases:
 .BR bmas ).
 .TP 
 .B gB
-Show Bookmarks, open bookmark in a new view (command
-.BR bookmarks_nv ,
+Show Bookmarks, open bookmark in a new tab (command
+.BR tab_bookmarks ,
 aliases:
 .BR tabmarks ).
 .TP 
 .B wB
 Show Bookmarks, open bookmark in a new window (command
-.BR bookmarks_nw ,
+.BR win_bookmarks ,
 aliases:
 .BR winmarks ).
 .TP
@@ -254,30 +257,30 @@ aliases:
 .TP
 .BR b
 Open quickmark (command 
-.BR open_quickmark ,
+.BR quickmark ,
 aliases:
 .BR qmarks ).
 .TP
 .BR B
-Open quickmark in a new view (command
-.BR open_quickmark_nv ,
+Open quickmark in a new tab (command
+.BR tab_quickmark ,
 aliases:
 .BR tabqmarks ).
 .TP
 .BR wb[:graph:]
 Open quickmark in a new window (command
-.BR open_quickmark_nw ,
+.BR win_quickmark ,
 aliases:
 .BR winqmarks ).
 .TP
 .BR r
-Reload focused view (command
+Reload focused tab (command
 .BR reload ,
 aliases:
 .BR re ).
 .TP
 .BR R
-Reload focused view without using any cached data (command
+Reload focused tab without using any cached data (command
 .BR reload_bypass_cache ,
 aliases:
 .BR refull ).
@@ -324,21 +327,21 @@ aliases:
 .BR wqn ).
 .TP
 .BR [n]J
-Cycle focus [n views] forwards. (command 
+Cycle focus [n tab] forwards. (command 
 .BR focus_next ,
 aliases:
 .BR tabnext ).
 .TP
 .BR [n]K
-Cycle focus [n views] backwards. (command 
+Cycle focus [n tab] backwards. (command 
 .BR focus_prev ,
 aliases:
 .BR tabprev ).
 .TP
 .BR [n]T
-Focus nth view or first, if n is ommitted. 
+Focus nth tab or first, if n is ommitted. 
 (command 
-.BR focus_nth_view ,
+.BR focus_tab ,
 aliases:
 .BR tab ).
 .TP
@@ -370,90 +373,90 @@ aliases:
 .TP
 .BR f 
 Show hints (command 
-.BR hint_mode ,
+.BR hints ,
 aliases:
 .BR hints , 
 .BR hi ).
 .TP
 .BR F
-Show hints, open link in a new view. (command
-.BR hint_mode_nv ,
+Show hints, open link in a new tab. (command
+.BR hints_tab ,
 aliases:
 .BR tabhints , 
 .BR thi ).
 .TP
 .BR wf
-Show hints, open link in a new view. (command
-.BR hint_mode_nw ,
+Show hints, open link in a new tab. (command
+.BR hints_win ,
 aliases:
 .BR winhints ,
 .BR whi ).
 .TP
 .BR ;i 
 Follow image (command 
-.BR hint_mode_images ,
+.BR hints_images ,
 aliases:
 .BR ihints ,
 ihi ).
 .TP
 .BR ;I 
 Follow image in a new tab (command 
-.BR hint_mode_images_nv ,
+.BR hints_images_tab ,
 aliases:
 .BR itabhints ,
 .BR ithi ).
 .TP
 .BR ;e 
 Focus editable elements via hints (command 
-.BR hint_mode_editable ,
+.BR hints_editable ,
 aliases:
 .BR ehints ,
 .BR ehi ).
 .TP
 .BR ;o 
 Set hint\'s url in commandline (command 
-.BR hint_mode_url ,
+.BR hints_url ,
 aliases:
 .BR uhints ,
 .BR uhi ).
 .TP
 .BR ;O 
 Set hint\'s url in commandline, open in a new tab (command 
-.BR hint_mode_url_nv ,
+.BR hints_url_tab ,
 aliases:
 .BR utabhints ,
 .BR uthi ).
 .TP
 .BR ;d 
 Download via hints (command 
-.BR hint_mode_download ,
+.BR hints_download ,
 aliases:
 .BR dhints ).
 .TP
 .BR ;y 
 Save link location to clipboard (command 
-.BR hint_mode_clipboard ,
+.BR hints_clipboard ,
 aliases:
 .BR chints ,
 .BR chi ).
 .TP
 .BR ;Y
 Save link location to primary selection (command 
-.BR hint_mode_primary ,
+.BR hints_primary ,
 aliases:
 .BR phints ,
 .BR phi ).
 .TP
 .BR ;r
 Rapid hint mode, each matching hint opens a new tab in background. (command 
-.BR hint_mode_rapid ,
+.BR hints_rapid ,
 aliases:
 .BR rhints ,
 .BR rhi ).
 .TP
 .BR ;R
 Rapid hint mode, each matching hint opens a new window. (command 
-.BR hint_mode_rapid ,
+.BR hints_rapid_win ,
 aliases:
 .BR wrhints ,
 .BR wrhi ).
@@ -528,16 +531,16 @@ aliases:
 .BR ppaste ).
 .TP
 .BR Pp
-Paste from clipboard and load in a new view (command 
-.BR paste_nv ,
+Paste from clipboard and load in a new tab (command 
+.BR tab_paste ,
 aliases:
-.BR tabpaste ).
+.BR tpaste ).
 .TP
 .BR PP
-Paste from primary selection and load in a new view (command
-.BR paste_primary_nv ,
+Paste from primary selection and load in a new tab (command
+.BR tab_paste_primary ,
 aliases:
-.BR tabppaste ).
+.BR tppaste ).
 .TP
 .BR wp
 Paste from clipboard and load in a new window (command 
@@ -634,10 +637,12 @@ aliases:
 .BR tuplugin ).
 .TP
 .BR V
-Next navigation action will be opened in a new view.
+Next navigation action will be opened in a new tab (command
+.BR new_tab ).
 .TP
 .BR W
-Next navigation action will be opened in a new window.
+Next navigation action will be opened in a new window (command
+.BR new_win ).
 .TP
 .BR eu
 Show userscripts (command 
@@ -687,16 +692,16 @@ aliases:
 .BR xt
 Toggle visibility of tabbar.
 (command 
-.BR toggle_bars , 
+.BR toggle_tabbar , 
 aliases: 
 .BR tbar ).
 .TP 
 .BR xb
 Toggle visibility of statusbar.
 (command 
-.BR toggle_bottombar , 
+.BR toggle_statusbar , 
 aliases: 
-.BR bbar ).
+.BR sbar ).
 .TP 
 .BR xv
 Toggle visibility of a tab.
@@ -733,8 +738,8 @@ Load a html string. This command is mainly intended for use in userscripts (comm
 .BR load_html ).
 .TP
 .BR unbound 
-Load a html string in a new view. This command is mainly intended for use in userscripts (command 
-.BR load_html_nv ).
+Load a html string in a new tab. This command is mainly intended for use in userscripts (command 
+.BR load_html_tab ).
 .TP 
 .B Tab (S-Tab) 
 In Normal mode Tab shows the next (previous) shortcut, that matches the
@@ -1168,7 +1173,7 @@ default value:
 .IR true .
 .TP 
 .BR background-tabs
-Open new views in background. 
+Open new tabs in background. 
 Possible values: true/false,
 default value:
 .IR false .
@@ -1307,7 +1312,7 @@ string,
 default value: 
 .TP 
 .BR font-inactive
-The font used for inactive views. Possible values: a font description
+The font used for inactive tabs. Possible values: a font description
 string,
 default value: 
 .TP 
@@ -1423,13 +1428,13 @@ default value:
 .IR #eeeeee .
 .TP 
 .BR normal-bg-color
-The background color of a not focused view. Possible values: an rgb
+The background color of a not focused tab. Possible values: an rgb
 color-string,
 default value:
 .IR #505050 .
 .TP 
 .BR normal-fg-color
-The foreground color of a not focused view. Possible values: an rgb
+The foreground color of a not focused tab. Possible values: an rgb
 color-string,
 default value:
 .IR #cccccc .
@@ -1462,29 +1467,11 @@ Wether scrollbars should be enabled.
 default value: 
 .IR false .
 .TP 
-.BR settings-bg-color
-The background color of a the settings view. Possible values: an rgb
-color-string,
-default value:
-.IR #151515 .
-.TP 
-.BR settings-border
-The border for used for seperating lines in the settings view. Possible values: A
-css-border-description,
-default value:
-.IR 1px\ dotted\ black .
-.TP 
-.BR settings-fg-color
-The foreground color of a the settings view. Possible values: an rgb
-color-string,
-default value:
-.IR #ffffff .
-.TP 
 .BR single-instance
 Only one instance of dwb per user. This option will be overridden by the
 commandlineoption -n. Possible values: true/false,
 default value:
-.IR false .
+.IR true .
 .TP 
 .BR ssl-strict
 Whether to allow only save ssl-certificates.
@@ -1513,31 +1500,31 @@ default value:
 .IR about:blank .
 .TP 
 .BR tab-active-bg-color
-The background color the tab of the focused view. Possible values: an rgb
+The background color the tab of the focused tab. Possible values: an rgb
 color-string,
 default value:
 .IR #000000 .
 .TP 
 .BR tab-active-fg-color
-The foreground color of the tab of the focused view. Possible values: an rgb
+The foreground color of the tab of the focused tab. Possible values: an rgb
 color-string,
 default value:
 .IR #ffffff .
 .TP 
 .BR tab-normal-bg-color
-The background color the tab of a not focused view. Possible values: an rgb
+The background color the tab of a not focused tab. Possible values: an rgb
 color-string,
 default value:
 .IR #505050 .
 .TP 
 .BR tab-normal-fg-color
-The foreground color of the tab of a not focused view. Possible values: an rgb
+The foreground color of the tab of a not focused tab. Possible values: an rgb
 color-string,
 default value:
 .IR #cccccc .
 .TP 
 .BR tab-normal-fg-color
-The foreground color of the tab of a not focused view. Possible values: an rgb
+The foreground color of the tab of a not focused tab. Possible values: an rgb
 color-string,
 default value:
 .IR #cccccc .
@@ -1560,7 +1547,7 @@ default value:
 .TP 
 .BR use-fifo
 Use a fifo to communicate with dwb, e.g. sending "open <url>" to the fifo would
-load the url in the current view,
+load the url in the current tab,
 default value:
 .IR false .
 .TP 

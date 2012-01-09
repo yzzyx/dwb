@@ -791,7 +791,7 @@ dwb_follow_selection() {
 /* dwb_open_startpage(GList *) {{{*/
 DwbStatus
 dwb_open_startpage(GList *gl) {
-  if (!dwb.misc.startpage) 
+  if (dwb.misc.startpage == NULL) 
     return STATUS_ERROR;
   if (gl == NULL) 
     gl = dwb.state.fview;
@@ -1947,7 +1947,8 @@ dwb_eval_key(GdkEventKey *e) {
     mod_mask = CLEAN_STATE(e);
     isprint = true;
   }
-  else if ( (key = g_strdup(gdk_keyval_name(keyval)))) {
+  else if ( (key = gdk_keyval_name(keyval))) {
+    key = g_strdup_printf("@%s@", key);
     mod_mask = CLEAN_STATE_WITH_SHIFT(e);
   }
   else {
@@ -2542,6 +2543,7 @@ dwb_str_to_key(char *str) {
     return key;
   g_strstrip(str);
   GString *buffer = g_string_new(NULL);
+  GString *keybuffer;
   char *end;
 
   char **string = g_strsplit(str, " ", -1);
@@ -2581,7 +2583,19 @@ dwb_str_to_key(char *str) {
       g_string_append(buffer, string[i]);
     }
   }
-  key.str = buffer->str;
+  const char *escape, *start = buffer->str;
+  if ((escape = strchr(start, '\\'))) {
+    keybuffer = g_string_new(NULL);
+    do {
+      g_string_append_len(keybuffer, start, escape - start);
+      start = escape + 1;
+    } while ((escape = strchr(start, '\\')));
+    g_string_append_len(keybuffer, start, escape - start);
+    key.str = keybuffer->str;
+    g_string_free(keybuffer, false);
+  }
+  else 
+    key.str = buffer->str;
   key.num = strtol(buffer->str, &end, 10);
   if (end == buffer->str) 
     key.num = -1;

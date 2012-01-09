@@ -1,20 +1,20 @@
 # general General
 open Open url
-Open Open url, edit the current url in the address bar
-open_nv Open in a new tab
-Open_nv Open url in a new view, edit the current url in the address bar
-open_nw Open url in a new window
-Open_nw Open url in a new window, edit the current url in the address bar
+open_url Open url, edit the current url in the address bar
+tabopen Open in a new tab
+tabopen_url Open url in a new tab, edit the current url in the address bar
+winopen Open url in a new window
+winopen_url Open url in a new window, edit the current url in the address bar
 find_backward Find backward
 find_forward Find forward
 find_next Find next
 find_previous Find previous
 history_back Go back
 history_forward Go forward
-history_back_nv Go back in a new tab
-history_forward_nv Go forward in a new tab
-history_back_nw Go back in a new tab
-history_forward_nw Go forward in a new tab
+tab_hist_back Go back in a new tab
+tab_hist_forward Go forward in a new tab
+win_hist_back Go back in a new window
+win_hist_forward Go forward in a new window
 reload Reload current page
 reload_bypass_cache Reload without using any cached data
 stop_loading Stop loading current page
@@ -26,31 +26,31 @@ zoom Zoom
 quit Quit dwb
 
 # hints Hints
-hint_mode Follow hints
-hint_mode_nv Follow hints, open link in a new view
-hint_mode_nw Follow hints, open link in a new window
-hint_mode_links Follow links
-hint_mode_images Follow images
-hint_mode_images_nv Follow images in a new tab
-hint_mode_editable Focus editable elements
-hint_mode_url Set hint's url in commandline
-hint_mode_url_nv Set hint's url in commandline, open in a new tab
-hint_mode_download Download via hints
-hint_mode_clipboard Save link location to clipboard
-hint_mode_primary Save link location to primary selection
-hint_mode_rapid Open new tabs in background rapidly
-hint_mode_rapid_nw Open new windows rapidly
+hints Follow hints
+hints_tab Follow hints, open link in a new tab
+hints_win Follow hints, open link in a new window
+hints_links Follow links
+hints_images Follow images
+hints_images_tab Follow images in a new tab
+hints_editable Focus editable elements
+hints_url Set hint's url in commandline
+hints_url_tab Set hint's url in commandline, open in a new tab
+hints_download Download via hints
+hints_clipboard Save link location to clipboard
+hints_primary Save link location to primary selection
+hints_rapid Open new tabs in background rapidly
+hints_rapid_win Open new windows rapidly
 
 # bookmark_keys Bookmarks &amp Quickmarks
 bookmark Bookmark current page
 bookmarks Show bookmarks in a pop up menu and open
-bookmarks_nv Show bookmarks in a pop up menu and open in new view
-bookmarks_nw Show bookmarks in a pop up menu and open in new window
+tab_bookmarks Show bookmarks in a pop up menu and open in new tab
+win_bookmarks Show bookmarks in a pop up menu and open in new window
 save_quickmark Save a quickmark for this page
-open_quickmark Open a quickmark
-open_quickmark_nv Open quickmark in a new tab
-open_quickmark_nw Open quickmark in a new window
-open_start_page Open the default homepage
+quickmark Open a quickmark
+tab_quickmark Open quickmark in a new tab
+win_quickmark Open quickmark in a new window
+start_page Open the default homepage
 
 # commandline Commandline
 command_mode Enter command mode
@@ -76,26 +76,21 @@ scroll_halfpage_down Scroll one-half page down
 scroll_halfpage_up Scroll one-half page up
 scroll_bottom Scroll to  bottom of the page
 scroll_top Scroll to the top of the page
-scroll_percent Scroll to percentage
 
 # tabs Tabs &amp UI
-add_view Add a new view
-remove_view Close view
+tab_new Open a new blank tab
+close_tab Close tab
 only Close all tabs except for the current one
 undo Undo closing last tab
-decrease_master Decrease master area
-increase_master Increase master area
-focus_next Focus next view
-focus_nth_view Focus nth view
-focus_prev Focus previous view
+focus_next Focus next tab
+focus_tab Focus nth tab
+focus_prev Focus previous tab
 lock_domain Lock tab to current domain
 lock_uri Lock tab to current uri
-push_master Push to master area
-toggle_bottomstack Toggle bottomstack
 fullscreen Toggle fullscreen
 toggle_bars Toggle tabbar and statusbar
-toggle_bottombar Toggle bottombar
-toggle_topbar Toggle tabbar
+toggle_statusbar Toggle statusbar
+toggle_tabbar Toggle tabbar
 protect Protect/unprotect tab 
 presentation_mode Toggle presentation mode
 visible Toggle visibility of a tab
@@ -104,7 +99,6 @@ visible Toggle visibility of a tab
 buffers Show all open tabs
 complete_bookmarks Complete bookmarks
 complete_history Complete browsing history
-complete_commands Complete command history
 complete_path Complete local file path
 complete_searchengines Complete searchengines
 complete_userscript Complete userscripts
@@ -112,11 +106,11 @@ complete_current_history Complete history of the current tab
 
 # clipboard Clipboard
 paste Open url from clipboard
-paste_nv Open url from clipboard in a new tab
-paste_nw Open url from clipboard in a new window
+tab_paste Open url from clipboard in a new tab
+win_paste Open url from clipboard in a new window
 paste_primary Open url from primary selection
-paste_primary_nw Open url from primary selection in a new window
-paste_primary_nv Open url from primary selection in a new window
+tab_paste_primary Open url from primary selection in a new window
+win_paste_primary Open url from primary selection in a new window
 yank Yank current url to clipboard
 yank_primary Yank current url to primary selection
 yank_title Yank current title to clipboard
@@ -135,9 +129,6 @@ toggle_scripts_host Toggle block content for current domain
 toggle_scripts_uri Toggle block content for current uri
 toggle_scripts_host_tmp Toggle block content for current domain for this session
 toggle_scripts_uri_tmp Toggle block content for current uri for this session
-private_browsing Toggle private browsing
-java_applets Toggle java applets
-plugins Toggle 'enable-plugins'
 proxy Toggle proxy
 
 # misc Miscellaneous
@@ -146,8 +137,8 @@ allow_session_cookie Allow session cookies for current site
 allow_session_cookie_tmp Allow session cookies for current site temporarily
 execute_userscript Execute userscript
 focus_input Focus the next input
-new_view New view for next navigation
-new_window New window for next navigation
+new_tab New tab for next navigation
+new_win New window for next navigation
 web_inspector Open the webinspector
 open_editor Open an external editor for current input/textarea.
 print Print current page
