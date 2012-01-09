@@ -76,7 +76,6 @@ DwbStatus commands_web_inspector(KeyMap *, Arg *);
 DwbStatus commands_quit(KeyMap *, Arg *);
 DwbStatus commands_reload_scripts(KeyMap *, Arg *);
 DwbStatus commands_fullscreen(KeyMap *, Arg *);
-DwbStatus commands_pass_through(KeyMap *, Arg *);
 DwbStatus commands_open_editor(KeyMap *, Arg *);
 DwbStatus commands_insert_mode(KeyMap *, Arg *);
 DwbStatus commands_command_mode(KeyMap *, Arg *);

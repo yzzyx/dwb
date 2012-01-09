@@ -1909,18 +1909,17 @@ dwb_entry_activate(GdkEventKey *e) {
   return true;
 }
 /* dwb_eval_key(GdkEventKey *e) {{{*/
-gboolean
+void
 dwb_eval_key(GdkEventKey *e) {
-  gboolean ret = false;
   int keyval = e->keyval;
   unsigned int mod_mask;
   int keynum = -1;
 
   if (dwb.state.scriptlock) {
-    return true;
+    return;
   }
   if (e->is_modifier) {
-    return false;
+    return;
   }
   /* don't show backspace in the buffer */
   if (keyval == GDK_KEY_BackSpace ) {
@@ -1930,21 +1929,17 @@ dwb_eval_key(GdkEventKey *e) {
     if (dwb.state.buffer->len > 0) {
       g_string_erase(dwb.state.buffer, dwb.state.buffer->len - 1, 1);
       dwb_set_status_bar_text(dwb.gui.lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_active, false);
-      ret = false;
     }
-    else {
-      ret = false;
-    }
-    return ret;
+    return;
   }
   /* Multimedia keys */
   switch (keyval) {
-    case GDK_KEY_Back : dwb_history_back(); return true;
-    case GDK_KEY_Forward : dwb_history_forward(); return true;
-    case GDK_KEY_Cancel : commands_stop_loading(NULL, NULL); return true;
-    case GDK_KEY_Reload : commands_reload(NULL, NULL); return true;
-    case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); return true;
-    case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return true;
+    case GDK_KEY_Back : dwb_history_back(); return;
+    case GDK_KEY_Forward : dwb_history_forward(); return;
+    case GDK_KEY_Cancel : commands_stop_loading(NULL, NULL); return;
+    case GDK_KEY_Reload : commands_reload(NULL, NULL); return;
+    case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); return;
+    case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return;
   }
   char *key = util_keyval_to_char(keyval, true);
   if (key) {
@@ -1954,7 +1949,7 @@ dwb_eval_key(GdkEventKey *e) {
     mod_mask = CLEAN_STATE_WITH_SHIFT(e);
   }
   else {
-    return false;
+    return;
   }
   /* nummod */
   if (DIGIT(e)) {
@@ -1987,7 +1982,7 @@ dwb_eval_key(GdkEventKey *e) {
 #undef IS_NUMMOD
     }
     FREE(key);
-    return false;
+    return;
   }
   g_string_append(dwb.state.buffer, key);
   if (ALPHA(e) || DIGIT(e)) {
@@ -2004,7 +1999,7 @@ dwb_eval_key(GdkEventKey *e) {
       for (int i=0; c->commands[i]; i++) {
         dwb_parse_command_line(c->commands[i], false);
       }
-      return true;
+      return;
     }
   }
 
@@ -2025,7 +2020,6 @@ dwb_eval_key(GdkEventKey *e) {
       if (dwb.comps.autocompletion) {
         coms = g_list_append(coms, km);
       }
-      ret = true;
     }
   }
   /* autocompletion */
@@ -2034,7 +2028,6 @@ dwb_eval_key(GdkEventKey *e) {
   }
   if (coms && g_list_length(coms) > 0) {
     completion_autocomplete(coms, NULL);
-    ret = true;
   }
   if (tmp && dwb.state.buffer->len == longest) {
     commands_simple_command(tmp);
@@ -2044,15 +2037,11 @@ dwb_eval_key(GdkEventKey *e) {
     CLEAR_COMMAND_TEXT();
   }
   FREE(key);
-  return ret;
-
 }/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
 static DwbStatus
 dwb_insert_mode(void) {
-  if (dwb.state.mode & PASS_THROUGH)
-    return STATUS_ERROR;
   if (dwb.state.mode == HINT_MODE) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
@@ -2069,14 +2058,6 @@ dwb_command_mode(void) {
   dwb_set_normal_message(dwb.state.fview, false, ":");
   entry_focus();
   dwb.state.mode = COMMAND_MODE;
-  return STATUS_OK;
-}/*}}}*/
-
-/* dwb_passthrough_mode () {{{*/
-static DwbStatus
-dwb_passthrough_mode(void) {
-  dwb.state.mode |= PASS_THROUGH;
-  dwb_set_normal_message(dwb.state.fview, false, "-- PASS THROUGH --");
   return STATUS_OK;
 }/*}}}*/
 
@@ -2124,7 +2105,6 @@ dwb_change_mode(Mode mode, ...) {
       break;
     case INSERT_MODE:   ret = dwb_insert_mode(); break;
     case COMMAND_MODE:  ret = dwb_command_mode(); break;
-    case PASS_THROUGH:  ret = dwb_passthrough_mode(); break;
     default: PRINT_DEBUG("Unknown mode: %d", mode); break;
   }
   return ret;

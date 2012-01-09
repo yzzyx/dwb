@@ -282,7 +282,6 @@ typedef enum {
   COMPLETE_BUFFER       = 1<<17,
   COMPLETE_QUICKMARKS   = 1<<18,
   COMPLETE_COMMAND_MODE = 1<<19,
-  PASS_THROUGH          = 1<<20,
   CONFIRM               = 1<<21,
 } Mode;
 
@@ -827,7 +826,7 @@ gboolean dwb_entry_activate(GdkEventKey *e);
 void dwb_set_adblock(GList *, WebSettings *);
 #endif
 
-gboolean dwb_eval_key(GdkEventKey *);
+void dwb_eval_key(GdkEventKey *);
 void dwb_follow_selection(void);
 void dwb_update_layout(void);
 const char * dwb_parse_nummod(const char *);

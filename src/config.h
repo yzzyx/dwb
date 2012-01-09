@@ -713,10 +713,6 @@ static FunctionMap FMAP [] = {
     (Func) commands_fullscreen, NULL,     ALWAYS_SM,    
     { 0 }, EP_NONE, { "fs", NULL }, },
   
-  { { "pass_through",    "Pass-through mode" },                 1, 
-    (Func) commands_pass_through, NULL,     POST_SM,    
-    { 0 }, EP_NONE, { "pthrough", NULL }, },
-  
   { { "open_editor",    "Open external editor" },                 1, 
     (Func) commands_open_editor, "No input focused",     NEVER_SM,    
     { 0 }, EP_NONE, { "editor", NULL }, },

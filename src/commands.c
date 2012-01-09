@@ -682,11 +682,6 @@ commands_fullscreen(KeyMap *km, Arg *arg) {
 }/*}}}*/
 /* commands_reload_scripts {{{*/
 DwbStatus
-commands_pass_through(KeyMap *km, Arg *arg) {
-  return dwb_change_mode(PASS_THROUGH);
-}/*}}}*/
-/* commands_reload_scripts {{{*/
-DwbStatus
 commands_open_editor(KeyMap *km, Arg *arg) {
   return dwb_open_in_editor();
 }/*}}}*/
