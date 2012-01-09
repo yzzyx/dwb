@@ -60,7 +60,6 @@ var DwbHintObj = (function () {
         for (j=0; j<max; j++) {
           text += _letterSeq[(cur%r)];
           cur = Math.floor(cur/r);
-          console.log(text);
         }
         e.hint.textContent = text;
       }

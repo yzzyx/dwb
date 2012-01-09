@@ -579,8 +579,10 @@ struct _Color {
   DwbColor ssl_untrusted;
   DwbColor tab_active_fg;
   DwbColor tab_active_bg;
-  DwbColor tab_normal_fg;
-  DwbColor tab_normal_bg;
+  DwbColor tab_normal_fg1;
+  DwbColor tab_normal_bg1;
+  DwbColor tab_normal_fg2;
+  DwbColor tab_normal_bg2;
   DwbColor error;
   DwbColor prompt;
   DwbColor active_c_fg;

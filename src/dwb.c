@@ -1132,7 +1132,7 @@ dwb_open_si_channel() {
 void 
 dwb_unfocus() {
   if (dwb.state.fview) {
-    view_set_normal_style(VIEW(dwb.state.fview));
+    view_set_normal_style(dwb.state.fview);
     dwb_source_remove(dwb.state.fview);
     CLEAR_COMMAND_TEXT();
     dwb.state.fview = NULL;
@@ -1187,14 +1187,12 @@ dwb_spawn(GList *gl, const char *prop, const char *uri) {
 static void 
 dwb_reload_layout(GList *gl, WebSettings *s) {
   dwb_init_style();
-  View *v;
   for (GList *l = dwb.state.views; l; l=l->next) {
-    v = VIEW(l);
     if (l == dwb.state.fview) {
-      view_set_active_style(v);
+      view_set_active_style(l);
     }
     else {
-      view_set_normal_style(v);
+      view_set_normal_style(l);
     }
   }
   dwb_init_style();
@@ -1706,7 +1704,7 @@ dwb_focus(GList *gl) {
     gtk_widget_hide(dwb.gui.entry);
   }
   dwb.state.fview = gl;
-  view_set_active_style(VIEW(gl));
+  view_set_active_style(gl);
   dwb_focus_scroll(gl);
   dwb_update_status(gl);
 }/*}}}*/
@@ -2796,8 +2794,10 @@ dwb_init_style() {
   /* Tabs */
   DWB_COLOR_PARSE(&dwb.color.tab_active_fg, GET_CHAR("tab-active-fg-color"));
   DWB_COLOR_PARSE(&dwb.color.tab_active_bg, GET_CHAR("tab-active-bg-color"));
-  DWB_COLOR_PARSE(&dwb.color.tab_normal_fg, GET_CHAR("tab-normal-fg-color"));
-  DWB_COLOR_PARSE(&dwb.color.tab_normal_bg, GET_CHAR("tab-normal-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.tab_normal_fg1, GET_CHAR("tab-normal-fg-color-1"));
+  DWB_COLOR_PARSE(&dwb.color.tab_normal_bg1, GET_CHAR("tab-normal-bg-color-1"));
+  DWB_COLOR_PARSE(&dwb.color.tab_normal_fg2, GET_CHAR("tab-normal-fg-color-2"));
+  DWB_COLOR_PARSE(&dwb.color.tab_normal_bg2, GET_CHAR("tab-normal-bg-color-2"));
 
   /* Downloads */
   DWB_COLOR_PARSE(&dwb.color.download_fg, "#ffffff");

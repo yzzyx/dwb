@@ -663,7 +663,8 @@ view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
 
 /* view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
-view_modify_style(View *v, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd) {
+view_modify_style(GList  *gl, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd) {
+  View *v = VIEW(gl);
   DWB_WIDGET_OVERRIDE_BACKGROUND(v->tabevent, GTK_STATE_NORMAL, tabbg);
   DWB_WIDGET_OVERRIDE_COLOR(v->tablabel, GTK_STATE_NORMAL, tabfg);
   DWB_WIDGET_OVERRIDE_FONT(v->tablabel, fd);
@@ -671,14 +672,17 @@ view_modify_style(View *v, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescriptio
 
 /* view_set_active_style (GList *) {{{*/
 void 
-view_set_active_style(View *v) {
-  view_modify_style(v, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_active);
+view_set_active_style(GList *gl) {
+  view_modify_style(gl, &dwb.color.tab_active_fg, &dwb.color.tab_active_bg, dwb.font.fd_active);
 }/*}}}*/
 
 /* view_set_normal_style {{{*/
 void 
-view_set_normal_style(View *v) {
-  view_modify_style(v, &dwb.color.tab_normal_fg, &dwb.color.tab_normal_bg, dwb.font.fd_inactive);
+view_set_normal_style(GList *gl) {
+  if (g_list_position(dwb.state.views, gl) % 2 == 0)
+    view_modify_style(gl, &dwb.color.tab_normal_fg1, &dwb.color.tab_normal_bg1, dwb.font.fd_inactive);
+  else
+    view_modify_style(gl, &dwb.color.tab_normal_fg2, &dwb.color.tab_normal_bg2, dwb.font.fd_inactive);
 }/*}}}*/
 
 /* view_init_settings {{{*/
@@ -921,7 +925,7 @@ view_add(const char *uri, gboolean background) {
     ret = dwb.state.fview->next;
 
     if (background) {
-      view_set_normal_style(v);
+      view_set_normal_style(ret);
       gtk_widget_hide(v->scroll);
     }
     else {

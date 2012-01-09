@@ -22,9 +22,9 @@
 GList * view_add(const char *uri, gboolean background);
 void view_remove(GList *gl);
 DwbStatus view_push_master(Arg *);
-void view_set_active_style(View *);
-void view_set_normal_style(View *);
-void view_modify_style(View *, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
+void view_set_active_style(GList *);
+void view_set_normal_style(GList *);
+void view_modify_style(GList *, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
 
 GtkWidget * dwb_web_view_create_plugin_widget_cb(WebKitWebView *, char *, char *, GHashTable *, GList *);
 #endif
