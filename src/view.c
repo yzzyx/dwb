@@ -220,7 +220,7 @@ view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourc
 static WebKitWebView * 
 view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
   if (dwb.misc.tabbed_browsing) {
-    GList *gl = view_add(NULL, false); 
+    GList *gl = view_add(NULL, dwb.state.background_tabs); 
     return WEBVIEW(gl);
   }
   else {
