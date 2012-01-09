@@ -660,17 +660,11 @@ adblock_rule_parse(char *filterlist) {
 
     //DwbStatus ret = STATUS_OK;
     GRegexCompileFlags regex_flags = G_REGEX_OPTIMIZE | G_REGEX_CASELESS;
-    if (pattern == NULL)
-      break;
-    //return STATUS_IGNORE;
-    g_strstrip(pattern);
-    if (strlen(pattern) == 0) 
-      break;
-    //return STATUS_IGNORE;
-    if (pattern[0] == '!' || pattern[0] == '[') {
-      break;
-      //return STATUS_IGNORE;
-    }
+    g_strchomp(pattern);
+    util_str_chug(pattern);
+    if (*pattern == '\0' || *pattern == '!' || *pattern == '[') 
+      continue;
+
     tmp_a = tmp_b = tmp_c = NULL;
     /* Element hiding rules */
     if ( (tmp = strstr(pattern, "##")) != NULL) {
