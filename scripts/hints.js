@@ -37,6 +37,36 @@ var DwbHintObj = (function () {
     HINT_T_URL : 4
   };
 
+  var __getTextHints = function(arr) {
+    var length = arr.length;
+    var i, j, e, text, cur, start, l, max, r;
+    if (length === 0)
+      return;
+    if (arr[0] instanceof __numberHint) {
+      for (i=0; i<length; i++) {
+        e = arr[i];
+        start = e.getStart(length);
+        e.hint.textContent = start+i;
+      }
+    }
+    else if (arr[0] instanceof __letterHint) {
+      l = _letterSeq.length;
+      max = Math.ceil(Math.log(length)/Math.log(l));
+      r = Math.ceil(Math.pow(length, 1/max));
+      for (i=0; i<length; i++) {
+        e = arr[i];
+        text = new String();
+        cur = i;
+        for (j=0; j<max; j++) {
+          text += _letterSeq[(cur%r)];
+          cur = Math.floor(cur/r);
+          console.log(text);
+        }
+        e.hint.textContent = text;
+      }
+    }
+  };
+
   var __newHint = function(element, win, rect) {
     this.element = element;
     this.overlay = null;
@@ -89,11 +119,6 @@ var DwbHintObj = (function () {
       }
       return Math.max(start, 1);
     };
-    this.getTextHint = function (i, length) {
-      var start = this.getStart(length);
-      this.hint.textContent = start+i;
-    };
-
     this.betterMatch = function(input) {
       var length = _activeArr.length;
       var i, cl;
@@ -117,10 +142,7 @@ var DwbHintObj = (function () {
           }
         }
       }
-      
-      for (i=0;i<length; i++) {
-        _activeArr[i].getTextHint(i, length);
-      }
+      __getTextHints(_activeArr);
       return ret;
     };
     this.matchText = function(input, matchHint) {
@@ -146,17 +168,6 @@ var DwbHintObj = (function () {
 
     this.betterMatch = function(input) {
       return 0;
-    };
-    this.getTextHint = function(i, length) {
-      var text = new String();
-      var l = _letterSeq.length;
-      var cur = i;
-      for (var j=0; j<Math.ceil(Math.log(length)/Math.log(l)); j++) {
-        text += _letterSeq[(cur%l)];
-        cur = Math.floor(cur/l);
-      }
-
-      this.hint.textContent = text;
     };
     this.matchText = function(input, matchHint) {
       var i;
@@ -301,10 +312,7 @@ var DwbHintObj = (function () {
       return  __evaluate(_elements[0].element, type);
     }
 
-    for (i=0; i<l; i++) {
-      var e =_elements[i];
-      e.getTextHint(i, l);
-    }
+    __getTextHints(_elements);
     _activeArr = _elements;
     __setActive(_elements[0]);
     return null;
