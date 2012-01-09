@@ -2003,7 +2003,7 @@ dwb_eval_key(GdkEventKey *e) {
   GList *coms = NULL;
   for (GSList *l = dwb.custom_commands; l; l=l->next) {
     CustomCommand *c = l->data;
-    if (c->key->num == dwb.state.nummod && !g_strcmp0(c->key->str, buf)) {
+    if (c->key->num == dwb.state.nummod && !g_strcmp0(c->key->str, buf) && c->key->mod == mod_mask) {
       for (int i=0; c->commands[i]; i++) {
         dwb_parse_command_line(c->commands[i], false);
       }
