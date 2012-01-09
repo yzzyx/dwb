@@ -148,8 +148,7 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
         return true;
       }
     }
-    dwb_eval_key(e);
-    ret = true;
+    ret = dwb_eval_key(e);
   }
   FREE(key);
   return ret;

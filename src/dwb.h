@@ -826,7 +826,7 @@ gboolean dwb_entry_activate(GdkEventKey *e);
 void dwb_set_adblock(GList *, WebSettings *);
 #endif
 
-void dwb_eval_key(GdkEventKey *);
+gboolean dwb_eval_key(GdkEventKey *);
 void dwb_follow_selection(void);
 void dwb_update_layout(void);
 const char * dwb_parse_nummod(const char *);

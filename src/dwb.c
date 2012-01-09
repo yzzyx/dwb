@@ -1909,17 +1909,18 @@ dwb_entry_activate(GdkEventKey *e) {
   return true;
 }
 /* dwb_eval_key(GdkEventKey *e) {{{*/
-void
+gboolean
 dwb_eval_key(GdkEventKey *e) {
+  gboolean ret = true, isprint = false;
   int keyval = e->keyval;
   unsigned int mod_mask;
   int keynum = -1;
 
   if (dwb.state.scriptlock) {
-    return;
+    return false;
   }
   if (e->is_modifier) {
-    return;
+    return false;
   }
   /* don't show backspace in the buffer */
   if (keyval == GDK_KEY_BackSpace ) {
@@ -1930,26 +1931,27 @@ dwb_eval_key(GdkEventKey *e) {
       g_string_erase(dwb.state.buffer, dwb.state.buffer->len - 1, 1);
       dwb_set_status_bar_text(dwb.gui.lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_active, false);
     }
-    return;
+    return false;
   }
   /* Multimedia keys */
   switch (keyval) {
-    case GDK_KEY_Back : dwb_history_back(); return;
-    case GDK_KEY_Forward : dwb_history_forward(); return;
-    case GDK_KEY_Cancel : commands_stop_loading(NULL, NULL); return;
-    case GDK_KEY_Reload : commands_reload(NULL, NULL); return;
-    case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); return;
-    case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return;
+    case GDK_KEY_Back : dwb_history_back(); return true;
+    case GDK_KEY_Forward : dwb_history_forward(); return true;
+    case GDK_KEY_Cancel : commands_stop_loading(NULL, NULL); return true;
+    case GDK_KEY_Reload : commands_reload(NULL, NULL); return true;
+    case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); return true;
+    case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return true;
   }
   char *key = util_keyval_to_char(keyval, true);
   if (key) {
     mod_mask = CLEAN_STATE(e);
+    isprint = true;
   }
   else if ( (key = g_strdup(gdk_keyval_name(keyval)))) {
     mod_mask = CLEAN_STATE_WITH_SHIFT(e);
   }
   else {
-    return;
+    return false;
   }
   /* nummod */
   if (DIGIT(e)) {
@@ -1982,7 +1984,7 @@ dwb_eval_key(GdkEventKey *e) {
 #undef IS_NUMMOD
     }
     FREE(key);
-    return;
+    return true;
   }
   g_string_append(dwb.state.buffer, key);
   if (ALPHA(e) || DIGIT(e)) {
@@ -1999,7 +2001,7 @@ dwb_eval_key(GdkEventKey *e) {
       for (int i=0; c->commands[i]; i++) {
         dwb_parse_command_line(c->commands[i], false);
       }
-      return;
+      return true;
     }
   }
 
@@ -2031,12 +2033,17 @@ dwb_eval_key(GdkEventKey *e) {
   }
   if (tmp && dwb.state.buffer->len == longest) {
     commands_simple_command(tmp);
+    ret = true;
+  }
+  else if (e->state & GDK_MODIFIER_MASK || !isprint) {
+    ret = false;
   }
   if (longest == 0) {
     dwb_clean_key_buffer();
     CLEAR_COMMAND_TEXT();
   }
   FREE(key);
+  return ret;
 }/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
