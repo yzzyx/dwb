@@ -1183,10 +1183,8 @@ dwb_spawn(GList *gl, const char *prop, const char *uri) {
   }
 }/*}}}*/
 
-/* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
-static void 
-dwb_reload_layout(GList *gl, WebSettings *s) {
-  dwb_init_style();
+void
+dwb_update_tabs() {
   for (GList *l = dwb.state.views; l; l=l->next) {
     if (l == dwb.state.fview) {
       view_set_active_style(l);
@@ -1195,7 +1193,13 @@ dwb_reload_layout(GList *gl, WebSettings *s) {
       view_set_normal_style(l);
     }
   }
+}
+
+/* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
+static void 
+dwb_reload_layout(GList *gl, WebSettings *s) {
   dwb_init_style();
+  dwb_update_tabs();
   dwb_apply_style();
 }/*}}}*/
 
@@ -1695,6 +1699,7 @@ dwb_update_layout() {
     const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
     dwb_tab_label_set_text(gl, title);
   }
+  dwb_update_tabs();
 }/*}}}*/
 
 /* dwb_focus(GList *gl) {{{*/

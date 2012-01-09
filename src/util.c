@@ -672,7 +672,7 @@ gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gi
   gtk_box_pack_start(box, child, expand, fill, padding);
   gtk_box_reorder_child(box, child, position);
 }
-GtkWidget * 
+void
 gtk_widget_remove_from_parent(GtkWidget *widget) {
   g_object_ref(widget);
   GtkWidget *parent = gtk_widget_get_parent(widget);

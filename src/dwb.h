@@ -834,6 +834,7 @@ void dwb_follow_selection(void);
 void dwb_update_layout(void);
 const char * dwb_parse_nummod(const char *);
 void dwb_init_custom_keys(gboolean);
+void dwb_update_tabs(void);
 
 
 #endif
