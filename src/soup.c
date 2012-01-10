@@ -63,7 +63,7 @@ dwb_soup_allow_cookie_tmp() {
   }
   FREE0(last_cookies->data);
   g_slist_free(last_cookies);
-  dwb_reload();
+  dwb_reload(dwb.state.fview);
 }
 
 DwbStatus
@@ -111,7 +111,7 @@ dwb_soup_allow_cookie(GList **whitelist, const char *filename, CookieStorePolicy
   /* soup_cookie_jar_add_cookie steals the cookie, it must no be freed */
   g_slist_free(allowed);
 
-  dwb_reload();
+  dwb_reload(dwb.state.fview);
   g_slist_free(asked);
   soup_cookies_free(last_cookies);
   return ret;

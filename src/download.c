@@ -73,10 +73,6 @@ download_get_command(const char *uri, const char *output) {
     FREE(command);
     command = newcommand;
   }
-  if ( GET_BOOL("use-fifo") && (newcommand = util_string_replace(command, "dwb_fifo", dwb.files.fifo)) ) {
-    FREE(command);
-    command = newcommand;
-  }
   return command;
 }/*}}}*/
 

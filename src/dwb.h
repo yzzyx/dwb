@@ -282,7 +282,6 @@ typedef enum {
   COMPLETE_BUFFER       = 1<<17,
   COMPLETE_QUICKMARKS   = 1<<18,
   COMPLETE_COMMAND_MODE = 1<<19,
-  PASS_THROUGH          = 1<<20,
   CONFIRM               = 1<<21,
 } Mode;
 
@@ -375,11 +374,9 @@ enum Signal {
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
   SIG_FRAME_CREATED, 
-#ifdef DWB_ADBLOCKER
   SIG_AD_LOAD_STATUS,
   SIG_AD_FRAME_CREATED,
   SIG_AD_RESOURCE_REQUEST,
-#endif
 
   SIG_PLUGINS_LOAD,
   SIG_PLUGINS_FRAME_LOAD,
@@ -672,7 +669,6 @@ struct _Files {
   const char *cookies_allow;
   const char *cookies_session_allow;
   const char *download_path;
-  const char *fifo;
   const char *history;
   const char *keys;
   const char *mimetypes;
@@ -767,7 +763,7 @@ void dwb_save_searchengine(void);
 char * dwb_execute_script(WebKitWebFrame *, const char *, gboolean);
 void dwb_toggle_tabbar(void);
 DwbStatus dwb_history(Arg *a);
-void dwb_reload(void);
+void dwb_reload(GList *gl);
 DwbStatus dwb_history_back(void);
 DwbStatus dwb_history_forward(void);
 void dwb_scroll(GList *, double, ScrollDirection);
@@ -825,9 +821,7 @@ void dwb_open_quickmark(const char *);
 gboolean dwb_update_find_quickmark(const char *text);
 
 gboolean dwb_entry_activate(GdkEventKey *e);
-#ifdef DWB_ADBLOCKER
 void dwb_set_adblock(GList *, WebSettings *);
-#endif
 
 gboolean dwb_eval_key(GdkEventKey *);
 void dwb_follow_selection(void);

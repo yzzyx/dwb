@@ -125,14 +125,8 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
       dwb_change_mode(NORMAL_MODE, true);
     ret = false;
   }
-  else if (mode & PASS_THROUGH) {
+  else if (mode & INSERT_MODE) {
     ret = false;
-  }
-  else if (mode == INSERT_MODE) {
-    if (CLEAN_STATE(e) & GDK_MODIFIER_MASK) {
-      dwb_eval_key(e);
-      ret = false;
-    }
   }
   else if (gtk_widget_has_focus(dwb.gui.entry) || mode & COMPLETION_MODE) {
     ret = false;

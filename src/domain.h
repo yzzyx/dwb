@@ -16,7 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifdef DWB_DOMAIN_SERVICE
 
 #ifndef DOMAIN_H
 #define DOMAIN_H
@@ -29,5 +28,4 @@ void domain_end(void);
 GSList * domain_get_cookie_domains(WebKitWebView *wv);
 gboolean domain_match(char **, const char *, const char *);
 const char * domain_get_base_for_host(const char *host);
-#endif
 #endif

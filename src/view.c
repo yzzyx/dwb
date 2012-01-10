@@ -29,9 +29,7 @@
 #include "plugins.h"
 #include "local.h"
 #include "soup.h"
-#ifdef DWB_ADBLOCKER
 #include "adblock.h"
-#endif
 
 static void view_ssl_state(GList *);
 static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
@@ -220,7 +218,7 @@ view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourc
 static WebKitWebView * 
 view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
   if (dwb.misc.tabbed_browsing) {
-    GList *gl = view_add(NULL, false); 
+    GList *gl = view_add(NULL, dwb.state.background_tabs); 
     return WEBVIEW(gl);
   }
   else {
@@ -916,7 +914,6 @@ view_add(const char *uri, gboolean background) {
   }
   View *v = view_create_web_view();
   gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
-  //if ((dwb.state.layout & MAXIMIZED || background) && dwb.state.fview) {
   if (dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
     gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
@@ -944,10 +941,8 @@ view_add(const char *uri, gboolean background) {
 
   view_init_signals(ret);
   view_init_settings(ret);
-#ifdef DWB_ADBLOCKER
   if (GET_BOOL("adblocker"))
     adblock_connect(ret);
-#endif
 
   dwb_update_layout();
   if (uri != NULL) {

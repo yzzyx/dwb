@@ -135,4 +135,3 @@ navigation-history-max Length of the navigation history
 print-backgrounds checkbox Whether background images should be printed
 sync-history text Interval to save history to disk, 0 means save immediately
 tab-key-cycles-through-elements checkbox Tab cycles through elements in insert mode
-use-fifo checkbox Create a fifo for communication

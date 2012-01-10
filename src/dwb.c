@@ -39,9 +39,7 @@
 #include "js.h"
 #include "callback.h"
 #include "entry.h"
-#ifdef DWB_ADBLOCKER
 #include "adblock.h"
-#endif
 #include "domain.h"
 
 /* DECLARATIONS {{{*/
@@ -72,6 +70,7 @@ static char * dwb_test_userscript(const char *);
 static void dwb_open_channel(const char *);
 static void dwb_open_si_channel(void);
 static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
+static void dwb_parse_commands(const char *line);
 
 
 static void dwb_init_key_map(void);
@@ -135,7 +134,6 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
-#ifdef DWB_ADBLOCKER
 /* dwb_set_adblock {{{*/
 void
 dwb_set_adblock(GList *gl, WebSettings *s) {
@@ -148,7 +146,6 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
       adblock_disconnect(l);
   }
 }/*}}}*/
-#endif
 
 /* dwb_set_cookies */
 static DwbStatus
@@ -471,7 +468,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
-
+/* dwb_glist_prepend_unique(GList **list, char *text) {{{*/
 void
 dwb_glist_prepend_unique(GList **list, char *text) {
   for (GList *l = (*list); l; l=l->next) {
@@ -791,7 +788,7 @@ dwb_follow_selection() {
 /* dwb_open_startpage(GList *) {{{*/
 DwbStatus
 dwb_open_startpage(GList *gl) {
-  if (!dwb.misc.startpage) 
+  if (dwb.misc.startpage == NULL) 
     return STATUS_ERROR;
   if (gl == NULL) 
     gl = dwb.state.fview;
@@ -995,10 +992,10 @@ dwb_toggle_allowed(const char *filename, const char *data) {
 }/*}}}*/
 
 void
-dwb_reload(void) {
-  const char *path = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+dwb_reload(GList *gl) {
+  const char *path = webkit_web_view_get_uri(WEBVIEW(gl));
   if ( !local_check_directory(dwb.state.fview, path, false, NULL) ) {
-    webkit_web_view_reload(CURRENT_WEBVIEW());
+    webkit_web_view_reload(WEBVIEW(gl));
   }
 }
 
@@ -1863,7 +1860,6 @@ dwb_parse_nummod(const char *text) {
     dwb.state.nummod = (int)strtol(num, NULL, 10);
   while (g_ascii_isspace(*text)) text++; 
   return text;
-
 }
 
 gboolean 
@@ -1886,7 +1882,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               dwb_set_key(token[0], token[1]);
                               g_strfreev(token);
                               return true;
-    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), false);
+    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), true);
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(); 
                               return true;
@@ -1914,13 +1910,13 @@ dwb_entry_activate(GdkEventKey *e) {
 /* dwb_eval_key(GdkEventKey *e) {{{*/
 gboolean
 dwb_eval_key(GdkEventKey *e) {
-  gboolean ret = false;
+  gboolean ret = true, isprint = false;
   int keyval = e->keyval;
   unsigned int mod_mask;
   int keynum = -1;
 
   if (dwb.state.scriptlock) {
-    return true;
+    return false;
   }
   if (e->is_modifier) {
     return false;
@@ -1933,12 +1929,8 @@ dwb_eval_key(GdkEventKey *e) {
     if (dwb.state.buffer->len > 0) {
       g_string_erase(dwb.state.buffer, dwb.state.buffer->len - 1, 1);
       dwb_set_status_bar_text(dwb.gui.lstatus, dwb.state.buffer->str, &dwb.color.active_fg, dwb.font.fd_active, false);
-      ret = false;
     }
-    else {
-      ret = false;
-    }
-    return ret;
+    return false;
   }
   /* Multimedia keys */
   switch (keyval) {
@@ -1952,8 +1944,10 @@ dwb_eval_key(GdkEventKey *e) {
   char *key = util_keyval_to_char(keyval, true);
   if (key) {
     mod_mask = CLEAN_STATE(e);
+    isprint = true;
   }
-  else if ( (key = g_strdup(gdk_keyval_name(keyval)))) {
+  else if ( (key = gdk_keyval_name(keyval))) {
+    key = g_strdup_printf("@%s@", key);
     mod_mask = CLEAN_STATE_WITH_SHIFT(e);
   }
   else {
@@ -1970,11 +1964,12 @@ dwb_eval_key(GdkEventKey *e) {
     }
     if (mod_mask) {
 #define IS_NUMMOD(X)  (((X) & DWB_NUMMOD_MASK) && ((X) & ~DWB_NUMMOD_MASK) == mod_mask)
+      GSList *last = g_slist_last(dwb.custom_commands);
       for (GSList *l = dwb.custom_commands; l; l=l->next) {
         CustomCommand *c = l->data;
         if (IS_NUMMOD(c->key->mod) || (c->key->mod == mod_mask && c->key->num == dwb.state.nummod)) {
           for (int i=0; c->commands[i]; i++) {
-            dwb_parse_command_line(c->commands[i], false);
+            dwb_parse_command_line(c->commands[i], l == last);
           }
           break;
         }
@@ -1990,7 +1985,7 @@ dwb_eval_key(GdkEventKey *e) {
 #undef IS_NUMMOD
     }
     FREE(key);
-    return false;
+    return true;
   }
   g_string_append(dwb.state.buffer, key);
   if (ALPHA(e) || DIGIT(e)) {
@@ -2001,11 +1996,12 @@ dwb_eval_key(GdkEventKey *e) {
   int longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
+  GSList *last =  g_slist_last(dwb.custom_commands);
   for (GSList *l = dwb.custom_commands; l; l=l->next) {
     CustomCommand *c = l->data;
     if (c->key->num == dwb.state.nummod && !g_strcmp0(c->key->str, buf) && c->key->mod == mod_mask) {
       for (int i=0; c->commands[i]; i++) {
-        dwb_parse_command_line(c->commands[i], false);
+        dwb_parse_command_line(c->commands[i], l == last);
       }
       return true;
     }
@@ -2028,7 +2024,6 @@ dwb_eval_key(GdkEventKey *e) {
       if (dwb.comps.autocompletion) {
         coms = g_list_append(coms, km);
       }
-      ret = true;
     }
   }
   /* autocompletion */
@@ -2037,10 +2032,13 @@ dwb_eval_key(GdkEventKey *e) {
   }
   if (coms && g_list_length(coms) > 0) {
     completion_autocomplete(coms, NULL);
-    ret = true;
   }
   if (tmp && dwb.state.buffer->len == longest) {
     commands_simple_command(tmp);
+    ret = true;
+  }
+  else if (e->state & GDK_MODIFIER_MASK || !isprint) {
+    ret = false;
   }
   if (longest == 0) {
     dwb_clean_key_buffer();
@@ -2048,14 +2046,11 @@ dwb_eval_key(GdkEventKey *e) {
   }
   FREE(key);
   return ret;
-
 }/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
 static DwbStatus
 dwb_insert_mode(void) {
-  if (dwb.state.mode & PASS_THROUGH)
-    return STATUS_ERROR;
   if (dwb.state.mode == HINT_MODE) {
     dwb_set_normal_message(dwb.state.fview, true, INSERT);
   }
@@ -2072,14 +2067,6 @@ dwb_command_mode(void) {
   dwb_set_normal_message(dwb.state.fview, false, ":");
   entry_focus();
   dwb.state.mode = COMMAND_MODE;
-  return STATUS_OK;
-}/*}}}*/
-
-/* dwb_passthrough_mode () {{{*/
-static DwbStatus
-dwb_passthrough_mode(void) {
-  dwb.state.mode |= PASS_THROUGH;
-  dwb_set_normal_message(dwb.state.fview, false, "-- PASS THROUGH --");
   return STATUS_OK;
 }/*}}}*/
 
@@ -2127,7 +2114,6 @@ dwb_change_mode(Mode mode, ...) {
       break;
     case INSERT_MODE:   ret = dwb_insert_mode(); break;
     case COMMAND_MODE:  ret = dwb_command_mode(); break;
-    case PASS_THROUGH:  ret = dwb_passthrough_mode(); break;
     default: PRINT_DEBUG("Unknown mode: %d", mode); break;
   }
   return ret;
@@ -2380,16 +2366,9 @@ dwb_clean_up() {
   dwb_free_custom_keys();
 
   dwb_soup_end();
-#ifdef DWB_ADBLOCKER
   adblock_end();
-#endif
-#ifdef DWB_DOMAIN_SERVICE
   domain_end();
-#endif
 
-  if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
-    unlink(dwb.files.fifo);
-  }
   util_rmdir(dwb.files.cachedir, true, true);
   gtk_widget_destroy(dwb.gui.window);
   return true;
@@ -2558,6 +2537,7 @@ dwb_str_to_key(char *str) {
     return key;
   g_strstrip(str);
   GString *buffer = g_string_new(NULL);
+  GString *keybuffer;
   char *end;
 
   char **string = g_strsplit(str, " ", -1);
@@ -2597,7 +2577,19 @@ dwb_str_to_key(char *str) {
       g_string_append(buffer, string[i]);
     }
   }
-  key.str = buffer->str;
+  const char *escape, *start = buffer->str;
+  if ((escape = strchr(start, '\\'))) {
+    keybuffer = g_string_new(NULL);
+    do {
+      g_string_append_len(keybuffer, start, escape - start);
+      start = escape + 1;
+    } while ((escape = strchr(start, '\\')));
+    g_string_append_len(keybuffer, start, escape - start);
+    key.str = keybuffer->str;
+    g_string_free(keybuffer, false);
+  }
+  else 
+    key.str = buffer->str;
   key.num = strtol(buffer->str, &end, 10);
   if (end == buffer->str) 
     key.num = -1;
@@ -3248,7 +3240,7 @@ dwb_init_custom_keys(gboolean reload) {
 
 /* dwb_init() {{{*/
 static void 
-dwb_init() {
+dwb_init(GSList *exe) {
   dwb_clean_vars();
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
@@ -3285,9 +3277,7 @@ dwb_init() {
   dwb_init_scripts();
   dwb_init_custom_keys(false);
   domain_init();
-#ifdef DWB_ADBLOCKER
   adblock_init();
-#endif
 
   dwb_soup_init();
 
@@ -3302,6 +3292,7 @@ dwb_init() {
   else if (!restore || !restore_success) {
     view_add(NULL, false);
   }
+  /* Compute bar height */
   PangoContext *pctx = gtk_widget_get_pango_context(VIEW(dwb.state.fview)->tablabel);
   PangoLayout *layout = pango_layout_new(pctx);
   int w = 0, h = 0;
@@ -3312,29 +3303,35 @@ dwb_init() {
   dwb_pack(GET_CHAR("widget-packing"), false);
   gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
   g_object_unref(layout);
+
+  /* commands */
+  if (exe != NULL) {
+    for (GSList *l = exe; l; l=l->next) {
+      dwb_parse_commands(exe->data);
+    }
+  }
 } /*}}}*/ /*}}}*/
 
 /* FIFO {{{*/
 /* dwb_parse_command_line(const char *line) {{{*/
 void 
 dwb_parse_command_line(const char *line, gboolean clear) {
-  while (g_ascii_isspace(*line))
-    line++;
-  char **token = g_strsplit(line, " ", 2);
+  const char *bak;
+  int nummod;
+  line = util_str_chug(line);
+  bak = dwb_parse_nummod(line);
+  nummod = dwb.state.nummod;
+  char **token = g_strsplit(bak, " ", 2);
   KeyMap *m = NULL;
   gboolean found;
-  int nummod;
 
   if (!token[0]) 
     return;
-  const char *bak;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     bak = token[0];
     found = false;
     m = l->data;
-    bak = dwb_parse_nummod(bak);
-    nummod = dwb.state.nummod;
     if (!g_strcmp0(m->map->n.first, bak)) 
       found = true;
     else {
@@ -3369,6 +3366,14 @@ dwb_parse_command_line(const char *line, gboolean clear) {
     dwb_change_mode(NORMAL_MODE, clear);
   }
 }/*}}}*/
+static void 
+dwb_parse_commands(const char *line) {
+  char **commands = g_strsplit(util_str_chug(line), ";", -1);
+  for (int i=0; commands[i]; i++) {
+    dwb_parse_command_line(commands[i], commands[i+1] == NULL);
+  }
+  g_strfreev(commands);
+}
 
 /* dwb_handle_channel {{{*/
 static gboolean
@@ -3378,7 +3383,7 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
   g_io_channel_read_line(c, &line, NULL, NULL, NULL);
   if (line) {
     g_strstrip(line);
-    dwb_parse_command_line(line, false);
+    dwb_parse_commands(line);
     g_io_channel_flush(c, NULL);
     g_free(line);
   }
@@ -3387,7 +3392,7 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 
 /* dwb_init_fifo{{{*/
 static void 
-dwb_init_fifo(gboolean single) {
+dwb_init_fifo(gboolean single, GSList *exe) {
   FILE *ff;
 
   /* Files */
@@ -3399,51 +3404,39 @@ dwb_init_fifo(gboolean single) {
     FREE(path);
     return;
   }
-
   if (GET_BOOL("single-instance")) {
     if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
       mkfifo(dwb.files.unifile, 0666);
     }
     int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
-    if ( (ff = fdopen(fd, "w")) ) {
-      if (dwb.misc.argc) {
+    if ((dwb.misc.argc > 0 || exe != NULL)) {
+      if ( (ff = fdopen(fd, "w")) ) {
         for (int i=0; i<dwb.misc.argc; i++) {
           if (g_file_test(dwb.misc.argv[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute(dwb.misc.argv[i])) {
             char *curr_dir = g_get_current_dir();
             path = g_build_filename(curr_dir, dwb.misc.argv[i], NULL);
 
-            fprintf(ff, "add_view %s\n", path);
+            fprintf(ff, "tabopen %s\n", path);
 
             FREE(curr_dir);
             FREE(path);
           }
           else {
-            fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
+            fprintf(ff, "tabopen %s\n", dwb.misc.argv[i]);
           }
         }
+        if (exe != NULL) {
+          for (GSList *l = exe; l; l=l->next) {
+            fprintf(ff, "%s\n", (char *)l->data);
+          }
+        }
+        fclose(ff);
+        exit(EXIT_SUCCESS);
       }
-      else {
-        fprintf(ff, "add_view\n");
-      }
-      fclose(ff);
-      exit(EXIT_SUCCESS);
     }
     close(fd);
     dwb_open_si_channel();
   }
-
-  /* fifo */
-  if (GET_BOOL("use-fifo")) {
-    char *filename = g_strdup_printf("%s-%d.fifo", dwb.misc.name, getpid());
-    dwb.files.fifo = g_build_filename(path, filename, NULL);
-    FREE(filename);
-
-    if (!g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
-      mkfifo(dwb.files.fifo, 0600);
-    }
-    dwb_open_channel(dwb.files.fifo);
-  }
-
   FREE(path);
 }/*}}}*/
 /*}}}*/
@@ -3459,6 +3452,7 @@ main(int argc, char *argv[]) {
   int last = 0;
   gboolean single = false;
   int argr = argc;
+  GSList *exe = NULL;
 
   gtk_init(&argc, &argv);
 
@@ -3481,6 +3475,9 @@ main(int argc, char *argv[]) {
         }
         else if (argv[i][1] == 'e' && argv[i+1]) {
           dwb.gui.wid = strtol(argv[++i], NULL, 10);
+        }
+        else if (argv[i][1] == 'x' && argv[i+1]) {
+          exe = g_slist_append(exe, argv[++i]);
         }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
@@ -3509,14 +3506,13 @@ main(int argc, char *argv[]) {
   if (GET_BOOL("save-session") && argr == 1 && !restore && !single) {
     restore = "default";
   }
-
   if (last) {
     dwb.misc.argv = &argv[last];
     dwb.misc.argc = g_strv_length(dwb.misc.argv);
   }
-  dwb_init_fifo(single);
+  dwb_init_fifo(single, exe);
   dwb_init_signals();
-  dwb_init();
+  dwb_init(exe);
   gtk_main();
   return EXIT_SUCCESS;
 }/*}}}*/
