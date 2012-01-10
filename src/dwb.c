@@ -468,7 +468,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
-
+/* dwb_glist_prepend_unique(GList **list, char *text) {{{*/
 void
 dwb_glist_prepend_unique(GList **list, char *text) {
   for (GList *l = (*list); l; l=l->next) {
@@ -992,10 +992,10 @@ dwb_toggle_allowed(const char *filename, const char *data) {
 }/*}}}*/
 
 void
-dwb_reload(void) {
-  const char *path = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+dwb_reload(GList *gl) {
+  const char *path = webkit_web_view_get_uri(WEBVIEW(gl));
   if ( !local_check_directory(dwb.state.fview, path, false, NULL) ) {
-    webkit_web_view_reload(CURRENT_WEBVIEW());
+    webkit_web_view_reload(WEBVIEW(gl));
   }
 }
 

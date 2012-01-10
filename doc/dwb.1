@@ -276,20 +276,20 @@ Open quickmark in a new window (command
 aliases:
 .BR winqmarks ).
 .TP
-.BR r
-Reload focused tab (command
+.BR [n]r
+Reload tab n or current tab if n is omitted (command
 .BR reload ,
 aliases:
 .BR re ).
 .TP
-.BR R
-Reload focused tab without using any cached data (command
+.BR [n]R
+Reload tab n or current tab if n is omitted without using any cached data (command
 .BR reload_bypass_cache ,
 aliases:
 .BR refull ).
 .TP
-.BR C-s
-Stop loading current page (command
+.BR [n]C-s
+Stop loading of tab n or of current tab is [n] is omitted (command
 .BR stop_loading ,
 aliases:
 .BR stop ,
@@ -497,27 +497,27 @@ not be saved persitently. (command
 aliases:
 .BR tcookie ).
 .TP
-.BR yy
-Yank the current url to clipboard
+.BR [n]yy
+Yank the url of tab n or of current tab is n omitted to clipboard
 (command 
 .BR yank ).
 .TP
 .BR yY
-Yank the current url to primary
+Yank the url of tab n or of current tab is n omitted to primary
 selection (command 
 .BR yank_primary ,
 aliases:
 .BR pyank ).
 .TP
 .BR yt
-Yank the current title to clipboard
+Yank the title of tab n or of current tab is n omitted to clipboard
 (command 
 .BR yank_title ,
 aliases:
 .BR tyank ).
 .TP
 .BR yT
-Yank the current title to primary
+Yank the title of tab n or of current tab is n omitted to primary
 selection (command 
 .BR yank_title_primary ,
 aliases:
@@ -650,8 +650,8 @@ Next navigation action will be opened in a new window (command
 .BR eu
 Show userscripts (command 
 .TP 
-.BR wi
-Show the webinspector. Note that 'enable-developer-extras' has to be set. 
+.BR [n]wi
+Show the webinspector of tab n or of current tab if n is omitted. Note that 'enable-developer-extras' has to be set. 
 (commmand
 .BR web_inspector , 
 aliases: 
@@ -713,8 +713,8 @@ Toggle visibility of a tab.
 aliases: 
 .BR vis ).
 .TP 
-.BR C-M-p
-Print focused frame.
+.BR [n]C-M-p
+Print focused frame of tab n or of current tab if n is ommitted.
 (command 
 .BR print , 
 aliases: 

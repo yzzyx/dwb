@@ -69,6 +69,13 @@ commands_simple_command(KeyMap *km) {
     km->map->arg.p = NULL;
   dwb_clean_key_buffer();
 }/*}}}*/
+static WebKitWebView * 
+commands_get_webview_with_nummod() {
+  if (dwb.state.nummod > 0 && dwb.state.nummod <= g_list_length(dwb.state.views)) 
+    return WEBVIEW(g_list_nth(dwb.state.views, NUMMOD - 1));
+  else 
+    return CURRENT_WEBVIEW();
+}
 
 /* commands_add_view(KeyMap *, Arg *) {{{*/
 DwbStatus 
@@ -236,14 +243,17 @@ commands_quickmark(KeyMap *km, Arg *arg) {
 /* commands_reload(KeyMap *km, Arg *){{{*/
 DwbStatus
 commands_reload(KeyMap *km, Arg *arg) {
-  dwb_reload();
+  GList *gl = dwb.state.nummod > 0 && dwb.state.nummod <= g_list_length(dwb.state.views)
+    ? g_list_nth(dwb.state.views, dwb.state.nummod-1) 
+    : dwb.state.fview;
+  dwb_reload(gl);
   return STATUS_OK;
 }/*}}}*/
 
 /* commands_reload_bypass_cache {{{*/
 DwbStatus
 commands_reload_bypass_cache(KeyMap *km, Arg *arg) {
-  webkit_web_view_reload_bypass_cache(WEBVIEW_FROM_ARG(arg));
+  webkit_web_view_reload_bypass_cache(commands_get_webview_with_nummod());
   return STATUS_OK;
 }
 /*}}}*/
@@ -251,7 +261,7 @@ commands_reload_bypass_cache(KeyMap *km, Arg *arg) {
 /* commands_stop_loading {{{*/
 DwbStatus
 commands_stop_loading(KeyMap *km, Arg *arg) {
-  webkit_web_view_stop_loading(WEBVIEW_FROM_ARG(arg));
+  webkit_web_view_stop_loading(commands_get_webview_with_nummod());
   return STATUS_OK;
 }
 /*}}}*/
@@ -402,10 +412,11 @@ DwbStatus
 commands_yank(KeyMap *km, Arg *arg) {
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
   const char *text = NULL;
+  WebKitWebView *wv = commands_get_webview_with_nummod();
   if (arg->n == CA_URI) 
-    text = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+    text = webkit_web_view_get_uri(wv);
   else if (arg->n == CA_TITLE)
-    text = webkit_web_view_get_title(CURRENT_WEBVIEW());
+    text = webkit_web_view_get_title(wv);
 
   return dwb_set_clipboard(text, atom);
 }/*}}}*/
@@ -596,8 +607,8 @@ commands_undo(KeyMap *km, Arg *arg) {
 /* commands_print (Arg *) {{{*/
 DwbStatus
 commands_print(KeyMap *km, Arg *arg) {
-  WebKitWebFrame *frame = webkit_web_view_get_focused_frame(CURRENT_WEBVIEW());
-
+  WebKitWebView *wv = commands_get_webview_with_nummod();
+  WebKitWebFrame *frame = webkit_web_view_get_focused_frame(wv);
   if (frame) {
     webkit_web_frame_print(frame);
     return STATUS_OK;
@@ -609,7 +620,8 @@ commands_print(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_web_inspector(KeyMap *km, Arg *arg) {
   if (GET_BOOL("enable-developer-extras")) {
-    webkit_web_inspector_show(webkit_web_view_get_inspector(CURRENT_WEBVIEW()));
+    WebKitWebView *wv = commands_get_webview_with_nummod();
+    webkit_web_inspector_show(webkit_web_view_get_inspector(wv));
     return STATUS_OK;
   }
   return STATUS_ERROR;
@@ -639,7 +651,7 @@ commands_execute_userscript(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_toggle_hidden_files(KeyMap *km, Arg *arg) {
   dwb.state.hidden_files = !dwb.state.hidden_files;
-  dwb_reload();
+  dwb_reload(dwb.state.fview);
   return STATUS_OK;
 }/*}}}*/
 
@@ -736,7 +748,8 @@ commands_execute_javascript(KeyMap *km, Arg *arg) {
     FREE0(script);
     script = g_strdup(arg->p);
   }
-  dwb_execute_script(webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()), script, false);
+  WebKitWebView *wv = commands_get_webview_with_nummod();
+  dwb_execute_script(webkit_web_view_get_focused_frame(wv), script, false);
   return STATUS_OK;
 }/*}}}*/
 /* commands_set {{{*/
