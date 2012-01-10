@@ -39,9 +39,7 @@
 #include "js.h"
 #include "callback.h"
 #include "entry.h"
-#ifdef DWB_ADBLOCKER
 #include "adblock.h"
-#endif
 #include "domain.h"
 
 /* DECLARATIONS {{{*/
@@ -72,6 +70,7 @@ static char * dwb_test_userscript(const char *);
 static void dwb_open_channel(const char *);
 static void dwb_open_si_channel(void);
 static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
+static void dwb_parse_commands(const char *line);
 
 
 static void dwb_init_key_map(void);
@@ -135,7 +134,6 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
-#ifdef DWB_ADBLOCKER
 /* dwb_set_adblock {{{*/
 void
 dwb_set_adblock(GList *gl, WebSettings *s) {
@@ -148,7 +146,6 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
       adblock_disconnect(l);
   }
 }/*}}}*/
-#endif
 
 /* dwb_set_cookies */
 static DwbStatus
@@ -2367,12 +2364,8 @@ dwb_clean_up() {
   dwb_free_custom_keys();
 
   dwb_soup_end();
-#ifdef DWB_ADBLOCKER
   adblock_end();
-#endif
-#ifdef DWB_DOMAIN_SERVICE
   domain_end();
-#endif
 
   util_rmdir(dwb.files.cachedir, true, true);
   gtk_widget_destroy(dwb.gui.window);
@@ -3243,7 +3236,7 @@ dwb_init_custom_keys(gboolean reload) {
 
 /* dwb_init() {{{*/
 static void 
-dwb_init() {
+dwb_init(GSList *exe) {
   dwb_clean_vars();
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
@@ -3280,9 +3273,7 @@ dwb_init() {
   dwb_init_scripts();
   dwb_init_custom_keys(false);
   domain_init();
-#ifdef DWB_ADBLOCKER
   adblock_init();
-#endif
 
   dwb_soup_init();
 
@@ -3297,6 +3288,7 @@ dwb_init() {
   else if (!restore || !restore_success) {
     view_add(NULL, false);
   }
+  /* Compute bar height */
   PangoContext *pctx = gtk_widget_get_pango_context(VIEW(dwb.state.fview)->tablabel);
   PangoLayout *layout = pango_layout_new(pctx);
   int w = 0, h = 0;
@@ -3307,6 +3299,13 @@ dwb_init() {
   dwb_pack(GET_CHAR("widget-packing"), false);
   gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
   g_object_unref(layout);
+
+  /* commands */
+  if (exe != NULL) {
+    for (GSList *l = exe; l; l=l->next) {
+      dwb_parse_commands(exe->data);
+    }
+  }
 } /*}}}*/ /*}}}*/
 
 /* FIFO {{{*/
@@ -3364,6 +3363,14 @@ dwb_parse_command_line(const char *line, gboolean clear) {
     dwb_change_mode(NORMAL_MODE, clear);
   }
 }/*}}}*/
+static void 
+dwb_parse_commands(const char *line) {
+  char **commands = g_strsplit(util_str_chug(line), ";", -1);
+  for (int i=0; commands[i]; i++) {
+    dwb_parse_command_line(commands[i], commands[i+1] == NULL);
+  }
+  g_strfreev(commands);
+}
 
 /* dwb_handle_channel {{{*/
 static gboolean
@@ -3373,7 +3380,7 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
   g_io_channel_read_line(c, &line, NULL, NULL, NULL);
   if (line) {
     g_strstrip(line);
-    dwb_parse_command_line(line, false);
+    dwb_parse_commands(line);
     g_io_channel_flush(c, NULL);
     g_free(line);
   }
@@ -3382,7 +3389,7 @@ dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
 
 /* dwb_init_fifo{{{*/
 static void 
-dwb_init_fifo(gboolean single) {
+dwb_init_fifo(gboolean single, GSList *exe) {
   FILE *ff;
 
   /* Files */
@@ -3394,13 +3401,13 @@ dwb_init_fifo(gboolean single) {
     FREE(path);
     return;
   }
-  if (GET_BOOL("single-instance") && dwb.misc.argc > 0) {
+  if (GET_BOOL("single-instance")) {
     if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
       mkfifo(dwb.files.unifile, 0666);
     }
     int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
-    if ( (ff = fdopen(fd, "w")) ) {
-      if (dwb.misc.argc) {
+    if ((dwb.misc.argc > 0 || exe != NULL)) {
+      if ( (ff = fdopen(fd, "w")) ) {
         for (int i=0; i<dwb.misc.argc; i++) {
           if (g_file_test(dwb.misc.argv[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute(dwb.misc.argv[i])) {
             char *curr_dir = g_get_current_dir();
@@ -3415,12 +3422,14 @@ dwb_init_fifo(gboolean single) {
             fprintf(ff, "tabopen %s\n", dwb.misc.argv[i]);
           }
         }
+        if (exe != NULL) {
+          for (GSList *l = exe; l; l=l->next) {
+            fprintf(ff, "%s\n", (char *)l->data);
+          }
+        }
+        fclose(ff);
+        exit(EXIT_SUCCESS);
       }
-      else {
-        fprintf(ff, "tab_new\n");
-      }
-      fclose(ff);
-      exit(EXIT_SUCCESS);
     }
     close(fd);
     dwb_open_si_channel();
@@ -3440,6 +3449,7 @@ main(int argc, char *argv[]) {
   int last = 0;
   gboolean single = false;
   int argr = argc;
+  GSList *exe = NULL;
 
   gtk_init(&argc, &argv);
 
@@ -3462,6 +3472,9 @@ main(int argc, char *argv[]) {
         }
         else if (argv[i][1] == 'e' && argv[i+1]) {
           dwb.gui.wid = strtol(argv[++i], NULL, 10);
+        }
+        else if (argv[i][1] == 'x' && argv[i+1]) {
+          exe = g_slist_append(exe, argv[++i]);
         }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
@@ -3494,9 +3507,9 @@ main(int argc, char *argv[]) {
     dwb.misc.argv = &argv[last];
     dwb.misc.argc = g_strv_length(dwb.misc.argv);
   }
-  dwb_init_fifo(single);
+  dwb_init_fifo(single, exe);
   dwb_init_signals();
-  dwb_init();
+  dwb_init(exe);
   gtk_main();
   return EXIT_SUCCESS;
 }/*}}}*/

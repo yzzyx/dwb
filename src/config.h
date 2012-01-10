@@ -487,7 +487,7 @@ static FunctionMap FMAP [] = {
   
   { { "set_setting",    "Set setting",               }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_set_setting,         NULL,                              NEVER_SM, 
-    { 0 }, EP_NONE, { "set", NULL }, },
+    { 0 }, EP_NONE, { NULL }, },
   
   { { "set_key",               "Set keybinding",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_set_key,             NULL,                              NEVER_SM,    
@@ -960,12 +960,10 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e ncftp 'dwb_uri'" }, NULL,   }, 
   { { "editor",                            "External editor", },                                            
     SETTING_GLOBAL,  CHAR, { .p = "xterm -e vim dwb_uri" }, NULL,   }, 
-#ifdef DWB_ADBLOCKER
   { { "adblocker",                               "Whether to block advertisements via a filterlist", },                   
     SETTING_GLOBAL,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
   { { "adblocker-filterlist",                    "Path to a filterlist", },                   
     SETTING_GLOBAL,  CHAR, { .p = NULL }, NULL,   }, 
-#endif
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   

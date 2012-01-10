@@ -26,10 +26,7 @@
 #include "commands.h"
 #include "local.h"
 #include "entry.h"
-#ifdef DWB_ADBLOCKER
 #include "adblock.h"
-#endif
-
 
 static int inline dwb_floor(double x) { 
   return x >= 0 ? (int) x : (int) x - 1;
@@ -171,10 +168,9 @@ commands_find(KeyMap *km, Arg *arg) {
 
 DwbStatus  
 commands_search(KeyMap *km, Arg *arg) { 
-  DwbStatus ret = STATUS_OK;
   if (!dwb_search(arg)) 
-    ret = STATUS_ERROR;
-  return ret;
+    return STATUS_ERROR;
+  return STATUS_OK;
 }
 
 /* commands_show_hints {{{*/
@@ -274,16 +270,14 @@ DwbStatus
 commands_zoom_in(KeyMap *km, Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-  DwbStatus ret = STATUS_OK;
 
   for (int i=0; i<NUMMOD; i++) {
     if ((webkit_web_view_get_zoom_level(web) > 4.0)) {
-      ret = STATUS_ERROR;
-      break;
+      return STATUS_ERROR;
     }
     webkit_web_view_zoom_in(web);
   }
-  return ret;
+  return STATUS_OK;
 }/*}}}*/
 
 /* commands_zoom_out(void *arg) {{{*/
@@ -291,16 +285,14 @@ DwbStatus
 commands_zoom_out(KeyMap *km, Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-  DwbStatus ret = STATUS_OK;
 
   for (int i=0; i<NUMMOD; i++) {
     if ((webkit_web_view_get_zoom_level(web) < 0.25)) {
-      ret = STATUS_ERROR;
-      break;
+      return STATUS_ERROR;
     }
     webkit_web_view_zoom_out(web);
   }
-  return ret;
+  return STATUS_OK;
 }/*}}}*/
 
 /* commands_scroll {{{*/
@@ -550,7 +542,6 @@ commands_toggle_scripts(KeyMap *km, Arg *arg) {
   return STATUS_OK;
 }/*}}}*/
 
-#ifdef DWB_ADBLOCKER
 /* commands_toggle_adblocker {{{ */
 DwbStatus 
 commands_toggle_adblocker(KeyMap *km, Arg *arg) {
@@ -562,7 +553,6 @@ commands_toggle_adblocker(KeyMap *km, Arg *arg) {
   dwb_set_normal_message(dwb.state.fview, true, "Adblocker %s", running ? "disabled" : "enabled");
   return STATUS_OK;
 }/*}}}*/
-#endif
 
 /* commands_new_window_or_view{{{*/
 DwbStatus 

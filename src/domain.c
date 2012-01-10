@@ -15,7 +15,6 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifdef DWB_DOMAIN_SERVICE
 #include <string.h>
 #include "dwb.h"
 #include "util.h"
@@ -175,4 +174,3 @@ domain_init() {
     g_hash_table_insert(_tld_table, eff_tld, TLDS_EFFECTIVE[i]);
   }
 }
-#endif

@@ -374,11 +374,9 @@ enum Signal {
   SIG_TAB_BUTTON_PRESS, 
   SIG_POPULATE_POPUP, 
   SIG_FRAME_CREATED, 
-#ifdef DWB_ADBLOCKER
   SIG_AD_LOAD_STATUS,
   SIG_AD_FRAME_CREATED,
   SIG_AD_RESOURCE_REQUEST,
-#endif
 
   SIG_PLUGINS_LOAD,
   SIG_PLUGINS_FRAME_LOAD,
@@ -821,9 +819,7 @@ void dwb_open_quickmark(const char *);
 gboolean dwb_update_find_quickmark(const char *text);
 
 gboolean dwb_entry_activate(GdkEventKey *e);
-#ifdef DWB_ADBLOCKER
 void dwb_set_adblock(GList *, WebSettings *);
-#endif
 
 gboolean dwb_eval_key(GdkEventKey *);
 void dwb_follow_selection(void);

@@ -68,7 +68,6 @@ DwbStatus commands_view_source(KeyMap *, Arg *);
 DwbStatus commands_yank(KeyMap *, Arg *);
 DwbStatus commands_zoom_in(KeyMap *, Arg *);
 DwbStatus commands_zoom_out(KeyMap *, Arg *);
-DwbStatus dwb_create_hints(Arg *);
 DwbStatus commands_remove_view(KeyMap *, Arg *);
 DwbStatus commands_set_zoom_level(KeyMap *, Arg *);
 DwbStatus commands_toggle_hidden_files(KeyMap *, Arg *);
@@ -86,9 +85,6 @@ DwbStatus commands_toggle_lock_protect(KeyMap *, Arg *);
 DwbStatus commands_execute_javascript(KeyMap *km, Arg *arg);
 DwbStatus commands_set(KeyMap *km, Arg *arg);
 DwbStatus commands_toggle_setting(KeyMap *km, Arg *arg);
-//DwbStatus commands_toggle_locked(KeyMap *, Arg *);
-#ifdef DWB_ADBLOCKER
 DwbStatus commands_toggle_adblocker(KeyMap *, Arg *);
-#endif
 
 #endif

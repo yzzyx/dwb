@@ -16,7 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifdef DWB_ADBLOCKER
 #include <string.h>
 #include <JavaScriptCore/JavaScript.h>
 #include "dwb.h"
@@ -938,4 +937,3 @@ adblock_init() {
   _init = true;
   return true;
 }/*}}}*//*}}}*/
-#endif
