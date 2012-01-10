@@ -669,7 +669,6 @@ struct _Files {
   const char *cookies_allow;
   const char *cookies_session_allow;
   const char *download_path;
-  const char *fifo;
   const char *history;
   const char *keys;
   const char *mimetypes;

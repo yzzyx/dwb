@@ -1262,8 +1262,6 @@ will be replaced with the download-uri,
 will be replaced with the fullpath of the destination, 
 .IR dwb_cookies
 will be replaced with the path to the cookie-file,
-.IR dwb_fifo
-will be replaced with the fifo-path if "use-fifo" is enabled,
 default value:
 .IR xterm\ -e\ wget\ 'dwb_uri'\ -O\ 'dwb_output'\ --load-cookies\ 'dwb_cookies' .
 .TP
@@ -1544,12 +1542,6 @@ Enable tabbed-browsing. If disabled, all new window/new tab requests will be
 opened in a new window. 
 default value:
 .IR true .
-.TP 
-.BR use-fifo
-Use a fifo to communicate with dwb, e.g. sending "open <url>" to the fifo would
-load the url in the current tab,
-default value:
-.IR false .
 .TP 
 .BR widget-packing
 A string consisting of 4 characters, where possible characters are: 

@@ -940,9 +940,6 @@ static WebSettings DWB_SETTINGS[] = {
   { { "complete-userscripts",                        "Whether to complete userscripts", },                                     
     SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)dwb_init_vars,  },
 
-  { { "use-fifo",                        "Create a fifo pipe for communication", },                            
-    SETTING_GLOBAL,  BOOLEAN, { .b = false         },     NULL,  },
-    
   { { "default-width",                           "Default width of the window", },                                           
     SETTING_GLOBAL,  INTEGER, { .i = 800          }, NULL,  },
   { { "default-height",                          "Default height of the window", },                                           

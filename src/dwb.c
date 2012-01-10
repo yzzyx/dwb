@@ -2374,9 +2374,6 @@ dwb_clean_up() {
   domain_end();
 #endif
 
-  if (g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
-    unlink(dwb.files.fifo);
-  }
   util_rmdir(dwb.files.cachedir, true, true);
   gtk_widget_destroy(dwb.gui.window);
   return true;
@@ -3397,8 +3394,7 @@ dwb_init_fifo(gboolean single) {
     FREE(path);
     return;
   }
-
-  if (GET_BOOL("single-instance")) {
+  if (GET_BOOL("single-instance") && dwb.misc.argc > 0) {
     if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
       mkfifo(dwb.files.unifile, 0666);
     }
@@ -3410,18 +3406,18 @@ dwb_init_fifo(gboolean single) {
             char *curr_dir = g_get_current_dir();
             path = g_build_filename(curr_dir, dwb.misc.argv[i], NULL);
 
-            fprintf(ff, "add_view %s\n", path);
+            fprintf(ff, "tabopen %s\n", path);
 
             FREE(curr_dir);
             FREE(path);
           }
           else {
-            fprintf(ff, "add_view %s\n", dwb.misc.argv[i]);
+            fprintf(ff, "tabopen %s\n", dwb.misc.argv[i]);
           }
         }
       }
       else {
-        fprintf(ff, "add_view\n");
+        fprintf(ff, "tab_new\n");
       }
       fclose(ff);
       exit(EXIT_SUCCESS);
@@ -3429,19 +3425,6 @@ dwb_init_fifo(gboolean single) {
     close(fd);
     dwb_open_si_channel();
   }
-
-  /* fifo */
-  if (GET_BOOL("use-fifo")) {
-    char *filename = g_strdup_printf("%s-%d.fifo", dwb.misc.name, getpid());
-    dwb.files.fifo = g_build_filename(path, filename, NULL);
-    FREE(filename);
-
-    if (!g_file_test(dwb.files.fifo, G_FILE_TEST_EXISTS)) {
-      mkfifo(dwb.files.fifo, 0600);
-    }
-    dwb_open_channel(dwb.files.fifo);
-  }
-
   FREE(path);
 }/*}}}*/
 /*}}}*/
@@ -3507,7 +3490,6 @@ main(int argc, char *argv[]) {
   if (GET_BOOL("save-session") && argr == 1 && !restore && !single) {
     restore = "default";
   }
-
   if (last) {
     dwb.misc.argv = &argv[last];
     dwb.misc.argc = g_strv_length(dwb.misc.argv);
