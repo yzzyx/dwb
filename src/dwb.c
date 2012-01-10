@@ -1857,7 +1857,6 @@ dwb_parse_nummod(const char *text) {
     dwb.state.nummod = (int)strtol(num, NULL, 10);
   while (g_ascii_isspace(*text)) text++; 
   return text;
-
 }
 
 gboolean 
@@ -3312,23 +3311,22 @@ dwb_init(GSList *exe) {
 /* dwb_parse_command_line(const char *line) {{{*/
 void 
 dwb_parse_command_line(const char *line, gboolean clear) {
-  while (g_ascii_isspace(*line))
-    line++;
-  char **token = g_strsplit(line, " ", 2);
+  const char *bak;
+  int nummod;
+  line = util_str_chug(line);
+  bak = dwb_parse_nummod(line);
+  nummod = dwb.state.nummod;
+  char **token = g_strsplit(bak, " ", 2);
   KeyMap *m = NULL;
   gboolean found;
-  int nummod;
 
   if (!token[0]) 
     return;
-  const char *bak;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     bak = token[0];
     found = false;
     m = l->data;
-    bak = dwb_parse_nummod(bak);
-    nummod = dwb.state.nummod;
     if (!g_strcmp0(m->map->n.first, bak)) 
       found = true;
     else {
