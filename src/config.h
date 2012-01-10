@@ -117,7 +117,6 @@ static KeyValue KEYS[] = {
   { "complete_bookmarks",       {   "B",         GDK_CONTROL_MASK,     },  },  
   { "complete_searchengines",   {   "S",         GDK_CONTROL_MASK,     },  },  
   { "complete_userscript",      {   "U",         GDK_CONTROL_MASK,     },  },  
-  { "complete_current_history", {   "C",         GDK_CONTROL_MASK,     },  },  
   { "buffers",                  {   "gt",         0 } }, 
 
   { "web_inspector",            {   "wi",         0,     },  },  
@@ -645,10 +644,6 @@ static FunctionMap FMAP [] = {
   { { "complete_path",          "Complete local file path", },        0, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
     { .n = COMP_PATH }, EP_ENTRY, { NULL }, },
-  
-  { { "complete_current_history",          "Complete history of current tab", },        0, 
-    (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
-    { .n = COMP_CUR_HISTORY }, EP_ENTRY, { NULL }, },
   
   { { "buffers",                          "Buffer", },        CP_COMMANDLINE | CP_HAS_MODE,
     (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     

@@ -1882,7 +1882,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               dwb_set_key(token[0], token[1]);
                               g_strfreev(token);
                               return true;
-    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), true);
+    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), false);
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(); 
                               return true;

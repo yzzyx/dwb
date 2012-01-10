@@ -1,11 +1,11 @@
-.TH DWB 1 "August 2010" dwb
+.TH DWB 1 "Januar 2012" dwb "USER COMMANDS"
 .SH NAME
 dwb \- dynamic web browser
 .SH SYNOPSIS
 .B dwb
 [ options ] [ <urls> ] 
 .SH DESCRIPTION
-dwb is a small webbrowser based on webkit and GTK which aimes to be mostly
+dwb is a small webbrowser based on webkit and GTK which aims to be mostly
 keyboard-driven. 
 
 .SH COMMAND LINE ARGUMENTS
@@ -17,7 +17,7 @@ Specify a profile.
 Restore session <sessionname> or the default session, if sessionname is omitted.
 .TP
 .B \-n
-New instance, overrides property "single-instance".
+New instance, overrides setting "single-instance".
 .TP
 .B \-e <wid>
 Embed dwb into <wid>.
@@ -34,20 +34,23 @@ URLs loaded on startup.
 .SH MODES
 dwb has different modes:
 .TP
-.BR Normalmode
-The default Mode. Pressing "Escape" will get you always back to
-Normalmode.
+.B Normal mode
+The default mode. Pressing "Escape" will get you always back to
+Normal mode.
 .TP
-.BR Insertmode 
+.B Insert mode 
 Used for editing text-elements in a webpage. 
 .TP
-.BR Hintmode 
+.B Hint mode 
 Follow links via hints. 
+.TP
+.B Command mode 
+Execute dwb commands from the builtin commandline
 
 
 .SH Usage
-Note: all shortcuts are casesensitive, e.g. C-H means Control-Shift-h.
-.SS "Normalmode shortcuts:"
+Note: all shortcuts are case sensitive, e.g. C-H means Control-Shift-h. 
+.SS "Normal mode shortcuts:"
 .TP
 .BR [n]j
 Scroll [n times] down (command: 
@@ -110,7 +113,7 @@ aliases:
 .BR halfup ).
 .TP
 .B : 
-Enter Commandmode.
+Enter Command mode.
 .TP
 .BR o 
 Open new url in the focused tab (command
@@ -145,7 +148,7 @@ Open url in a new window, set the current url in the navigation bar (command
 .BR winopen_url ).
 .TP
 .BR i 
-Enter Insertmode (command 
+Enter insert mode (command 
 .BR insert_mode ,
 aliases:
 .BR i , 
@@ -734,7 +737,8 @@ Set a setting from commandline (command
 Toggle a boolean setting from commandline (command 
 .BR toggle_setting ,
 aliases:
-.BR toggle, tog ).
+.BR toggle , 
+.BR tog ).
 .TP
 .BR unbound 
 Load a html string. This command is mainly intended for use in userscripts (command 
@@ -745,13 +749,15 @@ Load a html string in a new tab. This command is mainly intended for use in user
 .BR load_html_tab ).
 .TP 
 .B Tab (S-Tab) 
-In Normal mode Tab shows the next (previous) shortcut, that matches the
+In normal mode Tab shows the next (previous) shortcut, that matches the
 currently entered keysequence. 
 When opening a url, the next (previous) item in command
-history, bookmarks or history will be completed. In Hintmode the next (previous)
+history, bookmarks or history will be completed. In hint mode the next (previous)
 hint will get focus. Tab also completes settings and shortcut-settings. 
 When initiating a download, full paths (downloads and spawning programs) and
 binaries (spawning programs) in PATH will be completed. 
+In command mode tab will complete builtin commands and urls if the command
+accepts an url.
 
 .SS "Textentry shortcuts"
 .TP
@@ -804,11 +810,26 @@ Init searchengine completion.
 .BR C-U
 Init userscript completion.
 .TP
-.BR C-C
-Init completion completion for the history of the current tab.
-.TP
 .BR C-p
 Complete local path.
+
+.SS SHORTCUT SYNTAX
+All printable shortcuts are case sensitive, i.e. aH means press a then press
+shift, then press h. Shortcuts can be combined with a modifier, valid modifiers
+are
+.BR Control ,
+.BR Mod1 ,
+.BR Mod4 ,
+.BR Button1 ,
+.BR Button2 ,
+.BR Button3 ,
+.BR Button4 ,
+.BR Button5 
+and
+.B Shift 
+where Shift can only be used with non printable keys such as F1, space, Tab, ... .
+Non printable keys must be surrounded by @, e.g. "Control @F1@", Shift @space@.
+\e and @ itself must be escaped with \e.
 
 .SS CUSTOM COMMANDS
 Custom commands are a sequence of dwb commands that can be bound to a shortcut.
@@ -853,11 +874,13 @@ the default value will be used. The settings in detail are:
 .TP
 .BR adblocker
 Block advertisements using a filterlist, see also 
-.IR adblocker-filterlist
+.IR adblocker-filterlist .
+Default value:
 .IR false .
 .TP
 .BR adblocker-filterlist
 A path to a adblock plus compatible filterlist for the adblocker.
+Default value:
 .IR NULL .
 .TP
 .BR auto-load-images  
@@ -1275,7 +1298,7 @@ default value:
 .IR NULL .
 .TP
 .BR download-use-external-program
-Whether to use an external download programm specified in
+Whether to use an external download program specified in
 \'download-external-programm\' or the builtin download helper.
 Possible values: true/false,
 default value:

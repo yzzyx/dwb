@@ -368,25 +368,7 @@ completion_path(void) {
   completion_complete_path(false);
 }/*}}}*/
 
-/* completion_get_current_history {{{*/
-static  GList *
-completion_get_current_history(int back) {
-  GList *list = NULL;
-  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(CURRENT_WEBVIEW());
-  for (int i= -webkit_web_back_forward_list_get_back_length(bf_list); i<webkit_web_back_forward_list_get_forward_length(bf_list); i++) {
-    if (i==0)
-      continue;
-    WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, i);
-    const char *uri = webkit_web_history_item_get_uri(item);
-    const char *title = webkit_web_history_item_get_uri(item);
-    Completion *c = completion_get_completion_item(uri, title, NULL, NULL);
-    gtk_box_pack_start(GTK_BOX(dwb.gui.compbox), c->event, false, false, 0);
-    list = g_list_append(list, c);
-  }
-  if (back)
-    list = g_list_reverse(list);
-  return list;
-}/*}}}*/
+/* completion_get_quickmarks {{{*/
 static  GList *
 completion_get_quickmarks(int back) {
   GList *list = NULL;
@@ -412,7 +394,7 @@ completion_get_quickmarks(int back) {
   if (back)
     list = g_list_reverse(list);
   return list;
-}
+}/*}}}*/
 
 static void
 completion_buffer_exec(GList *gl) {
@@ -542,7 +524,6 @@ completion_complete(CompletionType type, int back) {
       case COMP_KEY:         dwb.comps.completions = completion_get_key_completion(true); break;
       case COMP_COMMAND:     dwb.comps.completions = completion_get_key_completion(false); break;
       case COMP_BOOKMARK:    dwb.comps.completions = completion_get_simple_completion(dwb.fc.bookmarks); break;
-      case COMP_CUR_HISTORY: dwb.comps.completions = completion_get_current_history(back); break;
       case COMP_HISTORY:     dwb.comps.completions = completion_get_simple_completion(dwb.fc.history); break;
       case COMP_USERSCRIPT:  dwb.comps.completions = completion_get_simple_completion(dwb.misc.userscripts); break;
       case COMP_SEARCH:      dwb.comps.completions = completion_get_simple_completion(dwb.fc.se_completion); break;
