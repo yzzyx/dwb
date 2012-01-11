@@ -1772,7 +1772,10 @@ dwb_load_uri(GList *gl, const char *arg) {
   }
   /* Check if uri is a javascript snippet */
   if (g_str_has_prefix(arg, "javascript:")) {
-    dwb_execute_script(webkit_web_view_get_main_frame(web), arg, false);
+    if (GET_BOOL("javascript-schemes"))
+      dwb_execute_script(webkit_web_view_get_main_frame(web), arg, false);
+    else 
+      dwb_set_error_message(dwb.state.fview, "Loading of javascript schemes permitted");
     return;
   }
   /* Check if uri is a directory */

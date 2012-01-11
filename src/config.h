@@ -918,6 +918,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR,    { .p = "dtws" },           (S_Func)dwb_set_widget_packing,  }, 
   { { "cache-model",                            "Packing of the main widgets", },                                       
     SETTING_GLOBAL,  CHAR,    { .p = "webbrowser" },           NULL,  }, 
+  { { "javascript-schemes",                    "Whether to allow loading urls with 'javascript' scheme", },                                       
+    SETTING_GLOBAL,  BOOLEAN,    { .b = true },           NULL,  }, 
   
 
   /* downloads */
