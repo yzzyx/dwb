@@ -43,7 +43,7 @@ hints_rapid_win Open new windows rapidly
 
 # bookmark_keys Bookmarks &amp Quickmarks
 bookmark Bookmark current page
-bookmarks Show bookmarks in a pop up menu and open
+bookmarks Show bookmarks in a pop up menu
 tab_bookmarks Show bookmarks in a pop up menu and open in new tab
 win_bookmarks Show bookmarks in a pop up menu and open in new window
 save_quickmark Save a quickmark for this page
@@ -108,7 +108,7 @@ paste Open url from clipboard
 tab_paste Open url from clipboard in a new tab
 win_paste Open url from clipboard in a new window
 paste_primary Open url from primary selection
-tab_paste_primary Open url from primary selection in a new window
+tab_paste_primary Open url from primary selection in a new tab
 win_paste_primary Open url from primary selection in a new window
 yank Yank current url to clipboard
 yank_primary Yank current url to primary selection

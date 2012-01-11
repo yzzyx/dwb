@@ -851,6 +851,141 @@ Control W:tabopen http://example.com; 150zoom
 .P
 opens http://example.com in a new tab and zooms to 150%.
 
+.SS COMMAND OVERVIEW
+.nf
+Command                 |Alias           |Description
+-------------------------------------------------------------------------------
+allow_cookie            |cookie          |Allow persistent cookies for site
+allow_session_cookie    |scookie         |Allow session cookies for site
+allow_session_cookie_tmp|tcookie         |Allow session cookies for site
+                        |                |temporarily
+bookmark                |bma, bmark      |Bookmark current page
+bookmarks               |bmas, bmarks    |Show bookmarks 
+buffers                 |bu              |Show all open tabs
+close_tab               |close           |Close tab
+execute_javascript      |exja            |Execute a javascript snippet
+execute_userscript      |                |Execute userscript
+find_backward           |bfind           |Find backward
+find_forward            |ffind           |Find forward
+find_next               |fnext           |Find next
+find_previous           |fprev           |Find previous
+focus_input             |                |Focus next input
+focus_next              |tabnext         |Focus next tab
+focus_prev              |tabprev         |Focus previous tab
+focus_tab               |tab             |Focus nth tab
+fullscreen              |fs              |Toggle fullscreen
+hints                   |hi              |Follow hints
+hints_clipboard         |chints, chi     |Save link location to clipboard
+hints_download          |dhints, dhi     |Download via hints
+hints_editable          |ehints, ehi     |Focus editable elements
+hints_images            |ihints, ihi     |Follow images
+hints_images_tab        |itabhinst, ithi |Follow images in a new tab
+hints_links             |lhints, lhi     |Follow links
+hints_primary           |phints, phi     |Save link location to primary
+                        |                |selection
+hints_rapid             |rhints, rhi     |Open new tabs in background rapidly
+hints_rapid_win         |wrhints, wrhi   |Open new windows rapidly
+hints_tab               |tabhints, thi   |Follow hints in a new tab
+hints_url               |uhints, uhi     |Set hints url in commandline
+hints_url_tab           |utabhints, uthi |Set hints url in commandline, open in
+                        |                |a new tab
+hints_win               |winhints, whi   |Follow hints in a new window
+history_back            |ba, back        |Go back
+history_forward         |fo, forward     |Go forward
+insert_mode             |i, insert       |Insert mode
+lock_domain             |dlock           |Lock tab to current domain
+lock_uri                |ulock           |Lock tab to current uri
+new_tab                 |                |Open next navigation action in new tab
+new_win                 |                |Open next navigation action in new
+                        |                |window
+only                    |                |Close all tabs except for the current
+                        |                |one
+open                    |o               |Open url
+open_editor             |editor          |Open external editor for
+                        |                |input/textarea.
+open_url                |                |Open, edit current url
+paste                   |                |Open from clipboard
+paste_primary           |ppaste          |Open from primary selection
+presentation_mode       |present         |Toggle presentation mode
+print                   |ha              |Print page
+protect                 |prot            |Protect/unprotect tab 
+proxy                   |                |Toggle proxy
+quickmark               |qmarks          |Open quickmark
+quit                    |q               |Quit
+reload                  |re              |Reload current page
+reload_bypass_cache     |refull          |Reload without using cached data
+reload_scripts          |                |Reload all javascript userscripts 
+save                    |                |Save all configuration files
+save_named_session      |wqn             |Save current session with name
+save_quickmark          |qmark, quickmark|Save a quickmark
+save_search_field       |search          |Add a new searchengine 
+save_session            |wq              |Save current session
+scroll_bottom           |bottom          |Scroll to bottom of the page
+scroll_down             |down            |Scroll down
+scroll_halfpage_down    |halfdown        |Scroll one-half page down
+scroll_halfpage_up      |halfup          |Scroll one-half page up
+scroll_left             |left            |Scroll left
+scroll_page_down        |pagedown        |Scroll one page down
+scroll_page_up          |pageup          |Scroll one page up
+scroll_right            |right           |Scroll right 
+scroll_top              |top             |Scroll to the top of the page
+scroll_up               |up              |Scroll up
+set                     |                |Set a setting
+set_key                 |keys            |Set keybinding
+set_setting             |                |Set a setting interactive
+show_keys               |skeys           |Show and modify keyboard configuration
+show_settings           |ssettings       |Show and modify global properties
+start_page              |home            |Open the default homepage
+stop_loading            |st, stop        |Stop loading current page
+tab_bookmarks           |tabmarks        |Show bookmarks, open in new tab
+tab_hist_back           |tba, tabback    |Go back in a new tab
+tab_hist_forward        |tfo, tabforward |Go forward in a new tab
+tab_new                 |                |Open a new blank tab
+tab_paste               |tpaste          |Open from clipboard in a new tab
+tab_paste_primary       |tppaste         |Open from primary selection in a new
+                        |                |tab
+tab_quickmark           |tabqmarks       |Open quickmark in a new tab
+tabopen                 |t, topen        |Open in a new tab
+tabopen_url             |                |Open in a new tab, edit current url
+toggle_bars             |bars            |Toggle tabbar and statusbar
+toggle_hidden_files     |hidden          |Toggle hidden files in directory
+                        |                |listings
+toggle_plugins_host     |hplugin         |Toggle plugin blocker for host
+toggle_plugins_host_tmp |tuplugin        |Toggle plugin blocker for domain for
+                        |                |this session
+toggle_plugins_uri      |uplugin         |Toggle plugin blocker for uri
+toggle_plugins_uri_tmp  |tuplugin        |Toggle plugin blocker for uri for this
+                        |                |session
+toggle_scripts_host     |hscript         |Toggle scripts for current domain
+toggle_scripts_host_tmp |thscript        |Toggle scripts for current host for
+                        |                |this session
+toggle_scripts_uri      |uscript         |Toggle scripts for current uri
+toggle_scripts_uri_tmp  |tuscript        |Toggle scripts for current uri for
+                        |                |this session
+toggle_setting          |tog, toggle     |Toggle a setting
+toggle_statusbar        |sbar            |Toggle statusbar
+toggle_tabbar           |tbar            |Toggle tabbar
+undo                    |u               |Undo closing last tab
+view_source             |so, source      |View page source
+visible                 |vis             |Toggle visibility of a tab
+web_inspector           |insp, inspect   |Open the webinspector
+win_bookmarks           |winmarks        |Show bookmarks, open in new window
+win_hist_back           |wba, winback    |Go back in a new window
+win_hist_forward        |wfo, winforward |Go forward in a new window
+win_paste               |wpaste          |Open from clipboard in a new window
+win_paste_primary       |wppaste         |Open primary selection in a new window
+win_quickmark           |winqmarks       |Open quickmark in a new window
+winopen                 |w, wopen        |Open in a new window
+winopen_url             |                |Open in a new window, edit current url
+yank                    |                |Yank url to clipboard
+yank_primary            |pyank           |Yank url to primary selection
+yank_title              |tyank           |Yank title to clipboard
+yank_title_primary      |tpyank          |Yank title to primary selection
+zoom                    |z               |Zoom
+zoom_in                 |zi              |Zoom in
+zoom_out                |zo              |Zoom out
+.fi
+
 .SH CUSTOMIZATION
 dwb can be  customized in a web interface (command 
 .BR show_settings ) 

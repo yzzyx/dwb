@@ -187,7 +187,7 @@ static FunctionMap FMAP [] = {
 
   { { "toggle_statusbar",    "Toggle visibility of statusbar" },                 1, 
     (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    
-    { .n = BAR_VIS_STATUS }, EP_NONE, { NULL }, },
+    { .n = BAR_VIS_STATUS }, EP_NONE, { "sbar", NULL }, },
 
   { { "presentation_mode",    "Toggle presentation mode" },                 1, 
     (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    
@@ -282,7 +282,7 @@ static FunctionMap FMAP [] = {
   
   { { "hints",             "Follow hints",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
-    { .n = OPEN_NORMAL, .i = HINT_T_ALL }, EP_NONE, { "hints", "hi",  NULL }, },
+    { .n = OPEN_NORMAL, .i = HINT_T_ALL }, EP_NONE, { "hi",  NULL }, },
   
   { { "hints_links",       "Follow links",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No links",                          NEVER_SM,    
@@ -334,7 +334,7 @@ static FunctionMap FMAP [] = {
   
   { { "hints_download",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
-    { .n = OPEN_DOWNLOAD }, EP_NONE, { "dhints",  }, },
+    { .n = OPEN_DOWNLOAD }, EP_NONE, { "dhints", "dhi", NULL }, },
   
   { { "history_back",          "Go Back",                           }, 1, 
     (Func)commands_history,        "Beginning of History",            ALWAYS_SM, 
@@ -544,7 +544,7 @@ static FunctionMap FMAP [] = {
   
   { { "tab_paste",              "Open url from clipboard in a new tab",                   }, 1, 
     (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, 
-    { .n = OPEN_NEW_VIEW, .p = GDK_NONE, .ro = true }, EP_NONE, { "tabpaste", NULL }, },
+    { .n = OPEN_NEW_VIEW, .p = GDK_NONE, .ro = true }, EP_NONE, { "tpaste", NULL }, },
   
   { { "tab_paste_primary",      "Open url from primary selection in a new window", }, 1, 
     (Func)commands_paste,               "No primary selection",  ALWAYS_SM, 

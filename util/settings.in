@@ -58,8 +58,10 @@ status-allowed-color text Color for script blocker, status allowed
 status-blocked-color text Color for script blocker, status blocked
 tab-active-bg-color text Background color of the active tab
 tab-active-fg-color text Foreground color of the active tab
-tab-normal-bg-color text Background color of the normal tab
-tab-normal-fg-color text Foreground color of the normal tab
+tab-normal-bg-color-1 text Background color 1 of the normal tab
+tab-normal-fg-color-1 text Foreground color 1 of the normal tab
+tab-normal-bg-color-2 text Background color 2 of the normal tab
+tab-normal-fg-color-2 text Foreground color 2 of the normal tab
 tab-number-color text Color of the tabnumber
 tab-protected-color text Color of the tabnumber for protected tabs
 
