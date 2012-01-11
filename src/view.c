@@ -164,10 +164,6 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   else if (e->button == 9) {
     dwb_history_forward();
   }
-  /* Leave insert mode, see check for context above */
-  if (dwb.state.mode & INSERT_MODE) {
-    dwb_change_mode(NORMAL_MODE);
-  }
   return ret;
 }/*}}}*/
 
