@@ -19,6 +19,7 @@
 #include <string.h>
 #include "dwb.h"
 #include "completion.h"
+#include "commands.h"
 
 
 /* dwb_entry_keyrelease_cb {{{*/
@@ -126,7 +127,15 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
     ret = false;
   }
   else if (mode & INSERT_MODE) {
-    ret = false;
+    /* The editor command must be handled special */
+    unsigned int mod; 
+    gboolean isprint;
+    if ((key = dwb_get_key(e, &mod, &isprint)) != NULL) {
+      if (!g_strcmp0(dwb.misc.editor_map->key, key) && mod == dwb.misc.editor_map->mod) {
+        commands_simple_command(dwb.misc.editor_map);
+        ret = true;
+      }
+    }
   }
   else if (gtk_widget_has_focus(dwb.gui.entry) || mode & COMPLETION_MODE) {
     ret = false;

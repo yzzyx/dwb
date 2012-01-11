@@ -1913,6 +1913,20 @@ dwb_entry_activate(GdkEventKey *e) {
   dwb_change_mode(NORMAL_MODE, false);
   return true;
 }
+char *
+dwb_get_key(GdkEventKey *e, unsigned int *mod_mask, gboolean *isprint) {
+  char *key = util_keyval_to_char(e->keyval, true);
+  *isprint = false;
+  if (key != NULL) {
+    *mod_mask = CLEAN_STATE(e);
+    *isprint = true;
+  }
+  else if ( (key = gdk_keyval_name(e->keyval))) {
+    key = g_strdup_printf("@%s@", key);
+    *mod_mask = CLEAN_STATE_WITH_SHIFT(e);
+  }
+  return key;
+}
 /* dwb_eval_key(GdkEventKey *e) {{{*/
 gboolean
 dwb_eval_key(GdkEventKey *e) {
@@ -1947,19 +1961,9 @@ dwb_eval_key(GdkEventKey *e) {
     case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); return true;
     case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return true;
   }
-  char *key = util_keyval_to_char(keyval, true);
-  if (key) {
-    mod_mask = CLEAN_STATE(e);
-    isprint = true;
-  }
-  else if ( (key = gdk_keyval_name(keyval))) {
-    key = g_strdup_printf("@%s@", key);
-    mod_mask = CLEAN_STATE_WITH_SHIFT(e);
-  }
-  else {
+  char *key = dwb_get_key(e, &mod_mask, &isprint);
+  if (key == NULL)
     return false;
-  }
-  /* nummod */
   if (DIGIT(e)) {
     keynum = e->keyval - GDK_KEY_0;
     if (dwb.state.nummod >= 0) {
@@ -2636,6 +2640,8 @@ dwb_keymap_add(GList *gl, KeyValue key) {
       fmap->n.first = (char*)key.id;
       keymap->map = fmap;
       gl = g_list_prepend(gl, keymap);
+      if (!g_strcmp0(FMAP[i].n.first, "open_editor")) 
+        dwb.misc.editor_map = keymap;
       break;
     }
   }

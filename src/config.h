@@ -708,7 +708,7 @@ static FunctionMap FMAP [] = {
     { 0 }, EP_NONE, { "fs", NULL }, },
   
   { { "open_editor",    "Open external editor" },                 1, 
-    (Func) commands_open_editor, "No input focused",     NEVER_SM,    
+    (Func) commands_open_editor, "No input focused",     ALWAYS_SM,    
     { 0 }, EP_NONE, { "editor", NULL }, },
   
 };/*}}}*/

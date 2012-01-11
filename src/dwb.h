@@ -655,6 +655,7 @@ struct _Misc {
   char *startpage;
   char *download_com;
   JSContextRef global_ctx;
+  KeyMap *editor_map;
 
   char *pbbackground;
   gboolean scrollbars;
@@ -824,6 +825,7 @@ gboolean dwb_entry_activate(GdkEventKey *e);
 void dwb_set_adblock(GList *, WebSettings *);
 
 gboolean dwb_eval_key(GdkEventKey *);
+char * dwb_get_key(GdkEventKey *, unsigned int *, gboolean *);
 void dwb_follow_selection(void);
 void dwb_update_layout(void);
 const char * dwb_parse_nummod(const char *);
