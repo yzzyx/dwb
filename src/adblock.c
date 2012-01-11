@@ -82,6 +82,7 @@ static GPtrArray *_simple_exceptions;
 static GPtrArray *_rules;
 static GPtrArray *_exceptions;
 static GHashTable *_hider_rules;
+gboolean _has_hider_rules;
 /*  only used to freeing elementhider */
 static GSList *_hider_list;
 static GString *_css_rules;
@@ -617,7 +618,7 @@ void
 adblock_connect(GList *gl) {
   if (!_init && !adblock_init()) 
       return;
-  if (_rules->len > 0 || _css_rules->len > 0) {
+  if (_rules->len > 0 || _css_rules->len > 0 || _has_hider_rules) {
     VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
     VIEW(gl)->status->signals[SIG_AD_FRAME_CREATED] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(adblock_frame_created_cb), gl);
   }
@@ -692,6 +693,7 @@ adblock_rule_parse(char *filterlist) {
             list = g_slist_append(list, hider);
             (void) list;
           }
+          _has_hider_rules = true;
         }
         hider->exception = hider_exc;
         if (hider_exc) {
