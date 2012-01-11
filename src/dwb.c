@@ -1140,13 +1140,16 @@ dwb_unfocus() {
 GHashTable * 
 dwb_get_default_settings() {
   GHashTable *ret = g_hash_table_new(g_str_hash, g_str_equal);
-  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
+  GList *l;
+  for (l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
     WebSettings *new = dwb_malloc(sizeof(WebSettings));
     *new = *s;
     char *value = g_strdup(s->n.first);
     g_hash_table_insert(ret, value, new);
   }
+  if (l != NULL)
+    g_list_free(l);
   return ret;
 }/*}}}*/
 
@@ -2433,6 +2436,7 @@ void
 dwb_save_settings() {
   GKeyFile *keyfile = g_key_file_new();
   GError *error = NULL;
+  GList *l;
   char *content;
   gsize size;
   setlocale(LC_NUMERIC, "C");
@@ -2441,13 +2445,15 @@ dwb_save_settings() {
     fprintf(stderr, "No settingsfile found, creating a new file.\n");
     g_clear_error(&error);
   }
-  for (GList *l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
+  for (l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
     char *value = util_arg_to_char(&s->arg, s->type); 
     g_key_file_set_value(keyfile, dwb.misc.profile, s->n.first, value ? value : "" );
 
     FREE(value);
   }
+  if (l != NULL)
+    g_list_free(l);
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
     util_set_file_content(dwb.files.settings, content);
     g_free(content);
@@ -2732,15 +2738,18 @@ dwb_read_settings() {
 /* dwb_init_settings() {{{*/
 static void
 dwb_init_settings() {
+  GList *l = NULL;
   dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)dwb_free, NULL);
   dwb.state.web_settings = webkit_web_settings_new();
   dwb_read_settings();
-  for (GList *l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
+  for (l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
     WebSettings *s = l->data;
     if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
       s->func(NULL, s);
     }
   }
+  if (l != NULL)
+    g_list_free(l);
 }/*}}}*/
 
 /* dwb_init_scripts{{{*/

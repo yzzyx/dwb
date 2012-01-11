@@ -305,6 +305,8 @@ completion_get_settings_completion() {
       list = g_list_append(list, c);
     }
   }
+  if (l != NULL)
+    g_list_free(l);
   return list;
 }/*}}}*/
 

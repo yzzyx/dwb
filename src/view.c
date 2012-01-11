@@ -690,12 +690,15 @@ view_init_settings(GList *gl) {
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
   /* apply settings */
   v->setting = dwb_get_default_settings();
-  for (GList *l = g_hash_table_get_values(v->setting); l; l=l->next) {
+  GList *l;
+  for (l = g_hash_table_get_values(v->setting); l; l=l->next) {
     WebSettings *s = l->data;
     if (s->apply & SETTING_PER_VIEW) {
       s->func(gl, s);
     }
   }
+  if (l != NULL) 
+    g_list_free(l);
 }/*}}}*/
 
 /* view_init_signals(View *v) {{{*/
