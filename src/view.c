@@ -795,6 +795,7 @@ view_create_web_view() {
 
   DWB_WIDGET_OVERRIDE_FONT(v->tablabel, dwb.font.fd_inactive);
 
+  gtk_widget_set_can_focus(v->scroll, false);
   gtk_widget_show_all(v->scroll);
   gtk_widget_show_all(v->tabevent);
 
