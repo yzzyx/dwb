@@ -32,6 +32,8 @@ struct _HtmlTable {
   DwbStatus (*func)(GList *, HtmlTable *);
 };
 
+static void html_key_changed(WebKitDOMElement *target);
+void html_settings_changed(WebKitDOMElement *el);
 
 DwbStatus html_bookmarks(GList *, HtmlTable *);
 DwbStatus html_history(GList *, HtmlTable *);
@@ -147,8 +149,8 @@ DwbStatus
 html_history(GList *gl, HtmlTable *table) {
   return html_navigation(gl, dwb.fc.history, table);
 }
-gboolean
-html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
+void
+html_settings_changed(WebKitDOMElement *el) {
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(el));
   char *value = NULL;
   char *type;
@@ -169,13 +171,29 @@ html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView
     value = webkit_dom_html_select_element_get_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(el));
   }
   dwb_set_setting(id, value);
+  webkit_dom_element_blur(el);
   dwb_change_mode(NORMAL_MODE, false);
+}
+gboolean
+html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
+  html_settings_changed(el);
   return true;
 }
 gboolean
 html_settings_really_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   webkit_dom_element_blur(el);
   return true;
+}
+gboolean
+html_keydown_settings_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
+  glong val = webkit_dom_ui_event_get_key_code(WEBKIT_DOM_UI_EVENT(ev));
+  if (val == 13) {
+    WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
+    if (target != NULL) 
+      html_settings_changed(WEBKIT_DOM_ELEMENT(target));
+    return true;
+  }
+  return false;
 }
 gboolean
 html_keydown_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
@@ -185,7 +203,7 @@ html_keydown_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
     if (target != NULL) {
       char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
       if (g_strcmp0(id, "dwb_custom_keys_area")) {
-        webkit_dom_element_blur(WEBKIT_DOM_ELEMENT(target));
+        html_key_changed(WEBKIT_DOM_ELEMENT(target));
         return true;
       }
     }
@@ -215,10 +233,8 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
   else {
     if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) {
       webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value ? value : "");
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_really_changed_cb), false, wv);
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "blur", G_CALLBACK(html_settings_changed_cb), false, wv);
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "focus", G_CALLBACK(html_focus_cb), false, wv);
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
+      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_settings_cb), true, wv);
     }
     else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(e)) {
       char *lower = g_utf8_strdown(value, -1);
@@ -265,16 +281,16 @@ html_custom_keys_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointe
   dwb_set_normal_message(dwb.state.fview, true, "Custom keys saved");
   return true;
 }
-static gboolean
-html_key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
+static void 
+html_key_changed(WebKitDOMElement *target) {
   char *value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
   dwb_set_key(id, value);
-  return true;
+  webkit_dom_element_blur(target);
 }
 static gboolean
-html_key_really_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
-  webkit_dom_element_blur(target);
+html_key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
+  html_key_changed(target);
   return true;
 }
 void 
@@ -295,9 +311,7 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
         mod = dwb_modmask_to_string(km->mod);
         value = g_strdup_printf("%s%s%s", mod, strlen(mod) > 0 ? " " : "", km->key ? km->key : "");
         webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(input), value);
-        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(html_key_really_changed_cb), false, wv);
-        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "blur", G_CALLBACK(html_key_changed_cb), false, wv);
-        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "focus", G_CALLBACK(html_focus_cb), false, wv);
+        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(html_key_changed_cb), false, wv);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
         FREE(mod);
         g_free(value);
