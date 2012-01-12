@@ -783,7 +783,7 @@ view_create_web_view() {
   gtk_misc_set_alignment(GTK_MISC(v->tablabel), 0.0, 0.5);
   gtk_label_set_ellipsize(GTK_LABEL(v->tablabel), PANGO_ELLIPSIZE_END);
 
-  gtk_box_pack_end(GTK_BOX(v->tabbox), v->tablabel, true, true, 0);
+  gtk_box_pack_end(GTK_BOX(v->tabbox), v->tablabel, true, true, 3);
 
   GdkPixbuf *pb = gdk_pixbuf_new_from_xpm_data(dummy_icon);
   v->tabicon = gtk_image_new_from_pixbuf(pb);

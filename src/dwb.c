@@ -450,6 +450,14 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     else 
       g_string_append_printf(string, "[<span foreground='%s'><s>P</s></span>]",  dwb.color.block_color);
   }
+  if (LP_STATUS(v)) {
+    g_string_append_printf(string, "[<span foreground='%s'>", dwb.color.tab_protected_color);
+    if (LP_LOCKED_DOMAIN(v)) 
+      g_string_append_c(string, 'd');
+    if (LP_LOCKED_URI(v)) 
+      g_string_append_c(string, 'u');
+    g_string_append(string, "</span>]");
+  }
   if (v->status->progress != 0) {
     wchar_t buffer[PBAR_LENGTH + 1] = { 0 };
     wchar_t cbuffer[PBAR_LENGTH] = { 0 };
@@ -1626,33 +1634,14 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
   const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
   char progress[11] = { 0 };
-  char buf[5] = { 0 };
-  int i=0;
-  char sep1 = 0, sep2 = 0;
-  if (v->status->lockprotect != 0) {
-    sep1 = '[';
-    sep2 = ']';
-    if (LP_PROTECTED(v)) 
-      buf[i++] = 'p';
-    if (LP_LOCKED_DOMAIN(v)) 
-      buf[i++] = 'd';
-    if (LP_LOCKED_URI(v)) 
-      buf[i++] = 'u';
-    if (LP_VISIBLE(v)) 
-      buf[i++] = 'v';
-    buf[i++] = '\0';
-  }
   if (v->status->progress != 0) {
     snprintf(progress, 11, "[%2d%%] ", v->status->progress);
   }
 
-  char *escaped = g_markup_printf_escaped("[<span foreground='%s'>%d</span>]%c<span foreground='%s'>%s</span>%c %s%s", 
-      dwb.color.tab_number_color,
+  char *escaped = g_markup_printf_escaped("<span foreground='%s'>%d%s</span> %s%s", 
+      LP_PROTECTED(v) ? dwb.color.tab_protected_color : dwb.color.tab_number_color,
       g_list_position(dwb.state.views, gl) + 1, 
-      sep1,
-      dwb.color.tab_protected_color,
-      buf, 
-      sep2,
+      LP_VISIBLE(v) ? "*" : "",
       progress,
       uri ? uri : "about:blank");
   gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
@@ -3249,7 +3238,7 @@ dwb_init_custom_keys(gboolean reload) {
     command->key = dwb_malloc(sizeof(Key));
 
     *(command->key) = dwb_str_to_key(keybuf->str);
-    command->commands = g_strsplit(current_line, ";", -1);
+    command->commands = g_strsplit(current_line, ";;", -1);
     dwb.custom_commands = g_slist_append(dwb.custom_commands, command);
     g_string_free(keybuf, true);
   }

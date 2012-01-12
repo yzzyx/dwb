@@ -244,6 +244,7 @@ typedef enum {
 #define LP_LOCKED_DOMAIN(v) ((v)->status->lockprotect & LP_LOCK_DOMAIN)
 #define LP_LOCKED_URI(v) ((v)->status->lockprotect & LP_LOCK_URI)
 #define LP_VISIBLE(v) ((v)->status->lockprotect & LP_VISIBLE)
+#define LP_STATUS(v)   ((v)->status->lockprotect & (LP_LOCK_DOMAIN | LP_LOCK_URI))
 
 typedef enum {
   HINT_T_ALL        = 0,

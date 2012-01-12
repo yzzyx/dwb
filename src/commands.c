@@ -733,7 +733,7 @@ commands_toggle_lock_protect(KeyMap *km, Arg *arg) {
     return STATUS_ERROR;
   View *v = VIEW(gl);
   v->status->lockprotect ^= arg->n;
-  dwb_tab_label_set_text(gl, NULL);
+  dwb_update_status(gl);
   if (arg->n & LP_VISIBLE && gl != dwb.state.fview)
     gtk_widget_set_visible(v->scroll, LP_VISIBLE(v));
   return STATUS_OK;
