@@ -1963,12 +1963,11 @@ dwb_eval_key(GdkEventKey *e) {
     }
     if (mod_mask) {
 #define IS_NUMMOD(X)  (((X) & DWB_NUMMOD_MASK) && ((X) & ~DWB_NUMMOD_MASK) == mod_mask)
-      GSList *last = g_slist_last(dwb.custom_commands);
       for (GSList *l = dwb.custom_commands; l; l=l->next) {
         CustomCommand *c = l->data;
         if (IS_NUMMOD(c->key->mod) || (c->key->mod == mod_mask && c->key->num == dwb.state.nummod)) {
           for (int i=0; c->commands[i]; i++) {
-            dwb_parse_command_line(c->commands[i], l == last);
+            dwb_parse_command_line(c->commands[i], c->commands[i+1] != NULL);
           }
           break;
         }
@@ -1995,13 +1994,12 @@ dwb_eval_key(GdkEventKey *e) {
   int longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
-  GSList *last =  g_slist_last(dwb.custom_commands);
   for (GSList *l = dwb.custom_commands; l; l=l->next) {
     CustomCommand *c = l->data;
     if (c->key->num == dwb.state.nummod  && c->key->mod == mod_mask) {
       if (!g_strcmp0(c->key->str, buf)) {
         for (int i=0; c->commands[i]; i++) {
-          dwb_parse_command_line(c->commands[i], l == last);
+          dwb_parse_command_line(c->commands[i], c->commands[i+1] != NULL);
         }
         return true;
       }

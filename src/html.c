@@ -323,8 +323,8 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
     char *content = util_get_file_content(dwb.files.custom_keys);
     if (content != NULL && *content != '\0') {
       webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(textarea), content);
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(button), "click", G_CALLBACK(html_custom_keys_changed_cb), false, wv);
     }
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(button), "click", G_CALLBACK(html_custom_keys_changed_cb), false, wv);
     FREE0(content);
     g_signal_handlers_disconnect_by_func(wv, html_keys_load_cb, table);
   }
