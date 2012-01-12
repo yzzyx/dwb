@@ -1998,11 +1998,16 @@ dwb_eval_key(GdkEventKey *e) {
   GSList *last =  g_slist_last(dwb.custom_commands);
   for (GSList *l = dwb.custom_commands; l; l=l->next) {
     CustomCommand *c = l->data;
-    if (c->key->num == dwb.state.nummod && !g_strcmp0(c->key->str, buf) && c->key->mod == mod_mask) {
-      for (int i=0; c->commands[i]; i++) {
-        dwb_parse_command_line(c->commands[i], l == last);
+    if (c->key->num == dwb.state.nummod  && c->key->mod == mod_mask) {
+      if (!g_strcmp0(c->key->str, buf)) {
+        for (int i=0; c->commands[i]; i++) {
+          dwb_parse_command_line(c->commands[i], l == last);
+        }
+        return true;
       }
-      return true;
+      else if (g_str_has_prefix(c->key->str, buf)) 
+        longest = 1;
+
     }
   }
 

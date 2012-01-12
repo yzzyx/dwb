@@ -279,6 +279,7 @@ html_custom_keys_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointe
   g_free(value);
   dwb_init_custom_keys(true);
   dwb_set_normal_message(dwb.state.fview, true, "Custom keys saved");
+  dwb_change_mode(NORMAL_MODE, true);
   return true;
 }
 static void 
