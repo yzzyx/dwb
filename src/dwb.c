@@ -2007,7 +2007,6 @@ dwb_eval_key(GdkEventKey *e) {
       }
       else if (g_str_has_prefix(c->key->str, buf)) 
         longest = 1;
-
     }
   }
 
