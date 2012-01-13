@@ -99,7 +99,7 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     else 
       div = g_slist_nth_data(v->plugins->clicks, v->plugins->created);
 
-    char *new_style = g_strdup_printf("width:%s; height:%s; top: %s; left: %s;%s", width, height, top, left, dwb.misc.pbbackground);
+    char *new_style = g_strdup_printf("width:%s; height:%s; top: %s; left: %s;%s;", width, height, top, left, dwb.misc.pbbackground);
     webkit_dom_element_set_attribute(div, "style", new_style, NULL);
     g_free(new_style);
 
