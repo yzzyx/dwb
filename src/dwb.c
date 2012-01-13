@@ -2213,7 +2213,7 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   GError *error = NULL;
   char nummod[64];
   snprintf(nummod, 64, "%d", NUMMOD);
-  char *argv[6] = { a->arg, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), (char *)dwb.misc.profile, nummod, a->p, NULL } ;
+  char *argv[] = { a->arg, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), (char *)webkit_web_view_get_title(CURRENT_WEBVIEW()), (char *)dwb.misc.profile, nummod, a->p, NULL } ;
   int std_out;
   int std_in;
   if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &std_in, &std_out, NULL, &error)) {
