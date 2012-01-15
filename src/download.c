@@ -309,7 +309,7 @@ download_start(const char *path) {
           goto error_out;
         }
         fullpath = external ? g_strdup(path) : g_strconcat("file://", path, NULL);
-        if ((last_slash = strrchr(path, '/'))) {
+        if (g_file_test(path, G_FILE_TEST_IS_DIR) && (last_slash = strrchr(path, '/'))) {
           g_strlcpy(path_buffer, path, last_slash - path);
           path = path_buffer;
         }
@@ -355,20 +355,26 @@ static void
 download_entry_set_directory() {
   dwb_set_normal_message(dwb.state.fview, false, "Downloadpath:");
   char *default_dir = GET_CHAR("download-directory");
-  char *current_dir = NULL;
-  if (default_dir != NULL) 
-    current_dir = g_strdup(default_dir);
-  else if (lastdir != NULL)
-    current_dir = g_strdup(lastdir);
+  char *current_dir = NULL, *new_dir = NULL;
+  if (default_dir != NULL) {
+    entry_set_text(default_dir);
+    return;
+  }
+  else if (lastdir != NULL) {
+    entry_set_text(lastdir);
+    return;
+  }
   else 
     current_dir = g_get_current_dir();
     
-  char *newdir = current_dir[strlen(current_dir) - 1] != '/' ? g_strdup_printf("%s/", current_dir) : g_strdup(current_dir);
-
-  entry_set_text(newdir);
-
+  if (g_file_test(current_dir, G_FILE_TEST_IS_DIR) && current_dir[strlen(current_dir) - 1] != '/') {
+    new_dir =  g_strdup_printf("%s/", current_dir);
+    entry_set_text(new_dir);
+    FREE(new_dir);
+  }
+  else 
+    entry_set_text(current_dir);
   FREE(current_dir);
-  FREE(newdir);
 }/*}}}*/
 
 /* download_entry_set_spawn_command{{{*/
