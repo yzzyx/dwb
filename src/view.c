@@ -349,8 +349,8 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   if (dwb.state.nv & OPEN_NEW_VIEW) {
     if (dwb.state.nv & OPEN_VIA_HINTS || (dwb.state.nv & OPEN_EXPLICIT && reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) ) {
       dwb.state.nv = OPEN_NORMAL;
-      view_add(uri, dwb.state.background_tabs);
       webkit_web_policy_decision_ignore(policy);
+      view_add(uri, dwb.state.background_tabs);
       return true;
     }
   }

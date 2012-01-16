@@ -187,18 +187,18 @@ var DwbHintObj = (function () {
     };
   };
 
-  var __mouseEvent = function (e, ev) {
+  var __mouseEvent = function (e, ev, bubble) {
     var mouseEvent = document.createEvent("MouseEvent");
-    mouseEvent.initMouseEvent(ev, true, true, e.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    mouseEvent.initMouseEvent(ev, bubble, true, e.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
     e.dispatchEvent(mouseEvent);
   };
   var __clickElement = function (element, ev) {
     if (ev) {
-      __mouseEvent(element, ev);
+      __mouseEvent(element, ev, false);
     }
     else { // both events, if no event is given
-      __mouseEvent(element, "click");
-      __mouseEvent(element, "mousedown");
+      __mouseEvent(element, "click", false);
+      __mouseEvent(element, "mousedown", false);
     }
   };
   var __getActive = function () {
