@@ -520,6 +520,8 @@ DwbStatus
 dwb_set_clipboard(const char *text, GdkAtom atom) {
   GtkClipboard *clipboard = gtk_clipboard_get(atom);
   gboolean ret = STATUS_ERROR;
+  if (text == NULL) 
+    return STATUS_ERROR;
 
   gtk_clipboard_set_text(clipboard, text, -1);
   if (*text) {
