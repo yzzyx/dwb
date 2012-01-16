@@ -438,12 +438,12 @@ commands_paste(KeyMap *km, Arg *arg) {
   return STATUS_ERROR;
 }/*}}}*/
 
-
+/* dwb_entry_movement() {{{*/
 DwbStatus
 commands_entry_movement(KeyMap *m, Arg *a) {
   entry_move_cursor_step(a->n, a->i, a->b);
   return STATUS_OK;
-}
+}/*}}}*/
 
 /* commands_entry_history_forward {{{*/
 DwbStatus 
@@ -461,6 +461,21 @@ commands_entry_history_back(KeyMap *km, Arg *a) {
     return entry_history_back(&dwb.fc.commands, &dwb.state.last_com_history);
   else 
     return entry_history_back(&dwb.fc.navigations, &dwb.state.last_nav_history);
+}/*}}}*/
+
+/* commands_entry_confirm {{{*/
+DwbStatus 
+commands_entry_confirm(KeyMap *km, Arg *a) {
+  GdkEventKey e = { .state = 0, .keyval = GDK_KEY_Return };
+  gboolean ret;
+  g_signal_emit_by_name(dwb.gui.entry, "key-press-event", &e, &ret);
+  return STATUS_OK;
+}/*}}}*/
+/* commands_entry_escape {{{*/
+DwbStatus 
+commands_entry_escape(KeyMap *km, Arg *a) {
+  dwb_change_mode(NORMAL_MODE, true);
+  return STATUS_OK;
 }/*}}}*/
 
 /* commands_save_session {{{*/

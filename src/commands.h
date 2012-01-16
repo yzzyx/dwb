@@ -30,6 +30,8 @@ DwbStatus commands_bookmarks(KeyMap *, Arg *);
 DwbStatus commands_entry_movement(KeyMap *, Arg *);
 DwbStatus commands_entry_history_back(KeyMap *, Arg *);
 DwbStatus commands_entry_history_forward(KeyMap *, Arg *);
+DwbStatus commands_entry_confirm(KeyMap *km, Arg *a);
+DwbStatus commands_entry_escape(KeyMap *km, Arg *a);
 
 DwbStatus commands_execute_userscript(KeyMap *, Arg *);
 DwbStatus commands_find(KeyMap *, Arg *);

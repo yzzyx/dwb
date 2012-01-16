@@ -112,6 +112,8 @@ static KeyValue KEYS[] = {
   { "entry_word_back",          {   "b",            GDK_CONTROL_MASK, }, }, 
   { "entry_history_forward",    {   "j",            GDK_CONTROL_MASK, }, }, 
   { "entry_history_back",       {   "k",            GDK_CONTROL_MASK, }, }, 
+  { "entry_escape",             {   "c",            GDK_CONTROL_MASK, }, }, 
+  { "entry_confirm",            {   "g",            GDK_CONTROL_MASK, }, }, 
   { "download_set_execute",     {   "x",            GDK_CONTROL_MASK, }, }, 
   { "complete_history",         {   "H",         GDK_CONTROL_MASK,     },  },  
   { "complete_bookmarks",       {   "B",         GDK_CONTROL_MASK,     },  },  
@@ -616,9 +618,13 @@ static FunctionMap FMAP [] = {
   { { "entry_history_back",     "Command line: Command history back", },             0,  
     (Func)commands_entry_history_back,           NULL,        ALWAYS_SM,  
     { 0 }, EP_ENTRY, { NULL }, },
+
+  { { "entry_escape",     "Command line: Alternate escape binding", },             0,  
+    (Func)commands_entry_escape,           NULL,        ALWAYS_SM,  
+    { 0 }, EP_ENTRY, { NULL }, },
   
-  { { "entry_history_forward",  "Command line: Command history forward", },          0,  
-    (Func)commands_entry_history_forward,        NULL,        ALWAYS_SM,  
+  { { "entry_confirm",  "Command line: Alternate return binding", },          0,  
+    (Func)commands_entry_confirm,        NULL,        ALWAYS_SM,  
     { 0 }, EP_ENTRY, { NULL }, },
   
   { { "download_set_execute",   "Downloads: toggle between spawning application/download path", }, 0, 

@@ -54,6 +54,8 @@ start_page Open the default homepage
 
 # commandline Commandline
 command_mode Enter command mode
+entry_confirm Alternative confirm shortcut
+entry_escape Alternative escape shortcut
 entry_history_back Command history back
 entry_history_forward Command history forward
 entry_delete_letter Delete a single letter
