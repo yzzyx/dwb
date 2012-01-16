@@ -35,7 +35,7 @@ static void view_ssl_state(GList *);
 static unsigned long _click_time;
 static guint _sig_caret_button_release;
 static guint _sig_caret_motion;
-static const char const* dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
+static const char const* dummy_icon[] = { "1 1 1 1 ", "- c NONE", "", };
 
 
 /* CALLBACKS */
