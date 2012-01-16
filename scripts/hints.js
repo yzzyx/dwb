@@ -66,21 +66,19 @@ var DwbHintObj = (function () {
     }
   };
 
-  var __newHint = function(element, win, rect) {
+  var __newHint = function(element, win, rect, oe) {
     this.element = element;
     this.overlay = null;
     this.win = win;
-    var br = document.body.getBoundingClientRect();
-    var bs = win.getComputedStyle(document.body, null);
     var hint = __createElement("div");
-    var toppos = rect.top - br.top;
-    var leftpos = rect.left - br.left;
+    var toppos = rect.top + oe.offY;
+    var leftpos = rect.left + oe.offX;
     var t = Math.max(toppos, 0);
     var l = Math.max(leftpos, 0);
     hint.style.top = t + "px";
-    hint.style.marginTop = bs.marginTop;
+    hint.style.marginTop = oe.bodyStyle.marginTop;
     hint.style.left = l + "px";
-    hint.style.marginLeft = bs.marginLeft;
+    hint.style.marginLeft = oe.bodyStyle.marginLeft;
 
     hint.className =  "dwb_hint";
     this.createOverlay = function() {
@@ -94,9 +92,9 @@ var DwbHintObj = (function () {
       overlay.style.width = (compleft > 0 ? width : width + compleft) + "px";
       overlay.style.height = (comptop > 0 ? height : height + comptop) + "px";
       overlay.style.top = t + "px";
-      overlay.style.marginTop = bs.marginTop;
+      overlay.style.marginTop = oe.bodyStyle.marginTop;
       overlay.style.left = l + "px";
-      overlay.style.marginLeft = bs.marginLeft;
+      overlay.style.marginLeft = oe.bodyStyle.marginLeft;
       overlay.style.display = "block";
       overlay.style.cursor = "pointer";
       this.overlay = overlay;
@@ -111,9 +109,9 @@ var DwbHintObj = (function () {
     }
     return element;
   };
-  var __numberHint = function (element, win, rect) {
+  var __numberHint = function (element, win, rect, offsetElement) {
     this.varructor = __newHint;
-    this.varructor(element, win, rect);
+    this.varructor(element, win, rect, offsetElement);
 
     this.getStart = function(n) {
       var start = parseInt(Math.log(n) / Math.log(10), 10)*10;
@@ -165,9 +163,9 @@ var DwbHintObj = (function () {
       }
     };
   };
-  var __letterHint = function (element, win, rect) {
+  var __letterHint = function (element, win, rect, offsetElement) {
     this.varructor = __newHint;
-    this.varructor(element, win, rect);
+    this.varructor(element, win, rect, offsetElement);
 
     this.betterMatch = function(input) {
       return 0;
@@ -265,7 +263,22 @@ var DwbHintObj = (function () {
     doc.head.appendChild(styleSheet);
     doc.hasStyleSheet = true;
   };
-
+  var __getOffsets = function(doc) {
+    var oe = new Object();
+    var win = doc.defaultView;
+    var body = doc.body || doc.documentElement;
+    oe.bodyStyle = win.getComputedStyle(body, null);
+    var br = body.getBoundingClientRect();
+    if (oe.bodyStyle && br && /^(relative|fixed|absolute)$/.test(oe.bodyStyle.position)) {
+      oe.offX = -br.left; 
+      oe.offY = -br.top;
+    }
+    else {
+      oe.offX = win.pageXOffset;
+      oe.offY = win.pageYOffset;
+    }
+    return oe;
+  };
   var __createHints = function(win, varructor, type) {
     var i;
     try {
@@ -274,6 +287,7 @@ var DwbHintObj = (function () {
       var e, r;
       __createStyleSheet(doc);
       var hints = doc.createDocumentFragment();
+      var oe = __getOffsets(doc);
       for (i=0;i < res.length; i++) {
         e = res[i];
         if ((r = __getVisibility(e, win)) === null) {
@@ -283,7 +297,7 @@ var DwbHintObj = (function () {
           __createHints(e.contentWindow, varructor, type);
         }
         else {
-          var element = new varructor(e, win, r);
+          var element = new varructor(e, win, r, oe);
           _elements.push(element);
           hints.appendChild(element.hint);
           if (_markHints) {
