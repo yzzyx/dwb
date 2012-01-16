@@ -1896,7 +1896,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), false);
                               return true;
-    case DOWNLOAD_GET_PATH:   download_start(); 
+    case DOWNLOAD_GET_PATH:   download_start(NULL); 
                               return true;
     case SAVE_SESSION:        session_save(GET_TEXT());
                               dwb_end();

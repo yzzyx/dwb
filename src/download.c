@@ -247,8 +247,9 @@ download_add_progress_label(GList *gl, const char *filename) {
 
 /* download_start {{{*/
 void 
-download_start() {
-  const char *path = GET_TEXT();
+download_start(const char *path) {
+  if (path == NULL) 
+    path = GET_TEXT();
   char *fullpath = NULL;
   const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
   const char *uri = webkit_download_get_uri(dwb.state.download);
@@ -308,7 +309,7 @@ download_start() {
           goto error_out;
         }
         fullpath = external ? g_strdup(path) : g_strconcat("file://", path, NULL);
-        if ((last_slash = strrchr(path, '/'))) {
+        if (g_file_test(path, G_FILE_TEST_IS_DIR) && (last_slash = strrchr(path, '/'))) {
           g_strlcpy(path_buffer, path, last_slash - path);
           path = path_buffer;
         }
@@ -354,20 +355,26 @@ static void
 download_entry_set_directory() {
   dwb_set_normal_message(dwb.state.fview, false, "Downloadpath:");
   char *default_dir = GET_CHAR("download-directory");
-  char *current_dir = NULL;
-  if (default_dir != NULL) 
-    current_dir = g_strdup(default_dir);
-  else if (lastdir != NULL)
-    current_dir = g_strdup(lastdir);
+  char *current_dir = NULL, *new_dir = NULL;
+  if (default_dir != NULL) {
+    entry_set_text(default_dir);
+    return;
+  }
+  else if (lastdir != NULL) {
+    entry_set_text(lastdir);
+    return;
+  }
   else 
     current_dir = g_get_current_dir();
     
-  char *newdir = current_dir[strlen(current_dir) - 1] != '/' ? g_strdup_printf("%s/", current_dir) : g_strdup(current_dir);
-
-  entry_set_text(newdir);
-
+  if (g_file_test(current_dir, G_FILE_TEST_IS_DIR) && current_dir[strlen(current_dir) - 1] != '/') {
+    new_dir =  g_strdup_printf("%s/", current_dir);
+    entry_set_text(new_dir);
+    FREE(new_dir);
+  }
+  else 
+    entry_set_text(current_dir);
   FREE(current_dir);
-  FREE(newdir);
 }/*}}}*/
 
 /* download_entry_set_spawn_command{{{*/
@@ -383,24 +390,31 @@ download_entry_set_spawn_command(const char *command) {
 /* download_get_path {{{*/
 void 
 download_get_path(GList *gl, WebKitDownload *d) {
+  const char *path, *command;
   const char *uri = webkit_download_get_uri(d) + 7;
 
   if (g_file_test(uri,  G_FILE_TEST_IS_EXECUTABLE)) {
     g_spawn_command_line_async(uri, NULL);
     return;
   }
-
-  char *command = download_get_command_from_mimetype(dwb.state.mimetype_request);
-  entry_focus();
-  dwb.state.mode = DOWNLOAD_GET_PATH;
   dwb.state.download = d;
-  if ( lastaction != DL_ACTION_DOWNLOAD && 
-        ( command != NULL ||  g_file_test(uri, G_FILE_TEST_EXISTS)) ) {
-    dwb.state.dl_action = DL_ACTION_EXECUTE;
-    download_entry_set_spawn_command(command);
+  path = GET_CHAR("download-directory");
+  if (path != NULL && g_file_test(path, G_FILE_TEST_IS_DIR) && GET_BOOL("download-no-confirm")) {
+    download_start(path);
   }
   else {
-    download_entry_set_directory();
+    command = download_get_command_from_mimetype(dwb.state.mimetype_request);
+    entry_focus();
+    dwb.state.mode = DOWNLOAD_GET_PATH;
+    dwb.state.download = d;
+    if ( lastaction != DL_ACTION_DOWNLOAD && 
+        ( command != NULL ||  g_file_test(uri, G_FILE_TEST_EXISTS)) ) {
+      dwb.state.dl_action = DL_ACTION_EXECUTE;
+      download_entry_set_spawn_command(command);
+    }
+    else {
+      download_entry_set_directory();
+    }
   }
 }/*}}}*/
 

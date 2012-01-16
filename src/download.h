@@ -21,7 +21,7 @@
 
 
 void download_get_path(GList *, WebKitDownload *);
-void download_start(void);
+void download_start(const char *);
 
 void download_set_execute(Arg *);
 

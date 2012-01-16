@@ -17,7 +17,7 @@ NF > 0 {
 END {
   print "<tr class='dwb_table_row'><th class='dwb_table_headline' colspan='3'>Custom commands</th></tr>"
 	print "<td colspan='3'><div class='desc'>Custom commands can be defined in the following form:"
-  print "</div><div class='commandLineContainer'><div class='commandline'>[shortcut]:[command];[command];...</div></div>"
+  print "</div><div class='commandLineContainer'><div class='commandline'>[shortcut]:[command];;[command];...</div></div>"
 	print "</td></tr>"
   print "<tr class='dwb_table_row'><td colspan='3'><textarea rows='10' id='dwb_custom_keys_area'></textarea><td></tr>"
 	print "<tr class='dwb_table_row'>"

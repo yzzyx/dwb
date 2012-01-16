@@ -116,6 +116,7 @@ cache-model select @webbrowser @documentviewer The cache-model used by webkit
 custom-encoding text The custom encoding of the view
 download-external-command text External application used for downloads
 download-directory text Default download directory
+download-no-confirm checkbox Whether to immediately start a download if download-directory is set
 download-use-external-program checkbox Whether to use an external download helper
 editor text External editor used for inputs/textareas
 editable checkbox Whether content can be modified
