@@ -25,6 +25,8 @@ DwbStatus view_push_master(Arg *);
 void view_set_active_style(GList *);
 void view_set_normal_style(GList *);
 void view_modify_style(GList *, DwbColor *tabfg, DwbColor *tabbg, PangoFontDescription *fd);
+void view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl);
+void view_set_favicon(GList *gl, gboolean);
 
 GtkWidget * dwb_web_view_create_plugin_widget_cb(WebKitWebView *, char *, char *, GHashTable *, GList *);
 #endif

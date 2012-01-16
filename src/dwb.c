@@ -59,6 +59,7 @@ static DwbStatus dwb_set_widget_packing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
 static DwbStatus dwb_reload_scripts(GList *, WebSettings *);
 static DwbStatus dwb_set_single_instance(GList *, WebSettings *);
+static DwbStatus dwb_set_favicon(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
@@ -238,6 +239,22 @@ dwb_set_single_instance(GList *l, WebSettings *s) {
   }
   else if (!dwb.misc.si_channel) {
     dwb_open_si_channel();
+  }
+  return STATUS_OK;
+}/*}}}*/
+
+/* dwb_set_single_instance(GList *l, WebSettings *s){{{*/
+static DwbStatus
+dwb_set_favicon(GList *l, WebSettings *s) {
+  if (!s->arg.b) {
+    for (GList *l = dwb.state.views; l; l=l->next) {
+      g_signal_handler_disconnect(WEBVIEW(l), VIEW(l)->status->signals[SIG_ICON_LOADED]);
+      view_set_favicon(l, false);
+    }
+  }
+  else {
+    for (GList *l = dwb.state.views; l; l=l->next) 
+      VIEW(l)->status->signals[SIG_ICON_LOADED] = g_signal_connect(VIEW(l)->web, "icon-loaded", G_CALLBACK(view_icon_loaded), l);
   }
   return STATUS_OK;
 }/*}}}*/

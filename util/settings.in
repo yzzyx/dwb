@@ -70,6 +70,7 @@ background-tabs checkbox Whether to open tabs in background
 default-height text Default height of the window
 default-width text Default width of the window
 enable-frame-flattening checkbox Whether to enable frame flattening
+enable-favicon checkbox Whether to enable favicons in the tabbar
 enforce-96-dpi checkbox Enforce a resolution of 96 dpi
 factor text Zoom factor of the tiling area
 hide-tabbar text Whether to hide the tabbar  (never, always, tiled)

@@ -32,10 +32,10 @@
 #include "adblock.h"
 
 static void view_ssl_state(GList *);
-static const char *dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
 static unsigned long _click_time;
 static guint _sig_caret_button_release;
 static guint _sig_caret_motion;
+static const char const* dummy_icon[] = { "1 1 1 1 ", "  c black", " ", };
 
 
 /* CALLBACKS */
@@ -450,16 +450,7 @@ view_value_changed_cb(GtkAdjustment *a, GList *gl) {
 /* view_icon_loaded(GtkAdjustment *a, GList *gl) {{{ */
 void 
 view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
-  View *v = VIEW(gl);
-  GdkPixbuf *pb = webkit_web_view_get_icon_pixbuf(web);
-  GdkPixbuf *old, *rescale;
-  if (pb) {
-    rescale = gdk_pixbuf_scale_simple(pb, dwb.misc.bar_height, dwb.misc.bar_height, GDK_INTERP_BILINEAR);
-    if ( (old = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
-      gdk_pixbuf_unref(old);
-    gtk_image_set_from_pixbuf(GTK_IMAGE(v->tabicon), rescale);
-    gdk_pixbuf_unref(pb);
-  }
+  view_set_favicon(gl, true);
 }/* }}} */
 
 /* view_title_cb {{{*/
@@ -639,16 +630,6 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   return true;
 }/*}}}*/
 
-/* view_entry_size_allocate_cb {{{*/
-#if 0
-void 
-view_entry_size_allocate_cb(GtkWidget *entry, GdkRectangle *rect, View *v) {
-  dwb.misc.bar_height = rect->height;
-  gtk_widget_set_size_request(v->entry, -1, rect->height);
-  g_signal_handlers_disconnect_by_func(entry, view_entry_size_allocate_cb, v);
-}/*}}}*/
-#endif
-
 /* Entry */
 
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
@@ -669,6 +650,27 @@ view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
 }/*}}}*/
 
 /* DWB_WEB_VIEW {{{*/
+
+void
+view_set_favicon(GList *gl, gboolean web) {
+  GdkPixbuf *pb = NULL, *old, *rescale;
+  if ( (old = gtk_image_get_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon))) ) 
+    gdk_pixbuf_unref(old);
+  if (web) {
+    pb = webkit_web_view_get_icon_pixbuf(WEBVIEW(gl));
+    if (pb) {
+      rescale = gdk_pixbuf_scale_simple(pb, dwb.misc.bar_height, dwb.misc.bar_height, GDK_INTERP_BILINEAR);
+      gtk_image_set_from_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon), rescale);
+      gdk_pixbuf_unref(pb);
+    }
+
+  }
+  if (!web || pb == NULL) {
+    pb = gdk_pixbuf_new_from_xpm_data(dummy_icon);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon), pb);
+  }
+
+}
 
 /* view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
 void 
@@ -740,7 +742,8 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(view_uri_cb), gl);
   v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(view_scroll_cb), gl);
   v->status->signals[SIG_VALUE_CHANGED]         = g_signal_connect(a,      "value-changed",                         G_CALLBACK(view_value_changed_cb), gl);
-  v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);
+  if (GET_BOOL("enable-favicon")) 
+    v->status->signals[SIG_ICON_LOADED]           = g_signal_connect(v->web, "icon-loaded",                           G_CALLBACK(view_icon_loaded), gl);
 
   /* v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl); */
 
