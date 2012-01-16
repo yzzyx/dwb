@@ -619,6 +619,10 @@ static FunctionMap FMAP [] = {
     (Func)commands_entry_history_back,           NULL,        ALWAYS_SM,  
     { 0 }, EP_ENTRY, { NULL }, },
 
+  { { "entry_history_forward",     "Command line: Command history forward", },             0,  
+    (Func)commands_entry_history_forward,           NULL,        ALWAYS_SM,  
+    { 0 }, EP_ENTRY, { NULL }, },
+
   { { "entry_escape",     "Command line: Alternate escape binding", },             0,  
     (Func)commands_entry_escape,           NULL,        ALWAYS_SM,  
     { 0 }, EP_ENTRY, { NULL }, },
