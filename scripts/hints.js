@@ -76,9 +76,9 @@ var DwbHintObj = (function () {
     var t = Math.max(toppos, 0);
     var l = Math.max(leftpos, 0);
     hint.style.top = t + "px";
-    hint.style.marginTop = oe.bodyStyle.marginTop;
+    hint.style.marginTop = oe.marginTop;
     hint.style.left = l + "px";
-    hint.style.marginLeft = oe.bodyStyle.marginLeft;
+    hint.style.marginLeft = oe.marginLeft;
 
     hint.className =  "dwb_hint";
     this.createOverlay = function() {
@@ -92,9 +92,9 @@ var DwbHintObj = (function () {
       overlay.style.width = (compleft > 0 ? width : width + compleft) + "px";
       overlay.style.height = (comptop > 0 ? height : height + comptop) + "px";
       overlay.style.top = t + "px";
-      overlay.style.marginTop = oe.bodyStyle.marginTop;
+      overlay.style.marginTop = oe.marginTop;
       overlay.style.left = l + "px";
-      overlay.style.marginLeft = oe.bodyStyle.marginLeft;
+      overlay.style.marginLeft = oe.marginLeft;
       overlay.style.display = "block";
       overlay.style.cursor = "pointer";
       this.overlay = overlay;
@@ -267,15 +267,20 @@ var DwbHintObj = (function () {
     var oe = new Object();
     var win = doc.defaultView;
     var body = doc.body || doc.documentElement;
-    oe.bodyStyle = win.getComputedStyle(body, null);
+    var bs = win.getComputedStyle(body, null);
     var br = body.getBoundingClientRect();
-    if (oe.bodyStyle && br && /^(relative|fixed|absolute)$/.test(oe.bodyStyle.position)) {
+    console.log("blub");
+    if (bs && br && /^(relative|fixed|absolute)$/.test(bs.position)) {
       oe.offX = -br.left; 
       oe.offY = -br.top;
+      oe.marginTop = bs.marginTop;
+      oe.marginLeft = bs.marginLeft;
     }
     else {
       oe.offX = win.pageXOffset;
       oe.offY = win.pageYOffset;
+      oe.marginTop = 0 + "px";
+      oe.marginLeft = 0 + "px";
     }
     return oe;
   };
