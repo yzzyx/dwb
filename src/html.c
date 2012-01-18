@@ -233,7 +233,6 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
   else {
     if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) {
       webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value ? value : "");
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
       webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_settings_cb), true, wv);
     }
     else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(e)) {
@@ -289,11 +288,6 @@ html_key_changed(WebKitDOMElement *target) {
   dwb_set_key(id, value);
   webkit_dom_element_blur(target);
 }
-static gboolean
-html_key_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointer data) {
-  html_key_changed(target);
-  return true;
-}
 void 
 html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   KeyMap *km;
@@ -312,7 +306,6 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
         mod = dwb_modmask_to_string(km->mod);
         value = g_strdup_printf("%s%s%s", mod, strlen(mod) > 0 ? " " : "", km->key ? km->key : "");
         webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(input), value);
-        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(input), "change", G_CALLBACK(html_key_changed_cb), false, wv);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
         FREE(mod);
         g_free(value);
