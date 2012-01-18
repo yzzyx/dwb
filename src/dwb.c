@@ -2237,6 +2237,17 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
   return false;
 }/*}}}*/
 
+void
+dwb_setup_environment(GSList *list) {
+  Navigation *n;
+  for (GSList *l = list; l; l=l->next) {
+    n = l->data;
+    g_setenv(n->first, n->second, false);
+    dwb_navigation_free(n);
+  }
+  g_slist_free(list);
+
+}
 /* dwb_execute_user_script(Arg *a) {{{*/
 void
 dwb_execute_user_script(KeyMap *km, Arg *a) {
@@ -2246,7 +2257,14 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   char *argv[] = { a->arg, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), (char *)webkit_web_view_get_title(CURRENT_WEBVIEW()), (char *)dwb.misc.profile, nummod, a->p, NULL } ;
   int std_out;
   int std_in;
-  if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &std_in, &std_out, NULL, &error)) {
+  GSList *list = NULL;
+  list = g_slist_append(list, dwb_navigation_new("DWB_URI",     webkit_web_view_get_uri(CURRENT_WEBVIEW())));
+  list = g_slist_append(list, dwb_navigation_new("DWB_TITLE",   webkit_web_view_get_title(CURRENT_WEBVIEW())));
+  list = g_slist_append(list, dwb_navigation_new("DWB_PROFILE", dwb.misc.profile));
+  list = g_slist_append(list, dwb_navigation_new("DWB_NUMMOD",  nummod));
+  list = g_slist_append(list, dwb_navigation_new("DWB_ARGUMENT",  a->p));
+  
+  if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &std_in, &std_out, NULL, &error)) {
     GIOChannel *channel = g_io_channel_unix_new(std_out);
     GIOChannel *out_channel = g_io_channel_unix_new(std_in);
     g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, out_channel);
@@ -2254,6 +2272,10 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   }
   else {
     fprintf(stderr, "Cannot execute %s: %s\n", (char*)a->p, error->message);
+    for (GSList *l = list; l; l=l->next) {
+      dwb_navigation_free(l->data);
+    }
+    g_slist_free(list);
   }
   g_clear_error(&error);
 }/*}}}*/
