@@ -66,9 +66,8 @@ callback_entry_key_press(GtkWidget* entry, GdkEventKey *e) {
     if ((text = dwb_clipboard_get_text(GDK_SELECTION_PRIMARY))) {
       entry_set_text(text);
       FREE0(text);
-      return true;
     }
-    return false;
+    return true;
   }
   if (mode == QUICK_MARK_SAVE) 
     return false;
