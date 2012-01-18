@@ -515,6 +515,16 @@ dwb_set_open_mode(Open mode) {
     dwb.state.nv = mode;
 }/*}}}*/
 
+/* dwb_clipboard_get_text(GdkAtom)GdkAtom {{{*/
+char *
+dwb_clipboard_get_text(GdkAtom atom) {
+  GtkClipboard *clipboard = gtk_clipboard_get(atom);
+
+  if (clipboard != NULL)
+    return gtk_clipboard_wait_for_text(clipboard);
+  return NULL;
+}/*}}}*/
+
 /* dwb_set_clipboard (const char *, GdkAtom) {{{*/
 DwbStatus
 dwb_set_clipboard(const char *text, GdkAtom atom) {

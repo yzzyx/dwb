@@ -103,7 +103,7 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
 
     double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
     guint remaining = (guint)(elapsed / progress - elapsed);
-    char *message = g_strdup_printf("[%d:%02d][%d%%][%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
+    char *message = g_strdup_printf("[%d:%02d|%2d%%|%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
     gtk_label_set_text(GTK_LABEL(label->rlabel), message);
     FREE(message);
 
@@ -215,11 +215,10 @@ static DwbDownload *
 download_add_progress_label(GList *gl, const char *filename) {
   DwbDownload *l = g_malloc(sizeof(DwbDownload));
 
-  GtkWidget *hbox = gtk_hbox_new(false, 5);
+  GtkWidget *hbox = gtk_hbox_new(false, 3);
   l->event = gtk_event_box_new();
   l->rlabel = gtk_label_new("???");
-  char *escaped  = g_markup_escape_text(filename, -1);
-  l->llabel = gtk_label_new(escaped);
+  l->llabel = gtk_label_new(filename);
 
   gtk_box_pack_start(GTK_BOX(hbox), l->llabel, false, false, 1);
   gtk_box_pack_start(GTK_BOX(hbox), l->rlabel, false, false, 1);

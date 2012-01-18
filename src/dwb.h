@@ -815,6 +815,7 @@ DwbStatus dwb_evaluate_hints(const char *);
 void dwb_set_open_mode(Open);
 
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
+char * dwb_clipboard_get_text(GdkAtom atom);
 DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
 

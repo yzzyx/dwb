@@ -425,10 +425,9 @@ commands_yank(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_paste(KeyMap *km, Arg *arg) {
   GdkAtom atom = GDK_POINTER_TO_ATOM(arg->p);
-  GtkClipboard *clipboard = gtk_clipboard_get(atom);
   char *text = NULL;
 
-  if ( (text = gtk_clipboard_wait_for_text(clipboard)) ) {
+  if ( (text = dwb_clipboard_get_text(atom)) ) {
     if (dwb.state.nv == OPEN_NORMAL)
       dwb_set_open_mode(arg->n);
     dwb_load_uri(NULL, text);
