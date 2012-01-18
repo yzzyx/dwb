@@ -73,6 +73,10 @@ download_get_command(const char *uri, const char *output) {
     FREE(command);
     command = newcommand;
   }
+  if ( (newcommand = util_string_replace(command, "dwb_referer", webkit_web_view_get_uri(CURRENT_WEBVIEW()))) ) {
+    FREE(command);
+    command = newcommand;
+  }
   return command;
 }/*}}}*/
 
