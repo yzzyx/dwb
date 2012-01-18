@@ -506,12 +506,13 @@ var DwbHintObj = (function () {
       var hints = document.createDocumentFragment();
       var res = document.body.querySelectorAll("form");
       var r, e;
+      var oe = __getOffsets(document);
 
       for (i=0; i<res.length; i++) {
         var els = res[i].elements;
         for (j=0; j<els.length; j++) {
           if (((r = __getVisibility(els[j], window)) !== null) && (els[j].type === "text" || els[j].type === "search")) {
-            e = new __letterHint(els[j], window, r);
+            e = new __letterHint(els[j], window, r, oe);
             hints.appendChild(e.hint);
             e.hint.style.visibility = "hidden";
             _elements.push(e);
