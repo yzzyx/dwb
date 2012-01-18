@@ -194,11 +194,11 @@ var DwbHintObj = (function () {
   };
   var __clickElement = function (element, ev) {
     if (ev) {
-      __mouseEvent(element, ev, false);
+      __mouseEvent(element, ev, !_new_tab);
     }
     else { // both events, if no event is given
-      __mouseEvent(element, "click", false);
-      __mouseEvent(element, "mousedown", false);
+      __mouseEvent(element, "click", !_new_tab);
+      __mouseEvent(element, "mousedown", !_new_tab);
     }
   };
   var __getActive = function () {

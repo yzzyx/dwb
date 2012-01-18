@@ -1450,7 +1450,9 @@ dwb_show_hints(Arg *arg) {
   }
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    char *command = g_strdup_printf("DwbHintObj.showHints(%d)", hint_map[arg->i].arg);
+    char *command = g_strdup_printf("DwbHintObj.showHints(%d, %d)", 
+        hint_map[arg->i].arg, 
+        (dwb.state.nv & (OPEN_NEW_WINDOW|OPEN_NEW_VIEW)) != 0);
     char *jsret = dwb_execute_script(MAIN_FRAME(), command, true);
     g_free(command);
     if (jsret != NULL) {
@@ -1465,7 +1467,6 @@ dwb_show_hints(Arg *arg) {
     entry_focus();
   }
   return ret;
-
 }
 
 /* dwb_execute_script {{{*/
