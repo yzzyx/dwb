@@ -334,14 +334,15 @@ commands_open(KeyMap *km, Arg *arg) {
   if (dwb.state.nv & OPEN_NORMAL)
     dwb_set_open_mode(arg->n & ~SET_URL);
 
-  dwb.state.type = arg->i;
+  if (arg)
+    dwb.state.type = arg->i;
 
   if (arg && arg->p && ! (arg->n & SET_URL)) {
     dwb_load_uri(NULL, arg->p);
   }
   else {
     entry_focus();
-    if (arg->n & SET_URL)
+    if (arg && (arg->n & SET_URL))
       entry_set_text(arg->p ? arg->p : CURRENT_URL());
   }
   return STATUS_OK;

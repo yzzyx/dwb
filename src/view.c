@@ -887,8 +887,8 @@ view_remove(GList *gl) {
   if (v->status->style) {
     g_object_unref(v->status->style);
   }
-  FREE(v->status);
-  FREE(v);
+  g_free(v->status);
+  g_free(v);
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
   gl = NULL;
