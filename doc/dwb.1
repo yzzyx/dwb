@@ -842,7 +842,7 @@ Non printable keys must be surrounded by @, e.g. "Control @F1@", Shift @space@.
 Custom commands are a sequence of dwb commands that can be bound to a shortcut.
 The syntax is
 .IP
-[shortcut]:[command];;[command];...
+[shortcut]:[command];;[command];;...
 .P 
 where shortcut is the shortcut for the commandsequence, 
 .B : 
@@ -854,9 +854,10 @@ and command is of the form
 .P 
 for example
 .IP 
-Control W:tabopen http://example.com; 150zoom
+Control W:tabopen http://example.com;; 150zoom
 .P
 opens http://example.com in a new tab and zooms to 150%.
+
 
 .SS COMMAND OVERVIEW
 .nf
