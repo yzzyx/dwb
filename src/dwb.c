@@ -3426,6 +3426,7 @@ dwb_parse_command_line(const char *line, gboolean clear) {
   if (dwb.keymap != NULL && m != NULL && !(m->map->prop & CP_HAS_MODE)) {
     dwb_change_mode(NORMAL_MODE, clear);
   }
+  dwb.state.nummod = -1;
 }/*}}}*/
 static void 
 dwb_parse_commands(const char *line) {

@@ -828,6 +828,8 @@ view_remove(GList *gl) {
   }
   if (dwb.state.nummod >= 0) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod - 1);
+    if (gl == NULL)
+      return;
   }
   else if (gl == NULL) 
     gl = dwb.state.fview;
