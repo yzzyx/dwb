@@ -107,13 +107,13 @@ util_keyval_to_char(guint keyval, gboolean ignore_whitespace) {
   if ( (unichar = gdk_keyval_to_unicode(keyval)) ) {
     if (ignore_whitespace && !g_unichar_isgraph(unichar))
       return NULL;
-    key = dwb_malloc(6);
+    key = g_malloc0_n(6, sizeof(char));
     if ( key && (length = g_unichar_to_utf8(unichar, key))) {
       memset(&key[length], '\0', 6-length); 
       return key;
     }
     else 
-      FREE(key);
+      g_free(key);
   }
   return NULL;
 }/*}}}*/
