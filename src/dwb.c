@@ -2813,6 +2813,12 @@ dwb_init_scripts() {
 
   setlocale(LC_NUMERIC, "C");
   /* user scripts */
+  util_get_directory_content(&allbuffer, dwb.files.scriptdir, "onload.all.js");
+  dwb.misc.allscripts_onload = g_strdup(allbuffer->str);
+  util_get_directory_content(&allbuffer, dwb.files.scriptdir, "onload.js");
+  dwb.misc.scripts_onload    = g_strdup(allbuffer->str);
+  g_string_erase(allbuffer, 0, -1);
+
   util_get_directory_content(&normalbuffer, dwb.files.scriptdir, "js");
   util_get_directory_content(&allbuffer, dwb.files.scriptdir, "all.js");
 

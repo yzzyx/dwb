@@ -1772,7 +1772,33 @@ Default value:
 .SH FILES
 .SS Scripts
 Javascript userscripts can be stored in 
-.IR ~/.config/dwb/scripts .
+.IR ~/.config/dwb/scripts . 
+The scripts are applied to pages depending on their filename extension, there
+are 4 possible extensions: 
+.TP
+.B .js
+Scripts with extension 
+.I .js
+are injected into the page directly after the load of a
+new page is committed. 
+.TP
+.B .all.js 
+Scripts with extension 
+.I .all.js
+are injected into all frames of a page directly after the load of a
+new frame is committed. 
+.TP
+.B .onload.js 
+Scripts with extension 
+.I .onload.js
+are injected into the page directly when loading of a page is done. 
+.TP
+.B .onload.all.js 
+Scripts with extension 
+.I .onload.all.js
+are injected into all frames of a page when the load of a
+frame is done. 
+
 .SS Userscripts
 Userscripts can be stored in 
 .IR ~/.config/dwb/userscripts .

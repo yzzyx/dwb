@@ -629,8 +629,10 @@ struct _Misc {
   const char *prog_path;
   /* applied to the mainframe */
   char *scripts;
+  char *scripts_onload;
   /* applied to all frames */
   char *allscripts;
+  char *allscripts_onload;
   const char *profile;
   const char *default_search;
   SoupSession *soupsession;

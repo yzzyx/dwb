@@ -210,13 +210,22 @@ view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 /* view_frame_committed_cb {{{*/
 static void 
 view_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
-  dwb_execute_script(frame, dwb.misc.allscripts, false);
+  WebKitLoadStatus status = webkit_web_frame_get_load_status(frame);
+  switch (status) {
+    case WEBKIT_LOAD_COMMITTED: 
+      dwb_execute_script(frame, dwb.misc.allscripts, false);
+      break;
+    case WEBKIT_LOAD_FINISHED: 
+      dwb_execute_script(frame, dwb.misc.allscripts_onload, false);
+      break;
+    default: return;
+  }
 }/*}}}*/
 
 /* view_frame_created_cb {{{*/
 static void 
 view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  g_signal_connect(frame, "load-committed", G_CALLBACK(view_frame_committed_cb), gl);
+  g_signal_connect(frame, "notify::load-status", G_CALLBACK(view_frame_committed_cb), gl);
 }/*}}}*/
 
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
@@ -580,6 +589,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
           && dwb.misc.synctimer <= 0) {
         util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       }
+      dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts_onload, false);
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);
