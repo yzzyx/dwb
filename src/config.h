@@ -965,8 +965,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) dwb_set_history_length,  },
   { { "navigation-history-max",                          "Length of the navigation history", },                                          
     SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) NULL,  },
-  { { "command-history-max",                          "Length of the command history", },                                          
-    SETTING_GLOBAL,  INTEGER, { .i = 500          }, (S_Func) NULL,  },
   { { "scrollbars",                                  "Whether scrollbars should be enabled", },     
     SETTING_GLOBAL,  BOOLEAN, { .b = false },  NULL,  },
   { { "mail-client",                            "Program used for mailto:-urls", },                                            

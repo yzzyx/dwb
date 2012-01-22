@@ -172,11 +172,12 @@ html_settings_changed(WebKitDOMElement *el) {
   }
   dwb_set_setting(id, value);
   webkit_dom_element_blur(el);
-  dwb_change_mode(NORMAL_MODE, false);
 }
+
 gboolean
 html_settings_changed_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
-  html_settings_changed(el);
+  WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
+  html_settings_changed(WEBKIT_DOM_ELEMENT(target));
   return true;
 }
 gboolean
@@ -191,6 +192,7 @@ html_keydown_settings_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView
     WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
     if (target != NULL) 
       html_settings_changed(WEBKIT_DOM_ELEMENT(target));
+    dwb_change_mode(NORMAL_MODE, false);
     return true;
   }
   return false;
@@ -210,44 +212,34 @@ html_keydown_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   }
   return false;
 }
-gboolean
-html_focus_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
-  char *type = webkit_dom_element_get_attribute(el, "type");
-  gboolean ret = false;
-  if (!g_strcmp0(type, "text")) {
-    dwb_change_mode(INSERT_MODE);
-    ret = true;
-  }
-  return ret;
-}
 void
 html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
   char *value = util_arg_to_char(&s->arg, s->type);
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-  WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
+  //WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
   WebKitDOMElement *e = webkit_dom_document_get_element_by_id(doc, key);
   if (s->type == BOOLEAN) {
     webkit_dom_html_input_element_set_checked(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), s->arg.b);
-    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
   }
-  else {
-    if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) {
+  else if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) {
       webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), value ? value : "");
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_settings_cb), true, wv);
-    }
-    else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(e)) {
-      char *lower = g_utf8_strdown(value, -1);
-      webkit_dom_html_select_element_set_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(e), lower);
-      webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
-      g_free(lower);
-    }
   }
+  else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(e)) {
+    char *lower = g_utf8_strdown(value, -1);
+    webkit_dom_html_select_element_set_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(e), lower);
+    g_free(lower);
+  }
+  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
   g_free(value);
 }
 void 
 html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
   if (status == WEBKIT_LOAD_FINISHED) {
+    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+    WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_settings_cb), true, wv);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
     g_hash_table_foreach(dwb.settings, (GHFunc)html_settings_fill, wv);
     g_signal_handlers_disconnect_by_func(wv, html_settings_load_cb, table);
   }
@@ -288,6 +280,12 @@ html_key_changed(WebKitDOMElement *target) {
   dwb_set_key(id, value);
   webkit_dom_element_blur(target);
 }
+static gboolean
+html_changed_cb(WebKitDOMElement *input, WebKitDOMEvent *e, gpointer data) {
+  WebKitDOMEventTarget *target = webkit_dom_event_get_target(e);
+  html_key_changed(WEBKIT_DOM_ELEMENT(target));
+  return true;
+}
 void 
 html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   KeyMap *km;
@@ -306,11 +304,12 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
         mod = dwb_modmask_to_string(km->mod);
         value = g_strdup_printf("%s%s%s", mod, strlen(mod) > 0 ? " " : "", km->key ? km->key : "");
         webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(input), value);
-        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
         g_free(mod);
         g_free(value);
       }
     }
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "change", G_CALLBACK(html_changed_cb), true, wv);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
     WebKitDOMElement *textarea = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_area");
     WebKitDOMElement *button = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_submit");
     char *content = util_get_file_content(dwb.files.custom_keys);

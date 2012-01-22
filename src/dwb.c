@@ -368,7 +368,12 @@ dwb_source_remove() {
 }
 static gpointer 
 dwb_hide_message() {
-  CLEAR_COMMAND_TEXT();
+  if (dwb.state.mode & INSERT_MODE) {
+    dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
+  }
+  else {
+    CLEAR_COMMAND_TEXT();
+  }
   return NULL;
 }/*}}}*/
 
@@ -937,8 +942,6 @@ dwb_set_key(const char *prop, char *val) {
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
   dwb_save_key_value(dwb.files.keys, prop, val);
-
-  dwb_change_mode(NORMAL_MODE, false);
 }/*}}}*/
 
 /* dwb_get_host(WebKitWebView *) {{{*/
@@ -1905,6 +1908,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case KEY_MODE:            token = g_strsplit(GET_TEXT(), " ", 2);
                               dwb_set_key(token[0], token[1]);
+                              dwb_change_mode(NORMAL_MODE, false);
                               g_strfreev(token);
                               return true;
     case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), false);
