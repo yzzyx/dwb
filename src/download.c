@@ -174,26 +174,37 @@ download_spawn(DwbDownload *dl) {
   download_do_spawn(dl->path, filename);
 }/*}}}*/
 
+gboolean
+download_delay(DwbDownload *download) {
+  gtk_widget_destroy(download->event);
+  g_free(download->path);
+  g_free(download);
+  if (!downloads) {
+    gtk_widget_hide(dwb.gui.downloadbar);
+  }
+  return false;
+}
+
 /* download_status_cb(WebKitDownload *) {{{*/
 static void
 download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *dstatus) {
   WebKitDownloadStatus status = webkit_download_get_status(download);
 
-  if (status == WEBKIT_DOWNLOAD_STATUS_FINISHED || status == WEBKIT_DOWNLOAD_STATUS_CANCELLED) {
+  if (status == WEBKIT_DOWNLOAD_STATUS_FINISHED || status == WEBKIT_DOWNLOAD_STATUS_CANCELLED || status == WEBKIT_DOWNLOAD_STATUS_ERROR) {
     GList *list = download_get_download_label(download);
     if (list) {
       DwbDownload *label = list->data;
       if (label->action == DL_ACTION_EXECUTE && status == WEBKIT_DOWNLOAD_STATUS_FINISHED) {
         download_spawn(label);
       }
-      gtk_widget_destroy(label->event);
       Navigation *n = dwb_navigation_new(webkit_download_get_uri(download), webkit_download_get_destination_uri(download));
       dwb.fc.downloads = g_list_append(dwb.fc.downloads, n);
-      g_free(label->path);
+      g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)download_delay, label);
       downloads = g_list_delete_link(downloads, list);
-    }
-    if (!downloads) {
-      gtk_widget_hide(dwb.gui.downloadbar);
+      if (status == WEBKIT_DOWNLOAD_STATUS_CANCELLED) 
+        gtk_label_set_text(GTK_LABEL(label->rlabel), "cancelled");
+      if (status == WEBKIT_DOWNLOAD_STATUS_ERROR) 
+        gtk_label_set_text(GTK_LABEL(label->rlabel), "failed");
     }
     if (dwb.state.mimetype_request) {
       g_free(dwb.state.mimetype_request);
