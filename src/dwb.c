@@ -453,7 +453,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
       value == upper ? g_strdup("[bot]") : 
       g_strdup_printf("[%02d%%]", (int)(value * 100/upper + 0.5));
     g_string_append(string, position);
-    FREE(position);
+    g_free(position);
   }
   if (v->status->scripts & SCRIPTS_BLOCKED) {
     const char *format = v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY 
@@ -650,7 +650,7 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
 clean:
   unlink(info->filename);
   g_free(info->filename);
-  FREE(info->id);
+  g_free(info->id);
   g_free(info);
 }/*}}}*/
 
@@ -740,7 +740,7 @@ dwb_open_in_editor(void) {
   g_child_watch_add(pid, (GChildWatchFunc)dwb_editor_watch, info);
 
 clean:
-  FREE(value);
+  g_free(value);
 
   return ret;
 }/*}}}*/
@@ -992,7 +992,7 @@ dwb_get_allowed(const char *filename, const char *data) {
       }
     }
     g_strfreev(lines);
-    FREE(content);
+    g_free(content);
   }
   return ret;
 }/*}}}*/
@@ -1022,7 +1022,7 @@ dwb_toggle_allowed(const char *filename, const char *data) {
   }
   g_file_set_contents(filename, buffer->str, -1, NULL);
 
-  FREE(content);
+  g_free(content);
   g_string_free(buffer, true);
 
   return !allowed;
@@ -1283,7 +1283,7 @@ dwb_submit_searchengine(void) {
   if ( (value = dwb_execute_script(MAIN_FRAME(), com, true))) {
     dwb.state.form_name = value;
   }
-  FREE(com);
+  g_free(com);
 }/*}}}*/
 
 /* dwb_save_searchengine {{{*/
@@ -1396,7 +1396,7 @@ dwb_evaluate_hints(const char *buffer) {
                               break;
       default : return ret;
     }
-    FREE(a);
+    g_free(a);
   }
   return ret;
 }/*}}}*/
@@ -1428,7 +1428,7 @@ dwb_update_hints(GdkEventKey *e) {
     val = util_keyval_to_char(e->keyval, true);
     snprintf(input, BUFFER_LENGTH, "%s%s", GET_TEXT(), val ? val : "");
     com = g_strdup_printf("DwbHintObj.updateHints(\"%s\", %d)", input, hint_map[dwb.state.hint_type].arg);
-    FREE(val);
+    g_free(val);
   }
   if (com) {
     buffer = dwb_execute_script(MAIN_FRAME(), com, true);
@@ -1708,7 +1708,7 @@ dwb_update_status(GList *gl) {
   }
   dwb_tab_label_set_text(gl, title);
 
-  FREE(filename);
+  g_free(filename);
 }/*}}}*/
 /* dwb_update_layout(GList *gl) {{{*/
 void 
@@ -1817,8 +1817,8 @@ dwb_load_uri(GList *gl, const char *arg) {
           fprintf(stderr, "Cannot open %s: %s", (char*)arg, error->message);
           g_clear_error(&error);
         }
-        FREE(tmp);
-        FREE(path);
+        g_free(tmp);
+        g_free(path);
       }
     }
   }
@@ -1834,7 +1834,7 @@ dwb_load_uri(GList *gl, const char *arg) {
       : g_strdup_printf("http://%s", (char*)arg);
   }
   webkit_web_view_load_uri(web, uri);
-  FREE(uri);
+  g_free(uri);
 }/*}}}*/
 
 /* dwb_eval_editing_key(GdkEventKey *) {{{*/
@@ -1860,7 +1860,7 @@ dwb_eval_editing_key(GdkEventKey *e) {
       }
     }
   }
-  FREE(key);
+  g_free(key);
   return ret;
 }/*}}}*/
 
@@ -2012,7 +2012,7 @@ dwb_eval_key(GdkEventKey *e) {
       }
 #undef IS_NUMMOD
     }
-    FREE(key);
+    g_free(key);
     return true;
   }
   g_string_append(dwb.state.buffer, key);
@@ -2075,7 +2075,7 @@ dwb_eval_key(GdkEventKey *e) {
     dwb_clean_key_buffer();
     CLEAR_COMMAND_TEXT();
   }
-  FREE(key);
+  g_free(key);
   return ret;
 }/*}}}*/
 
@@ -2172,7 +2172,7 @@ dwb_update_search(gboolean forward) {
   View *v = CURRENT_VIEW();
   const char *text = GET_TEXT();
   if (strlen(text) > 0) {
-    FREE(v->status->search_string);
+    g_free(v->status->search_string);
     v->status->search_string =  g_strdup(text);
   }
   if (!v->status->search_string) {
@@ -2220,14 +2220,14 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
     }
     else if (!g_strcmp0(line, "close\n")) {
       g_io_channel_shutdown(channel, true, NULL);
-      FREE(line);
+      g_free(line);
       break;
     }
     else {
       dwb_parse_command_line(g_strchomp(line), true);
     }
     g_io_channel_flush(out_channel, NULL);
-    FREE(line);
+    g_free(line);
   }
   if (error) {
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
@@ -2398,7 +2398,7 @@ gboolean
 dwb_clean_up() {
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
-    FREE(m);
+    g_free(m);
     m = NULL;
   }
   g_list_free(dwb.keymap);
@@ -2412,10 +2412,10 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.se_completion, (void_func)dwb_navigation_free);
   dwb_free_list(dwb.fc.mimetypes, (void_func)dwb_navigation_free);
   dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
-  dwb_free_list(dwb.fc.cookies_allow, (void_func)dwb_free);
-  dwb_free_list(dwb.fc.cookies_session_allow, (void_func)dwb_free);
-  dwb_free_list(dwb.fc.navigations, (void_func)dwb_free);
-  dwb_free_list(dwb.fc.commands, (void_func)dwb_free);
+  dwb_free_list(dwb.fc.cookies_allow, (void_func)g_free);
+  dwb_free_list(dwb.fc.cookies_session_allow, (void_func)g_free);
+  dwb_free_list(dwb.fc.navigations, (void_func)g_free);
+  dwb_free_list(dwb.fc.commands, (void_func)g_free);
   dwb_free_custom_keys();
 
   dwb_soup_end();
@@ -2466,8 +2466,8 @@ dwb_save_keys() {
       char *mod = dwb_modmask_to_string(map->mod);
       char *sc = g_strdup_printf("%s %s", mod, map->key ? map->key : "");
       g_key_file_set_value(keyfile, dwb.misc.profile, map->map->n.first, sc);
-      FREE(sc);
-      FREE(mod);
+      g_free(sc);
+      g_free(mod);
     }
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
@@ -2500,7 +2500,7 @@ dwb_save_settings() {
     char *value = util_arg_to_char(&s->arg, s->type); 
     g_key_file_set_value(keyfile, dwb.misc.profile, s->n.first, value ? value : "" );
 
-    FREE(value);
+    g_free(value);
   }
   if (l != NULL)
     g_list_free(l);
@@ -2761,7 +2761,7 @@ dwb_read_settings() {
       }
     }
   }
-  FREE(content);
+  g_free(content);
   for (int j=0; j<LENGTH(DWB_SETTINGS); j++) {
     gboolean set = false;
     char *key = g_strdup(DWB_SETTINGS[j].n.first);
@@ -2776,7 +2776,7 @@ dwb_read_settings() {
         g_hash_table_insert(dwb.settings, key, s);
         set = true;
       }
-      FREE(value);
+      g_free(value);
     }
     if (!set) {
       g_hash_table_insert(dwb.settings, key, &DWB_SETTINGS[j]);
@@ -2791,7 +2791,7 @@ dwb_read_settings() {
 static void
 dwb_init_settings() {
   GList *l = NULL;
-  dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)dwb_free, NULL);
+  dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
   dwb.state.web_settings = webkit_web_settings_new();
   dwb_read_settings();
   for (l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
@@ -2807,7 +2807,7 @@ dwb_init_settings() {
 /* dwb_init_scripts{{{*/
 void 
 dwb_init_scripts() {
-  FREE(dwb.misc.scripts);
+  g_free(dwb.misc.scripts);
   GString *normalbuffer = g_string_new(NULL);
   GString *allbuffer    = g_string_new(NULL);
 
@@ -3114,7 +3114,7 @@ dwb_get_search_completion_from_navigation(Navigation *n) {
   char *uri = n->second;
   n->second = util_domain_from_uri(n->second);
 
-  FREE(uri);
+  g_free(uri);
   return n;
 }
 static Navigation * 
@@ -3186,8 +3186,8 @@ dwb_init_files() {
   dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
   dwb.fc.cookies_session_allow = dwb_init_file_content(dwb.fc.cookies_session_allow, dwb.files.cookies_session_allow, (Content_Func)dwb_return);
 
-  FREE(path);
-  FREE(profile_path);
+  g_free(path);
+  g_free(profile_path);
 }/*}}}*/
 
 /* signals {{{*/
@@ -3463,7 +3463,7 @@ dwb_init_fifo(gboolean single, GSList *exe) {
 
   dwb.misc.si_channel = NULL;
   if (single) {
-    FREE(path);
+    g_free(path);
     return;
   }
   if (GET_BOOL("single-instance")) {
@@ -3471,8 +3471,8 @@ dwb_init_fifo(gboolean single, GSList *exe) {
       mkfifo(dwb.files.unifile, 0666);
     }
     int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
-    if ((dwb.misc.argc > 0 || exe != NULL)) {
-      if ( (ff = fdopen(fd, "w")) ) {
+    if ( (ff = fdopen(fd, "w")) ) {
+      if ((dwb.misc.argc > 0 || exe != NULL)) {
         for (int i=0; i<dwb.misc.argc; i++) {
           if (g_file_test(dwb.misc.argv[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute(dwb.misc.argv[i])) {
             char *curr_dir = g_get_current_dir();
@@ -3480,8 +3480,8 @@ dwb_init_fifo(gboolean single, GSList *exe) {
 
             fprintf(ff, "tabopen %s\n", path);
 
-            FREE(curr_dir);
-            FREE(path);
+            g_free(curr_dir);
+            g_free(path);
           }
           else {
             fprintf(ff, "tabopen %s\n", dwb.misc.argv[i]);
@@ -3492,14 +3492,17 @@ dwb_init_fifo(gboolean single, GSList *exe) {
             fprintf(ff, "%s\n", (char *)l->data);
           }
         }
-        fclose(ff);
-        exit(EXIT_SUCCESS);
       }
+      else {
+        fprintf(ff, "tab_new\n");
+
+      }
+      fclose(ff);
+      exit(EXIT_SUCCESS);
     }
-    close(fd);
     dwb_open_si_channel();
   }
-  FREE(path);
+  g_free(path);
 }/*}}}*/
 /*}}}*/
 

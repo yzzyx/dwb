@@ -63,7 +63,7 @@ util_is_hex(const char *string) {
   dup = loc = g_strdup(string);
   gboolean ret = !strtok(dup, "1234567890abcdefABCDEF");
 
-  FREE(loc);
+  g_free(loc);
   return ret;
 }/*}}}*/
 
@@ -255,7 +255,7 @@ util_get_directory_entries(const char *path, const char *text) {
         char *newpath = g_build_filename(path, filename, NULL);
         if (g_file_test(newpath, G_FILE_TEST_IS_DIR)) {
           store = g_strconcat(newpath, "/", NULL);
-          FREE(newpath);
+          g_free(newpath);
         }
         else {
           store = newpath;
@@ -296,8 +296,8 @@ util_get_directory_content(GString **buffer, const char *dirname, const char *ex
         fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
         g_clear_error(&error);
       }
-      FREE(filepath);
-      FREE(content);
+      g_free(filepath);
+      g_free(content);
     }
     g_dir_close (dir);
   }
@@ -373,7 +373,7 @@ util_set_file_content(const char *filename, const char *content) {
     g_clear_error(&error);
     ret = false;
   }
-  FREE(realpath);
+  g_free(realpath);
   return ret;
 }/*}}}*/
 /* util_build_path()       return: char * (alloc) {{{*/
@@ -418,7 +418,7 @@ util_get_system_data_dir(const char *dir) {
   if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
     return path;
   }
-  FREE(path);
+  g_free(path);
   return NULL;
 }/*}}}*/
 
@@ -516,8 +516,8 @@ dwb_navigation_new_from_line(const char *text) {
 void
 dwb_navigation_free(Navigation *n) {
   if (n != NULL) {
-    FREE(n->first);
-    FREE(n->second);
+    g_free(n->first);
+    g_free(n->second);
     g_free(n);
   }
 }/*}}}*/
@@ -553,18 +553,13 @@ dwb_quickmark_new_from_line(const char *line) {
 void
 dwb_quickmark_free(Quickmark *q) {
   if (q != NULL) {
-    FREE(q->key);
+    g_free(q->key);
     dwb_navigation_free(q->nav);
     g_free(q);
   }
 }/*}}}*/
 /*}}}*/
 
-/* dwb_true, dwb_false {{{*/
-gboolean
-dwb_true() {
-  return true;
-}/*}}}*/
 /* dwb_return(const char *)     return char * (alloc) {{{*/
 char *
 dwb_return(const char *ret) {
@@ -580,12 +575,6 @@ dwb_malloc(size_t size) {
     exit(EXIT_SUCCESS);
   }
   return r;
-}/*}}}*/
-/*dwb_free(void *p) {{{*/
-void 
-dwb_free(void *p) {
-  if (p) 
-    g_free(p);
 }/*}}}*/
 
 /* util_domain_from_uri (char *uri)      return: char* {{{*/

@@ -77,8 +77,8 @@ html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
     g_free(filecontent);
     ret = STATUS_OK;
   }
-  FREE(headpath);
-  FREE(path);
+  g_free(headpath);
+  g_free(path);
   return ret;
 }
 
@@ -242,7 +242,7 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
       g_free(lower);
     }
   }
-  FREE(value);
+  g_free(value);
 }
 void 
 html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
@@ -265,7 +265,7 @@ html_settings(GList *gl, HtmlTable *table) {
     g_free(path);
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_settings_load_cb), table);
   }
-  FREE(content);
+  g_free(content);
   return ret;
 }
 
@@ -307,7 +307,7 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
         value = g_strdup_printf("%s%s%s", mod, strlen(mod) > 0 ? " " : "", km->key ? km->key : "");
         webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(input), value);
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
-        FREE(mod);
+        g_free(mod);
         g_free(value);
       }
     }
@@ -334,7 +334,7 @@ html_keys(GList *gl, HtmlTable *table) {
     ret = html_load_page(wv, table, content);
     g_free(path);
   }
-  FREE(content);
+  g_free(content);
   return ret;
 }
 DwbStatus

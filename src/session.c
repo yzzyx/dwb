@@ -55,7 +55,7 @@ session_get_group(const char *name) {
       i++;
     }
     g_strfreev(groups);
-    FREE(group);
+    g_free(group);
   }
   return content;
 }/*}}}*/
@@ -110,7 +110,7 @@ session_list() {
     g_strfreev(group);
   }
   g_strfreev(content);
-  FREE(path);
+  g_free(path);
 
   exit(EXIT_SUCCESS);
 }/*}}}*/
@@ -154,7 +154,7 @@ session_restore(const char *name) {
         webkit_web_back_forward_list_add_item(bf_list, item);
       }
       last = current;
-      FREE(uri);
+      g_free(uri);
       uri = g_strdup(line[1]);
     }
     if (i == length && lastview)
@@ -169,7 +169,7 @@ session_restore(const char *name) {
 
   //dwb_unfocus();
   dwb_focus(dwb.state.fview);
-  FREE(uri);
+  g_free(uri);
   return true;
 }/*}}}*/
 
@@ -206,7 +206,7 @@ session_save(const char *name) {
       }
       i++;
     }
-    FREE(group);
+    g_free(group);
     g_strfreev(groups);
   }
   util_set_file_content(dwb.files.session, buffer->str);

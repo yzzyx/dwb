@@ -109,7 +109,7 @@ commands_focus_input(KeyMap *km, Arg *a) {
   if ((value = dwb_execute_script(MAIN_FRAME(), "DwbHintObj.focusInput()", true)) && !g_strcmp0(value, "_dwb_no_input_")) {
     ret = STATUS_ERROR;
   }
-  FREE(value);
+  g_free(value);
   
   return ret;
 }/*}}}*/
@@ -126,7 +126,7 @@ commands_add_search_field(KeyMap *km, Arg *a) {
   dwb.state.mode = SEARCH_FIELD_MODE;
   dwb_set_normal_message(dwb.state.fview, false, "Keyword:");
   entry_focus();
-  FREE(value);
+  g_free(value);
   return STATUS_OK;
 
 }/*}}}*/

@@ -50,7 +50,7 @@ entry_history_back(GList **list, GList **last) {
   GList *next;
   if (*last == NULL) {
     next = *list;
-    FREE(_store);
+    g_free(_store);
     _store = g_strdup(GET_TEXT());
   }
   else if ((*last)->next != NULL)

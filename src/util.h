@@ -73,11 +73,9 @@ Quickmark * dwb_quickmark_new_from_line(const char *);
 int util_quickmark_compare(Quickmark *a, Quickmark *b);
 
 // useless
-gboolean dwb_true(void);
 char * dwb_return(const char *);
 
 void * dwb_malloc(size_t);
-void dwb_free(void *);
 
 char * util_domain_from_uri(const char *);
 int util_compare_path(const char *, const char *);

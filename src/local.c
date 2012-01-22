@@ -219,7 +219,7 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
         <div class='dwb_local_header_time'>%s</div>\
         <div class='%s'><a href='%s'>%s</a></div></div>", 
         perm, (int64_t)st.st_nlink, user, group, size, date, time, class, fullpath, printname == NULL ? filename: printname);
-    FREE(printname);
+    g_free(printname);
 
   }
   tmp = orig_path+1;
@@ -265,9 +265,9 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
   g_signal_connect(web, "notify::load-status", G_CALLBACK(local_load_directory_cb), gl);
   webkit_web_view_load_string(web, page, NULL, NULL, fullpath);
 
-  FREE(fullpath);
+  g_free(fullpath);
   g_free(page);
-  FREE(newpath);
+  g_free(newpath);
 
   for (GSList *l = content; l; l=l->next) {
     g_free(l->data);

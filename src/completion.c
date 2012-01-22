@@ -210,7 +210,7 @@ completion_update_completion(GtkWidget *box, GList *comps, GList *active, int ma
 void 
 completion_clean_completion(gboolean set_text) {
   for (GList *l = dwb.comps.completions; l; l=l->next) {
-    FREE(l->data);
+    g_free(l->data);
   }
   g_list_free(dwb.comps.completions);
   if (dwb.comps.view != NULL) 
@@ -318,7 +318,7 @@ completion_create_key_completion(GList *l, const char *first, KeyMap *m) {
   Completion *c = completion_get_completion_item(first, m->map->n.second, value, m);
   gtk_box_pack_start(GTK_BOX(dwb.gui.compbox), c->event, false, false, 0);
   l = g_list_append(l, c);
-  FREE(value);
+  g_free(value);
   g_free(mod);
   return l;
 }/*}}}*/
@@ -568,7 +568,7 @@ completion_set_autcompletion(GList *l, WebSettings *s) {
 void 
 completion_clean_autocompletion() {
   for (GList *l = dwb.comps.auto_c; l; l=l->next) {
-    FREE(l->data);
+    g_free(l->data);
   }
   g_list_free(dwb.comps.auto_c);
   gtk_widget_destroy(dwb.gui.autocompletion);
@@ -642,7 +642,7 @@ completion_clean_path_completion() {
   if (dwb.comps.path_completion) {
     for (GList *l = g_list_first(dwb.comps.path_completion); l; l=l->next) {
       char *data = l->data;
-      FREE(data);
+      g_free(data);
     }
     g_list_free(dwb.comps.path_completion);
     dwb.comps.path_completion = NULL;
@@ -732,7 +732,7 @@ completion_get_path(GList *list, char *text) {
         else {
           g_free(store);
         }
-        FREE(newpath);
+        g_free(newpath);
       }
     }
     g_dir_close(dir);

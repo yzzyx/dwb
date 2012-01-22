@@ -177,7 +177,7 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
     }
     ret = dwb_eval_key(e);
   }
-  FREE(key);
+  g_free(key);
   return ret;
 }/*}}}*/
 

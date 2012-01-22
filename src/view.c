@@ -162,7 +162,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       view_add(clipboard, dwb.state.background_tabs);
       ret = true;
     }
-    FREE(clipboard);
+    g_free(clipboard);
   }
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS && WEBVIEW(gl) != CURRENT_WEBVIEW()) {
     dwb_unfocus();
@@ -277,7 +277,7 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
     dwb_set_status_bar_text(dwb.gui.urilabel, uri, &dwb.color.active_fg, NULL, false);
   }
   else {
-    FREE(VIEW(gl)->status->hover_uri);
+    g_free(VIEW(gl)->status->hover_uri);
     VIEW(gl)->status->hover_uri = NULL;
     dwb_update_uri(gl);
   }
@@ -567,7 +567,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
             )) {
         plugins_disconnect(gl);
       }
-      FREE(host);
+      g_free(host);
       dwb_clean_load_end(gl);
       break;
     case WEBKIT_LOAD_FINISHED:
@@ -625,8 +625,8 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   g_free(site);
   g_free(content);
   g_free(res);
-  FREE(icon);
-  FREE(search);
+  g_free(icon);
+  g_free(search);
   return true;
 }/*}}}*/
 
@@ -785,7 +785,7 @@ view_create_web_view() {
 #if !_HAS_GTK3
   if (! dwb.misc.scrollbars) {
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
-    g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(dwb_true), NULL);
+    g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(v->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
   }
 #endif
@@ -883,8 +883,8 @@ view_remove(GList *gl) {
   /*  clean up */ 
   dwb_source_remove();
   plugins_free(v->plugins);
-  FREE(v->status->hover_uri);
-  FREE(v->status->mimetype);
+  g_free(v->status->hover_uri);
+  g_free(v->status->mimetype);
 
   if (v->status->style) {
     g_object_unref(v->status->style);

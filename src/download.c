@@ -62,19 +62,19 @@ download_get_command(const char *uri, const char *output) {
   char *newcommand = NULL;
 
   if ( (newcommand = util_string_replace(command, "dwb_uri", uri)) ) {
-    FREE(command);
+    g_free(command);
     command = newcommand;
   }
   if ( (newcommand = util_string_replace(command, "dwb_cookies", dwb.files.cookies)) ) {
-    FREE(command);
+    g_free(command);
     command = newcommand;
   }
   if ( (newcommand = util_string_replace(command, "dwb_output", output)) ) {
-    FREE(command);
+    g_free(command);
     command = newcommand;
   }
   if ( (newcommand = util_string_replace(command, "dwb_referer", webkit_web_view_get_uri(CURRENT_WEBVIEW()))) ) {
-    FREE(command);
+    g_free(command);
     command = newcommand;
   }
   return command;
@@ -109,7 +109,7 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
     guint remaining = (guint)(elapsed / progress - elapsed);
     char *message = g_strdup_printf("[%d:%02d|%2d%%|%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
     gtk_label_set_text(GTK_LABEL(label->rlabel), message);
-    FREE(message);
+    g_free(message);
 
     guint blue = ((1 - progress) * 0xaa);
     if (blue != status->blue) {
@@ -121,7 +121,7 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
       DWB_COLOR_PARSE(&color, colorstring);
       DWB_WIDGET_OVERRIDE_BACKGROUND(label->event, GTK_STATE_NORMAL, &color);
 
-      FREE(colorstring);
+      g_free(colorstring);
     }
     status->blue = blue;
   }
@@ -189,7 +189,7 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
       gtk_widget_destroy(label->event);
       Navigation *n = dwb_navigation_new(webkit_download_get_uri(download), webkit_download_get_destination_uri(download));
       dwb.fc.downloads = g_list_append(dwb.fc.downloads, n);
-      FREE(label->path);
+      g_free(label->path);
       downloads = g_list_delete_link(downloads, list);
     }
     if (!downloads) {
@@ -286,7 +286,7 @@ download_start(const char *path) {
     if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
       char *cache_name = g_build_filename(dwb.files.cachedir, filename, NULL);
       fullpath = g_strconcat("file://", cache_name, NULL);
-      FREE(cache_name);
+      g_free(cache_name);
       lastaction = DL_ACTION_EXECUTE;
     }
     else {
@@ -341,7 +341,7 @@ download_start(const char *path) {
       webkit_download_start(dwb.state.download);
       dwb.state.download_ref_count++;
     }
-    FREE(lastdir);
+    g_free(lastdir);
     if (dwb.state.dl_action != DL_ACTION_EXECUTE) {
       lastdir = g_strdup(path);
     }
@@ -350,7 +350,7 @@ download_start(const char *path) {
 error_out:
   dwb_change_mode(NORMAL_MODE, clean);
   dwb.state.download = NULL;
-  FREE(fullpath);
+  g_free(fullpath);
 }/*}}}*/
 
 /* download_entry_set_directory() {{{*/
@@ -373,11 +373,11 @@ download_entry_set_directory() {
   if (g_file_test(current_dir, G_FILE_TEST_IS_DIR) && current_dir[strlen(current_dir) - 1] != '/') {
     new_dir =  g_strdup_printf("%s/", current_dir);
     entry_set_text(new_dir);
-    FREE(new_dir);
+    g_free(new_dir);
   }
   else 
     entry_set_text(current_dir);
-  FREE(current_dir);
+  g_free(current_dir);
 }/*}}}*/
 
 /* download_entry_set_spawn_command{{{*/

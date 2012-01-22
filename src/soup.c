@@ -278,7 +278,7 @@ void
 dwb_soup_end() {
   g_object_unref(_tmpJar);
   g_object_unref(_jar);
-  FREE(dwb.misc.proxyuri);
+  g_free(dwb.misc.proxyuri);
 }/*}}}*/
 
 /* dwb_soup_init() {{{*/

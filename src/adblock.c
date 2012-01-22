@@ -421,8 +421,8 @@ adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObje
     if (!g_strcmp0(rel, "stylesheet") || !g_strcmp0(type, "text/css")) {
       attributes |= AA_STYLESHEET;
     }
-    FREE(rel);
-    FREE(type);
+    g_free(rel);
+    g_free(type);
   }
   else if (!g_strcmp0(tagname, "OBJECT") || ! g_strcmp0(tagname, "EMBED")) {
     attributes |= AA_OBJECT;
@@ -808,7 +808,7 @@ adblock_rule_parse(char *filterlist) {
           regex_flags &= ~G_REGEX_CASELESS;
         rule = g_regex_new(tmp_c, regex_flags, 0, &error);
 
-        FREE(tmp_c);
+        g_free(tmp_c);
         if (error != NULL) {
           adblock_warn_ignored("Invalid regular expression", pattern);
           //ret = STATUS_ERROR;
@@ -878,8 +878,8 @@ adblock_rule_parse(char *filterlist) {
       }
     }
 error_out:
-    FREE(tmp_a);
-    FREE(tmp_b);
+    g_free(tmp_a);
+    g_free(tmp_b);
   }
   g_strfreev(lines);
 }/*}}}*/
