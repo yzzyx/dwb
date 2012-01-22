@@ -197,14 +197,25 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
       if (label->action == DL_ACTION_EXECUTE && status == WEBKIT_DOWNLOAD_STATUS_FINISHED) {
         download_spawn(label);
       }
+      /* Setting time to 0 will force recomputing size */
+      dstatus->time = 0;
+      switch (status) {
+        case WEBKIT_DOWNLOAD_STATUS_FINISHED: 
+          download_progress_cb(download, NULL, dstatus);
+          break;
+        case WEBKIT_DOWNLOAD_STATUS_CANCELLED: 
+          gtk_label_set_text(GTK_LABEL(label->rlabel), "cancelled");
+          break;
+        case WEBKIT_DOWNLOAD_STATUS_ERROR: 
+          gtk_label_set_text(GTK_LABEL(label->rlabel), "failed");
+          break;
+        default: 
+          break;
+      }
       Navigation *n = dwb_navigation_new(webkit_download_get_uri(download), webkit_download_get_destination_uri(download));
       dwb.fc.downloads = g_list_append(dwb.fc.downloads, n);
       g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)download_delay, label);
       downloads = g_list_delete_link(downloads, list);
-      if (status == WEBKIT_DOWNLOAD_STATUS_CANCELLED) 
-        gtk_label_set_text(GTK_LABEL(label->rlabel), "cancelled");
-      if (status == WEBKIT_DOWNLOAD_STATUS_ERROR) 
-        gtk_label_set_text(GTK_LABEL(label->rlabel), "failed");
     }
     if (dwb.state.mimetype_request) {
       g_free(dwb.state.mimetype_request);
