@@ -663,23 +663,19 @@ view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) {
 
 void
 view_set_favicon(GList *gl, gboolean web) {
-  GdkPixbuf *pb = NULL, *old, *rescale;
-  if ( (old = gtk_image_get_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon))) ) 
+  GdkPixbuf *pb = NULL, *old;
+  GdkPixbuf *new = NULL;
+  if ( (old = gtk_image_get_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon))) ) {
     gdk_pixbuf_unref(old);
+  }
   if (web) {
     pb = webkit_web_view_get_icon_pixbuf(WEBVIEW(gl));
     if (pb) {
-      rescale = gdk_pixbuf_scale_simple(pb, dwb.misc.bar_height, dwb.misc.bar_height, GDK_INTERP_BILINEAR);
-      gtk_image_set_from_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon), rescale);
+      new = gdk_pixbuf_scale_simple(pb, dwb.misc.bar_height, dwb.misc.bar_height, GDK_INTERP_BILINEAR);
       gdk_pixbuf_unref(pb);
     }
-
   }
-  if (!web || pb == NULL) {
-    pb = gdk_pixbuf_new_from_xpm_data(dummy_icon);
-    gtk_image_set_from_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon), pb);
-  }
-
+  gtk_image_set_from_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon), new);
 }
 
 /* view_modify_style(GList *gl, GdkColor *fg, GdkColor *bg, GdkColor *tabfg, GdkColor *tabbg, PangoFontDescription *fd, int fontsize) {{{*/
