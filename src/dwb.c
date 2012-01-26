@@ -651,6 +651,7 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
     webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), content);
   if (WEBKIT_DOM_IS_HTML_TEXT_AREA_ELEMENT(e)) 
     webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(e), content);
+  webkit_dom_element_focus(e);
 
 clean:
   unlink(info->filename);
