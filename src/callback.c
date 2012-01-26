@@ -71,7 +71,7 @@ callback_entry_key_press(GtkWidget* entry, GdkEventKey *e) {
           *buffer = ' ';
         buffer++;
       }
-      entry_set_text(back);
+      entry_insert_text(back);
       g_free(back);
       FREE0(text);
     }

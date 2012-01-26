@@ -22,5 +22,6 @@ DwbStatus entry_history_forward(GList **last);
 DwbStatus entry_history_back(GList **list, GList **last);
 void entry_focus();
 void entry_set_text(const char *text);
+void entry_insert_text(const char *text);
 void entry_move_cursor_step(GtkMovementStep step, int stepcount, gboolean del);
 #endif

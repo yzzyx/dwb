@@ -81,6 +81,13 @@ entry_focus() {
   dwb.state.last_nav_history = NULL;
 }/*}}}*/
 
+/* entry_insert_text(const char *) {{{*/
+void 
+entry_insert_text(const char *text) {
+  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+  gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &position);
+  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), position);
+}/*}}}*/
 /* entry_set_text(const char *) {{{*/
 void 
 entry_set_text(const char *text) {
