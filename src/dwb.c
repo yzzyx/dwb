@@ -114,7 +114,6 @@ struct HintMap hint_map[] = {
 
 static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
 static int MAX_COMPLETIONS = 11;
-static char *restore = NULL;
 /*}}}*/
 
 #include "config.h"
@@ -3313,7 +3312,7 @@ dwb_init_custom_keys(gboolean reload) {
 
 /* dwb_init() {{{*/
 static void 
-dwb_init(GSList *exe) {
+dwb_init(GSList *exe, char *restore) {
   dwb_clean_vars();
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
@@ -3528,7 +3527,9 @@ main(int argc, char *argv[]) {
   dwb.gui.wid = 0;
   int last = 0;
   gboolean single = false;
+  gboolean override_restore = false;
   int argr = argc;
+  char *restore = NULL;
   GSList *exe = NULL;
 
   gtk_init(&argc, &argv);
@@ -3556,6 +3557,10 @@ main(int argc, char *argv[]) {
         else if (argv[i][1] == 'x' && argv[i+1]) {
           exe = g_slist_append(exe, argv[++i]);
         }
+        else if (argv[i][1] == 'R' ) {
+          override_restore = true;
+          argr--;
+        }
         else if (argv[i][1] == 'r' ) {
           if (!argv[i+1] || argv[i+1][0] == '-') {
             restore = "default";
@@ -3580,7 +3585,7 @@ main(int argc, char *argv[]) {
   dwb_init_files();
 
   dwb_init_settings();
-  if (GET_BOOL("save-session") && argr == 1 && !restore && !single) {
+  if (!override_restore && GET_BOOL("save-session") && argr == 1 && !restore && !single) {
     restore = "default";
   }
   if (last) {
@@ -3589,7 +3594,7 @@ main(int argc, char *argv[]) {
   }
   dwb_init_fifo(single, exe);
   dwb_init_signals();
-  dwb_init(exe);
+  dwb_init(exe, restore);
   gtk_main();
   return EXIT_SUCCESS;
 }/*}}}*/
