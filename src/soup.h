@@ -31,6 +31,8 @@ void dwb_soup_init_proxy();
 void dwb_soup_init_session_features();
 void dwb_soup_end();
 void dwb_soup_init();
+const char * soup_get_header(GList *gl, const char *);
+const char * soup_get_header_from_request(WebKitNetworkRequest *, const char *);
 CookieStorePolicy dwb_soup_get_cookie_store_policy(const char *policy);
 
 #endif

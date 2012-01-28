@@ -80,6 +80,7 @@ commands_get_webview_with_nummod() {
 /* commands_add_view(KeyMap *, Arg *) {{{*/
 DwbStatus 
 commands_add_view(KeyMap *km, Arg *arg) {
+  soup_get_header(dwb.state.fview, "Referer");
   view_add(arg->p, false);
   return STATUS_OK;
 }/*}}}*/
