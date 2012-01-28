@@ -20,6 +20,7 @@
 #include "dwb.h"
 #include "entry.h"
 #include "util.h"
+#include "soup.h"
 
 typedef struct _DwbDownloadStatus {
   guint blue;
@@ -60,6 +61,8 @@ static char *
 download_get_command(const char *uri, const char *output) {
   char *command = g_strdup(GET_CHAR("download-external-command"));
   char *newcommand = NULL;
+  WebKitNetworkRequest *request = webkit_download_get_network_request(dwb.state.download);
+  const char *referer = soup_get_header_from_request(request, "Referer");
 
   if ( (newcommand = util_string_replace(command, "dwb_uri", uri)) ) {
     g_free(command);
@@ -73,9 +76,11 @@ download_get_command(const char *uri, const char *output) {
     g_free(command);
     command = newcommand;
   }
-  if ( (newcommand = util_string_replace(command, "dwb_referer", webkit_web_view_get_uri(CURRENT_WEBVIEW()))) ) {
-    g_free(command);
-    command = newcommand;
+  if (referer != NULL) {
+    if ( (newcommand = util_string_replace(command, "dwb_referer", referer)) ) {
+      g_free(command);
+      command = newcommand;
+    }
   }
   return command;
 }/*}}}*/

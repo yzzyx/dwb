@@ -48,6 +48,22 @@ dwb_soup_allow_cookie_simple(GList **whitelist, const char *filename, CookieStor
 
   return STATUS_OK;
 }
+const char *
+soup_get_header_from_request(WebKitNetworkRequest *request, const char *name) {
+  SoupMessage *msg = webkit_network_request_get_message(request);
+  if (msg != NULL) {
+    return soup_message_headers_get_one(msg->request_headers, name);
+  }
+  return NULL;
+}
+
+const char *
+soup_get_header(GList *gl, const char *name) {
+  WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBVIEW(gl));
+  WebKitWebDataSource *data = webkit_web_frame_get_data_source(frame);
+  WebKitNetworkRequest *request = webkit_web_data_source_get_request(data);
+  return soup_get_header_from_request(request, name);
+}
 
 void
 dwb_soup_allow_cookie_tmp() {
