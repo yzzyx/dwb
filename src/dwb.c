@@ -2269,9 +2269,11 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   list = g_slist_append(list, dwb_navigation_new("DWB_NUMMOD",  nummod));
   list = g_slist_append(list, dwb_navigation_new("DWB_ARGUMENT",  a->p));
   const char *referer = soup_get_header(dwb.state.fview, "Referer");
-  if (referer != NULL) {
+  if (referer != NULL)
     list = g_slist_append(list, dwb_navigation_new("DWB_REFERER",  referer));
-  }
+  const char *user_agent = soup_get_header(dwb.state.fview, "User-Agent");
+  if (user_agent != NULL)
+    list = g_slist_append(list, dwb_navigation_new("DWB_USER_AGENT",  referer));
   
   if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &std_in, &std_out, NULL, &error)) {
     GIOChannel *channel = g_io_channel_unix_new(std_out);
