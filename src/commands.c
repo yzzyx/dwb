@@ -746,7 +746,7 @@ commands_presentation_mode(KeyMap *km, Arg *arg) {
     if (! dwb.state.fullscreen)
       gtk_window_unfullscreen(GTK_WINDOW(dwb.gui.window));
     commands_set_bars(last);
-    dwb.state.bar_visible &= ~BAR_PRESENTATION;
+    dwb.state.bar_visible = last & ~BAR_PRESENTATION;
   }
   else {
     dwb.state.bar_visible |= BAR_PRESENTATION;
@@ -754,6 +754,7 @@ commands_presentation_mode(KeyMap *km, Arg *arg) {
       gtk_window_fullscreen(GTK_WINDOW(dwb.gui.window));
     commands_set_bars(0);
     last = dwb.state.bar_visible;
+    dwb.state.bar_visible = BAR_PRESENTATION;
   }
   return STATUS_OK;
 }/*}}}*/
