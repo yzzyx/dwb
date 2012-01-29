@@ -265,11 +265,14 @@ view_delete_web_inspector(GtkWidget *widget, GdkEvent *event, WebKitWebInspector
 static WebKitWebView * 
 view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList *gl) {
   GtkWidget *window;
-  if (dwb.gui.wid == 0) 
+  if (dwb.gui.wid == 0) {
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  }
   else
     window = gtk_plug_new(dwb.gui.wid);
   GtkWidget *webview = webkit_web_view_new();
+  WebKitWebSettings *settings = webkit_web_view_get_settings(WEBKIT_WEB_VIEW(webview));
+  g_object_set(settings, "user-stylesheet-uri", GET_CHAR("user-stylesheet-uri"), NULL);
   
   gtk_container_add(GTK_CONTAINER(window), webview);
   gtk_widget_show_all(window);

@@ -3017,7 +3017,6 @@ dwb_init_gui() {
     dwb.gui.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   else 
     dwb.gui.window = gtk_plug_new(dwb.gui.wid);
-  gtk_window_set_wmclass(GTK_WINDOW(dwb.gui.window), dwb.misc.name, dwb.misc.name);
   gtk_widget_set_name(dwb.gui.window, dwb.misc.name);
   /* Icon */
   GdkPixbuf *icon_pixbuf = gdk_pixbuf_new_from_xpm_data(icon);
