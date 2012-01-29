@@ -261,6 +261,7 @@ typedef enum {
 typedef enum {
   BAR_VIS_TOP = 1<<0,
   BAR_VIS_STATUS = 1<<1,
+  BAR_PRESENTATION = 1<<2,
 } BarVisibility;
 
 typedef enum {

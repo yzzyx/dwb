@@ -691,6 +691,8 @@ commands_reload_scripts(KeyMap *km, Arg *arg) {
 /* commands_reload_scripts {{{*/
 DwbStatus
 commands_fullscreen(KeyMap *km, Arg *arg) {
+  if (dwb.state.bar_visible & BAR_PRESENTATION)
+    return STATUS_ERROR;
   dwb.state.fullscreen = !dwb.state.fullscreen;
   if (dwb.state.fullscreen) 
     gtk_window_fullscreen(GTK_WINDOW(dwb.gui.window));
@@ -724,21 +726,38 @@ commands_only(KeyMap *km, Arg *arg) {
   }
   return ret;
 }/*}}}*/
+static void 
+commands_set_bars(int status) {
+  gtk_widget_set_visible(dwb.gui.topbox, status & BAR_VIS_TOP);
+  gtk_widget_set_visible(dwb.gui.bottombox, status & BAR_VIS_STATUS);
+}
 /* commands_toggle_bars {{{*/
 DwbStatus
 commands_toggle_bars(KeyMap *km, Arg *arg) {
   dwb.state.bar_visible ^= arg->n;
-  gtk_widget_set_visible(dwb.gui.topbox, dwb.state.bar_visible & BAR_VIS_TOP);
-  gtk_widget_set_visible(dwb.gui.bottombox, dwb.state.bar_visible & BAR_VIS_STATUS);
+  commands_set_bars(dwb.state.bar_visible);
   return STATUS_OK;
 }/*}}}*/
 /* commands_presentation_mode {{{*/
 DwbStatus
 commands_presentation_mode(KeyMap *km, Arg *arg) {
-  if (! dwb.state.fullscreen)
-    dwb.state.bar_visible = BAR_VIS_TOP | BAR_VIS_STATUS;
-  commands_fullscreen(km, arg);
-  commands_toggle_bars(km, arg);
+  static int last;
+  static int was_fullscreen;
+  if (dwb.state.bar_visible & BAR_PRESENTATION) {
+    if (!was_fullscreen)
+      commands_fullscreen(km, arg);
+    commands_set_bars(last);
+    dwb.state.bar_visible &= ~BAR_PRESENTATION;
+  }
+  else {
+    dwb.state.bar_visible |= BAR_PRESENTATION;
+    was_fullscreen = dwb.state.fullscreen;
+    if (!dwb.state.fullscreen) {
+      commands_fullscreen(km, arg);
+    }
+    commands_set_bars(0);
+    last = dwb.state.bar_visible;
+  }
   return STATUS_OK;
 }/*}}}*/
 /* commands_toggle_lock_protect {{{*/

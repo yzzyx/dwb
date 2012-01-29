@@ -1,5 +1,5 @@
 REAL_NAME=dwb
-REAL_VERSION=0.0.18
+REAL_VERSION=0.1.0
 COPYRIGHT="© 2011 portix"
 
 # dirs
