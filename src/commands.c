@@ -742,19 +742,16 @@ commands_toggle_bars(KeyMap *km, Arg *arg) {
 DwbStatus
 commands_presentation_mode(KeyMap *km, Arg *arg) {
   static int last;
-  static int was_fullscreen;
   if (dwb.state.bar_visible & BAR_PRESENTATION) {
-    if (!was_fullscreen)
-      commands_fullscreen(km, arg);
+    if (! dwb.state.fullscreen)
+      gtk_window_unfullscreen(GTK_WINDOW(dwb.gui.window));
     commands_set_bars(last);
     dwb.state.bar_visible &= ~BAR_PRESENTATION;
   }
   else {
     dwb.state.bar_visible |= BAR_PRESENTATION;
-    was_fullscreen = dwb.state.fullscreen;
-    if (!dwb.state.fullscreen) {
-      commands_fullscreen(km, arg);
-    }
+    if (! dwb.state.fullscreen)
+      gtk_window_fullscreen(GTK_WINDOW(dwb.gui.window));
     commands_set_bars(0);
     last = dwb.state.bar_visible;
   }
