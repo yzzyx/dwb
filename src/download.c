@@ -23,7 +23,11 @@
 #include "soup.h"
 
 typedef struct _DwbDownloadStatus {
-  guint blue;
+#if _HAS_GTK3 
+  gdouble blue, red, green, alpha;
+#else
+  guint blue, red, green;
+#endif
   gint64 time;
 } DwbDownloadStatus;
 
@@ -116,19 +120,37 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
     gtk_label_set_text(GTK_LABEL(label->rlabel), message);
     g_free(message);
 
-    guint blue = ((1 - progress) * 0xaa);
-    if (blue != status->blue) {
-      guint green = progress * 0xaa;
-      char *colorstring = g_strdup_printf("#%02x%02x%02x", 0x00, green, blue);
+#if _HAS_GTK3
+    gdouble red, green, blue, alpha;
+#else 
+    guint red, green, blue;
+#endif
+    red = ((progress) * dwb.color.download_end.red + (1-progress) * dwb.color.download_start.red);
+    green = ((progress) * dwb.color.download_end.green + (1-progress) * dwb.color.download_start.green);
+    blue = ((progress) * dwb.color.download_end.blue + (1-progress) * dwb.color.download_start.blue);
+#if _HAS_GTK3 
+    alpha = ((progress) * dwb.color.download_end.alpha + (1-progress) * dwb.color.download_start.alpha);
 
-      DwbColor color; 
-
-      DWB_COLOR_PARSE(&color, colorstring);
-      DWB_WIDGET_OVERRIDE_BACKGROUND(label->event, GTK_STATE_NORMAL, &color);
-
-      g_free(colorstring);
+    if (blue != status->blue || red != status->red || green != status->green || alpha != status->alpha) {
+#else 
+    if (blue != status->blue || red != status->red || green != status->green) {
+#endif
+        DwbColor gradient = { 
+          .red = red, 
+          .green = green, 
+          .blue = blue,
+#if _HAS_GTK3 
+          .alpha = alpha
+#endif
+        };
+        DWB_WIDGET_OVERRIDE_BACKGROUND(label->event, GTK_STATE_NORMAL, &gradient);
     }
-    status->blue = blue;
+    status->blue  = blue;
+    status->red   = red;
+    status->green = red;
+#if _HAS_GTK3 
+    status->alpha = alpha;
+#endif
   }
   status->time = time;
 }/*}}}*/

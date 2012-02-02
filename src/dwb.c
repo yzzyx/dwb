@@ -2875,8 +2875,10 @@ dwb_init_style() {
   DWB_COLOR_PARSE(&dwb.color.tab_normal_bg2, GET_CHAR("tab-normal-bg-color-2"));
 
   /* Downloads */
-  DWB_COLOR_PARSE(&dwb.color.download_fg, "#ffffff");
-  DWB_COLOR_PARSE(&dwb.color.download_bg, "#000000");
+  DWB_COLOR_PARSE(&dwb.color.download_fg, GET_CHAR("download-fg-color"));
+  DWB_COLOR_PARSE(&dwb.color.download_bg, GET_CHAR("download-bg-color"));
+  DWB_COLOR_PARSE(&dwb.color.download_start, GET_CHAR("download-gradient-start"));
+  DWB_COLOR_PARSE(&dwb.color.download_end, GET_CHAR("download-gradient-end"));
 
   /* SSL */
   DWB_COLOR_PARSE(&dwb.color.ssl_trusted, GET_CHAR("ssl-trusted-color"));

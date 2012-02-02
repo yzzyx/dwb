@@ -589,6 +589,8 @@ struct _Color {
   DwbColor normal_c_bg;
   DwbColor download_fg;
   DwbColor download_bg;
+  DwbColor download_start;
+  DwbColor download_end;
   char *tab_number_color;
   char *tab_protected_color;
   char *allow_color;
