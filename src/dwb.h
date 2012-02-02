@@ -522,6 +522,7 @@ struct _State {
 
   gboolean fullscreen;
   unsigned int bar_visible;
+  gboolean auto_insert_mode;
 };
 
 typedef enum _SettingsApply {
@@ -838,6 +839,7 @@ const char * dwb_parse_nummod(const char *);
 void dwb_init_custom_keys(gboolean);
 void dwb_update_tabs(void);
 void dwb_setup_environment(GSList *);
+void dwb_check_auto_insert(GList *);
 
 
 #endif

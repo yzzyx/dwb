@@ -537,7 +537,6 @@ view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
     dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
   }
 }/*}}}*/
-
 /* view_load_status_cb {{{*/
 
 static void 
@@ -594,6 +593,8 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
       }
       dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts_onload, false);
+      if (dwb.state.auto_insert_mode) 
+        dwb_check_auto_insert(gl);
       break;
     case WEBKIT_LOAD_FAILED: 
       dwb_clean_load_end(gl);

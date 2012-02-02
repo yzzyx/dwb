@@ -116,6 +116,7 @@ complete-searchengines checkbox Whether to enable tabcompletion for searchengine
 complete-userscripts checkbox Whether to enable tabcompletion for userscripts
 
 # misc Miscellaneous
+auto-insert-mode checkbox Whether to automatically go in insert mode if an editable element has focus after loading
 cache-model select @webbrowser @documentviewer The cache-model used by webkit 
 custom-encoding text The custom encoding of the view
 download-external-command text External application used for downloads

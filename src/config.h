@@ -989,4 +989,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
+  { { "auto-insert-mode",                         "Whether go automatically in insert mode if input or textarea has focus", },                   
+    SETTING_PER_VIEW,  BOOLEAN, { .b = false }, (S_Func)dwb_set_auto_insert_mode,   }, 
 };/*}}}*/

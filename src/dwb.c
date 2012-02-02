@@ -60,10 +60,13 @@ static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
 static DwbStatus dwb_reload_scripts(GList *, WebSettings *);
 static DwbStatus dwb_set_single_instance(GList *, WebSettings *);
 static DwbStatus dwb_set_favicon(GList *, WebSettings *);
+static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
 static DwbStatus dwb_pack(const char *layout, gboolean rebuild);
+
+static gboolean dwb_editable_focus_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl);
 
 static void dwb_reload_layout(GList *,  WebSettings *);
 static char * dwb_test_userscript(const char *);
@@ -242,6 +245,11 @@ dwb_set_single_instance(GList *l, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
+static DwbStatus 
+dwb_set_auto_insert_mode(GList *l, WebSettings *s) {
+  dwb.state.auto_insert_mode = s->arg.b;
+  return STATUS_OK;
+}
 /* dwb_set_single_instance(GList *l, WebSettings *s){{{*/
 static DwbStatus
 dwb_set_favicon(GList *l, WebSettings *s) {
@@ -646,11 +654,10 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
   else 
     e = info->element;
 
-  if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(e)) 
+  if (!g_strcmp0(info->tagname, "INPUT")) 
     webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), content);
-  if (WEBKIT_DOM_IS_HTML_TEXT_AREA_ELEMENT(e)) 
+  else if (!g_strcmp0(info->tagname, "TEXTAREA")) 
     webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(e), content);
-  webkit_dom_element_focus(e);
 
 clean:
   unlink(info->filename);
@@ -659,20 +666,38 @@ clean:
   g_free(info);
 }/*}}}*/
 
+/* dwb_get_editable(WebKitDOMElement *) {{{*/
+static gboolean
+dwb_get_editable(WebKitDOMElement *element) {
+  if (element == NULL)
+    return false;
+
+  char *tagname = webkit_dom_node_get_node_name(WEBKIT_DOM_NODE(element));
+  if (!g_strcmp0(tagname, "INPUT")) {
+    char *type = webkit_dom_element_get_attribute((void*)element, "type");
+    if (!g_strcmp0(type, "text") || !g_strcmp0(type, "search")|| !g_strcmp0(type, "password")) 
+      return true;
+  }
+  else if (!g_strcmp0(tagname, "TEXTAREA")) {
+    return true;
+  }
+  return false;
+}/*}}}*/
+
 /* dwb_get_active_input(WebKitDOMDocument )  {{{*/
 static WebKitDOMElement *
-dwb_get_active_input(WebKitDOMDocument *doc) {
+dwb_get_active_element(WebKitDOMDocument *doc) {
   WebKitDOMElement *ret = NULL;
   WebKitDOMDocument *d = NULL;
-  WebKitDOMElement *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
+  WebKitDOMElement *active = webkit_dom_html_document_get_active_element((void*)doc);
   char *tagname = webkit_dom_element_get_tag_name(active);
   if (! g_strcmp0(tagname, "FRAME")) {
     d = webkit_dom_html_frame_element_get_content_document(WEBKIT_DOM_HTML_FRAME_ELEMENT(active));
-    ret = dwb_get_active_input(d);
+    ret = dwb_get_active_element(d);
   }
   else if (! g_strcmp0(tagname, "IFRAME")) {
     d = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(active));
-    ret = dwb_get_active_input(d);
+    ret = dwb_get_active_element(d);
   }
   else {
     ret = active;
@@ -693,9 +718,12 @@ dwb_open_in_editor(void) {
   if (editor == NULL) 
     return STATUS_ERROR;
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
-  WebKitDOMElement *active = dwb_get_active_input(doc);
+  WebKitDOMElement *active = dwb_get_active_element(doc);
   
   if (active == NULL) 
+    return STATUS_ERROR;
+
+  if (!dwb_get_editable(active)) 
     return STATUS_ERROR;
 
   char *tagname = webkit_dom_element_get_tag_name(active);
@@ -748,6 +776,39 @@ clean:
   g_free(value);
 
   return ret;
+}/*}}}*/
+
+/* Auto insert mode {{{*/
+static gboolean
+dwb_auto_insert(WebKitDOMElement *element) {
+  if (dwb_get_editable(element)) {
+    dwb_change_mode(INSERT_MODE);
+    return true;
+  }
+  return false;
+}
+
+static gboolean
+dwb_editable_focus_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) {
+  webkit_dom_event_target_remove_event_listener(WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dwb_editable_focus_cb), true);
+  if (gl != dwb.state.fview) 
+    return false;
+  if (!(dwb.state.mode & INSERT_MODE)) {
+    WebKitDOMEventTarget *target = webkit_dom_event_get_target(event);
+    dwb_auto_insert((void*)target);
+  }
+  return false;
+}
+void
+dwb_check_auto_insert(GList *gl) {
+  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(WEBVIEW(gl));
+  WebKitDOMElement *active = dwb_get_active_element(doc);
+  if (!dwb_auto_insert(active)) {
+    WebKitDOMHTMLElement *element = webkit_dom_document_get_body(doc);
+    if (element == NULL) 
+      element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dwb_editable_focus_cb), true, gl);
+  }
 }/*}}}*/
 
 /* remove history, bookmark, quickmark {{{*/
@@ -3250,6 +3311,7 @@ dwb_init_vars() {
   dwb.state.complete_searchengines = GET_BOOL("complete-searchengines");
   dwb.state.complete_userscripts = GET_BOOL("complete-userscripts");
   dwb.state.background_tabs = GET_BOOL("background-tabs");
+  dwb.state.auto_insert_mode = GET_BOOL("auto-insert-mode");
 
   dwb.state.buffer = g_string_new(NULL);
   dwb.comps.autocompletion = GET_BOOL("auto-completion");
