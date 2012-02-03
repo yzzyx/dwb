@@ -147,7 +147,7 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
     }
     status->blue  = blue;
     status->red   = red;
-    status->green = red;
+    status->green = green;
 #if _HAS_GTK3 
     status->alpha = alpha;
 #endif
