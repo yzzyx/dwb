@@ -65,7 +65,7 @@ tab-normal-fg-color-2 text Foreground color 2 of the normal tab
 tab-number-color text Color of the tabnumber
 tab-protected-color text Color of the tabnumber for protected tabs
 download-fg-color text Foreground color of the download bar
-download-fg-color text Background color of the download bar
+download-bg-color text Background color of the download bar
 download-gradient-start text Start color for download progress gradient color
 download-gradient-end text End color for download progress gradient color
 

@@ -20,7 +20,6 @@
 #include <gdk/gdkkeysyms.h> 
 #include "dwb.h"
 #include "commands.h"
-#include "completion.h"
 #include "util.h"
 #include "download.h"
 #include "session.h"
