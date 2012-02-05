@@ -60,13 +60,19 @@ download_get_command_from_mimetype(char *mimetype) {
   return command;
 }/*}}}*/
 
-/* dwb_get_download_command {{{*/
-static char *
-download_get_command(const char *uri, const char *output) {
+static gboolean 
+download_spawn_external(const char *uri, const char *filename, WebKitDownload *download) {
+  gboolean ret = true;
+  GError *error = NULL;
   char *command = g_strdup(GET_CHAR("download-external-command"));
   char *newcommand = NULL;
-  WebKitNetworkRequest *request = webkit_download_get_network_request(dwb.state.download);
+  WebKitNetworkRequest *request = webkit_download_get_network_request(download);
   const char *referer = soup_get_header_from_request(request, "Referer");
+  const char *user_agent = soup_get_header_from_request(request, "User-Agent");
+
+  GSList *list = g_slist_prepend(NULL, dwb_navigation_new("DWB_URI", uri));
+  list = g_slist_prepend(list, dwb_navigation_new("DWB_FILENAME", filename));
+  list = g_slist_prepend(list, dwb_navigation_new("DWB_COOKIES", dwb.files.cookies));
 
   if ( (newcommand = util_string_replace(command, "dwb_uri", uri)) ) {
     g_free(command);
@@ -76,18 +82,28 @@ download_get_command(const char *uri, const char *output) {
     g_free(command);
     command = newcommand;
   }
-  if ( (newcommand = util_string_replace(command, "dwb_output", output)) ) {
+  if ( (newcommand = util_string_replace(command, "dwb_output", filename)) ) {
     g_free(command);
     command = newcommand;
   }
   if (referer != NULL) {
+    list = g_slist_prepend(list, dwb_navigation_new("DWB_REFERER", referer));
     if ( (newcommand = util_string_replace(command, "dwb_referer", referer)) ) {
       g_free(command);
       command = newcommand;
     }
   }
-  return command;
-}/*}}}*/
+  if (user_agent != NULL) 
+    list = g_slist_prepend(list, dwb_navigation_new("DWB_USER_AGENT", user_agent));
+  char **argv = g_strsplit(command, " ", -1);
+  g_free(command);
+  if (!g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &error)) {
+    perror(error->message);
+    ret = false;
+  }
+  g_strfreev(argv);
+  return ret;
+}
 
 /* download_get_download_label(WebKitDownload *) {{{*/
 static GList * 
@@ -305,7 +321,7 @@ download_start(const char *path) {
   char *fullpath = NULL;
   const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
   const char *uri = webkit_download_get_uri(dwb.state.download);
-  char *command = NULL;
+  //char *command = NULL;
   char *tmppath = NULL;
   const char *last_slash;
   char path_buffer[PATH_MAX+1];
@@ -370,8 +386,7 @@ download_start(const char *path) {
     }
 
     if (external && dwb.state.dl_action == DL_ACTION_DOWNLOAD) {
-      command = download_get_command(uri, fullpath);
-      if (!g_spawn_command_line_async(command, NULL)) {
+      if (!download_spawn_external(uri, fullpath, dwb.state.download) ) {
         dwb_set_error_message(dwb.state.fview, "Cannot spawn download program");
       }
     }

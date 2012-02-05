@@ -1470,7 +1470,15 @@ will be replaced with the fullpath of the destination,
 will be replaced with the path to the cookie-file,
 .IR dwb_referer 
 will be replaced with the uri of the site the download started. 
-default value:
+Additionally the environment-variables
+.IR DWB_URI , 
+.IR DWB_FILENAME , 
+.IR DWB_COOKIES , 
+.IR DWB_REFERER 
+and 
+.I DWB_USER_AGENT  
+are set. 
+Default value:
 .IR xterm\ -e\ wget\ 'dwb_uri'\ -O\ 'dwb_output'\ --load-cookies\ 'dwb_cookies' .
 .TP
 .BR download-directory

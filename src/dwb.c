@@ -2303,6 +2303,10 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
   return false;
 }/*}}}*/
 
+void 
+dwb_spawn_full(char **argv, GSList *env) {
+}
+
 void
 dwb_setup_environment(GSList *list) {
   Navigation *n;
