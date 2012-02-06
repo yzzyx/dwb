@@ -883,9 +883,6 @@ view_remove(GList *gl) {
   if ( (pb = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
     gdk_pixbuf_unref(pb);
 
-  /* Destroy widget */
-  gtk_widget_destroy(v->web);
-  gtk_widget_destroy(v->scroll);
 
   dwb_focus(dwb.state.fview);
   gtk_widget_destroy(v->tabevent);
@@ -900,10 +897,14 @@ view_remove(GList *gl) {
     g_object_unref(v->status->style);
   }
   g_free(v->status);
+
+  /* Destroy widget */
+  gtk_widget_destroy(v->web);
+  gtk_widget_destroy(v->scroll);
+
   g_free(v);
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
-  gl = NULL;
 
   gtk_widget_show(CURRENT_VIEW()->scroll);
   dwb_update_layout();

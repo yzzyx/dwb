@@ -107,7 +107,7 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
 
     webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
     webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(div), NULL);
-    v->plugins->elements = g_slist_append(v->plugins->elements, element);
+    v->plugins->elements = g_slist_prepend(v->plugins->elements, element);
 
     //* at least hide element if default behaviour cannot be prevented */
     g_object_set_data((gpointer)div, "dwb-plugin-element", element);
