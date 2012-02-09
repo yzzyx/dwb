@@ -2449,6 +2449,7 @@ dwb_reload_userscripts() {
   for (GSList *sl = delete; sl; sl=sl->next) {
     dwb.keymap = g_list_delete_link(dwb.keymap, sl->data);
   }
+  g_slist_free(delete);
   dwb.keymap = g_list_concat(dwb.keymap, dwb_get_scripts());
   dwb_set_normal_message(dwb.state.fview, true, "Userscripts reloaded");
 }
