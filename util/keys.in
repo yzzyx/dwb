@@ -149,4 +149,5 @@ save_named_session Save current session with name
 toggle_hidden_files Toggle hidden files in directory listing
 save_search_field Add a new searchengine 
 reload_scripts Reload all javascript userscripts 
+reload_userscripts Reload userscripts 
 

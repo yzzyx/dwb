@@ -414,6 +414,7 @@ typedef enum {
   CP_COMMANDLINE   = 1<<0,
   CP_DONT_SAVE     = 1<<1,
   CP_HAS_MODE      = 1<<2,
+  CP_USERSCRIPT    = 1<<3,
 } CommandProperty;
 
 /*}}}*/
@@ -810,6 +811,7 @@ DwbStatus dwb_set_setting(const char *, char *value);
 DwbStatus dwb_toggle_setting(const char *);
 DwbStatus dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
+void dwb_reload_userscripts(void);
 char * dwb_get_search_engine(const char *uri, gboolean);
 char * dwb_get_stock_item_base64_encoded(const char *);
 void dwb_remove_bookmark(const char *);

@@ -2106,7 +2106,7 @@ dwb_eval_key(GdkEventKey *e) {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
-    if (km->map->entry & EP_ENTRY) {
+    if (km->map->entry & EP_ENTRY || km->key == NULL) {
       continue;
     }
     gsize kl = strlen(km->key);
@@ -2363,7 +2363,7 @@ dwb_get_scripts() {
   char *filename;
   char *content;
   GList *gl = NULL;
-  Navigation *n = NULL;
+  Navigation *n;
   GError *error = NULL;
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
@@ -2382,6 +2382,10 @@ dwb_get_scripts() {
         g_free(path);
         path = realpath;
       }
+      if (!g_file_test(path, G_FILE_TEST_IS_EXECUTABLE)) {
+        fprintf(stderr, "Warning: userscript %s isn't executable and will be ignored.\n", path);
+        continue;
+      }
 
       g_file_get_contents(path, &content, NULL, NULL);
       if (content == NULL) 
@@ -2393,6 +2397,7 @@ dwb_get_scripts() {
       content = NULL;
 
       int i=0;
+      n = NULL;
       KeyMap *map = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
       while (lines[i]) {
@@ -2403,7 +2408,6 @@ dwb_get_scripts() {
             Key key = dwb_str_to_key(line[1]);
             map->key = key.str;
             map->mod = key.mod;
-            gl = g_list_prepend(gl, map);
           }
           g_strfreev(line);
           break;
@@ -2414,13 +2418,12 @@ dwb_get_scripts() {
         n = dwb_navigation_new(filename, "");
         map->key = "";
         map->mod = 0;
-        gl = g_list_prepend(gl, map);
       }
-      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path } };
+      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE | CP_USERSCRIPT, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path } };
       *fmap = fm;
       map->map = fmap;
       dwb.misc.userscripts = g_list_prepend(dwb.misc.userscripts, n);
-      n = NULL;
+      gl = g_list_prepend(gl, map);
 
       g_strfreev(lines);
     }
@@ -2428,6 +2431,27 @@ dwb_get_scripts() {
   }
   return gl;
 }/*}}}*/
+
+void 
+dwb_reload_userscripts() {
+  g_list_foreach(dwb.misc.userscripts, (GFunc)dwb_navigation_free, NULL);
+  dwb.misc.userscripts = NULL;
+  KeyMap *m;
+  GSList *delete = NULL;
+  for (GList *l = dwb.keymap; l; l=l->next) {
+    m = l->data;
+    if (m->map->prop & CP_USERSCRIPT) {
+      g_free(m->map);
+      g_free(m);
+      delete = g_slist_prepend(delete, l);
+    }
+  }
+  for (GSList *sl = delete; sl; sl=sl->next) {
+    dwb.keymap = g_list_delete_link(dwb.keymap, sl->data);
+  }
+  dwb.keymap = g_list_concat(dwb.keymap, dwb_get_scripts());
+  dwb_set_normal_message(dwb.state.fview, true, "Userscripts reloaded");
+}
 
 /*}}}*/
 
@@ -2474,6 +2498,8 @@ gboolean
 dwb_clean_up() {
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
+    if (m->map->prop & CP_USERSCRIPT)
+      g_free(m->map);
     g_free(m);
     m = NULL;
   }
@@ -2754,7 +2780,7 @@ dwb_keymap_add(GList *gl, KeyValue key) {
     if (!g_strcmp0(FMAP[i].n.first, key.id)) {
       KeyMap *keymap = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = &FMAP[i];
-      keymap->key = key.key.str ? key.key.str : "";
+      keymap->key = key.key.str ? key.key.str : NULL;
       keymap->mod = key.key.mod;
       fmap->n.first = (char*)key.id;
       keymap->map = fmap;

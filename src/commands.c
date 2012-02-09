@@ -687,6 +687,11 @@ commands_reload_scripts(KeyMap *km, Arg *arg) {
   }
   return STATUS_OK;
 }/*}}}*/
+DwbStatus
+commands_reload_user_scripts(KeyMap *km, Arg *arg) {
+  dwb_reload_userscripts();
+  return STATUS_OK;
+}
 
 /* commands_reload_scripts {{{*/
 DwbStatus
