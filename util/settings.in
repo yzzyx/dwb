@@ -80,6 +80,7 @@ factor text Zoom factor of the tiling area
 hide-tabbar text Whether to hide the tabbar  (never, always, tiled)
 message-delay text Time messages are shown, in seconds
 scrollbars checkbox Whether scrollbars should be enabled
+tabbar-visible text Number of seconds a hidden tabbar is visible when switching between tabs
 tabbed-browsing checkbox Whether to enable tabbed browsing
 user-stylesheet-uri text The uri of a stylesheet applied to every page
 widget-packing text Packing of the main widgets; t (T)=tabbar (hidden), w=webview, s (S)=statusbar (hidden), d=downloadbar

@@ -61,6 +61,7 @@ static DwbStatus dwb_reload_scripts(GList *, WebSettings *);
 static DwbStatus dwb_set_single_instance(GList *, WebSettings *);
 static DwbStatus dwb_set_favicon(GList *, WebSettings *);
 static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
+static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
@@ -248,6 +249,11 @@ dwb_set_single_instance(GList *l, WebSettings *s) {
 static DwbStatus 
 dwb_set_auto_insert_mode(GList *l, WebSettings *s) {
   dwb.state.auto_insert_mode = s->arg.b;
+  return STATUS_OK;
+}
+static DwbStatus 
+dwb_set_tabbar_delay(GList *l, WebSettings *s) {
+  dwb.misc.tabbar_delay = s->arg.i;
   return STATUS_OK;
 }
 /* dwb_set_single_instance(GList *l, WebSettings *s){{{*/
@@ -3342,6 +3348,7 @@ dwb_init_vars() {
   dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
   dwb.misc.scroll_step = GET_DOUBLE("scroll-step");
   dwb.misc.scrollbars = GET_BOOL("scrollbars");
+  dwb.misc.tabbar_delay = GET_BOOL("tabbar-visible");
 
   dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(GET_CHAR("cookies-store-policy"));
 

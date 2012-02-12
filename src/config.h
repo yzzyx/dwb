@@ -1010,4 +1010,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
   { { "auto-insert-mode",                         "Whether go automatically in insert mode if input or textarea has focus", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = false }, (S_Func)dwb_set_auto_insert_mode,   }, 
+  { { "tabbar-visible",                         "Number of seconds the tabbar is shown when switching tabs", },                   
+    SETTING_PER_VIEW,  INTEGER, { .i = 2 }, (S_Func)dwb_set_tabbar_delay,   }, 
 };/*}}}*/

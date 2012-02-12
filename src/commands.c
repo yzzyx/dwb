@@ -379,11 +379,11 @@ commands_focus(KeyMap *km, Arg *arg) {
     int pos = modulo(g_list_position(dwb.state.views, dwb.state.fview) + NUMMOD * arg->n, g_list_length(dwb.state.views));
     GList *g = g_list_nth(dwb.state.views, pos);
     dwb_focus_view(g);
-    if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
+    if (! (dwb.state.bar_visible & BAR_VIS_TOP) && dwb.misc.tabbar_delay > 0) {
       gtk_widget_show(dwb.gui.topbox);
       if (running != 0) 
         g_source_remove(running);
-      running = g_timeout_add(2000, (GSourceFunc)commands_hide_tabbar, &running);
+      running = g_timeout_add(dwb.misc.tabbar_delay * 1000, (GSourceFunc)commands_hide_tabbar, &running);
     }
     return STATUS_OK;
   }

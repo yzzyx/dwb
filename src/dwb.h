@@ -653,6 +653,7 @@ struct _Misc {
 
   int max_c_items;
   int message_delay;
+  int tabbar_delay;
   int history_length;
 
   char *settings_border;
