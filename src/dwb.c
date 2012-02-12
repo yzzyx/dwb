@@ -1015,16 +1015,6 @@ dwb_get_host(WebKitWebView *web) {
     soup_uri_free(uri);
   }
   return host;
-
-#if 0 
-  /*  this sometimes segfaults */
-  const char *host = NULL;
-  WebKitSecurityOrigin *origin = webkit_web_frame_get_security_origin(webkit_web_view_get_main_frame(web));
-  if (origin) {
-    host = webkit_security_origin_get_host(origin);
-  }
-  return host;
-#endif
 }/*}}}*/
 
 /* dwb_focus_view(GList *gl){{{*/
@@ -1169,23 +1159,7 @@ dwb_clean_load_begin(GList *gl) {
   view_set_favicon(gl, false);
 }/*}}}*/
 
-/* dwb_clean_load_end(GList *) {{{*/
-void 
-dwb_clean_load_end(GList *gl) {
-  View *v = gl->data;
-  if (v->status->mimetype) {
-    g_free(v->status->mimetype);
-    v->status->mimetype = NULL;
-  }
-#if 0
-  if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {  
-    dwb_change_mode(NORMAL_MODE, true);
-  }
-#endif
-}/*}}}*/
-
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
-/* TODO sqlite */
 Navigation *
 dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   Navigation *n = NULL;
@@ -1751,13 +1725,15 @@ dwb_update_status(GList *gl) {
   char *filename = NULL;
   WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
   const char *title = webkit_web_view_get_title(w);
-  if (!title && v->status->mimetype && g_strcmp0(v->status->mimetype, "text/html")) {
-    const char *uri = webkit_web_view_get_uri(w);
-    filename = g_path_get_basename(uri);
-    title = filename;
-  }
   if (!title) {
-    title = dwb.misc.name;
+    const char *uri = webkit_web_view_get_uri(w);
+    if (uri) {
+      filename = g_path_get_basename(uri);
+      title = filename;
+    }
+    else {
+      title = dwb.misc.name;
+    }
   }
 
   if (gl == dwb.state.fview) {
@@ -2238,7 +2214,7 @@ dwb_update_search(gboolean forward) {
   View *v = CURRENT_VIEW();
   const char *text = GET_TEXT();
   if (strlen(text) > 0) {
-    g_free(v->status->search_string);
+    FREE0(v->status->search_string);
     v->status->search_string =  g_strdup(text);
   }
   if (!v->status->search_string) {
@@ -2441,8 +2417,8 @@ dwb_reload_userscripts() {
   for (GList *l = dwb.keymap; l; l=l->next) {
     m = l->data;
     if (m->map->prop & CP_USERSCRIPT) {
-      g_free(m->map);
-      g_free(m);
+      FREE0(m->map);
+      FREE0(m);
       delete = g_slist_prepend(delete, l);
     }
   }
@@ -2468,8 +2444,7 @@ dwb_clean_vars() {
   dwb.state.scriptlock = 0;
   dwb.state.dl_action = DL_ACTION_DOWNLOAD;
   if (dwb.state.mimetype_request) {
-    g_free(dwb.state.mimetype_request);
-    dwb.state.mimetype_request = NULL;
+    FREE0(dwb.state.mimetype_request);
   }
 }/*}}}*/
 

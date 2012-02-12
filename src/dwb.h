@@ -551,7 +551,6 @@ struct _ViewStatus {
   gboolean add_history;
   char *search_string;
   GList *downloads;
-  char *mimetype;
   gulong signals[SIG_LAST];
   int progress;
   SslState ssl;

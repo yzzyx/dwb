@@ -71,17 +71,6 @@ view_main_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
 #if 0
 static void 
 view_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitWebResource *resource, WebKitNetworkRequest *request, WebKitNetworkResponse *response, GList *gl) {
-  if (request) {
-    SoupMessage *msg = webkit_network_request_get_message(request);
-    if (msg && msg->request_headers) {
-      SoupMessageHeadersIter iter;
-      soup_message_headers_iter_init(&iter, msg->response_headers);
-      const char *value, *key;
-      while (soup_message_headers_iter_next(&iter, &key, &value))
-        printf("%s %s\n", key, value), key, value;;
-
-    }
-  }
 }
 #endif
 
@@ -298,13 +287,9 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
 /* view_mime_type_policy_cb {{{*/
 static gboolean 
 view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mimetype, WebKitWebPolicyDecision *policy, GList *gl) {
-  View *v = gl->data;
-
   /* Prevents from segfault if proxy is set */
   if ( !mimetype || strlen(mimetype) == 0 )
     return false;
-
-  v->status->mimetype = g_strdup(mimetype);
 
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv & OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
@@ -579,7 +564,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         plugins_disconnect(gl);
       }
       g_free(host);
-      dwb_clean_load_end(gl);
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
@@ -596,7 +580,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
         dwb_check_auto_insert(gl);
       break;
     case WEBKIT_LOAD_FAILED: 
-      dwb_clean_load_end(gl);
       break;
     default:
       break;
@@ -774,7 +757,6 @@ view_create_web_view() {
   ViewStatus *status = dwb_malloc(sizeof(ViewStatus));
   status->search_string = NULL;
   status->downloads = NULL;
-  status->mimetype = NULL;
   status->hover_uri = NULL;
   status->progress = 0;
   status->allowed_plugins = NULL;
@@ -856,14 +838,6 @@ view_remove(GList *gl) {
         gtk_widget_show_all(dwb.gui.topbox);
     }
   }
-#if 0
-  if (gl == dwb.state.views) {
-    if (dwb.state.views->next) {
-      gtk_widget_reparent(VIEW(dwb.state.views->next)->vbox, dwb.gui.left);
-    }
-  }
-#endif
-
   /* Get History for the undo list */
   WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
   if ( bflist != NULL ) {
@@ -890,19 +864,18 @@ view_remove(GList *gl) {
   /*  clean up */ 
   dwb_source_remove();
   plugins_free(v->plugins);
-  g_free(v->status->hover_uri);
-  g_free(v->status->mimetype);
+  FREE0(v->status->hover_uri);
 
   if (v->status->style) {
     g_object_unref(v->status->style);
   }
-  g_free(v->status);
+  FREE0(v->status);
 
   /* Destroy widget */
   gtk_widget_destroy(v->web);
   gtk_widget_destroy(v->scroll);
 
-  g_free(v);
+  FREE0(v);
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
 

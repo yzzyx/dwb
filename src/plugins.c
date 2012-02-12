@@ -47,7 +47,7 @@ plugins_free(Plugins *p) {
       g_object_unref(l->data);
     g_slist_free(p->elements);
   }
-  g_free(p);
+  FREE0(p);
 }
 static void 
 plugins_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) {
@@ -83,6 +83,7 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     char *height = webkit_dom_css_style_declaration_get_property_value(style, "height");
     char *top = webkit_dom_css_style_declaration_get_property_value(style, "top");
     char *left = webkit_dom_css_style_declaration_get_property_value(style, "left");
+    char *position = webkit_dom_css_style_declaration_get_property_value(style, "position");
     char *display = webkit_dom_css_style_declaration_get_property_value(style, "display");
     int w, h;
     if (sscanf(width, "%dpx", &w) == 1 && w<48) 
@@ -99,7 +100,7 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     else 
       div = g_slist_nth_data(v->plugins->clicks, v->plugins->created);
 
-    char *new_style = g_strdup_printf("width:%s; height:%s; top: %s; left: %s;%s;", width, height, top, left, dwb.misc.pbbackground);
+    char *new_style = g_strdup_printf("position:%s;width:%s; height:%s; top: %s; left: %s;%s;", position, width, height, top, left, dwb.misc.pbbackground);
     webkit_dom_element_set_attribute(div, "style", new_style, NULL);
     g_free(new_style);
 
