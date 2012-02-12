@@ -10,7 +10,7 @@
 CONTENT_FILE=${XDG_CONFIG_HOME}/dwb/data/forms
 SUBMIT=1 
 
-COMMAND+="javascript:function set_value(e, value){if(e.type==\"checkbox\"||e.type==\"radio\"){e.checked=(value.toLowerCase()!=='false'&&value!=='0');}else{e.value=value;}}"
+COMMAND+="exja function set_value(e, value){if(e.type==\"checkbox\"||e.type==\"radio\"){e.checked=(value.toLowerCase()!=='false'&&value!=='0');}else{e.value=value;}}"
 
 while read; do
   read -a LINE -d $'\0' <<<"${REPLY}"
@@ -23,6 +23,6 @@ while read; do
     test ${SUBMIT} != 0 && COMMAND+="${NAME}.form.submit();"
   fi
 done < "${CONTENT_FILE}"
-printf "open ${COMMAND}\nclose\n"
+printf "${COMMAND}\nclose\n"
 
 # vim: tw=0
