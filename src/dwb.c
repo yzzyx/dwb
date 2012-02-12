@@ -2275,6 +2275,11 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
   }
   g_clear_error(&error);
+  if (dwb.misc.fifo != NULL) {
+    unlink(dwb.misc.fifo);
+    g_free(dwb.misc.fifo);
+    dwb.misc.fifo = NULL;
+  }
 
   return false;
 }/*}}}*/
@@ -2315,8 +2320,19 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   const char *user_agent = soup_get_header(dwb.state.fview, "User-Agent");
   if (user_agent != NULL)
     list = g_slist_append(list, dwb_navigation_new("DWB_USER_AGENT",  user_agent));
+  if (km->map->arg.b) {
+    dwb.misc.fifo = util_get_temp_filename("fifo_");
+    list = g_slist_append(list, dwb_navigation_new("DWB_FIFO",  dwb.misc.fifo));
+    mkfifo(dwb.misc.fifo, 0600);
+  }
   
   if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &std_in, &std_out, NULL, &error)) {
+    if (km->map->arg.b) {
+      int out = open(dwb.misc.fifo, O_RDONLY);
+      dup2(out, std_out);
+      close(std_out);
+      std_out = out;
+    }
     GIOChannel *channel = g_io_channel_unix_new(std_out);
     GIOChannel *out_channel = g_io_channel_unix_new(std_in);
     g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, out_channel);
@@ -2341,6 +2357,7 @@ dwb_get_scripts() {
   GList *gl = NULL;
   Navigation *n;
   GError *error = NULL;
+  gboolean usefifo = false;
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
@@ -2376,14 +2393,30 @@ dwb_get_scripts() {
       n = NULL;
       KeyMap *map = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
+      const char *colon, *tmp;
       while (lines[i]) {
         if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
           char **line = g_strsplit(lines[i], "dwb:", 2);
           if (line[1]) {
-            n = dwb_navigation_new(filename, line[1]);
-            Key key = dwb_str_to_key(line[1]);
-            map->key = key.str;
-            map->mod = key.mod;
+            colon = tmp = line[1];
+            while (*colon) {
+              if (*colon == ':') {
+                if (colon - line[1] > 0 && !strncmp(line[1], "usefifo", colon-line[1])) {
+                  usefifo = true;
+                }
+                tmp = colon+1;
+                break;
+              }
+              else if (*colon == '\\') 
+                colon++;
+              colon++;
+            }
+            if (tmp && *tmp) {
+              n = dwb_navigation_new(filename, tmp);
+              Key key = dwb_str_to_key((char*)tmp);
+              map->key = key.str;
+              map->mod = key.mod;
+            }
           }
           g_strfreev(line);
           break;
@@ -2395,7 +2428,7 @@ dwb_get_scripts() {
         map->key = "";
         map->mod = 0;
       }
-      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE | CP_USERSCRIPT, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path } };
+      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE | CP_USERSCRIPT, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path, .b = usefifo } };
       *fmap = fm;
       map->map = fmap;
       dwb.misc.userscripts = g_list_prepend(dwb.misc.userscripts, n);
@@ -3407,6 +3440,7 @@ dwb_init(GSList *exe, char *restore) {
   dwb.misc.scripts = NULL;
   dwb.misc.synctimer = 0;
   dwb.misc.bar_height = 0;
+  dwb.misc.fifo = NULL;
 
   char *path = util_get_data_file(PLUGIN_FILE);
   if (path) {

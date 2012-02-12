@@ -673,6 +673,7 @@ struct _Misc {
   gboolean scrollbars;
   int synctimer;
   int bar_height;
+  char *fifo;
 };
 struct _Files {
   const char *bookmarks;
