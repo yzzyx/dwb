@@ -2334,7 +2334,7 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   
   if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &std_in, &std_out, NULL, &error)) {
     if (km->map->arg.b) {
-      int out = open(dwb.misc.fifo, O_RDONLY);
+      int out = open(dwb.misc.fifo, O_RDONLY | O_NONBLOCK);
       dup2(out, std_out);
       close(std_out);
       std_out = out;
