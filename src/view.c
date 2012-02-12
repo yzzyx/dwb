@@ -864,16 +864,17 @@ view_remove(GList *gl) {
   /*  clean up */ 
   dwb_source_remove();
   plugins_free(v->plugins);
-  FREE0(v->status->hover_uri);
 
   if (v->status->style) {
     g_object_unref(v->status->style);
   }
-  FREE0(v->status);
 
   /* Destroy widget */
   gtk_widget_destroy(v->web);
   gtk_widget_destroy(v->scroll);
+
+  FREE0(v->status->hover_uri);
+  FREE0(v->status);
 
   FREE0(v);
 
