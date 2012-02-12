@@ -95,6 +95,7 @@ download_spawn_external(const char *uri, const char *filename, WebKitDownload *d
   }
   if (user_agent != NULL) 
     list = g_slist_prepend(list, dwb_navigation_new("DWB_USER_AGENT", user_agent));
+  list = g_slist_prepend(list, dwb_navigation_new("DWB_MIME_TYPE", dwb.state.mimetype_request));
   char **argv = g_strsplit(command, " ", -1);
   g_free(command);
   if (!g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &error)) {
