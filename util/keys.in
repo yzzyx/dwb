@@ -90,6 +90,9 @@ focus_prev Focus previous tab
 lock_domain Lock tab to current domain
 lock_uri Lock tab to current uri
 fullscreen Toggle fullscreen
+tab_move Move tab 
+tab_move_left Move tab left
+tab_move_right Move tab right
 toggle_bars Toggle tabbar and statusbar
 toggle_statusbar Toggle statusbar
 toggle_tabbar Toggle tabbar

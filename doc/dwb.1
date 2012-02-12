@@ -357,6 +357,27 @@ Focus nth tab or first, if n is omitted.
 aliases:
 .BR tab ).
 .TP
+.BR [n]gm
+Move current tab to position [n] or to first position if n is omitted.
+(command 
+.BR tab_move ,
+aliases:
+.BR tabm ).
+.TP
+.BR [n]gl
+Move current tab [n] positions left.
+(command 
+.BR tab_move_left ,
+aliases:
+.BR tabl ).
+.TP
+.BR [n]gr
+Move current tab [n] positions right.
+(command 
+.BR tab_move_right ,
+aliases:
+.BR tabr ).
+.TP
 .BR gt
 Show all open tabs. (command 
 .BR buffers ,
@@ -958,6 +979,9 @@ stop_loading            |st, stop        |Stop loading current page
 tab_bookmarks           |tabmarks        |Show bookmarks, open in new tab
 tab_hist_back           |tba, tabback    |Go back in a new tab
 tab_hist_forward        |tfo, tabforward |Go forward in a new tab
+tab_move                |tabm            |Move tab
+tab_move_left           |tabl            |Move tab left
+tab_move_right          |tabr            |Move tab right
 tab_new                 |                |Open a new blank tab
 tab_paste               |tpaste          |Open from clipboard in a new tab
 tab_paste_primary       |tppaste         |Open from primary selection in a 

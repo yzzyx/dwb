@@ -661,8 +661,11 @@ util_file_add_navigation(const char *filename, const Navigation *n, int append, 
 }/*}}}*/
 
 void
-gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gint padding, int position) {
-  gtk_box_pack_start(box, child, expand, fill, padding);
+gtk_box_insert(GtkBox *box, GtkWidget *child, gboolean expand, gboolean fill, gint padding, int position, GtkPackType packtype) {
+  if (packtype == GTK_PACK_START) 
+    gtk_box_pack_start(box, child, expand, fill, padding);
+  else 
+    gtk_box_pack_end(box, child, expand, fill, padding);
   gtk_box_reorder_child(box, child, position);
 }
 void

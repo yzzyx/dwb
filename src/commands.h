@@ -88,6 +88,6 @@ DwbStatus commands_toggle_lock_protect(KeyMap *, Arg *);
 DwbStatus commands_execute_javascript(KeyMap *km, Arg *arg);
 DwbStatus commands_set(KeyMap *km, Arg *arg);
 DwbStatus commands_toggle_setting(KeyMap *km, Arg *arg);
-DwbStatus commands_toggle_adblocker(KeyMap *, Arg *);
+DwbStatus commands_tab_move(KeyMap *, Arg *);
 
 #endif

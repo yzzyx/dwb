@@ -160,6 +160,9 @@ static KeyValue KEYS[] = {
   { "execute_javascript",     {   NULL,        0 }, }, 
   { "set",                    {   NULL,        0 }, }, 
   { "toggle_setting",                    {   NULL,        0 }, }, 
+  { "tab_move",                    {   "gm",        0 }, }, 
+  { "tab_move_left",                    {   "gl",        0 }, }, 
+  { "tab_move_right",                    {   "gr",        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -271,17 +274,29 @@ static FunctionMap FMAP [] = {
     (Func)commands_focus_input,        "No input found in current context",      ALWAYS_SM, 
     {0}, EP_NONE, { NULL }, },
   
-  { { "focus_next",            "Focus next tab",                   }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "focus_next",            "Focus next tab",                   }, CP_COMMANDLINE, 
     (Func)commands_focus,              "No other tab",                   ALWAYS_SM,  
     { .n = 1 }, EP_NONE, { "tabnext", NULL }, },
   
-  { { "focus_prev",            "Focus previous tab",               }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "focus_prev",            "Focus previous tab",               }, CP_COMMANDLINE, 
     (Func)commands_focus,              "No other tab",                   ALWAYS_SM,  
     { .n = -1 }, EP_NONE, { "tabprev", NULL }, },
   
-  { { "focus_tab",        "Focus nth tab",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "focus_tab",        "Focus nth tab",                    }, CP_COMMANDLINE, 
     (Func)commands_focus_nth_view,       "No such tab",                   ALWAYS_SM,  
     { 0 }, EP_NONE, { "tab", NULL }, },
+
+  { { "tab_move",        "Move tab to position",                    }, CP_COMMANDLINE, 
+    (Func)commands_tab_move,       NULL,                   ALWAYS_SM,  
+    { .n = TAB_MOVE_NONE }, EP_NONE, { "tabm", NULL }, },
+
+  { { "tab_move_left",        "Move tab left",                    }, CP_COMMANDLINE, 
+    (Func)commands_tab_move,       NULL,                   ALWAYS_SM,  
+    { .n = TAB_MOVE_LEFT }, EP_NONE, { "tabl", NULL }, },
+
+  { { "tab_move_right",        "Move tab left",                    }, CP_COMMANDLINE, 
+    (Func)commands_tab_move,       NULL,                   ALWAYS_SM,  
+    { .n = TAB_MOVE_RIGHT }, EP_NONE, { "tabr", NULL }, },
   
   { { "hints",             "Follow hints",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    

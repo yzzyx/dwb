@@ -37,7 +37,7 @@ void completion_clean_autocompletion(void);
 void completion_clean_path_completion(void);
 void completion_set_entry_text(Completion *);
 
-void completion_set_autcompletion(GList *, WebSettings *);
+DwbStatus completion_set_autcompletion(GList *, WebSettings *);
 void completion_autocomplete(GList *, GdkEventKey *e);
 void completion_eval_autocompletion(void);
 void completion_eval_buffer_completion(void);

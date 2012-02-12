@@ -559,9 +559,10 @@ completion_eval_autocompletion() {
 }/*}}}*/
 
 /* dwb_set_autcompletion{{{*/
-void 
+DwbStatus 
 completion_set_autcompletion(GList *l, WebSettings *s) {
   dwb.comps.autocompletion = s->arg.b;
+  return STATUS_OK;
 }/*}}}*/
 
 /* completion_cleanautocompletion{{{*/

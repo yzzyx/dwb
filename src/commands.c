@@ -569,18 +569,6 @@ commands_toggle_scripts(KeyMap *km, Arg *arg) {
   return STATUS_OK;
 }/*}}}*/
 
-/* commands_toggle_adblocker {{{ */
-DwbStatus 
-commands_toggle_adblocker(KeyMap *km, Arg *arg) {
-  gboolean running = adblock_running();
-  WebSettings *s = g_hash_table_lookup(dwb.settings, "adblocker");
-  s->arg.b = !running;
-  dwb_set_adblock(NULL, s);
-
-  dwb_set_normal_message(dwb.state.fview, true, "Adblocker %s", running ? "disabled" : "enabled");
-  return STATUS_OK;
-}/*}}}*/
-
 /* commands_new_window_or_view{{{*/
 DwbStatus 
 commands_new_window_or_view(KeyMap *km, Arg *arg) {
@@ -805,4 +793,40 @@ commands_toggle_setting(KeyMap *km, Arg *arg) {
   const char *command = util_str_chug(arg->p);
   return dwb_toggle_setting(command);
 }/*}}}*/
+DwbStatus
+commands_tab_move(KeyMap *km, Arg *arg) {
+  int l = g_list_length(dwb.state.views);
+  int newpos;
+  if (dwb.state.views->next == NULL) 
+    return STATUS_ERROR;
+  switch (arg->n) {
+    case TAB_MOVE_LEFT   : newpos = MAX(MIN(l-1, g_list_position(dwb.state.views, dwb.state.fview)-NUMMOD), 0); break;
+    case TAB_MOVE_RIGHT  : newpos = MAX(MIN(l-1, g_list_position(dwb.state.views, dwb.state.fview)+NUMMOD), 0); break;
+    default :  newpos = MAX(MIN(l, NUMMOD)-1, 0); break;
+  }
+  gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), CURRENT_VIEW()->tabevent, l-(newpos+1));
+  gtk_box_reorder_child(GTK_BOX(dwb.gui.mainbox), CURRENT_VIEW()->scroll, newpos);
+  dwb.state.views = g_list_remove_link(dwb.state.views, dwb.state.fview);
+  GList *sibling = g_list_nth(dwb.state.views, newpos);
+  g_list_position(dwb.state.fview, sibling);
+  if (sibling == NULL) {
+    GList *last = g_list_last(dwb.state.views);
+    last->next = dwb.state.fview;
+    dwb.state.fview->prev = last;
+  }
+  else if (sibling->prev == NULL) {
+    dwb.state.views->prev = dwb.state.fview;
+    dwb.state.fview->next = dwb.state.views;
+    dwb.state.views = dwb.state.fview;
+  }
+  else {
+    sibling->prev->next = dwb.state.fview;
+    dwb.state.fview->prev = sibling->prev;
+    sibling->prev = dwb.state.fview;
+    dwb.state.fview->next = sibling;
+  }
+  dwb_focus(dwb.state.fview);
+  dwb_update_layout();
+  return STATUS_OK;
+}
 /*}}}*/

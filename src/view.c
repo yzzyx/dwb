@@ -921,7 +921,7 @@ view_add(const char *uri, gboolean background) {
   if (dwb.state.fview) {
     int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
     gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
-    gtk_box_insert(GTK_BOX(dwb.gui.mainbox), v->scroll, true, true, 0, p);
+    gtk_box_insert(GTK_BOX(dwb.gui.mainbox), v->scroll, true, true, 0, p, GTK_PACK_START);
     dwb.state.views = g_list_insert(dwb.state.views, v, p);
     ret = dwb.state.fview->next;
 

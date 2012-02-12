@@ -224,6 +224,12 @@ enum {
 } EntryProp;
 #define EP_COMPLETION (EP_COMP_DEFAULT | EP_COMP_QUICKMARK)
 
+typedef enum _TabMoveDirection {
+  TAB_MOVE_NONE,
+  TAB_MOVE_LEFT,
+  TAB_MOVE_RIGHT,
+
+} TabMoveDirection;
 
 typedef enum {
   PLUGIN_STATUS_DISABLED      = 1<<0,
