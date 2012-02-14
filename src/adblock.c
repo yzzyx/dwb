@@ -313,7 +313,7 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
         hider = l->data;
         if (hider->exception) {
           escaped = g_regex_escape_string(hider->selector, -1);
-          pattern = g_strdup_printf("(?<=^|,)%s,?", escaped);
+          pattern = g_strdup_printf("(?<=,)%s,?", escaped);
           regex = g_regex_new(pattern, 0, 0, NULL);
           replaced = g_regex_replace(regex, tmpreplaced, -1, 0, "", 0, NULL);
           g_free(tmpreplaced);
@@ -339,8 +339,10 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
   else if (css_rule == NULL || css_rule->len == 0) {
     g_string_append(css_rule, _css_exceptions->str);
   }
-  if ((css_rule != NULL && css_rule->len > 1) || (_css_rules != NULL && _css_rules->len > 1)) {
+  if (_css_rules != NULL && _css_rules->len > 1) {
     g_string_append(css_rule, _css_rules->str);
+  }
+  if (css_rule != NULL && css_rule->len > 0) {
     if (css_rule->str[css_rule->len-1] == ',') 
       g_string_erase(css_rule, css_rule->len-1, 1);
     g_string_append(css_rule, "{display:none!important;}");
@@ -365,6 +367,7 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
           css++;
         }
       }
+      puts(css_rule->str);
       char *script = g_strdup_printf(
           "var st=document.createElement('style');\
           document.head.appendChild(st);\

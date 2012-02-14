@@ -2401,6 +2401,7 @@ dwb_get_scripts() {
       FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
       const char *colon, *tmp;
       while (lines[i]) {
+        usefifo = false;
         if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
           char **line = g_strsplit(lines[i], "dwb:", 2);
           if (line[1]) {
@@ -2832,10 +2833,12 @@ dwb_init_key_map() {
     }
     else if (KEYS[i].key.str) {
       kv.key = KEYS[i].key;
+      kv.key.num = 0;
     }
     else {
        kv.key.str = NULL;
        kv.key.mod = 0;
+       kv.key.num = 0;
     }
 
     kv.id = KEYS[i].id;
