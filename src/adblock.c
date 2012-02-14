@@ -276,7 +276,7 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
   if (msg == NULL)
     return;
 
-  SoupURI *suri = soup_message_get_uri(msg);
+  SoupURI *suri = soup_message_get_first_party(msg);
   g_return_if_fail(suri != NULL);
 
   const char *host = soup_uri_get_host(suri);
@@ -285,10 +285,7 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
   g_return_if_fail(base_domain != NULL);
 
   AdblockElementHider *hider;
-  char *pattern, *escaped, *replaced = NULL;
-  char *tmpreplaced = g_strdup(_css_exceptions->str);
   GString *css_rule = g_string_new(NULL);
-  GRegex *regex = NULL;
 
   /* get all subdomains */
   const char *subdomains[SUBDOMAIN_MAX];
@@ -305,24 +302,15 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
   }
   subdomains[uc++] = NULL;
 
-
+  gboolean has_exception = false;
   for (int i=0; subdomains[i]; i++) {
     list = g_hash_table_lookup(_hider_rules, subdomains[i]);
     if (list) {
       for (GSList *l = list; l; l=l->next) {
         hider = l->data;
-        if (hider->exception) {
-          escaped = g_regex_escape_string(hider->selector, -1);
-          pattern = g_strdup_printf("(?<=,)%s,?", escaped);
-          regex = g_regex_new(pattern, 0, 0, NULL);
-          replaced = g_regex_replace(regex, tmpreplaced, -1, 0, "", 0, NULL);
-          g_free(tmpreplaced);
-          tmpreplaced = replaced;
-          g_free(escaped);
-          g_free(pattern);
-          g_regex_unref(regex);
-        }
-        else if (domain_match(hider->domains, host, base_domain)) {
+        if (hider->exception) 
+          has_exception = true;
+        else if  (domain_match(hider->domains, host, base_domain)) {
           g_string_append(css_rule, hider->selector);
           g_string_append_c(css_rule, ',');
         }
@@ -331,12 +319,7 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
     }
   }
   /* Adding replaced exceptions */
-  if (replaced != NULL) {
-    g_string_append(css_rule, replaced);
-    g_string_append_c(css_rule, ',');
-  }
-  /* No exception-exceptions found, so we take all exceptions */
-  else if (css_rule == NULL || css_rule->len == 0) {
+  if (! has_exception) {
     g_string_append(css_rule, _css_exceptions->str);
   }
   if (_css_rules != NULL && _css_rules->len > 1) {
@@ -367,7 +350,6 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
           css++;
         }
       }
-      puts(css_rule->str);
       char *script = g_strdup_printf(
           "var st=document.createElement('style');\
           document.head.appendChild(st);\
@@ -378,8 +360,6 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
     }
     g_string_free(css_rule, true);
   }
-  g_free(tmpreplaced);
-
 }/*}}}*/
 /*}}}*/
 
