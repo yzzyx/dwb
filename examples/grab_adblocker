@@ -95,11 +95,6 @@ http://www.fanboy.co.nz/adblock/fanboy-adblock.txt
 http://www.fanboy.co.nz/adblock/fanboy-tracking.txt
 )
 
-#if [ ${#URLS[@]} -eq 0 ]; then 
-#  echo "No urls specified, you must uncomment at least one url." 
-#  exit 1
-#fi
-
 # General not supported filterlists
 _USP="object-subrequest|ping|xbl|xmlhttprequest|dtd|elemhide|other|collapse|donottrack|popup"
 # Only remove rules, not exceptions
@@ -109,7 +104,8 @@ UNSUPPORTED+="|(^[^@].*[\$,](${_USP})($|,))"
 
 declare PROFILE
 # Parse settings
-CONFIG=${XDG_CONFIG_HOME}/dwb/settings
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
+CONFIG="${CONFIG_DIR}/dwb/settings"
 
 while read; do 
   if [[ ${REPLY} =~ ^\[ ]]; then 
@@ -129,7 +125,7 @@ in dwb or close all instances of dwb and run this script again.
 !
     exit 1
   fi
-  DEST=${XDG_CONFIG_HOME}/dwb/adblock_default
+  DEST=${CONFIG_DIR}/dwb/adblock_default
   echo "No setting 'adblocker-filterlist' found for profile default, using '${DEST}'"
   sed -i "0,/adblocker-filterlist/s#^adblocker-filterlist=.*#adblocker-filterlist=${DEST}#" ${CONFIG}
 fi

@@ -3254,7 +3254,7 @@ dwb_get_search_completion(const char *text) {
 static void
 dwb_init_files() {
   char *path           = util_build_path();
-  char *profile_path = util_check_directory(g_build_filename(path, dwb.misc.profile, NULL));
+  char *profile_path   = util_check_directory(g_build_filename(path, dwb.misc.profile, NULL));
   char *userscripts, *scripts, *cachedir;
 
   dwb.fc.bookmarks = NULL;
