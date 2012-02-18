@@ -275,6 +275,7 @@ html_custom_keys_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointe
 }
 static void 
 html_key_changed(WebKitDOMElement *target) {
+  g_return_if_fail(target != NULL);
   char *value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
   dwb_set_key(id, value);

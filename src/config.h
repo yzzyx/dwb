@@ -950,7 +950,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "startpage",                               "The default homepage", },                                        
     SETTING_GLOBAL,  CHAR,    { .p = "dwb://bookmarks" },        (S_Func)dwb_set_startpage,  }, 
   { { "single-instance",                         "Whether to have only on instance", },                                         
-    SETTING_GLOBAL,  BOOLEAN,    { .b = true },          (S_Func)dwb_set_single_instance,  }, 
+    SETTING_GLOBAL,  BOOLEAN,    { .b = true },          NULL,  }, 
   { { "save-session",                            "Whether to automatically save sessions", },                                       
     SETTING_GLOBAL,  BOOLEAN,    { .b = true },          NULL,  }, 
   { { "widget-packing",                            "Packing of the main widgets", },                                       
