@@ -723,6 +723,9 @@ static void
 commands_set_bars(int status) {
   gtk_widget_set_visible(dwb.gui.topbox, status & BAR_VIS_TOP);
   gtk_widget_set_visible(dwb.gui.bottombox, status & BAR_VIS_STATUS);
+  if ((status & BAR_VIS_STATUS) ) {
+    webkit_dom_css_style_declaration_set_property(CURRENT_VIEW()->hover.style, "display", "none", "", NULL);
+  }
 }
 /* commands_toggle_bars {{{*/
 DwbStatus

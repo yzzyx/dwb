@@ -47,10 +47,8 @@ background-color text Background color of the statusbar
 active-completion-bg-color text Background color of the active completion item
 active-completion-fg-color text Foreground color of the active completion item
 error-color text Color for error messages
-normal-bg-color text Background color of the normal view
 normal-completion-bg-color text Background color of normal completion items
 normal-completion-fg-color text Foreground color of normal completion items
-normal-fg-color text Foreground color of the normal view
 prompt-color text Color for prompt messages
 ssl-trusted-color text Color for encrypted sites, trusted certificate
 ssl-untrusted-color text Color for encrypted sites, untrusted certificate
@@ -77,7 +75,6 @@ enable-frame-flattening checkbox Whether to enable frame flattening
 enable-favicon checkbox Whether to enable favicons in the tabbar
 enforce-96-dpi checkbox Enforce a resolution of 96 dpi
 factor text Zoom factor of the tiling area
-hide-tabbar text Whether to hide the tabbar  (never, always, tiled)
 message-delay text Time messages are shown, in seconds
 scrollbars checkbox Whether scrollbars should be enabled
 tabbar-visible text Number of seconds a hidden tabbar is visible when switching between tabs

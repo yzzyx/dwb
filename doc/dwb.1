@@ -1574,11 +1574,6 @@ Program to open ftp://.
 will be replaced with the ftp-url. Default value: 
 .IR xterm\ -e\ ncftp\ 'dwb_uri' .
 .TP 
-.BR hide-tabbar
-Hide the tabbar. Possible values: always, never, tiled. 
-default value:
-.IR never
-.TP 
 .BR hint-active-color
 The background color for active link, i.e. the link followed when Return is
 pressed. Possible values: a rgb color string,
@@ -1683,18 +1678,6 @@ The foreground color of inactive element in tab-completion. Possible values: an 
 color-string,
 default value:
 .IR #eeeeee .
-.TP 
-.BR normal-bg-color
-The background color of a not focused tab. Possible values: an rgb
-color-string,
-default value:
-.IR #505050 .
-.TP 
-.BR normal-fg-color
-The foreground color of a not focused tab. Possible values: an rgb
-color-string,
-default value:
-.IR #cccccc .
 .TP 
 .BR proxy
 Whether to use a HTTP-proxy. Possible values: true/false,
@@ -1866,6 +1849,15 @@ Scripts with extension
 .I .onload.all.js
 are injected into all frames of a page when the load of a
 frame is done. 
+
+.SS CSS
+dwb creates some html-elements at runtime, namely hints and a bar that show the
+current url under the cursor. They can be styled in user-stylesheets using the
+selector 
+.I .dwb_hint
+for hints and 
+.I #dwb_hover_element
+for the hover element. 
 
 .SS Userscripts
 Userscripts can be stored in 

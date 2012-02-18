@@ -576,6 +576,10 @@ struct _View {
   ViewStatus *status;
   GHashTable *setting;
   Plugins *plugins;
+  struct {
+    WebKitDOMElement *element;
+    WebKitDOMCSSStyleDeclaration *style;
+  } hover;
 };
 struct _Color {
   DwbColor active_fg;
