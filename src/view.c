@@ -277,14 +277,14 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
     VIEW(gl)->status->hover_uri = g_strdup(uri);
     dwb_set_status_bar_text(dwb.gui.urilabel, uri, &dwb.color.active_fg, NULL, false);
     webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->hover.element), uri, NULL);
-      if (! (dwb.state.bar_visible & BAR_VIS_TOP)) 
+      if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) 
         webkit_dom_css_style_declaration_set_property(VIEW(gl)->hover.style, "display", "inherit", "", NULL);
   }
   else {
     g_free(VIEW(gl)->status->hover_uri);
     VIEW(gl)->status->hover_uri = NULL;
     dwb_update_uri(gl);
-    if (! (dwb.state.bar_visible & BAR_VIS_TOP)) 
+    if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) 
       webkit_dom_css_style_declaration_set_property(VIEW(gl)->hover.style, "display", "none", "", NULL);
   }
 }/*}}}*/
