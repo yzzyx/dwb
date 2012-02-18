@@ -16,9 +16,9 @@ $(TARGET): $(OBJ)
 
 debug: $(DTARGET)
 
-#%.d: %.c %.h tlds.h 
-#	@echo "$(CC) -MM $@"
-#	@$(CC) $(CFLAGS) -MM $< -o $@
+deps.d: %.c %.h tlds.h 
+	@echo "$(CC) -MM $@"
+	@$(CC) $(CFLAGS) -MM $< -o $@
 
 
 %.do: %.c %.h config.h

@@ -578,6 +578,7 @@ struct _View {
   Plugins *plugins;
   struct {
     WebKitDOMElement *element;
+    WebKitDOMElement *anchor;
     WebKitDOMCSSStyleDeclaration *style;
   } hover;
 };

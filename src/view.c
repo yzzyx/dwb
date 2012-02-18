@@ -276,9 +276,11 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
   if (uri) {
     VIEW(gl)->status->hover_uri = g_strdup(uri);
     dwb_set_status_bar_text(dwb.gui.urilabel, uri, &dwb.color.active_fg, NULL, false);
-    webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->hover.element), uri, NULL);
-      if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) 
-        webkit_dom_css_style_declaration_set_property(VIEW(gl)->hover.style, "display", "inherit", "", NULL);
+    if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) {
+      webkit_dom_css_style_declaration_set_property(VIEW(gl)->hover.style, "display", "inherit", "", NULL);
+      webkit_dom_html_anchor_element_set_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(VIEW(gl)->hover.anchor), uri);
+      webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->hover.anchor), uri, NULL);
+    }
   }
   else {
     g_free(VIEW(gl)->status->hover_uri);
@@ -821,10 +823,18 @@ view_create_web_view() {
 
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(WEBKIT_WEB_VIEW(v->web));
   v->hover.element = webkit_dom_document_create_element(doc, "div", NULL);
-  gchar *style = g_strdup_printf("bottom:0px; right:0px; position:fixed; z-index:1000; border-radius:3px 0px 0px 0px;padding:1px;background:%s;color:%s;display:none;font:normal 11px helvetica;", 
+  v->hover.anchor = webkit_dom_document_create_element(doc, "a", NULL);
+  gchar *style = g_strdup_printf(
+      "bottom:0px;right:0px;position:fixed;z-index:1000;\
+      text-overflow:ellipsis;white-space:nowrap;overflow:hidden;max-width:100%%;\
+      border:1px solid #555;\
+      border-radius:4px 0px 0px 0px;padding:1px;background:%s;color:%s;display:none;font:normal 11px helvetica;letter-spacing:0px", 
       GET_CHAR("background-color"), 
       GET_CHAR("foreground-color"));
   webkit_dom_element_set_attribute(v->hover.element, "style", style, NULL);
+  g_free(style);
+  webkit_dom_element_set_attribute(v->hover.anchor, "style", "text-decoration:none;color:inherit;", NULL);
+  webkit_dom_node_append_child(WEBKIT_DOM_NODE(v->hover.element), WEBKIT_DOM_NODE(v->hover.anchor), NULL);
   webkit_dom_html_element_set_id(WEBKIT_DOM_HTML_ELEMENT(v->hover.element), "dwb_hover_element");
   v->hover.style = webkit_dom_element_get_style(v->hover.element);
   return v;
@@ -891,6 +901,8 @@ view_remove(GList *gl) {
   gtk_widget_destroy(v->web);
   gtk_widget_destroy(v->scroll);
 
+  g_object_unref(v->hover.anchor);
+  g_object_unref(v->hover.style);
   g_object_unref(v->hover.element);
 
   FREE0(v->status->hover_uri);
