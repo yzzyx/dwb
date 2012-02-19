@@ -827,8 +827,10 @@ view_create_web_view() {
   gchar *style = g_strdup_printf(
       "bottom:0px;right:0px;position:fixed;z-index:1000;\
       text-overflow:ellipsis;white-space:nowrap;overflow:hidden;max-width:100%%;\
-      border:1px solid #555;\
-      border-radius:4px 0px 0px 0px;padding:1px;background:%s;color:%s;display:none;font:normal 11px helvetica;letter-spacing:0px", 
+      border-left:1px solid #555;\
+      border-top:1px solid #555;\
+      padding-left:2px;\
+      border-radius:5px 0px 0px 0px;background:%s;color:%s;display:none;font:normal 11px helvetica;letter-spacing:0px", 
       GET_CHAR("background-color"), 
       GET_CHAR("foreground-color"));
   webkit_dom_element_set_attribute(v->hover.element, "style", style, NULL);
