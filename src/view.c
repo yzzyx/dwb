@@ -402,12 +402,12 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   /* mailto, ftp */
   char *scheme = g_uri_parse_scheme(uri);
   if (scheme) {
-    if (!strcmp(scheme, "mailto")) {
+    if (!g_strcmp0(scheme, "mailto")) {
       dwb_spawn(gl, "mail-client", uri);
       webkit_web_policy_decision_ignore(policy);
       ret = true;
     }
-    else if (!strcmp(scheme, "ftp")) {
+    else if (!g_strcmp0(scheme, "ftp")) {
       dwb_spawn(gl, "ftp-client", uri);
       webkit_web_policy_decision_ignore(policy);
       ret = true;
@@ -501,7 +501,7 @@ view_popup_activate_cb(GtkMenuItem *menu, GList *gl) {
   if (a == NULL) 
     return;
   name  = gtk_action_get_name(a);
-  if (!strcmp(name, "context-menu-action-3")) { /* copy link location */
+  if (!g_strcmp0(name, "context-menu-action-3")) { /* copy link location */
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
     gtk_clipboard_set_text(clipboard, VIEW(gl)->status->hover_uri, -1);
   }
@@ -563,15 +563,15 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
           && (((host = dwb_get_host(web)) 
           && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
-              || g_list_find_custom(dwb.fc.tmp_scripts, host, (GCompareFunc)strcmp) || g_list_find_custom(dwb.fc.tmp_scripts, uri, (GCompareFunc)strcmp)))
-          || !strcmp(uri, "dwb://") || !strcmp(uri, "Error"))) {
+              || g_list_find_custom(dwb.fc.tmp_scripts, host, (GCompareFunc)g_strcmp0) || g_list_find_custom(dwb.fc.tmp_scripts, uri, (GCompareFunc)g_strcmp0)))
+          || !g_strcmp0(uri, "dwb://") || !g_strcmp0(uri, "Error"))) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", true, NULL);
         v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
       }
       if (v->plugins->status & PLUGIN_STATUS_ENABLED 
           && ( (host != NULL || (host = dwb_get_host(web))) 
           && (dwb_get_allowed(dwb.files.plugins_allow, host) || dwb_get_allowed(dwb.files.plugins_allow, uri)
-            || g_list_find_custom(dwb.fc.tmp_plugins, host, (GCompareFunc)strcmp) || g_list_find_custom(dwb.fc.tmp_plugins, uri, (GCompareFunc)strcmp) )
+            || g_list_find_custom(dwb.fc.tmp_plugins, host, (GCompareFunc)g_strcmp0) || g_list_find_custom(dwb.fc.tmp_plugins, uri, (GCompareFunc)g_strcmp0) )
             )) {
         plugins_disconnect(gl);
       }
@@ -581,7 +581,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       dwb_update_status(gl);
       /* TODO sqlite */
       if (!dwb.misc.private_browsing 
-          && strcmp(uri, "about:blank")
+          && g_strcmp0(uri, "about:blank")
           && !g_str_has_prefix(uri, "dwb://") 
           && (dwb_prepend_navigation(gl, &dwb.fc.history) == STATUS_OK)
           && dwb.misc.synctimer <= 0) {
@@ -985,7 +985,7 @@ view_add(const char *uri, gboolean background) {
   if (uri != NULL) {
     dwb_load_uri(ret, uri);
   }
-  else if (strcmp("about:blank", dwb.misc.startpage)) {
+  else if (g_strcmp0("about:blank", dwb.misc.startpage)) {
     char *page = g_strdup(dwb.misc.startpage);
     dwb_load_uri(ret, page);
     g_free(page);

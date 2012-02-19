@@ -149,7 +149,7 @@ util_char_to_arg(char *value, DwbType type) {
       }
     }
     if (type == BOOLEAN) {
-      if(!g_ascii_strcasecmp(value, "false") || !g_strcmp0(value, "0")) {
+      if(value == NULL || !g_ascii_strcasecmp(value, "false") || !g_strcmp0(value, "0")) {
         ret->b = false;
       }
       else {

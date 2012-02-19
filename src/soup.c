@@ -188,12 +188,12 @@ DwbStatus
 dwb_soup_set_cookie_accept_policy(const char *policy) {
   SoupCookieJarAcceptPolicy apo = 37;
   DwbStatus ret = STATUS_OK;
+  if (policy == NULL || ! g_ascii_strcasecmp(policy, "always")) 
+    apo = SOUP_COOKIE_JAR_ACCEPT_ALWAYS;
   if (! g_ascii_strcasecmp(policy, "nothirdparty"))
     apo = SOUP_COOKIE_JAR_ACCEPT_NO_THIRD_PARTY;
   else if (! g_ascii_strcasecmp(policy, "never"))
     apo = SOUP_COOKIE_JAR_ACCEPT_NEVER;
-  else if (! g_ascii_strcasecmp(policy, "always"))
-    apo = SOUP_COOKIE_JAR_ACCEPT_ALWAYS;
 
   if (apo == 37) {
     dwb_set_error_message(dwb.state.fview, "Invalid value for cookies-accept-policy: %d, using 0", policy);
@@ -207,6 +207,8 @@ dwb_soup_set_cookie_accept_policy(const char *policy) {
 /* dwb_soup_get_cookie_store_policy(const char *policy) {{{*/
 CookieStorePolicy 
 dwb_soup_get_cookie_store_policy(const char *policy) {
+  if (policy == NULL)
+    return COOKIE_STORE_SESSION;
   if (! g_ascii_strcasecmp(policy, "persistent")) 
     return COOKIE_STORE_PERSISTENT;
   else if (! g_ascii_strcasecmp(policy, "never")) 

@@ -3008,9 +3008,16 @@ dwb_init_style() {
 
 
   char *font = GET_CHAR("font");
-  dwb.font.fd_active = pango_font_description_from_string(font);
+  if (font) 
+    dwb.font.fd_active = pango_font_description_from_string(font);
   char *f;
-#define SET_FONT(var, prop) f = GET_CHAR(prop); var = pango_font_description_from_string(f ? f : font)
+#define SET_FONT(var, prop) do { \
+  if ((f = GET_CHAR(prop)) != NULL) \
+    var = pango_font_description_from_string(f); \
+  else if (dwb.font.fd_active) \
+    var = dwb.font.fd_active; \
+  } while(0)
+
   SET_FONT(dwb.font.fd_inactive, "font-inactive");
   SET_FONT(dwb.font.fd_entry, "font-entry");
   SET_FONT(dwb.font.fd_completion, "font-completion");
@@ -3458,7 +3465,8 @@ dwb_init(GSList *exe, char *restore) {
     g_free(path);
   }
   char *cache_model = GET_CHAR("cache-model");
-  if (!g_ascii_strcasecmp(cache_model, "documentviewer"))
+
+  if (cache_model != NULL && !g_ascii_strcasecmp(cache_model, "documentviewer"))
     webkit_set_cache_model(WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
 
   dwb_init_key_map();

@@ -541,7 +541,7 @@ adblock_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame,
   const char *firstdomain = domain_get_base_for_host(firsthost);
   if (firstdomain == NULL)
     return;
-  gboolean thirdparty = strcmp(domain, firstdomain);
+  gboolean thirdparty = g_strcmp0(domain, firstdomain);
 
   if (!adblock_match(_simple_exceptions, uri, host, domain, firsthost, firstdomain, attribute, thirdparty)) {
     if (adblock_match(_simple_rules, uri, host, domain, firsthost, firstdomain, attribute, thirdparty)) {
@@ -717,27 +717,27 @@ adblock_rule_parse(char *filterlist) {
             inverse = AB_INVERSE;
             o++;
           }
-          if (!strcmp(o, "script"))
+          if (!g_strcmp0(o, "script"))
             attributes |= (AA_SCRIPT << inverse);
-          else if (!strcmp(o, "image"))
+          else if (!g_strcmp0(o, "image"))
             attributes |= (AA_IMAGE << inverse);
-          else if (!strcmp(o, "stylesheet"))
+          else if (!g_strcmp0(o, "stylesheet"))
             attributes |= (AA_STYLESHEET << inverse);
-          else if (!strcmp(o, "object")) {
+          else if (!g_strcmp0(o, "object")) {
             attributes |= (AA_OBJECT << inverse);
           }
-          else if (!strcmp(o, "subdocument")) {
+          else if (!g_strcmp0(o, "subdocument")) {
             attributes |= inverse ? AA_DOCUMENT : AA_SUBDOCUMENT;
           }
-          else if (!strcmp(o, "document")) {
+          else if (!g_strcmp0(o, "document")) {
             if (exception) 
               attributes |= inverse ? AA_DOCUMENT : AA_SUBDOCUMENT;
             else 
               adblock_warn_ignored("Adblock option 'document' can only be applied to exception rules", pattern);
           }
-          else if (!strcmp(o, "match-case"))
+          else if (!g_strcmp0(o, "match-case"))
             option |= AO_MATCH_CASE;
-          else if (!strcmp(o, "third-party")) {
+          else if (!g_strcmp0(o, "third-party")) {
             if (inverse) {
               option |= AO_NOTHIRDPARTY;
             }
