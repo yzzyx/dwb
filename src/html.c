@@ -32,7 +32,7 @@ struct _HtmlTable {
   DwbStatus (*func)(GList *, HtmlTable *);
 };
 
-static void html_key_changed(WebKitDOMElement *target);
+static gboolean html_key_changed(WebKitDOMElement *target);
 void html_settings_changed(WebKitDOMElement *el);
 
 DwbStatus html_bookmarks(GList *, HtmlTable *);
@@ -203,11 +203,7 @@ html_keydown_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   if (val == 13) {
     WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
     if (target != NULL) {
-      char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
-      if (g_strcmp0(id, "dwb_custom_keys_area")) {
-        html_key_changed(WEBKIT_DOM_ELEMENT(target));
-        return true;
-      }
+      return html_key_changed(WEBKIT_DOM_ELEMENT(target));
     }
   }
   return false;
@@ -272,18 +268,26 @@ html_custom_keys_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointe
   dwb_change_mode(NORMAL_MODE, false);
   return true;
 }
-static void 
+static gboolean 
 html_key_changed(WebKitDOMElement *target) {
-  char *value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
+  char *value;
+  if (WEBKIT_DOM_IS_HTML_TEXT_AREA_ELEMENT(target)) 
+    value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(target));
+  else 
+    value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
+
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
-  dwb_set_key(id, value);
-  webkit_dom_element_blur(target);
+  if (g_strcmp0(id, "dwb_custom_keys_area")) {
+    dwb_set_key(id, value);
+    webkit_dom_element_blur(target);
+    return true;
+  }
+  return false;
 }
 static gboolean
 html_changed_cb(WebKitDOMElement *input, WebKitDOMEvent *e, gpointer data) {
   WebKitDOMEventTarget *target = webkit_dom_event_get_target(e);
-  html_key_changed(WEBKIT_DOM_ELEMENT(target));
-  return true;
+  return html_key_changed(WEBKIT_DOM_ELEMENT(target));
 }
 void 
 html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
