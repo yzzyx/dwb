@@ -229,7 +229,6 @@ html_settings_fill(char *key, WebSettings *s, WebKitWebView *wv) {
     webkit_dom_html_select_element_set_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(e), lower);
     g_free(lower);
   }
-  webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(e), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
   g_free(value);
 }
 void 
@@ -239,7 +238,7 @@ html_settings_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
     WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_settings_cb), true, wv);
-    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "change", G_CALLBACK(html_settings_changed_cb), false, wv);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "change", G_CALLBACK(html_settings_changed_cb), true, wv);
     g_hash_table_foreach(dwb.settings, (GHFunc)html_settings_fill, wv);
     g_signal_handlers_disconnect_by_func(wv, html_settings_load_cb, table);
   }
