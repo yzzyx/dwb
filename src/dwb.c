@@ -1960,7 +1960,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               dwb_change_mode(NORMAL_MODE, false);
                               g_strfreev(token);
                               return true;
-    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT(), false);
+    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT());
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(NULL); 
                               return true;
@@ -2050,7 +2050,7 @@ dwb_eval_key(GdkEventKey *e) {
         CustomCommand *c = l->data;
         if (IS_NUMMOD(c->key->mod) || (c->key->mod == mod_mask && c->key->num == dwb.state.nummod)) {
           for (int i=0; c->commands[i]; i++) {
-            dwb_parse_command_line(c->commands[i], c->commands[i+1] != NULL);
+            dwb_parse_command_line(c->commands[i]);
           }
           break;
         }
@@ -2082,7 +2082,7 @@ dwb_eval_key(GdkEventKey *e) {
     if (c->key->num == dwb.state.nummod  && c->key->mod == mod_mask) {
       if (!g_strcmp0(c->key->str, buf)) {
         for (int i=0; c->commands[i]; i++) {
-          dwb_parse_command_line(c->commands[i], c->commands[i+1] != NULL);
+          dwb_parse_command_line(c->commands[i]);
         }
         return true;
       }
@@ -2277,7 +2277,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
       break;
     }
     else {
-      dwb_parse_command_line(g_strchomp(line), true);
+      dwb_parse_command_line(g_strchomp(line));
     }
     g_io_channel_flush(out_channel, NULL);
     g_free(line);
@@ -3519,7 +3519,7 @@ dwb_init(GSList *exe, char *restore) {
 /* FIFO {{{*/
 /* dwb_parse_command_line(const char *line) {{{*/
 void 
-dwb_parse_command_line(const char *line, gboolean clear) {
+dwb_parse_command_line(const char *line) {
   const char *bak;
   int nummod;
   line = util_str_chug(line);
@@ -3567,7 +3567,7 @@ dwb_parse_command_line(const char *line, gboolean clear) {
   dwb_glist_prepend_unique(&dwb.fc.commands, g_strdup(line));
   /* Check for dwb.keymap is necessary for commands that quit dwb. */
   if (dwb.keymap != NULL && m != NULL && !(m->map->prop & CP_HAS_MODE)) {
-    dwb_change_mode(NORMAL_MODE, clear);
+    dwb_change_mode(NORMAL_MODE, dwb.state.message_id == 0);
   }
   dwb.state.nummod = -1;
 }/*}}}*/
@@ -3575,7 +3575,7 @@ static void
 dwb_parse_commands(const char *line) {
   char **commands = g_strsplit(util_str_chug(line), ";", -1);
   for (int i=0; commands[i]; i++) {
-    dwb_parse_command_line(commands[i], commands[i+1] == NULL);
+    dwb_parse_command_line(commands[i]);
   }
   g_strfreev(commands);
 }
