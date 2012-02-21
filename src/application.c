@@ -15,10 +15,12 @@ static gboolean opt_list_sessions = false;
 static gboolean opt_single = false;
 static gboolean opt_override_restore = false;
 static gboolean opt_version = false;
+static gboolean opt_force = false;
 static gchar *opt_restore = NULL;
 static gchar **opt_exe = NULL;
 static GOptionEntry options[] = {
   { "embed", 'e', 0, G_OPTION_ARG_INT64, &dwb.gui.wid, "Embed into window with window id wid", "wid"},
+  { "force", 'f', 0, G_OPTION_ARG_NONE, &opt_force, "Force restoring a saved session, even if another process has restored the session", NULL },
   { "list-sessions", 'l', 0, G_OPTION_ARG_NONE, &opt_list_sessions, "List saved sessions and exit", NULL },
   { "new-instance", 'n', 0, G_OPTION_ARG_NONE, &opt_single, "Open a new instance, overrides 'single-instance'", NULL},
   { "restore", 'r', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, &application_parse_option, "Restore session with name 'sessionname' or default if name is omitted", "sessionname"},
@@ -79,8 +81,6 @@ dwb_application_command_line(GApplication *app, GApplicationCommandLine *cl) {
 static gboolean
 dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_status) {
   GError *error = NULL;
-  dwb_init_files();
-  dwb_init_settings();
   *exit_status = 0;
   gint argc = g_strv_length(*argv);
   GOptionContext *c = application_get_option_context();
@@ -89,6 +89,8 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     *exit_status = 1;
     return true;
   }
+  dwb_init_files();
+  dwb_init_settings();
   if (opt_list_sessions) {
     session_list();
     return true;
@@ -106,9 +108,13 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     return true;
   }
   gboolean remote = g_application_get_is_remote(app);
+  /* Remaining number of args */
+  gint argc_remain = g_strv_length(*argv);
   if (remote) {
     if (opt_exe != NULL) {
-      gchar **restore_args = g_malloc0_n(g_strv_length(opt_exe)*2 + g_strv_length(*argv) + 1, sizeof(char*));
+      gchar **restore_args = g_malloc0_n(g_strv_length(opt_exe)*2 + argc_remain + 1, sizeof(char*));
+      if (restore_args == NULL)
+        return false;
       int count = 0;
       restore_args[count++] = g_strdup((*argv)[0]);
       gint i=0;
@@ -122,6 +128,10 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
       restore_args[2*i+count] = NULL;
       g_strfreev(*argv);
       *argv = restore_args;
+    }
+    else if (argc_remain == 1) {
+      application_start(app, *argv);
+      return true;
     }
     return false;
   }
@@ -158,9 +168,6 @@ application_execute_args(char **argv) {
       view_add(argv[i], false);
     }
   }
-  else {
-    view_add(NULL, false);
-  }
   if (opt_exe != NULL) {
     for (int i=0; opt_exe[i] != NULL; i++) {
       dwb_parse_commands(opt_exe[i]);
@@ -169,12 +176,27 @@ application_execute_args(char **argv) {
 }
 static void 
 application_start(GApplication *app, char **argv) {
+  gboolean restored = false;
   if (argv == NULL)
     return;
   gtk_init(NULL, NULL);
   dwb_init();
 
-  application_execute_args(argv);
+  // restore session
+  if (! opt_override_restore) {
+    if (GET_BOOL("save-session") || opt_restore != NULL) {
+      if (opt_restore == NULL)
+        opt_restore = g_strdup("default");
+      restored = session_restore(opt_restore, opt_force);
+    }
+  }
+  if (! restored && g_strv_length(argv) == 1 ) {
+    view_add(NULL, false);
+    dwb_open_startpage(dwb.state.fview);
+  }
+  else {
+    application_execute_args(argv);
+  }
   /*  Compute bar height */
   gint w = 0, h = 0;
   PangoContext *pctx = gtk_widget_get_pango_context(VIEW(dwb.state.fview)->tablabel);
@@ -204,8 +226,10 @@ application_get_option_context() {
 static gboolean 
 application_parse_option(const gchar *key, const gchar *value, gpointer data, GError **error) {
   if (!g_strcmp0(key, "-r") || !g_strcmp0(key, "--restore")) {
-    if (value == NULL) 
-      opt_restore = "default";
+    if (value != NULL) 
+      opt_restore = g_strdup(value);
+    else 
+      opt_restore = g_strdup("default");
     return true;
   }
   else {

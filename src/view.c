@@ -950,13 +950,9 @@ view_add(const char *uri, gboolean background) {
     adblock_connect(ret);
 
   dwb_update_layout();
+
   if (uri != NULL) {
     dwb_load_uri(ret, uri);
-  }
-  else if (strcmp("about:blank", dwb.misc.startpage)) {
-    char *page = g_strdup(dwb.misc.startpage);
-    dwb_load_uri(ret, page);
-    g_free(page);
   }
   return ret;
 } /*}}}*/

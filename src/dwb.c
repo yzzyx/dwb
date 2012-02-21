@@ -222,16 +222,20 @@ dwb_set_background_tab(GList *l, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
+/* dwb_set_auto_insert_mode {{{*/
 static DwbStatus 
 dwb_set_auto_insert_mode(GList *l, WebSettings *s) {
   dwb.state.auto_insert_mode = s->arg.b;
   return STATUS_OK;
-}
+}/*}}}*/
+
+/* dwb_set_tabbar_delay {{{*/
 static DwbStatus 
 dwb_set_tabbar_delay(GList *l, WebSettings *s) {
   dwb.misc.tabbar_delay = s->arg.i;
   return STATUS_OK;
-}
+}/*}}}*/
+
 /* dwb_set_favicon(GList *l, WebSettings *s){{{*/
 static DwbStatus
 dwb_set_favicon(GList *l, WebSettings *s) {
@@ -1923,7 +1927,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(NULL); 
                               return true;
-    case SAVE_SESSION:        session_save(GET_TEXT());
+    case SAVE_SESSION:        session_save(GET_TEXT(), true);
                               dwb_end();
                               return true;
     case COMPLETE_BUFFER:     completion_eval_buffer_completion();
@@ -2627,7 +2631,7 @@ dwb_save_files(gboolean end_session) {
   }
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
-    session_save(NULL);
+    session_save(NULL, false);
   }
   return true;
 }
