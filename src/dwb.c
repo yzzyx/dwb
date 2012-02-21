@@ -1613,12 +1613,17 @@ dwb_confirm(GList *gl, char *prompt, ...) {
   va_end(arg_list);
   dwb_source_remove(gl);
   dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.prompt, dwb.font.fd_active, false);
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
+    gtk_widget_show(dwb.gui.bottombox);
+
 
   int state = -1;
   int id = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_confirm_snooper_cb, &state);
   while ((dwb.state.mode & CONFIRM) && state == -1) {
     gtk_main_iteration();
   }
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
+    gtk_widget_hide(dwb.gui.bottombox);
   gtk_key_snooper_remove(id);
   return state > 0;
 }/*}}}*/
