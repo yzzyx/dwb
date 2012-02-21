@@ -245,7 +245,7 @@ application_stop(void) {
 
 gint 
 application_run(gint argc, gchar **argv) {
-  _app = dwb_application_new("org.gtk.net.dwb", 0);
+  _app = dwb_application_new("org.bitbucket.dwb", 0);
   gint ret = g_application_run(G_APPLICATION(_app), argc, argv);
   return ret;
 }
