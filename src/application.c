@@ -99,7 +99,8 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     dwb_version();
     return true;
   }
-  if (opt_single || !GET_BOOL("single-instance")) {
+  gboolean single_instance = GET_BOOL("single-instance");
+  if (opt_single || !single_instance) {
     g_application_set_flags(app, G_APPLICATION_NON_UNIQUE);
   }
   if (!g_application_register(app, NULL, &error)) { 
@@ -108,6 +109,10 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     return true;
   }
   gboolean remote = g_application_get_is_remote(app);
+  /* If single instance is enabled and this is the primary instance force
+   * loading of  sessions */
+  if (GET_BOOL("save-session") && !remote && single_instance)
+    opt_force = true;
   /* Remaining number of args */
   gint argc_remain = g_strv_length(*argv);
   if (remote) {
@@ -182,7 +187,7 @@ application_start(GApplication *app, char **argv) {
   gtk_init(NULL, NULL);
   dwb_init();
 
-  // restore session
+  /* restore session */ 
   if (! opt_override_restore) {
     if (GET_BOOL("save-session") || opt_restore != NULL) {
       if (opt_restore == NULL)
