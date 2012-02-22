@@ -1,8 +1,15 @@
 include config.mk
 
-all: $(TARGET) 
+all: options $(TARGET)
 
-$(TARGET):
+options: 
+	@echo Build options:
+	@echo CC 				= $(CC)
+	@echo CFLAGS 		= $(CFLAGS)
+	@echo LDFLAGS 	= $(LDFLAGS)
+	@echo CPPFLAGS 	= $(CPPFLAGS)
+
+$(TARGET): 
 	@for dir in $(SUBDIRS); do $(MAKE) $(MFLAGS) -C $$dir; done
 
 #@$(MAKE) -C $(SRCDIR)
@@ -12,7 +19,7 @@ clean:
 	@echo Cleaning 
 	@for dir in $(SUBDIRS); do $(MAKE) clean -C $$dir; done
 
-install: all install-man install-data
+install: $(TARGET) install-man install-data
 	install -d $(DESTDIR)$(BINDIR)
 	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 
@@ -57,4 +64,4 @@ dist: distclean
 	@echo "Creating tarball."
 	@hg archive -t tgz $(DISTDIR).tar.gz
 
-.PHONY: clean all install uninstall distclean install-data install-man uninstall-man uninstall-data 
+.PHONY: clean install uninstall distclean install-data install-man uninstall-man uninstall-data phony options

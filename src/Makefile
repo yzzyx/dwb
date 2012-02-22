@@ -1,15 +1,8 @@
 include ../config.mk
 
 DEPS=$(patsubst %.o, %.d, $(OBJ))
+
 all: $(TARGET)
-
-options: 
-	@echo Build options:
-	@echo CC 				= $(CC)
-	@echo CFLAGS 		= $(CFLAGS)
-	@echo LDFLAGS 	= $(LDFLAGS)
-	@echo CPPFLAGS 	= $(CPPFLAGS)
-
 
 $(TARGET): $(OBJ) 
 	@echo "$(CC) $@"
@@ -18,11 +11,9 @@ $(TARGET): $(OBJ)
 -include $(OBJ:.o=.d)
 -include $(DOBJ:.do=.dd)
 
-%.o: %.c %.h config.h dwb.h 
+%.o: %.c %.h config.h dwb.h tlds.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CFLAGS) $(CPPFLAGS) 
-
-$(SOURCE) $(HDR): options
 
 debug: $(DTARGET)
 
@@ -39,7 +30,7 @@ $(DTARGET): $(DOBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(DOBJ) -o $(DTARGET) $(LDFLAGS) 
 
-tlds.h: tlds.in
+tlds.h: tlds.in 
 	@echo gen tlds.h
 	@echo "#ifndef TLDS_H" > $@
 	@echo "#define TLDS_H" >> $@
@@ -49,10 +40,9 @@ tlds.h: tlds.in
 	@echo "};" >> $@
 	@echo "#endif" >> $@
 
-domain.o: tlds.h
+domain.o: tlds.h 
 
 domain.do: tlds.h
-
 
 dependencies: $(DEPS)
 
@@ -79,4 +69,4 @@ clean:
 	$(RM) *.o  *.do $(TARGET) $(DTARGET) *.d
 	$(RM) tlds.h
 
-.PHONY: clean all cgdb deps options
+.PHONY: clean all cgdb deps 
