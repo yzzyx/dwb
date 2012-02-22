@@ -44,6 +44,7 @@
 #include "entry.h"
 #include "adblock.h"
 #include "domain.h"
+#include "application.h"
 
 /* DECLARATIONS {{{*/
 static DwbStatus dwb_webkit_setting(GList *, WebSettings *);
@@ -61,28 +62,19 @@ static DwbStatus dwb_set_cookies(GList *, WebSettings *);
 static DwbStatus dwb_set_widget_packing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
 static DwbStatus dwb_reload_scripts(GList *, WebSettings *);
-static DwbStatus dwb_set_single_instance(GList *, WebSettings *);
 static DwbStatus dwb_set_favicon(GList *, WebSettings *);
 static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
-static DwbStatus dwb_pack(const char *layout, gboolean rebuild);
 
 static gboolean dwb_editable_focus_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl);
 
 static void dwb_reload_layout(GList *,  WebSettings *);
 static char * dwb_test_userscript(const char *);
 
-static void dwb_open_channel(const char *);
-static void dwb_open_si_channel(void);
-static gboolean dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data);
-static void dwb_parse_commands(const char *line);
-
-
 static void dwb_init_key_map(void);
-static void dwb_init_settings(void);
 static void dwb_init_style(void);
 static void dwb_apply_style(void);
 static void dwb_init_gui(void);
@@ -233,33 +225,21 @@ dwb_set_background_tab(GList *l, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
-/* dwb_set_single_instance(GList *l, WebSettings *s){{{*/
-static DwbStatus
-dwb_set_single_instance(GList *l, WebSettings *s) {
-  if (!s->arg.b) {
-    if (dwb.misc.si_channel) {
-      g_io_channel_shutdown(dwb.misc.si_channel, true, NULL);
-      g_io_channel_unref(dwb.misc.si_channel);
-      dwb.misc.si_channel = NULL;
-    }
-  }
-  else if (!dwb.misc.si_channel) {
-    dwb_open_si_channel();
-  }
-  return STATUS_OK;
-}/*}}}*/
-
+/* dwb_set_auto_insert_mode {{{*/
 static DwbStatus 
 dwb_set_auto_insert_mode(GList *l, WebSettings *s) {
   dwb.state.auto_insert_mode = s->arg.b;
   return STATUS_OK;
-}
+}/*}}}*/
+
+/* dwb_set_tabbar_delay {{{*/
 static DwbStatus 
 dwb_set_tabbar_delay(GList *l, WebSettings *s) {
   dwb.misc.tabbar_delay = s->arg.i;
   return STATUS_OK;
-}
-/* dwb_set_single_instance(GList *l, WebSettings *s){{{*/
+}/*}}}*/
+
+/* dwb_set_favicon(GList *l, WebSettings *s){{{*/
 static DwbStatus
 dwb_set_favicon(GList *l, WebSettings *s) {
   if (!s->arg.b) {
@@ -1183,12 +1163,6 @@ dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   return n;
 }/*}}}*/
 
-/* dwb_open_channel (const char *filename) {{{*/
-static void dwb_open_channel(const char *filename) {
-  dwb.misc.si_channel = g_io_channel_new_file(filename, "r+", NULL);
-  g_io_add_watch(dwb.misc.si_channel, G_IO_IN, (GIOFunc)dwb_handle_channel, NULL);
-}/*}}}*/
-
 /* dwb_test_userscript (const char *)         return: char* (alloc) or NULL {{{*/
 static char * 
 dwb_test_userscript(const char *filename) {
@@ -1202,12 +1176,6 @@ dwb_test_userscript(const char *filename) {
     g_free(path);
   }
   return NULL;
-}/*}}}*/
-
-/* dwb_open_si_channel() {{{*/
-static void
-dwb_open_si_channel() {
-  dwb_open_channel(dwb.files.unifile);
 }/*}}}*/
 
 /* dwb_focus(GList *gl) {{{*/
@@ -1967,7 +1935,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(NULL); 
                               return true;
-    case SAVE_SESSION:        session_save(GET_TEXT());
+    case SAVE_SESSION:        session_save(GET_TEXT(), true);
                               dwb_end();
                               return true;
     case COMPLETE_BUFFER:     completion_eval_buffer_completion();
@@ -2671,7 +2639,7 @@ dwb_save_files(gboolean end_session) {
   }
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
-    session_save(NULL);
+    session_save(NULL, false);
   }
   return true;
 }
@@ -2700,7 +2668,8 @@ dwb_end() {
       
   if (dwb_save_files(true)) {
     if (dwb_clean_up()) {
-      gtk_main_quit();
+      application_stop();
+      //gtk_main_quit();
       return true;
     }
   }
@@ -2916,7 +2885,7 @@ dwb_read_settings() {
 }/*}}}*/
 
 /* dwb_init_settings() {{{*/
-static void
+void
 dwb_init_settings() {
   GList *l = NULL;
   dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
@@ -3049,7 +3018,7 @@ dwb_apply_style() {
   DWB_WIDGET_OVERRIDE_BACKGROUND(dwb.gui.window, GTK_STATE_NORMAL, &dwb.color.active_bg);
 }
 
-static DwbStatus
+DwbStatus
 dwb_pack(const char *layout, gboolean rebuild) {
   DwbStatus ret = STATUS_OK;
   const char *default_layout = DEFAULT_WIDGET_PACKING;
@@ -3266,7 +3235,7 @@ dwb_get_search_completion(const char *text) {
 }
 
 /* dwb_init_files() {{{*/
-static void
+void
 dwb_init_files() {
   char *path           = util_build_path();
   char *profile_path   = util_check_directory(g_build_filename(path, dwb.misc.profile, NULL));
@@ -3354,7 +3323,7 @@ dwb_handle_signal(int s) {
   }
 }
 
-static void 
+void 
 dwb_init_signals() {
   for (int i=0; i<LENGTH(signals); i++) {
     struct sigaction act, oact;
@@ -3454,8 +3423,9 @@ dwb_init_custom_keys(gboolean reload) {
 }
 
 /* dwb_init() {{{*/
-static void 
-dwb_init(GSList *exe, char *restore) {
+void 
+dwb_init() {
+  dwb_init_signals();
   dwb_clean_vars();
   dwb.state.views = NULL;
   dwb.state.fview = NULL;
@@ -3497,36 +3467,6 @@ dwb_init(GSList *exe, char *restore) {
   adblock_init();
 
   dwb_soup_init();
-
-  gboolean restore_success = false;
-  if (restore) 
-    restore_success = session_restore(restore);
-  if (dwb.misc.argc > 0) {
-    for (int i=0; i<dwb.misc.argc; i++) {
-      view_add(dwb.misc.argv[i], false);
-    }
-  }
-  else if (!restore || !restore_success) {
-    view_add(NULL, false);
-  }
-  /* Compute bar height */
-  PangoContext *pctx = gtk_widget_get_pango_context(VIEW(dwb.state.fview)->tablabel);
-  PangoLayout *layout = pango_layout_new(pctx);
-  int w = 0, h = 0;
-  pango_layout_set_text(layout, "a", -1);
-  pango_layout_set_font_description(layout, dwb.font.fd_active);
-  pango_layout_get_size(layout, &w, &h);
-  dwb.misc.bar_height = h/PANGO_SCALE;
-  dwb_pack(GET_CHAR("widget-packing"), false);
-  gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
-  g_object_unref(layout);
-
-  /* commands */
-  if (exe != NULL) {
-    for (GSList *l = exe; l; l=l->next) {
-      dwb_parse_commands(exe->data);
-    }
-  }
 } /*}}}*/ /*}}}*/
 
 /* FIFO {{{*/
@@ -3584,7 +3524,7 @@ dwb_parse_command_line(const char *line) {
   }
   dwb.state.nummod = -1;
 }/*}}}*/
-static void 
+void 
 dwb_parse_commands(const char *line) {
   char **commands = g_strsplit(util_str_chug(line), ";", -1);
   for (int i=0; commands[i]; i++) {
@@ -3592,154 +3532,20 @@ dwb_parse_commands(const char *line) {
   }
   g_strfreev(commands);
 }
-
-/* dwb_handle_channel {{{*/
-static gboolean
-dwb_handle_channel(GIOChannel *c, GIOCondition condition, void *data) {
-  char *line = NULL;
-
-  g_io_channel_read_line(c, &line, NULL, NULL, NULL);
-  if (line) {
-    g_strstrip(line);
-    dwb_parse_commands(line);
-    g_io_channel_flush(c, NULL);
-    g_free(line);
-  }
-  return true;
-}/*}}}*/
-
-/* dwb_init_fifo{{{*/
-static void 
-dwb_init_fifo(gboolean single, GSList *exe) {
-  FILE *ff;
-
-  /* Files */
-  char *path = util_build_path();
-  dwb.files.unifile = g_build_filename(path, "dwb-uni.fifo", NULL);
-
-  dwb.misc.si_channel = NULL;
-  if (single) {
-    g_free(path);
-    return;
-  }
-  if (GET_BOOL("single-instance")) {
-    if (!g_file_test(dwb.files.unifile, G_FILE_TEST_EXISTS)) {
-      mkfifo(dwb.files.unifile, 0666);
-    }
-    int fd = open(dwb.files.unifile, O_WRONLY | O_NONBLOCK);
-    if ( (ff = fdopen(fd, "w")) ) {
-      if ((dwb.misc.argc > 0 || exe != NULL)) {
-        for (int i=0; i<dwb.misc.argc; i++) {
-          if (g_file_test(dwb.misc.argv[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute(dwb.misc.argv[i])) {
-            char *curr_dir = g_get_current_dir();
-            path = g_build_filename(curr_dir, dwb.misc.argv[i], NULL);
-
-            fprintf(ff, "tabopen %s\n", path);
-
-            g_free(curr_dir);
-            g_free(path);
-          }
-          else {
-            fprintf(ff, "tabopen %s\n", dwb.misc.argv[i]);
-          }
-        }
-        if (exe != NULL) {
-          for (GSList *l = exe; l; l=l->next) {
-            fprintf(ff, "%s\n", (char *)l->data);
-          }
-        }
-      }
-      else {
-        fprintf(ff, "tab_new\n");
-
-      }
-      fclose(ff);
-      exit(EXIT_SUCCESS);
-    }
-    dwb_open_si_channel();
-  }
-  g_free(path);
-}/*}}}*/
 /*}}}*/
 
+void
+dwb_version() {
+  printf("%s %s, %s\n", NAME, VERSION, COPYRIGHT);
+}
 /* MAIN {{{*/
 int 
 main(int argc, char *argv[]) {
   dwb.misc.name = REAL_NAME;
   dwb.misc.profile = "default";
-  dwb.misc.argc = 0;
   dwb.misc.prog_path = argv[0];
   dwb.gui.wid = 0;
-  int last = 0;
-  gboolean single = false;
-  gboolean override_restore = false;
-  int argr = argc;
-  char *restore = NULL;
-  GSList *exe = NULL;
 
-  gtk_init(&argc, &argv);
-
-  if (argc > 1) {
-    for (int i=1; i<argc; i++) {
-      if (! argv[i] )
-        continue;
-      if (argv[i][0] == '-') {
-        if (argv[i][1] == 'l') {
-          session_list();
-          argr--;
-        }
-        else if (argv[i][1] == 'p' && argv[i+1]) {
-          dwb.misc.profile = argv[++i];
-          argr -= 2;
-        }
-        else if (argv[i][1] == 'n') {
-          single = true;
-          argr -=1;
-        }
-        else if (argv[i][1] == 'e' && argv[i+1]) {
-          dwb.gui.wid = strtol(argv[++i], NULL, 10);
-        }
-        else if (argv[i][1] == 'x' && argv[i+1]) {
-          exe = g_slist_append(exe, argv[++i]);
-        }
-        else if (argv[i][1] == 'R' ) {
-          override_restore = true;
-          argr--;
-        }
-        else if (argv[i][1] == 'r' ) {
-          if (!argv[i+1] || argv[i+1][0] == '-') {
-            restore = "default";
-            argr--;
-          }
-          else {
-            restore = argv[++i];
-            argr -=2;
-          }
-        }
-        else if (argv[i][1] == 'v') {
-          printf("%s %s, %s\n", NAME, VERSION, COPYRIGHT);
-          return 0;
-        }
-      }
-      else {
-        last = i;
-        break;
-      }
-    }
-  }
-  dwb_init_files();
-
-  dwb_init_settings();
-  if (!override_restore && GET_BOOL("save-session") && argr == 1 && !restore && !single) {
-    restore = "default";
-  }
-  if (last) {
-    dwb.misc.argv = &argv[last];
-    dwb.misc.argc = g_strv_length(dwb.misc.argv);
-  }
-  dwb_init_fifo(single, exe);
-  dwb_init_signals();
-  dwb_init(exe, restore);
-  gtk_main();
-  return EXIT_SUCCESS;
+  gint ret = application_run(argc, argv); 
+  return ret;
 }/*}}}*/

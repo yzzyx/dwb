@@ -270,6 +270,7 @@ html_custom_keys_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointe
 }
 static gboolean 
 html_key_changed(WebKitDOMElement *target) {
+  g_return_val_if_fail(target != NULL, false);
   char *value;
   if (WEBKIT_DOM_IS_HTML_TEXT_AREA_ELEMENT(target)) 
     value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(target));

@@ -662,8 +662,6 @@ struct _Misc {
   int history_length;
 
   char *settings_border;
-  int argc;
-  char **argv;
 
   gboolean tabbed_browsing;
   gboolean private_browsing;
@@ -698,7 +696,6 @@ struct _Files {
   const char *session;
   const char *settings;
   const char *stylesheet;
-  const char *unifile;
   const char *userscripts;
   const char *adblock;
   const char *scripts_allow;
@@ -854,6 +851,10 @@ void dwb_init_custom_keys(gboolean);
 void dwb_update_tabs(void);
 void dwb_setup_environment(GSList *);
 void dwb_check_auto_insert(GList *);
+void dwb_version();
+DwbStatus dwb_pack(const char *layout, gboolean rebuild);
+void dwb_init_signals(void);
+void dwb_parse_commands(const char *line);
 
 
 #endif

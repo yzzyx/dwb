@@ -19,8 +19,8 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-gboolean session_save(const char *);
-gboolean session_restore(const char *);
+gboolean session_save(const char *, gboolean);
+gboolean session_restore(char *, gboolean);
 void session_list(void);
 
 #endif

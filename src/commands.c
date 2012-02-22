@@ -80,8 +80,9 @@ commands_get_webview_with_nummod() {
 /* commands_add_view(KeyMap *, Arg *) {{{*/
 DwbStatus 
 commands_add_view(KeyMap *km, Arg *arg) {
-  soup_get_header(dwb.state.fview, "Referer");
   view_add(arg->p, false);
+  if (arg->p == NULL)
+    dwb_open_startpage(dwb.state.fview);
   return STATUS_OK;
 }/*}}}*/
 
@@ -484,7 +485,7 @@ DwbStatus
 commands_save_session(KeyMap *km, Arg *arg) {
   if (arg->n == NORMAL_MODE) {
     dwb.state.mode = SAVE_SESSION;
-    session_save(NULL);
+    session_save(NULL, true);
     dwb_end();
     return STATUS_END;
   }

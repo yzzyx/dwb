@@ -984,6 +984,7 @@ view_add(const char *uri, gboolean background) {
     adblock_connect(ret);
 
   dwb_update_layout();
+
   if (uri != NULL) {
     dwb_load_uri(ret, uri);
   }

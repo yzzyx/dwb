@@ -17,11 +17,13 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "dwb.h"
 #include "util.h"
 #include "view.h"
 #include "session.h"
 
+static char *_session_name;
 typedef struct _SessionTab {
   GList *gl;
   unsigned int lock;
@@ -41,23 +43,70 @@ session_get_groups() {
 
 /* session_get_group(const char *)     return char* (alloc){{{*/
 static char *
-session_get_group(const char *name) {
+session_get_group(const char *name, gboolean *is_marked) {
   char *content = NULL;
+  gboolean mark;
+  int l = strlen (name);
+  const char *group;
 
   char **groups = session_get_groups();
   if (groups) {
     int i=1;
-    char *group = g_strconcat(name, "\n", NULL);
     while (groups[i]) {
-      if (g_str_has_prefix(groups[i], group)) {
+      group = groups[i];
+      mark = false;
+      if (*groups[i] == '*') {
+        group++;
+        mark = true;
+      }
+      if (strlen(group) > l+1 && !strncmp(group, name, l) && group[l] == '\n') {
         content = g_strdup(groups[i]);
+        *is_marked = mark;
       }
       i++;
     }
     g_strfreev(groups);
-    g_free(group);
   }
   return content;
+}/*}}}*/
+
+/* session_save_file (const char *group, const char *content, gboolean * mark_group) {{{*/
+static void
+session_save_file(const char *groupname, const char *content, gboolean mark) {
+  if (groupname == NULL || content == NULL)
+    return;
+
+  gboolean set = false;
+  GString *buffer = g_string_new(NULL);
+  char *group = NULL;
+
+  char **groups = session_get_groups();
+  if (groups) {
+    int i=1;
+    group = g_strconcat(groupname,  "\n", NULL);
+    int l = strlen(group);
+    while(groups[i]) {
+      if (*groups[i] == '*') {
+        if (!strncmp(groups[i]+1, group, l-1)) {
+            g_string_append_printf(buffer, "g:%s%s\n%s", mark ? "*" : "", groupname, content);
+            set = true;
+        }
+        else 
+          g_string_append_printf(buffer, "g:%s", groups[i]+1);
+       
+      }
+      else if (strncmp(groups[i], group, l)) {
+        g_string_append_printf(buffer, "g:%s", groups[i]);
+      }
+      i++;
+    }
+  }
+  if (!set) 
+    g_string_append_printf(buffer, "g:%s%s\n%s", mark ? "*" : "", groupname, content);
+  util_set_file_content(dwb.files.session, buffer->str);
+  g_string_free(buffer, true);
+  g_free(group);
+  g_strfreev(groups);
 }/*}}}*/
 
 void
@@ -78,12 +127,11 @@ session_load_status_callback(WebKitWebView *wv, GParamSpec *p, SessionTab *tab) 
 static void
 session_load_webview(GList *gl, char *uri, int last, int lock_status) {
   if (last > 0) {
-    for (int j=0; j<last; j++) {
-      webkit_web_view_go_back(WEBVIEW(gl));
-    }
+    webkit_web_view_go_back_or_forward(WEBVIEW(gl), -last);
   }
   else {
-    dwb_load_uri(gl, uri);
+    WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(gl));
+    webkit_web_view_go_to_back_forward_item(WEBVIEW(gl), webkit_web_back_forward_list_get_nth_item(bf_list, 0));
   }
   if (lock_status > 0) {
     SessionTab *tab = dwb_malloc(sizeof(SessionTab));
@@ -117,19 +165,31 @@ session_list() {
 
 /* session_restore(const char *name) {{{*/
 gboolean
-session_restore(const char *name) {
-  char *group = session_get_group(name);
-  if (group == NULL) {
-    return false;
-  }
-  char  **lines = g_strsplit(group, "\n", -1);
-  g_free(group);
+session_restore(char *name, gboolean force) {
+  gboolean is_marked = false;
+  gboolean ret = false;
+  char *uri = NULL;
   GList *currentview = NULL, *lastview = NULL;
   WebKitWebBackForwardList *bf_list = NULL;
   int last = 1;
-  char *uri = NULL;
   char *end;
   int locked_state = 0;
+
+  char *group = session_get_group(name, &is_marked);
+  if (is_marked && !force) {
+    fprintf(stderr, "Warning: Session '%s' will not be restored.\n", name);
+    fprintf(stderr, "There is already a restored session open with name '%s'.\n", name);
+    fputs("To force opening a saved session use -f or --force.\n", stderr);
+    return false;
+  }
+  _session_name = name;
+  if (group == NULL) {
+    return false;
+  }
+  char *group_begin = strchr(group, '\n');
+  session_save_file(name, group_begin+1, true);
+  char  **lines = g_strsplit(group, "\n", -1);
+  g_free(group);
 
   int length = g_strv_length(lines) - 1;
   for (int i=1; i<=length; i++) {
@@ -162,25 +222,29 @@ session_restore(const char *name) {
     g_strfreev(line);
   }
   g_strfreev(lines);
-  //gtk_widget_show_all(dwb.gui.window);
+  ret = true;
 
-  if (!dwb.state.views) 
+  if (!dwb.state.views) {
     view_add(NULL, false);
-
-  //dwb_unfocus();
+    dwb_open_startpage(dwb.state.fview);
+  }
   dwb_focus(dwb.state.fview);
   g_free(uri);
-  return true;
+  return ret;
 }/*}}}*/
 
 /* session_save(const char *) {{{*/
 gboolean  
-session_save(const char *name) {
+session_save(const char *name, gboolean force) {
   if (!name) {
-    name = "default";
+    if (_session_name) 
+      name = _session_name;
+    else if (force) 
+      name = "default";
+    else 
+      return false;
   }
   GString *buffer = g_string_new(NULL);
-  g_string_append_printf(buffer, "g:%s\n", name);
 
   for (GList *l = g_list_first(dwb.state.views); l; l=l->next) {
     WebKitWebView *web = WEBVIEW(l);
@@ -196,20 +260,8 @@ session_save(const char *name) {
       }
     }
   }
-  char **groups = session_get_groups();
-  if (groups) {
-    int i=1;
-    char *group = g_strconcat(name,  "\n", NULL);
-    while(groups[i]) {
-      if (!g_str_has_prefix(groups[i], group)) {
-        g_string_append_printf(buffer, "g:%s", groups[i]);
-      }
-      i++;
-    }
-    g_free(group);
-    g_strfreev(groups);
-  }
-  util_set_file_content(dwb.files.session, buffer->str);
+  session_save_file(name, buffer->str, false);
+  g_free(_session_name);
   g_string_free(buffer, true);
   return true;
 }/*}}}*/
