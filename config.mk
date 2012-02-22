@@ -134,7 +134,7 @@ endif
 CFLAGS +=-I/usr/lib/dwb/ 
 
 # LDFLAGS
-LDFLAGS = $(shell pkg-config --libs $(LIBS)) -rdynamic
+LDFLAGS = $(shell pkg-config --libs $(LIBS))
 
 # Debug flags
 DCFLAGS = $(CFLAGS)
