@@ -168,7 +168,6 @@ session_list() {
 gboolean
 session_restore(char *name, gboolean force) {
   gboolean is_marked = false;
-  gboolean ret = false;
   char *uri = NULL;
   GList *currentview = NULL, *lastview = NULL;
   WebKitWebBackForwardList *bf_list = NULL;
@@ -223,7 +222,6 @@ session_restore(char *name, gboolean force) {
     g_strfreev(line);
   }
   g_strfreev(lines);
-  ret = true;
 
   if (!dwb.state.views) {
     view_add(NULL, false);
@@ -231,7 +229,7 @@ session_restore(char *name, gboolean force) {
   }
   dwb_focus(dwb.state.fview);
   g_free(uri);
-  return ret;
+  return true;
 }/*}}}*/
 
 /* session_save(const char *) {{{*/

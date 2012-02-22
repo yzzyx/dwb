@@ -199,6 +199,7 @@ application_start(GApplication *app, char **argv) {
   if (! restored && g_strv_length(argv) == 1 ) {
     view_add(NULL, false);
     dwb_open_startpage(dwb.state.fview);
+    application_execute_args(NULL);
   }
   else {
     application_execute_args(argv);

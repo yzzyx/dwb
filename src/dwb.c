@@ -1071,13 +1071,14 @@ dwb_toggle_allowed(const char *filename, const char *data) {
   return !allowed;
 }/*}}}*/
 
+/* dwb_reload(GList *){{{*/
 void
 dwb_reload(GList *gl) {
   const char *path = webkit_web_view_get_uri(WEBVIEW(gl));
   if ( !local_check_directory(dwb.state.fview, path, false, NULL) ) {
     webkit_web_view_reload(WEBVIEW(gl));
   }
-}
+}/*}}}*/
 
 /* dwb_history{{{*/
 DwbStatus
@@ -1236,8 +1237,9 @@ dwb_spawn(GList *gl, const char *prop, const char *uri) {
   }
 }/*}}}*/
 
+/* dwb_update_tabs(){{{*/
 void
-dwb_update_tabs() {
+dwb_update_tabs(void) {
   for (GList *l = dwb.state.views; l; l=l->next) {
     if (l == dwb.state.fview) {
       view_set_active_style(l);
@@ -1246,7 +1248,7 @@ dwb_update_tabs() {
       view_set_normal_style(l);
     }
   }
-}
+}/*}}}*/
 
 /* dwb_reload_layout(GList *,  WebSettings  *s) {{{*/
 static void 
@@ -1458,6 +1460,7 @@ dwb_update_hints(GdkEventKey *e) {
   return ret;
 }/*}}}*/
 
+/* dwb_show_hints(Arg *) {{{*/
 DwbStatus 
 dwb_show_hints(Arg *arg) {
   DwbStatus ret = STATUS_OK;
@@ -1483,7 +1486,7 @@ dwb_show_hints(Arg *arg) {
     entry_focus();
   }
   return ret;
-}
+}/*}}}*/
 
 /* dwb_execute_script {{{*/
 char *
@@ -1733,6 +1736,7 @@ dwb_update_status(GList *gl) {
 
   g_free(filename);
 }/*}}}*/
+
 /* dwb_update_layout(GList *gl) {{{*/
 void 
 dwb_update_layout() {
@@ -1900,7 +1904,7 @@ dwb_clean_key_buffer() {
   g_string_truncate(dwb.state.buffer, 0);
 }/*}}}*/
 
-const char *
+const char * /* dwb_parse_nummod {{{*/
 dwb_parse_nummod(const char *text) {
   char num[6];
   int i=0;
@@ -1914,9 +1918,10 @@ dwb_parse_nummod(const char *text) {
     dwb.state.nummod = (int)strtol(num, NULL, 10);
   while (g_ascii_isspace(*text)) text++; 
   return text;
-}
+}/*}}}*/
 
-gboolean 
+
+gboolean /* dwb_entry_activate (GdkEventKey *e) {{{*/
 dwb_entry_activate(GdkEventKey *e) {
   char **token = NULL;
   switch (CLEAN_MODE(dwb.state.mode))  {
@@ -1961,7 +1966,9 @@ dwb_entry_activate(GdkEventKey *e) {
     dwb_glist_prepend_unique(&dwb.fc.navigations, g_strdup(text));
   dwb_change_mode(NORMAL_MODE, false);
   return true;
-}
+}/*}}}*/
+
+/* dwb_get_key(GdkEventKey *e, unsigned gint *mod_mask, gboolean *isprint) {{{*/
 char *
 dwb_get_key(GdkEventKey *e, unsigned int *mod_mask, gboolean *isprint) {
   char *key = util_keyval_to_char(e->keyval, true);
@@ -1975,7 +1982,8 @@ dwb_get_key(GdkEventKey *e, unsigned int *mod_mask, gboolean *isprint) {
     *mod_mask = CLEAN_STATE_WITH_SHIFT(e);
   }
   return key;
-}
+}/*}}}*/
+
 /* dwb_eval_key(GdkEventKey *e) {{{*/
 gboolean
 dwb_eval_key(GdkEventKey *e) {
@@ -2272,10 +2280,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_
   return false;
 }/*}}}*/
 
-void 
-dwb_spawn_full(char **argv, GSList *env) {
-}
-
+/* dwb_setup_environment(GSList *list) {{{*/
 void
 dwb_setup_environment(GSList *list) {
   Navigation *n;
@@ -2286,7 +2291,8 @@ dwb_setup_environment(GSList *list) {
   }
   g_slist_free(list);
 
-}
+}/*}}}*/
+
 /* dwb_execute_user_script(Arg *a) {{{*/
 void
 dwb_execute_user_script(KeyMap *km, Arg *a) {
@@ -2430,8 +2436,9 @@ dwb_get_scripts() {
   return gl;
 }/*}}}*/
 
+/* dwb_reload_userscripts()  {{{*/
 void 
-dwb_reload_userscripts() {
+dwb_reload_userscripts(void) {
   g_list_foreach(dwb.misc.userscripts, (GFunc)dwb_navigation_free, NULL);
   dwb.misc.userscripts = NULL;
   KeyMap *m;
@@ -2450,7 +2457,7 @@ dwb_reload_userscripts() {
   g_slist_free(delete);
   dwb.keymap = g_list_concat(dwb.keymap, dwb_get_scripts());
   dwb_set_normal_message(dwb.state.fview, true, "Userscripts reloaded");
-}
+}/*}}}*/
 
 /*}}}*/
 
