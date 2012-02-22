@@ -1,18 +1,28 @@
 include ../config.mk
 
 DEPS=$(patsubst %.o, %.d, $(OBJ))
-#all: $(TARGET) 
+all: $(TARGET)
 
-$(TARGET): $(OBJ)
+options: 
+	@echo Build options:
+	@echo CC 				= $(CC)
+	@echo CFLAGS 		= $(CFLAGS)
+	@echo LDFLAGS 	= $(LDFLAGS)
+	@echo CPPFLAGS 	= $(CPPFLAGS)
+
+
+$(TARGET): $(OBJ) 
 	@echo "$(CC) $@"
 	@$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS) 
 
 -include $(OBJ:.o=.d)
 -include $(DOBJ:.do=.dd)
 
-%.o: %.c %.h config.h dwb.h
+%.o: %.c %.h config.h dwb.h 
 	@echo "${CC} $<"
-	@$(CC) -c -o $@ $< $(CFLAGS) 
+	@$(CC) -c -o $@ $< $(CFLAGS) $(CPPFLAGS) 
+
+$(SOURCE) $(HDR): options
 
 debug: $(DTARGET)
 
@@ -69,4 +79,4 @@ clean:
 	$(RM) *.o  *.do $(TARGET) $(DTARGET) *.d
 	$(RM) tlds.h
 
-.PHONY: clean all cgdb deps
+.PHONY: clean all cgdb deps options

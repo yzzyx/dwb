@@ -95,6 +95,7 @@ LOCAL_FILE=local.html
 PLUGIN_FILE=pluginblocker.asc
 
 # CFLAGS
+CFLAGS := $(CFLAGS)
 CFLAGS += -Wall
 CFLAGS += -pipe
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
