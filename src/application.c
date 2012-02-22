@@ -9,8 +9,7 @@ static void application_execute_args(char **);
 static GOptionContext * application_get_option_context(void);
 static void application_start(GApplication *, char **);
 
-
-
+/* Option parsing arguments  {{{ */
 static gboolean opt_list_sessions = false;
 static gboolean opt_single = false;
 static gboolean opt_override_restore = false;
@@ -31,6 +30,7 @@ static GOptionEntry options[] = {
   { NULL }
 };
 static GOptionContext *option_context;
+/* }}} */
 
 /* DwbApplication derived from GApplication {{{*/
 #define DWB_TYPE_APPLICATION            (dwb_application_get_type ())
@@ -166,7 +166,7 @@ dwb_application_new (const gchar *id, GApplicationFlags flags)
   return g_object_new (DWB_TYPE_APPLICATION, "application-id", id, "flags", flags, NULL);
 }/*}}}*/
 
-static void
+static void /* application_execute_args(char **argv) {{{*/
 application_execute_args(char **argv) {
   if (argv != NULL && argv[1] != NULL) {
     for (int i=1; argv[i] != NULL; i++) {
@@ -178,8 +178,9 @@ application_execute_args(char **argv) {
       dwb_parse_commands(opt_exe[i]);
     }
   }
-}
-static void 
+}/*}}}*/
+
+static void /* application_start(GApplication *app, char **argv) {{{*/
 application_start(GApplication *app, char **argv) {
   gboolean restored = false;
   if (argv == NULL)
@@ -218,17 +219,18 @@ application_start(GApplication *app, char **argv) {
 
   dwb_init_signals();
   g_application_hold(app);
-}
-static GOptionContext * 
-application_get_option_context() {
+}/*}}}*/
+
+static GOptionContext * /* application_get_option_context(void) {{{*/
+application_get_option_context(void) {
   if (option_context == NULL) {
     option_context = g_option_context_new("[url]");
     g_option_context_add_main_entries(option_context, options, NULL);
   }
   return option_context;
-}
+}/*}}}*/
 
-static gboolean 
+static gboolean /* application_parse_option(const gchar *key, const gchar *value, gpointer data, GError **error) {{{*/
 application_parse_option(const gchar *key, const gchar *value, gpointer data, GError **error) {
   if (!g_strcmp0(key, "-r") || !g_strcmp0(key, "--restore")) {
     if (value != NULL) 
@@ -241,16 +243,16 @@ application_parse_option(const gchar *key, const gchar *value, gpointer data, GE
     g_set_error(error, 0, 1, "Invalid option : %s", key);
   }
   return false;
-}
+}/*}}}*/
 
-void 
+void /* application_stop() {{{*/
 application_stop(void) {
   g_application_release(G_APPLICATION(_app));
-}
+}/*}}}*/
 
-gint 
+gint /* application_run(gint, char **) {{{*/
 application_run(gint argc, gchar **argv) {
   _app = dwb_application_new("org.bitbucket.dwb", 0);
   gint ret = g_application_run(G_APPLICATION(_app), argc, argv);
   return ret;
-}
+}/*}}}*/

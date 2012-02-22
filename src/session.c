@@ -24,6 +24,7 @@
 #include "session.h"
 
 static char *_session_name;
+
 typedef struct _SessionTab {
   GList *gl;
   unsigned int lock;
