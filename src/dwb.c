@@ -405,7 +405,7 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
   vsnprintf(message, STRING_LENGTH, error, arg_list);
   va_end(arg_list);
 
-  dwb_source_remove(dwb.state.fview);
+  dwb_source_remove();
 
   dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.error, dwb.font.fd_active, false);
   dwb.state.message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, NULL);
@@ -1183,7 +1183,7 @@ void
 dwb_unfocus() {
   if (dwb.state.fview) {
     view_set_normal_style(dwb.state.fview);
-    dwb_source_remove(dwb.state.fview);
+    dwb_source_remove();
     CLEAR_COMMAND_TEXT();
     dwb.state.fview = NULL;
   }
@@ -1582,7 +1582,7 @@ dwb_confirm(GList *gl, char *prompt, ...) {
   char message[STRING_LENGTH];
   vsnprintf(message, STRING_LENGTH, prompt, arg_list);
   va_end(arg_list);
-  dwb_source_remove(gl);
+  dwb_source_remove();
   dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.prompt, dwb.font.fd_active, false);
   if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
     gtk_widget_show(dwb.gui.bottombox);
