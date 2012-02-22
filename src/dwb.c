@@ -1774,70 +1774,74 @@ dwb_new_window(const char  *uri) {
 void 
 dwb_load_uri(GList *gl, const char *arg) {
   /* TODO parse scheme */
-  if (arg != NULL && strlen(arg) > 0)
-    g_strstrip((char*)arg);
+  if (arg == NULL)
+    return;
+  char *uri = NULL; 
+  char *argback = g_strdup(arg);
+  char *tmpuri = argback;
+  if (tmpuri != NULL && *tmpuri != '\0')
+    g_strstrip(tmpuri);
   gl = gl == NULL ? dwb.state.fview : gl;
   WebKitWebView *web = WEBVIEW(gl);
 
-  if (!arg || !arg || !strlen(arg)) {
-    return;
+  if (*tmpuri == '\0') {
+    goto clean;
   }
 
   /* new window ? */
   if (dwb.state.nv & OPEN_NEW_WINDOW) {
     dwb.state.nv = OPEN_NORMAL;
-    dwb_new_window(arg);
-    return;
+    dwb_new_window(tmpuri);
+    goto clean;
   }
   /*  new tab ?  */
   else if (dwb.state.nv == OPEN_NEW_VIEW) {
     dwb.state.nv = OPEN_NORMAL;
-    view_add(arg, false);
-    return;
+    view_add(tmpuri, false);
+    goto clean;
   }
   /*  get resolved uri */
-  char *uri = NULL; 
 
   dwb_soup_clean();
   /* Check if uri is a html-string */
   if (dwb.state.type == HTML_STRING) {
-    webkit_web_view_load_string(web, arg, "text/html", NULL, NULL);
+    webkit_web_view_load_string(web, tmpuri, "text/html", NULL, NULL);
     dwb.state.type = 0;
-    return;
+    goto clean;
   }
   /* Check if uri is a userscript */
-  if ( (uri = dwb_test_userscript(arg)) ) {
+  if ( (uri = dwb_test_userscript(tmpuri)) ) {
     Arg a = { .arg = uri };
     dwb_execute_user_script(NULL, &a);
     g_free(uri);
-    return;
+    goto clean;
   }
   /* Check if uri is a javascript snippet */
-  if (g_str_has_prefix(arg, "javascript:")) {
+  if (g_str_has_prefix(tmpuri, "javascript:")) {
     if (GET_BOOL("javascript-schemes"))
-      dwb_execute_script(webkit_web_view_get_main_frame(web), arg, false);
+      dwb_execute_script(webkit_web_view_get_main_frame(web), tmpuri, false);
     else 
       dwb_set_error_message(dwb.state.fview, "Loading of javascript schemes permitted");
-    return;
+    goto clean;
   }
   /* Check if uri is a directory */
-  if ( (local_check_directory(gl, arg, true, NULL)) ) {
-    return;
+  if ( (local_check_directory(gl, tmpuri, true, NULL)) ) {
+    goto clean;
   }
   /* Check if uri is a regular file */
-  if (g_str_has_prefix(arg, "file://") || !g_strcmp0(arg, "about:blank")) {
-    webkit_web_view_load_uri(web, arg);
-    return;
+  if (g_str_has_prefix(tmpuri, "file://") || !g_strcmp0(tmpuri, "about:blank")) {
+    webkit_web_view_load_uri(web, tmpuri);
+    goto clean;
   }
-  else if ( g_file_test(arg, G_FILE_TEST_IS_REGULAR) ) {
+  else if ( g_file_test(tmpuri, G_FILE_TEST_IS_REGULAR) ) {
     GError *error = NULL;
-    if ( !(uri = g_filename_to_uri(arg, NULL, &error)) ) { 
+    if ( !(uri = g_filename_to_uri(tmpuri, NULL, &error)) ) { 
       if (error->code == G_CONVERT_ERROR_NOT_ABSOLUTE_PATH) {
         g_clear_error(&error);
         char *path = g_get_current_dir();
-        char *tmp = g_build_filename(path, arg, NULL);
+        char *tmp = g_build_filename(path, tmpuri, NULL);
         if ( !(uri = g_filename_to_uri(tmp, NULL, &error))) {
-          fprintf(stderr, "Cannot open %s: %s", (char*)arg, error->message);
+          fprintf(stderr, "Cannot open %s: %s", tmpuri, error->message);
           g_clear_error(&error);
         }
         g_free(tmp);
@@ -1845,19 +1849,21 @@ dwb_load_uri(GList *gl, const char *arg) {
       }
     }
   }
-  else if (g_str_has_prefix(arg, "dwb://")) {
-    webkit_web_view_load_uri(web, arg);
-    return;
+  else if (g_str_has_prefix(tmpuri, "dwb://")) {
+    webkit_web_view_load_uri(web, tmpuri);
+    goto clean;
   }
   /* Check if searchengine is needed and load uri */
 
-  else if (!(uri = dwb_get_search_engine(arg, false)) || strstr(arg, "localhost:")) {
-    uri = g_str_has_prefix(arg, "http://") || g_str_has_prefix(arg, "https://") 
-      ? g_strdup(arg)
-      : g_strdup_printf("http://%s", (char*)arg);
+  else if (!(uri = dwb_get_search_engine(tmpuri, false)) || strstr(tmpuri, "localhost:")) {
+    uri = g_str_has_prefix(tmpuri, "http://") || g_str_has_prefix(tmpuri, "https://") 
+      ? g_strdup(tmpuri)
+      : g_strdup_printf("http://%s", tmpuri);
   }
   webkit_web_view_load_uri(web, uri);
+clean: 
   g_free(uri);
+  g_free(argback);
 }/*}}}*/
 
 /* dwb_eval_editing_key(GdkEventKey *) {{{*/

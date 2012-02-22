@@ -988,11 +988,6 @@ view_add(const char *uri, gboolean background) {
   if (uri != NULL) {
     dwb_load_uri(ret, uri);
   }
-  else if (g_strcmp0("about:blank", dwb.misc.startpage)) {
-    char *page = g_strdup(dwb.misc.startpage);
-    dwb_load_uri(ret, page);
-    g_free(page);
-  }
   return ret;
 } /*}}}*/
 
