@@ -24,6 +24,9 @@
 #include <fcntl.h>
 #include <locale.h>
 #include <JavaScriptCore/JavaScript.h>
+#ifdef HAS_EXECINFO
+#include <execinfo.h>
+#endif
 #include "dwb.h"
 #include "soup.h"
 #include "completion.h"
@@ -3336,6 +3339,16 @@ dwb_handle_signal(int s) {
     exit(EXIT_SUCCESS);
   else if (s == SIGSEGV) {
     fprintf(stderr, "Received SIGSEGV, trying to clean up.\n");
+#ifdef HAS_EXECINFO
+    void  *buffer[100];
+    char **symbols = NULL;
+    int trace_size = backtrace(buffer, 100);
+    symbols = backtrace_symbols(buffer, trace_size);
+    printf("\nLast %d stack frames: \n\n", trace_size);
+    for (int i=0; trace_size; i++)
+      printf("%3d: %s\n", trace_size-i, symbols[i]);
+    g_free(symbols);
+#endif
     dwb_clean_up();
     exit(EXIT_FAILURE);
   }

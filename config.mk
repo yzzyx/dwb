@@ -119,6 +119,11 @@ CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 CFLAGS += -DLOCAL_FILE=\"$(LOCAL_FILE)\"
 CFLAGS += -DSYSTEM_DATA_DIR=\"$(DATADIR)\"
 
+# If execinfo.h is not available, e.g. freebsd
+ifneq (${WITHOUT_EXECINFO}, 1)
+CFLAGS += -DHAS_EXECINFO
+endif
+
 ifeq (USEGTK3, 1) 
 CFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
 CFLAGS+=-DGTK_DISABLE_DEPRECATED
@@ -128,7 +133,7 @@ endif
 CFLAGS +=-I/usr/lib/dwb/ 
 
 # LDFLAGS
-LDFLAGS = $(shell pkg-config --libs $(LIBS)) 
+LDFLAGS = $(shell pkg-config --libs $(LIBS)) -rdynamic
 
 # Debug flags
 DCFLAGS = $(CFLAGS)
