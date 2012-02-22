@@ -199,11 +199,8 @@ application_start(GApplication *app, char **argv) {
   if (! restored && g_strv_length(argv) == 1 ) {
     view_add(NULL, false);
     dwb_open_startpage(dwb.state.fview);
-    application_execute_args(NULL);
   }
-  else {
-    application_execute_args(argv);
-  }
+  application_execute_args(argv);
   /*  Compute bar height */
   gint w = 0, h = 0;
   PangoContext *pctx = gtk_widget_get_pango_context(VIEW(dwb.state.fview)->tablabel);
