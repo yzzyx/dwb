@@ -1,8 +1,11 @@
 #include <gtk/gtk.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "dwb.h"
 #include "init.h"
 #include "view.h"
 #include "session.h"
+#include "util.h"
 
 static gboolean application_parse_option(const gchar *, const gchar *, gpointer , GError **);
 static void application_execute_args(char **);
@@ -17,6 +20,7 @@ static gboolean opt_version = false;
 static gboolean opt_force = false;
 static gchar *opt_restore = NULL;
 static gchar **opt_exe = NULL;
+static GIOChannel *_fallback_channel;
 static GOptionEntry options[] = {
   { "embed", 'e', 0, G_OPTION_ARG_INT64, &dwb.gui.wid, "Embed into window with window id wid", "wid"},
   { "force", 'f', 0, G_OPTION_ARG_NONE, &opt_force, "Force restoring a saved session, even if another process has restored the session", NULL },
@@ -78,17 +82,44 @@ dwb_application_command_line(GApplication *app, GApplicationCommandLine *cl) {
   application_execute_args(argv);
   return 0;
 }
+
+
+/* dwb_handle_channel {{{*/
+static gboolean
+application_handle_channel(GIOChannel *c, GIOCondition condition) {
+  char *line = NULL;
+
+  g_io_channel_read_line(c, &line, NULL, NULL, NULL);
+  if (line) {
+    g_strstrip(line);
+    dwb_parse_commands(line);
+    g_io_channel_flush(c, NULL);
+    g_free(line);
+  }
+  return true;
+}/*}}}*/
+
 static gboolean
 dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_status) {
   GError *error = NULL;
   *exit_status = 0;
+  gboolean remote = false, single_instance;
+  gint argc_remain;
   gint argc = g_strv_length(*argv);
+  gint i, count;
+  gchar **restore_args;
+  gint fd = -1;
+  FILE *ff = NULL; 
+  gchar *path, *curr_dir, *unififo = NULL;
+
   GOptionContext *c = application_get_option_context();
   if (!g_option_context_parse(c, &argc, argv, &error)) {
     fprintf(stderr, "Error parsing command line options: %s\n", error->message);
     *exit_status = 1;
     return true;
   }
+
+  argc_remain = g_strv_length(*argv);
   dwb_init_files();
   dwb_init_settings();
   if (opt_list_sessions) {
@@ -99,48 +130,92 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     dwb_version();
     return true;
   }
-  gboolean single_instance = GET_BOOL("single-instance");
+  single_instance = GET_BOOL("single-instance");
   if (opt_single || !single_instance) {
     g_application_set_flags(app, G_APPLICATION_NON_UNIQUE);
   }
-  if (!g_application_register(app, NULL, &error)) { 
-    perror(error->message);
-    *exit_status = 1;
-    return true;
-  }
-  gboolean remote = g_application_get_is_remote(app);
-  /* If single instance is enabled and this is the primary instance force
-   * loading of  sessions */
-  if (GET_BOOL("save-session") && !remote && single_instance)
-    opt_force = true;
-  /* Remaining number of args */
-  gint argc_remain = g_strv_length(*argv);
-  if (remote) {
-    if (opt_exe != NULL) {
-      gchar **restore_args = g_malloc0_n(g_strv_length(opt_exe)*2 + argc_remain + 1, sizeof(char*));
-      if (restore_args == NULL)
-        return false;
-      int count = 0;
-      restore_args[count++] = g_strdup((*argv)[0]);
-      gint i=0;
-      for (; opt_exe[i] != NULL; i++) {
-        restore_args[2*i + count] = g_strdup("-x");
-        restore_args[2*i + 1 + count] = opt_exe[i];
+  if (g_application_register(app, NULL, &error)) { 
+    remote = g_application_get_is_remote(app);
+    if (remote) {
+      /* Restore executable args */
+      if (opt_exe != NULL) {
+        restore_args = g_malloc0_n(g_strv_length(opt_exe)*2 + argc_remain + 1, sizeof(char*));
+        if (restore_args == NULL)
+          return false;
+        count = 0;
+        restore_args[count++] = g_strdup((*argv)[0]);
+        for (i = 0; opt_exe[i] != NULL; i++) {
+          restore_args[2*i + count] = g_strdup("-x");
+          restore_args[2*i + 1 + count] = opt_exe[i];
+        }
+        for (; (*argv)[count]; count++) {
+          restore_args[2*i+count] = g_strdup((*argv)[count]);
+        }
+        restore_args[2*i+count] = NULL;
+        g_strfreev(*argv);
+        *argv = restore_args;
       }
-      for (; (*argv)[count]; count++) {
-        restore_args[2*i+count] = g_strdup((*argv)[count]);
+      else if (argc_remain == 1) {
+        application_start(app, *argv);
+        return true;
       }
-      restore_args[2*i+count] = NULL;
-      g_strfreev(*argv);
-      *argv = restore_args;
+      return false;
     }
-    else if (argc_remain == 1) {
+  }
+  /* Fallback */
+  else {
+    fprintf(stderr, "Cannot register to dbus, using fallback\n");
+    if (!single_instance) {
       application_start(app, *argv);
       return true;
     }
-    return false;
+    else {
+      path = util_build_path();
+      unififo = g_build_filename(path, "dwb-uni.fifo", NULL);
+      g_free(path);
+      if (! g_file_test(unififo, G_FILE_TEST_EXISTS)) {
+        mkfifo(unififo, 0600);
+      }
+      fd = open(unififo, O_WRONLY | O_NONBLOCK);
+      if ( (ff = fdopen(fd, "w")) )
+          remote = true;
+      if ( argc_remain > 1 && remote ) {
+        if (argc_remain > 1 || opt_exe != NULL) {
+          for (int i=1; (*argv)[i]; i++) {
+            if ( g_file_test((*argv)[i], G_FILE_TEST_EXISTS) ) {
+              curr_dir = g_get_current_dir();
+              path = g_build_filename(curr_dir, argv[i], NULL);
+              fprintf(ff, "tabopen %s\n", path);
+              g_free (path);
+              g_free (curr_dir);
+            }
+            else {
+              fprintf(ff, "tabopen %s\n", (*argv)[i]);
+            }
+          }
+          if (opt_exe != NULL) {
+            for (int i = 0; opt_exe[i]; i++) {
+              fprintf(ff, "%s\n", opt_exe[i]);
+            }
+          }
+          goto clean;
+        }
+      }
+      if (!remote)  {
+        GIOChannel *_fallback_channel = g_io_channel_new_file(unififo, "r+", NULL);
+        g_io_add_watch(_fallback_channel, G_IO_IN, (GIOFunc)application_handle_channel, NULL);
+      }
+    }
   }
+  if (GET_BOOL("save-session") && !remote && !opt_single)
+    opt_force = true;
   application_start(app, *argv);
+clean:
+  if (ff != NULL)
+    fclose(ff);
+  if(fd > 0)
+    close(fd);
+  g_free(unififo);
   return true;
 }
 
@@ -245,6 +320,10 @@ application_parse_option(const gchar *key, const gchar *value, gpointer data, GE
 
 void /* application_stop() {{{*/
 application_stop(void) {
+  if (_fallback_channel != NULL) {
+    g_io_channel_shutdown(_fallback_channel, true, NULL);
+    g_io_channel_unref(_fallback_channel);
+  }
   g_application_release(G_APPLICATION(_app));
 }/*}}}*/
 
@@ -252,5 +331,6 @@ gint /* application_run(gint, char **) {{{*/
 application_run(gint argc, gchar **argv) {
   _app = dwb_application_new("org.bitbucket.dwb", 0);
   gint ret = g_application_run(G_APPLICATION(_app), argc, argv);
+  g_object_unref(_app);
   return ret;
 }/*}}}*/
