@@ -182,9 +182,9 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
       if ( remote ) {
         if (argc_remain > 1 || opt_exe != NULL) {
           for (int i=1; (*argv)[i]; i++) {
-            if ( g_file_test((*argv)[i], G_FILE_TEST_EXISTS) ) {
+            if ( g_file_test((*argv)[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute((*argv)[i])) {
               curr_dir = g_get_current_dir();
-              path = g_build_filename(curr_dir, argv[i], NULL);
+              path = g_build_filename(curr_dir, (*argv)[i], NULL);
               fprintf(ff, "tabopen %s\n", path);
               g_free (path);
               g_free (curr_dir);

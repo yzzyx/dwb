@@ -3539,7 +3539,7 @@ dwb_parse_command_line(const char *line) {
 }/*}}}*/
 void 
 dwb_parse_commands(const char *line) {
-  char **commands = g_strsplit(util_str_chug(line), ";", -1);
+  char **commands = g_strsplit(util_str_chug(line), ";;", -1);
   for (int i=0; commands[i]; i++) {
     dwb_parse_command_line(commands[i]);
   }
