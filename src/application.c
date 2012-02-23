@@ -164,7 +164,7 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
   }
   /* Fallback */
   else {
-    fprintf(stderr, "Cannot register to dbus, using fallback\n");
+    fprintf(stderr, "D-Bus-registration failed, using fallback mode\n");
     if (!single_instance) {
       application_start(app, *argv);
       return true;
@@ -179,7 +179,7 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
       fd = open(unififo, O_WRONLY | O_NONBLOCK);
       if ( (ff = fdopen(fd, "w")) )
           remote = true;
-      if ( argc_remain > 1 && remote ) {
+      if ( remote ) {
         if (argc_remain > 1 || opt_exe != NULL) {
           for (int i=1; (*argv)[i]; i++) {
             if ( g_file_test((*argv)[i], G_FILE_TEST_EXISTS) ) {
@@ -201,7 +201,7 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
           goto clean;
         }
       }
-      if (!remote)  {
+      else {
         GIOChannel *_fallback_channel = g_io_channel_new_file(unififo, "r+", NULL);
         g_io_add_watch(_fallback_channel, G_IO_IN, (GIOFunc)application_handle_channel, NULL);
       }

@@ -3326,9 +3326,9 @@ dwb_handle_signal(int s) {
     char **symbols = NULL;
     int trace_size = backtrace(buffer, 100);
     symbols = backtrace_symbols(buffer, trace_size);
-    printf("\nLast %d stack frames: \n\n", trace_size);
+    fprintf(stderr, "\nLast %d stack frames: \n\n", trace_size);
     for (int i=0; trace_size; i++)
-      printf("%3d: %s\n", trace_size-i, symbols[i]);
+      fprintf(stderr, "%3d: %s\n", trace_size-i, symbols[i]);
     g_free(symbols);
 #endif
     dwb_clean_up();
