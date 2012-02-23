@@ -340,7 +340,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
       return true;
     }
   }
-  if (g_str_has_prefix(uri, "dwb://")) {
+  if (g_str_has_prefix(uri, "dwb:")) {
     if (!html_load(gl, uri)) {
       fprintf(stderr, "Error loadings %s, maybe some files are missing.\n", uri);
     }
@@ -564,7 +564,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
           && (((host = dwb_get_host(web)) 
           && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
               || g_list_find_custom(dwb.fc.tmp_scripts, host, (GCompareFunc)g_strcmp0) || g_list_find_custom(dwb.fc.tmp_scripts, uri, (GCompareFunc)g_strcmp0)))
-          || !g_strcmp0(uri, "dwb://") || !g_strcmp0(uri, "Error"))) {
+          || !g_str_has_prefix(uri, "dwb:") || !g_strcmp0(uri, "Error"))) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", true, NULL);
         v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
       }
@@ -582,7 +582,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       /* TODO sqlite */
       if (!dwb.misc.private_browsing 
           && g_strcmp0(uri, "about:blank")
-          && !g_str_has_prefix(uri, "dwb://") 
+          && !g_str_has_prefix(uri, "dwb:") 
           && (dwb_prepend_navigation(gl, &dwb.fc.history) == STATUS_OK)
           && dwb.misc.synctimer <= 0) {
         util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);

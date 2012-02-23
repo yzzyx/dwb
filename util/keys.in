@@ -153,4 +153,8 @@ toggle_hidden_files Toggle hidden files in directory listing
 save_search_field Add a new searchengine 
 reload_scripts Reload all javascript userscripts 
 reload_userscripts Reload userscripts 
+show_bookmarks Show bookmarks page
+show_downloads Show download page
+show_history Show history page
+show_quickmarks Show quickmark page
 

@@ -188,19 +188,26 @@ commands_show_hints(KeyMap *km, Arg *arg) {
   return dwb_show_hints(arg);
 }/*}}}*/
 
+DwbStatus 
+commands_show(KeyMap *km, Arg *arg) {
+  html_load(dwb.state.fview, arg->p);
+  return STATUS_OK;
+}
+#if 0
 /* commands_show_keys(KeyMap *km, Arg *arg){{{*/
 DwbStatus 
 commands_show_keys(KeyMap *km, Arg *arg) {
-  html_load(dwb.state.fview, "dwb://keys");
+  html_load(dwb.state.fview, "dwb:keys");
   return STATUS_OK;
 }/*}}}*/
 
 /* commands_show_settings(KeyMap *km, Arg *a) {{{*/
 DwbStatus
 commands_show_settings(KeyMap *km, Arg *arg) {
-  html_load(dwb.state.fview, "dwb://settings");
+  html_load(dwb.state.fview, "dwb:settings");
   return STATUS_OK;
 }/*}}}*/
+#endif
 
 /* commands_allow_cookie {{{*/
 DwbStatus

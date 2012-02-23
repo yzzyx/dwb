@@ -45,13 +45,13 @@ DwbStatus html_keys(GList *, HtmlTable *);
 
 
 static HtmlTable table[] = {
-  { "dwb://bookmarks",  "Bookmarks",    INFO_FILE,      0, html_bookmarks,  },
-  { "dwb://quickmarks", "Quickmarks",   INFO_FILE,      0, html_quickmarks, },
-  { "dwb://history",    "History",      INFO_FILE,      0, html_history,    },
-  { "dwb://downloads",  "Downloads",    INFO_FILE,      0, html_downloads, },
-  { "dwb://keys",       "Keys",         INFO_FILE,      0, html_keys },
-  { "dwb://settings",   "Settings",     INFO_FILE,      0, html_settings },
-  { "dwb://startpage",   NULL,           NULL,           0, html_startpage },
+  { "dwb:bookmarks",  "Bookmarks",    INFO_FILE,      0, html_bookmarks,  },
+  { "dwb:quickmarks", "Quickmarks",   INFO_FILE,      0, html_quickmarks, },
+  { "dwb:history",    "History",      INFO_FILE,      0, html_history,    },
+  { "dwb:downloads",  "Downloads",    INFO_FILE,      0, html_downloads, },
+  { "dwb:keys",       "Keys",         INFO_FILE,      0, html_keys },
+  { "dwb:settings",   "Settings",     INFO_FILE,      0, html_settings },
+  { "dwb:startpage",   NULL,           NULL,           0, html_startpage },
 };
 
 static char current_uri[BUFFER_LENGTH];
@@ -88,16 +88,16 @@ html_remove_item_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
   if (webkit_dom_element_has_attribute((void*)target, "navigation")) {
     char *navigation = webkit_dom_element_get_attribute(WEBKIT_DOM_ELEMENT(target), "navigation");
     const char *uri = webkit_web_view_get_uri(WEBVIEW(gl));
-    if (!g_strcmp0(uri, "dwb://history")) {
+    if (!g_strcmp0(uri, "dwb:history")) {
       dwb_remove_history(navigation);
     }
-    else if (!g_strcmp0(uri, "dwb://bookmarks")) {
+    else if (!g_strcmp0(uri, "dwb:bookmarks")) {
       dwb_remove_bookmark(navigation);
     }
-    else if (!g_strcmp0(uri, "dwb://quickmarks")) {
+    else if (!g_strcmp0(uri, "dwb:quickmarks")) {
       dwb_remove_quickmark(navigation);
     }
-    else if (!g_strcmp0(uri, "dwb://downloads")) {
+    else if (!g_strcmp0(uri, "dwb:downloads")) {
       dwb_remove_download(navigation);
     }
   }

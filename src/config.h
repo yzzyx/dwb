@@ -81,6 +81,10 @@ static KeyValue KEYS[] = {
   { "scroll_up",                {   "k",         0,                   },  },  
   { "show_keys",                {   "Sk",         0,                  },  },  
   { "show_settings",            {   "Ss",        0,                  },  },  
+  { "show_bookmarks",           {   "Sb",        0,                  },  },  
+  { "show_history",             {   "Sh",        0,                  },  },  
+  { "show_downloads",           {   "Sd",        0,                  },  },  
+  { "show_quickmarks",           {   "Sq",        0,                  },  },  
   { "stop_loading",             {   "s",         GDK_CONTROL_MASK,   },  },  
   { "view_source",              {   "gf",         0,                  },  },  
   { "zoom_in",                  {   "+",         0,                  },  },  
@@ -428,7 +432,7 @@ static FunctionMap FMAP [] = {
   
   { { "start_page",       "Open startpage",                    }, 1, 
     (Func)commands_open_startpage,      "No startpage set",                ALWAYS_SM, 
-    { .p = "dwb://bookmarks" }, EP_NONE, { "home", NULL }, },
+    { 0 }, EP_NONE, { "home", NULL }, },
   
   { { "quit",           "Quit dwb",               }, 1, 
     (Func)commands_quit,         NULL,                   ALWAYS_SM, 
@@ -510,13 +514,29 @@ static FunctionMap FMAP [] = {
     (Func)commands_set_key,             NULL,                              NEVER_SM,    
     { 0 }, EP_NONE, { "keys", NULL }, },
   
-  { { "show_keys",             "Key configuration",                 }, 1, 
-    (Func)commands_show_keys,           NULL,                              ALWAYS_SM, 
-    { 0 }, EP_NONE, { "skeys", NULL }, },
+  { { "show_bookmarks",             "Show bookmarks",                 }, 1, 
+    (Func)commands_show,           NULL,                              ALWAYS_SM, 
+    { .p = "dwb:bookmarks", .ro = true }, EP_NONE, { "sbookmarks", NULL }, },
   
+  { { "show_quickmarks",             "Show quickmarks",                 }, 1, 
+    (Func)commands_show,           NULL,                              ALWAYS_SM, 
+    { .p = "dwb:quickmarks", .ro = true }, EP_NONE, { "squickmarks", NULL }, },
+
+  { { "show_history",             "Show quickmarks",                 }, 1, 
+    (Func)commands_show,           NULL,                              ALWAYS_SM, 
+    { .p = "dwb:history", .ro = true }, EP_NONE, { "shistory", NULL }, },
+
+  { { "show_downloads",             "Show downloads",                 }, 1, 
+    (Func)commands_show,           NULL,                              ALWAYS_SM, 
+    { .p = "dwb:downloads", .ro = true }, EP_NONE, { "sdownloads", NULL }, },
+  
+  { { "show_keys",             "Key configuration",                 }, 1, 
+    (Func)commands_show,           NULL,                              ALWAYS_SM, 
+    { .p = "dwb:keys", .ro = true }, EP_NONE, { "skeys", NULL }, },
+
   { { "show_settings",         "Settings configuration",                          }, 1, 
-    (Func)commands_show_settings,       NULL,                              ALWAYS_SM, 
-    { 0 }, EP_NONE, { "ssettings", NULL }, },
+    (Func)commands_show,       NULL,                              ALWAYS_SM, 
+    { .p = "dwb:settings", .ro = true }, EP_NONE, { "ssettings", NULL }, },
   
   { { "view_source",           "View source",                       }, 1, 
     (Func)commands_view_source,         NULL,                              ALWAYS_SM, 
@@ -948,7 +968,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "auto-completion",                         "Show possible shortcuts", },                                
     SETTING_GLOBAL,  BOOLEAN, { .b = false         },     (S_Func)completion_set_autcompletion,  },
   { { "startpage",                               "The default homepage", },                                        
-    SETTING_GLOBAL,  CHAR,    { .p = "dwb://bookmarks" },        (S_Func)dwb_set_startpage,  }, 
+    SETTING_GLOBAL,  CHAR,    { .p = "dwb:bookmarks" },        (S_Func)dwb_set_startpage,  }, 
   { { "single-instance",                         "Whether to have only on instance", },                                         
     SETTING_GLOBAL,  BOOLEAN,    { .b = true },          NULL,  }, 
   { { "save-session",                            "Whether to automatically save sessions", },                                       

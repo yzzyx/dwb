@@ -1853,7 +1853,7 @@ dwb_load_uri(GList *gl, const char *arg) {
       }
     }
   }
-  else if (g_str_has_prefix(tmpuri, "dwb://")) {
+  else if (g_str_has_prefix(tmpuri, "dwb:")) {
     webkit_web_view_load_uri(web, tmpuri);
     goto clean;
   }
