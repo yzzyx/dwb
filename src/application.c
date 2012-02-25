@@ -99,18 +99,30 @@ application_handle_channel(GIOChannel *c, GIOCondition condition) {
   return true;
 }/*}}}*/
 
+static char *
+application_local_path(const char *file) {
+  char *path = NULL;
+  if ( g_file_test(file, G_FILE_TEST_EXISTS) && !g_path_is_absolute(file)) {
+    char *curr_dir = g_get_current_dir();
+    path = g_build_filename(curr_dir, file, NULL);
+    g_free (curr_dir);
+  }
+  return path;
+
+}
+
 static gboolean
 dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_status) {
   GError *error = NULL;
   *exit_status = 0;
   gboolean remote = false, single_instance;
-  gint argc_remain;
+  gint argc_remain, argc_exe = 0;
   gint argc = g_strv_length(*argv);
   gint i, count;
   gchar **restore_args;
   gint fd = -1;
   FILE *ff = NULL; 
-  gchar *path, *curr_dir, *unififo = NULL;
+  gchar *path, *unififo = NULL;
 
   GOptionContext *c = application_get_option_context();
   if (!g_option_context_parse(c, &argc, argv, &error)) {
@@ -120,6 +132,10 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
   }
 
   argc_remain = g_strv_length(*argv);
+
+  if (opt_exe != NULL)
+    argc_exe = g_strv_length(opt_exe);
+
   dwb_init_files();
   dwb_init_settings();
   if (opt_list_sessions) {
@@ -138,18 +154,24 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     remote = g_application_get_is_remote(app);
     if (remote) {
       /* Restore executable args */
-      if (opt_exe != NULL) {
-        restore_args = g_malloc0_n(g_strv_length(opt_exe)*2 + argc_remain + 1, sizeof(char*));
+      if (argc_exe > 0 || argc_remain > 1) {
+        restore_args = g_malloc0_n(argc_exe*2 + argc_remain + 1, sizeof(char*));
         if (restore_args == NULL)
           return false;
-        count = 0;
+        count = i = 0;
         restore_args[count++] = g_strdup((*argv)[0]);
-        for (i = 0; opt_exe[i] != NULL; i++) {
-          restore_args[2*i + count] = g_strdup("-x");
-          restore_args[2*i + 1 + count] = opt_exe[i];
+        if (opt_exe != NULL) {
+          for (; opt_exe[i] != NULL; i++) {
+            restore_args[2*i + count] = g_strdup("-x");
+            restore_args[2*i + 1 + count] = opt_exe[i];
+          }
         }
         for (; (*argv)[count]; count++) {
-          restore_args[2*i+count] = g_strdup((*argv)[count]);
+          if ( (path = application_local_path((*argv)[count]))) {
+            restore_args[2*i+count] = path;
+          }
+          else 
+            restore_args[2*i+count] = g_strdup((*argv)[count]);
         }
         restore_args[2*i+count] = NULL;
         g_strfreev(*argv);
@@ -182,12 +204,9 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
       if ( remote ) {
         if (argc_remain > 1 || opt_exe != NULL) {
           for (int i=1; (*argv)[i]; i++) {
-            if ( g_file_test((*argv)[i], G_FILE_TEST_EXISTS) && !g_path_is_absolute((*argv)[i])) {
-              curr_dir = g_get_current_dir();
-              path = g_build_filename(curr_dir, (*argv)[i], NULL);
+            if ( (path = application_local_path((*argv)[i])) ) {
               fprintf(ff, "tabopen %s\n", path);
               g_free (path);
-              g_free (curr_dir);
             }
             else {
               fprintf(ff, "tabopen %s\n", (*argv)[i]);
