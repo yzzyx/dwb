@@ -81,6 +81,7 @@ scroll_top Scroll to the top of the page
 
 # tabs Tabs &amp UI
 tab_new Open a new blank tab
+clear_tab Clear history of a tab and load about:blank
 close_tab Close tab
 only Close all tabs except for the current one
 undo Undo closing last tab

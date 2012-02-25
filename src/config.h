@@ -167,6 +167,7 @@ static KeyValue KEYS[] = {
   { "tab_move",                    {   "gm",        0 }, }, 
   { "tab_move_left",                    {   "gl",        0 }, }, 
   { "tab_move_right",                    {   "gr",        0 }, }, 
+  { "clear_tab",                    {   "gc",        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -174,6 +175,10 @@ static FunctionMap FMAP [] = {
   { { "tab_new",              "Add a new tab",                    }, 1, 
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "clear_tab",              "Clear current tab",                    }, 1, 
+    (Func)commands_clear_tab,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { "clear" }, },
 
   { { "execute_javascript",              "Execute a javascript snippet",                    }, 1, 
     (Func)commands_execute_javascript,            NULL,                            ALWAYS_SM,     

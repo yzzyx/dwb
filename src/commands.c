@@ -76,6 +76,12 @@ commands_get_webview_with_nummod() {
   else 
     return CURRENT_WEBVIEW();
 }
+static GList * 
+commands_get_view_with_nummod() {
+  if (dwb.state.nummod > 0 && dwb.state.nummod <= g_list_length(dwb.state.views)) 
+    return g_list_nth(dwb.state.views, NUMMOD - 1);
+  return dwb.state.fview;
+}
 
 /* commands_add_view(KeyMap *, Arg *) {{{*/
 DwbStatus 
@@ -838,6 +844,14 @@ commands_tab_move(KeyMap *km, Arg *arg) {
   }
   dwb_focus(dwb.state.fview);
   dwb_update_layout();
+  return STATUS_OK;
+}
+DwbStatus 
+commands_clear_tab(KeyMap *km, Arg *arg) {
+  GList *gl = commands_get_view_with_nummod();
+  dwb_load_uri(gl, "about:blank");
+  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(gl));
+  webkit_web_back_forward_list_clear(bf_list);
   return STATUS_OK;
 }
 /*}}}*/

@@ -191,6 +191,14 @@ Close current tab (command
 aliases:
 .BR close ).
 .TP
+.BR [n]gc
+Clear tab n or of current tab, clears the history of the tab and loads 
+.IR about:blank .
+(command
+.BR clear_tab ,
+aliases:
+.BR clear ).
+.TP
 .BR co
 Close all tabs except for the current one (command
 .BR only ).
@@ -942,6 +950,7 @@ allow_session_cookie_tmp|tcookie         |Allow session cookies for site
 bookmark                |bma, bmark      |Bookmark current page
 bookmarks               |bmas, bmarks    |Show bookmarks 
 buffers                 |bu              |Show all open tabs
+clear_tab               |clear           |Clear tab
 close_tab               |close           |Close tab
 execute_javascript      |exja            |Execute a javascript snippet
 execute_userscript      |                |Execute userscript
