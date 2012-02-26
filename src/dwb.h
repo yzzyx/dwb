@@ -101,8 +101,10 @@
 #define FOCUSED_FRAME()             (webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()))  
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
-#define CLEAR_COMMAND_TEXT()       dwb_set_status_bar_text(dwb.gui.lstatus, NULL, NULL, NULL, false)
+#define CLEAR_COMMAND_TEXT()        dwb_set_status_bar_text(dwb.gui.lstatus, NULL, NULL, NULL, false)
 #define BOOLEAN(X)                  (!(!(X)))
+
+#define DOM_NODE_REMOVE_FROM_PARENT(node, error)  (webkit_dom_node_remove_child(webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(node)), WEBKIT_DOM_NODE(node), error))
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 

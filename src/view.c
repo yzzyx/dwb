@@ -277,7 +277,9 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
     VIEW(gl)->status->hover_uri = g_strdup(uri);
     dwb_set_status_bar_text(dwb.gui.urilabel, uri, &dwb.color.active_fg, NULL, false);
     if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) {
-      webkit_dom_css_style_declaration_set_property(VIEW(gl)->hover.style, "display", "inherit", "", NULL);
+      WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
+      WebKitDOMElement *docelement = webkit_dom_document_get_document_element(doc);
+      webkit_dom_node_append_child(WEBKIT_DOM_NODE(docelement), WEBKIT_DOM_NODE(VIEW(gl)->hover.element), NULL);
       webkit_dom_html_anchor_element_set_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(VIEW(gl)->hover.anchor), uri);
       webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->hover.anchor), uri, NULL);
     }
@@ -287,7 +289,7 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
     VIEW(gl)->status->hover_uri = NULL;
     dwb_update_uri(gl);
     if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) 
-      webkit_dom_css_style_declaration_set_property(VIEW(gl)->hover.style, "display", "none", "", NULL);
+      DOM_NODE_REMOVE_FROM_PARENT(VIEW(gl)->hover.element, NULL);
   }
 }/*}}}*/
 
@@ -536,8 +538,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   View *v = VIEW(gl);
   char *host =  NULL;
   const char *uri = webkit_web_view_get_uri(web);
-  WebKitDOMDocument *doc;
-  WebKitDOMElement *docelement;
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
@@ -554,9 +554,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
        * execution time 
        * */
       dwb_execute_script(webkit_web_view_get_main_frame(web), "DwbHintObj.createStylesheet();", false);
-      doc = webkit_web_view_get_dom_document(web);
-      docelement = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_document_element(doc));
-      webkit_dom_node_append_child(WEBKIT_DOM_NODE(docelement), WEBKIT_DOM_NODE(v->hover.element), NULL);
       break;
     case WEBKIT_LOAD_COMMITTED: 
       view_ssl_state(gl);
@@ -830,7 +827,7 @@ view_create_web_view() {
       border-left:1px solid #555;\
       border-top:1px solid #555;\
       padding-left:2px;\
-      border-radius:5px 0px 0px 0px;background:%s;color:%s;display:none;font:normal 11px helvetica;letter-spacing:0px", 
+      border-radius:5px 0px 0px 0px;background:%s;color:%s;font:normal 11px helvetica;letter-spacing:0px", 
       GET_CHAR("background-color"), 
       GET_CHAR("foreground-color"));
   webkit_dom_element_set_attribute(v->hover.element, "style", style, NULL);
