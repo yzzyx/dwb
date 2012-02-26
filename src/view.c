@@ -564,7 +564,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
           && (((host = dwb_get_host(web)) 
           && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
               || g_list_find_custom(dwb.fc.tmp_scripts, host, (GCompareFunc)g_strcmp0) || g_list_find_custom(dwb.fc.tmp_scripts, uri, (GCompareFunc)g_strcmp0)))
-          || !g_str_has_prefix(uri, "dwb:") || !g_strcmp0(uri, "Error"))) {
+          ||  g_str_has_prefix(uri, "dwb:") || !g_strcmp0(uri, "Error"))) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", true, NULL);
         v->status->scripts |= SCRIPTS_ALLOWED_TEMPORARY;
       }
