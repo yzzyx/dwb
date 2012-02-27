@@ -896,13 +896,14 @@ view_remove(GList *gl) {
     g_object_unref(v->status->style);
   }
 
-  /* Destroy widget */
-  gtk_widget_destroy(v->web);
-  gtk_widget_destroy(v->scroll);
-
   g_object_unref(v->hover.anchor);
   g_object_unref(v->hover.style);
   g_object_unref(v->hover.element);
+
+
+  /* Destroy widget */
+  gtk_widget_destroy(v->web);
+  gtk_widget_destroy(v->scroll);
 
   FREE0(v->status->hover_uri);
   FREE0(v->status);
