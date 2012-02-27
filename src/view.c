@@ -289,7 +289,7 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
     VIEW(gl)->status->hover_uri = NULL;
     dwb_update_uri(gl);
     if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) 
-      DOM_NODE_REMOVE_FROM_PARENT(VIEW(gl)->hover.element, NULL);
+      dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(VIEW(gl)->hover.element), NULL);
   }
 }/*}}}*/
 

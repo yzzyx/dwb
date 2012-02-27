@@ -655,6 +655,15 @@ clean:
   g_free(info);
 }/*}}}*/
 
+gboolean 
+dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error) {
+  WebKitDOMNode *parent = webkit_dom_node_get_parent_node(node);
+  if (parent != NULL) {
+    webkit_dom_node_remove_child(parent, node, error);
+    return true;
+  }
+  return false;
+}
 /* dwb_get_editable(WebKitDOMElement *) {{{*/
 static gboolean
 dwb_get_editable(WebKitDOMElement *element) {

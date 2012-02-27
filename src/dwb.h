@@ -104,8 +104,6 @@
 #define CLEAR_COMMAND_TEXT()        dwb_set_status_bar_text(dwb.gui.lstatus, NULL, NULL, NULL, false)
 #define BOOLEAN(X)                  (!(!(X)))
 
-#define DOM_NODE_REMOVE_FROM_PARENT(node, error)  (webkit_dom_node_remove_child(webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(node)), WEBKIT_DOM_NODE(node), error))
-
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 
 #define FOO                         puts("bar")
@@ -857,6 +855,8 @@ void dwb_version();
 DwbStatus dwb_pack(const char *layout, gboolean rebuild);
 void dwb_init_signals(void);
 void dwb_parse_commands(const char *line);
+
+gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 
 
 #endif
