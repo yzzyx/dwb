@@ -952,11 +952,26 @@ view_add(const char *uri, gboolean background) {
   View *v = view_create_web_view();
   gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
   if (dwb.state.fview) {
-    int p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
+    int p;
+    switch (dwb.misc.tab_position) {
+      case TAB_POSITION_RIGHTMOST: 
+        p = g_list_length(dwb.state.views);
+        break;
+      case TAB_POSITION_LEFT: 
+        p = g_list_position(dwb.state.views, dwb.state.fview);
+        break;
+      case TAB_POSITION_LEFTMOST: 
+        p = 0;
+        break;
+      case TAB_POSITION_RIGHT: 
+      default :
+        p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
+        break;
+    }
     gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
     gtk_box_insert(GTK_BOX(dwb.gui.mainbox), v->scroll, true, true, 0, p, GTK_PACK_START);
     dwb.state.views = g_list_insert(dwb.state.views, v, p);
-    ret = dwb.state.fview->next;
+    ret = g_list_nth(dwb.state.views, p);
 
     if (background) {
       view_set_normal_style(ret);

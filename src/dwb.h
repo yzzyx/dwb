@@ -230,6 +230,12 @@ typedef enum _TabMoveDirection {
   TAB_MOVE_RIGHT,
 
 } TabMoveDirection;
+typedef enum _TabPosition {
+  TAB_POSITION_LEFT, 
+  TAB_POSITION_RIGHT, 
+  TAB_POSITION_LEFTMOST, 
+  TAB_POSITION_RIGHTMOST, 
+} TabPosition;
 
 typedef enum {
   PLUGIN_STATUS_DISABLED      = 1<<0,
@@ -678,6 +684,7 @@ struct _Misc {
   int synctimer;
   int bar_height;
   char *fifo;
+  TabPosition tab_position;
 };
 struct _Files {
   const char *bookmarks;

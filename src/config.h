@@ -1034,7 +1034,9 @@ static WebSettings DWB_SETTINGS[] = {
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
   { { "auto-insert-mode",                         "Whether go automatically in insert mode if input or textarea has focus", },                   
-    SETTING_PER_VIEW,  BOOLEAN, { .b = false }, (S_Func)dwb_set_auto_insert_mode,   }, 
+    SETTING_GLOBAL,  BOOLEAN, { .b = false }, (S_Func)dwb_set_auto_insert_mode,   }, 
   { { "tabbar-visible",                         "Number of seconds the tabbar is shown when switching tabs", },                   
-    SETTING_PER_VIEW,  INTEGER, { .i = 2 }, (S_Func)dwb_set_tabbar_delay,   }, 
+    SETTING_GLOBAL,  INTEGER, { .i = 2 }, (S_Func)dwb_set_tabbar_delay,   }, 
+  { { "new-tab-position-policy",                         "Number of seconds the tabbar is shown when switching tabs", },                   
+    SETTING_GLOBAL | SETTING_ONINIT,  CHAR, { .p = "right" }, (S_Func)dwb_set_new_tab_position_policy,   }, 
 };/*}}}*/

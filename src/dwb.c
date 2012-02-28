@@ -58,6 +58,7 @@ static DwbStatus dwb_set_history_length(GList *, WebSettings *);
 static DwbStatus dwb_set_plugin_blocker(GList *, WebSettings *);
 static DwbStatus dwb_set_sync_interval(GList *, WebSettings *);
 static DwbStatus dwb_set_private_browsing(GList *, WebSettings *);
+static DwbStatus dwb_set_new_tab_position_policy(GList *, WebSettings *);
 static DwbStatus dwb_set_cookies(GList *, WebSettings *);
 static DwbStatus dwb_set_widget_packing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
@@ -170,6 +171,21 @@ static DwbStatus
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
   dwb.misc.private_browsing = s->arg.b;
   dwb_webkit_setting(gl, s);
+  return STATUS_OK;
+}/*}}}*/
+/* dwb_set_new_tab_position_policy */
+static DwbStatus
+dwb_set_new_tab_position_policy(GList *gl, WebSettings *s) {
+  if (!g_strcmp0(s->arg.p, "right"))
+    dwb.misc.tab_position = TAB_POSITION_RIGHT;
+  else if (!g_strcmp0(s->arg.p, "left"))
+    dwb.misc.tab_position = TAB_POSITION_LEFT;
+  else if (!g_strcmp0(s->arg.p, "rightmost"))
+    dwb.misc.tab_position = TAB_POSITION_RIGHTMOST;
+  else if (!g_strcmp0(s->arg.p, "leftmost"))
+    dwb.misc.tab_position = TAB_POSITION_LEFTMOST;
+  else 
+    return STATUS_ERROR;
   return STATUS_OK;
 }/*}}}*/
 
@@ -902,9 +918,7 @@ dwb_open_startpage(GList *gl) {
 static DwbStatus
 dwb_apply_settings(WebSettings *s) {
   DwbStatus ret = STATUS_OK;
-  if (s->apply & SETTING_ONINIT) 
-    return ret;
-  else if (s->apply & SETTING_GLOBAL) {
+  if (s->apply & SETTING_GLOBAL) {
     if (s->func) 
       ret = s->func(NULL, s);
   }
@@ -923,6 +937,7 @@ dwb_toggle_setting(const char *key) {
   WebSettings *s;
   DwbStatus ret = STATUS_ERROR;
   const char *value;
+  Arg oldarg;
 
   GHashTable *t = dwb.settings;
   if (key) {
@@ -931,6 +946,7 @@ dwb_toggle_setting(const char *key) {
         dwb_set_error_message(dwb.state.fview, "Not a boolean value.");
       }
       else {
+        oldarg = s->arg;
         s->arg.b = !s->arg.b;
         if (dwb_apply_settings(s) != STATUS_ERROR) {
           value = s->arg.b ? "true" : "false";
@@ -939,6 +955,7 @@ dwb_toggle_setting(const char *key) {
           ret = STATUS_OK;
         }
         else {
+          s->arg = oldarg;
           dwb_set_error_message(dwb.state.fview, "Error setting value.");
         }
       }
@@ -954,7 +971,8 @@ dwb_toggle_setting(const char *key) {
 DwbStatus
 dwb_set_setting(const char *key, char *value) {
   WebSettings *s;
-  Arg *a = NULL;
+  Arg *a = NULL, oldarg;
+  
   DwbStatus ret = STATUS_ERROR;
   
 
@@ -962,13 +980,18 @@ dwb_set_setting(const char *key, char *value) {
   if (key) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
       if ( (a = util_char_to_arg(value, s->type))) {
+        oldarg = s->arg;
         s->arg = *a;
         if (dwb_apply_settings(s) != STATUS_ERROR) {
           dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
           dwb_save_key_value(dwb.files.settings, key, value);
+          g_free(oldarg.p);
           ret = STATUS_OK;
         }
         else {
+          g_free(a->p);
+          g_free(a);
+          s->arg = oldarg;
           dwb_set_error_message(dwb.state.fview, "Error setting value.");
         }
       }
