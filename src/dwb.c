@@ -2574,7 +2574,8 @@ dwb_clean_up() {
   return true;
 }/*}}}*/
 
-static void dwb_save_key_value(const char *file, const char *key, const char *value) {
+static void 
+dwb_save_key_value(const char *file, const char *key, const char *value) {
   GKeyFile *keyfile = g_key_file_new();
   GError *error = NULL;
   char *content;
