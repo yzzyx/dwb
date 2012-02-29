@@ -3049,7 +3049,7 @@ dwb_init_style() {
     var = dwb.font.fd_active; \
   } while(0)
 
-  SET_FONT(dwb.font.fd_inactive, "font-inactive");
+  SET_FONT(dwb.font.fd_inactive, "font-nofocus");
   SET_FONT(dwb.font.fd_entry, "font-entry");
   SET_FONT(dwb.font.fd_completion, "font-completion");
 #undef SET_FONT

@@ -948,11 +948,11 @@ static WebSettings DWB_SETTINGS[] = {
 
   { { "font",                                    "Default font used for the ui", },                                       
     SETTING_GLOBAL,  CHAR, { .p = "monospace 8"          },   (S_Func) dwb_reload_layout,  },
-  { { "font-inactive",                           "Font of views without focus", },                  
-    SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
   { { "font-entry",                              "Font of the addressbar", },                            
     SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
   { { "font-completion",                         "Font for tab-completion", },                            
+    SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
+  { { "font-nofocus",                           "Font of tabs/completion items without focus", },                  
     SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
    
   { { "hint-letter-seq",                       "Letter sequence for letter hints", },             
