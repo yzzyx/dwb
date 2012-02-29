@@ -266,14 +266,14 @@ completion_get_normal_completion() {
   GList *list = NULL;
 
   if (!(dwb.state.mode & COMMAND_MODE) ) {
-    if (dwb.state.complete_userscripts) 
+    if (GET_BOOL("complete-userscripts")) 
       list = completion_init_completion(list, dwb.misc.userscripts, false, NULL, "Userscript");
-    if (dwb.state.complete_searchengines) 
+    if (GET_BOOL("complete-searchengines")) 
       list = completion_init_completion(list, dwb.fc.se_completion, false, NULL, "Searchengine");
   }
-  if (dwb.state.complete_bookmarks) 
+  if (GET_BOOL("complete-bookmarks")) 
     list = completion_init_completion(list, dwb.fc.bookmarks, false, NULL, "Bookmark");
-  if (dwb.state.complete_history) 
+  if (GET_BOOL("complete-history")) 
     list = completion_init_completion(list, dwb.fc.history, false, NULL, "History");
 
   return  list;

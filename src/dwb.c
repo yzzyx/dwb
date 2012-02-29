@@ -57,6 +57,7 @@ static DwbStatus dwb_set_message_delay(GList *, WebSettings *);
 static DwbStatus dwb_set_history_length(GList *, WebSettings *);
 static DwbStatus dwb_set_plugin_blocker(GList *, WebSettings *);
 static DwbStatus dwb_set_sync_interval(GList *, WebSettings *);
+static DwbStatus dwb_set_scroll_step(GList *, WebSettings *);
 static DwbStatus dwb_set_private_browsing(GList *, WebSettings *);
 static DwbStatus dwb_set_new_tab_position_policy(GList *, WebSettings *);
 static DwbStatus dwb_set_cookies(GList *, WebSettings *);
@@ -66,6 +67,7 @@ static DwbStatus dwb_reload_scripts(GList *, WebSettings *);
 static DwbStatus dwb_set_favicon(GList *, WebSettings *);
 static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
+
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
@@ -79,7 +81,6 @@ static void dwb_init_key_map(void);
 static void dwb_init_style(void);
 static void dwb_apply_style(void);
 static void dwb_init_gui(void);
-static void dwb_init_vars(void);
 
 static Navigation * dwb_get_search_completion(const char *text);
 
@@ -212,6 +213,12 @@ dwb_set_sync_interval(GList *gl, WebSettings *s) {
   }
   return STATUS_OK;
 }/*}}}*/
+
+static DwbStatus
+dwb_set_scroll_step(GList *gl, WebSettings *s) {
+  dwb.misc.scroll_step = s->arg.d;
+  return STATUS_OK;
+}
 
 /* dwb_set_startpage(GList *l, WebSettings *){{{*/
 static DwbStatus 
@@ -2543,6 +2550,7 @@ dwb_clean_up() {
   g_list_free(dwb.keymap);
   dwb.keymap = NULL;
   g_hash_table_remove_all(dwb.settings);
+  g_string_free(dwb.state.buffer, true);
 
   dwb_free_list(dwb.fc.bookmarks, (void_func)dwb_navigation_free);
   /*  TODO sqlite */
@@ -3166,7 +3174,7 @@ dwb_init_gui() {
   gtk_window_set_has_resize_grip(GTK_WINDOW(dwb.gui.window), false);
   GtkCssProvider *provider = gtk_css_provider_get_default();
   GString *buffer = g_string_new("GtkEntry {background-image: none; }");
-  if (! dwb.misc.scrollbars) {
+  if (! GET_BOOL("scrollbars")) {
     g_string_append(buffer, "GtkScrollbar { \
         -GtkRange-slider-width: 0; \
         -GtkRange-trough-border: 0; \
@@ -3380,31 +3388,6 @@ dwb_init_signals() {
   }
 }/*}}}*/
 
-/* dwb_init_vars{{{*/
-static void 
-dwb_init_vars() {
-  dwb.misc.message_delay = GET_INT("message-delay");
-  dwb.misc.history_length = GET_INT("history-length");
-  dwb.misc.startpage = GET_CHAR("startpage");
-  dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
-  dwb.misc.private_browsing = GET_BOOL("enable-private-browsing");
-  dwb.misc.scroll_step = GET_DOUBLE("scroll-step");
-  dwb.misc.scrollbars = GET_BOOL("scrollbars");
-  dwb.misc.tabbar_delay = GET_BOOL("tabbar-visible");
-
-  dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(GET_CHAR("cookies-store-policy"));
-
-  dwb.state.complete_history = GET_BOOL("complete-history");
-  dwb.state.complete_bookmarks = GET_BOOL("complete-bookmarks");
-  dwb.state.complete_searchengines = GET_BOOL("complete-searchengines");
-  dwb.state.complete_userscripts = GET_BOOL("complete-userscripts");
-  dwb.state.background_tabs = GET_BOOL("background-tabs");
-  dwb.state.auto_insert_mode = GET_BOOL("auto-insert-mode");
-
-  dwb.state.buffer = g_string_new(NULL);
-  dwb.comps.autocompletion = GET_BOOL("auto-completion");
-}/*}}}*/
-
 char *
 dwb_get_stock_item_base64_encoded(const char *name) {
   GdkPixbuf *pb;
@@ -3491,6 +3474,9 @@ dwb_init() {
   dwb.misc.synctimer = 0;
   dwb.misc.bar_height = 0;
   dwb.misc.fifo = NULL;
+  dwb.state.buffer = g_string_new(NULL);
+
+  dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
 
   char *path = util_get_data_file(PLUGIN_FILE);
   if (path) {
@@ -3504,7 +3490,6 @@ dwb_init() {
 
   dwb_init_key_map();
   dwb_init_style();
-  dwb_init_vars();
   dwb_init_gui();
   dwb_init_scripts();
   dwb_init_custom_keys(false);

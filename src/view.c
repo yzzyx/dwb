@@ -784,7 +784,7 @@ view_create_web_view() {
   gtk_container_add(GTK_CONTAINER(v->scroll), v->web);
 
 #if !_HAS_GTK3
-  if (! dwb.misc.scrollbars) {
+  if (! GET_BOOL("scrollbars")) {
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
     g_signal_connect(frame, "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(v->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);

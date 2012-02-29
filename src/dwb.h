@@ -509,11 +509,6 @@ struct _State {
   SoupCookieJar *cookiejar;
   CookieStorePolicy cookie_store_policy;
 
-  gboolean complete_history;
-  gboolean complete_bookmarks;
-  gboolean complete_searchengines;
-  gboolean complete_userscripts;
-
   gboolean hidden_files;
   gboolean view_in_background;
 
@@ -680,7 +675,6 @@ struct _Misc {
   KeyMap *editor_map;
 
   char *pbbackground;
-  gboolean scrollbars;
   int synctimer;
   int bar_height;
   char *fifo;
