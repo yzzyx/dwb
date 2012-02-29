@@ -109,7 +109,6 @@ plugin-blocker checkbox Whether to block plugins and replace them with a clickab
 # completion Completion
 auto-completion checkbox Whether to show possible shortcuts
 complete-bookmarks checkbox Whether to enable tabcompletion for bookmarks
-complete-commands checkbox Whether to enable tabcompletion for command history
 complete-history checkbox Whether to enable tabcompletion for browsing history
 complete-searchengines checkbox Whether to enable tabcompletion for searchengines
 complete-userscripts checkbox Whether to enable tabcompletion for userscripts
