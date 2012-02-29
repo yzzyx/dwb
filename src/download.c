@@ -38,11 +38,13 @@ typedef struct _DwbDownload {
   WebKitDownload *download;
   DownloadAction action;
   char *path;
+  guint n;
 } DwbDownload;
+#define DWB_DOWNLOAD(X) ((DwbDownload*)((X)->data))
 
-static GList *downloads = NULL;
-static char *lastdir = NULL;
-static DownloadAction lastaction;
+static GList *_downloads = NULL;
+static char *_lastdir = NULL;
+static DownloadAction _lastaction;
 
 /*  dwb_get_command_from_mimetype(char *mimetype){{{*/
 static char *
@@ -109,7 +111,7 @@ download_spawn_external(const char *uri, const char *filename, WebKitDownload *d
 /* download_get_download_label(WebKitDownload *) {{{*/
 static GList * 
 download_get_download_label(WebKitDownload *download) {
-  for (GList *l = downloads; l; l=l->next) {
+  for (GList *l = _downloads; l; l=l->next) {
     DwbDownload *label = l->data;
     if (label->download == download) {
       return l;
@@ -223,7 +225,7 @@ download_delay(DwbDownload *download) {
   gtk_widget_destroy(download->event);
   g_free(download->path);
   g_free(download);
-  if (!downloads) {
+  if (!_downloads) {
     gtk_widget_hide(dwb.gui.downloadbar);
   }
   return false;
@@ -259,7 +261,7 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
       Navigation *n = dwb_navigation_new(webkit_download_get_uri(download), webkit_download_get_destination_uri(download));
       dwb.fc.downloads = g_list_append(dwb.fc.downloads, n);
       g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)download_delay, label);
-      downloads = g_list_delete_link(downloads, list);
+      _downloads = g_list_delete_link(_downloads, list);
     }
     if (dwb.state.mimetype_request) {
       g_free(dwb.state.mimetype_request);
@@ -274,21 +276,39 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
 static gboolean 
 download_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *gl) {
   if (e->button == 3) {
-    DwbDownload *label = gl->data;
-    webkit_download_cancel(label->download);
+    webkit_download_cancel(DWB_DOWNLOAD(gl)->download);
   }
   return false;
 }/*}}}*/
 
+DwbStatus 
+download_cancel(int number) {
+  if (_downloads == NULL)
+    return STATUS_ERROR;
+  if (number <= 0) {
+    webkit_download_cancel(DWB_DOWNLOAD(_downloads)->download);
+    return STATUS_OK;
+  }
+  for (GList *l = _downloads; l; l=l->next) {
+    if (DWB_DOWNLOAD(l)->n == number) {
+      webkit_download_cancel(DWB_DOWNLOAD(l)->download);
+      return STATUS_OK;
+    }
+  }
+  return STATUS_ERROR;
+}
+
 /* download_add_progress_label (GList *gl, const char *filename) {{{*/
 static DwbDownload *
-download_add_progress_label(GList *gl, const char *filename) {
+download_add_progress_label(GList *gl, const char *filename, gint length) {
   DwbDownload *l = g_malloc(sizeof(DwbDownload));
 
   GtkWidget *hbox = gtk_hbox_new(false, 3);
   l->event = gtk_event_box_new();
   l->rlabel = gtk_label_new("???");
-  l->llabel = gtk_label_new(filename);
+  char *name = g_strdup_printf("%d: %s", length, filename);
+  l->llabel = gtk_label_new(name);
+  g_free(name);
 
   gtk_box_pack_start(GTK_BOX(hbox), l->llabel, false, false, 1);
   gtk_box_pack_start(GTK_BOX(hbox), l->rlabel, false, false, 1);
@@ -353,7 +373,7 @@ download_start(const char *path) {
       char *cache_name = g_build_filename(dwb.files.cachedir, filename, NULL);
       fullpath = g_strconcat("file://", cache_name, NULL);
       g_free(cache_name);
-      lastaction = DL_ACTION_EXECUTE;
+      _lastaction = DL_ACTION_EXECUTE;
     }
     else {
       if (!path || *path == '\0') {
@@ -383,7 +403,7 @@ download_start(const char *path) {
           path = path_buffer;
         }
       }
-      lastaction = DL_ACTION_DOWNLOAD;
+      _lastaction = DL_ACTION_DOWNLOAD;
     }
 
     if (external && dwb.state.dl_action == DL_ACTION_DOWNLOAD) {
@@ -393,22 +413,24 @@ download_start(const char *path) {
     }
     else {
       webkit_download_set_destination_uri(dwb.state.download, fullpath);
-      DwbDownload *active = download_add_progress_label(dwb.state.fview, filename);
+      int n = g_list_length(_downloads)+1;
+      DwbDownload *active = download_add_progress_label(dwb.state.fview, filename, n);
       active->action = dwb.state.dl_action;
       active->path = g_strdup(path);
+      active->n = n;
       gtk_widget_show_all(dwb.gui.downloadbar);
-      downloads = g_list_prepend(downloads, active);
+      _downloads = g_list_prepend(_downloads, active);
       DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
       s->blue = s->time = 0;
-      g_signal_connect(active->event, "button-press-event", G_CALLBACK(download_button_press_cb), downloads);
+      g_signal_connect(active->event, "button-press-event", G_CALLBACK(download_button_press_cb), _downloads);
       g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(download_progress_cb), s);
       g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(download_status_cb), s);
       webkit_download_start(dwb.state.download);
       dwb.state.download_ref_count++;
     }
-    g_free(lastdir);
+    g_free(_lastdir);
     if (dwb.state.dl_action != DL_ACTION_EXECUTE) {
-      lastdir = g_strdup(path);
+      _lastdir = g_strdup(path);
     }
   }
 
@@ -428,8 +450,8 @@ download_entry_set_directory() {
     entry_set_text(default_dir);
     return;
   }
-  else if (lastdir != NULL) {
-    entry_set_text(lastdir);
+  else if (_lastdir != NULL) {
+    entry_set_text(_lastdir);
     return;
   }
   else 
@@ -475,7 +497,7 @@ download_get_path(GList *gl, WebKitDownload *d) {
     entry_focus();
     dwb.state.mode = DOWNLOAD_GET_PATH;
     dwb.state.download = d;
-    if ( lastaction != DL_ACTION_DOWNLOAD && 
+    if ( _lastaction != DL_ACTION_DOWNLOAD && 
         ( command != NULL ||  g_file_test(uri, G_FILE_TEST_EXISTS)) ) {
       dwb.state.dl_action = DL_ACTION_EXECUTE;
       download_entry_set_spawn_command(command);

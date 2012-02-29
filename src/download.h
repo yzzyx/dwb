@@ -22,6 +22,7 @@
 
 void download_get_path(GList *, WebKitDownload *);
 void download_start(const char *);
+DwbStatus download_cancel(int number);
 
 void download_set_execute(Arg *);
 

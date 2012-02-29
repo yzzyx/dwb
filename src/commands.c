@@ -27,6 +27,7 @@
 #include "local.h"
 #include "entry.h"
 #include "adblock.h"
+#include "download.h"
 
 static int inline dwb_floor(double x) { 
   return x >= 0 ? (int) x : (int) x - 1;
@@ -853,5 +854,9 @@ commands_clear_tab(KeyMap *km, Arg *arg) {
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(gl));
   webkit_web_back_forward_list_clear(bf_list);
   return STATUS_OK;
+}
+DwbStatus 
+commands_cancel_download(KeyMap *km, Arg *arg) {
+  return download_cancel(dwb.state.nummod);
 }
 /*}}}*/

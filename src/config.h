@@ -168,12 +168,17 @@ static KeyValue KEYS[] = {
   { "tab_move_left",                    {   "gl",        0 }, }, 
   { "tab_move_right",                    {   "gr",        0 }, }, 
   { "clear_tab",                    {   "gc",        0 }, }, 
+  { "cancel_download",                    {   "ad",        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
   { { "tab_new",              "Add a new tab",                    }, 1, 
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "cancel_download",              "Cancel a download",                    }, 1, 
+    (Func)commands_cancel_download,            "No download to stop",                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
   { { "clear_tab",              "Clear current tab",                    }, 1, 

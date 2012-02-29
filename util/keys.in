@@ -140,6 +140,7 @@ proxy Toggle proxy
 allow_cookie Allow persistent cookies for current site
 allow_session_cookie Allow session cookies for current site
 allow_session_cookie_tmp Allow session cookies for current site temporarily
+cancel_download Cancel a running download
 execute_userscript Execute userscript
 focus_input Focus the next input
 new_tab New tab for next navigation

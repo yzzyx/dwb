@@ -616,6 +616,11 @@ Paste from primary selection and load in a new window (command
 aliases:
 .BR winppaste ).
 .TP
+.BR [n]ad
+Cancel the download with number n or the first download in the lists of running
+downloads if n is omitted. (command 
+.BR cancel_download ).
+.TP
 .BR gs
 Add a searchengine. Text fields can be focused via hints (command 
 .BR save_search_field ,
@@ -950,6 +955,7 @@ allow_session_cookie_tmp|tcookie         |Allow session cookies for site
 bookmark                |bma, bmark      |Bookmark current page
 bookmarks               |bmas, bmarks    |Show bookmarks 
 buffers                 |bu              |Show all open tabs
+cancel_download         |                |Cancel a download
 clear_tab               |clear           |Clear tab
 close_tab               |close           |Close tab
 execute_javascript      |exja            |Execute a javascript snippet
