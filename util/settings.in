@@ -76,7 +76,7 @@ enable-favicon checkbox Whether to enable favicons in the tabbar
 enforce-96-dpi checkbox Enforce a resolution of 96 dpi
 factor text Zoom factor of the tiling area
 message-delay text Time messages are shown, in seconds
-new-tab-position-policy select @right @left @rightmost @leftmost Control the position of newly created tabs
+new-tab-position-policy select @right @left @rightmost @leftmost Controls the position of newly created tabs
 scrollbars checkbox Whether scrollbars should be enabled
 tabbar-visible text Number of seconds a hidden tabbar is visible when switching between tabs
 tabbed-browsing checkbox Whether to enable tabbed browsing
