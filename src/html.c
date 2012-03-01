@@ -101,6 +101,12 @@ html_remove_item_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
       dwb_remove_download(navigation);
     }
   }
+  else if (webkit_dom_element_has_attribute((void*) target, "href")) {
+    char *href = webkit_dom_element_get_attribute((void*) target, "href");
+    dwb_load_uri(gl, href);
+    webkit_dom_event_prevent_default(ev);
+    return true;
+  }
   return false;
 }
 void
@@ -132,7 +138,7 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
         </td>\
         <td class='dwb_table_cell_middle'></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
-        <tr>",  n->first, n->second, n->first, n->second);
+        <tr>",  n->first, n->second && g_strcmp0(n->second, "(null)") ? n->second : n->first, n->first, n->second);
   }
   ret = html_load_page(wv, table, panels->str);
 
@@ -352,7 +358,7 @@ html_quickmarks(GList *gl, HtmlTable *table) {
         <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a></div></td>\
         <td class='dwb_table_cell_middle'></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
-        </tr>", q->key, q->nav->first, q->nav->second, q->key, q->nav->first, q->nav->second);
+        </tr>", q->key, q->nav->first, q->nav->second && g_strcmp0(q->nav->second, "(null)") ? q->nav->second : q->nav->first, q->key, q->nav->first, q->nav->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
@@ -367,10 +373,10 @@ html_downloads(GList *gl, HtmlTable *table) {
   for (GList *gl = dwb.fc.downloads; gl; gl=gl->next) {
     Navigation *n = gl->data;
     g_string_append_printf(panels, "<tr class='dwb_table_row'>\
-        <td class='dwb_table_cell_left'>%s</td>\
+        <td class='dwb_table_cell_left'><a href='%s'>%s</a></td>\
         <td class='dwb_table_cell_middle'><a href='%s'>restart</a></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
-        </tr>", n->second, n->first, n->first, n->second);
+        </tr>", n->second, n->second, n->first, n->first, n->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
