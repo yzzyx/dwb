@@ -2028,7 +2028,7 @@ gboolean
 dwb_eval_key(GdkEventKey *e) {
   gboolean ret = true, isprint = false;
   int keyval = e->keyval;
-  unsigned int mod_mask;
+  unsigned int mod_mask = 0;
   int keynum = -1;
 
   if (dwb.state.scriptlock) {
