@@ -435,6 +435,7 @@ typedef enum {
   CP_DONT_SAVE     = 1<<1,
   CP_HAS_MODE      = 1<<2,
   CP_USERSCRIPT    = 1<<3,
+  CP_DONT_CLEAN    = 1<<4,
 } CommandProperty;
 
 /*}}}*/
@@ -803,7 +804,7 @@ DwbStatus dwb_set_proxy(GList *, WebSettings *);
 void dwb_new_window(const char *uri);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
-void dwb_parse_command_line(const char *);
+DwbStatus dwb_parse_command_line(const char *);
 GHashTable * dwb_get_default_settings(void);
 
 int dwb_end(void);

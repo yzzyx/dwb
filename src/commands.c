@@ -37,7 +37,7 @@ static int inline modulo(int x, int y) {
 }
 /* commands.h {{{*/
 /* commands_simple_command(keyMap *km) {{{*/
-void 
+DwbStatus 
 commands_simple_command(KeyMap *km) {
   gboolean (*func)(void *, void *) = km->map->func;
   Arg *arg = &km->map->arg;
@@ -63,12 +63,13 @@ commands_simple_command(KeyMap *km) {
       break;
     case STATUS_END: 
       dwb_clean_key_buffer();
-      return;
+      return ret;
     default: break;
   }
   if (! km->map->arg.ro)
     km->map->arg.p = NULL;
   dwb_clean_key_buffer();
+  return ret;
 }/*}}}*/
 static WebKitWebView * 
 commands_get_webview_with_nummod() {

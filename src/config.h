@@ -173,43 +173,44 @@ static KeyValue KEYS[] = {
 
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
-  { { "tab_new",              "Add a new tab",                    }, 1, 
+  { { "tab_new",              "Add a new tab",                    }, CP_COMMANDLINE, 
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
-  { { "cancel_download",              "Cancel a download",                    }, 1, 
+  { { "cancel_download",              "Cancel a download",                    }, CP_COMMANDLINE, 
     (Func)commands_cancel_download,            "No download to stop",                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
-  { { "clear_tab",              "Clear current tab",                    }, 1, 
+  { { "clear_tab",              "Clear current tab",                    }, CP_COMMANDLINE, 
     (Func)commands_clear_tab,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { "clear" }, },
 
-  { { "execute_javascript",              "Execute a javascript snippet",                    }, 1, 
+  { { "execute_javascript",              "Execute a javascript snippet",                    }, CP_COMMANDLINE, 
+
     (Func)commands_execute_javascript,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { "exja", NULL }, },
 
-  { { "set",              "Set a setting",                    }, 1, 
+  { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_set,            "Invalid value",                            POST_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
-  { { "toggle_setting",              "Toggle a setting",                    }, 1, 
+  { { "toggle_setting",              "Toggle a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_toggle_setting,            "Invalid value",                            POST_SM,     
     { .p = NULL },                          EP_NONE,    { "toggle", "tog", NULL }, },
 
-  { { "toggle_bars",    "Toggle visibility of status and tabbar" },                 1, 
+  { { "toggle_bars",    "Toggle visibility of status and tabbar" },                 CP_COMMANDLINE, 
     (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    
     { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE, { "bars", NULL }, },
 
-  { { "toggle_tabbar",    "Toggle visibility of tabbar" },                 1, 
+  { { "toggle_tabbar",    "Toggle visibility of tabbar" },                CP_COMMANDLINE, 
     (Func) commands_toggle_bars,                NULL,     ALWAYS_SM,    
     { .n = BAR_VIS_TOP  },                  EP_NONE,  { "tbar", NULL }, },
 
-  { { "toggle_statusbar",    "Toggle visibility of statusbar" },                 1, 
+  { { "toggle_statusbar",    "Toggle visibility of statusbar" },                 CP_COMMANDLINE, 
     (Func) commands_toggle_bars,                                     NULL,     ALWAYS_SM,    
     { .n = BAR_VIS_STATUS }, EP_NONE, { "sbar", NULL }, },
 
-  { { "presentation_mode",    "Toggle presentation mode" },                 1, 
+  { { "presentation_mode",    "Toggle presentation mode" },                 CP_COMMANDLINE, 
     (Func) commands_presentation_mode,                                     NULL,     ALWAYS_SM,    
     { .n = BAR_VIS_STATUS | BAR_VIS_TOP  }, EP_NONE,  { "present", NULL }, },
 
@@ -240,7 +241,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_allow_cookie,        "No new domain in current context",   ALWAYS_SM, 
     { .n = COOKIE_ALLOW_SESSION_TMP }, EP_NONE, { "tcookie", NULL }, },
   
-  { { "bookmark",              "Bookmark current page",             }, 1, 
+  { { "bookmark",              "Bookmark current page",             }, CP_COMMANDLINE, 
     (Func)commands_bookmark,            NO_URL,                            POST_SM,     
     {0},  EP_NONE, { "bmark", "bma", NULL }, },
   
@@ -276,15 +277,15 @@ static FunctionMap FMAP [] = {
     (Func)commands_find,                NO_URL,                            NEVER_SM,     
     { .b = true }, EP_NONE, { "ffind",  NULL, }, },
   
-  { { "find_next",             "Find next",                         }, 1, 
+  { { "find_next",             "Find next",                         }, CP_COMMANDLINE, 
     (Func)commands_search,                  "No matches",                      ALWAYS_SM,     
     { .b = true }, EP_NONE, { "fnext", NULL, }, },
   
-  { { "find_previous",         "Find previous",                     }, 1, 
+  { { "find_previous",         "Find previous",                     }, CP_COMMANDLINE, 
     (Func)commands_search,                  "No matches",                      ALWAYS_SM,     
     { .b = false }, EP_NONE, { "fprev", NULL }, },
   
-  { { "focus_input",           "Focus input",                       }, 1, 
+  { { "focus_input",           "Focus input",                       }, CP_COMMANDLINE, 
     (Func)commands_focus_input,        "No input found in current context",      ALWAYS_SM, 
     {0}, EP_NONE, { NULL }, },
   
@@ -368,27 +369,27 @@ static FunctionMap FMAP [] = {
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_DOWNLOAD }, EP_NONE, { "dhints", "dhi", NULL }, },
   
-  { { "history_back",          "Go Back",                           }, 1, 
+  { { "history_back",          "Go Back",                           }, CP_COMMANDLINE, 
     (Func)commands_history,        "Beginning of History",            ALWAYS_SM, 
     { .n = OPEN_NORMAL, .i = -1 }, EP_NONE, { "back", "ba", NULL }, },
   
-  { { "history_forward",       "Go Forward",                        }, 1, 
+  { { "history_forward",       "Go Forward",                        }, CP_COMMANDLINE, 
     (Func)commands_history,     "End of History",                  ALWAYS_SM, 
     { .n = OPEN_NORMAL, .i = 1 }, EP_NONE, { "forward", "fo", NULL }, },
   
-  { { "tab_hist_back",          "Go Back",                           }, 1, 
+  { { "tab_hist_back",          "Go Back",                           }, CP_COMMANDLINE, 
     (Func)commands_history,        "Beginning of History",            ALWAYS_SM, 
     { .n = OPEN_NEW_VIEW, .i = -1 }, EP_NONE, { "tabback", "tba", NULL }, },
   
-  { { "tab_hist_forward",       "Go Forward",                        }, 1, 
+  { { "tab_hist_forward",       "Go Forward",                        }, CP_COMMANDLINE, 
     (Func)commands_history,     "End of History",                  ALWAYS_SM, 
     { .n = OPEN_NEW_VIEW, .i = 1 }, EP_NONE, { "tabforward", "tfo", NULL }, },
   
-  { { "win_hist_back",          "Go Back",                           }, 1, 
+  { { "win_hist_back",          "Go Back",                           }, CP_COMMANDLINE, 
     (Func)commands_history,        "Beginning of History",            ALWAYS_SM, 
     { .n = OPEN_NEW_WINDOW, .i = -1 }, EP_NONE, { "winback", "wba", NULL }, },
   
-  { { "win_hist_forward",       "Go Forward",                        }, 1, 
+  { { "win_hist_forward",       "Go Forward",                        }, CP_COMMANDLINE, 
     (Func)commands_history,     "End of History",                  ALWAYS_SM, 
     { .n = OPEN_NEW_WINDOW, .i = 1 }, EP_NONE, { "winforward", "wfo", NULL }, },
   
@@ -396,15 +397,15 @@ static FunctionMap FMAP [] = {
     (Func)commands_insert_mode,             NULL,                              POST_SM, 
     { 0 }, EP_NONE, { "i", "insert", NULL }, },
   
-  { { "load_html",             "Load html",                         }, 1, 
+  { { "load_html",             "Load html",                         }, CP_COMMANDLINE, 
     (Func)commands_open,           NULL,                       NEVER_SM,   
     { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL }, EP_NONE, { NULL }, },
   
-  { { "load_html_tab",          "Load html new tab",                }, 1, 
+  { { "load_html_tab",          "Load html new tab",                }, CP_COMMANDLINE, 
     (Func)commands_open,           NULL,                       NEVER_SM,   
     { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL }, EP_NONE, { NULL }, },
   
-  { { "open",                  "open",                              }, 1, 
+  { { "open",                  "open",                              }, CP_COMMANDLINE | CP_DONT_CLEAN, 
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NORMAL,      .p = NULL }, EP_COMP_DEFAULT, { "o", NULL }, },
   
@@ -412,7 +413,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NORMAL | SET_URL, .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
   
-  { { "tabopen",               "tabopen",                          }, 1, 
+  { { "tabopen",               "tabopen",                          }, CP_COMMANDLINE | CP_DONT_CLEAN, 
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NEW_VIEW,     .p = NULL }, EP_COMP_DEFAULT, { "t", "topen", NULL }, },
   
@@ -420,7 +421,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
   
-  { { "winopen",               "winopen",                           }, 1, 
+  { { "winopen",               "winopen",                           }, CP_COMMANDLINE | CP_DONT_CLEAN, 
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NEW_WINDOW,     .p = NULL }, EP_COMP_DEFAULT, { "w", "wopen", NULL }, },
   
@@ -440,11 +441,11 @@ static FunctionMap FMAP [] = {
     (Func)commands_quickmark,           NULL,                              NEVER_SM,    
     { .n = QUICK_MARK_OPEN, .i=OPEN_NEW_WINDOW }, EP_NONE, { "winqmarks", NULL }, },
   
-  { { "start_page",       "Open startpage",                    }, 1, 
+  { { "start_page",       "Open startpage",                    }, CP_COMMANDLINE, 
     (Func)commands_open_startpage,      "No startpage set",                ALWAYS_SM, 
     { 0 }, EP_NONE, { "home", NULL }, },
   
-  { { "quit",           "Quit dwb",               }, 1, 
+  { { "quit",           "Quit dwb",               }, CP_COMMANDLINE, 
     (Func)commands_quit,         NULL,                   ALWAYS_SM, 
     { 0 }, EP_NONE, { "q", NULL }, },
   
@@ -476,43 +477,43 @@ static FunctionMap FMAP [] = {
     (Func)commands_add_search_field,    "No input in current context",     POST_SM, 
     { 0 }, EP_NONE, { "search", NULL }, },
   
-  { { "scroll_bottom",         "Scroll to  bottom of the page",     }, 1, 
+  { { "scroll_bottom",         "Scroll to  bottom of the page",     }, CP_COMMANDLINE, 
     (Func)commands_scroll,              NULL,                              ALWAYS_SM,    
     { .n = SCROLL_BOTTOM }, EP_NONE, { "bottom", NULL }, },
   
-  { { "scroll_down",           "Scroll down",                       }, 1, 
+  { { "scroll_down",           "Scroll down",                       }, CP_COMMANDLINE, 
     (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    
     { .n = SCROLL_DOWN, }, EP_NONE, { "down", NULL }, },
   
-  { { "scroll_left",           "Scroll left",                       }, 1, 
+  { { "scroll_left",           "Scroll left",                       }, CP_COMMANDLINE, 
     (Func)commands_scroll,              "Left side of the page",           ALWAYS_SM,    
     { .n = SCROLL_LEFT }, EP_NONE, { "left",  NULL }, },
   
-  { { "scroll_halfpage_down",  "Scroll one-half page down",         }, 1, 
+  { { "scroll_halfpage_down",  "Scroll one-half page down",         }, CP_COMMANDLINE, 
     (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    
     { .n = SCROLL_HALF_PAGE_DOWN, }, EP_NONE, { "halfdown", NULL }, },
   
-  { { "scroll_halfpage_up",    "Scroll one-half page up",           }, 1, 
+  { { "scroll_halfpage_up",    "Scroll one-half page up",           }, CP_COMMANDLINE, 
     (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    
     { .n = SCROLL_HALF_PAGE_UP, }, EP_NONE, { "halfup", NULL }, },
   
-  { { "scroll_page_down",      "Scroll one page down",              }, 1, 
+  { { "scroll_page_down",      "Scroll one page down",              }, CP_COMMANDLINE, 
     (Func)commands_scroll,              "Bottom of the page",              ALWAYS_SM,    
     { .n = SCROLL_PAGE_DOWN, }, EP_NONE, { "pagedown", NULL }, },
   
-  { { "scroll_page_up",        "Scroll one page up",                }, 1, 
+  { { "scroll_page_up",        "Scroll one page up",                }, CP_COMMANDLINE, 
     (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    
     { .n = SCROLL_PAGE_UP, }, EP_NONE, { "pageup", NULL }, },
   
-  { { "scroll_right",          "Scroll left",                       }, 1, 
+  { { "scroll_right",          "Scroll left",                       }, CP_COMMANDLINE, 
     (Func)commands_scroll,              "Right side of the page",          ALWAYS_SM,    
     { .n = SCROLL_RIGHT }, EP_NONE, { "right", NULL }, },
   
-  { { "scroll_top",            "Scroll to the top of the page",     }, 1, 
+  { { "scroll_top",            "Scroll to the top of the page",     }, CP_COMMANDLINE, 
     (Func)commands_scroll,              NULL,                              ALWAYS_SM,    
     { .n = SCROLL_TOP }, EP_NONE, { "top", NULL }, },
   
-  { { "scroll_up",             "Scroll up",                         }, 1, 
+  { { "scroll_up",             "Scroll up",                         }, CP_COMMANDLINE, 
     (Func)commands_scroll,              "Top of the page",                 ALWAYS_SM,    
     { .n = SCROLL_UP, }, EP_NONE, { "up", NULL }, },
   
@@ -524,90 +525,90 @@ static FunctionMap FMAP [] = {
     (Func)commands_set_key,             NULL,                              NEVER_SM,    
     { 0 }, EP_NONE, { "keys", NULL }, },
   
-  { { "show_bookmarks",             "Show bookmarks",                 }, 1, 
+  { { "show_bookmarks",             "Show bookmarks",                 }, CP_COMMANDLINE, 
     (Func)commands_show,           NULL,                              ALWAYS_SM, 
     { .p = "dwb:bookmarks", .ro = true }, EP_NONE, { "sbookmarks", NULL }, },
   
-  { { "show_quickmarks",             "Show quickmarks",                 }, 1, 
+  { { "show_quickmarks",             "Show quickmarks",                 }, CP_COMMANDLINE, 
     (Func)commands_show,           NULL,                              ALWAYS_SM, 
     { .p = "dwb:quickmarks", .ro = true }, EP_NONE, { "squickmarks", NULL }, },
 
-  { { "show_history",             "Show quickmarks",                 }, 1, 
+  { { "show_history",             "Show quickmarks",                 }, CP_COMMANDLINE, 
     (Func)commands_show,           NULL,                              ALWAYS_SM, 
     { .p = "dwb:history", .ro = true }, EP_NONE, { "shistory", NULL }, },
 
-  { { "show_downloads",             "Show downloads",                 }, 1, 
+  { { "show_downloads",             "Show downloads",                 }, CP_COMMANDLINE, 
     (Func)commands_show,           NULL,                              ALWAYS_SM, 
     { .p = "dwb:downloads", .ro = true }, EP_NONE, { "sdownloads", NULL }, },
   
-  { { "show_keys",             "Key configuration",                 }, 1, 
+  { { "show_keys",             "Key configuration",                 }, CP_COMMANDLINE, 
     (Func)commands_show,           NULL,                              ALWAYS_SM, 
     { .p = "dwb:keys", .ro = true }, EP_NONE, { "skeys", NULL }, },
 
-  { { "show_settings",         "Settings configuration",                          }, 1, 
+  { { "show_settings",         "Settings configuration",                          }, CP_COMMANDLINE, 
     (Func)commands_show,       NULL,                              ALWAYS_SM, 
     { .p = "dwb:settings", .ro = true }, EP_NONE, { "ssettings", NULL }, },
   
-  { { "view_source",           "View source",                       }, 1, 
+  { { "view_source",           "View source",                       }, CP_COMMANDLINE, 
     (Func)commands_view_source,         NULL,                              ALWAYS_SM, 
     { 0 }, EP_NONE, { "source", "so", NULL }, },
   
-  { { "zoom_in",               "Zoom in",                           }, 1, 
+  { { "zoom_in",               "Zoom in",                           }, CP_COMMANDLINE, 
     (Func)commands_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, 
     { 0 }, EP_NONE, { "zi", NULL }, },
   
-  { { "zoom",                 "Zoom",                         }, 1, 
+  { { "zoom",                 "Zoom",                         }, CP_COMMANDLINE, 
     (Func)commands_set_zoom_level,      NULL,                              ALWAYS_SM,    
     { .d = 1.0,   .p = NULL }, EP_NONE, { "z", NULL }, },
   
-  { { "zoom_out",              "Zoom out",                          }, 1, 
+  { { "zoom_out",              "Zoom out",                          }, CP_COMMANDLINE, 
     (Func)commands_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, 
     { 0 }, EP_NONE, { "zo", NULL }, },
   
   /* yank and paste */
   
-  { { "yank",                  "Yank current url",                              }, 1, 
+  { { "yank",                  "Yank current url",                              }, CP_COMMANDLINE, 
     (Func)commands_yank,                 NO_URL,                 POST_SM,  
     { .p = GDK_NONE, .n = CA_URI, .ro = true }, EP_NONE, { NULL }, },
   
-  { { "yank_primary",          "Yank current url to Primary selection",         }, 1, 
+  { { "yank_primary",          "Yank current url to Primary selection",         }, CP_COMMANDLINE, 
     (Func)commands_yank,                 NO_URL,                 POST_SM,  
     { .p = GDK_SELECTION_PRIMARY, .n = CA_URI, .ro = true }, EP_NONE, { "pyank", NULL }, },
   
-  { { "yank_title",                  "Yank current title",                              }, 1, 
+  { { "yank_title",                  "Yank current title",                              }, CP_COMMANDLINE, 
     (Func)commands_yank,                 "No title",                 POST_SM,  
     { .p = GDK_NONE, .n = CA_TITLE, .ro = true }, EP_NONE, { "tyank", NULL }, },
   
-  { { "yank_title_primary",          "Yank current title to Primary selection",         }, 1, 
+  { { "yank_title_primary",          "Yank current title to Primary selection",         }, CP_COMMANDLINE, 
     (Func)commands_yank,                 "No title",                 POST_SM,  
     { .p = GDK_SELECTION_PRIMARY, .n = CA_TITLE, .ro = true }, EP_NONE, { "tpyank", NULL }, },
   
-  { { "paste",                 "Open url from clipboard",                             }, 1, 
+  { { "paste",                 "Open url from clipboard",                             }, CP_COMMANDLINE, 
     (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, 
     { .n = OPEN_NORMAL, .p = GDK_NONE, .ro = true }, EP_NONE, { NULL }, },
   
-  { { "paste_primary",         "Open url from primary selection",           }, 1, 
+  { { "paste_primary",         "Open url from primary selection",           }, CP_COMMANDLINE, 
     (Func)commands_paste,               "No primary selection",  ALWAYS_SM, 
     { .n = OPEN_NORMAL, .p = GDK_SELECTION_PRIMARY, .ro = true }, EP_NONE, { "ppaste", NULL }, },
   
-  { { "tab_paste",              "Open url from clipboard in a new tab",                   }, 1, 
+  { { "tab_paste",              "Open url from clipboard in a new tab",                   }, CP_COMMANDLINE, 
     (Func)commands_paste,               "Clipboard is empty",    ALWAYS_SM, 
     { .n = OPEN_NEW_VIEW, .p = GDK_NONE, .ro = true }, EP_NONE, { "tpaste", NULL }, },
   
-  { { "tab_paste_primary",      "Open url from primary selection in a new window", }, 1, 
+  { { "tab_paste_primary",      "Open url from primary selection in a new window", }, CP_COMMANDLINE, 
     (Func)commands_paste,               "No primary selection",  ALWAYS_SM, 
     { .n = OPEN_NEW_VIEW, .p = GDK_SELECTION_PRIMARY, .ro = true }, EP_NONE, { "tabppaste", NULL }, },
   
-  { { "win_paste",              "Open url from clipboard in a new window",                   }, 1, 
+  { { "win_paste",              "Open url from clipboard in a new window",                   }, CP_COMMANDLINE, 
     (Func)commands_paste,             "Clipboard is empty",    ALWAYS_SM, 
     { .n = OPEN_NEW_WINDOW, .p = GDK_NONE, .ro = true }, EP_NONE, { "wpaste", NULL }, },
   
-  { { "win_paste_primary",      "Open url from primary selection in a new window", }, 1, 
+  { { "win_paste_primary",      "Open url from primary selection in a new window", }, CP_COMMANDLINE, 
     (Func)commands_paste,             "No primary selection",  ALWAYS_SM, 
     { .n = OPEN_NEW_WINDOW, .p = GDK_SELECTION_PRIMARY, .ro = true }, EP_NONE, { "wppaste", NULL }, },
   
 
-  { { "save_session",          "Save current session", },              1, 
+  { { "save_session",          "Save current session", },              CP_COMMANDLINE, 
     (Func)commands_save_session,        NULL,                              ALWAYS_SM,  
     { .n = NORMAL_MODE }, EP_NONE, { "wq", NULL }, },
   
@@ -615,22 +616,22 @@ static FunctionMap FMAP [] = {
     (Func)commands_save_session,        NULL,                              POST_SM,  
     { .n = SAVE_SESSION }, EP_NONE, { "wqn", NULL }, },
   
-  { { "save",                  "Save all configuration files", },      1, 
+  { { "save",                  "Save all configuration files", },      CP_COMMANDLINE, 
     (Func)commands_save_files,        NULL,                              POST_SM,  
     { .n = SAVE_SESSION }, EP_NONE, { NULL }, },
   
-  { { "undo",                  "Undo closing last tab", },             1, 
+  { { "undo",                  "Undo closing last tab", },             CP_COMMANDLINE, 
     (Func)commands_undo,              "No more closed views",            POST_SM,  
     { 0 }, EP_NONE, { "u", NULL }, },
   
-  { { "web_inspector",         "Open the webinspector", },             1, 
+  { { "web_inspector",         "Open the webinspector", },             CP_COMMANDLINE, 
     (Func)commands_web_inspector,              "Enable developer extras for the webinspector",           POST_SM, 
     { 0 }, EP_NONE, { "inspect", "insp", NULL }, },
   
-  { { "reload_scripts",         "Reload scripts", },             1, 
+  { { "reload_scripts",         "Reload scripts", },             CP_COMMANDLINE, 
     (Func)commands_reload_scripts,              NULL,                              ALWAYS_SM, 
     { 0 }, EP_NONE, { NULL }, },
-  { { "reload_userscripts",         "Reload userscripts", },             1, 
+  { { "reload_userscripts",         "Reload userscripts", },             CP_COMMANDLINE, 
     (Func)commands_reload_user_scripts,              NULL,                              POST_SM, 
     { 0 }, EP_NONE, { NULL }, },
   
@@ -714,59 +715,59 @@ static FunctionMap FMAP [] = {
     (Func)commands_toggle_property,     NULL,                              POST_SM,    
     {  .ro = true, .p = "enable-spell-checking" }, EP_NONE, { NULL }, },
   
-  { { "proxy",                 "Toggle proxy",                    },        1,     
+  { { "proxy",                 "Toggle proxy",                    },        CP_COMMANDLINE,     
     (Func)commands_toggle_proxy,        NULL,                    POST_SM,    
     { 0 }, EP_NONE, { NULL }, },
   
-  { { "toggle_scripts_host", "Toggle block content for current host" },   1, 
+  { { "toggle_scripts_host", "Toggle block content for current host" },   CP_COMMANDLINE, 
     (Func) commands_toggle_scripts, NULL,                  POST_SM,    
     { .n = ALLOW_HOST }, EP_NONE, { "hscript",  NULL }, },
   
-  { { "toggle_scripts_uri",    "Toggle block content for current url" }, 1, 
+  { { "toggle_scripts_uri",    "Toggle block content for current url" }, CP_COMMANDLINE, 
     (Func) commands_toggle_scripts, NULL,                POST_SM,    
     { .n = ALLOW_URI }, EP_NONE, { "uscript", NULL }, },
   
-  { { "toggle_scripts_host_tmp", "Toggle block content for current host for this session" },  1, 
+  { { "toggle_scripts_host_tmp", "Toggle block content for current host for this session" },  CP_COMMANDLINE, 
     (Func) commands_toggle_scripts, NULL,      POST_SM,    
     { .n = ALLOW_HOST | ALLOW_TMP }, EP_NONE, { "thscript", NULL }, },
   
-  { { "toggle_scripts_uri_tmp", "Toggle block content for current url for this session" },   1, 
+  { { "toggle_scripts_uri_tmp", "Toggle block content for current url for this session" },   CP_COMMANDLINE, 
     (Func) commands_toggle_scripts, NULL,       POST_SM,    
     { .n = ALLOW_URI | ALLOW_TMP }, EP_NONE, { "tuscript", NULL }, },
   
-  { { "toggle_plugins_host", "Toggle plugin blocker for current host" },   1, 
+  { { "toggle_plugins_host", "Toggle plugin blocker for current host" },   CP_COMMANDLINE, 
     (Func) commands_toggle_plugin_blocker, NULL,                  POST_SM,    
     { .n = ALLOW_HOST }, EP_NONE, { "hplugin", NULL }, },
   
-  { { "toggle_plugins_uri",    "Toggle plugin blocker for current url" }, 1, 
+  { { "toggle_plugins_uri",    "Toggle plugin blocker for current url" }, CP_COMMANDLINE, 
     (Func) commands_toggle_plugin_blocker, NULL,                POST_SM,    
     { .n = ALLOW_URI }, EP_NONE, { "uplugin", NULL }, },
   
-  { { "toggle_plugins_host_tmp", "Toggle block content for current domain for this session" },  1, 
+  { { "toggle_plugins_host_tmp", "Toggle block content for current domain for this session" },  CP_COMMANDLINE, 
     (Func) commands_toggle_plugin_blocker, NULL,      POST_SM,    
     { .n = ALLOW_HOST | ALLOW_TMP }, EP_NONE, { "thplugin", NULL }, },
   
-  { { "toggle_plugins_uri_tmp", "Toggle block content for current url for this session" },   1, 
+  { { "toggle_plugins_uri_tmp", "Toggle block content for current url for this session" },   CP_COMMANDLINE, 
     (Func) commands_toggle_plugin_blocker, NULL,       POST_SM,    
     { .n = ALLOW_URI | ALLOW_TMP }, EP_NONE, { "tuplugin", NULL }, },
   
-  { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  1, 
+  { { "toggle_hidden_files",   "Toggle hidden files in directory listing" },  CP_COMMANDLINE, 
     (Func) commands_toggle_hidden_files, NULL,                  ALWAYS_SM,    
     { 0 }, EP_NONE, { "hidden", NULL }, },
   
-  { { "print",                 "Print current page" },                         1, 
+  { { "print",                 "Print current page" },                         CP_COMMANDLINE, 
     (Func) commands_print, NULL,                             POST_SM,    
     { 0 }, EP_NONE, { "ha", NULL }, },
   
-  { { "execute_userscript",    "Execute userscript" },                 1, 
+  { { "execute_userscript",    "Execute userscript" },                 CP_COMMANDLINE, 
     (Func) commands_execute_userscript, "No userscripts available",     NEVER_SM,    
     { 0 }, EP_NONE, { NULL }, },
   
-  { { "fullscreen",    "Toggle fullscreen" },                 1, 
+  { { "fullscreen",    "Toggle fullscreen" },                 CP_COMMANDLINE, 
     (Func) commands_fullscreen, NULL,     ALWAYS_SM,    
     { 0 }, EP_NONE, { "fs", NULL }, },
   
-  { { "open_editor",    "Open external editor" },                 1, 
+  { { "open_editor",    "Open external editor" },                 CP_COMMANDLINE, 
     (Func) commands_open_editor, "No input focused",     POST_SM,    
     { 0 }, EP_NONE, { "editor", NULL }, },
   

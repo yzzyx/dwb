@@ -2077,6 +2077,7 @@ dwb_eval_key(GdkEventKey *e) {
     case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return true;
   }
   char *key = dwb_get_key(e, &mod_mask, &isprint);
+  printf("%d\n", mod_mask);
   if (key == NULL)
     return false;
   if (DIGIT(e)) {
@@ -2093,7 +2094,8 @@ dwb_eval_key(GdkEventKey *e) {
         CustomCommand *c = l->data;
         if (IS_NUMMOD(c->key->mod) || (c->key->mod == mod_mask && c->key->num == dwb.state.nummod)) {
           for (int i=0; c->commands[i]; i++) {
-            dwb_parse_command_line(c->commands[i]);
+            if (dwb_parse_command_line(c->commands[i]) == STATUS_END)
+              return true;
           }
           break;
         }
@@ -2125,7 +2127,9 @@ dwb_eval_key(GdkEventKey *e) {
     if (c->key->num == dwb.state.nummod  && c->key->mod == mod_mask) {
       if (!g_strcmp0(c->key->str, buf)) {
         for (int i=0; c->commands[i]; i++) {
-          dwb_parse_command_line(c->commands[i]);
+          if (dwb_parse_command_line(c->commands[i]) == STATUS_END) {
+            return true;
+          }
         }
         return true;
       }
@@ -2549,8 +2553,9 @@ static void
 dwb_free_custom_keys() {
   for (GSList *l = dwb.custom_commands; l; l=l->next) {
     CustomCommand *c = l->data;
-    g_free(c->key);
+    FREE0(c->key);
     g_strfreev(c->commands);
+    c->commands = NULL;
   }
   g_slist_free(dwb.custom_commands);
   dwb.custom_commands = NULL;
@@ -3521,8 +3526,11 @@ dwb_init() {
 
 /* FIFO {{{*/
 /* dwb_parse_command_line(const char *line) {{{*/
-void 
+DwbStatus 
 dwb_parse_command_line(const char *line) {
+  DwbStatus ret = STATUS_OK;
+  if (line == NULL || *line == '\0')
+    return STATUS_OK;
   const char *bak;
   int nummod;
   line = util_str_chug(line);
@@ -3533,7 +3541,7 @@ dwb_parse_command_line(const char *line) {
   gboolean found;
 
   if (!token[0]) 
-    return;
+    return STATUS_OK;
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     bak = token[0];
@@ -3561,7 +3569,7 @@ dwb_parse_command_line(const char *line) {
         m->map->func(&m, &m->map->arg);
       }
       else {
-        commands_simple_command(m);
+        ret = commands_simple_command(m);
       }
       break;
     }
@@ -3569,10 +3577,11 @@ dwb_parse_command_line(const char *line) {
   g_strfreev(token);
   dwb_glist_prepend_unique(&dwb.fc.commands, g_strdup(line));
   /* Check for dwb.keymap is necessary for commands that quit dwb. */
-  if (dwb.keymap != NULL && m != NULL && !(m->map->prop & CP_HAS_MODE)) {
+  if (dwb.keymap != NULL && m != NULL && !(m->map->prop & CP_HAS_MODE) && !(m->map->prop & CP_DONT_CLEAN)) {
     dwb_change_mode(NORMAL_MODE, dwb.state.message_id == 0);
   }
   dwb.state.nummod = -1;
+  return ret;
 }/*}}}*/
 void 
 dwb_parse_commands(const char *line) {
