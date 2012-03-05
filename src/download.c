@@ -39,6 +39,7 @@ typedef struct _DwbDownload {
   DownloadAction action;
   char *path;
   guint n;
+  guint sig_button;
 } DwbDownload;
 #define DWB_DOWNLOAD(X) ((DwbDownload*)((X)->data))
 
@@ -260,6 +261,8 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
       }
       Navigation *n = dwb_navigation_new(webkit_download_get_uri(download), webkit_download_get_destination_uri(download));
       dwb.fc.downloads = g_list_append(dwb.fc.downloads, n);
+      g_signal_handler_disconnect(label->event, label->sig_button);
+      label->download = NULL;
       g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)download_delay, label);
       _downloads = g_list_delete_link(_downloads, list);
     }
@@ -275,8 +278,8 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
 /* download_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *) {{{*/
 static gboolean 
 download_button_press_cb(GtkWidget *w, GdkEventButton *e, GList *gl) {
-  if (e->button == 3) {
-    webkit_download_cancel(DWB_DOWNLOAD(gl)->download);
+  if (e->button == 3 && DWB_DOWNLOAD(gl)->download != NULL) {
+      webkit_download_cancel(DWB_DOWNLOAD(gl)->download);
   }
   return false;
 }/*}}}*/
@@ -422,7 +425,7 @@ download_start(const char *path) {
       _downloads = g_list_prepend(_downloads, active);
       DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
       s->blue = s->time = 0;
-      g_signal_connect(active->event, "button-press-event", G_CALLBACK(download_button_press_cb), _downloads);
+      active->sig_button = g_signal_connect(active->event, "button-press-event", G_CALLBACK(download_button_press_cb), _downloads);
       g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(download_progress_cb), s);
       g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(download_status_cb), s);
       webkit_download_start(dwb.state.download);
