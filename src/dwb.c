@@ -858,6 +858,27 @@ void
 dwb_remove_history(const char *line) {
   dwb_remove_navigation_item(&dwb.fc.history, line, dwb.misc.synctimer <= 0 ? dwb.files.history : NULL);
 }
+void
+dwb_remove_search_engine(const char *line) {
+  Navigation *n = dwb_navigation_new_from_line(line);
+  GList *item = g_list_find_custom(dwb.fc.searchengines, n, (GCompareFunc)util_navigation_compare_first);
+
+  if (item != NULL) {
+    if (item == dwb.fc.searchengines && dwb.fc.searchengines->next != NULL) 
+      dwb.misc.default_search = NAVIGATION(dwb.fc.searchengines->next)->second;
+    else 
+      dwb.misc.default_search = NULL;
+    util_file_remove_line(dwb.files.searchengines, line);
+    dwb_navigation_free(item->data);
+    dwb.fc.searchengines = g_list_delete_link(dwb.fc.searchengines, item);
+  }
+  item = g_list_find_custom(dwb.fc.se_completion, n, (GCompareFunc)util_navigation_compare_first);
+  if (item != NULL)  {
+    dwb_navigation_free(item->data);
+    dwb.fc.se_completion = g_list_delete_link(dwb.fc.se_completion, item);
+  }
+  dwb_navigation_free(n);
+}
 void 
 dwb_remove_quickmark(const char *line) {
   Quickmark *q = dwb_quickmark_new_from_line(line);

@@ -37,6 +37,7 @@ void html_settings_changed(WebKitDOMElement *el);
 
 DwbStatus html_bookmarks(GList *, HtmlTable *);
 DwbStatus html_history(GList *, HtmlTable *);
+DwbStatus html_searchengines(GList *gl, HtmlTable *table);
 DwbStatus html_quickmarks(GList *, HtmlTable *);
 DwbStatus html_downloads(GList *, HtmlTable *);
 DwbStatus html_settings(GList *, HtmlTable *);
@@ -45,13 +46,14 @@ DwbStatus html_keys(GList *, HtmlTable *);
 
 
 static HtmlTable table[] = {
-  { "dwb:bookmarks",  "Bookmarks",    INFO_FILE,      0, html_bookmarks,  },
-  { "dwb:quickmarks", "Quickmarks",   INFO_FILE,      0, html_quickmarks, },
-  { "dwb:history",    "History",      INFO_FILE,      0, html_history,    },
-  { "dwb:downloads",  "Downloads",    INFO_FILE,      0, html_downloads, },
-  { "dwb:keys",       "Keys",         INFO_FILE,      0, html_keys },
-  { "dwb:settings",   "Settings",     INFO_FILE,      0, html_settings },
-  { "dwb:startpage",   NULL,           NULL,           0, html_startpage },
+  { "dwb:bookmarks",        "Bookmarks",      INFO_FILE,      0, html_bookmarks,  },
+  { "dwb:quickmarks",       "Quickmarks",     INFO_FILE,      0, html_quickmarks, },
+  { "dwb:history",          "History",        INFO_FILE,      0, html_history,    },
+  { "dwb:searchengines",    "Searchengines",  INFO_FILE,      0, html_searchengines,    },
+  { "dwb:downloads",        "Downloads",      INFO_FILE,      0, html_downloads, },
+  { "dwb:keys",             "Keys",           INFO_FILE,      0, html_keys },
+  { "dwb:settings",         "Settings",       INFO_FILE,      0, html_settings },
+  { "dwb:startpage",         NULL,            NULL,           0, html_startpage },
 };
 
 static char current_uri[BUFFER_LENGTH];
@@ -100,6 +102,9 @@ html_remove_item_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
     else if (!g_strcmp0(uri, "dwb:downloads")) {
       dwb_remove_download(navigation);
     }
+    else if (!g_strcmp0(uri, "dwb:searchengines")) {
+      dwb_remove_search_engine(navigation);
+    }
   }
   else if (webkit_dom_element_has_attribute((void*) target, "href")) {
     char *href = webkit_dom_element_get_attribute((void*) target, "href");
@@ -140,9 +145,8 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
         <tr>",  n->first, n->second && g_strcmp0(n->second, "(null)") ? n->second : n->first, n->first, n->second);
   }
-  ret = html_load_page(wv, table, panels->str);
-
-  g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
+  if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
+    g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
   g_string_free(panels, true);
   return ret;
 }
@@ -150,6 +154,26 @@ DwbStatus
 html_bookmarks(GList *gl, HtmlTable *table) {
   dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)util_navigation_compare_second);
   return html_navigation(gl, dwb.fc.bookmarks, table);
+}
+DwbStatus
+html_searchengines(GList *gl, HtmlTable *table) {
+  WebKitWebView *wv = WEBVIEW(gl);
+  DwbStatus ret;
+
+  GString *panels = g_string_new(NULL);
+  int i=0;
+  for (GList *l = dwb.fc.se_completion; l; l=l->next, i++, i%=2) {
+    Navigation *n = l->data;
+    g_string_append_printf(panels, "<tr class='dwb_table_row'>\
+        <td class='dwb_table_cell_left'><a href='%s'>%s</a></div></td>\
+        <td class='dwb_table_cell_middle'><div class='dwb_qm'>%s</div></td>\
+        <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
+        </tr>", n->second, n->second, n->first, n->first, n->second);
+  }
+  if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
+    g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
+  g_string_free(panels, true);
+  return ret;
 }
 DwbStatus
 html_history(GList *gl, HtmlTable *table) {

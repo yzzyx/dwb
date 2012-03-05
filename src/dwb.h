@@ -110,6 +110,7 @@
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
 #define CLEAR_COMMAND_TEXT()        dwb_set_status_bar_text(dwb.gui.lstatus, NULL, NULL, NULL, false)
 #define BOOLEAN(X)                  (!(!(X)))
+#define NAVIGATION(X)               ((Navigation*)((X)->data))
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 
@@ -835,6 +836,7 @@ void dwb_remove_bookmark(const char *);
 void dwb_remove_download(const char *);
 void dwb_remove_history(const char *);
 void dwb_remove_quickmark(const char *);
+void dwb_remove_search_engine(const char *);
 DwbStatus dwb_evaluate_hints(const char *);
 void dwb_set_open_mode(Open);
 
