@@ -382,7 +382,8 @@ html_quickmarks(GList *gl, HtmlTable *table) {
         <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a></div></td>\
         <td class='dwb_table_cell_middle'><div class='dwb_ellipsize'><a style='color:inherit;font:inherit;' href='%s'>%s</a></div></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
-        </tr>", q->key, q->nav->first, q->nav->second && g_strcmp0(q->nav->second, "(null)") ? q->nav->second : q->nav->first, q->nav->first, q->nav->first, q->key, q->nav->first, q->nav->second);
+        </tr>", q->key, q->nav->first, q->nav->second && g_strcmp0(q->nav->second, "(null)") ? q->nav->second : q->nav->first,
+        q->nav->first, q->nav->first, q->key, q->nav->first, q->nav->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 

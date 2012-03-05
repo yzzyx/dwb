@@ -864,10 +864,8 @@ dwb_remove_search_engine(const char *line) {
   GList *item = g_list_find_custom(dwb.fc.searchengines, n, (GCompareFunc)util_navigation_compare_first);
 
   if (item != NULL) {
-    if (item == dwb.fc.searchengines && dwb.fc.searchengines->next != NULL) 
-      dwb.misc.default_search = NAVIGATION(dwb.fc.searchengines->next)->second;
-    else 
-      dwb.misc.default_search = NULL;
+    if (item == dwb.fc.searchengines) 
+      dwb.misc.default_search = dwb.fc.searchengines->next != NULL ? NAVIGATION(dwb.fc.searchengines->next)->second : NULL;
     util_file_remove_line(dwb.files.searchengines, line);
     dwb_navigation_free(item->data);
     dwb.fc.searchengines = g_list_delete_link(dwb.fc.searchengines, item);

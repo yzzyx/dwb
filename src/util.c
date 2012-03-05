@@ -480,7 +480,6 @@ util_file_remove_line(const char *filename, const char *line) {
     if (*tmp == '\0' || *tmp == '#')
       g_string_append_printf(buffer, "%s\n", lines[i]);
     else if (*tmp != '\0' && STRCMP_FIRST_WORD(tmp, line)) {
-      printf("%s\n", tmp);
       g_string_append_printf(buffer, "%s\n", lines[i]);
     }
   }
