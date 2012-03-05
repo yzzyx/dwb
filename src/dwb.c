@@ -3284,7 +3284,7 @@ dwb_init_file_content(GList *gl, const char *filename, Content_Func func) {
       line = lines[i];
       while (g_ascii_isspace(*line))
         line++;
-      if (*line == '\0')
+      if (*line == '\0' || *line == '#')
         continue;
       value = func(line);
       if (value != NULL)

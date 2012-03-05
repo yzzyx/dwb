@@ -470,9 +470,17 @@ util_file_remove_line(const char *filename, const char *line) {
   int ret = 1;
   char *content = util_get_file_content(filename);
   char **lines = g_strsplit(content, "\n", -1);
+  const char *tmp;
   GString *buffer = g_string_new(NULL);
-  for (int i=0; lines[i]; i++) {
-    if (strlen(lines[i]) > 0 && STRCMP_FIRST_WORD(lines[i], line)) {
+  int last_non_empty = g_strv_length(lines)-1;
+  for (int i=0; i<last_non_empty; i++) {
+    tmp = lines[i];
+    while (g_ascii_isspace(*tmp)) 
+      tmp++;
+    if (*tmp == '\0' || *tmp == '#')
+      g_string_append_printf(buffer, "%s\n", lines[i]);
+    else if (*tmp != '\0' && STRCMP_FIRST_WORD(tmp, line)) {
+      printf("%s\n", tmp);
       g_string_append_printf(buffer, "%s\n", lines[i]);
     }
   }
@@ -635,6 +643,7 @@ util_file_add(const char *filename, const char *text, int append, int max) {
   FILE *file;
   char buffer[STRING_LENGTH];
   GString *content = g_string_new(NULL);
+  char *tmp;
 
   if (!append) 
     g_string_append_printf(content, "%s\n", text);
@@ -642,7 +651,12 @@ util_file_add(const char *filename, const char *text, int append, int max) {
   gboolean ret = false;
   if ( (file = fopen(filename, "r"))) {
     for (int i=0; fgets(buffer, sizeof buffer, file) &&  (max < 0 || i < max-1); i++ ) {
-      if (STRCMP_FIRST_WORD(text, buffer) && STRCMP_SKIP_NEWLINE(text, buffer) ) {
+      tmp = buffer;
+      while (g_ascii_isspace(*tmp) && *tmp != '\n')
+        tmp++;
+      if (*tmp == '#' || *tmp == '\n')
+        g_string_append(content, buffer);
+      else if (STRCMP_FIRST_WORD(text, tmp) && STRCMP_SKIP_NEWLINE(text, tmp) ) {
         g_string_append(content, buffer);
       }
     }
