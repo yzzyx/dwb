@@ -141,9 +141,9 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
         <td class=dwb_table_cell_left>\
           <a href='%s'>%s</a>\
         </td>\
-        <td class='dwb_table_cell_middle'></td>\
+        <td class='dwb_table_cell_middle'><div class='dwb_ellipsize'><a style='color:inherit;font:inherit;' href='%s'>%s</a></div></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
-        <tr>",  n->first, n->second && g_strcmp0(n->second, "(null)") ? n->second : n->first, n->first, n->second);
+        <tr>",  n->first, n->second && g_strcmp0(n->second, "(null)") ? n->second : n->first, n->first, n->first, n->first, n->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
@@ -380,9 +380,9 @@ html_quickmarks(GList *gl, HtmlTable *table) {
     Quickmark *q = gl->data;
     g_string_append_printf(panels, "<tr class='dwb_table_row'>\
         <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a></div></td>\
-        <td class='dwb_table_cell_middle'></td>\
+        <td class='dwb_table_cell_middle'><div class='dwb_ellipsize'><a style='color:inherit;font:inherit;' href='%s'>%s</a></div></td>\
         <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
-        </tr>", q->key, q->nav->first, q->nav->second && g_strcmp0(q->nav->second, "(null)") ? q->nav->second : q->nav->first, q->key, q->nav->first, q->nav->second);
+        </tr>", q->key, q->nav->first, q->nav->second && g_strcmp0(q->nav->second, "(null)") ? q->nav->second : q->nav->first, q->nav->first, q->nav->first, q->key, q->nav->first, q->nav->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
