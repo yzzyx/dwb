@@ -2129,7 +2129,6 @@ dwb_eval_key(GdkEventKey *e) {
     case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return true;
   }
   char *key = dwb_get_key(e, &mod_mask, &isprint);
-  printf("%d\n", mod_mask);
   if (key == NULL)
     return false;
   if (DIGIT(e)) {
