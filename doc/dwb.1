@@ -1628,12 +1628,6 @@ The font used for tablabels without focus and completion items without focus. Po
 string,
 default value: 
 .TP 
-.BR ftp-client
-Program to open ftp://. 
-.IR dwb_uri
-will be replaced with the ftp-url. Default value: 
-.IR xterm\ -e\ ncftp\ 'dwb_uri' .
-.TP 
 .BR hint-active-color
 The background color for active link, i.e. the link followed when Return is
 pressed. Possible values: a rgb color string,
@@ -1709,12 +1703,6 @@ default value:
 Whether to allow loading javascript snippets with scheme 'javascript',
 default value:
 .IR true .
-.TP
-.BR mail-client
-The email program that is used for mailto:-urls. 
-.IR dwb_uri
-will be replaced with the mail-url. Default value: 
-.IR xterm\ -e\ mutt\ 'dwb_uri'.
 .TP 
 .BR message-delay
 The duration messages are shown. Possible values: duration in seconds (integer),
@@ -1768,6 +1756,38 @@ Save the session when dwb is closed and restore the last saved session when
 invoking dwb. Possible values: true/false,
 default value:
 .IR false .
+.TP 
+.BR scheme-handler 
+A script or application that handles uris that cannot be loaded by dwb. dwb only
+loads uris with scheme 
+.BR http , 
+.BR https , 
+.B about 
+and 
+.BR dwb ; 
+support for e.g. ftp is provided through a scheme handler. The scheme handler
+can either be an application or a script. The first command line argument will
+be the uri for your application, so you can simply set this to 
+.IR xdg-open .
+There are also the environment variables 
+.IR DWB_URI , 
+.IR DWB_SCHEME , 
+.IR DWB_COOKIES , 
+.IR DWB_USER_AGENT , 
+and 
+.I DWB_REFERER
+available which can be used in a script, for example:
+
+.nf
+  #!/bin/sh
+
+  case ${DWB_SCHEME} in 
+    mailto) xterm -e "mutt ${DWB_URI}";;
+    ftp) xterm -e "ncftp ${DWB_URI}";;
+    *) xdg-open ${DWB_URI}
+  esac
+.fi
+
 .TP 
 .BR scroll-step
 The step-increment in pixels for scrolling. If set to a value lower or equal 0,

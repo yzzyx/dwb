@@ -865,6 +865,7 @@ void dwb_version();
 DwbStatus dwb_pack(const char *layout, gboolean rebuild);
 void dwb_init_signals(void);
 void dwb_parse_commands(const char *line);
+DwbStatus dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request);
 
 gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 

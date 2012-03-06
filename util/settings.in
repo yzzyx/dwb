@@ -135,10 +135,9 @@ enable-site-specific-quirks checkbox Enable site specific compatibility workarou
 enable-spatial-navigation checkbox Enable spatial navigation
 enable-universal-access-from-file-uris checkbox Whether to allow files loaded through file: 
 enable-xss-auditor checkbox Whether to enable the xss auditor
-ftp-client text Application used for ftp
 history-length text Length of the browsing history
-mail-client text Application used for mailto:-urls
 navigation-history-max Length of the navigation history
 print-backgrounds checkbox Whether background images should be printed
+scheme-handler Application or script that handles uris with schemes that cannot be handled by dwb 
 sync-history text Interval to save history to disk, 0 means save immediately
 tab-key-cycles-through-elements checkbox Tab cycles through elements in insert mode

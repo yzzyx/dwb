@@ -148,7 +148,7 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
   }
 }/*}}}*/
 
-/* dwb_set_cookies */
+/* dwb_set_cookies {{{ */
 static DwbStatus
 dwb_set_cookies(GList *gl, WebSettings *s) {
   dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(s->arg.p);
@@ -174,7 +174,8 @@ dwb_set_private_browsing(GList *gl, WebSettings *s) {
   dwb_webkit_setting(gl, s);
   return STATUS_OK;
 }/*}}}*/
-/* dwb_set_new_tab_position_policy */
+
+/* dwb_set_new_tab_position_policy {{{ */
 static DwbStatus
 dwb_set_new_tab_position_policy(GList *gl, WebSettings *s) {
   if (!g_strcmp0(s->arg.p, "right"))
@@ -214,11 +215,12 @@ dwb_set_sync_interval(GList *gl, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
+/* dwb_set_scroll_step {{{*/
 static DwbStatus
 dwb_set_scroll_step(GList *gl, WebSettings *s) {
   dwb.misc.scroll_step = s->arg.d;
   return STATUS_OK;
-}
+}/*}}}*/
 
 /* dwb_set_startpage(GList *l, WebSettings *){{{*/
 static DwbStatus 
@@ -517,6 +519,53 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 /*}}}*/
 
 /* FUNCTIONS {{{*/
+
+DwbStatus
+dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request) {
+  const char *handler = GET_CHAR("scheme-handler");
+  if (handler == NULL) {
+    dwb_set_error_message(gl, "No scheme handler defined");
+    return STATUS_ERROR;
+  }
+  GError *error = NULL;
+  char **scheme_handler = g_strsplit(handler, " ", -1);
+  int l = g_strv_length(scheme_handler);
+  char **argv = g_malloc0_n(l + 2, sizeof(char*));
+  GSList *list = NULL;
+  const char *uri = webkit_network_request_get_uri(request);
+  int i=0;
+  for (; i<l; i++) {
+    argv[i] = scheme_handler[i];
+  }
+  argv[i++] = (char*)uri;
+  argv[i++] = NULL;
+  list = g_slist_append(list, dwb_navigation_new("DWB_URI", uri));
+  list = g_slist_prepend(list, dwb_navigation_new("DWB_COOKIES", dwb.files.cookies));
+
+  char *scheme = g_uri_parse_scheme(uri);
+  if (scheme) {
+    list = g_slist_append(list, dwb_navigation_new("DWB_SCHEME", scheme));
+    g_free(scheme);
+  }
+  const char *referer = soup_get_header_from_request(request, "Referer");
+  if (referer)
+    list = g_slist_append(list, dwb_navigation_new("DWB_REFERER", uri));
+  const char *user_agent = soup_get_header_from_request(request, "User-Agent");
+  if (user_agent)
+    list = g_slist_append(list, dwb_navigation_new("DWB_USER_AGENT", uri));
+  if (g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &error)) {
+    return STATUS_OK;
+  }
+  else {
+    dwb_set_error_message(gl, "Spawning scheme handler failed");
+    return STATUS_ERROR;
+  }
+  for (int i=0; i<l; i++) 
+    g_free(argv[i]);
+  g_free(scheme_handler);
+  g_free(argv);
+}
+
 /* dwb_glist_prepend_unique(GList **list, char *text) {{{*/
 void
 dwb_glist_prepend_unique(GList **list, char *text) {
@@ -678,6 +727,7 @@ clean:
   g_free(info);
 }/*}}}*/
 
+/* dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error) {{{*/
 gboolean 
 dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error) {
   WebKitDOMNode *parent = webkit_dom_node_get_parent_node(node);
@@ -686,7 +736,8 @@ dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error) {
     return true;
   }
   return false;
-}
+}/*}}}*/
+
 /* dwb_get_editable(WebKitDOMElement *) {{{*/
 static gboolean
 dwb_get_editable(WebKitDOMElement *element) {
