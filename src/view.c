@@ -317,7 +317,9 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   gboolean ret = false;
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
-  if (!g_str_has_prefix(uri, "http:") && !g_str_has_prefix(uri, "https:") && !g_str_has_prefix(uri, "about:") && !g_str_has_prefix(uri, "dwb:")) {
+  if (!g_str_has_prefix(uri, "http:") && !g_str_has_prefix(uri, "https:") &&
+      !g_str_has_prefix(uri, "about:") && !g_str_has_prefix(uri, "dwb:") &&
+      !g_str_has_prefix(uri, "file:")) {
     if (dwb_scheme_handler(gl, request) == STATUS_OK)  {
       webkit_web_policy_decision_ignore(policy);
       return true;
