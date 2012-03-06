@@ -523,6 +523,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 DwbStatus
 dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request) {
   const char *handler = GET_CHAR("scheme-handler");
+  DwbStatus ret = STATUS_OK;
   if (handler == NULL) {
     dwb_set_error_message(gl, "No scheme handler defined");
     return STATUS_ERROR;
@@ -553,17 +554,17 @@ dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request) {
   const char *user_agent = soup_get_header_from_request(request, "User-Agent");
   if (user_agent)
     list = g_slist_append(list, dwb_navigation_new("DWB_USER_AGENT", uri));
-  if (g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &error)) {
-    return STATUS_OK;
-  }
-  else {
+  if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &error)) {
     dwb_set_error_message(gl, "Spawning scheme handler failed");
-    return STATUS_ERROR;
+    fprintf(stderr, "Scheme handler failed: %s", error->message);
+    g_clear_error(&error);
+    ret = STATUS_ERROR;
   }
   for (int i=0; i<l; i++) 
     g_free(argv[i]);
   g_free(scheme_handler);
   g_free(argv);
+  return ret;
 }
 
 /* dwb_glist_prepend_unique(GList **list, char *text) {{{*/
