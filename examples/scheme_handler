@@ -1,0 +1,10 @@
+#!/bin/sh
+# The environment variables DWB_URI, DWB_SCHEME, DWB_COOKIES, DWB_USER_AGENT and
+# DWB_REFERER can be used
+
+case ${DWB_SCHEME} in 
+  mailto) xterm -e "mutt ${DWB_URI}";;
+  ftp) xterm -e "ncftp ${DWB_URI}";;
+  *) xdg-open ${DWB_URI}
+esac
+

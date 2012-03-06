@@ -317,6 +317,13 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   gboolean ret = false;
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
+  if (!g_str_has_prefix(uri, "http:") && !g_str_has_prefix(uri, "https:") && !g_str_has_prefix(uri, "about:") && !g_str_has_prefix(uri, "dwb:")) {
+    if (dwb_scheme_handler(gl, request) == STATUS_OK)  {
+      webkit_web_policy_decision_ignore(policy);
+      return true;
+    }
+  }
+
   /* Check if tab is locked */
   if (LP_LOCKED_URI(VIEW(gl))) {
     const char *initial_uri = webkit_web_view_get_uri(web);
@@ -399,22 +406,6 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
         }
     default: break;
 
-  }
-
-  /* mailto, ftp */
-  char *scheme = g_uri_parse_scheme(uri);
-  if (scheme) {
-    if (!g_strcmp0(scheme, "mailto")) {
-      dwb_spawn(gl, "mail-client", uri);
-      webkit_web_policy_decision_ignore(policy);
-      ret = true;
-    }
-    else if (!g_strcmp0(scheme, "ftp")) {
-      dwb_spawn(gl, "ftp-client", uri);
-      webkit_web_policy_decision_ignore(policy);
-      ret = true;
-    }
-    g_free(scheme);
   }
   return ret;
 }/*}}}*/
