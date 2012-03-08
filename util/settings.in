@@ -23,6 +23,7 @@ save-session checkbox Whether to Automatically save sessions
 single-instance checkbox Whether to have only one instance
 ssl-ca-cert text Path to ssl-certificate
 ssl-strict checkbox Whether to allow only save ssl-certificates
+use-ntlm checkbox Whether to use ntlm-authentication
 user-agent text The user agent string
 
 # fonts Fonts

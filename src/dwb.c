@@ -67,6 +67,7 @@ static DwbStatus dwb_reload_scripts(GList *, WebSettings *);
 static DwbStatus dwb_set_favicon(GList *, WebSettings *);
 static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
+static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
 
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
@@ -154,6 +155,13 @@ dwb_set_cookies(GList *gl, WebSettings *s) {
   dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(s->arg.p);
   return STATUS_OK;
 }/*}}}*/
+
+
+static DwbStatus 
+dwb_set_ntlm(GList *gl, WebSettings *s) {
+  dwb_soup_set_ntlm(s->arg.b);
+  return STATUS_OK;
+}
 
 /* dwb_set_cookies {{{  */
 static DwbStatus

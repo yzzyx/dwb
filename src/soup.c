@@ -278,6 +278,14 @@ dwb_soup_init_proxy() {
   soup_uri_free(uri);
 }/*}}}*/
 
+void
+dwb_soup_set_ntlm(gboolean use_ntlm) {
+  if (use_ntlm) 
+    soup_session_add_feature_by_type(dwb.misc.soupsession, SOUP_TYPE_AUTH_NTLM);
+  else 
+    soup_session_remove_feature_by_type(dwb.misc.soupsession, SOUP_TYPE_AUTH_NTLM);
+}
+
 /* dwb_soup_init_session_features() {{{*/
 void 
 dwb_soup_init_session_features() {
@@ -287,6 +295,8 @@ dwb_soup_init_session_features() {
         SOUP_SESSION_SSL_CA_FILE, cert, NULL);
   }
   g_object_set(dwb.misc.soupsession, SOUP_SESSION_SSL_STRICT, GET_BOOL("ssl-strict"), NULL);
+  dwb_soup_set_ntlm(GET_BOOL("use-ntlm"));
+  //soup_session_add_feature_by_type(dwb.misc.soupsession, SOUP_TYPE_AUTH_NTLM);
   //soup_session_add_feature(dwb.misc.soupsession, SOUP_SESSION_FEATURE(soup_content_sniffer_new()));
   //soup_session_add_feature_by_type(webkit_get_default_session(), SOUP_TYPE_CONTENT_SNIFFER);
 }/*}}}*/
