@@ -1589,7 +1589,7 @@ dwb_show_hints(Arg *arg) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
     char *command = g_strdup_printf("DwbHintObj.showHints(%d, %d)", 
         hint_map[arg->i].arg, 
-        (dwb.state.nv & (OPEN_NEW_WINDOW|OPEN_NEW_VIEW)) != 0);
+        (dwb.state.nv & (OPEN_NEW_WINDOW|OPEN_NEW_VIEW)));
     char *jsret = dwb_execute_script(MAIN_FRAME(), command, true);
     g_free(command);
     if (jsret != NULL) {
@@ -1881,14 +1881,15 @@ dwb_focus(GList *gl) {
 /* dwb_new_window(const char *arg) {{{*/
 void 
 dwb_new_window(const char  *uri) {
-  char *argv[6];
+  char *argv[7];
 
   argv[0] = (char *)dwb.misc.prog_path;
   argv[1] = "-p"; 
   argv[2] = (char *)dwb.misc.profile;
   argv[3] = "-n";
-  argv[4] = (char *)uri;
-  argv[5] = NULL;
+  argv[4] = "-R";
+  argv[5] = (char *)uri;
+  argv[6] = NULL;
   g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
 }/*}}}*/
 

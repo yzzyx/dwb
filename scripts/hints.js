@@ -36,6 +36,11 @@ var DwbHintObj = (function () {
     HINT_T_EDITABLE : 3,
     HINT_T_URL : 4
   };
+  var OpenMode = {
+    OPEN_NORMAL      : 1<<0, 
+    OPEN_NEW_VIEW    : 1<<1, 
+    OPEN_NEW_WINDOW  : 1<<2
+  };
 
   var __getTextHints = function(arr) {
     var length = arr.length;
@@ -189,7 +194,8 @@ var DwbHintObj = (function () {
 
   var __mouseEvent = function (e, ev, bubble) {
     var mouseEvent = document.createEvent("MouseEvent");
-    mouseEvent.initMouseEvent(ev, bubble, true, e.win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+    mouseEvent.initMouseEvent(ev, bubble, true, e.win, 0, 0, 0, 0, 0, false, false, false, false, 
+        _new_tab & OpenMode.OPEN_NEW_VIEW ? 1 : 0, null);
     e.dispatchEvent(mouseEvent);
   };
   var __clickElement = function (element, ev) {
@@ -269,8 +275,7 @@ var DwbHintObj = (function () {
     var body = doc.body || doc.documentElement;
     var bs = win.getComputedStyle(body, null);
     var br = body.getBoundingClientRect();
-    console.log("blub");
-    if (bs && br && /^(relative|fixed|absolute)$/.test(bs.position)) {
+    if (bs && br && (/^(relative|fixed|absolute)$/.test(bs.position)) ) {
       oe.offX = -br.left; 
       oe.offY = -br.top;
       oe.marginTop = bs.marginTop;
@@ -485,7 +490,6 @@ var DwbHintObj = (function () {
       }
       ret = "_dwb_click_";
     }
-    console.log(ret);
     __clear();
     return ret;
   };

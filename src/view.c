@@ -358,16 +358,11 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     webkit_web_policy_decision_ignore(policy);
     return true;
   }
-  /* Hints can open new windows / tabs via navigation_policy since the
-   * navigation is done by a simulated click 
-   */
-  if (dwb.state.nv & OPEN_NEW_VIEW) {
-    if (dwb.state.nv & OPEN_VIA_HINTS || (dwb.state.nv & OPEN_EXPLICIT && reason == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) ) {
-      dwb.state.nv = OPEN_NORMAL;
-      webkit_web_policy_decision_ignore(policy);
-      view_add(uri, dwb.state.background_tabs);
-      return true;
-    }
+  if (webkit_web_navigation_action_get_button(action) == 2) {
+    dwb.state.nv = OPEN_NORMAL;
+    webkit_web_policy_decision_ignore(policy);
+    view_add(uri, dwb.state.background_tabs);
+    return true;
   }
   /* In single mode (without tabs), this seems to be the only way of creating a
    * new window
@@ -701,7 +696,7 @@ view_init_settings(GList *gl) {
   GList *l;
   for (l = g_hash_table_get_values(v->setting); l; l=l->next) {
     WebSettings *s = l->data;
-    if (s->apply & SETTING_PER_VIEW) {
+    if (s->apply & SETTING_PER_VIEW && s->func != NULL) {
       s->func(gl, s);
     }
   }
