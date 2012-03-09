@@ -23,7 +23,9 @@ var DwbHintObj = (function () {
   var _active = null;
   var _markHints = false;
   var _bigFont = null;
-  var _hintTypes = [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, *[onclick], *[onmousedown]",  // HINT_T_ALL
+  var _hintTypes =  [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, [onclick], [onmousedown]," + 
+      "[onmouseover], [role=link], [role=option], [role=button], [role=option]",  // HINT_T_ALL
+                 //[ "iframe", 
                  "a",  // HINT_T_LINKS
                  "img",  // HINT_T_IMAGES
                  "input[type=text], input[type=password], input[type=search], textarea",  // HINT_T_EDITABLE
@@ -193,8 +195,11 @@ var DwbHintObj = (function () {
   };
 
   var __mouseEvent = function (e, ev, bubble) {
-    var mouseEvent = document.createEvent("MouseEvent");
-    mouseEvent.initMouseEvent(ev, bubble, true, e.win, 0, 0, 0, 0, 0, false, false, false, false, 
+    if (e.ownerDocument != document) {
+      e.focus();
+    }
+    var mouseEvent = e.ownerDocument.createEvent("MouseEvent");
+    mouseEvent.initMouseEvent(ev, bubble, true, e.ownerDocument.defaultView, 0, 0, 0, 0, 0, false, false, false, false, 
         _new_tab & OpenMode.OPEN_NEW_VIEW ? 1 : 0, null);
     e.dispatchEvent(mouseEvent);
   };
@@ -300,11 +305,12 @@ var DwbHintObj = (function () {
       var oe = __getOffsets(doc);
       for (i=0;i < res.length; i++) {
         e = res[i];
-        if ((r = __getVisibility(e, win)) === null) {
-          continue;
-        }
         if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
           __createHints(e.contentWindow, varructor, type);
+          continue;
+        }
+        if ((r = __getVisibility(e, win)) === null) {
+          continue;
         }
         else {
           var element = new varructor(e, win, r, oe);
@@ -413,8 +419,8 @@ var DwbHintObj = (function () {
     }
     var r = e.getBoundingClientRect();
 
-    var height = window.innerHeight || document.body.offsetHeight;
-    var width = window.innerWidth || document.body.offsetWidth;
+    var height = win.innerHeight || document.body.offsetHeight;
+    var width = win.innerWidth || document.body.offsetWidth;
     if (!r || r.top > height || r.bottom < 0 || r.left > width ||  r.right < 0 || !e.getClientRects()[0]) {
       return null;
     }
@@ -449,8 +455,9 @@ var DwbHintObj = (function () {
   };
   var __evaluate = function (e, type) {
     var ret = null;
+    var elementType = null;
     if (e.type) {
-      type = e.type.toLowerCase();
+      elementType = e.type.toLowerCase();
     }
     var tagname = e.tagName.toLowerCase();
     if (_new_tab && e.target == "_blank") {
@@ -463,13 +470,13 @@ var DwbHintObj = (function () {
         default: break;
       }
     }
-    else if (tagname && (tagname == "input" || tagname == "textarea") ) {
+    else if ((tagname && (tagname == "input" || tagname == "textarea"))) {
       if (type == "radio" || type == "checkbox") {
         e.focus();
         __clickElement(e, "click");
         ret = "_dwb_check_";
       }
-      else if (type == "submit" || type == "reset" || type  == "button") {
+      else if (elementType && (elementType == "submit" || elementType == "reset" || elementType  == "button")) {
         __clickElement(e, "click");
         ret = "_dwb_click_";
       }
@@ -477,6 +484,10 @@ var DwbHintObj = (function () {
         e.focus();
         ret = "_dwb_input_";
       }
+    }
+    else if (e.hasAttribute("role")) {
+      __clickElement(e);
+      ret = "_dwb_click_";
     }
     else {
       if (tagname == "a" || e.hasAttribute("onclick")) {
