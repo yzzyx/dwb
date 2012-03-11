@@ -144,7 +144,6 @@ adblock_element_hider_free(AdblockElementHider *hider) {
 static inline gboolean
 adblock_do_match(AdblockRule *rule, const char *uri) {
   if (g_regex_match(rule->pattern, uri, 0, NULL)) {
-    printf("blocked %s %s\n", uri, g_regex_get_pattern(rule->pattern));
     PRINT_DEBUG("blocked %s %s\n", uri, g_regex_get_pattern(rule->pattern));
     return true;
   }
