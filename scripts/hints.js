@@ -305,11 +305,11 @@ var DwbHintObj = (function () {
       var oe = __getOffsets(doc);
       for (i=0;i < res.length; i++) {
         e = res[i];
-        if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
-          __createHints(e.contentWindow, varructor, type);
+        if ((r = __getVisibility(e, win)) === null) {
           continue;
         }
-        if ((r = __getVisibility(e, win)) === null) {
+        if ( (e instanceof HTMLFrameElement || e instanceof HTMLIFrameElement)) {
+          __createHints(e.contentWindow, varructor, type);
           continue;
         }
         else {
@@ -463,6 +463,7 @@ var DwbHintObj = (function () {
     if (_new_tab && e.target == "_blank") {
       e.target = null;
     }
+    console.log(type);
     if (type > 0) {
       switch (type) {
         case HintTypes.HINT_T_IMAGES:  ret = e.src; break;
@@ -470,24 +471,24 @@ var DwbHintObj = (function () {
         default: break;
       }
     }
-    else if ((tagname && (tagname == "input" || tagname == "textarea"))) {
+    if ((tagname && (tagname == "input" || tagname == "textarea"))) {
       if (type == "radio" || type == "checkbox") {
         e.focus();
         __clickElement(e, "click");
-        ret = "_dwb_check_";
+        ret = ret || "_dwb_check_";
       }
       else if (elementType && (elementType == "submit" || elementType == "reset" || elementType  == "button")) {
         __clickElement(e, "click");
-        ret = "_dwb_click_";
+        ret = ret || "_dwb_click_";
       }
       else {
         e.focus();
-        ret = "_dwb_input_";
+        ret = ret || "_dwb_input_";
       }
     }
     else if (e.hasAttribute("role")) {
       __clickElement(e);
-      ret = "_dwb_click_";
+      ret = ret || "_dwb_click_";
     }
     else {
       if (tagname == "a" || e.hasAttribute("onclick")) {
@@ -499,7 +500,7 @@ var DwbHintObj = (function () {
       else {
         __clickElement(e);
       }
-      ret = "_dwb_click_";
+      ret = ret || "_dwb_click_";
     }
     __clear();
     return ret;
