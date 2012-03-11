@@ -463,7 +463,6 @@ var DwbHintObj = (function () {
     if (_new_tab && e.target == "_blank") {
       e.target = null;
     }
-    console.log(type);
     if (type > 0) {
       switch (type) {
         case HintTypes.HINT_T_IMAGES:  ret = e.src; break;
