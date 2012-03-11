@@ -1057,7 +1057,7 @@ dwb_toggle_setting(const char *key) {
 DwbStatus
 dwb_set_setting(const char *key, char *value) {
   WebSettings *s;
-  Arg *a = NULL, oldarg;
+  Arg *a = NULL, oldarg = { .p = NULL };
   
   DwbStatus ret = STATUS_ERROR;
   
@@ -1071,7 +1071,6 @@ dwb_set_setting(const char *key, char *value) {
         if (dwb_apply_settings(s) != STATUS_ERROR) {
           dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
           dwb_save_key_value(dwb.files.settings, key, value);
-          g_free(oldarg.p);
           ret = STATUS_OK;
         }
         else {
