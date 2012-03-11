@@ -2227,7 +2227,7 @@ dwb_eval_key(GdkEventKey *e) {
     commands_simple_command(tmp);
     ret = true;
   }
-  else if (e->state & GDK_MODIFIER_MASK || !isprint) {
+  else if (e->state & GDK_CONTROL_MASK || !isprint) {
     ret = false;
   }
   if (longest == 0) {
