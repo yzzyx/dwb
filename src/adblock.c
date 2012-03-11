@@ -351,9 +351,9 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
         }
       }
       char *script = g_strdup_printf(
-          "var st=document.createElement('style');\
+          "(function() {var st=document.createElement('style');\
           document.head.appendChild(st);\
-          document.styleSheets[document.styleSheets.length-1].insertRule('%s', 0);", 
+          document.styleSheets[document.styleSheets.length-1].insertRule('%s', 0);})();", 
           css_rule->str);
       dwb_execute_script(frame, script, false);
       g_free(script);
