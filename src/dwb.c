@@ -2776,7 +2776,7 @@ dwb_save_files(gboolean end_session) {
   }
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
-    session_save(NULL, true);
+    session_save(NULL, false);
   }
   return true;
 }

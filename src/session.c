@@ -24,6 +24,7 @@
 #include "session.h"
 
 static char *_session_name;
+static gboolean _has_marked = true;
 
 typedef struct _SessionTab {
   GList *gl;
@@ -180,6 +181,7 @@ session_restore(char *name, gboolean force) {
     fprintf(stderr, "Warning: Session '%s' will not be restored.\n", name);
     fprintf(stderr, "There is already a restored session open with name '%s'.\n", name);
     fputs("To force opening a saved session use -f or --force.\n", stderr);
+    _has_marked = false;
     return false;
   }
   _session_name = name;
@@ -240,9 +242,9 @@ session_save(const char *name, gboolean force) {
       name = _session_name;
     else if (force) 
       name = "default";
-    else 
-      return false;
   }
+  if (!_has_marked && !force) 
+    return false;
   GString *buffer = g_string_new(NULL);
 
   for (GList *l = g_list_first(dwb.state.views); l; l=l->next) {
