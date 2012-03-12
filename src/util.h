@@ -49,7 +49,6 @@ int util_web_settings_sort_first(WebSettings *, WebSettings *);
 
 // files
 void util_get_directory_content(GString **, const char *, const char *extension);
-GList * util_get_directory_entries(const char *path, const char *);
 char * util_get_file_content(const char *);
 char ** util_get_lines(const char *);
 gboolean util_set_file_content(const char *, const char *);

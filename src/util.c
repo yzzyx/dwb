@@ -241,33 +241,6 @@ util_web_settings_sort_second(WebSettings *a, WebSettings *b) {
   return g_strcmp0(a->n.second, b->n.second);
 }/*}}}*/
 
-/* util_get_directory_entries(const char *)   return: GList * {{{*/
-GList *
-util_get_directory_entries(const char *path, const char *text) {
-  GList *list = NULL;
-  GDir *dir;
-  char *filename;
-  char *store;
-
-  if ( (dir = g_dir_open(path, 0, NULL)) ) {
-    while ( (filename = (char*)g_dir_read_name(dir)) ) {
-      if (strlen(text) && g_str_has_prefix(filename, text)) {
-        char *newpath = g_build_filename(path, filename, NULL);
-        if (g_file_test(newpath, G_FILE_TEST_IS_DIR)) {
-          store = g_strconcat(newpath, "/", NULL);
-          g_free(newpath);
-        }
-        else {
-          store = newpath;
-        }
-        list = g_list_prepend(list,  store);
-      }
-    }
-    g_dir_close(dir);
-  }
-  list = g_list_sort(list, (GCompareFunc)g_strcmp0);
-  return list;
-}/*}}}*/
 /*util_get_directory_content(GString **, const char *filename) {{{*/
 void 
 util_get_directory_content(GString **buffer, const char *dirname, const char *extension) {

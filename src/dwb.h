@@ -226,7 +226,6 @@ typedef enum  {
 
 enum {
   EP_NONE = 0,
-  EP_ENTRY = 1<<0,
   EP_COMP_DEFAULT = 1<<1,
   EP_COMP_QUICKMARK = 1<<2,
 } EntryProp;
@@ -431,12 +430,16 @@ typedef enum {
 } SslState;
 
 typedef enum {
-  CP_COMMANDLINE   = 1<<0,
-  CP_DONT_SAVE     = 1<<1,
-  CP_HAS_MODE      = 1<<2,
-  CP_USERSCRIPT    = 1<<3,
-  CP_DONT_CLEAN    = 1<<4,
+  CP_COMMANDLINE          = 1<<0,
+  CP_DONT_SAVE            = 1<<1,
+  CP_HAS_MODE             = 1<<2,
+  CP_USERSCRIPT           = 1<<3,
+  CP_DONT_CLEAN           = 1<<4,
+  CP_OVERRIDE_INSERT      = 1<<5,
+  CP_OVERRIDE_ENTRY       = 1<<6,
+  CP_OVERRIDE_ALL         = 1<<7,
 } CommandProperty;
+#define CP_OVERRIDE  (CP_OVERRIDE_INSERT | CP_OVERRIDE_ENTRY | CP_OVERRIDE_ALL)
 
 /*}}}*/
 
@@ -681,7 +684,6 @@ struct _Misc {
   char *startpage;
   char *download_com;
   JSContextRef global_ctx;
-  KeyMap *editor_map;
 
   char *pbbackground;
   int synctimer;
@@ -746,6 +748,7 @@ struct _Dwb {
   State state;
   Completions comps;
   GList *keymap;
+  GList *override_keys;
   GSList *custom_commands;
   GHashTable *settings;
   Files files;
@@ -854,6 +857,7 @@ gboolean dwb_entry_activate(GdkEventKey *e);
 void dwb_set_adblock(GList *, WebSettings *);
 
 gboolean dwb_eval_key(GdkEventKey *);
+gboolean dwb_eval_override_key(GdkEventKey *e, CommandProperty prop);
 char * dwb_get_key(GdkEventKey *, unsigned int *, gboolean *);
 void dwb_follow_selection(void);
 void dwb_update_layout(void);

@@ -55,6 +55,7 @@ static KeyValue KEYS[] = {
   { "win_hist_back",             {   "wh",         0,                   },  },  
   { "win_hist_forward",          {   "wl",         0,                   },  },  
   { "insert_mode",              {   "i",         0,                   },  },  
+  { "normal_mode",              {   "n",         GDK_CONTROL_MASK,                   },  },  
   { "open",                     {   "o",         0,                   },  },  
   { "open_url",                     {   "go",        0,                   },  }, 
   { "tabopen",                  {   "O",         0,                   },  },  
@@ -397,6 +398,10 @@ static FunctionMap FMAP [] = {
     (Func)commands_insert_mode,             NULL,                              POST_SM, 
     { 0 }, EP_NONE, { "i", "insert", NULL }, },
   
+  { { "normal_mode",           "Normal Mode",                       }, CP_OVERRIDE_INSERT | CP_OVERRIDE_ENTRY | CP_OVERRIDE_ALL, 
+    (Func)commands_normal_mode,             NULL,                              POST_SM, 
+    { 0 }, EP_NONE, { NULL }, },
+  
   { { "load_html",             "Load html",                         }, CP_COMMANDLINE, 
     (Func)commands_open,           NULL,                       NEVER_SM,   
     { .i = HTML_STRING, .n = OPEN_NORMAL,      .p = NULL }, EP_NONE, { NULL }, },
@@ -637,73 +642,73 @@ static FunctionMap FMAP [] = {
   
 
   /* Entry editing */
-  { { "entry_delete_word",      "Command line: Delete word back", },                      0,  
+  { { "entry_delete_word",      "Command line: Delete word back", },                      CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_movement,        NULL,        ALWAYS_SM,  
-    { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = true }, EP_ENTRY, { NULL }, },
+    { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = true }, EP_NONE, { NULL }, },
   
-  { { "entry_delete_word_forward",      "Command line: Delete word forward", },                      0,  
+  { { "entry_delete_word_forward",      "Command line: Delete word forward", },                      CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_movement,        NULL,        ALWAYS_SM,  
-    { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = true }, EP_ENTRY, { NULL }, },
+    { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = true }, EP_NONE, { NULL }, },
   
-  { { "entry_delete_letter",    "Command line: Delete a single letter", },           0,  
+  { { "entry_delete_letter",    "Command line: Delete a single letter", },           CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_movement,          NULL,        ALWAYS_SM,  
-    { .n = GTK_MOVEMENT_LOGICAL_POSITIONS, .i = -1, .b = true }, EP_ENTRY, { NULL }, },
+    { .n = GTK_MOVEMENT_LOGICAL_POSITIONS, .i = -1, .b = true }, EP_NONE, { NULL }, },
   
-  { { "entry_delete_line",      "Command line: Delete to beginning of the line", },  0,  
+  { { "entry_delete_line",      "Command line: Delete to beginning of the line", },  CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_movement,            NULL,        ALWAYS_SM,  
-    { .n = GTK_MOVEMENT_BUFFER_ENDS, .i = -1, .b = true }, EP_ENTRY, { NULL }, },
+    { .n = GTK_MOVEMENT_BUFFER_ENDS, .i = -1, .b = true }, EP_NONE, { NULL }, },
   
-  { { "entry_delete_line_end",      "Command line: Delete to end of the line", },  0,  
+  { { "entry_delete_line_end",      "Command line: Delete to end of the line", },  CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_movement,            NULL,        ALWAYS_SM,  
-    { .n = GTK_MOVEMENT_BUFFER_ENDS, .i = 1, .b = true }, EP_ENTRY, { NULL }, },
+    { .n = GTK_MOVEMENT_BUFFER_ENDS, .i = 1, .b = true }, EP_NONE, { NULL }, },
   
-  { { "entry_word_forward",     "Command line: Move cursor forward on word", },      0,  
+  { { "entry_word_forward",     "Command line: Move cursor forward on word", },      CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_movement,           NULL,        ALWAYS_SM,  
-    { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = false }, EP_ENTRY, { NULL }, },
+    { .n = GTK_MOVEMENT_WORDS, .i = 1, .b = false }, EP_NONE, { NULL }, },
   
-  { { "entry_word_back",        "Command line: Move cursor back on word", },         0,  
+  { { "entry_word_back",        "Command line: Move cursor back on word", },         CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_movement,              NULL,        ALWAYS_SM,  
-    { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = false }, EP_ENTRY, { NULL }, },
+    { .n = GTK_MOVEMENT_WORDS, .i = -1, .b = false }, EP_NONE, { NULL }, },
   
-  { { "entry_history_back",     "Command line: Command history back", },             0,  
+  { { "entry_history_back",     "Command line: Command history back", },             CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_history_back,           NULL,        ALWAYS_SM,  
-    { 0 }, EP_ENTRY, { NULL }, },
+    { 0 }, EP_NONE, { NULL }, },
 
-  { { "entry_history_forward",     "Command line: Command history forward", },             0,  
+  { { "entry_history_forward",     "Command line: Command history forward", },             CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_history_forward,           NULL,        ALWAYS_SM,  
-    { 0 }, EP_ENTRY, { NULL }, },
+    { 0 }, EP_NONE, { NULL }, },
 
-  { { "entry_escape",     "Command line: Alternate escape binding", },             0,  
+  { { "entry_escape",     "Command line: Alternate escape binding", },             CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_escape,           NULL,        ALWAYS_SM,  
-    { 0 }, EP_ENTRY, { NULL }, },
+    { 0 }, EP_NONE, { NULL }, },
   
-  { { "entry_confirm",  "Command line: Alternate return binding", },          0,  
+  { { "entry_confirm",  "Command line: Alternate return binding", },          CP_OVERRIDE_ENTRY,  
     (Func)commands_entry_confirm,        NULL,        ALWAYS_SM,  
-    { 0 }, EP_ENTRY, { NULL }, },
+    { 0 }, EP_NONE, { NULL }, },
   
-  { { "download_set_execute",   "Downloads: toggle between spawning application/download path", }, 0, 
+  { { "download_set_execute",   "Downloads: toggle between spawning application/download path", }, CP_OVERRIDE_ENTRY, 
     (Func)download_set_execute,        NULL,       ALWAYS_SM,  
-    { 0 }, EP_ENTRY, { NULL }, },
+    { 0 }, EP_NONE, { NULL }, },
   
-  { { "complete_history",       "Complete browsing history", },       0, 
+  { { "complete_history",       "Complete browsing history", },       CP_OVERRIDE_ENTRY, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
-    { .n = COMP_HISTORY }, EP_ENTRY, { NULL }, },
+    { .n = COMP_HISTORY }, EP_NONE, { NULL }, },
   
-  { { "complete_bookmarks",     "Complete bookmarks", },              0, 
+  { { "complete_bookmarks",     "Complete bookmarks", },              CP_OVERRIDE_ENTRY, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
-    { .n = COMP_BOOKMARK }, EP_ENTRY, { NULL }, },
+    { .n = COMP_BOOKMARK }, EP_NONE, { NULL }, },
   
-  { { "complete_searchengines", "Complete searchengines", },          0, 
+  { { "complete_searchengines", "Complete searchengines", },          CP_OVERRIDE_ENTRY, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
-    { .n = COMP_SEARCH }, EP_ENTRY, { NULL }, },
+    { .n = COMP_SEARCH }, EP_NONE, { NULL }, },
   
-  { { "complete_userscript",    "Complete userscripts", },            0, 
+  { { "complete_userscript",    "Complete userscripts", },            CP_OVERRIDE_ENTRY, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
-    { .n = COMP_USERSCRIPT }, EP_ENTRY, { NULL }, },
+    { .n = COMP_USERSCRIPT }, EP_NONE, { NULL }, },
   
-  { { "complete_path",          "Complete local file path", },        0, 
+  { { "complete_path",          "Complete local file path", },        CP_OVERRIDE_ENTRY, 
     (Func)commands_complete_type,             NULL,     ALWAYS_SM,     
-    { .n = COMP_PATH }, EP_ENTRY, { NULL }, },
+    { .n = COMP_PATH }, EP_NONE, { NULL }, },
   
   { { "buffers",                          "Buffer", },        CP_COMMANDLINE | CP_HAS_MODE,
     (Func)commands_complete_type,            "Only one buffer",     NEVER_SM,     
@@ -767,7 +772,7 @@ static FunctionMap FMAP [] = {
     (Func) commands_fullscreen, NULL,     ALWAYS_SM,    
     { 0 }, EP_NONE, { "fs", NULL }, },
   
-  { { "open_editor",    "Open external editor" },                 CP_COMMANDLINE, 
+  { { "open_editor",    "Open external editor" },                 CP_COMMANDLINE | CP_OVERRIDE_INSERT, 
     (Func) commands_open_editor, "No input focused",     POST_SM,    
     { 0 }, EP_NONE, { "editor", NULL }, },
   

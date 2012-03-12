@@ -19,6 +19,7 @@ reload Reload current page
 reload_bypass_cache Reload without using any cached data
 stop_loading Stop loading current page
 insert_mode Insert mode
+normal_mode Normal mode
 view_source View page source
 zoom_in Zoom in
 zoom_out Zoom out

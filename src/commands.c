@@ -145,6 +145,11 @@ DwbStatus
 commands_insert_mode(KeyMap *km, Arg *a) {
   return dwb_change_mode(INSERT_MODE);
 }
+DwbStatus 
+commands_normal_mode(KeyMap *km, Arg *a) {
+  dwb_change_mode(NORMAL_MODE, true);
+  return STATUS_OK;
+}
 
 /* commands_toggle_property {{{*/
 DwbStatus 

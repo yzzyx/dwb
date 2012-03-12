@@ -92,5 +92,6 @@ DwbStatus commands_toggle_setting(KeyMap *km, Arg *arg);
 DwbStatus commands_tab_move(KeyMap *, Arg *);
 DwbStatus commands_clear_tab(KeyMap *, Arg *);
 DwbStatus commands_cancel_download(KeyMap *, Arg *);
+DwbStatus commands_normal_mode(KeyMap *, Arg *);
 
 #endif

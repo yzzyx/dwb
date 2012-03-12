@@ -117,7 +117,7 @@ callback_entry_key_press(GtkWidget* entry, GdkEventKey *e) {
     completion_complete(dwb_eval_completion_type(), e->state & GDK_SHIFT_MASK);
     return true;
   }
-  if (dwb_eval_editing_key(e)) {
+  if (dwb_eval_override_key(e, CP_OVERRIDE_ENTRY)) {
     ret = true;
   }
   return ret;
@@ -136,7 +136,6 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
   gboolean ret = false;
   Mode mode = CLEAN_MODE(dwb.state.mode);
 
-  char *key = NULL;
   if (e->keyval == GDK_KEY_Escape) {
     if (dwb.state.mode & COMPLETION_MODE)
       completion_clean_completion(true);
@@ -144,16 +143,10 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
       dwb_change_mode(NORMAL_MODE, true);
     ret = false;
   }
+  else if (dwb_eval_override_key(e, CP_OVERRIDE_ALL)) 
+    ret = true;
   else if (mode & INSERT_MODE) {
-    /* The editor command must be handled special */
-    unsigned int mod; 
-    gboolean isprint;
-    if ((key = dwb_get_key(e, &mod, &isprint)) != NULL) {
-      if (!g_strcmp0(dwb.misc.editor_map->key, key) && mod == dwb.misc.editor_map->mod) {
-        commands_simple_command(dwb.misc.editor_map);
-        ret = true;
-      }
-    }
+    ret = dwb_eval_override_key(e, CP_OVERRIDE_INSERT);
   }
   else if (gtk_widget_has_focus(dwb.gui.entry) || mode & COMPLETION_MODE) {
     ret = false;
@@ -177,7 +170,6 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
     }
     ret = dwb_eval_key(e);
   }
-  g_free(key);
   return ret;
 }/*}}}*/
 

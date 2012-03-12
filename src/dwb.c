@@ -1988,33 +1988,6 @@ clean:
   g_free(argback);
 }/*}}}*/
 
-/* dwb_eval_editing_key(GdkEventKey *) {{{*/
-gboolean 
-dwb_eval_editing_key(GdkEventKey *e) {
-  if (DIGIT(e)) {
-    return false;
-  }
-
-  char *key = util_keyval_to_char(e->keyval, false);
-  if (key == NULL) {
-    key = g_strdup(gdk_keyval_name(e->keyval));
-  }
-  gboolean ret = false;
-
-  for (GList *l = dwb.keymap; l; l=l->next) {
-    KeyMap *km = l->data;
-    if (km->map->entry & EP_ENTRY) {
-      if (!g_strcmp0(key, km->key) && CLEAN_STATE(e) == km->mod) {
-        km->map->func(&km, &km->map->arg);
-        ret = true;
-        break;
-      }
-    }
-  }
-  g_free(key);
-  return ret;
-}/*}}}*/
-
 /* dwb_clean_key_buffer() {{{*/
 void 
 dwb_clean_key_buffer() {
@@ -2199,7 +2172,7 @@ dwb_eval_key(GdkEventKey *e) {
 
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *km = l->data;
-    if (km->map->entry & EP_ENTRY || km->key == NULL) {
+    if (km->map->prop & CP_OVERRIDE_ENTRY || km->key == NULL) {
       continue;
     }
     gsize kl = strlen(km->key);
@@ -2237,6 +2210,28 @@ dwb_eval_key(GdkEventKey *e) {
   g_free(key);
   return ret;
 }/*}}}*/
+gboolean 
+dwb_eval_override_key(GdkEventKey *e, CommandProperty prop) {
+  if (DIGIT(e))
+    return false;
+  char *key = NULL;
+  unsigned int mod; 
+  gboolean isprint;
+  gboolean ret = false;
+  if (CLEAN_STATE(e) && (key = dwb_get_key(e, &mod, &isprint)) != NULL)  {
+    for (GList *l = dwb.override_keys; l; l=l->next) {
+      KeyMap *m = l->data;
+      if (m->map->prop & prop && !g_strcmp0(m->key, key) && m->mod == mod) {
+        m->map->func(m, &m->map->arg);
+        ret = true; 
+        break;
+      }
+    }
+  }
+  g_free(key);
+  return ret;
+}
+
 
 /* dwb_insert_mode(Arg *arg) {{{*/
 static DwbStatus
@@ -2631,6 +2626,7 @@ dwb_clean_up() {
     m = NULL;
   }
   g_list_free(dwb.keymap);
+  g_list_free(dwb.override_keys);
   dwb.keymap = NULL;
   g_hash_table_remove_all(dwb.settings);
   g_string_free(dwb.state.buffer, true);
@@ -2915,8 +2911,8 @@ dwb_keymap_add(GList *gl, KeyValue key) {
       fmap->n.first = (char*)key.id;
       keymap->map = fmap;
       gl = g_list_prepend(gl, keymap);
-      if (!g_strcmp0(FMAP[i].n.first, "open_editor")) 
-        dwb.misc.editor_map = keymap;
+      if (FMAP[i].prop & CP_OVERRIDE)
+        dwb.override_keys = g_list_append(dwb.override_keys, keymap);
       break;
     }
   }
@@ -2932,6 +2928,7 @@ dwb_init_key_map() {
   GKeyFile *keyfile = g_key_file_new();
   GError *error = NULL;
   dwb.keymap = NULL;
+  dwb.override_keys = NULL;
 
   g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error);
   if (error) {
@@ -3624,7 +3621,7 @@ dwb_parse_command_line(const char *line) {
         g_strstrip(token[1]);
         m->map->arg.p = token[1];
       }
-      if (gtk_widget_has_focus(dwb.gui.entry) && (m->map->entry & EP_ENTRY)) {
+      if (gtk_widget_has_focus(dwb.gui.entry) && (m->map->prop & CP_OVERRIDE_ENTRY)) {
         m->map->func(&m, &m->map->arg);
       }
       else {
