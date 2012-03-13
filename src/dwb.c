@@ -1393,7 +1393,9 @@ dwb_get_search_engine_uri(const char *uri, const char *text) {
 char *
 dwb_get_search_engine(const char *uri, gboolean force) {
   char *ret = NULL;
-  if ( force || ((!strstr(uri, ".") || strstr(uri, " ")) && !strstr(uri, "localhost:"))) {
+  if (!strncmp(uri, "localhost", 9) && (uri[9] == ':' || uri[9] == '\0')) 
+    return NULL;
+  if ( force || !strchr(uri, '.') || strchr(uri, ' ')  ) {
     char **token = g_strsplit(uri, " ", 2);
     for (GList *l = dwb.fc.searchengines; l; l=l->next) {
       Navigation *n = l->data;
@@ -1976,11 +1978,13 @@ dwb_load_uri(GList *gl, const char *arg) {
     goto clean;
   }
   /* Check if searchengine is needed and load uri */
-
-  else if (!(uri = dwb_get_search_engine(tmpuri, false)) || strstr(tmpuri, "localhost:")) {
-    uri = g_str_has_prefix(tmpuri, "http://") || g_str_has_prefix(tmpuri, "https://") 
-      ? g_strdup(tmpuri)
-      : g_strdup_printf("http://%s", tmpuri);
+  else {
+    if ( g_str_has_prefix(tmpuri, "http://") || g_str_has_prefix(tmpuri, "https://")) {
+      uri = g_strdup(tmpuri);
+    }
+    else if (!(uri = dwb_get_search_engine(tmpuri, false))) {
+      uri = g_strdup_printf("http://%s", tmpuri);
+    }
   }
   webkit_web_view_load_uri(web, uri);
 clean: 
