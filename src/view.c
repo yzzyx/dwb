@@ -262,6 +262,9 @@ view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList
   WebKitWebSettings *settings = webkit_web_view_get_settings(WEBKIT_WEB_VIEW(webview));
   g_object_set(settings, "user-stylesheet-uri", GET_CHAR("user-stylesheet-uri"), NULL);
   gtk_window_set_title(GTK_WINDOW(window), "dwb-web-inspector");
+
+  gtk_window_set_default_size(GTK_WINDOW(window), GET_INT("default-width"), GET_INT("default-height"));
+  gtk_window_set_geometry_hints(GTK_WINDOW(window), NULL, NULL, GDK_HINT_MIN_SIZE);
   
   gtk_container_add(GTK_CONTAINER(window), webview);
   gtk_widget_show_all(window);
