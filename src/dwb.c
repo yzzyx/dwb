@@ -2273,9 +2273,6 @@ dwb_normal_mode(gboolean clean) {
   if (mode & COMPLETION_MODE) {
     completion_clean_completion(false);
   }
-  if (mode & AUTO_COMPLETE) {
-    completion_clean_autocompletion();
-  }
   dwb_focus_scroll(dwb.state.fview);
 
   if (clean) {
@@ -2294,6 +2291,8 @@ dwb_change_mode(Mode mode, ...) {
   DwbStatus ret = STATUS_OK;
   gboolean clean;
   va_list vl;
+  if (dwb.state.mode & AUTO_COMPLETE) 
+    completion_clean_autocompletion();
   switch(mode) {
     case NORMAL_MODE: 
       va_start(vl, mode);
