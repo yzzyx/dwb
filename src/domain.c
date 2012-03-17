@@ -158,8 +158,11 @@ domain_get_base_for_host(const char *host) {
 }
 void
 domain_end() {
-  if (_tld_table)
+  if (_tld_table) {
     g_hash_table_unref(_tld_table);
+    _tld_table = NULL;
+  }
+
 }
 
 void 
