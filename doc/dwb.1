@@ -560,26 +560,26 @@ aliases:
 .BR tcookie ).
 .TP
 .BR [n]yy
-Yank the url of tab n or of current tab is n omitted to clipboard
+Yank the url of tab n or of current tab if n is omitted to clipboard
 (command 
 .BR yank ).
 .TP
 .BR yY
-Yank the url of tab n or of current tab is n omitted to primary
+Yank the url of tab n or of current tab if n is omitted to primary
 selection (command 
 .BR yank_primary ,
 aliases:
 .BR pyank ).
 .TP
 .BR yt
-Yank the title of tab n or of current tab is n omitted to clipboard
+Yank the title of tab n or of current tab if n is omitted to clipboard
 (command 
 .BR yank_title ,
 aliases:
 .BR tyank ).
 .TP
 .BR yT
-Yank the title of tab n or of current tab is n omitted to primary
+Yank the title of tab n or of current tab if n is omitted to primary
 selection (command 
 .BR yank_title_primary ,
 aliases:
@@ -625,7 +625,11 @@ downloads if n is omitted. (command
 .BR cancel_download ).
 .TP
 .BR gs
-Add a searchengine. Text fields can be focused via hints (command 
+Add a searchengine. Textfields can be chosen with tab and a keyword must be
+specified. The first defined searchengine will be the default searchengine. The
+keyword can be used in all open commands, e.g. 
+.I :open <keyword> <searchterm>
+(command 
 .BR save_search_field ,
 aliases:
 .BR search ).
@@ -821,7 +825,7 @@ aliases:
 Set a setting from commandline (command 
 .BR set ).
 .TP
-.BR toggle_setting 
+.BR unbound 
 Toggle a boolean setting from commandline (command 
 .BR toggle_setting ,
 aliases:
@@ -930,7 +934,7 @@ Non printable keys must be surrounded by @, e.g. "Control @F1@", Shift @space@.
 Custom commands are a sequence of dwb commands that can be bound to a shortcut.
 The syntax is
 .IP
-[shortcut]:[command];;[command];;...
+<shortcut>:<command>;;<command>;;...
 .P 
 where shortcut is the shortcut for the commandsequence, 
 .B : 
@@ -938,7 +942,7 @@ may be escaped with
 .BR \e: 
 and command is of the form 
 .IP
-[numerical modifier][command or alias] [argument for the command]
+[numerical modifier]<command or alias> [argument for the command]
 .P 
 for example
 .IP 
