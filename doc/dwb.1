@@ -933,21 +933,27 @@ Non printable keys must be surrounded by @, e.g. "Control @F1@", Shift @space@.
 .SH CUSTOM COMMANDS
 Custom commands are a sequence of dwb commands that can be bound to a shortcut.
 The syntax is
-.IP
-<shortcut>:<command>;;<command>;;...
-.P 
+.RS
+
+.I <shortcut>:<command>;;<command>;;...
+
+.RE 
 where shortcut is the shortcut for the commandsequence, 
 .B : 
 may be escaped with
 .BR \e: 
 and command is of the form 
-.IP
-[numerical modifier]<command or alias> [argument for the command]
-.P 
+.RS
+
+.I [numerical modifier]<command or alias> [argument for the command]
+
+.RE 
 for example
-.IP 
-Control W:tabopen http://example.com;; 150zoom
-.P
+.RS 
+
+.I Control W:tabopen http://example.com;; 150zoom
+
+.RE
 opens http://example.com in a new tab and zooms to 150%.
 
 
@@ -1988,23 +1994,24 @@ Commands can be executed by sending the command to stdout.
 
 .SS Examples
 The following script will download the actual webpage:
-.IP
-#!/bin/bash
-.PD 0
-.IP 
-# dwb: Control w
+.nf
 
-wget $1
+  #!/bin/bash
+  # dwb: Control w
+  
+  wget $1
 
-.P
+.fi
+
 Popup an alert dialog:
-.IP
-#!/bin/bash
-.PD 0
-.IP 
-# dwb: Control h
+.nf
 
-echo "execute_javascript:window.alert('Hello world');"
+  #!/bin/bash
+  # dwb: Control h
+
+  echo "execute_javascript:window.alert('Hello world');"
+
+.fi
 
 
 .SH AUTHOR
