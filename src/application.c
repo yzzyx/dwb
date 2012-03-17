@@ -300,6 +300,8 @@ application_start(GApplication *app, char **argv) {
   gtk_init(NULL, NULL);
   dwb_init();
 
+  dwb_pack(GET_CHAR("widget-packing"), false);
+
   /* restore session */ 
   if (! opt_override_restore) {
     if (GET_BOOL("save-session") || opt_restore != NULL) {
@@ -322,7 +324,6 @@ application_start(GApplication *app, char **argv) {
   pango_layout_get_size(layout, &w, &h);
   dwb.misc.bar_height = h/PANGO_SCALE;
 
-  dwb_pack(GET_CHAR("widget-packing"), false);
 
   gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
   g_object_unref(layout);
