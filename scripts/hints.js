@@ -465,8 +465,8 @@ var DwbHintObj = (function () {
     }
     if (type > 0) {
       switch (type) {
-        case HintTypes.HINT_T_IMAGES:  ret = e.src; break;
-        case HintTypes.HINT_T_URL:     ret = e.hasAttribute("href") ? e.href : e.src; break;
+        case HintTypes.HINT_T_IMAGES: ret = e.src; break;
+        case HintTypes.HINT_T_URL   : ret = e.hasAttribute("href") ? e.href : e.src; __clear(); return ret;
         default: break;
       }
     }
