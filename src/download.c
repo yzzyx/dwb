@@ -40,6 +40,7 @@ typedef struct _DwbDownload {
   char *path;
   guint n;
   guint sig_button;
+  char *mimetype;
 } DwbDownload;
 #define DWB_DOWNLOAD(X) ((DwbDownload*)((X)->data))
 
@@ -175,23 +176,9 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
   status->time = time;
 }/*}}}*/
 
-/* download_set_mimetype(const char *) {{{*/
-static void
-download_set_mimetype(const char *command) {
-  GList *list = NULL;
-  if (dwb.state.mimetype_request) {
-    Navigation *n = dwb_navigation_new(dwb.state.mimetype_request, command);
-    if ( (list = g_list_find_custom(dwb.fc.mimetypes, n, (GCompareFunc)util_navigation_compare_first))) {
-      g_free(list->data);
-      dwb.fc.mimetypes = g_list_delete_link(dwb.fc.mimetypes, list);
-    }
-    dwb.fc.mimetypes = g_list_prepend(dwb.fc.mimetypes, n);
-    util_file_add_navigation(dwb.files.mimetypes, n, true, -1);
-  }
-}/*}}}*/
-
+/* download_do_spawn(const char *cmommand, const char *path, const char * *mimetype_request) {{{*/
 static void 
-download_do_spawn(const char *command, const char *path) {
+download_do_spawn(const char *command, const char *path, const char *mimetype) {
   GError *error = NULL;
   char *argv[64];
 
@@ -211,20 +198,31 @@ download_do_spawn(const char *command, const char *path) {
     fprintf(stderr, "Couldn't open %s with %s : %s\n", path, command, error->message);
     g_clear_error(&error);
   }
-  download_set_mimetype(command);
+  /* Set mimetype */
   g_strfreev(argcom);
-}
+  GList *list = NULL;
+  if (mimetype && *mimetype) {
+    Navigation *n = dwb_navigation_new(mimetype, command);
+    if ( (list = g_list_find_custom(dwb.fc.mimetypes, n, (GCompareFunc)util_navigation_compare_first))) {
+      g_free(list->data);
+      dwb.fc.mimetypes = g_list_delete_link(dwb.fc.mimetypes, list);
+    }
+    dwb.fc.mimetypes = g_list_prepend(dwb.fc.mimetypes, n);
+    util_file_add_navigation(dwb.files.mimetypes, n, true, -1);
+  }
+}/*}}}*/
 /* download_spawn(DwbDownload *) {{{*/
 static void 
 download_spawn(DwbDownload *dl) {
   const char *filename = webkit_download_get_destination_uri(dl->download);
-  download_do_spawn(dl->path, filename);
+  download_do_spawn(dl->path, filename, dl->mimetype);
 }/*}}}*/
 
 gboolean
 download_delay(DwbDownload *download) {
   gtk_widget_destroy(download->event);
   g_free(download->path);
+  g_free(download->mimetype);
   g_free(download);
   if (!_downloads) {
     gtk_widget_hide(dwb.gui.downloadbar);
@@ -359,7 +357,7 @@ download_start(const char *path) {
   /* Handle local files */
   if (g_str_has_prefix(uri, "file://") && g_file_test(uri+7, G_FILE_TEST_EXISTS)) {
     if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
-      download_do_spawn(path, uri+7);
+      download_do_spawn(path, uri+7, dwb.state.mimetype_request);
     }
     else {
       GFile *source = g_file_new_for_uri(uri);
@@ -421,6 +419,7 @@ download_start(const char *path) {
       active->action = dwb.state.dl_action;
       active->path = g_strdup(path);
       active->n = n;
+      active->mimetype = dwb.state.mimetype_request != NULL ? g_strdup(dwb.state.mimetype_request) : NULL;
       gtk_widget_show_all(dwb.gui.downloadbar);
       _downloads = g_list_prepend(_downloads, active);
       DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
