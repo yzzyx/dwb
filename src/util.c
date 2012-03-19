@@ -411,20 +411,20 @@ util_get_user_data_dir(const char *dir) {
 
 /* util_get_data_file(const char *filename)   return: filename (alloc) or NULL {{{*/
 char *
-util_get_data_file(const char *filename) {
+util_get_data_file(const char *filename, const char *dir) {
   if (filename == NULL)
     return NULL;
   char *path = NULL;
   char *ret = NULL;
   char *basename = g_path_get_basename(filename);
-  path = util_get_user_data_dir("lib");
+  path = util_get_user_data_dir(dir);
   if (path != NULL) {
     ret = g_build_filename(path, basename, NULL);
     if (g_file_test(ret, G_FILE_TEST_EXISTS)) 
       goto clean;
   }
 
-  path = util_get_system_data_dir("lib");
+  path = util_get_system_data_dir(dir);
   if (path != NULL)  {
     ret = g_build_filename(path, basename, NULL);
     if (g_file_test(ret, G_FILE_TEST_EXISTS)) 

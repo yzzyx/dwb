@@ -25,5 +25,7 @@ JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char
 JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 char * js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 double  js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *name);
+JSObjectRef js_create_object(WebKitWebFrame *, const char *);
+char * js_call_as_function(WebKitWebFrame *, JSObjectRef, char *string, char *args, char **char_ret);
 
 #endif

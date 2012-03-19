@@ -28,6 +28,7 @@
 #include "entry.h"
 #include "adblock.h"
 #include "download.h"
+#include "js.h"
 
 static int inline dwb_floor(double x) { 
   return x >= 0 ? (int) x : (int) x - 1;
@@ -116,10 +117,11 @@ commands_focus_input(KeyMap *km, Arg *a) {
   char *value;
   DwbStatus ret = STATUS_OK;
 
-  if ((value = dwb_execute_script(MAIN_FRAME(), "DwbHintObj.focusInput()", true)) && !g_strcmp0(value, "_dwb_no_input_")) {
-    ret = STATUS_ERROR;
+  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "focusInput", NULL, &value)) ) {
+    if (!g_strcmp0(value, "_dwb_no_input_")) 
+      ret = STATUS_ERROR;
+    g_free(value);
   }
-  g_free(value);
   
   return ret;
 }/*}}}*/
@@ -128,7 +130,7 @@ commands_focus_input(KeyMap *km, Arg *a) {
 DwbStatus
 commands_add_search_field(KeyMap *km, Arg *a) {
   char *value;
-  if ( (value = dwb_execute_script(MAIN_FRAME(), "DwbHintObj.addSearchEngine()", true)) ) {
+  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "addSearchEngine", NULL, &value)) ) {
     if (!g_strcmp0(value, "_dwb_no_hints_")) {
       return STATUS_ERROR;
     }

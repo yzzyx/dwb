@@ -1,10 +1,10 @@
-String.prototype.isInt = function () { 
-  return !isNaN(parseInt(this, 10)); 
-};
-String.prototype.isLower = function () { 
-  return this == this.toLowerCase(); 
-};
-var DwbHintObj = (function () {
+(function () {
+  String.prototype.isInt = function () { 
+    return !isNaN(parseInt(this, 10)); 
+  };
+  String.prototype.isLower = function () { 
+    return this == this.toLowerCase(); 
+  };
   var _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
   var _font = "bold 10px monospace";
   var _style = "letter";
@@ -328,13 +328,15 @@ var DwbHintObj = (function () {
       console.error(exc);
     }
   };
-  var __showHints = function (type, new_tab) {
+  //var __showHints = function (type, new_tab) {
+  var __showHints = function (newTab, type) {
     var i;
     if (document.activeElement) {
       document.activeElement.blur();
     }
 
-    _new_tab = new_tab;
+    _new_tab = newTab;
+    //__createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
     __createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
     var l = _elements.length;
 
@@ -560,7 +562,9 @@ var DwbHintObj = (function () {
   };
   var __submitSearchEngine = function (string) {
     var e = __getActive().element;
+    console.log(e.value);
     e.value = string;
+    console.log(e.name);
     e.form.submit();
     e.value = "";
     __clear();
@@ -608,24 +612,27 @@ var DwbHintObj = (function () {
 
 
   return {
-    createStylesheet : function() {
+    createStyleSheet : function(obj) {
+      __init(obj.hintLetterSeq, obj.hintFont, obj.hintStyle, obj.hintFgColor,
+        obj.hintBgColor, obj.hintActiveColor, obj.hintNormalColor,
+        obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks);
       __createStyleSheet(document);
     },
     showHints : 
-      function(type, new_tab) {
-        return __showHints(type, new_tab);
+      function(obj) {
+        return __showHints(obj.newTab, obj.type);
       },
     updateHints :
-      function (input, type) {
-        return __updateHints(input, type);
+      function (obj) {
+        return __updateHints(obj.input, obj.type);
       },
     clear : 
       function () {
         __clear();
       },
     followActive :
-      function (type) {
-        return __evaluate(__getActive().element, type);
+      function (obj) {
+        return __evaluate(__getActive().element, obj.type);
       },
 
     focusNext :
@@ -638,20 +645,16 @@ var DwbHintObj = (function () {
       },
     addSearchEngine : 
       function () {
+        console.log("add");
         return __addSearchEngine();
       },
     submitSearchEngine :
-      function (string) {
-        return __submitSearchEngine(string);
+      function (obj) {
+        return __submitSearchEngine(obj.searchString);
       },
     focusInput : 
       function () {
         __focusInput();
       },
-    init: 
-      function (letter_seq, font, style,
-          fg_color, bg_color, active_color, normal_color, border,  opacity, highlightLinks) {
-        __init(letter_seq, font, style, fg_color, bg_color, active_color, normal_color, border,  opacity, highlightLinks); 
-      }
   };
 })();
