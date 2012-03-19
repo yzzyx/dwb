@@ -120,7 +120,7 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *
   char *ret = NULL;
   JSValueRef js_ret, function, v = NULL;
   JSObjectRef function_object;
-  JSStringRef js_json, js_name;
+  JSStringRef js_json, js_name = NULL;
   JSContextRef ctx;
 
   if (obj == NULL) 
@@ -150,7 +150,8 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *
     ret = js_value_to_char(ctx, js_ret);
   }
 error_out: 
-  JSStringRelease(js_name);
+  if (js_name)
+    JSStringRelease(js_name);
   if (char_ret != NULL)
     *char_ret = ret;
   return ret;
