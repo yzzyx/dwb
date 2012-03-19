@@ -87,9 +87,12 @@ JSObjectRef
 js_create_object(WebKitWebFrame *frame, const char *script) {
   if (script == NULL)
     return NULL;
+
+  JSStringRef prop_name;
+  JSValueRef prop, exc = NULL;
+
   JSContextRef ctx = webkit_web_frame_get_global_context(frame);
   JSStringRef jsscript = JSStringCreateWithUTF8CString(script);
-  JSValueRef exc = NULL;
   JSValueRef ret = JSEvaluateScript(ctx, jsscript, NULL, NULL, 0, &exc);
   if (exc != NULL)
     return NULL;
@@ -100,8 +103,8 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
   JSValueProtect(ctx, ret);
   JSPropertyNameArrayRef array = JSObjectCopyPropertyNames(ctx, return_object);
   for (int i=0; i<JSPropertyNameArrayGetCount(array); i++) {
-    JSStringRef prop_name = JSPropertyNameArrayGetNameAtIndex(array, i);
-    JSValueRef prop = JSObjectGetProperty(ctx, return_object, prop_name, NULL);
+    prop_name = JSPropertyNameArrayGetNameAtIndex(array, i);
+    prop = JSObjectGetProperty(ctx, return_object, prop_name, NULL);
     JSObjectDeleteProperty(ctx, return_object, prop_name, NULL);
     JSObjectSetProperty(ctx, return_object, prop_name, prop, 
         kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete | kJSPropertyAttributeDontEnum, NULL);
@@ -111,21 +114,25 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
 }
 char *  
 js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *json, char **char_ret) {
-  if (obj == NULL) {
+  if (obj == NULL) 
     goto error_out;
-  }
+
+  JSValueRef ret, function, v = NULL;
+  JSObjectRef function_object;
+  JSStringRef js_json;
+
   JSContextRef ctx = webkit_web_frame_get_global_context(frame);
   JSStringRef name = JSStringCreateWithUTF8CString(string);
+
   if (!JSObjectHasProperty(ctx, obj, name)) {
     goto error_out;
   }
-  JSValueRef function = JSObjectGetProperty(ctx, obj, name, NULL);
-  JSObjectRef function_object = JSValueToObject(ctx, function, NULL);
-  JSValueRef ret;
-  JSValueRef v = NULL;
+  function = JSObjectGetProperty(ctx, obj, name, NULL);
+  function_object = JSValueToObject(ctx, function, NULL);
   if (json != NULL) {
-    JSStringRef js_json = JSStringCreateWithUTF8CString(json);
+    js_json = JSStringCreateWithUTF8CString(json);
     v = JSValueMakeFromJSONString(ctx, js_json);
+    JSStringRelease(js_json);
   }
   if (v) {
     JSValueRef vals[] = { v };
