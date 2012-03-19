@@ -328,15 +328,12 @@
       console.error(exc);
     }
   };
-  //var __showHints = function (type, new_tab) {
-  var __showHints = function (newTab, type) {
+  var __showHints = function (type, newTab) {
     var i;
     if (document.activeElement) {
       document.activeElement.blur();
     }
-
     _new_tab = newTab;
-    //__createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
     __createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
     var l = _elements.length;
 
@@ -620,7 +617,7 @@
     },
     showHints : 
       function(obj) {
-        return __showHints(obj.newTab, obj.type);
+        return __showHints(obj.type, obj.newTab);
       },
     updateHints :
       function (obj) {
@@ -645,7 +642,6 @@
       },
     addSearchEngine : 
       function () {
-        console.log("add");
         return __addSearchEngine();
       },
     submitSearchEngine :
