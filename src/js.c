@@ -120,19 +120,19 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *
   char *ret = NULL;
   JSValueRef js_ret, function, v = NULL;
   JSObjectRef function_object;
-  JSStringRef js_json, name;
+  JSStringRef js_json, js_name;
   JSContextRef ctx;
 
   if (obj == NULL) 
     goto error_out;
 
   ctx = webkit_web_frame_get_global_context(frame);
-  name = JSStringCreateWithUTF8CString(string);
+  js_name = JSStringCreateWithUTF8CString(string);
 
-  if (!JSObjectHasProperty(ctx, obj, name)) {
+  if (!JSObjectHasProperty(ctx, obj, js_name)) {
     goto error_out;
   }
-  function = JSObjectGetProperty(ctx, obj, name, NULL);
+  function = JSObjectGetProperty(ctx, obj, js_name, NULL);
   function_object = JSValueToObject(ctx, function, NULL);
   if (json != NULL) {
     js_json = JSStringCreateWithUTF8CString(json);
@@ -150,6 +150,7 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *
     ret = js_value_to_char(ctx, js_ret);
   }
 error_out: 
+  JSStringRelease(js_name);
   if (char_ret != NULL)
     *char_ret = ret;
   return ret;
