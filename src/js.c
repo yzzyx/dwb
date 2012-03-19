@@ -117,15 +117,17 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
 }
 char *  
 js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *json, char **char_ret) {
+  char *ret = NULL;
+  JSValueRef js_ret, function, v = NULL;
+  JSObjectRef function_object;
+  JSStringRef js_json, name;
+  JSContextRef ctx;
+
   if (obj == NULL) 
     goto error_out;
 
-  JSValueRef ret, function, v = NULL;
-  JSObjectRef function_object;
-  JSStringRef js_json;
-
-  JSContextRef ctx = webkit_web_frame_get_global_context(frame);
-  JSStringRef name = JSStringCreateWithUTF8CString(string);
+  ctx = webkit_web_frame_get_global_context(frame);
+  name = JSStringCreateWithUTF8CString(string);
 
   if (!JSObjectHasProperty(ctx, obj, name)) {
     goto error_out;
@@ -139,19 +141,18 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *
   }
   if (v) {
     JSValueRef vals[] = { v };
-    ret = JSObjectCallAsFunction(ctx, function_object, NULL, 1, vals, NULL);
+    js_ret = JSObjectCallAsFunction(ctx, function_object, NULL, 1, vals, NULL);
   }
   else {
-    ret = JSObjectCallAsFunction(ctx, function_object, NULL, 0, NULL, NULL);
+    js_ret = JSObjectCallAsFunction(ctx, function_object, NULL, 0, NULL, NULL);
   }
   if (char_ret != NULL) {
-    *char_ret = js_value_to_char(ctx, ret);
-    return *char_ret;
+    ret = js_value_to_char(ctx, js_ret);
   }
 error_out: 
   if (char_ret != NULL)
-    *char_ret = NULL;
-  return NULL;
+    *char_ret = ret;
+  return ret;
 }
 
 /*{{{*/
