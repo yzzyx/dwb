@@ -88,20 +88,23 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
   if (script == NULL)
     return NULL;
 
-  JSStringRef prop_name;
-  JSValueRef prop, exc = NULL;
+  JSStringRef prop_name, js_script;
+  JSValueRef prop, ret, exc = NULL;
+  JSObjectRef return_object;
+  JSPropertyNameArrayRef array;
 
   JSContextRef ctx = webkit_web_frame_get_global_context(frame);
-  JSStringRef jsscript = JSStringCreateWithUTF8CString(script);
-  JSValueRef ret = JSEvaluateScript(ctx, jsscript, NULL, NULL, 0, &exc);
+  js_script = JSStringCreateWithUTF8CString(script);
+  ret = JSEvaluateScript(ctx, js_script, NULL, NULL, 0, &exc);
+  JSStringRelease(js_script);
   if (exc != NULL)
     return NULL;
-  JSStringRelease(jsscript);
-  JSObjectRef return_object = JSValueToObject(ctx, ret, &exc);
+
+  return_object = JSValueToObject(ctx, ret, &exc);
   if (exc != NULL)
     return NULL;
   JSValueProtect(ctx, ret);
-  JSPropertyNameArrayRef array = JSObjectCopyPropertyNames(ctx, return_object);
+  array = JSObjectCopyPropertyNames(ctx, return_object);
   for (int i=0; i<JSPropertyNameArrayGetCount(array); i++) {
     prop_name = JSPropertyNameArrayGetNameAtIndex(array, i);
     prop = JSObjectGetProperty(ctx, return_object, prop_name, NULL);
