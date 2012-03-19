@@ -111,6 +111,7 @@
 #define CLEAR_COMMAND_TEXT()        dwb_set_status_bar_text(dwb.gui.lstatus, NULL, NULL, NULL, false)
 #define BOOLEAN(X)                  (!(!(X)))
 #define NAVIGATION(X)               ((Navigation*)((X)->data))
+#define JS_CONEXT_REF(X)            (webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(WEBVIEW(gl))))
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 
@@ -594,6 +595,7 @@ struct _View {
     WebKitDOMElement *anchor;
     WebKitDOMCSSStyleDeclaration *style;
   } hover;
+  JSObjectRef hint_object;
 };
 struct _Color {
   DwbColor active_fg;
@@ -658,6 +660,7 @@ struct _Misc {
   /* applied to the mainframe */
   char *scripts;
   char *scripts_onload;
+  char *hints;
   /* applied to all frames */
   char *allscripts;
   char *allscripts_onload;
@@ -690,6 +693,7 @@ struct _Misc {
   int bar_height;
   char *fifo;
   TabPosition tab_position;
+  char *hint_style;
 };
 struct _Files {
   const char *bookmarks;

@@ -1265,6 +1265,10 @@ dwb_clean_load_begin(GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
   }
   view_set_favicon(gl, false);
+  if (v->hint_object != NULL) {
+    JSValueUnprotect(JS_CONEXT_REF(gl), v->hint_object);
+    v->hint_object = NULL;
+  }
 }/*}}}*/
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
@@ -1416,12 +1420,12 @@ dwb_get_search_engine(const char *uri, gboolean force) {
 /* dwb_submit_searchengine {{{*/
 void 
 dwb_submit_searchengine(void) {
-  char *com = g_strdup_printf("DwbHintObj.submitSearchEngine(\"%s\")", HINT_SEARCH_SUBMIT);
+  char buffer[64];
   char *value;
-  if ( (value = dwb_execute_script(MAIN_FRAME(), com, true))) {
+  snprintf(buffer, 64, "{ \"searchString\" : \"%s\" }", HINT_SEARCH_SUBMIT);
+  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "submitSearchEngine", buffer, &value)) ) {
     dwb.state.form_name = value;
   }
-  g_free(com);
 }/*}}}*/
 
 /* dwb_save_searchengine {{{*/
@@ -1542,20 +1546,22 @@ dwb_evaluate_hints(const char *buffer) {
 /* update_hints {{{*/
 gboolean
 dwb_update_hints(GdkEventKey *e) {
-  char *buffer = NULL;
+  char *buffer;
   char *com = NULL;
-  char input[BUFFER_LENGTH] = { 0 }, *val;
+  char *val;
   gboolean ret = false;
+  char json[BUFFER_LENGTH] = {0};
 
   if (e->keyval == GDK_KEY_Return) {
-    com = g_strdup_printf("DwbHintObj.followActive(%d)", hint_map[dwb.state.hint_type].arg);
+    com = "followActive";
+    snprintf(json, BUFFER_LENGTH, "{ \"type\" : \"%d\" }", hint_map[dwb.state.hint_type].arg);
   }
   else if (DWB_TAB_KEY(e)) {
     if (e->state & GDK_SHIFT_MASK) {
-      com = g_strdup("DwbHintObj.focusPrev()");
+      com = "focusPrev";
     }
     else {
-      com = g_strdup("DwbHintObj.focusNext()");
+      com = "focusNext";
     }
     ret = true;
   }
@@ -1564,13 +1570,12 @@ dwb_update_hints(GdkEventKey *e) {
   }
   else {
     val = util_keyval_to_char(e->keyval, true);
-    snprintf(input, BUFFER_LENGTH, "%s%s", GET_TEXT(), val ? val : "");
-    com = g_strdup_printf("DwbHintObj.updateHints(\"%s\", %d)", input, hint_map[dwb.state.hint_type].arg);
+    snprintf(json, BUFFER_LENGTH, "{ \"input\" : \"%s%s\", \"type\" : %d }", GET_TEXT(), val ? val : "", hint_map[dwb.state.hint_type].arg);
+    com = "updateHints";
     g_free(val);
   }
   if (com) {
-    buffer = dwb_execute_script(MAIN_FRAME(), com, true);
-    g_free(com);
+    buffer = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, com, *json ? json : NULL, &buffer);
   }
   if (buffer != NULL) { 
     if (dwb_evaluate_hints(buffer) == STATUS_END) 
@@ -1589,11 +1594,16 @@ dwb_show_hints(Arg *arg) {
   }
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
-    char *command = g_strdup_printf("DwbHintObj.showHints(%d, %d)", 
-        hint_map[arg->i].arg, 
-        (dwb.state.nv & (OPEN_NEW_WINDOW|OPEN_NEW_VIEW)));
-    char *jsret = dwb_execute_script(MAIN_FRAME(), command, true);
-    g_free(command);
+    char json[64];
+    snprintf(json, 64, "{ \"newTab\" : \"%d\", \"type\" : \"%d\" }",
+        (dwb.state.nv & (OPEN_NEW_WINDOW|OPEN_NEW_VIEW)), 
+        hint_map[arg->i].arg);
+    char *jsret; 
+    js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "showHints", json, &jsret);
+    if (jsret) {
+      puts(jsret);
+      //g_free(jsret);
+    }
     if (jsret != NULL) {
       ret = dwb_evaluate_hints(jsret);
       g_free(jsret);
@@ -1620,8 +1630,11 @@ dwb_execute_script(WebKitWebFrame *frame, const char *com, gboolean ret) {
   g_return_val_if_fail(global_object != NULL, NULL);
 
   JSStringRef text = JSStringCreateWithUTF8CString(com);
-  eval_ret = JSEvaluateScript(context, text, global_object, NULL, 0, NULL);
+  JSValueRef exc = NULL;
+  eval_ret = JSEvaluateScript(context, text, global_object, NULL, 0, &exc);
   JSStringRelease(text);
+  if (exc != NULL)
+    return NULL;
 
   if (eval_ret && ret) {
     return js_value_to_char(context, eval_ret);
@@ -2266,7 +2279,7 @@ dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
 
   if (mode == HINT_MODE || mode == SEARCH_FIELD_MODE) {
-    dwb_execute_script(MAIN_FRAME(), "DwbHintObj.clear()", false);
+    js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "clear", NULL, NULL);
   }
   else if (mode == DOWNLOAD_GET_PATH) {
     completion_clean_path_completion();
@@ -2634,6 +2647,8 @@ dwb_clean_up() {
   dwb.keymap = NULL;
   g_hash_table_remove_all(dwb.settings);
   g_string_free(dwb.state.buffer, true);
+  g_free(dwb.misc.hints);
+  g_free(dwb.misc.hint_style);
 
   dwb_free_list(dwb.fc.bookmarks, (void_func)dwb_navigation_free);
   /*  TODO sqlite */
@@ -3058,13 +3073,16 @@ dwb_init_scripts() {
   util_get_directory_content(&allbuffer, dwb.files.scriptdir, "all.js");
 
   /* systemscripts */
-  char *dir = NULL;
-  if ( (dir = util_get_system_data_dir("scripts")) ) {
-    util_get_directory_content(&normalbuffer, dir, "js");
-    util_get_directory_content(&allbuffer, dir, "all.js");
-    g_free(dir);
-  }
-  g_string_append_printf(normalbuffer, "DwbHintObj.init(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%f\", %s);", 
+  g_free(dwb.misc.hints);
+  char *scriptpath = util_get_data_file(HINT_SCRIPT, "scripts");
+  dwb.misc.hints = util_get_file_content(scriptpath);
+  g_free(scriptpath);
+
+  g_free(dwb.misc.hint_style);
+  dwb.misc.hint_style = g_strdup_printf(
+      "{ \"hintLetterSeq\" : \"%s\", \"hintFont\" : \"%s\", \"hintStyle\" : \"%s\", \"hintFgColor\" : \"%s\",\
+      \"hintBgColor\" : \"%s\", \"hintActiveColor\" : \"%s\", \"hintNormalColor\" : \"%s\", \"hintBorder\" : \"%s\",\
+      \"hintOpacity\" : \"%f\", \"hintHighlighLinks\" : %s }", 
       GET_CHAR("hint-letter-seq"),
       GET_CHAR("hint-font"),
       GET_CHAR("hint-style"), 
@@ -3556,14 +3574,16 @@ dwb_init() {
   dwb.misc.userscripts = NULL;
   dwb.misc.proxyuri = NULL;
   dwb.misc.scripts = NULL;
+  dwb.misc.hints = NULL;
   dwb.misc.synctimer = 0;
   dwb.misc.bar_height = 0;
   dwb.misc.fifo = NULL;
+  dwb.misc.hint_style = NULL;
   dwb.state.buffer = g_string_new(NULL);
 
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
 
-  char *path = util_get_data_file(PLUGIN_FILE);
+  char *path = util_get_data_file(PLUGIN_FILE, "lib");
   if (path) {
     dwb.misc.pbbackground = util_get_file_content(path);
     g_free(path);

@@ -29,6 +29,7 @@
 #include "local.h"
 #include "soup.h"
 #include "adblock.h"
+#include "js.h"
 
 static void view_ssl_state(GList *);
 static unsigned long _click_time;
@@ -519,6 +520,7 @@ view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   if (status == WEBKIT_LOAD_COMMITTED) {
     dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
+    VIEW(gl)->hint_object = js_create_object(webkit_web_view_get_main_frame(web), dwb.misc.hints);
   }
 }/*}}}*/
 /* view_load_status_cb {{{*/
@@ -544,7 +546,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       /* This is more or less a dummy call, to compile the script and speed up
        * execution time 
        * */
-      dwb_execute_script(webkit_web_view_get_main_frame(web), "DwbHintObj.createStylesheet();", false);
+      js_call_as_function(webkit_web_view_get_main_frame(web), v->hint_object, "createStyleSheet", dwb.misc.hint_style, NULL);
       break;
     case WEBKIT_LOAD_COMMITTED: 
       view_ssl_state(gl);
@@ -595,7 +597,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
     return false;
 
 
-  char *errorfile = util_get_data_file(ERROR_FILE);
+  char *errorfile = util_get_data_file(ERROR_FILE, "lib");
   if (errorfile == NULL) 
     return false;
 
@@ -763,6 +765,7 @@ view_create_web_view() {
   status->style = NULL;
   status->lockprotect = 0;
 
+  v->hint_object = NULL;
   v->plugins = plugins_new();
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;

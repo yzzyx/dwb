@@ -18,6 +18,7 @@
 
 #include <JavaScriptCore/JavaScript.h>
 #include "dwb.h"
+#include "util.h"
 #include "js.h"
 #define JS_STRING_MAX 1024
 
@@ -82,10 +83,73 @@ js_string_to_char(JSContextRef ctx, JSStringRef jsstring) {
   return ret;
 }/*}}}*/
 
+JSObjectRef 
+js_create_object(WebKitWebFrame *frame, const char *script) {
+  if (script == NULL)
+    return NULL;
+  JSContextRef ctx = webkit_web_frame_get_global_context(frame);
+  JSStringRef jsscript = JSStringCreateWithUTF8CString(script);
+  JSValueRef exc = NULL;
+  JSValueRef ret = JSEvaluateScript(ctx, jsscript, NULL, NULL, 0, &exc);
+  if (exc != NULL)
+    return NULL;
+  JSStringRelease(jsscript);
+  JSValueProtect(ctx, ret);
+  JSObjectRef return_object = JSValueToObject(ctx, ret, &exc);
+  if (exc != NULL)
+    return NULL;
+  JSPropertyNameArrayRef array = JSObjectCopyPropertyNames(ctx, return_object);
+  for (int i=0; i<JSPropertyNameArrayGetCount(array); i++) {
+    JSStringRef prop_name = JSPropertyNameArrayGetNameAtIndex(array, i);
+    JSValueRef prop = JSObjectGetProperty(ctx, return_object, prop_name, NULL);
+    JSObjectDeleteProperty(ctx, return_object, prop_name, NULL);
+    JSObjectSetProperty(ctx, return_object, prop_name, prop, 
+        kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete | kJSPropertyAttributeDontEnum, NULL);
+  }
+  JSPropertyNameArrayRelease(array);
+  return return_object;
+}
+char *  
+js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *json, char **char_ret) {
+  if (obj == NULL) {
+    goto error_out;
+  }
+  JSContextRef ctx = webkit_web_frame_get_global_context(frame);
+  JSStringRef name = JSStringCreateWithUTF8CString(string);
+  if (!JSObjectHasProperty(ctx, obj, name)) {
+    goto error_out;
+  }
+  JSValueRef function = JSObjectGetProperty(ctx, obj, name, NULL);
+  JSObjectRef function_object = JSValueToObject(ctx, function, NULL);
+  JSValueRef ret;
+  JSValueRef v = NULL;
+  if (json != NULL) {
+    JSStringRef js_json = JSStringCreateWithUTF8CString(json);
+    v = JSValueMakeFromJSONString(ctx, js_json);
+  }
+  if (v) {
+    JSValueRef vals[] = { v };
+    ret = JSObjectCallAsFunction(ctx, function_object, NULL, 1, vals, NULL);
+  }
+  else {
+    ret = JSObjectCallAsFunction(ctx, function_object, NULL, 0, NULL, NULL);
+  }
+  if (char_ret != NULL) {
+    *char_ret = js_value_to_char(ctx, ret);
+    return *char_ret;
+  }
+error_out: 
+  if (char_ret != NULL)
+    *char_ret = NULL;
+  return NULL;
+}
+
 /*{{{*/
 char *
 js_value_to_char(JSContextRef ctx, JSValueRef value) {
   JSValueRef exc = NULL;
+  if (value == NULL)
+    return NULL;
   if (! JSValueIsString(ctx, value)) 
     return NULL;
   JSStringRef jsstring = JSValueToStringCopy(ctx, value, &exc);

@@ -61,8 +61,8 @@ DwbStatus
 html_load_page(WebKitWebView *wv, HtmlTable *t, char *panel) {
   char *filecontent;
   GString *content = g_string_new(NULL);
-  char *path = util_get_data_file(t->file);
-  char *headpath = util_get_data_file(HEAD_FILE);
+  char *path = util_get_data_file(t->file, "lib");
+  char *headpath = util_get_data_file(HEAD_FILE, "lib");
   DwbStatus ret = STATUS_ERROR;
 
   if (path && headpath) {
@@ -275,7 +275,7 @@ html_settings(GList *gl, HtmlTable *table) {
   DwbStatus ret = STATUS_ERROR;
   WebKitWebView *wv = WEBVIEW(gl);
 
-  char *path = util_get_data_file(SETTINGS_FILE);
+  char *path = util_get_data_file(SETTINGS_FILE, "lib");
   if  (path != NULL) {
     g_file_get_contents(path, &content, NULL, NULL);
     ret = html_load_page(wv, table, content);
@@ -360,7 +360,7 @@ html_keys(GList *gl, HtmlTable *table) {
   DwbStatus ret = STATUS_ERROR;
   char *content = NULL;
   WebKitWebView *wv = WEBVIEW(gl);
-  char *path = util_get_data_file(KEY_FILE);
+  char *path = util_get_data_file(KEY_FILE, "lib");
   if (path != NULL) {
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_keys_load_cb), table);
     g_file_get_contents(path, &content, NULL, NULL);
