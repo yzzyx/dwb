@@ -688,6 +688,8 @@ util_strlen_trailing_space(const char *str) {
 }
 const char *
 util_str_chug(const char *str) {
+  if (str == NULL)
+    return str;
   while (g_ascii_isspace(*str))
     str++;
   return str;
