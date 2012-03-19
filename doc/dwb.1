@@ -5,7 +5,7 @@ dwb \- dynamic web browser
 .B dwb
 [ options ] [ <urls> ] 
 .SH DESCRIPTION
-dwb is a small webbrowser based on webkit and GTK which aims to be mostly
+dwb is a small webbrowser based on WebKit and GTK which aims to be mostly
 keyboard-driven. 
 
 .SH COMMAND LINE ARGUMENTS
@@ -1122,10 +1122,11 @@ or via command line (command
 Shortcuts will be saved in 
 .IR ~/.config/dwb/keys .
 
-.SS Settings
 If a string value is set to 
 .IR NULL
 the default value will be used. The settings in detail are: 
+
+.SS WebKit builtin settings
 .TP
 .BR adblocker
 Block advertisements using a filterlist, see also 
@@ -1423,6 +1424,7 @@ values: a decimal,
 default value:
 .IR 0.1 .
 
+.SS Other settings
 .TP 
 .BR active-completion-bg-color
 The background color for an active element in tab-completion. Possible values:
