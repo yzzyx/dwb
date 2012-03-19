@@ -94,10 +94,10 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
   if (exc != NULL)
     return NULL;
   JSStringRelease(jsscript);
-  JSValueProtect(ctx, ret);
   JSObjectRef return_object = JSValueToObject(ctx, ret, &exc);
   if (exc != NULL)
     return NULL;
+  JSValueProtect(ctx, ret);
   JSPropertyNameArrayRef array = JSObjectCopyPropertyNames(ctx, return_object);
   for (int i=0; i<JSPropertyNameArrayGetCount(array); i++) {
     JSStringRef prop_name = JSPropertyNameArrayGetNameAtIndex(array, i);
