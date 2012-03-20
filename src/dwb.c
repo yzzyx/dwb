@@ -63,11 +63,11 @@ static DwbStatus dwb_set_new_tab_position_policy(GList *, WebSettings *);
 static DwbStatus dwb_set_cookies(GList *, WebSettings *);
 static DwbStatus dwb_set_widget_packing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
-static DwbStatus dwb_reload_scripts(GList *, WebSettings *);
 static DwbStatus dwb_set_favicon(GList *, WebSettings *);
 static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
 static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
+static DwbStatus dwb_init_hints(GList *gl, WebSettings *s);
 
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
 static gboolean dwb_sync_history(gpointer);
@@ -82,6 +82,7 @@ static void dwb_init_key_map(void);
 static void dwb_init_style(void);
 static void dwb_apply_style(void);
 static void dwb_init_gui(void);
+static void dwb_free_list(GList *list, void (*func)(void*));
 
 static Navigation * dwb_get_search_completion(const char *text);
 
@@ -358,12 +359,6 @@ dwb_webview_property(GList *gl, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
-/*dwb_reload_scripts {{{  */
-static DwbStatus 
-dwb_reload_scripts(GList *gl, WebSettings *s) {
-  dwb_init_scripts();
-  return STATUS_OK;
-} /*}}}*/
 /*}}}*/
 
 /* COMMAND_TEXT {{{*/
@@ -2572,7 +2567,10 @@ dwb_get_scripts() {
 /* dwb_reload_userscripts()  {{{*/
 void 
 dwb_reload_userscripts(void) {
+  dwb_free_list(dwb.misc.userscripts, (void_func) dwb_navigation_free);
+  dwb.misc.userscripts = NULL;
   g_list_foreach(dwb.misc.userscripts, (GFunc)dwb_navigation_free, NULL);
+  g_list_free(dwb.misc.userscripts);
   dwb.misc.userscripts = NULL;
   KeyMap *m;
   GSList *delete = NULL;
@@ -2649,6 +2647,8 @@ dwb_clean_up() {
   g_string_free(dwb.state.buffer, true);
   g_free(dwb.misc.hints);
   g_free(dwb.misc.hint_style);
+  g_free(dwb.misc.proxyuri);
+  g_free(dwb.misc.scripts);
 
   dwb_free_list(dwb.fc.bookmarks, (void_func)dwb_navigation_free);
   /*  TODO sqlite */
@@ -2661,6 +2661,7 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.cookies_session_allow, (void_func)g_free);
   dwb_free_list(dwb.fc.navigations, (void_func)g_free);
   dwb_free_list(dwb.fc.commands, (void_func)g_free);
+  dwb_free_list(dwb.misc.userscripts, (void_func)dwb_navigation_free);
   dwb_free_custom_keys();
 
   dwb_soup_end();
@@ -3073,6 +3074,16 @@ dwb_init_scripts() {
   util_get_directory_content(&allbuffer, dwb.files.scriptdir, "all.js");
 
   /* systemscripts */
+  g_string_append(normalbuffer, allbuffer->str);
+  dwb.misc.scripts = normalbuffer->str;
+  dwb.misc.allscripts = allbuffer->str;
+  g_string_free(normalbuffer, false);
+  g_string_free(allbuffer, false);
+  dwb_init_hints(NULL, NULL);
+}/*}}}*/
+
+static DwbStatus 
+dwb_init_hints(GList *gl, WebSettings *s) {
   g_free(dwb.misc.hints);
   char *scriptpath = util_get_data_file(HINT_SCRIPT, "scripts");
   dwb.misc.hints = util_get_file_content(scriptpath);
@@ -3082,7 +3093,7 @@ dwb_init_scripts() {
   dwb.misc.hint_style = g_strdup_printf(
       "{ \"hintLetterSeq\" : \"%s\", \"hintFont\" : \"%s\", \"hintStyle\" : \"%s\", \"hintFgColor\" : \"%s\",\
       \"hintBgColor\" : \"%s\", \"hintActiveColor\" : \"%s\", \"hintNormalColor\" : \"%s\", \"hintBorder\" : \"%s\",\
-      \"hintOpacity\" : \"%f\", \"hintHighlighLinks\" : %s }", 
+      \"hintOpacity\" : \"%f\", \"hintHighlighLinks\" : %s, \"hintAutoFollow\" : %s }", 
       GET_CHAR("hint-letter-seq"),
       GET_CHAR("hint-font"),
       GET_CHAR("hint-style"), 
@@ -3092,13 +3103,10 @@ dwb_init_scripts() {
       GET_CHAR("hint-normal-color"), 
       GET_CHAR("hint-border"), 
       GET_DOUBLE("hint-opacity"),
-      GET_BOOL("hint-highlight-links") ? "true" : "false");
-  g_string_append(normalbuffer, allbuffer->str);
-  dwb.misc.scripts = normalbuffer->str;
-  dwb.misc.allscripts = allbuffer->str;
-  g_string_free(normalbuffer, false);
-  g_string_free(allbuffer, false);
-}/*}}}*/
+      GET_BOOL("hint-highlight-links") ? "true" : "false",
+      GET_BOOL("hint-autofollow") ? "true" : "false");
+  return STATUS_OK;
+}
 
 /* dwb_init_style() {{{*/
 static void
@@ -3574,11 +3582,13 @@ dwb_init() {
   dwb.misc.userscripts = NULL;
   dwb.misc.proxyuri = NULL;
   dwb.misc.scripts = NULL;
+
   dwb.misc.hints = NULL;
+  dwb.misc.hint_style = NULL;
+
   dwb.misc.synctimer = 0;
   dwb.misc.bar_height = 0;
   dwb.misc.fifo = NULL;
-  dwb.misc.hint_style = NULL;
   dwb.state.buffer = g_string_new(NULL);
 
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");

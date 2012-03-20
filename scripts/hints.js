@@ -22,6 +22,7 @@
   var _new_tab = false;
   var _active = null;
   var _markHints = false;
+  var _autoFollow = true;
   var _bigFont = null;
   var _hintTypes =  [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, [onclick], [onmousedown]," + 
       "[onmouseover], [role=link], [role=option], [role=button], [role=option]",  // HINT_T_ALL
@@ -402,7 +403,7 @@
       __clear();
       return "_dwb_no_hints_";
     }
-    else if (array.length == 1) {
+    else if (array.length == 1 && _autoFollow) {
       return __evaluate(array[0].element, type);
     }
     else {
@@ -593,7 +594,7 @@
     return null;
   };
   var __init = function (letter_seq, font, style,
-          fg_color, bg_color, active_color, normal_color, border,  opacity, markHints) {
+          fg_color, bg_color, active_color, normal_color, border,  opacity, markHints, autoFollow) {
         _letterSeq  = letter_seq;
         _font = font;
         _style =  style.toLowerCase();
@@ -604,6 +605,7 @@
         _hintBorder = border;
         _hintOpacity = opacity;
         _markHints = markHints;
+        _autoFollow = autoFollow;
         _bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
   };
 
@@ -612,7 +614,7 @@
     createStyleSheet : function(obj) {
       __init(obj.hintLetterSeq, obj.hintFont, obj.hintStyle, obj.hintFgColor,
         obj.hintBgColor, obj.hintActiveColor, obj.hintNormalColor,
-        obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks);
+        obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks, obj.hintAutoFollow);
       __createStyleSheet(document);
     },
     showHints : 

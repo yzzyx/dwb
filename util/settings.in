@@ -85,6 +85,7 @@ widget-packing text Packing of the main widgets; t (T)=tabbar (hidden), w=webvie
 
 # hints Hints
 hint-active-color text Color of active links in hintmode
+hint-autofollow checkbox Whether to follow hints automatically if only one hint matches the typed letters
 hint-bg-color text Background color of hints
 hint-border text Border used for hints
 hint-fg-color text Foreground color of hints
