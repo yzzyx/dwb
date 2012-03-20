@@ -125,11 +125,11 @@ download_get_download_label(WebKitDownload *download) {
 /* download_progress_cb(WebKitDownload *) {{{*/
 static void
 download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *status) {
-  GList *l = download_get_download_label(download); 
-  DwbDownload *label = l->data;
   /* Update at most four times a second */
   gint64 time = g_get_monotonic_time()/250000;
   if (time != status->time) {
+    GList *l = download_get_download_label(download); 
+    DwbDownload *label = l->data;
     double elapsed = webkit_download_get_elapsed_time(download);
     double progress = webkit_download_get_progress(download);
     double total_size = (double)webkit_download_get_total_size(download) / 0x100000;
@@ -137,9 +137,9 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
 
     double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
     guint remaining = (guint)(elapsed / progress - elapsed);
-    char *message = g_strdup_printf("[%d:%02d|%2d%%|%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
-    gtk_label_set_text(GTK_LABEL(label->rlabel), message);
-    g_free(message);
+    char buffer[128] = {0};
+    snprintf(buffer, 128, "[%d:%02d|%2d%%|%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
+    gtk_label_set_text(GTK_LABEL(label->rlabel), buffer);
 
 #if _HAS_GTK3
     gdouble red, green, blue, alpha;
@@ -175,6 +175,15 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
   }
   status->time = time;
 }/*}}}*/
+
+static void 
+download_finished(DwbDownload *d) {
+  char buffer[64];
+  double elapsed = webkit_download_get_elapsed_time(d->download);
+  double total_size = (double)webkit_download_get_total_size(d->download);
+  snprintf(buffer, 64, "[%.2f KB/s|%.3f MB]", (total_size / (elapsed*0x400)), total_size / 0x100000);
+  gtk_label_set_text(GTK_LABEL(d->rlabel), buffer);
+}
 
 /* download_do_spawn(const char *cmommand, const char *path, const char * *mimetype_request) {{{*/
 static void 
@@ -246,7 +255,7 @@ download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *d
       dstatus->time = 0;
       switch (status) {
         case WEBKIT_DOWNLOAD_STATUS_FINISHED: 
-          download_progress_cb(download, NULL, dstatus);
+          download_finished(label);
           break;
         case WEBKIT_DOWNLOAD_STATUS_CANCELLED: 
           gtk_label_set_text(GTK_LABEL(label->rlabel), "cancelled");

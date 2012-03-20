@@ -83,6 +83,11 @@ js_string_to_char(JSContextRef ctx, JSStringRef jsstring) {
   return ret;
 }/*}}}*/
 
+/* js_create_object(WebKitWebFrame *frame, const char *) 
+ *
+ * Executes a script in a function scope, should return an object with
+ * function-properties
+ * {{{*/
 JSObjectRef 
 js_create_object(WebKitWebFrame *frame, const char *script) {
   if (script == NULL)
@@ -114,7 +119,9 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
   }
   JSPropertyNameArrayRelease(array);
   return return_object;
-}
+}/*}}}*/
+
+/* js_call_as_function(WebKitWebFrame, JSObjectRef, char *string, char *json, * char **ret) {{{*/
 char *  
 js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *json, char **char_ret) {
   char *ret = NULL;
@@ -155,7 +162,7 @@ error_out:
   if (char_ret != NULL)
     *char_ret = ret;
   return ret;
-}
+}/*}}}*/
 
 /*{{{*/
 char *
