@@ -287,7 +287,7 @@ dwb_soup_set_ntlm(gboolean use_ntlm) {
 }
 
 /* dwb_soup_init_session_features() {{{*/
-void 
+DwbStatus 
 dwb_soup_init_session_features() {
   char *cert = GET_CHAR("ssl-ca-cert");
   if (cert != NULL && g_file_test(cert, G_FILE_TEST_EXISTS)) {
@@ -296,6 +296,7 @@ dwb_soup_init_session_features() {
   }
   g_object_set(dwb.misc.soupsession, SOUP_SESSION_SSL_STRICT, GET_BOOL("ssl-strict"), NULL);
   dwb_soup_set_ntlm(GET_BOOL("use-ntlm"));
+  return STATUS_OK;
   //soup_session_add_feature_by_type(dwb.misc.soupsession, SOUP_TYPE_AUTH_NTLM);
   //soup_session_add_feature(dwb.misc.soupsession, SOUP_SESSION_FEATURE(soup_content_sniffer_new()));
   //soup_session_add_feature_by_type(webkit_get_default_session(), SOUP_TYPE_CONTENT_SNIFFER);
