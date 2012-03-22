@@ -2654,7 +2654,6 @@ dwb_clean_up() {
   g_string_free(dwb.state.buffer, true);
   g_free(dwb.misc.hints);
   g_free(dwb.misc.hint_style);
-  g_free(dwb.misc.proxyuri);
   g_free(dwb.misc.scripts);
 
   dwb_free_list(dwb.fc.bookmarks, (void_func)dwb_navigation_free);
