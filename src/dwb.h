@@ -598,8 +598,10 @@ struct _View {
   struct {
     WebKitDOMElement *element;
     WebKitDOMElement *anchor;
-    WebKitDOMCSSStyleDeclaration *style;
   } hover;
+  WebKitDOMElement *status_element;
+  struct {
+  } hidden;
   JSObjectRef hint_object;
 };
 struct _Color {

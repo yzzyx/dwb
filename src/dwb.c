@@ -397,7 +397,10 @@ dwb_hide_message() {
     dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
   }
   else {
-    CLEAR_COMMAND_TEXT();
+    if (gtk_widget_get_visible(dwb.gui.bottombox)) 
+      CLEAR_COMMAND_TEXT();
+    else 
+      dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
   }
   return NULL;
 }/*}}}*/
@@ -414,7 +417,15 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
   vsnprintf(message, STRING_LENGTH, text, arg_list);
   va_end(arg_list);
 
-  dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.active_fg, dwb.font.fd_active, false);
+  if (gtk_widget_get_visible(dwb.gui.bottombox)) {
+    dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.active_fg, dwb.font.fd_active, false);
+  }
+  else {
+      WebKitDOMDocument *doc = webkit_web_view_get_dom_document(WEBVIEW(gl));
+      WebKitDOMElement *docelement = webkit_dom_document_get_document_element(doc);
+      webkit_dom_node_append_child(WEBKIT_DOM_NODE(docelement), WEBKIT_DOM_NODE(VIEW(gl)->status_element), NULL);
+      webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->status_element), message, NULL);
+  }
 
   dwb_source_remove();
   if (hide) {
@@ -436,7 +447,15 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
 
   dwb_source_remove();
 
-  dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.error, dwb.font.fd_active, false);
+  if (gtk_widget_get_visible(dwb.gui.bottombox)) {
+    dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.error, dwb.font.fd_active, false);
+  }
+  else {
+    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(WEBVIEW(gl));
+    WebKitDOMElement *docelement = webkit_dom_document_get_document_element(doc);
+    webkit_dom_node_append_child(WEBKIT_DOM_NODE(docelement), WEBKIT_DOM_NODE(VIEW(gl)->status_element), NULL);
+    webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->status_element), message, NULL);
+  }
   dwb.state.message_id = g_timeout_add_seconds(dwb.misc.message_delay, (GSourceFunc)dwb_hide_message, NULL);
   gtk_widget_hide(dwb.gui.entry);
 }/*}}}*/
@@ -524,7 +543,7 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
-DwbStatus
+DwbStatus/*{{{*/
 dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request) {
   const char *handler = GET_CHAR("scheme-handler");
   DwbStatus ret = STATUS_OK;
@@ -569,7 +588,7 @@ dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request) {
   g_free(scheme_handler);
   g_free(argv);
   return ret;
-}
+}/*}}}*/
 
 /* dwb_glist_prepend_unique(GList **list, char *text) {{{*/
 void
@@ -1310,6 +1329,7 @@ dwb_unfocus() {
     view_set_normal_style(dwb.state.fview);
     dwb_source_remove();
     CLEAR_COMMAND_TEXT();
+    dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
     dwb.state.fview = NULL;
   }
 } /*}}}*/
@@ -2296,6 +2316,8 @@ dwb_normal_mode(gboolean clean) {
     dwb_clean_key_buffer();
     CLEAR_COMMAND_TEXT();
   }
+  dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
+
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   dwb_clean_vars();

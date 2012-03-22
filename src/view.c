@@ -829,7 +829,18 @@ view_create_web_view() {
   webkit_dom_element_set_attribute(v->hover.anchor, "style", "text-decoration:none;color:inherit;", NULL);
   webkit_dom_node_append_child(WEBKIT_DOM_NODE(v->hover.element), WEBKIT_DOM_NODE(v->hover.anchor), NULL);
   webkit_dom_html_element_set_id(WEBKIT_DOM_HTML_ELEMENT(v->hover.element), "dwb_hover_element");
-  v->hover.style = webkit_dom_element_get_style(v->hover.element);
+
+  v->status_element = webkit_dom_document_create_element(doc, "div", NULL);
+  style = g_strdup_printf(
+      "bottom:0px;left:0px;position:fixed;z-index:1000;\
+      border-right:1px solid #555;\
+      border-top:1px solid #555;\
+      padding-left:2px;\
+      border-radius:0px 5px 0px 0px;background:%s;color:%s;font:normal 11px helvetica;letter-spacing:0px", 
+      GET_CHAR("background-color"), 
+      GET_CHAR("foreground-color"));
+  webkit_dom_element_set_attribute(v->status_element, "style", style, NULL);
+  g_free(style);
   return v;
 } /*}}}*/
 
@@ -891,7 +902,6 @@ view_remove(GList *gl) {
   }
 
   g_object_unref(v->hover.anchor);
-  g_object_unref(v->hover.style);
   g_object_unref(v->hover.element);
 
 
