@@ -671,10 +671,16 @@ aliases:
 .BR ssettings ).
 .TP
 .BR ss 
-Set setting (command
-.BR set_setting ,
-aliases:
-.BR settings ).
+Set setting, the interactive version of the command set, for changing settings
+in scripts use set instead (command
+.BR set_setting ).
+.TP
+.BR sl 
+Set local setting, changes a setting but doesn't save the setting to
+configuration file. The interactive version of the command local_set, for
+changing settings locally in scripts use local_set instead
+(command
+.BR set_local_setting ).
 .TP
 .BR sk
 Set keyboard shortcut (command
@@ -1002,6 +1008,9 @@ hints_win               |winhints, whi   |Follow hints in a new window
 history_back            |ba, back        |Go back
 history_forward         |fo, forward     |Go forward
 insert_mode             |i, insert       |Insert mode
+local_set               |                |Set a setting only for the running
+                        |                |instance, don't save it to the
+                        |                |configuration file
 lock_domain             |dlock           |Lock tab to current domain
 lock_uri                |ulock           |Lock tab to current uri
 new_tab                 |                |Open next navigation action in
@@ -1043,6 +1052,8 @@ scroll_top              |top             |Scroll to the top of the page
 scroll_up               |up              |Scroll up
 set                     |                |Set a setting
 set_key                 |keys            |Set keybinding
+set_local_setting       |                |Set a setting for the running instance
+                        |                |interactively
 set_setting             |                |Set a setting interactive
 show_keys               |skeys           |Show and modify keyboard
                         |                |configuration

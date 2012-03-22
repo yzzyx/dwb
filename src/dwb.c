@@ -1051,7 +1051,7 @@ dwb_toggle_setting(const char *key) {
 
 /* dwb_set_setting(const char *){{{*/
 DwbStatus
-dwb_set_setting(const char *key, char *value) {
+dwb_set_setting(const char *key, char *value, int scope) {
   WebSettings *s;
   Arg *a = NULL, oldarg = { .p = NULL };
   
@@ -1065,8 +1065,13 @@ dwb_set_setting(const char *key, char *value) {
         oldarg = s->arg;
         s->arg = *a;
         if (dwb_apply_settings(s) != STATUS_ERROR) {
-          dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
-          dwb_save_key_value(dwb.files.settings, key, value);
+          if (scope == SET_GLOBAL) {
+            dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
+            dwb_save_key_value(dwb.files.settings, key, value);
+          }
+          else {
+            dwb_set_normal_message(dwb.state.fview, true, "Changed %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
+          }
           ret = STATUS_OK;
         }
         else {
@@ -1241,6 +1246,7 @@ dwb_history_forward() {
 CompletionType 
 dwb_eval_completion_type(void) {
   switch (CLEAN_MODE(dwb.state.mode)) {
+    case SETTINGS_MODE_LOCAL:        
     case SETTINGS_MODE:         return COMP_SETTINGS;
     case KEY_MODE:              return COMP_KEY;
     case COMMAND_MODE:          return COMP_COMMAND;
@@ -2036,8 +2042,9 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case SEARCH_FIELD_MODE:   dwb_submit_searchengine();
                               return true;
+    case SETTINGS_MODE_LOCAL: 
     case SETTINGS_MODE:       token = g_strsplit(GET_TEXT(), " ", 2);
-                              dwb_set_setting(token[0], token[1]);
+                              dwb_set_setting(token[0], token[1], dwb.state.mode == SETTINGS_MODE ? SET_GLOBAL : SET_LOCAL);
                               dwb_change_mode(NORMAL_MODE, false);
                               g_strfreev(token);
                               return true;
@@ -2780,8 +2787,6 @@ dwb_save_list(GList *list, const char *filename, int limit) {
 /* dwb_save_files() {{{*/
 gboolean 
 dwb_save_files(gboolean end_session) {
-  dwb_save_keys();
-  dwb_save_settings();
   if (dwb.misc.synctimer > 0) {
     dwb_sync_history(NULL);
   }
@@ -2797,6 +2802,13 @@ dwb_save_files(gboolean end_session) {
   return true;
 }
 /* }}} */
+
+gboolean 
+dwb_save_all_files() {
+  dwb_save_keys();
+  dwb_save_settings();
+  return dwb_save_files(false);
+}
 
 /* dwb_end() {{{*/
 gboolean

@@ -98,7 +98,7 @@ commands_add_view(KeyMap *km, Arg *arg) {
 /* commands_set_setting {{{*/
 DwbStatus 
 commands_set_setting(KeyMap *km, Arg *arg) {
-  dwb.state.mode = SETTINGS_MODE;
+  dwb.state.mode = arg->n;
   entry_focus();
   return STATUS_OK;
 }/*}}}*/
@@ -587,7 +587,7 @@ commands_new_window_or_view(KeyMap *km, Arg *arg) {
 /* commands_save_files(KeyMap *km, Arg *arg) {{{*/
 DwbStatus 
 commands_save_files(KeyMap *km, Arg *arg) {
-  if (dwb_save_files(false)) {
+  if (dwb_save_all_files()) {
     dwb_set_normal_message(dwb.state.fview, true, "Configuration files saved");
     return STATUS_OK;
   }
@@ -794,7 +794,7 @@ DwbStatus
 commands_set(KeyMap *km, Arg *arg) {
   const char *command = util_str_chug(arg->p);
   char **args = g_strsplit(command, " ", 2);
-  DwbStatus ret = dwb_set_setting(args[0], args[1]);
+  DwbStatus ret = dwb_set_setting(args[0], args[1], arg->n);
   g_strfreev(args);
   return ret;
 }/*}}}*/

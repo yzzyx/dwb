@@ -225,6 +225,10 @@ typedef enum  {
   COMP_QUICKMARK,
 } CompletionType;
 
+enum SetSetting {
+  SET_GLOBAL, 
+  SET_LOCAL, 
+};
 enum {
   EP_NONE = 0,
   EP_COMP_DEFAULT = 1<<1,
@@ -304,6 +308,7 @@ typedef enum {
   COMPLETE_QUICKMARKS   = 1<<18,
   COMPLETE_COMMAND_MODE = 1<<19,
   CONFIRM               = 1<<21,
+  SETTINGS_MODE_LOCAL   = 1<<22,
 } Mode;
 
 
@@ -820,7 +825,7 @@ Key dwb_str_to_key(char *);
 GList * dwb_keymap_add(GList *, KeyValue );
 
 void dwb_save_settings(void);
-gboolean dwb_save_files(gboolean);
+gboolean dwb_save_all_files(void);
 CompletionType dwb_eval_completion_type(void);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);
@@ -833,7 +838,7 @@ char * dwb_get_host(WebKitWebView *);
 void dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
 void dwb_set_key(const char *, char *);
-DwbStatus dwb_set_setting(const char *, char *value);
+DwbStatus dwb_set_setting(const char *, char *value, int);
 DwbStatus dwb_toggle_setting(const char *);
 DwbStatus dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
