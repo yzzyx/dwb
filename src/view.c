@@ -815,15 +815,19 @@ view_create_web_view() {
   WebKitDOMDocument *doc = webkit_web_view_get_dom_document(WEBKIT_WEB_VIEW(v->web));
   v->hover.element = webkit_dom_document_create_element(doc, "div", NULL);
   v->hover.anchor = webkit_dom_document_create_element(doc, "a", NULL);
+  char *font = GET_CHAR("font-hidden-statusbar");
+  char *bgcolor = GET_CHAR("background-color");
+  char *fgcolor = GET_CHAR("foreground-color");
   gchar *style = g_strdup_printf(
       "bottom:0px;right:0px;position:fixed;z-index:1000;\
       text-overflow:ellipsis;white-space:nowrap;overflow:hidden;max-width:100%%;\
       border-left:1px solid #555;\
       border-top:1px solid #555;\
       padding-left:2px;\
-      border-radius:5px 0px 0px 0px;background:%s;color:%s;font:normal 11px helvetica;letter-spacing:0px", 
-      GET_CHAR("background-color"), 
-      GET_CHAR("foreground-color"));
+      border-radius:5px 0px 0px 0px;letter-spacing:0px;background:%s;color:%s;font:%s", 
+      bgcolor, 
+      fgcolor, 
+      font);
   webkit_dom_element_set_attribute(v->hover.element, "style", style, NULL);
   g_free(style);
   webkit_dom_element_set_attribute(v->hover.anchor, "style", "text-decoration:none;color:inherit;", NULL);
@@ -836,9 +840,10 @@ view_create_web_view() {
       border-right:1px solid #555;\
       border-top:1px solid #555;\
       padding-left:2px;\
-      border-radius:0px 5px 0px 0px;background:%s;color:%s;font:normal 11px helvetica;letter-spacing:0px", 
-      GET_CHAR("background-color"), 
-      GET_CHAR("foreground-color"));
+      border-radius:0px 5px 0px 0px;letter-spacing:0px;background:%s;color:%s;font:%s;", 
+      bgcolor, 
+      fgcolor, 
+      font);
   webkit_dom_element_set_attribute(v->status_element, "style", style, NULL);
   g_free(style);
   return v;

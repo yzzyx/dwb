@@ -33,8 +33,9 @@ default-font-size text Default font size used to display text
 default-monospace-font-size text Default monospace font size used to display text
 fantasy-font-family text Fantasy font family used to display text
 font text Default font used for the ui
-font-completion text Font for tab-completion
 font-entry text Font for the addressbar
+font-hidden-statusbar text Font for the status elements if statusbar is hidden 
+font-nofocus text Font of tabs/completion items without focus
 minimum-font-size text Minimum font size used to display text
 minimum-logical-font-size text Minimum logical font size used to display text
 monospace-font-family text Monospace font family used to display text

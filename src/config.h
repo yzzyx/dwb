@@ -972,6 +972,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
   { { "font-nofocus",                           "Font of tabs/completion items without focus", },                  
     SETTING_GLOBAL,  CHAR, { .p = NULL                   },   (S_Func) dwb_reload_layout,  },
+  { { "font-hidden-statusbar",                           "Font for status elements if statusbar is hidden", },                  
+    SETTING_GLOBAL,  CHAR, { .p = "normal 10px helvetica"              },   (S_Func) NULL,  }, 
    
   { { "hint-style",                              "Whether to use 'letter' or 'number' hints", },                     
     SETTING_GLOBAL,  CHAR, { .p = "letter"            },     (S_Func) dwb_init_hints,  },
