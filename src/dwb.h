@@ -695,6 +695,7 @@ struct _Misc {
 
   char *pbbackground;
   int synctimer;
+  int sync_interval;
   int bar_height;
   char *fifo;
   TabPosition tab_position;

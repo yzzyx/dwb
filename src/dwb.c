@@ -217,6 +217,7 @@ dwb_set_sync_interval(GList *gl, WebSettings *s) {
     g_source_remove(dwb.misc.synctimer);
     dwb.misc.synctimer = 0;
   }
+  dwb.misc.sync_interval = s->arg.i;
 
   if (s->arg.i > 0) {
     dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_history, NULL);
