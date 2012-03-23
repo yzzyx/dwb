@@ -55,8 +55,8 @@ commands_simple_command(KeyMap *km) {
       if (km->map->hide == NEVER_SM) 
         dwb_set_normal_message(dwb.state.fview, false, "%s:", km->map->n.second);
       else if (km->map->hide == ALWAYS_SM) {
-        CLEAR_COMMAND_TEXT();
         gtk_widget_hide(dwb.gui.entry);
+        CLEAR_COMMAND_TEXT();
       }
       break;
     case STATUS_ERROR: 

@@ -394,7 +394,7 @@ dwb_source_remove() {
 static gpointer 
 dwb_hide_message() {
   if (dwb.state.mode & INSERT_MODE) {
-    dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
+    dwb_set_normal_message(dwb.state.fview, false, INSERT_MODE_STRING);
   }
   else {
     if (gtk_widget_get_visible(dwb.gui.bottombox)) 
@@ -2277,11 +2277,8 @@ dwb_eval_override_key(GdkEventKey *e, CommandProperty prop) {
 /* dwb_insert_mode(Arg *arg) {{{*/
 static DwbStatus
 dwb_insert_mode(void) {
-  if (dwb.state.mode == HINT_MODE) {
-    dwb_set_normal_message(dwb.state.fview, true, INSERT);
-  }
-  dwb_set_normal_message(dwb.state.fview, false, "-- INSERT MODE --");
   dwb_focus_scroll(dwb.state.fview);
+  dwb_set_normal_message(dwb.state.fview, false, INSERT_MODE_STRING);
 
   dwb.state.mode = INSERT_MODE;
   return STATUS_OK;

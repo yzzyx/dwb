@@ -839,7 +839,7 @@ view_create_web_view() {
       "bottom:0px;left:0px;position:fixed;z-index:1000;\
       border-right:1px solid #555;\
       border-top:1px solid #555;\
-      padding-left:2px;\
+      padding-right:2px;\
       border-radius:0px 5px 0px 0px;letter-spacing:0px;background:%s;color:%s;font:%s;", 
       bgcolor, 
       fgcolor, 

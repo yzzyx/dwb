@@ -40,6 +40,7 @@
 #define BUFFER_LENGTH 256
 
 #define INSERT "Insert Mode"
+#define INSERT_MODE_STRING  "-- INSERT MODE --"
 
 #define NO_URL                      "No URL in current context"
 #define NO_HINTS                    "No Hints in current context"
