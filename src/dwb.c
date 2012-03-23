@@ -3433,8 +3433,8 @@ dwb_get_search_completion(const char *text) {
 static inline void
 dwb_check_create(const char *filename) {
   if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
-    FILE *file = fopen(filename, "w");
-    fclose(file);
+    int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    close(fd);
   }
 }
 /* dwb_init_files() {{{*/
