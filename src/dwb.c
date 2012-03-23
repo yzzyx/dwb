@@ -2824,6 +2824,8 @@ dwb_save_files(gboolean end_session) {
 
 gboolean 
 dwb_save_all_files() {
+  dwb_save_keys();
+  dwb_save_settings();
   return dwb_save_files(false);
 }
 
