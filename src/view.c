@@ -908,6 +908,7 @@ view_remove(GList *gl) {
 
   g_object_unref(v->hover.anchor);
   g_object_unref(v->hover.element);
+  g_object_unref(v->status_element);
 
 
   /* Destroy widget */
