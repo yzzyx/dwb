@@ -3430,6 +3430,13 @@ dwb_get_search_completion(const char *text) {
   return dwb_get_search_completion_from_navigation(n);
 }
 
+static inline void
+dwb_check_create(const char *filename) {
+  if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
+    FILE *file = fopen(filename, "w");
+    fclose(file);
+  }
+}
 /* dwb_init_files() {{{*/
 void
 dwb_init_files() {
@@ -3451,23 +3458,35 @@ dwb_init_files() {
   dwb.files.cachedir = util_check_directory(cachedir);
 
   dwb.files.bookmarks       = g_build_filename(profile_path, "bookmarks",     NULL);
+  dwb_check_create(dwb.files.bookmarks);
   dwb.files.history         = g_build_filename(profile_path, "history",       NULL);
-  dwb.files.stylesheet      = g_build_filename(profile_path, "stylesheet",    NULL);
+  dwb_check_create(dwb.files.history);
   dwb.files.quickmarks      = g_build_filename(profile_path, "quickmarks",    NULL);
+  dwb_check_create(dwb.files.quickmarks);
   dwb.files.session         = g_build_filename(profile_path, "session",       NULL);
+  dwb_check_create(dwb.files.session);
   dwb.files.navigation_history = g_build_filename(profile_path, "navigate.history",       NULL);
+  dwb_check_create(dwb.files.navigation_history);
   dwb.files.command_history = g_build_filename(profile_path, "commands.history",       NULL);
+  dwb_check_create(dwb.files.command_history);
   dwb.files.searchengines   = g_build_filename(path, "searchengines", NULL);
+  dwb_check_create(dwb.files.searchengines);
   dwb.files.keys            = g_build_filename(path, "keys",          NULL);
   dwb.files.settings        = g_build_filename(path, "settings",      NULL);
   dwb.files.mimetypes       = g_build_filename(path, "mimetypes",      NULL);
+  dwb_check_create(dwb.files.mimetypes);
   dwb.files.cookies         = g_build_filename(profile_path, "cookies",       NULL);
+  dwb_check_create(dwb.files.cookies);
   dwb.files.cookies_allow   = g_build_filename(profile_path, "cookies.allow", NULL);
+  dwb_check_create(dwb.files.cookies_allow);
   dwb.files.cookies_session_allow   = g_build_filename(profile_path, "cookies_session.allow", NULL);
-  dwb.files.adblock         = g_build_filename(path, "adblock",      NULL);
+  dwb_check_create(dwb.files.cookies_session_allow);
   dwb.files.scripts_allow   = g_build_filename(profile_path, "scripts.allow",      NULL);
+  dwb_check_create(dwb.files.scripts_allow);
   dwb.files.plugins_allow   = g_build_filename(profile_path, "plugins.allow",      NULL);
+  dwb_check_create(dwb.files.plugins_allow);
   dwb.files.custom_keys     = g_build_filename(profile_path, "custom_keys",      NULL);
+  dwb_check_create(dwb.files.custom_keys);
 
   scripts                   = g_build_filename(path, "scripts",      NULL);
   dwb.files.scriptdir       = util_check_directory(scripts);

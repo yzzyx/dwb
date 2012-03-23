@@ -720,9 +720,7 @@ struct _Files {
   const char *searchengines;
   const char *session;
   const char *settings;
-  const char *stylesheet;
   const char *userscripts;
-  const char *adblock;
   const char *scripts_allow;
   const char *plugins_allow;
   const char *cachedir;
