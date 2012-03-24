@@ -130,8 +130,9 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *
   JSStringRef js_json, js_name = NULL;
   JSContextRef ctx;
 
-  if (obj == NULL) 
+  if (obj == NULL)  {
     goto error_out;
+  }
 
   ctx = webkit_web_frame_get_global_context(frame);
   js_name = JSStringCreateWithUTF8CString(string);

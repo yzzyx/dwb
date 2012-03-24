@@ -1286,10 +1286,6 @@ dwb_clean_load_begin(GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
   }
   view_set_favicon(gl, false);
-  if (v->hint_object != NULL) {
-    JSValueUnprotect(JS_CONEXT_REF(gl), v->hint_object);
-    v->hint_object = NULL;
-  }
 }/*}}}*/
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/

@@ -112,7 +112,7 @@
 #define CLEAR_COMMAND_TEXT()        dwb_set_status_bar_text(dwb.gui.lstatus, NULL, NULL, NULL, false)
 #define BOOLEAN(X)                  (!(!(X)))
 #define NAVIGATION(X)               ((Navigation*)((X)->data))
-#define JS_CONEXT_REF(X)            (webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(WEBVIEW(gl))))
+#define JS_CONTEXT_REF(X)            (webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(WEBVIEW(gl))))
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 

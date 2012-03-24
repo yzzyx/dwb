@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <gdk/gdkkeysyms.h> 
+#include <JavaScriptCore/JavaScript.h> 
 #include "dwb.h"
 #include "commands.h"
 #include "util.h"
@@ -520,6 +521,10 @@ view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   if (status == WEBKIT_LOAD_COMMITTED) {
     dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
+    if (VIEW(gl)->hint_object != NULL) {
+      JSValueUnprotect(JS_CONTEXT_REF(gl), VIEW(gl)->hint_object);
+      VIEW(gl)->hint_object = NULL;
+    }
     VIEW(gl)->hint_object = js_create_object(webkit_web_view_get_main_frame(web), dwb.misc.hints);
   }
 }/*}}}*/
