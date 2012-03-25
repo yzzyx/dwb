@@ -539,13 +539,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
-      if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
-        g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
-        v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
-      }
-      if (v->plugins->status & PLUGIN_STATUS_ENABLED) 
-        plugins_connect(gl);
-      dwb_clean_load_begin(gl);
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       /* This is more or less a dummy call, to compile the script and speed up
@@ -555,6 +548,13 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_COMMITTED: 
       view_ssl_state(gl);
+      if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
+        g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
+        v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
+      }
+      if (v->plugins->status & PLUGIN_STATUS_ENABLED) 
+        plugins_connect(gl);
+      dwb_clean_load_begin(gl);
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
           && (((host = dwb_get_host(web)) 
           && (dwb_get_allowed(dwb.files.scripts_allow, host) || dwb_get_allowed(dwb.files.scripts_allow, uri) 
