@@ -3715,11 +3715,15 @@ dwb_parse_command_line(const char *line) {
   }
   g_strfreev(token);
   dwb_glist_prepend_unique(&dwb.fc.commands, g_strdup(line));
+  dwb.state.nummod = -1;
   /* Check for dwb.keymap is necessary for commands that quit dwb. */
-  if (dwb.keymap != NULL && m != NULL && !(m->map->prop & CP_HAS_MODE) && !(m->map->prop & CP_DONT_CLEAN)) {
+  if (dwb.keymap == NULL || m == NULL)
+    return ret;
+  if (m->map->prop & CP_HAS_MODE)
+    return STATUS_OK;
+  if (!(m->map->prop & CP_DONT_CLEAN) || ( m->map->prop & CP_NEEDS_ARG && (token[1] == NULL)) ) {
     dwb_change_mode(NORMAL_MODE, dwb.state.message_id == 0);
   }
-  dwb.state.nummod = -1;
   return ret;
 }/*}}}*/
 void 
