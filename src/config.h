@@ -416,7 +416,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_open,           NULL,                       NEVER_SM,   
     { .i = HTML_STRING, .n = OPEN_NEW_VIEW,    .p = NULL }, EP_NONE, { NULL }, },
   
-  { { "open",                  "open",                              }, CP_COMMANDLINE | CP_DONT_CLEAN, 
+  { { "open",                  "open",                              }, CP_COMMANDLINE | CP_DONT_CLEAN | CP_NEEDS_ARG, 
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NORMAL,      .p = NULL }, EP_COMP_DEFAULT, { "o", NULL }, },
   
@@ -424,7 +424,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NORMAL | SET_URL, .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
   
-  { { "tabopen",               "tabopen",                          }, CP_COMMANDLINE | CP_DONT_CLEAN, 
+  { { "tabopen",               "tabopen",                          }, CP_COMMANDLINE | CP_DONT_CLEAN | CP_NEEDS_ARG, 
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NEW_VIEW,     .p = NULL }, EP_COMP_DEFAULT, { "t", "topen", NULL }, },
   
@@ -432,7 +432,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
   
-  { { "winopen",               "winopen",                           }, CP_COMMANDLINE | CP_DONT_CLEAN, 
+  { { "winopen",               "winopen",                           }, CP_COMMANDLINE | CP_DONT_CLEAN | CP_NEEDS_ARG, 
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NEW_WINDOW,     .p = NULL }, EP_COMP_DEFAULT, { "w", "wopen", NULL }, },
   

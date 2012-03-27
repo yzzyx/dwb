@@ -340,14 +340,18 @@ commands_history(KeyMap *km, Arg *arg) {
 /* commands_open(KeyMap *km, Arg *arg) {{{*/
 DwbStatus  
 commands_open(KeyMap *km, Arg *arg) {
+
   if (dwb.state.nv & OPEN_NORMAL)
     dwb_set_open_mode(arg->n & ~SET_URL);
 
   if (arg)
     dwb.state.type = arg->i;
 
+  
   if (arg && arg->p && ! (arg->n & SET_URL)) {
     dwb_load_uri(NULL, arg->p);
+    CLEAR_COMMAND_TEXT();
+    return STATUS_OK;
   }
   else {
     entry_focus();
