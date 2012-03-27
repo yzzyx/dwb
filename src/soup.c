@@ -25,6 +25,7 @@
 static SoupCookieJar *_jar;
 static guint _changed_id;
 static SoupCookieJar *_tmpJar;
+static SoupCookieJar *_persJar;
 
 /* dwb_soup_allow_cookie(GList *, const char, CookieStorePolicy) {{{*/
 static DwbStatus
@@ -220,15 +221,13 @@ dwb_soup_get_cookie_store_policy(const char *policy) {
 /*dwb_soup_cookie_changed_cb {{{*/
 static void 
 dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new, gpointer *p) {
-  int fd = open(dwb.files.cookies, 0);
-  flock(fd, LOCK_EX);
-  SoupCookieJar *j = soup_cookie_jar_text_new(dwb.files.cookies, false);
+  //SoupCookieJar *j = soup_cookie_jar_text_new(dwb.files.cookies, false);
   if (old) {
-    soup_cookie_jar_delete_cookie(j, old);
+    soup_cookie_jar_delete_cookie(_persJar, old);
   }
   if (new) {
     if (dwb.state.cookie_store_policy == COOKIE_STORE_PERSISTENT || dwb_soup_test_cookie_allowed(dwb.fc.cookies_allow, new)) {
-      soup_cookie_jar_add_cookie(j, soup_cookie_copy(new));
+      soup_cookie_jar_add_cookie(_persJar, soup_cookie_copy(new));
     }
     else { 
       soup_cookie_jar_add_cookie(_tmpJar, soup_cookie_copy(new));
@@ -239,16 +238,33 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
       }
     }
   }
+  if (dwb.misc.sync_interval <= 0) 
+    dwb_soup_sync_cookies();
+
+}/*}}}*/
+
+void
+dwb_soup_sync_cookies() {
+  int fd = open(dwb.files.cookies, 0);
+  flock(fd, LOCK_EX);
+  GSList *all_cookies = soup_cookie_jar_all_cookies(_persJar);
+  SoupCookieJar *j = soup_cookie_jar_text_new(dwb.files.cookies, false);
+  for (GSList *l = all_cookies; l; l=l->next) {
+    soup_cookie_jar_add_cookie(j, l->data);
+  }
+  g_slist_free(all_cookies);
   g_object_unref(j);
   flock(fd, LOCK_UN);
   close(fd);
-}/*}}}*/
+}
 
 /* dwb_soup_init_cookies {{{*/
 void
 dwb_soup_init_cookies(SoupSession *s) {
   _jar = soup_cookie_jar_new(); 
   _tmpJar = soup_cookie_jar_new();
+  //_persJar = soup_cookie_jar_new();
+  _persJar = soup_cookie_jar_new();
   dwb_soup_set_cookie_accept_policy(GET_CHAR("cookies-accept-policy"));
   SoupCookieJar *old_cookies = soup_cookie_jar_text_new(dwb.files.cookies, true);
   GSList *l = soup_cookie_jar_all_cookies(old_cookies);
@@ -307,6 +323,8 @@ void
 dwb_soup_end() {
   g_object_unref(_tmpJar);
   g_object_unref(_jar);
+  dwb_soup_sync_cookies();
+  g_object_unref(_persJar);
   g_free(dwb.misc.proxyuri);
 }/*}}}*/
 

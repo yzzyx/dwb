@@ -748,6 +748,8 @@ struct _FileContent {
   GList *adblock;
   GList *tmp_scripts;
   GList *tmp_plugins;
+  GList *pers_scripts; 
+  GList *pers_plugins; 
   GList *downloads;
 };
 
@@ -835,7 +837,7 @@ void dwb_clean_load_end(GList *);
 void dwb_clean_load_begin(GList *);
 void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
-gboolean dwb_toggle_allowed(const char *, const char *);
+gboolean dwb_toggle_allowed(const char *, const char *, GList **);
 char * dwb_get_host(WebKitWebView *);
 void dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
@@ -882,6 +884,7 @@ DwbStatus dwb_pack(const char *layout, gboolean rebuild);
 void dwb_init_signals(void);
 void dwb_parse_commands(const char *line);
 DwbStatus dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request);
+GList *dwb_get_simple_list(GList *, const char *filename);
 
 gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 

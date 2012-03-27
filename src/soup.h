@@ -20,6 +20,7 @@
 #define COOKIES_H
 
 void dwb_soup_clean(void);
+void dwb_soup_sync_cookies(void);
 void dwb_soup_allow_cookie_tmp(void);
 DwbStatus dwb_soup_allow_cookie(GList **, const char *, CookieStorePolicy);
 const char * dwb_soup_get_host_from_request(WebKitNetworkRequest *);

@@ -527,7 +527,7 @@ commands_complete_type(KeyMap *km, Arg *arg) {
 }/*}}}*/
 
 void
-commands_toggle(Arg *arg, const char *filename, GList **tmp, const char *message) {
+commands_toggle(Arg *arg, const char *filename, GList **tmp, GList **pers, const char *message) {
   char *host = NULL;
   const char *block = NULL;
   gboolean allowed;
@@ -556,7 +556,7 @@ commands_toggle(Arg *arg, const char *filename, GList **tmp, const char *message
       dwb_set_normal_message(dwb.state.fview, true, "%s temporarily %s for %s", message, allowed ? "allowed" : "blocked", block);
     }
     else {
-      allowed = dwb_toggle_allowed(filename, block);
+      allowed = dwb_toggle_allowed(filename, block, pers);
       dwb_set_normal_message(dwb.state.fview, true, "%s %s for %s", message, allowed ? "allowed" : "blocked", block);
     }
   }
@@ -566,14 +566,14 @@ commands_toggle(Arg *arg, const char *filename, GList **tmp, const char *message
 
 DwbStatus 
 commands_toggle_plugin_blocker(KeyMap *km, Arg *arg) {
-  commands_toggle(arg, dwb.files.plugins_allow, &dwb.fc.tmp_plugins, "Plugins");
+  commands_toggle(arg, dwb.files.plugins_allow, &dwb.fc.tmp_plugins, &dwb.fc.pers_plugins, "Plugins");
   return STATUS_OK;
 }
 
 /* commands_toggle_scripts {{{ */
 DwbStatus 
 commands_toggle_scripts(KeyMap *km, Arg *arg) {
-  commands_toggle(arg, dwb.files.scripts_allow, &dwb.fc.tmp_scripts, "Scripts");
+  commands_toggle(arg, dwb.files.scripts_allow, &dwb.fc.tmp_scripts,  &dwb.fc.pers_scripts, "Scripts");
   return STATUS_OK;
 }/*}}}*/
 

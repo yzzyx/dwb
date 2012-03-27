@@ -70,7 +70,7 @@ static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
 static DwbStatus dwb_init_hints(GList *gl, WebSettings *s);
 
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
-static gboolean dwb_sync_history(gpointer);
+static gboolean dwb_sync_files(gpointer);
 static void dwb_save_key_value(const char *file, const char *key, const char *value);
 
 static gboolean dwb_editable_focus_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl);
@@ -220,7 +220,7 @@ dwb_set_sync_interval(GList *gl, WebSettings *s) {
   dwb.misc.sync_interval = s->arg.i;
 
   if (s->arg.i > 0) {
-    dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_history, NULL);
+    dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_files, NULL);
   }
   return STATUS_OK;
 }/*}}}*/
@@ -966,7 +966,7 @@ dwb_remove_quickmark(const char *line) {
 
 /* dwb_sync_history {{{*/
 static gboolean
-dwb_sync_history(gpointer data) {
+dwb_sync_files(gpointer data) {
   GString *buffer = g_string_new(NULL);
   for (GList *gl = dwb.fc.history; gl; gl=gl->next) {
     Navigation *n = gl->data;
@@ -974,6 +974,7 @@ dwb_sync_history(gpointer data) {
   }
   g_file_set_contents(dwb.files.history, buffer->str, -1, NULL);
   g_string_free(buffer, true);
+  dwb_soup_sync_cookies();
   return true;
 }/*}}}*/
 
@@ -1158,46 +1159,45 @@ dwb_focus_view(GList *gl) {
   }
 }/*}}}*/
 
-/* dwb_get_allowed(const char *filename, const char *data) {{{*/
-gboolean 
-dwb_get_allowed(const char *filename, const char *data) {
-  char *content;
-  gboolean ret = false;
-  g_file_get_contents(filename, &content, NULL, NULL);
-  if (content) {
-    char **lines = g_strsplit(content, "\n", -1);
-    for (int i=0; i<g_strv_length(lines); i++) {
-      if (!g_strcmp0(lines[i], data)) {
-        ret = true; 
-        break;
-      }
-    }
-    g_strfreev(lines);
-    g_free(content);
-  }
-  return ret;
-}/*}}}*/
-
 /* dwb_toggle_allowed(const char *filename, const char *data) {{{*/
 gboolean 
-dwb_toggle_allowed(const char *filename, const char *data) {
-  char *content = NULL;
+dwb_toggle_allowed(const char *filename, const char *data, GList **pers) {
   if (!data)
     return false;
-  gboolean allowed = dwb_get_allowed(filename, data);
-  g_file_get_contents(filename, &content, NULL, NULL);
+  char *content = util_get_file_content(filename);
+  char **lines = NULL;
+  gboolean allowed = false;
+  if (content != NULL) {
+    lines = util_get_lines(filename);
+    if (lines != NULL)  {
+      for (int i=0; lines[i] != NULL; i++) {
+        if (!g_strcmp0(lines[i], data)) {
+          allowed = true;
+          break;
+        }
+      } 
+    }
+  }
   GString *buffer = g_string_new(NULL);
   if (!allowed) {
     if (content) {
       g_string_append(buffer, content);
     }
     g_string_append_printf(buffer, "%s\n", data);
+    *pers = g_list_prepend(*pers, g_strdup(data));
+    g_strfreev(lines);
   }
   else if (content) {
-    char **lines = g_strsplit(content, "\n", -1);
-    for (int i=0; i<g_strv_length(lines); i++) {
-      if (strlen(lines[i]) && g_strcmp0(lines[i], data)) {
-        g_string_append_printf(buffer, "%s\n", lines[i]);
+    if (pers != NULL) {
+      dwb_free_list(*pers, (void_func)g_free);
+      *pers = NULL;
+    }
+    if (lines != NULL) {
+      for (int i=0; lines[i] != NULL; i++) {
+        if (strlen(lines[i]) && g_strcmp0(lines[i], data)) {
+          g_string_append_printf(buffer, "%s\n", lines[i]);
+          *pers = g_list_prepend(*pers, lines[i]);
+        }
       }
     }
   }
@@ -2684,6 +2684,8 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.navigations, (void_func)g_free);
   dwb_free_list(dwb.fc.commands, (void_func)g_free);
   dwb_free_list(dwb.misc.userscripts, (void_func)dwb_navigation_free);
+  dwb_free_list(dwb.fc.pers_plugins, (void_func)g_free);
+  dwb_free_list(dwb.fc.pers_scripts, (void_func)g_free);
   dwb_free_custom_keys();
 
   dwb_soup_end();
@@ -2802,9 +2804,7 @@ dwb_save_list(GList *list, const char *filename, int limit) {
 /* dwb_save_files() {{{*/
 gboolean 
 dwb_save_files(gboolean end_session) {
-  if (dwb.misc.synctimer > 0) {
-    dwb_sync_history(NULL);
-  }
+  dwb_sync_files(NULL);
   /* Save command history */
   if (! dwb.misc.private_browsing) {
     dwb_save_list(dwb.fc.navigations, dwb.files.navigation_history, GET_INT("navigation-history-max"));
@@ -3435,6 +3435,24 @@ dwb_check_create(const char *filename) {
     close(fd);
   }
 }
+GList *
+dwb_get_simple_list(GList *gl, const char *filename) {
+  if (gl != NULL) {
+    for (GList *l = gl; l; l=l->next) {
+      g_free(l->data);
+    }
+    g_list_free(gl);
+    gl = NULL;
+  }
+  char **lines = util_get_lines(filename);
+  if (lines == NULL)
+    return NULL;
+  for (int i=0; lines[i]; i++) {
+    gl = g_list_prepend(gl, lines[i]);
+  }
+  return gl;
+}
+
 /* dwb_init_files() {{{*/
 void
 dwb_init_files() {
@@ -3502,6 +3520,8 @@ dwb_init_files() {
   dwb.fc.tmp_scripts = NULL;
   dwb.fc.tmp_plugins = NULL;
   dwb.fc.downloads   = NULL;
+  dwb.fc.pers_scripts = dwb_get_simple_list(NULL, dwb.files.scripts_allow);
+  dwb.fc.pers_plugins = dwb_get_simple_list(NULL, dwb.files.plugins_allow);
 
   if (g_list_last(dwb.fc.searchengines)) 
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;
