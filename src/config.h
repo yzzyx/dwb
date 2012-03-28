@@ -569,16 +569,16 @@ static FunctionMap FMAP [] = {
     { 0 }, EP_NONE, { "source", "so", NULL }, },
   
   { { "zoom_in",               "Zoom in",                           }, CP_COMMANDLINE, 
-    (Func)commands_zoom_in,             "Cannot zoom in further",          ALWAYS_SM, 
-    { 0 }, EP_NONE, { "zi", NULL }, },
+    (Func)commands_zoom,             "Cannot zoom in further",          POST_SM, 
+    { .i = 1 }, EP_NONE, { "zi", NULL }, },
   
   { { "zoom",                 "Zoom",                         }, CP_COMMANDLINE, 
-    (Func)commands_set_zoom_level,      NULL,                              ALWAYS_SM,    
+    (Func)commands_set_zoom_level,      NULL,                              POST_SM,    
     { .d = 1.0,   .p = NULL }, EP_NONE, { "z", NULL }, },
   
   { { "zoom_out",              "Zoom out",                          }, CP_COMMANDLINE, 
-    (Func)commands_zoom_out,            "Cannot zoom out further",         ALWAYS_SM, 
-    { 0 }, EP_NONE, { "zo", NULL }, },
+    (Func)commands_zoom,            "Cannot zoom out further",         POST_SM, 
+    { .i = -1 }, EP_NONE, { "zo", NULL }, },
   
   /* yank and paste */
   

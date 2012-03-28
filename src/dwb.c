@@ -2138,13 +2138,14 @@ dwb_eval_key(GdkEventKey *e) {
     return false;
   }
   /* Multimedia keys */
+  Arg a = { .i = 1 };
   switch (keyval) {
     case GDK_KEY_Back : dwb_history_back(); return true;
     case GDK_KEY_Forward : dwb_history_forward(); return true;
     case GDK_KEY_Cancel : commands_stop_loading(NULL, NULL); return true;
     case GDK_KEY_Reload : commands_reload(NULL, NULL); return true;
-    case GDK_KEY_ZoomIn : commands_zoom_in(NULL, NULL); return true;
-    case GDK_KEY_ZoomOut : commands_zoom_out(NULL, NULL); return true;
+    case GDK_KEY_ZoomIn : commands_zoom(NULL, &a); return true;
+    case GDK_KEY_ZoomOut : a.i = -1; commands_zoom(NULL, &a); return true;
   }
   char *key = dwb_get_key(e, &mod_mask, &isprint);
   if (key == NULL)

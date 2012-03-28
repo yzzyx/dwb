@@ -286,31 +286,13 @@ commands_view_source(KeyMap *km, Arg *arg) {
 
 /* commands_zoom_in(void *arg) {{{*/
 DwbStatus
-commands_zoom_in(KeyMap *km, Arg *arg) {
+commands_zoom(KeyMap *km, Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
 
-  for (int i=0; i<NUMMOD; i++) {
-    if ((webkit_web_view_get_zoom_level(web) > 4.0)) {
-      return STATUS_ERROR;
-    }
-    webkit_web_view_zoom_in(web);
-  }
-  return STATUS_OK;
-}/*}}}*/
-
-/* commands_zoom_out(void *arg) {{{*/
-DwbStatus
-commands_zoom_out(KeyMap *km, Arg *arg) {
-  View *v = dwb.state.fview->data;
-  WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
-
-  for (int i=0; i<NUMMOD; i++) {
-    if ((webkit_web_view_get_zoom_level(web) < 0.25)) {
-      return STATUS_ERROR;
-    }
-    webkit_web_view_zoom_out(web);
-  }
+  gfloat zoomlevel = webkit_web_view_get_zoom_level(web) + arg->i * NUMMOD * GET_DOUBLE("zoom-step");
+  webkit_web_view_set_zoom_level(web, zoomlevel);
+  dwb_set_normal_message(dwb.state.fview, true, "Zoomlevel: %d%%", (int)(zoomlevel * 100));
   return STATUS_OK;
 }/*}}}*/
 
@@ -328,6 +310,7 @@ commands_set_zoom_level(KeyMap *km, Arg *arg) {
   GList *gl = arg->p ? arg->p : dwb.state.fview;
   double zoomlevel = dwb.state.nummod < 0 ? arg->d : (double)dwb.state.nummod  / 100;
   webkit_web_view_set_zoom_level(WEBKIT_WEB_VIEW(((View*)gl->data)->web), zoomlevel);
+  dwb_set_normal_message(dwb.state.fview, true, "Zoomlevel: %d%%", (int)(zoomlevel * 100));
   return STATUS_OK;
 }/*}}}*/
 
