@@ -320,7 +320,6 @@ void
 dwb_soup_end() {
   g_object_unref(_tmpJar);
   g_object_unref(_jar);
-  dwb_soup_sync_cookies();
   g_object_unref(_persJar);
   g_free(dwb.misc.proxyuri);
 }/*}}}*/
