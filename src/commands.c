@@ -290,7 +290,7 @@ commands_zoom(KeyMap *km, Arg *arg) {
   View *v = dwb.state.fview->data;
   WebKitWebView *web = WEBKIT_WEB_VIEW(v->web);
 
-  gfloat zoomlevel = webkit_web_view_get_zoom_level(web) + arg->i * NUMMOD * GET_DOUBLE("zoom-step");
+  gfloat zoomlevel = MAX(webkit_web_view_get_zoom_level(web) + arg->i * NUMMOD * GET_DOUBLE("zoom-step"), 0);
   webkit_web_view_set_zoom_level(web, zoomlevel);
   dwb_set_normal_message(dwb.state.fview, true, "Zoomlevel: %d%%", (int)(zoomlevel * 100));
   return STATUS_OK;
