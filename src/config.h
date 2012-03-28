@@ -932,7 +932,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "enable-favicon",                         "Whether to show favicons", },                                  
     SETTING_GLOBAL,  BOOLEAN,      { .b = true         },      (S_Func)dwb_set_favicon,  },
   { { "sync-files",                            "Interval to save history and cookies to hdd or 0 to directly write to hdd", },                                  
-    SETTING_GLOBAL|SETTING_ONINIT,  INTEGER,      { .i = 0         },      (S_Func) dwb_set_sync_interval,  },
+    SETTING_GLOBAL|SETTING_ONINIT,  INTEGER,      { .i = 120         },      (S_Func) dwb_set_sync_interval,  },
 
   { { "active-completion-fg-color",                    "Foreground color of the active tabcompletion item", },                        
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#53868b"         }, (S_Func) dwb_init_style,  },
