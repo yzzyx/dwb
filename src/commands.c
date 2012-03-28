@@ -781,7 +781,10 @@ DwbStatus
 commands_set(KeyMap *km, Arg *arg) {
   const char *command = util_str_chug(arg->p);
   char **args = g_strsplit(command, " ", 2);
+#if 0
   DwbStatus ret = dwb_set_setting(args[0], args[1], arg->n);
+#endif
+  DwbStatus ret = dwb_set_setting(args[0], args[1], 0);
   g_strfreev(args);
   return ret;
 }/*}}}*/

@@ -1086,13 +1086,17 @@ dwb_set_setting(const char *key, char *value, int scope) {
         oldarg = s->arg;
         s->arg = *a;
         if (dwb_apply_settings(s) != STATUS_ERROR) {
+#if 0
           if (scope == SET_GLOBAL) {
+#endif
             dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
             dwb_save_key_value(dwb.files.settings, key, value);
+#if 0
           }
           else {
             dwb_set_normal_message(dwb.state.fview, true, "Changed %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
           }
+#endif
           ret = STATUS_OK;
         }
         else {
@@ -2061,7 +2065,10 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case SETTINGS_MODE_LOCAL: 
     case SETTINGS_MODE:       token = g_strsplit(GET_TEXT(), " ", 2);
-                              dwb_set_setting(token[0], token[1], dwb.state.mode == SETTINGS_MODE ? SET_GLOBAL : SET_LOCAL);
+#if 0
+                              //dwb_set_setting(token[0], token[1], dwb.state.mode == SETTINGS_MODE ? SET_GLOBAL : SET_LOCAL);
+#endif
+                              dwb_set_setting(token[0], token[1], 0);
                               dwb_change_mode(NORMAL_MODE, false);
                               g_strfreev(token);
                               return true;

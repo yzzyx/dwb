@@ -97,7 +97,9 @@ static KeyValue KEYS[] = {
   { "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
   { "focus_input",              {   "gi",           0, }, }, 
   { "set_setting",              {   "ss",           0, }, }, 
+#if 0
   { "set_local_setting",        {   "sl",           0, }, }, 
+#endif
   { "set_key",                  {   "sk",           0, }, }, 
   { "yank",                     {   "yy",           0, }, }, 
   { "yank_primary",             {   "yY",           0, }, }, 
@@ -171,7 +173,9 @@ static KeyValue KEYS[] = {
   { "tab_move_right",                    {   "gr",        0 }, }, 
   { "clear_tab",                    {   "gc",        0 }, }, 
   { "cancel_download",                    {   "ad",        0 }, }, 
+#if 0
   { "local_set",                    {   NULL,        0 }, }, 
+#endif
 };
 
 /* FUNCTION_MAP{{{*/
@@ -195,11 +199,16 @@ static FunctionMap FMAP [] = {
 
   { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_set,            "Invalid value",                            POST_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+#if 0
+  { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 
+    (Func)commands_set,            "Invalid value",                            POST_SM,     
     { .p = NULL, .n = SET_GLOBAL },                          EP_NONE,    { NULL }, },
 
   { { "local_set",                "Set a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_set,            "Invalid value",                            POST_SM,     
     { .p = NULL, .n = SET_LOCAL },                          EP_NONE,    { NULL }, },
+#endif
 
   { { "toggle_setting",              "Toggle a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_toggle_setting,            "Invalid value",                            POST_SM,     
@@ -532,9 +541,11 @@ static FunctionMap FMAP [] = {
     (Func)commands_set_setting,         NULL,                              NEVER_SM, 
     { .n = SETTINGS_MODE }, EP_NONE, { NULL }, },
 
+#if 0
   { { "set_local_setting",    "Set local setting",               }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_set_setting,         NULL,                              NEVER_SM, 
     { .n = SETTINGS_MODE_LOCAL }, EP_NONE, { NULL }, },
+#endif
   
   { { "set_key",               "Set keybinding",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_set_key,             NULL,                              NEVER_SM,    

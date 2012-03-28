@@ -226,10 +226,12 @@ typedef enum  {
   COMP_QUICKMARK,
 } CompletionType;
 
+#if 0
 enum SetSetting {
   SET_GLOBAL, 
   SET_LOCAL, 
 };
+#endif
 enum {
   EP_NONE = 0,
   EP_COMP_DEFAULT = 1<<1,
