@@ -832,7 +832,7 @@ Key dwb_str_to_key(char *);
 GList * dwb_keymap_add(GList *, KeyValue );
 
 void dwb_save_settings(void);
-gboolean dwb_save_all_files(void);
+gboolean dwb_save_files(gboolean);
 CompletionType dwb_eval_completion_type(void);
 
 void dwb_append_navigation_with_argument(GList **, const char *, const char *);

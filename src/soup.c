@@ -238,9 +238,6 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
       }
     }
   }
-  if (dwb.misc.sync_interval <= 0) 
-    dwb_soup_sync_cookies();
-
 }/*}}}*/
 
 void

@@ -574,7 +574,7 @@ commands_new_window_or_view(KeyMap *km, Arg *arg) {
 /* commands_save_files(KeyMap *km, Arg *arg) {{{*/
 DwbStatus 
 commands_save_files(KeyMap *km, Arg *arg) {
-  if (dwb_save_all_files()) {
+  if (dwb_save_files(false)) {
     dwb_set_normal_message(dwb.state.fview, true, "Configuration files saved");
     return STATUS_OK;
   }

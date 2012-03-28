@@ -2812,6 +2812,8 @@ dwb_save_list(GList *list, const char *filename, int limit) {
 /* dwb_save_files() {{{*/
 gboolean 
 dwb_save_files(gboolean end_session) {
+  dwb_save_keys();
+  dwb_save_settings();
   dwb_sync_files(NULL);
   /* Save command history */
   if (! dwb.misc.private_browsing) {
@@ -2825,13 +2827,6 @@ dwb_save_files(gboolean end_session) {
   return true;
 }
 /* }}} */
-
-gboolean 
-dwb_save_all_files() {
-  dwb_save_keys();
-  dwb_save_settings();
-  return dwb_save_files(false);
-}
 
 /* dwb_end() {{{*/
 gboolean
@@ -2854,9 +2849,6 @@ dwb_end() {
     }
   }
 
-  dwb_save_keys();
-  dwb_save_settings();
-      
   if (dwb_save_files(true)) {
     if (dwb_clean_up()) {
       application_stop();
