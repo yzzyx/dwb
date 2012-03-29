@@ -320,6 +320,16 @@ util_get_lines(const char *filename) {
   }
   return ret;
 }
+char * 
+util_expand_home(char *buffer, const char *filename, size_t length) {
+  if (*filename == '~') {
+    const char *home = g_getenv("HOME");
+    snprintf(buffer, length, "%s%s", home, filename+1);
+  }
+  else 
+    strncpy(buffer, filename, length);
+  return buffer;
+}
 /* util_set_file_content(const char *filename, const char *content) {{{*/
 gboolean
 util_set_file_content(const char *filename, const char *content) {
@@ -328,6 +338,9 @@ util_set_file_content(const char *filename, const char *content) {
   char *link = NULL;
   char *dname = NULL;
   char *realpath = NULL;
+  char buffer[PATH_MAX];
+  util_expand_home(buffer, filename, PATH_MAX);
+  filename = buffer;
   if (g_file_test(filename, G_FILE_TEST_IS_SYMLINK)) {
      link = g_file_read_link(filename, &error);
      if (link == NULL) {
