@@ -126,7 +126,7 @@ static int MAX_COMPLETIONS = 11;
 static DwbStatus
 dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
   View *v = gl->data;
-  if (s->arg.b) {
+  if (s->arg_local.b) {
     plugins_connect(gl);
     v->plugins->status ^= (v->plugins->status & PLUGIN_STATUS_DISABLED) | PLUGIN_STATUS_ENABLED;
   }
@@ -140,7 +140,7 @@ dwb_set_plugin_blocker(GList *gl, WebSettings *s) {
 /* dwb_set_adblock {{{*/
 void
 dwb_set_adblock(GList *gl, WebSettings *s) {
-  if (s->arg.b) {
+  if (s->arg_local.b) {
     for (GList *l = dwb.state.views; l; l=l->next) 
       adblock_connect(l);
   }
@@ -153,14 +153,14 @@ dwb_set_adblock(GList *gl, WebSettings *s) {
 /* dwb_set_cookies {{{ */
 static DwbStatus
 dwb_set_cookies(GList *gl, WebSettings *s) {
-  dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(s->arg.p);
+  dwb.state.cookie_store_policy = dwb_soup_get_cookie_store_policy(s->arg_local.p);
   return STATUS_OK;
 }/*}}}*/
 
 
 static DwbStatus 
 dwb_set_ntlm(GList *gl, WebSettings *s) {
-  dwb_soup_set_ntlm(s->arg.b);
+  dwb_soup_set_ntlm(s->arg_local.b);
   return STATUS_OK;
 }
 
@@ -168,9 +168,9 @@ dwb_set_ntlm(GList *gl, WebSettings *s) {
 static DwbStatus
 dwb_set_widget_packing(GList *gl, WebSettings *s) {
   DwbStatus ret = STATUS_OK;
-  if (dwb_pack(s->arg.p, true) != STATUS_OK) {
-    g_free(s->arg.p);
-    s->arg.p = g_strdup(DEFAULT_WIDGET_PACKING);
+  if (dwb_pack(s->arg_local.p, true) != STATUS_OK) {
+    g_free(s->arg_local.p);
+    s->arg_local.p = g_strdup(DEFAULT_WIDGET_PACKING);
     ret = STATUS_ERROR;
   }
   return ret;
@@ -179,7 +179,7 @@ dwb_set_widget_packing(GList *gl, WebSettings *s) {
 /* dwb_set_private_browsing  {{{ */
 static DwbStatus
 dwb_set_private_browsing(GList *gl, WebSettings *s) {
-  dwb.misc.private_browsing = s->arg.b;
+  dwb.misc.private_browsing = s->arg_local.b;
   dwb_webkit_setting(gl, s);
   return STATUS_OK;
 }/*}}}*/
@@ -187,13 +187,13 @@ dwb_set_private_browsing(GList *gl, WebSettings *s) {
 /* dwb_set_new_tab_position_policy {{{ */
 static DwbStatus
 dwb_set_new_tab_position_policy(GList *gl, WebSettings *s) {
-  if (!g_strcmp0(s->arg.p, "right"))
+  if (!g_strcmp0(s->arg_local.p, "right"))
     dwb.misc.tab_position = TAB_POSITION_RIGHT;
-  else if (!g_strcmp0(s->arg.p, "left"))
+  else if (!g_strcmp0(s->arg_local.p, "left"))
     dwb.misc.tab_position = TAB_POSITION_LEFT;
-  else if (!g_strcmp0(s->arg.p, "rightmost"))
+  else if (!g_strcmp0(s->arg_local.p, "rightmost"))
     dwb.misc.tab_position = TAB_POSITION_RIGHTMOST;
-  else if (!g_strcmp0(s->arg.p, "leftmost"))
+  else if (!g_strcmp0(s->arg_local.p, "leftmost"))
     dwb.misc.tab_position = TAB_POSITION_LEFTMOST;
   else 
     return STATUS_ERROR;
@@ -203,8 +203,8 @@ dwb_set_new_tab_position_policy(GList *gl, WebSettings *s) {
 /* dwb_set_cookie_accept_policy {{{ */
 static DwbStatus
 dwb_set_cookie_accept_policy(GList *gl, WebSettings *s) {
-  if (dwb_soup_set_cookie_accept_policy(s->arg.p) == STATUS_ERROR) {
-    s->arg.p = g_strdup("always");
+  if (dwb_soup_set_cookie_accept_policy(s->arg_local.p) == STATUS_ERROR) {
+    s->arg_local.p = g_strdup("always");
     return STATUS_ERROR;
   }
   return STATUS_OK;
@@ -217,10 +217,10 @@ dwb_set_sync_interval(GList *gl, WebSettings *s) {
     g_source_remove(dwb.misc.synctimer);
     dwb.misc.synctimer = 0;
   }
-  dwb.misc.sync_interval = s->arg.i;
+  dwb.misc.sync_interval = s->arg_local.i;
 
-  if (s->arg.i > 0) {
-    dwb.misc.synctimer = g_timeout_add_seconds(s->arg.i, dwb_sync_files, NULL);
+  if (s->arg_local.i > 0) {
+    dwb.misc.synctimer = g_timeout_add_seconds(s->arg_local.i, dwb_sync_files, NULL);
   }
   return STATUS_OK;
 }/*}}}*/
@@ -228,56 +228,56 @@ dwb_set_sync_interval(GList *gl, WebSettings *s) {
 /* dwb_set_scroll_step {{{*/
 static DwbStatus
 dwb_set_scroll_step(GList *gl, WebSettings *s) {
-  dwb.misc.scroll_step = s->arg.d;
+  dwb.misc.scroll_step = s->arg_local.d;
   return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_startpage(GList *l, WebSettings *){{{*/
 static DwbStatus 
 dwb_set_startpage(GList *l, WebSettings *s) {
-  dwb.misc.startpage = s->arg.p;
+  dwb.misc.startpage = s->arg_local.p;
   return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_message_delay(GList *l, WebSettings *){{{*/
 static DwbStatus 
 dwb_set_message_delay(GList *l, WebSettings *s) {
-  dwb.misc.message_delay = s->arg.i;
+  dwb.misc.message_delay = s->arg_local.i;
   return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_history_length(GList *l, WebSettings *){{{*/
 static DwbStatus 
 dwb_set_history_length(GList *l, WebSettings *s) {
-  dwb.misc.history_length = s->arg.i;
+  dwb.misc.history_length = s->arg_local.i;
   return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_background_tab (GList *, WebSettings *s) {{{*/
 static DwbStatus 
 dwb_set_background_tab(GList *l, WebSettings *s) {
-  dwb.state.background_tabs = s->arg.b;
+  dwb.state.background_tabs = s->arg_local.b;
   return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_auto_insert_mode {{{*/
 static DwbStatus 
 dwb_set_auto_insert_mode(GList *l, WebSettings *s) {
-  dwb.state.auto_insert_mode = s->arg.b;
+  dwb.state.auto_insert_mode = s->arg_local.b;
   return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_tabbar_delay {{{*/
 static DwbStatus 
 dwb_set_tabbar_delay(GList *l, WebSettings *s) {
-  dwb.misc.tabbar_delay = s->arg.i;
+  dwb.misc.tabbar_delay = s->arg_local.i;
   return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_favicon(GList *l, WebSettings *s){{{*/
 static DwbStatus
 dwb_set_favicon(GList *l, WebSettings *s) {
-  if (!s->arg.b) {
+  if (!s->arg_local.b) {
     for (GList *l = dwb.state.views; l; l=l->next) {
       g_signal_handler_disconnect(WEBVIEW(l), VIEW(l)->status->signals[SIG_ICON_LOADED]);
       view_set_favicon(l, false);
@@ -293,7 +293,7 @@ dwb_set_favicon(GList *l, WebSettings *s) {
 /* dwb_set_proxy{{{*/
 DwbStatus
 dwb_set_proxy(GList *l, WebSettings *s) {
-  if (s->arg.b) {
+  if (s->arg_local.b) {
     SoupURI *uri = soup_uri_new(dwb.misc.proxyuri);
     g_object_set(dwb.misc.soupsession, "proxy-uri", uri, NULL);
     soup_uri_free(uri);
@@ -301,7 +301,7 @@ dwb_set_proxy(GList *l, WebSettings *s) {
   else  {
     g_object_set(dwb.misc.soupsession, "proxy-uri", NULL, NULL);
   }
-  dwb_set_normal_message(dwb.state.fview, true, "Set setting proxy: %s", s->arg.b ? "true" : "false");
+  dwb_set_normal_message(dwb.state.fview, true, "Set setting proxy: %s", s->arg_local.b ? "true" : "false");
   return STATUS_OK;
 }/*}}}*/
 
@@ -310,7 +310,7 @@ static DwbStatus
 dwb_set_scripts(GList *gl, WebSettings *s) {
   dwb_webkit_setting(gl, s);
   View *v = VIEW(gl);
-  if (s->arg.b) 
+  if (s->arg_local.b) 
     v->status->scripts = SCRIPTS_ALLOWED;
   else 
     v->status->scripts = SCRIPTS_BLOCKED;
@@ -320,11 +320,11 @@ dwb_set_scripts(GList *gl, WebSettings *s) {
 /* dwb_set_user_agent {{{*/
 static DwbStatus
 dwb_set_user_agent(GList *gl, WebSettings *s) {
-  char *ua = s->arg.p;
+  char *ua = s->arg_local.p;
   if (! ua) {
     char *current_ua;
     g_object_get(dwb.state.web_settings, "user-agent", &current_ua, NULL);
-    s->arg.p = g_strdup_printf("%s %s/%s", current_ua, NAME, VERSION);
+    s->arg_local.p = g_strdup_printf("%s %s/%s", current_ua, NAME, VERSION);
   }
   dwb_webkit_setting(gl, s);
   g_hash_table_insert(dwb.settings, g_strdup("user-agent"), s);
@@ -337,10 +337,10 @@ static DwbStatus
 dwb_webkit_setting(GList *gl, WebSettings *s) {
   WebKitWebSettings *settings = gl ? webkit_web_view_get_settings(WEBVIEW(gl)) : dwb.state.web_settings;
   switch (s->type) {
-    case DOUBLE:  g_object_set(settings, s->n.first, s->arg.d, NULL); break;
-    case INTEGER: g_object_set(settings, s->n.first, s->arg.i, NULL); break;
-    case BOOLEAN: g_object_set(settings, s->n.first, s->arg.b, NULL); break;
-    case CHAR:    g_object_set(settings, s->n.first, !s->arg.p || !g_strcmp0(s->arg.p, "null") ? NULL : (char*)s->arg.p  , NULL); break;
+    case DOUBLE:  g_object_set(settings, s->n.first, s->arg_local.d, NULL); break;
+    case INTEGER: g_object_set(settings, s->n.first, s->arg_local.i, NULL); break;
+    case BOOLEAN: g_object_set(settings, s->n.first, s->arg_local.b, NULL); break;
+    case CHAR:    g_object_set(settings, s->n.first, !s->arg_local.p || !g_strcmp0(s->arg_local.p, "null") ? NULL : (char*)s->arg_local.p  , NULL); break;
     default: return STATUS_OK;
   }
   return STATUS_OK;
@@ -351,10 +351,10 @@ static DwbStatus
 dwb_webview_property(GList *gl, WebSettings *s) {
   WebKitWebView *web = gl ? WEBVIEW(gl) : CURRENT_WEBVIEW();
   switch (s->type) {
-    case DOUBLE:  g_object_set(web, s->n.first, s->arg.d, NULL); break;
-    case INTEGER: g_object_set(web, s->n.first, s->arg.i, NULL); break;
-    case BOOLEAN: g_object_set(web, s->n.first, s->arg.b, NULL); break;
-    case CHAR:    g_object_set(web, s->n.first, (char*)s->arg.p, NULL); break;
+    case DOUBLE:  g_object_set(web, s->n.first, s->arg_local.d, NULL); break;
+    case INTEGER: g_object_set(web, s->n.first, s->arg_local.i, NULL); break;
+    case BOOLEAN: g_object_set(web, s->n.first, s->arg_local.b, NULL); break;
+    case CHAR:    g_object_set(web, s->n.first, (char*)s->arg_local.p, NULL); break;
     default: return STATUS_OK;
   }
   return STATUS_OK;
@@ -1036,7 +1036,7 @@ dwb_apply_settings(WebSettings *s) {
 }/*}}}*/
 
 DwbStatus
-dwb_toggle_setting(const char *key) {
+dwb_toggle_setting(const char *key, int scope) {
   WebSettings *s;
   DwbStatus ret = STATUS_ERROR;
   const char *value;
@@ -1049,13 +1049,17 @@ dwb_toggle_setting(const char *key) {
         dwb_set_error_message(dwb.state.fview, "Not a boolean value.");
       }
       else {
-        oldarg = s->arg;
-        s->arg.b = !s->arg.b;
+        oldarg = s->arg_local;
+        s->arg_local.b = !s->arg_local.b;
         if (dwb_apply_settings(s) != STATUS_ERROR) {
-          value = s->arg.b ? "true" : "false";
+          value = s->arg_local.b ? "true" : "false";
           dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, value);
           dwb_save_key_value(dwb.files.settings, key, value);
           ret = STATUS_OK;
+          if (scope == SET_GLOBAL) 
+            util_arg_copy(&(s->arg), &(s->arg_local));
+
+          
         }
         else {
           s->arg = oldarg;
@@ -1084,19 +1088,16 @@ dwb_set_setting(const char *key, char *value, int scope) {
     if  ( (s = g_hash_table_lookup(t, key)) ) {
       if ( (a = util_char_to_arg(value, s->type))) {
         oldarg = s->arg;
-        s->arg = *a;
+        s->arg_local = *a;
         if (dwb_apply_settings(s) != STATUS_ERROR) {
-#if 0
           if (scope == SET_GLOBAL) {
-#endif
-            dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
+            util_arg_copy(&(s->arg), &(s->arg_local));
+            dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg_local.b ? "true" : "false") : value);
             dwb_save_key_value(dwb.files.settings, key, value);
-#if 0
           }
           else {
-            dwb_set_normal_message(dwb.state.fview, true, "Changed %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg.b ? "true" : "false") : value);
+            dwb_set_normal_message(dwb.state.fview, true, "Changed %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg_local.b ? "true" : "false") : value);
           }
-#endif
           ret = STATUS_OK;
         }
         else {
@@ -2065,10 +2066,8 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case SETTINGS_MODE_LOCAL: 
     case SETTINGS_MODE:       token = g_strsplit(GET_TEXT(), " ", 2);
-#if 0
-                              //dwb_set_setting(token[0], token[1], dwb.state.mode == SETTINGS_MODE ? SET_GLOBAL : SET_LOCAL);
-#endif
-                              dwb_set_setting(token[0], token[1], 0);
+                              dwb_set_setting(token[0], token[1], dwb.state.mode == SETTINGS_MODE ? SET_GLOBAL : SET_LOCAL);
+                              //dwb_set_setting(token[0], token[1], 0);
                               dwb_change_mode(NORMAL_MODE, false);
                               g_strfreev(token);
                               return true;
@@ -3077,6 +3076,7 @@ dwb_init_settings() {
   dwb_read_settings();
   for (l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
     WebSettings *s = l->data;
+    util_arg_copy(&(s->arg_local), &(s->arg));
     if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
       s->func(NULL, s);
     }

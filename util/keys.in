@@ -124,6 +124,7 @@ yank_title_primary Yank current title to primary selection
 
 # settings Settings
 set_setting Set a setting
+set_local_setting Set a setting only for this session
 show_settings Show and modify global properties
 set_key Set keybinding
 show_keys Show and modify keyboard configuration

@@ -131,10 +131,10 @@
 #define DWB_TAB_KEY(e)              (e->keyval == GDK_KEY_Tab || e->keyval == GDK_KEY_ISO_Left_Tab)
 
 // Settings
-#define GET_CHAR(prop)              ((char*)(((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.p))
-#define GET_BOOL(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.b)
-#define GET_INT(prop)               (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.i)
-#define GET_DOUBLE(prop)            (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg.d)
+#define GET_CHAR(prop)              ((char*)(((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg_local.p))
+#define GET_BOOL(prop)              (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg_local.b)
+#define GET_INT(prop)               (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg_local.i)
+#define GET_DOUBLE(prop)            (((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg_local.d)
 #define NUMMOD                      (dwb.state.nummod < 0 ? 1 : dwb.state.nummod)
 
 #ifdef DWB_DEBUG
@@ -226,12 +226,10 @@ typedef enum  {
   COMP_QUICKMARK,
 } CompletionType;
 
-#if 0
 enum SetSetting {
   SET_GLOBAL, 
   SET_LOCAL, 
 };
-#endif
 enum {
   EP_NONE = 0,
   EP_COMP_DEFAULT = 1<<1,
@@ -568,6 +566,7 @@ struct _WebSettings {
   DwbType type;
   Arg arg;
   S_Func func;
+  Arg arg_local;
 };
 struct _Plugins {
   GSList *elements;
@@ -844,7 +843,7 @@ void dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
 void dwb_set_key(const char *, char *);
 DwbStatus dwb_set_setting(const char *, char *value, int);
-DwbStatus dwb_toggle_setting(const char *);
+DwbStatus dwb_toggle_setting(const char *, int );
 DwbStatus dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
 void dwb_reload_userscripts(void);

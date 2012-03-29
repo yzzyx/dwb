@@ -93,5 +93,6 @@ Arg * util_arg_new(void);
 char * util_check_directory(char *);
 int util_strlen_trailing_space(const char *str);
 const char * util_str_chug(const char *str);
+Arg *util_arg_copy(Arg *dest, Arg *src);
 
 #endif

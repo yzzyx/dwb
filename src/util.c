@@ -130,6 +130,17 @@ util_arg_new() {
   ret->e = NULL;
   return ret;
 }
+Arg *
+util_arg_copy(Arg *dest, Arg *src) {
+  dest->n = src->n;
+  dest->i = src->i;
+  dest->d = src->d;
+  dest->p = src->p;
+  dest->arg = src->arg;
+  dest->b = src->b;
+  dest->e = src->e;
+  return dest;
+}
 /* util_char_to_arg(char *value, DwbType type)    return: Arg*{{{*/
 Arg *
 util_char_to_arg(char *value, DwbType type) {

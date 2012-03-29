@@ -24,6 +24,5 @@ gboolean adblock_running();
 void adblock_end();
 void adblock_connect(GList *gl);
 void adblock_disconnect(GList *gl);
-void adblock_set_user_stylesheet(const char *file);
 
 #endif // ADBLOCK_H
