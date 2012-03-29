@@ -1019,7 +1019,7 @@ dwb_open_startpage(GList *gl) {
 
 /* dwb_apply_settings(WebSettings *s) {{{*/
 static DwbStatus
-dwb_apply_settings(WebSettings *s) {
+dwb_apply_settings(WebSettings *s, const char *key, const char *value, int scope) {
   DwbStatus ret = STATUS_OK;
   if (s->apply & SETTING_GLOBAL) {
     if (s->func) 
@@ -1031,7 +1031,21 @@ dwb_apply_settings(WebSettings *s) {
         s->func(l, s);
     }
   }
-  //dwb_change_mode(NORMAL_MODE, false);
+  if (ret != STATUS_ERROR) {
+    if (s->type == BOOLEAN) 
+      value = s->arg_local.b ? "true" : "false";
+    if (scope == SET_GLOBAL) {
+      s->arg = s->arg_local;
+      dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, value);
+      dwb_save_key_value(dwb.files.settings, key, value);
+    }
+    else {
+      dwb_set_normal_message(dwb.state.fview, true, "Changed %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg_local.b ? "true" : "false") : value);
+    }
+  }
+  else {
+    dwb_set_error_message(dwb.state.fview, "Error setting value.");
+  }
   return ret;
 }/*}}}*/
 
@@ -1039,37 +1053,24 @@ DwbStatus
 dwb_toggle_setting(const char *key, int scope) {
   WebSettings *s;
   DwbStatus ret = STATUS_ERROR;
-  const char *value;
   Arg oldarg;
 
-  GHashTable *t = dwb.settings;
-  if (key) {
-    if  ( (s = g_hash_table_lookup(t, key)) ) {
-      if (s->type != BOOLEAN) {
-        dwb_set_error_message(dwb.state.fview, "Not a boolean value.");
-      }
-      else {
-        oldarg = s->arg_local;
-        s->arg_local.b = !s->arg_local.b;
-        if (dwb_apply_settings(s) != STATUS_ERROR) {
-          value = s->arg_local.b ? "true" : "false";
-          dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, value);
-          dwb_save_key_value(dwb.files.settings, key, value);
-          ret = STATUS_OK;
-          if (scope == SET_GLOBAL) 
-            util_arg_copy(&(s->arg), &(s->arg_local));
-
-          
-        }
-        else {
-          s->arg = oldarg;
-          dwb_set_error_message(dwb.state.fview, "Error setting value.");
-        }
-      }
-    }
-    else {
-      dwb_set_error_message(dwb.state.fview, "No such setting: %s", key);
-    }
+  if (key == NULL) 
+    return STATUS_ERROR;
+  s = g_hash_table_lookup(dwb.settings, key);
+  if (s == NULL) {
+    dwb_set_error_message(dwb.state.fview, "No such setting: %s", key);
+    return STATUS_ERROR;
+  }
+  if (s->type != BOOLEAN) {
+    dwb_set_error_message(dwb.state.fview, "Not a boolean value.");
+    return STATUS_ERROR;
+  }
+  oldarg = s->arg_local;
+  s->arg_local.b = !s->arg_local.b;
+  ret = dwb_apply_settings(s, key, NULL, scope);
+  if (ret == STATUS_ERROR) {
+    s->arg = oldarg;
   }
   return ret;
 }/*}}}*/
@@ -1079,41 +1080,29 @@ DwbStatus
 dwb_set_setting(const char *key, char *value, int scope) {
   WebSettings *s;
   Arg *a = NULL, oldarg = { .p = NULL };
-  
-  DwbStatus ret = STATUS_ERROR;
-  
 
-  GHashTable *t = dwb.settings;
-  if (key) {
-    if  ( (s = g_hash_table_lookup(t, key)) ) {
-      if ( (a = util_char_to_arg(value, s->type))) {
-        oldarg = s->arg;
-        s->arg_local = *a;
-        if (dwb_apply_settings(s) != STATUS_ERROR) {
-          if (scope == SET_GLOBAL) {
-            util_arg_copy(&(s->arg), &(s->arg_local));
-            dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg_local.b ? "true" : "false") : value);
-            dwb_save_key_value(dwb.files.settings, key, value);
-          }
-          else {
-            dwb_set_normal_message(dwb.state.fview, true, "Changed %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg_local.b ? "true" : "false") : value);
-          }
-          ret = STATUS_OK;
-        }
-        else {
-          g_free(a->p);
-          g_free(a);
-          s->arg = oldarg;
-          dwb_set_error_message(dwb.state.fview, "Error setting value.");
-        }
-      }
-      else {
-        dwb_set_error_message(dwb.state.fview, "No valid value.");
-      }
-    }
-    else {
-      dwb_set_error_message(dwb.state.fview, "No such setting: %s", key);
-    }
+  DwbStatus ret = STATUS_ERROR;
+
+  if (key == NULL)
+    return ret;
+
+  s = g_hash_table_lookup(dwb.settings, key);
+  if (s == NULL) {
+    dwb_set_error_message(dwb.state.fview, "No such setting: %s", key);
+    return STATUS_ERROR;
+  }
+  a = util_char_to_arg(value, s->type);
+  if (a == NULL) {
+    dwb_set_error_message(dwb.state.fview, "No valid value.");
+    return STATUS_ERROR;
+  }
+  oldarg = s->arg;
+  s->arg_local = *a;
+  ret = dwb_apply_settings(s, key, value, scope);
+  if (ret == STATUS_ERROR) {
+    g_free(a->p);
+    g_free(a);
+    s->arg = oldarg;
   }
   return ret;
 }/*}}}*/
@@ -3011,15 +3000,18 @@ dwb_init_key_map() {
   g_key_file_free(keyfile);
 }/*}}}*/
 
-/* dwb_read_settings() {{{*/
-static gboolean
-dwb_read_settings() {
+/* dwb_init_settings() {{{*/
+void
+dwb_init_settings() {
   GError *error = NULL;
   gsize length, numkeys = 0;
   char  **keys = NULL;
   char  *content;
-  GKeyFile  *keyfile = g_key_file_new();
   Arg *arg;
+  WebSettings *s = NULL;
+  GKeyFile  *keyfile = g_key_file_new();
+  dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
+  dwb.state.web_settings = webkit_web_settings_new();
   setlocale(LC_NUMERIC, "C");
 
   g_file_get_contents(dwb.files.settings, &content, &length, &error);
@@ -3048,41 +3040,27 @@ dwb_read_settings() {
     for (int i=0; i<numkeys; i++) {
       char *value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
       if (!g_strcmp0(keys[i], DWB_SETTINGS[j].n.first)) {
-        WebSettings *s = dwb_malloc(sizeof(WebSettings));
+        s = dwb_malloc(sizeof(WebSettings));
         *s = DWB_SETTINGS[j];
         if ( (arg = util_char_to_arg(value, s->type)) ) {
-          s->arg = *arg;
+          s->arg = s->arg_local = *arg;
         }
-        g_hash_table_insert(dwb.settings, key, s);
         set = true;
       }
       g_free(value);
     }
     if (!set) {
-      g_hash_table_insert(dwb.settings, key, &DWB_SETTINGS[j]);
+      s = &DWB_SETTINGS[j];
+    }
+    if (s != NULL) {
+      g_hash_table_insert(dwb.settings, key, s);
+      if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
+        s->func(NULL, s);
+      }
     }
   }
   if (keys)
     g_strfreev(keys);
-  return true;
-}/*}}}*/
-
-/* dwb_init_settings() {{{*/
-void
-dwb_init_settings() {
-  GList *l = NULL;
-  dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
-  dwb.state.web_settings = webkit_web_settings_new();
-  dwb_read_settings();
-  for (l =  g_hash_table_get_values(dwb.settings); l; l = l->next) {
-    WebSettings *s = l->data;
-    util_arg_copy(&(s->arg_local), &(s->arg));
-    if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
-      s->func(NULL, s);
-    }
-  }
-  if (l != NULL)
-    g_list_free(l);
 }/*}}}*/
 
 /* dwb_init_scripts{{{*/
