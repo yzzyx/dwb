@@ -3006,9 +3006,10 @@ dwb_init_settings() {
   GError *error = NULL;
   gsize length, numkeys = 0;
   char  **keys = NULL;
-  char  *content;
+  char  *content, *key, *value;
+  gboolean set;
   Arg *arg;
-  WebSettings *s = NULL;
+  WebSettings *s;
   GKeyFile  *keyfile = g_key_file_new();
   dwb.settings = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
   dwb.state.web_settings = webkit_web_settings_new();
@@ -3035,10 +3036,11 @@ dwb_init_settings() {
   }
   g_free(content);
   for (int j=0; j<LENGTH(DWB_SETTINGS); j++) {
-    gboolean set = false;
-    char *key = g_strdup(DWB_SETTINGS[j].n.first);
+    s = NULL;
+    set = false;
+    key = g_strdup(DWB_SETTINGS[j].n.first);
     for (int i=0; i<numkeys; i++) {
-      char *value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
+      value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
       if (!g_strcmp0(keys[i], DWB_SETTINGS[j].n.first)) {
         s = dwb_malloc(sizeof(WebSettings));
         *s = DWB_SETTINGS[j];
