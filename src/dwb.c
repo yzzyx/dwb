@@ -3051,6 +3051,7 @@ dwb_init_settings() {
     }
     if (s == NULL) {
       s = &DWB_SETTINGS[j];
+      s->arg_local = s->arg;
     }
     g_hash_table_insert(dwb.settings, key, s);
     if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
