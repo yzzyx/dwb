@@ -173,6 +173,7 @@ static KeyValue KEYS[] = {
   { "clear_tab",                    {   "gc",        0 }, }, 
   { "cancel_download",                    {   "ad",        0 }, }, 
   { "local_set",                    {   NULL,        0 }, }, 
+  { "dump",                    {   NULL,        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -190,7 +191,6 @@ static FunctionMap FMAP [] = {
     { .p = NULL },                          EP_NONE,    { "clear" }, },
 
   { { "execute_javascript",              "Execute a javascript snippet",                    }, CP_COMMANDLINE, 
-
     (Func)commands_execute_javascript,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { "exja", NULL }, },
 
@@ -204,6 +204,10 @@ static FunctionMap FMAP [] = {
   { { "local_set",                "Set a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_set,            "Invalid value",                            POST_SM,     
     { .p = NULL, .n = SET_LOCAL },                          EP_NONE,    { NULL }, },
+
+  { { "dump",                "Write current website to a file or stdout",               }, CP_COMMANDLINE, 
+    (Func)commands_dump,            NULL,                            POST_SM,     
+    { .p = NULL },                            EP_NONE,    { NULL }, },
 
   { { "toggle_setting",              "Toggle a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_toggle_setting,            "Invalid value",                            POST_SM,     

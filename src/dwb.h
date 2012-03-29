@@ -887,6 +887,6 @@ DwbStatus dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request);
 GList *dwb_get_simple_list(GList *, const char *filename);
 
 gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
-
+char * dwb_get_raw_data(GList *gl);
 
 #endif

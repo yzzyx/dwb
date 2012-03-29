@@ -543,6 +543,19 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
 
 /* FUNCTIONS {{{*/
 
+/* dwb_get_raw_data(GList *){{{*/
+char *
+dwb_get_raw_data(GList *gl) {
+  char *ret = NULL;
+  WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBVIEW(gl));
+  WebKitWebDataSource *data_source = webkit_web_frame_get_data_source(frame);
+  GString *data = webkit_web_data_source_get_data(data_source);
+  if (data != NULL) {
+    ret = data->str;
+  }
+  return ret;
+}/*}}}*/
+
 DwbStatus/*{{{*/
 dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request) {
   const char *handler = GET_CHAR("scheme-handler");
@@ -2455,12 +2468,18 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   list = g_slist_append(list, dwb_navigation_new("DWB_PROFILE", dwb.misc.profile));
   list = g_slist_append(list, dwb_navigation_new("DWB_NUMMOD",  nummod));
   list = g_slist_append(list, dwb_navigation_new("DWB_ARGUMENT",  a->p));
+
+  const char *raw_data = dwb_get_raw_data(dwb.state.fview);
+  list = g_slist_append(list, dwb_navigation_new("DWB_HTML_CONTENT",  raw_data == NULL ? "" : raw_data));
+
   const char *referer = soup_get_header(dwb.state.fview, "Referer");
   if (referer != NULL)
     list = g_slist_append(list, dwb_navigation_new("DWB_REFERER",  referer));
+
   const char *user_agent = soup_get_header(dwb.state.fview, "User-Agent");
   if (user_agent != NULL)
     list = g_slist_append(list, dwb_navigation_new("DWB_USER_AGENT",  user_agent));
+
   if (km->map->arg.b) {
     dwb.misc.fifo = util_get_temp_filename("fifo_");
     list = g_slist_append(list, dwb_navigation_new("DWB_FIFO",  dwb.misc.fifo));

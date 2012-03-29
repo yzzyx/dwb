@@ -840,4 +840,17 @@ DwbStatus
 commands_cancel_download(KeyMap *km, Arg *arg) {
   return download_cancel(dwb.state.nummod);
 }
+DwbStatus 
+commands_dump(KeyMap *km, Arg *arg) {
+  char *data = dwb_get_raw_data(dwb.state.fview);
+  if (data == NULL) 
+    return STATUS_ERROR;
+  if (arg->p == NULL) 
+    puts(data);
+  else {
+    util_set_file_content(arg->p, data);
+    arg->p = NULL;
+  }
+  return STATUS_OK;
+}
 /*}}}*/
