@@ -174,6 +174,7 @@ session_restore(char *name, int flags) {
   WebKitWebBackForwardList *bf_list = NULL;
   int last = 1;
   char *end;
+  gboolean ret = false;
   int locked_state = 0;
   if (name == NULL) {
     _session_name = g_strdup("default");
@@ -236,10 +237,11 @@ session_restore(char *name, int flags) {
   }
   dwb_focus(dwb.state.fview);
   g_free(uri);
+  ret = true;
 
 clean:
   g_free(group);
-  return true;
+  return ret;
 }/*}}}*/
 
 /* session_save(const char *) {{{*/

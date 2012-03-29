@@ -314,7 +314,7 @@ application_start(GApplication *app, char **argv) {
   else {
     session_restore(opt_restore, session_flags | SESSION_ONLY_MARK);
   }
-  if (! restored && g_strv_length(argv) == 1 ) {
+  if ((! restored && g_strv_length(argv) == 1)) {
     view_add(NULL, false);
     dwb_open_startpage(dwb.state.fview);
   }
