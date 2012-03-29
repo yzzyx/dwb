@@ -48,6 +48,7 @@ int util_web_settings_sort_second(WebSettings *, WebSettings *);
 int util_web_settings_sort_first(WebSettings *, WebSettings *);
 
 // files
+char * util_expand_home(char *buffer, const char *filename, size_t length);
 void util_get_directory_content(GString **, const char *, const char *extension);
 char * util_get_file_content(const char *);
 char ** util_get_lines(const char *);

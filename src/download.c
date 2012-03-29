@@ -358,6 +358,9 @@ download_start(const char *path) {
   char path_buffer[PATH_MAX+1];
   gboolean external = GET_BOOL("download-use-external-program");
   gboolean clean = true;
+
+  char buffer[PATH_MAX];
+  path = util_expand_home(buffer, path, PATH_MAX);
   
   if (!filename || !strlen(filename)) {
     filename = "dwb_download";

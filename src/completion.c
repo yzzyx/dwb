@@ -746,6 +746,8 @@ completion_get_path(GList *list, char *text) {
 static void
 completion_init_path_completion(int back) { 
   char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
+  char expanded[PATH_MAX];
+  text = util_expand_home(expanded, text, PATH_MAX);
 
   dwb.comps.path_completion = dwb.comps.active_path = g_list_append(NULL, g_strdup(text));
   if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
