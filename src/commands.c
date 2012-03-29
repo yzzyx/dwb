@@ -479,7 +479,7 @@ DwbStatus
 commands_save_session(KeyMap *km, Arg *arg) {
   if (arg->n == NORMAL_MODE) {
     dwb.state.mode = SAVE_SESSION;
-    session_save(NULL, true);
+    session_save(NULL, SESSION_FORCE);
     dwb_end();
     return STATUS_END;
   }

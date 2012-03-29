@@ -295,6 +295,7 @@ application_execute_args(char **argv) {
 static void /* application_start(GApplication *app, char **argv) {{{*/
 application_start(GApplication *app, char **argv) {
   gboolean restored = false;
+  int session_flags = 0;
   if (argv == NULL)
     return;
   gtk_init(NULL, NULL);
@@ -302,13 +303,16 @@ application_start(GApplication *app, char **argv) {
 
   dwb_pack(GET_CHAR("widget-packing"), false);
 
+  if (opt_force) 
+    session_flags |= SESSION_FORCE;
   /* restore session */ 
   if (! opt_override_restore) {
     if (GET_BOOL("save-session") || opt_restore != NULL) {
-      if (opt_restore == NULL)
-        opt_restore = g_strdup("default");
-      restored = session_restore(opt_restore, opt_force);
+      restored = session_restore(opt_restore, session_flags);
     }
+  }
+  else {
+    session_restore(opt_restore, session_flags | SESSION_ONLY_MARK);
   }
   if (! restored && g_strv_length(argv) == 1 ) {
     view_add(NULL, false);
@@ -323,7 +327,6 @@ application_start(GApplication *app, char **argv) {
   pango_layout_set_font_description(layout, dwb.font.fd_active);
   pango_layout_get_size(layout, &w, &h);
   dwb.misc.bar_height = h/PANGO_SCALE;
-
 
   gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
   g_object_unref(layout);

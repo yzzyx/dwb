@@ -19,8 +19,12 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-gboolean session_save(const char *, gboolean);
-gboolean session_restore(char *, gboolean);
+enum SessionFlags {
+  SESSION_FORCE = 1<<0,
+  SESSION_ONLY_MARK = 1<<1,
+};
+gboolean session_save(const char *, int);
+gboolean session_restore(char *, int);
 void session_list(void);
 
 #endif

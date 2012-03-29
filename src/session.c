@@ -167,7 +167,7 @@ session_list() {
 
 /* session_restore(const char *name) {{{*/
 gboolean
-session_restore(char *name, gboolean force) {
+session_restore(char *name, int flags) {
   gboolean is_marked = false;
   char *uri = NULL;
   GList *currentview = NULL, *lastview = NULL;
@@ -175,23 +175,28 @@ session_restore(char *name, gboolean force) {
   int last = 1;
   char *end;
   int locked_state = 0;
+  if (name == NULL) {
+    _session_name = g_strdup("default");
+  }
+  else 
+    _session_name = name;
 
-  char *group = session_get_group(name, &is_marked);
-  if (is_marked && !force) {
-    fprintf(stderr, "Warning: Session '%s' will not be restored.\n", name);
-    fprintf(stderr, "There is already a restored session open with name '%s'.\n", name);
+  char *group = session_get_group(_session_name, &is_marked);
+  if (is_marked && (flags & SESSION_FORCE) == 0) {
+    fprintf(stderr, "Warning: Session '%s' will not be restored.\n", _session_name);
+    fprintf(stderr, "There is already a restored session open with name '%s'.\n", _session_name);
     fputs("To force opening a saved session use -f or --force.\n", stderr);
     _has_marked = false;
-    return false;
+    goto clean;
   }
-  _session_name = name;
   if (group == NULL) {
     return false;
   }
   char *group_begin = strchr(group, '\n');
-  session_save_file(name, group_begin+1, true);
+  session_save_file(_session_name, group_begin+1, true);
+  if (flags & SESSION_ONLY_MARK) 
+    goto clean;
   char  **lines = g_strsplit(group, "\n", -1);
-  g_free(group);
 
   int length = g_strv_length(lines) - 1;
   for (int i=1; i<=length; i++) {
@@ -231,19 +236,22 @@ session_restore(char *name, gboolean force) {
   }
   dwb_focus(dwb.state.fview);
   g_free(uri);
+
+clean:
+  g_free(group);
   return true;
 }/*}}}*/
 
 /* session_save(const char *) {{{*/
 gboolean  
-session_save(const char *name, gboolean force) {
+session_save(const char *name, int flags) {
   if (!name) {
     if (_session_name) 
       name = _session_name;
-    else if (force) 
+    else if (flags & SESSION_FORCE) 
       name = "default";
   }
-  if (!_has_marked && !force) 
+  if (!_has_marked && (flags & SESSION_FORCE) == 0) 
     return false;
   GString *buffer = g_string_new(NULL);
 

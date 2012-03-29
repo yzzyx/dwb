@@ -2069,7 +2069,7 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(NULL); 
                               return true;
-    case SAVE_SESSION:        session_save(GET_TEXT(), true);
+    case SAVE_SESSION:        session_save(GET_TEXT(), SESSION_FORCE);
                               dwb_end();
                               return true;
     case COMPLETE_BUFFER:     completion_eval_buffer_completion();
@@ -2810,7 +2810,7 @@ dwb_save_files(gboolean end_session) {
   }
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
-    session_save(NULL, false);
+    session_save(NULL, 0);
   }
   return true;
 }
@@ -3044,15 +3044,15 @@ dwb_init_settings() {
         s = dwb_malloc(sizeof(WebSettings));
         *s = DWB_SETTINGS[j];
         if ( (arg = util_char_to_arg(value, s->type)) ) {
-          s->arg = s->arg_local = *arg;
+          s->arg = *arg;
         }
         break;
       }
     }
     if (s == NULL) {
       s = &DWB_SETTINGS[j];
-      s->arg_local = s->arg;
     }
+    s->arg_local = s->arg;
     g_hash_table_insert(dwb.settings, key, s);
     if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
       s->func(NULL, s);
