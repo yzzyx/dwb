@@ -44,6 +44,6 @@ NF > 0 {
   }
 	print "  <td class='dwb_table_cell_left'>" id "</td>"
 	print "  <td class='dwb_table_cell_middle'>" $0 "</td>"
-	print "  <td class='dwb_table_cell_right'><input id='" id "' type='" type "'></td>"
+	print "  <td class='dwb_table_cell_right'><input id='" id "' type='" type "'></input></td>"
 	print "</tr>"
 }

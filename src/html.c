@@ -137,13 +137,24 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
   GString *panels = g_string_new(NULL);
   for (GList *l = data; l; l=l->next, i++, i%=2) {
     Navigation *n = l->data;
-    g_string_append_printf(panels, "<tr class='dwb_table_row'>\
-        <td class=dwb_table_cell_left>\
-          <a href='%s'>%s</a>\
-        </td>\
-        <td class='dwb_table_cell_middle'><div class='dwb_ellipsize'><a style='color:inherit;font:inherit;' href='%s'>%s</a></div></td>\
-        <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
-        <tr>",  n->first, n->second && g_strcmp0(n->second, "(null)") ? n->second : n->first, n->first, n->first, n->first, n->second);
+    g_string_append_printf(panels, "\n\
+        <tr class='dwb_table_row'>\n\
+          <td class=dwb_table_cell_left>\n\
+            <a href='%s'>\n\
+              %s\n\
+            </a>\n\
+          </td>\n\
+          <td class='dwb_table_cell_middle'>\n\
+            <div class='dwb_ellipsize'>\n\
+              <a style='color:inherit;font:inherit;' href='%s'>\n\
+                %s\n\
+              </a>\n\
+            </div>\n\
+          </td>\n\
+          <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>\n\
+            &times\n\
+          </td>\n\
+        </tr>\n",  n->first, n->second && g_strcmp0(n->second, "(null)") ? n->second : n->first, n->first, n->first, n->first, n->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
@@ -164,11 +175,20 @@ html_searchengines(GList *gl, HtmlTable *table) {
   int i=0;
   for (GList *l = dwb.fc.se_completion; l; l=l->next, i++, i%=2) {
     Navigation *n = l->data;
-    g_string_append_printf(panels, "<tr class='dwb_table_row'>\
-        <td class='dwb_table_cell_left'><a href='%s'>%s</a></div></td>\
-        <td class='dwb_table_cell_middle'><div class='dwb_qm'>%s</div></td>\
-        <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
-        </tr>", n->second, n->second, n->first, n->first, n->second);
+    g_string_append_printf(panels, "\n\
+        <tr class='dwb_table_row'>\n\
+          <td class='dwb_table_cell_left'>\n\
+            <a href='%s'>\n\
+              %s\n\
+            </a>\n\
+          </td>\n\
+          <td class='dwb_table_cell_middle'>\n\
+            <div class='dwb_qm'>\n\
+              %s\n\
+            </div>\n\
+          </td>\
+          <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\n\
+        </tr>\n", n->second, n->second, n->first, n->first, n->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
     g_signal_connect(wv, "notify::load-status", G_CALLBACK(html_load_status_cb), gl); 
@@ -378,10 +398,24 @@ html_quickmarks(GList *gl, HtmlTable *table) {
 
   for (GList *gl = dwb.fc.quickmarks; gl; gl=gl->next) {
     Quickmark *q = gl->data;
-    g_string_append_printf(panels, "<tr class='dwb_table_row'>\
-        <td class='dwb_table_cell_left'><div><div class='dwb_qm'>%s</div><a href='%s'>%s</a></div></td>\
-        <td class='dwb_table_cell_middle'><div class='dwb_ellipsize'><a style='color:inherit;font:inherit;' href='%s'>%s</a></div></td>\
-        <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\
+    g_string_append_printf(panels, "\n\
+        <tr class='dwb_table_row'>\n\
+          <td class='dwb_table_cell_left'>\n\
+            <div>\n\
+              <div class='dwb_qm'>%s</div>\n\
+              <a href='%s'>\n\
+                %s\n\
+              </a>\n\
+            </div>\n\
+          </td>\n\
+          <td class='dwb_table_cell_middle'>\n\
+            <div class='dwb_ellipsize'>\n\
+              <a style='color:inherit;font:inherit;' href='%s'>\n\
+                %s\n\
+              </a>\n\
+            </div>\n\
+          </td>\n\
+          <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\n\
         </tr>", q->key, q->nav->first, q->nav->second && g_strcmp0(q->nav->second, "(null)") ? q->nav->second : q->nav->first,
         q->nav->first, q->nav->first, q->key, q->nav->first, q->nav->second);
   }
@@ -397,10 +431,19 @@ html_downloads(GList *gl, HtmlTable *table) {
   GString *panels = g_string_new(NULL);
   for (GList *gl = dwb.fc.downloads; gl; gl=gl->next) {
     Navigation *n = gl->data;
-    g_string_append_printf(panels, "<tr class='dwb_table_row'>\
-        <td class='dwb_table_cell_left'><a href='%s'>%s</a></td>\
-        <td class='dwb_table_cell_middle'><a href='%s'>restart</a></td>\
-        <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\
+    g_string_append_printf(panels, "\n\
+        <tr class='dwb_table_row'>\n\
+          <td class='dwb_table_cell_left'>\n\
+            <a href='%s'>\n\
+              %s\n\
+            </a>\n\
+          </td>\
+          <td class='dwb_table_cell_middle'>\n\
+            <a href='%s'>\n\
+              restart\n\
+            </a>\n\
+          </td>\
+          <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>&times</td>\n\
         </tr>", n->second, n->second, n->first, n->first, n->second);
   }
   if ( (ret = html_load_page(wv, table, panels->str)) == STATUS_OK) 
