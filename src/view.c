@@ -547,7 +547,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       js_call_as_function(webkit_web_view_get_main_frame(web), v->hint_object, "createStyleSheet", dwb.misc.hint_style, NULL);
       break;
     case WEBKIT_LOAD_COMMITTED: 
-      view_ssl_state(gl);
       if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
@@ -570,6 +569,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
             )) {
         plugins_disconnect(gl);
       }
+      view_ssl_state(gl);
       g_free(host);
       break;
     case WEBKIT_LOAD_FINISHED:

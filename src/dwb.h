@@ -604,8 +604,6 @@ struct _View {
     WebKitDOMElement *anchor;
   } hover;
   WebKitDOMElement *status_element;
-  struct {
-  } hidden;
   JSObjectRef hint_object;
 };
 struct _Color {
