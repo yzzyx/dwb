@@ -737,11 +737,6 @@ static FunctionMap FMAP [] = {
     { .n = COMP_BUFFER }, EP_NONE, { "bu", NULL }, },
   
 
-  
-  { { "spell_checking",        "Setting: spell checking",         },   0, 
-    (Func)commands_toggle_property,     NULL,                              POST_SM,    
-    {  .ro = true, .p = "enable-spell-checking" }, EP_NONE, { NULL }, },
-  
   { { "proxy",                 "Toggle proxy",                    },        CP_COMMANDLINE,     
     (Func)commands_toggle_proxy,        NULL,                    POST_SM,    
     { 0 }, EP_NONE, { NULL }, },

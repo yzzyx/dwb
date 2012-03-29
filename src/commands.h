@@ -64,7 +64,6 @@ DwbStatus commands_show_hints(KeyMap *, Arg *);
 DwbStatus commands_show(KeyMap *, Arg *);
 DwbStatus commands_toggle_scripts(KeyMap *, Arg *a);
 DwbStatus commands_toggle_plugin_blocker(KeyMap *, Arg *a);
-DwbStatus commands_toggle_property(KeyMap *, Arg *); 
 DwbStatus commands_toggle_proxy(KeyMap *, Arg *); 
 DwbStatus commands_undo(KeyMap *, Arg *);
 DwbStatus commands_view_source(KeyMap *, Arg *);

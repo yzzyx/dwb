@@ -153,18 +153,6 @@ commands_normal_mode(KeyMap *km, Arg *a) {
   return STATUS_OK;
 }
 
-/* commands_toggle_property {{{*/
-DwbStatus 
-commands_toggle_property(KeyMap *km, Arg *a) {
-  char *prop = a->p;
-  gboolean value;
-  WebKitWebSettings *settings = webkit_web_view_get_settings(CURRENT_WEBVIEW());
-  g_object_get(settings, prop, &value, NULL);
-  g_object_set(settings, prop, !value, NULL);
-  dwb_set_normal_message(dwb.state.fview, true, "Property %s set to %s", prop, !value ? "true" : "false");
-  return STATUS_OK;
-}/*}}}*/
-
 /* commands_toggle_proxy {{{*/
 DwbStatus
 commands_toggle_proxy(KeyMap *km, Arg *a) {
