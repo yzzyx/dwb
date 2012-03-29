@@ -3007,7 +3007,6 @@ dwb_init_settings() {
   gsize length, numkeys = 0;
   char  **keys = NULL;
   char  *content, *key, *value;
-  gboolean set;
   Arg *arg;
   WebSettings *s;
   GKeyFile  *keyfile = g_key_file_new();
@@ -3037,7 +3036,7 @@ dwb_init_settings() {
   g_free(content);
   for (int j=0; j<LENGTH(DWB_SETTINGS); j++) {
     s = NULL;
-    set = false;
+    value = NULL;
     key = g_strdup(DWB_SETTINGS[j].n.first);
     for (int i=0; i<numkeys; i++) {
       value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
@@ -3047,19 +3046,17 @@ dwb_init_settings() {
         if ( (arg = util_char_to_arg(value, s->type)) ) {
           s->arg = s->arg_local = *arg;
         }
-        set = true;
+        break;
       }
-      g_free(value);
     }
-    if (!set) {
+    if (s == NULL) {
       s = &DWB_SETTINGS[j];
     }
-    if (s != NULL) {
-      g_hash_table_insert(dwb.settings, key, s);
-      if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
-        s->func(NULL, s);
-      }
+    g_hash_table_insert(dwb.settings, key, s);
+    if (s->apply & SETTING_BUILTIN || s->apply & SETTING_ONINIT) {
+      s->func(NULL, s);
     }
+    g_free(value);
   }
   if (keys)
     g_strfreev(keys);
