@@ -2469,9 +2469,6 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   list = g_slist_append(list, dwb_navigation_new("DWB_NUMMOD",  nummod));
   list = g_slist_append(list, dwb_navigation_new("DWB_ARGUMENT",  a->p));
 
-  const char *raw_data = dwb_get_raw_data(dwb.state.fview);
-  list = g_slist_append(list, dwb_navigation_new("DWB_HTML_CONTENT",  raw_data == NULL ? "" : raw_data));
-
   const char *referer = soup_get_header(dwb.state.fview, "Referer");
   if (referer != NULL)
     list = g_slist_append(list, dwb_navigation_new("DWB_REFERER",  referer));
