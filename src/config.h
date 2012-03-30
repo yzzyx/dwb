@@ -31,6 +31,7 @@ static KeyValue KEYS[] = {
   { "find_forward_ic",             {   "c/",         0,                   },  }, 
   { "find_next",                {   "n",         0,                   },  },
   { "find_previous",            {   "N",         0,                   },  },
+  { "find_backward",            {   "?",         0,                   },  },  
   { "find_backward_ic",         {   "c?",         0,                   },  },  
   { "focus_next",               {   "J",         0,                   },  },  
   { "focus_prev",               {   "K",         0,                   },  },  
