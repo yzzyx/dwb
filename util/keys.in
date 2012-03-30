@@ -6,7 +6,9 @@ tabopen_url Open url in a new tab, edit the current url in the address bar
 winopen Open url in a new window
 winopen_url Open url in a new window, edit the current url in the address bar
 find_backward Find backward
+find_backward_ic Find backward case sensitive
 find_forward Find forward
+find_forward_ic Find forward case sensitive
 find_next Find next
 find_previous Find previous
 history_back Go back

@@ -230,6 +230,11 @@ enum SetSetting {
   SET_GLOBAL, 
   SET_LOCAL, 
 };
+enum FindFlags {
+  FIND_FORWARD        = 1<<0, 
+  FIND_CASE_SENSITIVE = 1<<1,
+  FIND_WRAP           = 1<<2,
+};
 enum {
   EP_NONE = 0,
   EP_COMP_DEFAULT = 1<<1,
@@ -523,7 +528,7 @@ struct _State {
   HintType hint_type;
   guint scriptlock;
   GHashTable *settings_hash;
-  gboolean forward_search;
+  int search_flags;
   gboolean background_tabs;
 
   SoupCookieJar *cookiejar;
@@ -781,7 +786,7 @@ void dwb_execute_user_script(KeyMap *km, Arg *a);
 
 void dwb_focus_scroll(GList *);
 
-gboolean dwb_update_search(gboolean forward);
+gboolean dwb_update_search(void);
 
 void dwb_set_normal_message(GList *, gboolean, const char *, ...);
 void dwb_set_error_message(GList *gl, const char *, ...);

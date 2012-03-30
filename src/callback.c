@@ -43,7 +43,7 @@ callback_entry_key_release(GtkWidget* entry, GdkEventKey *e) {
     }
   }
   if (dwb.state.mode == FIND_MODE) {
-    dwb_update_search(dwb.state.forward_search);
+    dwb_update_search();
   }
   return false;
 }/*}}}*/

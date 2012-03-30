@@ -28,9 +28,10 @@ static KeyValue KEYS[] = {
   { "command_mode",             {   ":",         0,                   },  },  
   { "only",                     {   "co",         0,                   },  },  
   { "find_forward",             {   "/",         0,                   },  }, 
+  { "find_forward_ic",             {   "c/",         0,                   },  }, 
   { "find_next",                {   "n",         0,                   },  },
   { "find_previous",            {   "N",         0,                   },  },
-  { "find_backward",            {   "?",         0,                   },  },  
+  { "find_backward_ic",         {   "c?",         0,                   },  },  
   { "focus_next",               {   "J",         0,                   },  },  
   { "focus_prev",               {   "K",         0,                   },  },  
   { "focus_tab",           {   "T",         0,                   },  },  
@@ -290,11 +291,19 @@ static FunctionMap FMAP [] = {
   
   { { "find_backward",         "Find backward ",                    }, CP_COMMANDLINE|CP_HAS_MODE, 
     (Func)commands_find,                NO_URL,                            NEVER_SM,     
-    { .b = false }, EP_NONE, { "bfind", NULL }, },
+    { .n = 0 }, EP_NONE, { "bfind", NULL }, },
   
   { { "find_forward",          "Find forward ",                     }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_find,                NO_URL,                            NEVER_SM,     
-    { .b = true }, EP_NONE, { "ffind",  NULL, }, },
+    { .n = FIND_FORWARD }, EP_NONE, { "ffind",  NULL, }, },
+
+  { { "find_backward_ic",         "Find backward ",                    }, CP_COMMANDLINE|CP_HAS_MODE, 
+    (Func)commands_find,                NO_URL,                            NEVER_SM,     
+    { .n = FIND_CASE_SENSITIVE }, EP_NONE, { "ibfind", NULL }, },
+  
+  { { "find_forward_ic",          "Find forward ",                     }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_find,                NO_URL,                            NEVER_SM,     
+    { .n = FIND_FORWARD | FIND_CASE_SENSITIVE }, EP_NONE, { "iffind",  NULL, }, },
   
   { { "find_next",             "Find next",                         }, CP_COMMANDLINE, 
     (Func)commands_search,                  "No matches",                      ALWAYS_SM,     

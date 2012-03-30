@@ -266,6 +266,30 @@ aliases:
 .BR winforward ,
 .BR wfo ).
 .TP
+.BR /
+Find forward (command
+.BR find_forward ,
+alias: 
+.BR ffind ).
+.TP
+.BR ?
+Find backward (command
+.BR find_backward ,
+alias
+.BR bfind ).
+.TP
+.BR c/
+Find forward, ignore case (command
+.BR find_forward_ic ,
+alias: 
+.BR iffind ).
+.TP
+.BR c?
+Find backward, ignore case (command
+.BR find_backward_ic ,
+alias
+.BR ibfind ).
+.TP
 .BR M
 Add a bookmark (command
 .BR bookmark ,
@@ -982,7 +1006,9 @@ dump                    |                |Write html of current website to a
 execute_javascript      |exja            |Execute a javascript snippet
 execute_userscript      |                |Execute userscript
 find_backward           |bfind           |Find backward
+find_backward_ic        |ibfind          |Find backward case sensitive
 find_forward            |ffind           |Find forward
+find_forward_ic         |iffind          |Find forward case sensitive
 find_next               |fnext           |Find next
 find_previous           |fprev           |Find previous
 focus_input             |                |Focus next input

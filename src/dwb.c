@@ -2356,7 +2356,7 @@ dwb_highlight_search() {
   int matches;
   webkit_web_view_unmark_text_matches(web);
 
-  if ( v->status->search_string != NULL && (matches = webkit_web_view_mark_text_matches(web, v->status->search_string, false, 0)) ) {
+  if ( v->status->search_string != NULL && (matches = webkit_web_view_mark_text_matches(web, v->status->search_string, dwb.state.search_flags & FIND_CASE_SENSITIVE, 0)) ) {
     dwb_set_normal_message(dwb.state.fview, false, "[%3d hits] ", matches);
     webkit_web_view_set_highlight_text_matches(web, true);
     return true;
@@ -2366,7 +2366,7 @@ dwb_highlight_search() {
 
 /* dwb_update_search(gboolean ) {{{*/
 gboolean 
-dwb_update_search(gboolean forward) {
+dwb_update_search(void) {
   View *v = CURRENT_VIEW();
   const char *text = GET_TEXT();
   if (strlen(text) > 0) {
@@ -2388,15 +2388,15 @@ gboolean
 dwb_search(Arg *arg) {
   gboolean ret = false;
   View *v = CURRENT_VIEW();
-  gboolean forward = dwb.state.forward_search;
+  gboolean forward = dwb.state.search_flags & FIND_FORWARD;
   if (arg) {
     if (!arg->b) {
-      forward = !dwb.state.forward_search;
+      forward = !forward;
     }
     dwb_highlight_search();
   }
   if (v->status->search_string) {
-    ret = webkit_web_view_search_text(WEBKIT_WEB_VIEW(v->web), v->status->search_string, false, forward, true);
+    ret = webkit_web_view_search_text(WEBKIT_WEB_VIEW(v->web), v->status->search_string, dwb.state.search_flags & FIND_CASE_SENSITIVE, forward, true);
   }
   return ret;
 }/*}}}*/
