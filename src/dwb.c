@@ -2483,12 +2483,9 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
     mkfifo(dwb.misc.fifo, 0600);
   }
   
-  if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &std_in, &std_out, NULL, &error)) {
+  if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &std_in, km->map->arg.b ? NULL : &std_out , NULL, &error)) {
     if (km->map->arg.b) {
-      int out = open(dwb.misc.fifo, O_RDONLY | O_NONBLOCK);
-      dup2(out, std_out);
-      close(std_out);
-      std_out = out;
+      std_out = open(dwb.misc.fifo, O_RDONLY | O_NONBLOCK);
     }
     GIOChannel *channel = g_io_channel_unix_new(std_out);
     GIOChannel *out_channel = g_io_channel_unix_new(std_in);
