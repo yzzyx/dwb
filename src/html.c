@@ -220,7 +220,7 @@ html_settings_changed(WebKitDOMElement *el) {
   else if (WEBKIT_DOM_IS_HTML_SELECT_ELEMENT(el)) {
     value = webkit_dom_html_select_element_get_value(WEBKIT_DOM_HTML_SELECT_ELEMENT(el));
   }
-  dwb_set_setting(id, value, SETTING_GLOBAL);
+  dwb_set_setting(id, value, SET_GLOBAL);
   webkit_dom_element_blur(el);
 }
 
