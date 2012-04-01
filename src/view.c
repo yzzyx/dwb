@@ -66,7 +66,7 @@ static void view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *, GList *);
 /* view_main_frame_committed_cb {{{*/
 void
 view_main_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
-  if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {
+  if (gl == dwb.state.fview && (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE)) {
     dwb_change_mode(NORMAL_MODE, true);
   }
 }/*}}}*/

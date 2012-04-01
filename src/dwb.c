@@ -1289,7 +1289,7 @@ dwb_clean_load_begin(GList *gl) {
   View *v = gl->data;
   v->status->ssl = SSL_NONE;
   v->plugins->status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
-  if (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) {  
+  if (gl == dwb.state.fview && (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE)) {  
     dwb_change_mode(NORMAL_MODE, true);
   }
   view_set_favicon(gl, false);
