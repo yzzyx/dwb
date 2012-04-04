@@ -41,7 +41,7 @@ Open a new session, even if
 is enabled.
 .TP
 .BR \-x ,\  --execute \ <commands>
-Execute a list list of dwb commands seperated by 
+Execute a list of dwb commands separated by
 .IR ;; , 
 see 
 .B CUSTOM COMMANDS 
@@ -149,7 +149,7 @@ aliases:
 .BR o ).
 .TP
 .BR go 
-Open url in the focused tab, set the current url in the navigation bar (comand 
+Open url in the focused tab, set the current url in the navigation bar (command
 .BR open_url ).
 .TP
 .BR O 
@@ -1621,7 +1621,8 @@ and
 .I DWB_USER_AGENT  
 are set. 
 Default value:
-.IR xterm\ -e\ wget\ 'dwb_uri'\ -O\ 'dwb_output'\ --load-cookies\ 'dwb_cookies' .
+.IR xterm\ -e\ wget\ 'dwb_uri'\ -O\ 'dwb_output'
+.BR --load-cookies 'dwb_cookies'.
 .TP
 .BR download-directory
 The default download directory, if empty, the current working directory is used
@@ -1850,8 +1851,8 @@ available which can be used in a script, for example:
   #!/bin/sh
 
   case ${DWB_SCHEME} in 
-    mailto) xterm -e "mutt ${DWB_URI}";;
-    ftp) xterm -e "ncftp ${DWB_URI}";;
+    mailto) xterm -\(hye "mutt ${DWB_URI}";;
+    ftp) xterm \(hye "ncftp ${DWB_URI}";;
     *) xdg-open ${DWB_URI}
   esac
 .fi
@@ -1870,7 +1871,7 @@ default value:
 .TP 
 .BR single-instance
 Only one instance of dwb per user. This option will be overridden by the
-commandlineoption -n. Possible values: true/false,
+commandlineoption \(hyn. Possible values: true/false,
 default value:
 .IR true .
 .TP 
