@@ -76,7 +76,6 @@ static void dwb_save_key_value(const char *file, const char *key, const char *va
 static gboolean dwb_editable_focus_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl);
 
 static void dwb_reload_layout(GList *,  WebSettings *);
-static char * dwb_test_userscript(const char *);
 
 static void dwb_init_key_map(void);
 static void dwb_init_style(void);
@@ -1310,21 +1309,6 @@ dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
   return n;
 }/*}}}*/
 
-/* dwb_test_userscript (const char *)         return: char* (alloc) or NULL {{{*/
-static char * 
-dwb_test_userscript(const char *filename) {
-  char *path = g_build_filename(dwb.files.userscripts, filename, NULL); 
-
-  if (g_file_test(path, G_FILE_TEST_IS_REGULAR) || 
-      (g_str_has_prefix(filename, dwb.files.userscripts) && g_file_test(filename, G_FILE_TEST_IS_REGULAR) && (path = g_strdup(filename))) ) {
-    return path;
-  }
-  else {
-    g_free(path);
-  }
-  return NULL;
-}/*}}}*/
-
 /* dwb_focus(GList *gl) {{{*/
 void 
 dwb_unfocus() {
@@ -1970,13 +1954,6 @@ dwb_load_uri(GList *gl, const char *arg) {
   if (dwb.state.type == HTML_STRING) {
     webkit_web_view_load_string(web, tmpuri, "text/html", NULL, NULL);
     dwb.state.type = 0;
-    goto clean;
-  }
-  /* Check if uri is a userscript */
-  if ( (uri = dwb_test_userscript(tmpuri)) ) {
-    Arg a = { .arg = uri };
-    dwb_execute_user_script(NULL, &a);
-    g_free(uri);
     goto clean;
   }
   /* Check if uri is a javascript snippet */
