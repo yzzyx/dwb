@@ -1,10 +1,12 @@
 # general General
 open Open url
-open_url Open url, edit the current url in the address bar
+open_url Open url, edit current url in the address bar
 tabopen Open in a new tab
-tabopen_url Open url in a new tab, edit the current url in the address bar
+tabopen_url Open url in a new tab, edit current url in the address bar
+backopen Open in a new tab in background
+backopen_url Open url in a new tab, edit current url in the address bar
 winopen Open url in a new window
-winopen_url Open url in a new window, edit the current url in the address bar
+winopen_url Open url in a new window, edit current url in the address bar
 find_backward Find backward
 find_backward_ic Find backward case sensitive
 find_forward Find forward

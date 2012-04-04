@@ -1942,9 +1942,10 @@ dwb_load_uri(GList *gl, const char *arg) {
     goto clean;
   }
   /*  new tab ?  */
-  else if (dwb.state.nv == OPEN_NEW_VIEW) {
+  else if (dwb.state.nv & OPEN_NEW_VIEW) {
+    gboolean background = dwb.state.nv & OPEN_BACKGROUND;
     dwb.state.nv = OPEN_NORMAL;
-    view_add(tmpuri, false);
+    view_add(tmpuri, background);
     goto clean;
   }
   /*  get resolved uri */

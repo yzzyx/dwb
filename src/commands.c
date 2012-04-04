@@ -311,7 +311,6 @@ commands_history(KeyMap *km, Arg *arg) {
 /* commands_open(KeyMap *km, Arg *arg) {{{*/
 DwbStatus  
 commands_open(KeyMap *km, Arg *arg) {
-
   if (dwb.state.nv & OPEN_NORMAL)
     dwb_set_open_mode(arg->n & ~SET_URL);
 

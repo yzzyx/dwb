@@ -62,6 +62,8 @@ static KeyValue KEYS[] = {
   { "open_url",                     {   "go",        0,                   },  }, 
   { "tabopen",                  {   "O",         0,                   },  },  
   { "tabopen_url",                  {   "gO",         0,                   },  },  
+  { "backopen",                  {   "xo",         0,                   },  },  
+  { "backopen_url",                  {   "xO",         0,                   },  },  
   { "winopen",                  {   "wo",         0,                   },  },  
   { "winopen_url",                  {   "wO",         0,                   },  },  
   { "start_page",          {   "h",         GDK_CONTROL_MASK,    },  },  
@@ -453,6 +455,14 @@ static FunctionMap FMAP [] = {
   { { "tabopen_url",               "tabopen",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_open,                NULL,                 NEVER_SM,   
     { .n = OPEN_NEW_VIEW | SET_URL, .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
+
+  { { "backopen",               "backopen",                          }, CP_COMMANDLINE | CP_DONT_CLEAN | CP_NEEDS_ARG, 
+    (Func)commands_open,                NULL,                 NEVER_SM,   
+    { .n = OPEN_NEW_VIEW | OPEN_BACKGROUND,     .p = NULL }, EP_COMP_DEFAULT, { "bopen", NULL }, },
+  
+  { { "backopen_url",               "backopen",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_open,                NULL,                 NEVER_SM,   
+    { .n = OPEN_NEW_VIEW | SET_URL | OPEN_BACKGROUND, .p = NULL }, EP_COMP_DEFAULT, { NULL }, },
   
   { { "winopen",               "winopen",                           }, CP_COMMANDLINE | CP_DONT_CLEAN | CP_NEEDS_ARG, 
     (Func)commands_open,                NULL,                 NEVER_SM,   
