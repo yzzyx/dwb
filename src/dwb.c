@@ -1923,17 +1923,25 @@ dwb_load_uri(GList *gl, const char *arg) {
   /* TODO parse scheme */
   if (arg == NULL)
     return;
+  const char *tmpuri;
   char *uri = NULL; 
   char *argback = g_strdup(arg);
-  char *tmpuri = argback;
-  if (tmpuri != NULL && *tmpuri != '\0')
-    g_strstrip(tmpuri);
-  gl = gl == NULL ? dwb.state.fview : gl;
-  WebKitWebView *web = WEBVIEW(gl);
+  char *backuri = argback;
+  if (backuri != NULL && *backuri != '\0')
+    g_strstrip(backuri);
+
+  tmpuri = backuri;
 
   if (*tmpuri == '\0') {
     goto clean;
   }
+  if (gl == NULL)
+    gl = dwb.state.fview;
+
+  WebKitWebView *web = WEBVIEW(gl);
+
+  if (!g_strcmp0(tmpuri, "$URI"))
+    tmpuri = webkit_web_view_get_uri(WEBVIEW(gl));
 
   /* new window ? */
   if (dwb.state.nv & OPEN_NEW_WINDOW) {
