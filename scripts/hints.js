@@ -5,33 +5,23 @@
   String.prototype.isLower = function () { 
     return this == this.toLowerCase(); 
   };
-  var _letterSeq = "FDSARTGBVECWXQYIOPMNHZULKJ";
-  var _font = "bold 10px monospace";
-  var _style = "letter";
-  var _fgColor = "#ffffff";
-  var _bgColor = "#000088";
-  var _activeColor = "#00ff00";
-  var _normalColor = "#ffff99";
-  var _hintBorder = "2px dashed #000000";
-  var _hintOpacity = 0.65;
-  var _elements = [];
-  var _activeArr = [];
-  var _lastInput = null;
-  var _lastPosition = 0;
-  var _activeInput = null;
-  var _new_tab = false;
-  var _active = null;
-  var _markHints = false;
-  var _autoFollow = true;
-  var _bigFont = null;
-  var _hintTypes =  [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, [onclick], [onmousedown]," + 
-      "[onmouseover], [role=link], [role=option], [role=button], [role=option]",  // HINT_T_ALL
-                 //[ "iframe", 
-                 "a",  // HINT_T_LINKS
-                 "img",  // HINT_T_IMAGES
-                 "input[type=text], input[type=password], input[type=search], textarea",  // HINT_T_EDITABLE
-                 "[src], [href]"  // HINT_T_URL
-               ];
+  var globals = {
+    active : null,
+    activeArr : [],
+    activeInput : null,
+    elements : [],
+    lastInput : null,
+    lastPosition : 0,
+    newTab : false,
+    hintTypes :  [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, [onclick], [onmousedown]," + 
+        "[onmouseover], [role=link], [role=option], [role=button], [role=option]",  // HINT_T_ALL
+                   //[ "iframe", 
+                   "a",  // HINT_T_LINKS
+                   "img",  // HINT_T_IMAGES
+                   "input[type=text], input[type=password], input[type=search], textarea",  // HINT_T_EDITABLE
+                   "[src], [href]"  // HINT_T_URL
+                 ]
+  };
   var HintTypes = {
     HINT_T_ALL : 0,
     HINT_T_LINKS : 1,
@@ -44,7 +34,6 @@
     OPEN_NEW_VIEW    : 1<<1, 
     OPEN_NEW_WINDOW  : 1<<2
   };
-
   var __getTextHints = function(arr) {
     var length = arr.length;
     var i, j, e, text, cur, start, l, max, r;
@@ -58,7 +47,7 @@
       }
     }
     else if (arr[0] instanceof __letterHint) {
-      l = _letterSeq.length;
+      l = globals.letterSeq.length;
       max = Math.ceil(Math.log(length)/Math.log(l));
       r = Math.ceil(Math.pow(length, 1/max));
       for (i=0; i<length; i++) {
@@ -66,7 +55,7 @@
         text = new String();
         cur = i;
         for (j=0; j<max; j++) {
-          text += _letterSeq[(cur%r)];
+          text += globals.letterSeq[(cur%r)];
           cur = Math.floor(cur/r);
         }
         e.hint.textContent = text;
@@ -129,7 +118,7 @@
       return Math.max(start, 1);
     };
     this.betterMatch = function(input) {
-      var length = _activeArr.length;
+      var length = globals.activeArr.length;
       var i, cl;
       if (input.isInt()) {
         return 0;
@@ -137,7 +126,7 @@
       var bestposition = 37;
       var ret = 0;
       for (i=0; i<length; i++) {
-        var e = _activeArr[i];
+        var e = globals.activeArr[i];
         if (input && bestposition !== 0) {
           var content = e.element.textContent.toLowerCase().split(" ");
           for (cl=0; cl<content.length; cl++) {
@@ -151,7 +140,7 @@
           }
         }
       }
-      __getTextHints(_activeArr);
+      __getTextHints(globals.activeArr);
       return ret;
     };
     this.matchText = function(input, matchHint) {
@@ -201,42 +190,42 @@
     }
     var mouseEvent = e.ownerDocument.createEvent("MouseEvent");
     mouseEvent.initMouseEvent(ev, bubble, true, e.ownerDocument.defaultView, 0, 0, 0, 0, 0, false, false, false, false, 
-        _new_tab & OpenMode.OPEN_NEW_VIEW ? 1 : 0, null);
+        globals.newTab & OpenMode.OPEN_NEW_VIEW ? 1 : 0, null);
     e.dispatchEvent(mouseEvent);
   };
   var __clickElement = function (element, ev) {
     if (ev) {
-      __mouseEvent(element, ev, !_new_tab);
+      __mouseEvent(element, ev, !globals.newTab);
     }
     else { // both events, if no event is given
-      __mouseEvent(element, "click", !_new_tab);
-      __mouseEvent(element, "mousedown", !_new_tab);
+      __mouseEvent(element, "click", !globals.newTab);
+      __mouseEvent(element, "mousedown", !globals.newTab);
     }
   };
   var __getActive = function () {
-    return _active;
+    return globals.active;
   };
   var __setActive = function (element) {
     var active = __getActive();
     if (active) {
-      if (_markHints) {
-        active.overlay.style.background = _normalColor;
+      if (globals.markHints) {
+        active.overlay.style.background = globals.normalColor;
       }
       else if (active.overlay) {
         active.overlay.parentNode.removeChild(active.overlay);
       }
-      active.hint.style.font = _font;
+      active.hint.style.font = globals.font;
 
     }
-    _active = element;
-    if (!_active.overlay) {
-      _active.createOverlay();
+    globals.active = element;
+    if (!globals.active.overlay) {
+      globals.active.createOverlay();
     }
-    if (!_markHints) {
-      _active.hint.parentNode.appendChild(_active.overlay);
+    if (!globals.markHints) {
+      globals.active.hint.parentNode.appendChild(globals.active.overlay);
     }
-    _active.overlay.style.background = _activeColor;
-    _active.hint.style.fontSize = _bigFont;
+    globals.active.overlay.style.background = globals.activeColor;
+    globals.active.hint.style.fontSize = globals.bigFont;
   };
   var __hexToRgb = function (color) {
     var rgb, i;
@@ -256,7 +245,7 @@
         rgb[i] = parseInt("0x" + rgb[i], 16);
       }
     }
-    return "rgba(" + rgb.slice(1) + "," +  _hintOpacity/2 + ")";
+    return "rgba(" + rgb.slice(1) + "," +  globals.hintOpacity/2 + ")";
   };
   var __createStyleSheet = function(doc) {
     if (doc.hasStyleSheet) {
@@ -265,13 +254,13 @@
     var styleSheet = __createElement("style");
     styleSheet.innerHTML += ".dwb_hint { " +
       "position:absolute; z-index:20000;" +
-      "background:" + _bgColor  + ";" + 
-      "color:" + _fgColor + ";" + 
-      "border:" + _hintBorder + ";" + 
-      "font:" + _font + ";" + 
+      "background:" + globals.bgColor  + ";" + 
+      "color:" + globals.fgColor + ";" + 
+      "border:" + globals.hintBorder + ";" + 
+      "font:" + globals.font + ";" + 
       "display:inline;" +
-      "opacity: " + _hintOpacity + "; }" + 
-      ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + _normalColor + ";}";
+      "opacity: " + globals.hintOpacity + "; }" + 
+      ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + globals.normalColor + ";}";
     doc.head.appendChild(styleSheet);
     doc.hasStyleSheet = true;
   };
@@ -299,7 +288,7 @@
     var i;
     try {
       var doc = win.document;
-      var res = doc.body.querySelectorAll(_hintTypes[type]); 
+      var res = doc.body.querySelectorAll(globals.hintTypes[type]); 
       var e, r;
       __createStyleSheet(doc);
       var hints = doc.createDocumentFragment();
@@ -315,9 +304,9 @@
         }
         else {
           var element = new varructor(e, win, r, oe);
-          _elements.push(element);
+          globals.elements.push(element);
           hints.appendChild(element.hint);
-          if (_markHints) {
+          if (globals.markHints) {
             element.createOverlay();
             hints.appendChild(element.overlay);
           }
@@ -334,39 +323,39 @@
     if (document.activeElement) {
       document.activeElement.blur();
     }
-    _new_tab = newTab;
-    __createHints(window, _style == "letter" ? __letterHint : __numberHint, type);
-    var l = _elements.length;
+    globals.newTab = newTab;
+    __createHints(window, globals.style == "letter" ? __letterHint : __numberHint, type);
+    var l = globals.elements.length;
 
     if (l === 0) {
       return "_dwb_no_hints_";
     }
     else if (l == 1)  {
-      return  __evaluate(_elements[0].element, type);
+      return  __evaluate(globals.elements[0].element, type);
     }
 
-    __getTextHints(_elements);
-    _activeArr = _elements;
-    __setActive(_elements[0]);
+    __getTextHints(globals.elements);
+    globals.activeArr = globals.elements;
+    __setActive(globals.elements[0]);
     return null;
   };
   var __updateHints = function(input, type) {
     var i;
     var array = [];
     var matchHint = false;
-    if (!_activeArr.length) {
+    if (!globals.activeArr.length) {
       __clear();
-      __showHints(type, _new_tab);
+      __showHints(type, globals.newTab);
     }
-    if (_lastInput && (_lastInput.length > input.length)) {
+    if (globals.lastInput && (globals.lastInput.length > input.length)) {
       __clear();
-      _lastInput = input;
-      __showHints(type, _new_tab);
+      globals.lastInput = input;
+      __showHints(type, globals.newTab);
       return __updateHints(input, type);
     }
-    _lastInput = input;
+    globals.lastInput = input;
     if (input) {
-      if (_style == "number") {
+      if (globals.style == "number") {
         if (input[input.length-1].isInt()) {
           input = input.match(/[0-9]+/g).join("");
           matchHint = true;
@@ -375,8 +364,8 @@
           input = input.match(/[^0-9]+/g).join("");
         }
       }
-      else if (_style == "letter") {
-        var lowerSeq = _letterSeq.toLowerCase();
+      else if (globals.style == "letter") {
+        var lowerSeq = globals.letterSeq.toLowerCase();
         if (input[input.length-1].isLower()) {
           if (lowerSeq.indexOf(input.charAt(input.length-1)) == -1) {
             return "_dwb_no_hints_";
@@ -389,8 +378,8 @@
         }
       }
     }
-    for (i=0; i<_activeArr.length; i++) {
-      var e = _activeArr[i];
+    for (i=0; i<globals.activeArr.length; i++) {
+      var e = globals.activeArr[i];
       if (e.matchText(input, matchHint)) {
         array.push(e);
       }
@@ -398,17 +387,17 @@
         e.hint.style.visibility = 'hidden';
       }
     }
-    _activeArr = array;
+    globals.activeArr = array;
     if (array.length === 0) {
       __clear();
       return "_dwb_no_hints_";
     }
-    else if (array.length == 1 && _autoFollow) {
+    else if (array.length == 1 && globals.autoFollow) {
       return __evaluate(array[0].element, type);
     }
     else {
-      _lastPosition = array[0].betterMatch(input);
-      __setActive(array[_lastPosition]);
+      globals.lastPosition = array[0].betterMatch(input);
+      __setActive(array[globals.lastPosition]);
     }
     return null;
   };
@@ -429,9 +418,9 @@
   var __clear = function() {
     var p, i;
     try {
-      if (_elements) {
-        for (i=0; i<_elements.length; i++) {
-          var e = _elements[i];
+      if (globals.elements) {
+        for (i=0; i<globals.elements.length; i++) {
+          var e = globals.elements[i];
           if ( (p = e.hint.parentNode) ) {
             p.removeChild(e.hint);
           }
@@ -440,18 +429,18 @@
           }
         }
       }
-      if(! _markHints && _active) {
-        _active.element.removeAttribute("dwb_highlight");
+      if(! globals.markHints && globals.active) {
+        globals.active.element.removeAttribute("dwb_highlight");
       }
     }
     catch (exc) { 
       console.error(exc); 
     }
-    _elements = [];
-    _activeArr = [];
-    _active = null;
-    _lastPosition = 0;
-    _lastInput = null;
+    globals.elements = [];
+    globals.activeArr = [];
+    globals.active = null;
+    globals.lastPosition = 0;
+    globals.lastInput = null;
   };
   var __evaluate = function (e, type) {
     var ret = null;
@@ -460,7 +449,7 @@
       elementType = e.type.toLowerCase();
     }
     var tagname = e.tagName.toLowerCase();
-    if (_new_tab && e.target == "_blank") {
+    if (globals.newTab && e.target == "_blank") {
       e.target = null;
     }
     if (type > 0) {
@@ -505,14 +494,14 @@
     return ret;
   };
   var __focusNext = function()  {
-    var newpos = _lastPosition === _activeArr.length-1 ? 0 : _lastPosition + 1;
-    __setActive(_activeArr[newpos]);
-    _lastPosition = newpos;
+    var newpos = globals.lastPosition === globals.activeArr.length-1 ? 0 : globals.lastPosition + 1;
+    __setActive(globals.activeArr[newpos]);
+    globals.lastPosition = newpos;
   };
   var __focusPrev = function()  {
-    var newpos = _lastPosition === 0 ? _activeArr.length-1 : _lastPosition - 1;
-    __setActive(_activeArr[newpos]);
-    _lastPosition = newpos;
+    var newpos = globals.lastPosition === 0 ? globals.activeArr.length-1 : globals.lastPosition - 1;
+    __setActive(globals.activeArr[newpos]);
+    globals.lastPosition = newpos;
   };
   var __addSearchEngine = function() {
     var i, j;
@@ -530,28 +519,28 @@
             e = new __letterHint(els[j], window, r, oe);
             hints.appendChild(e.hint);
             e.hint.style.visibility = "hidden";
-            _elements.push(e);
+            globals.elements.push(e);
           }
         }
       }
-      if (_elements.length === 0) {
+      if (globals.elements.length === 0) {
         return "_dwb_no_hints_";
       }
-      if (_markHints) {
-        for (i=0; i<_elements.length; i++) {
-          e = _elements[i];
+      if (globals.markHints) {
+        for (i=0; i<globals.elements.length; i++) {
+          e = globals.elements[i];
           e.createOverlay();
           hints.appendChild(e.overlay);
         }
       }
       else {
-        e = _elements[0];
+        e = globals.elements[0];
         e.createOverlay();
         hints.appendChild(e.overlay);
       }
       document.body.appendChild(hints); 
-      __setActive(_elements[0]);
-      _activeArr = _elements;
+      __setActive(globals.elements[0]);
+      globals.activeArr = globals.elements;
     }
     catch (exc) {
       console.error(exc);
@@ -579,42 +568,39 @@
     }
     var styles = document.styleSheets[0];
     styles.insertRule('input:focus { outline: 2px solid #1793d1; }', 0);
-    if (!_activeInput) {
-      _activeInput = res[0];
+    if (!globals.activeInput) {
+      globals.activeInput = res[0];
     }
     else {
       for (i=0; i<res.length; i++) {
-        if (res[i] == _activeInput) {
-          _activeInput = res[i+1] || res[0];
+        if (res[i] == globals.activeInput) {
+          globals.activeInput = res[i+1] || res[0];
           break;
         }
       }
     }
-    _activeInput.focus();
+    globals.activeInput.focus();
     return null;
   };
   var __init = function (letter_seq, font, style,
           fg_color, bg_color, active_color, normal_color, border,  opacity, markHints, autoFollow) {
-        _letterSeq  = letter_seq;
-        _font = font;
-        _style =  style.toLowerCase();
-        _fgColor    = fg_color;
-        _bgColor    = bg_color;
-        _activeColor = __hexToRgb(active_color);
-        _normalColor = __hexToRgb(normal_color);
-        _hintBorder = border;
-        _hintOpacity = opacity;
-        _markHints = markHints;
-        _autoFollow = autoFollow;
-        _bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
+        globals.hintOpacity = opacity;
+        globals.letterSeq  = letter_seq;
+        globals.font = font;
+        globals.style =  style.toLowerCase();
+        globals.fgColor    = fg_color;
+        globals.bgColor    = bg_color;
+        globals.activeColor = __hexToRgb(active_color);
+        globals.normalColor = __hexToRgb(normal_color);
+        globals.hintBorder = border;
+        globals.markHints = markHints;
+        globals.autoFollow = autoFollow;
+        globals.bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
   };
 
 
   return {
-    createStyleSheet : function(obj) {
-      __init(obj.hintLetterSeq, obj.hintFont, obj.hintStyle, obj.hintFgColor,
-        obj.hintBgColor, obj.hintActiveColor, obj.hintNormalColor,
-        obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks, obj.hintAutoFollow);
+    createStyleSheet : function() {
       __createStyleSheet(document);
     },
     showHints : 
@@ -654,5 +640,11 @@
       function () {
         __focusInput();
       },
+    init : 
+      function (obj) {
+        __init(obj.hintLetterSeq, obj.hintFont, obj.hintStyle, obj.hintFgColor,
+            obj.hintBgColor, obj.hintActiveColor, obj.hintNormalColor,
+            obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks, obj.hintAutoFollow);
+      }
   };
 })();

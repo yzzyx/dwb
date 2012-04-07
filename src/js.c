@@ -123,7 +123,7 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
 
 /* js_call_as_function(WebKitWebFrame, JSObjectRef, char *string, char *json, * char **ret) {{{*/
 char *  
-js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, char *string, char *json, char **char_ret) {
+js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, const char *string, const char *json, char **char_ret) {
   char *ret = NULL;
   JSValueRef js_ret, function, v = NULL;
   JSObjectRef function_object;

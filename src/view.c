@@ -526,6 +526,7 @@ view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       VIEW(gl)->hint_object = NULL;
     }
     VIEW(gl)->hint_object = js_create_object(webkit_web_view_get_main_frame(web), dwb.misc.hints);
+    js_call_as_function(webkit_web_view_get_main_frame(web), VIEW(gl)->hint_object, "init", dwb.misc.hint_style, NULL);
   }
 }/*}}}*/
 /* view_load_status_cb {{{*/
@@ -544,7 +545,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       /* This is more or less a dummy call, to compile the script and speed up
        * execution time 
        * */
-      js_call_as_function(webkit_web_view_get_main_frame(web), v->hint_object, "createStyleSheet", dwb.misc.hint_style, NULL);
+      js_call_as_function(webkit_web_view_get_main_frame(web), v->hint_object, "createStyleSheet", NULL, NULL);
       break;
     case WEBKIT_LOAD_COMMITTED: 
       if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
