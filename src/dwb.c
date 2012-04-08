@@ -1609,10 +1609,6 @@ dwb_show_hints(Arg *arg) {
         hint_map[arg->i].arg);
     char *jsret; 
     js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "showHints", json, &jsret);
-    if (jsret) {
-      puts(jsret);
-      //g_free(jsret);
-    }
     if (jsret != NULL) {
       ret = dwb_evaluate_hints(jsret);
       g_free(jsret);
