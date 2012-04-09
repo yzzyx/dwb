@@ -340,7 +340,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_tab_move,       NULL,                   ALWAYS_SM,  
     { .n = TAB_MOVE_LEFT }, EP_NONE, { "tabl", NULL }, },
 
-  { { "tab_move_right",        "Move tab left",                    }, CP_COMMANDLINE, 
+  { { "tab_move_right",        "Move tab right",                    }, CP_COMMANDLINE, 
     (Func)commands_tab_move,       NULL,                   ALWAYS_SM,  
     { .n = TAB_MOVE_RIGHT }, EP_NONE, { "tabr", NULL }, },
   
