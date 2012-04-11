@@ -94,7 +94,6 @@ typedef struct _EditorInfo {
   char *tagname;
 } EditorInfo;
 
-enum { USER_SCRIPT_RUNNING, USER_SCRIPT_STOPPED };
 typedef struct _UserScriptEnv {
   GIOChannel *channel;
   char *fifo;
@@ -2468,7 +2467,6 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   if (g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, (GSpawnChildSetupFunc)dwb_setup_environment, list, &pid, &error)) {
     UserScripEnv *env = g_malloc(sizeof(UserScripEnv));
     env->fifo = fifo;
-    env->status = USER_SCRIPT_RUNNING;
     env->fd = open(env->fifo, O_RDONLY | O_NONBLOCK); 
     env->channel = g_io_channel_unix_new(env->fd);
     if (env->channel != NULL) {
