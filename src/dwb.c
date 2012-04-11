@@ -2394,11 +2394,24 @@ dwb_search(Arg *arg) {
 /* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
 static gboolean
 dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, UserScripEnv *env) {
-  GError *error = NULL;
+  GError *error = NULL, *e = NULL;
   char *line;
+  gint status;
 
-  while ( g_io_channel_read_line(channel, &line, NULL, NULL, &error) == G_IO_STATUS_NORMAL ) {
-    dwb_parse_command_line(g_strchomp(line));
+  while ( (status = g_io_channel_read_line(channel, &line, NULL, NULL, &error)) ) {
+    if (status == G_IO_STATUS_NORMAL) 
+      dwb_parse_command_line(g_strchomp(line));
+    else {
+      g_io_channel_shutdown(env->channel, true, &e);
+      if (e != NULL)
+        fprintf(stderr, "Shutting down userscript channel failed : %s\n", e->message);
+      g_clear_error(&e);
+      g_io_channel_unref(env->channel);
+      close(env->fd);
+      unlink(env->fifo);
+      g_free(env->fifo);
+      g_free(env);
+    }
     g_free(line);
   }
   if (error) {
@@ -2422,20 +2435,6 @@ dwb_setup_environment(GSList *list) {
 
 }/*}}}*/
 
-
-void
-dwb_watch_userscript(GPid pid, gint status, UserScripEnv *env) {
-  GError *e = NULL;
-  g_io_channel_shutdown(env->channel, true, &e);
-  if (e != NULL)
-    fprintf(stderr, "Shutdown down userscript channel failed : %s\n", e->message);
-  g_clear_error(&e);
-  g_io_channel_unref(env->channel);
-  unlink(env->fifo);
-  g_free(env->fifo);
-  g_free(env);
-}
-
 /* dwb_execute_user_script(Arg *a) {{{*/
 void
 dwb_execute_user_script(KeyMap *km, Arg *a) {
@@ -2446,11 +2445,20 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   GPid pid;
   GSList *list = NULL;
   char *fifo;
-  list = g_slist_append(list, dwb_navigation_new("DWB_URI",     webkit_web_view_get_uri(CURRENT_WEBVIEW())));
-  list = g_slist_append(list, dwb_navigation_new("DWB_TITLE",   webkit_web_view_get_title(CURRENT_WEBVIEW())));
+
+  const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+  if (uri != NULL)
+    list = g_slist_append(list, dwb_navigation_new("DWB_URI",     uri));
+
+  const char *title = webkit_web_view_get_title(CURRENT_WEBVIEW());
+  if (title != NULL)
+    list = g_slist_append(list, dwb_navigation_new("DWB_TITLE",   webkit_web_view_get_title(CURRENT_WEBVIEW())));
+
   list = g_slist_append(list, dwb_navigation_new("DWB_PROFILE", dwb.misc.profile));
   list = g_slist_append(list, dwb_navigation_new("DWB_NUMMOD",  nummod));
-  list = g_slist_append(list, dwb_navigation_new("DWB_ARGUMENT",  a->p));
+
+  if (a->p != NULL)
+    list = g_slist_append(list, dwb_navigation_new("DWB_ARGUMENT",  a->p));
 
   const char *referer = soup_get_header(dwb.state.fview, "Referer");
   if (referer != NULL)
@@ -2472,12 +2480,11 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
     if (env->channel != NULL) {
       dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->arg);
       g_io_add_watch(env->channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, env);
-      g_child_watch_add(pid, (GChildWatchFunc)dwb_watch_userscript, env);
     }
     else  {
+      close(env->fd);
       unlink(fifo);
       g_free(fifo);
-      close(env->fd);
       g_free(env);
       dwb_set_error_message(dwb.state.fview, "Executing script %s failed", a->arg);
     }
