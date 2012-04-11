@@ -94,6 +94,14 @@ typedef struct _EditorInfo {
   char *tagname;
 } EditorInfo;
 
+enum { USER_SCRIPT_RUNNING, USER_SCRIPT_STOPPED };
+typedef struct _UserScriptEnv {
+  GIOChannel *channel;
+  char *fifo;
+  gint fd;
+} UserScripEnv;
+
+
 typedef struct HintMap {
   int type;
   int arg;
@@ -112,6 +120,7 @@ struct HintMap hint_map[] = {
 };
 
 
+static gboolean dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, UserScripEnv *env);
 
 
 static int signals[] = { SIGFPE, SIGILL, SIGINT, SIGQUIT, SIGTERM, SIGALRM, SIGSEGV};
@@ -2385,40 +2394,19 @@ dwb_search(Arg *arg) {
 
 /* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
 static gboolean
-dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, GIOChannel *out_channel) {
+dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, UserScripEnv *env) {
   GError *error = NULL;
   char *line;
 
-  while (g_io_channel_read_line(channel, &line, NULL, NULL, &error) == G_IO_STATUS_NORMAL) {
-    if (g_str_has_prefix(line, "javascript:")) {
-      char *value; 
-      if ( ( value = dwb_execute_script(MAIN_FRAME(), line + 11, true))) {
-        g_io_channel_write_chars(out_channel, value, -1, NULL, NULL);
-        g_io_channel_write_chars(out_channel, "\n", 1, NULL, NULL);
-        g_free(value);
-      }
-    }
-    else if (!g_strcmp0(line, "close\n")) {
-      g_io_channel_shutdown(channel, true, NULL);
-      g_free(line);
-      break;
-    }
-    else {
-      dwb_parse_command_line(g_strchomp(line));
-    }
-    g_io_channel_flush(out_channel, NULL);
+  while ( g_io_channel_read_line(channel, &line, NULL, NULL, &error) == G_IO_STATUS_NORMAL ) {
+    dwb_parse_command_line(g_strchomp(line));
     g_free(line);
   }
   if (error) {
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
   }
-  g_clear_error(&error);
-  if (dwb.misc.fifo != NULL) {
-    unlink(dwb.misc.fifo);
-    g_free(dwb.misc.fifo);
-    dwb.misc.fifo = NULL;
-  }
 
+  g_clear_error(&error);
   return false;
 }/*}}}*/
 
@@ -2435,6 +2423,20 @@ dwb_setup_environment(GSList *list) {
 
 }/*}}}*/
 
+
+void
+dwb_watch_userscript(GPid pid, gint status, UserScripEnv *env) {
+  GError *e = NULL;
+  g_io_channel_shutdown(env->channel, true, &e);
+  if (e != NULL)
+    fprintf(stderr, "Shutdown down userscript channel failed : %s\n", e->message);
+  g_clear_error(&e);
+  g_io_channel_unref(env->channel);
+  unlink(env->fifo);
+  g_free(env->fifo);
+  g_free(env);
+}
+
 /* dwb_execute_user_script(Arg *a) {{{*/
 void
 dwb_execute_user_script(KeyMap *km, Arg *a) {
@@ -2442,9 +2444,9 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   char nummod[64];
   snprintf(nummod, 64, "%d", NUMMOD);
   char *argv[] = { a->arg, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), (char *)webkit_web_view_get_title(CURRENT_WEBVIEW()), (char *)dwb.misc.profile, nummod, a->p, NULL } ;
-  int std_out;
-  int std_in;
+  GPid pid;
   GSList *list = NULL;
+  char *fifo;
   list = g_slist_append(list, dwb_navigation_new("DWB_URI",     webkit_web_view_get_uri(CURRENT_WEBVIEW())));
   list = g_slist_append(list, dwb_navigation_new("DWB_TITLE",   webkit_web_view_get_title(CURRENT_WEBVIEW())));
   list = g_slist_append(list, dwb_navigation_new("DWB_PROFILE", dwb.misc.profile));
@@ -2459,20 +2461,29 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
   if (user_agent != NULL)
     list = g_slist_append(list, dwb_navigation_new("DWB_USER_AGENT",  user_agent));
 
-  if (km->map->arg.b) {
-    dwb.misc.fifo = util_get_temp_filename("fifo_");
-    list = g_slist_append(list, dwb_navigation_new("DWB_FIFO",  dwb.misc.fifo));
-    mkfifo(dwb.misc.fifo, 0600);
-  }
+  fifo = util_get_temp_filename("fifo_");
+  list = g_slist_append(list, dwb_navigation_new("DWB_FIFO",  fifo));
+  mkfifo(fifo, 0600);
   
-  if (g_spawn_async_with_pipes(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &std_in, km->map->arg.b ? NULL : &std_out , NULL, &error)) {
-    if (km->map->arg.b) {
-      std_out = open(dwb.misc.fifo, O_RDONLY | O_NONBLOCK);
+  if (g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, (GSpawnChildSetupFunc)dwb_setup_environment, list, &pid, &error)) {
+    UserScripEnv *env = g_malloc(sizeof(UserScripEnv));
+    env->fifo = fifo;
+    env->status = USER_SCRIPT_RUNNING;
+    env->fd = open(env->fifo, O_RDONLY | O_NONBLOCK); 
+    env->channel = g_io_channel_unix_new(env->fd);
+    if (env->channel != NULL) {
+      dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->arg);
+      g_io_add_watch(env->channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, env);
+      g_child_watch_add(pid, (GChildWatchFunc)dwb_watch_userscript, env);
     }
-    GIOChannel *channel = g_io_channel_unix_new(std_out);
-    GIOChannel *out_channel = g_io_channel_unix_new(std_in);
-    g_io_add_watch(channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, out_channel);
-    dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->arg);
+    else  {
+      unlink(fifo);
+      g_free(fifo);
+      close(env->fd);
+      g_free(env);
+      dwb_set_error_message(dwb.state.fview, "Executing script %s failed", a->arg);
+    }
+
   }
   else {
     fprintf(stderr, "Cannot execute %s: %s\n", (char*)a->p, error->message);
@@ -2493,7 +2504,6 @@ dwb_get_scripts() {
   GList *gl = NULL;
   Navigation *n;
   GError *error = NULL;
-  gboolean usefifo = false;
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
@@ -2529,28 +2539,17 @@ dwb_get_scripts() {
       n = NULL;
       KeyMap *map = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
-      const char *colon, *tmp;
+      char *tmp;
       while (lines[i]) {
-        usefifo = false;
         if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) {
           char **line = g_strsplit(lines[i], "dwb:", 2);
           if (line[1]) {
-            colon = tmp = line[1];
-            while (*colon) {
-              if (*colon == ':') {
-                if (colon - line[1] > 0 && !strncmp(line[1], "usefifo", colon-line[1])) {
-                  usefifo = true;
-                }
-                tmp = colon+1;
-                break;
-              }
-              else if (*colon == '\\') 
-                colon++;
-              colon++;
-            }
-            if (tmp && *tmp) {
+            tmp = line[1];
+            while (g_ascii_isspace(*tmp))
+              tmp++;
+            if (*tmp != '\0') {
               n = dwb_navigation_new(filename, tmp);
-              Key key = dwb_str_to_key((char*)tmp);
+              Key key = dwb_str_to_key(tmp);
               map->key = key.str;
               map->mod = key.mod;
             }
@@ -2565,7 +2564,7 @@ dwb_get_scripts() {
         map->key = "";
         map->mod = 0;
       }
-      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE | CP_USERSCRIPT, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path, .b = usefifo } };
+      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE | CP_USERSCRIPT, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path } };
       *fmap = fm;
       map->map = fmap;
       dwb.misc.userscripts = g_list_prepend(dwb.misc.userscripts, n);
@@ -3630,7 +3629,6 @@ dwb_init() {
 
   dwb.misc.synctimer = 0;
   dwb.misc.bar_height = 0;
-  dwb.misc.fifo = NULL;
   dwb.state.buffer = g_string_new(NULL);
 
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
