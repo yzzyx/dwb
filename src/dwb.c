@@ -2394,30 +2394,16 @@ dwb_search(Arg *arg) {
 /* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
 static gboolean
 dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, UserScripEnv *env) {
-  GError *error = NULL, *e = NULL;
+  GError *error = NULL;
   char *line;
-  gint status;
 
-  while ( (status = g_io_channel_read_line(channel, &line, NULL, NULL, &error)) ) {
-    if (status == G_IO_STATUS_NORMAL) 
-      dwb_parse_command_line(g_strchomp(line));
-    else {
-      g_io_channel_shutdown(env->channel, true, &e);
-      if (e != NULL)
-        fprintf(stderr, "Shutting down userscript channel failed : %s\n", e->message);
-      g_clear_error(&e);
-      g_io_channel_unref(env->channel);
-      close(env->fd);
-      unlink(env->fifo);
-      g_free(env->fifo);
-      g_free(env);
-    }
+  while ( g_io_channel_read_line(channel, &line, NULL, NULL, &error) == G_IO_STATUS_NORMAL ) {
+    dwb_parse_command_line(g_strchomp(line));
     g_free(line);
   }
   if (error) {
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
   }
-
   g_clear_error(&error);
   return false;
 }/*}}}*/
@@ -2434,6 +2420,14 @@ dwb_setup_environment(GSList *list) {
   g_slist_free(list);
 
 }/*}}}*/
+void 
+dwb_watch_userscript(GPid pid, int status, UserScripEnv *env) {
+  unlink(env->fifo);
+  g_free(env->fifo);
+  g_io_channel_shutdown(env->channel, true, NULL);
+  g_io_channel_unref(env->channel);
+  g_free(env);
+}
 
 /* dwb_execute_user_script(Arg *a) {{{*/
 void
@@ -2480,6 +2474,7 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
     if (env->channel != NULL) {
       dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->arg);
       g_io_add_watch(env->channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, env);
+      g_child_watch_add(pid, (GChildWatchFunc) dwb_watch_userscript, env);
     }
     else  {
       close(env->fd);
