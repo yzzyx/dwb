@@ -196,7 +196,7 @@ static FunctionMap FMAP [] = {
 
   { { "execute_javascript",              "Execute a javascript snippet",                    }, CP_COMMANDLINE, 
     (Func)commands_execute_javascript,            NULL,                            ALWAYS_SM,     
-    { .p = NULL },                          EP_NONE,    { "exja", NULL }, },
+    { .p = NULL },                          EP_NONE,    { "js", "exja", NULL }, },
 
   { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_set,            "Invalid value",                            POST_SM,     

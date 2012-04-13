@@ -861,7 +861,7 @@ aliases:
 Execute a javascript snippet (command 
 .BR execute_javascript ,
 aliases: 
-.BR exja ).
+.BR exja, js ).
 .TP
 .BR unbound 
 Set a setting from commandline (command 
@@ -1015,7 +1015,7 @@ clear_tab               |clear           |Clear tab
 close_tab               |close           |Close tab
 dump                    |                |Write html of current website to a
                         |                |file or stdout if no argument is given
-execute_javascript      |exja            |Execute a javascript snippet
+execute_javascript      |exja, js        |Execute a javascript snippet
 execute_userscript      |                |Execute userscript
 find_backward           |bfind           |Find backward
 find_backward_ic        |ibfind          |Find backward case sensitive
@@ -2070,7 +2070,7 @@ The following script will download the actual webpage:
   #!/bin/bash
   # dwb: Control w
   
-  wget $1
+  wget $DWB_URI
 
 .fi
 
@@ -2080,7 +2080,7 @@ Popup an alert dialog:
   #!/bin/bash
   # dwb: Control h
 
-  echo "execute_javascript:window.alert('Hello world');" > ${DWB_FIFO}
+  echo "js window.alert('Hello world');" > ${DWB_FIFO}
 
 .fi
 
