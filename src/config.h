@@ -1029,6 +1029,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL | SETTING_ONINIT,  BOOLEAN, { .b = false         },     (S_Func)completion_set_autcompletion,  },
   { { "startpage",                               "The default homepage", },                                        
     SETTING_GLOBAL | SETTING_ONINIT,  CHAR,    { .p = "dwb:bookmarks" },        (S_Func)dwb_set_startpage,  }, 
+  { { "update-search-delay",                               "The delay when searching between every keypress", },                                        
+    SETTING_GLOBAL | SETTING_ONINIT,  INTEGER,    { .i = 200 },        (S_Func)dwb_set_find_delay,  }, 
   { { "single-instance",                         "Whether to have only on instance", },                                         
     SETTING_GLOBAL,  BOOLEAN,    { .b = true },          NULL,  }, 
   { { "save-session",                            "Whether to automatically save sessions", },                                       

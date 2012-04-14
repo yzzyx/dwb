@@ -680,6 +680,7 @@ struct _Misc {
   char *allscripts_onload;
   const char *profile;
   const char *default_search;
+  gint find_delay;
   SoupSession *soupsession;
   char *proxyuri;
 

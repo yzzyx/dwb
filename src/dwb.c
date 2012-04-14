@@ -67,6 +67,7 @@ static DwbStatus dwb_set_favicon(GList *, WebSettings *);
 static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
 static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
+static DwbStatus dwb_set_find_delay(GList *gl, WebSettings *s);
 static DwbStatus dwb_init_hints(GList *gl, WebSettings *s);
 
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
@@ -168,6 +169,12 @@ dwb_set_cookies(GList *gl, WebSettings *s) {
 static DwbStatus 
 dwb_set_ntlm(GList *gl, WebSettings *s) {
   dwb_soup_set_ntlm(s->arg_local.b);
+  return STATUS_OK;
+}
+
+static DwbStatus 
+dwb_set_find_delay(GList *gl, WebSettings *s) {
+  dwb.misc.find_delay = s->arg_local.i;
   return STATUS_OK;
 }
 
@@ -2051,6 +2058,7 @@ dwb_entry_activate(GdkEventKey *e) {
   switch (CLEAN_MODE(dwb.state.mode))  {
     case HINT_MODE:           dwb_update_hints(e); return false;
     case FIND_MODE:           dwb_focus_scroll(dwb.state.fview);
+                              dwb_update_search();
                               dwb_search(NULL);
                               dwb_change_mode(NORMAL_MODE, true);
                               return true;

@@ -1967,6 +1967,14 @@ Enable tabbed-browsing. If disabled, all new window/new tab requests will be
 opened in a new window,
 default value:
 .IR true .
+.TP
+.BR update-search-delay 
+Delay in milliseconds before updating search results. If set to 0 search results
+will be updated after every keypress. If set to a value greater than 0 search
+results will be updated after that delay but only if the search-term has not
+changed since the timeout started. It is recommended to set this value greater
+than 0, default value: 
+.IR 200 .
 .TP 
 .BR use-ntlm
 Whether to use NTLM-authentication, 

@@ -35,6 +35,13 @@ callback_entry_insert_text(GtkWidget* entry, char *new_text, int length, gpointe
   }
   return false;
 }
+gboolean
+callback_find_timeout(char *text) {
+  if (!g_strcmp0(text, GET_TEXT())) 
+    dwb_update_search();
+  g_free(text);
+  return false;
+}
 gboolean 
 callback_entry_key_release(GtkWidget* entry, GdkEventKey *e) { 
   if (dwb.state.mode == HINT_MODE) {
@@ -43,7 +50,10 @@ callback_entry_key_release(GtkWidget* entry, GdkEventKey *e) {
     }
   }
   if (dwb.state.mode == FIND_MODE) {
-    dwb_update_search();
+    if (dwb.misc.find_delay > 0)
+      g_timeout_add(dwb.misc.find_delay, (GSourceFunc)callback_find_timeout, g_strdup(GET_TEXT()));
+    else 
+      dwb_update_search();
   }
   return false;
 }/*}}}*/
