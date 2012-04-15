@@ -40,9 +40,11 @@ static KeyValue KEYS[] = {
   { "hints_links",          {   ";;",         0,                   },  },  
   { "hints_images",         {   ";i",         0,                   },  },  
   { "hints_images_tab",      {   ";I",         0,                   },  },  
+  { "hints_images_background",      {   ".i",         0,                   },  },  
   { "hints_editable",       {   ";e",         0,                   },  },  
   { "hints_url",            {   ";o",         0,                   },  },  
   { "hints_url_tab",         {   ";O",         0,                   },  },  
+  { "hints_url_background",         {   ".o",         0,                   },  },  
   { "hints_download",       {   ";d",           0 }, },
   { "hints_tab",             {   "F",         0,                   },  },  
   { "hints_background",             {   ";b",         0,                   },  },  
@@ -360,6 +362,10 @@ static FunctionMap FMAP [] = {
   { { "hints_images_tab",       "tabfollow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No images",                          NEVER_SM,    
     { .n = OPEN_NEW_VIEW, .i = HINT_T_IMAGES }, EP_NONE, { "itabhints", "ithi", NULL }, },
+
+  { { "hints_images_background",       "backfollow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          "No images",                          NEVER_SM,    
+    { .n = OPEN_NEW_VIEW | OPEN_BACKGROUND, .i = HINT_T_IMAGES }, EP_NONE, { "ibackhints", NULL }, },
   
   { { "hints_editable",       "follow editable",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No editable elements",           NEVER_SM,    
@@ -369,6 +375,10 @@ static FunctionMap FMAP [] = {
     (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_URL }, EP_NONE, { "uhints", "uhi", NULL }, },
   
+  { { "hints_url_background",         "backfollow url",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    
+    { .n = OPEN_NEW_VIEW | OPEN_BACKGROUND, .i = HINT_T_URL }, EP_NONE, { "utabhints", "uthi",  NULL }, },
+
   { { "hints_url_tab",         "tabfollow url",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    
     { .n = OPEN_NEW_VIEW, .i = HINT_T_URL }, EP_NONE, { "utabhints", "uthi",  NULL }, },

@@ -514,6 +514,12 @@ aliases:
 .BR itabhints ,
 .BR ithi ).
 .TP
+.BR .i 
+Follow image in a background tab (command 
+.BR hints_images_background ,
+aliases:
+.BR ibackhints ).
+.TP
 .BR ;e 
 Focus editable elements via hints (command 
 .BR hints_editable ,
@@ -534,6 +540,12 @@ Set hint\'s url in commandline, open in a new tab (command
 aliases:
 .BR utabhints ,
 .BR uthi ).
+.TP
+.BR .o 
+Set hint\'s url in commandline, open in a background tab (command 
+.BR hints_url_background ,
+aliases:
+.BR ubackhints ).
 .TP
 .BR ;d 
 Download via hints (command 
@@ -1041,7 +1053,8 @@ hints_clipboard         |chints, chi     |Save link location to clipboard
 hints_download          |dhints, dhi     |Download via hints
 hints_editable          |ehints, ehi     |Focus editable elements
 hints_images            |ihints, ihi     |Follow images
-hints_images_tab        |itabhinst, ithi |Follow images in a new tab
+hints_images_tab        |itabhints, ithi |Follow images in a new tab
+hints_images_background |ibackhints      |Follow images in a background tab
 hints_links             |lhints, lhi     |Follow links
 hints_primary           |phints, phi     |Save link location to primary
                         |                |selection
@@ -1052,6 +1065,8 @@ hints_tab               |tabhints, thi   |Follow hints in a new tab
 hints_url               |uhints, uhi     |Set hints url in commandline
 hints_url_tab           |utabhints, uthi |Set hints url in commandline,
                         |                |open in a new tab
+hints_url_background    |ubackhints      |Set hints url in commandline,
+                        |                |open in a background tab
 hints_win               |winhints, whi   |Follow hints in a new window
 history_back            |ba, back        |Go back
 history_forward         |fo, forward     |Go forward

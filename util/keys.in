@@ -38,9 +38,11 @@ hints_win Follow hints, open link in a new window
 hints_links Follow links
 hints_images Follow images
 hints_images_tab Follow images in a new tab
+hints_images_background Follow images in a background tab
 hints_editable Focus editable elements
 hints_url Set hint's url in commandline
 hints_url_tab Set hint's url in commandline, open in a new tab
+hints_url_background Set hint's url in commandline, open in a background tab
 hints_download Download via hints
 hints_clipboard Save link location to clipboard
 hints_primary Save link location to primary selection
