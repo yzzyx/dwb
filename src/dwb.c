@@ -2315,7 +2315,9 @@ dwb_normal_mode(gboolean clean) {
     CLEAR_COMMAND_TEXT();
   }
   dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
-
+  if (mode == NORMAL_MODE) {
+      webkit_web_view_set_highlight_text_matches(CURRENT_WEBVIEW(), false);
+  }
 
   gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
   dwb_clean_vars();
