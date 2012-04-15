@@ -703,10 +703,8 @@ static void
 view_init_settings(GList *gl) {
   View *v = gl->data;
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
-  /* apply settings */
-  v->setting = dwb_get_default_settings();
   GList *l;
-  for (l = g_hash_table_get_values(v->setting); l; l=l->next) {
+  for (l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
     if (s->apply & SETTING_PER_VIEW && s->func != NULL) {
       s->func(gl, s);
@@ -903,7 +901,12 @@ view_remove(GList *gl) {
 
 
   dwb_focus(dwb.state.fview);
+
+  gtk_widget_destroy(v->tabicon);
+  gtk_widget_destroy(v->tablabel);
+  gtk_widget_destroy(v->tabbox);
   gtk_widget_destroy(v->tabevent);
+
 
   /*  clean up */ 
   dwb_source_remove();

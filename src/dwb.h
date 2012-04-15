@@ -602,7 +602,6 @@ struct _View {
   GtkWidget *tablabel;
   GtkWidget *scroll; 
   ViewStatus *status;
-  GHashTable *setting;
   Plugins *plugins;
   struct {
     WebKitDOMElement *element;
@@ -827,7 +826,6 @@ void dwb_new_window(const char *uri);
 
 gboolean dwb_eval_editing_key(GdkEventKey *);
 DwbStatus dwb_parse_command_line(const char *);
-GHashTable * dwb_get_default_settings(void);
 
 int dwb_end(void);
 Key dwb_str_to_key(char *);
