@@ -45,6 +45,7 @@
 #include "adblock.h"
 #include "domain.h"
 #include "application.h"
+#include "scripts.h"
 
 /* DECLARATIONS {{{*/
 static DwbStatus dwb_webkit_setting(GList *, WebSettings *);
@@ -2512,9 +2513,12 @@ dwb_get_scripts() {
   GList *gl = NULL;
   Navigation *n;
   GError *error = NULL;
+  FILE *f;
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
+      gboolean javascript = false;
+      char buf[11] = {0};
       char *path = g_build_filename(dwb.files.userscripts, filename, NULL);
       char *realpath;
       /* ignore subdirectories */
@@ -2529,7 +2533,22 @@ dwb_get_scripts() {
         g_free(path);
         path = realpath;
       }
-      if (!g_file_test(path, G_FILE_TEST_IS_EXECUTABLE)) {
+      if ( (f = fopen(path, "r")) != NULL) {
+        if (fgetc(f) == '#' && fgetc(f) == '!')  {
+          fgets(buf, 11, f);
+          if (!g_strcmp0(buf, "javascript")) {
+            int next = fgetc(f);
+            if (g_ascii_isspace(next))
+              javascript = true;
+          }
+        }
+        fclose(f);
+
+      }
+
+      if (javascript)
+        puts("script found");
+      if (!javascript && !g_file_test(path, G_FILE_TEST_IS_EXECUTABLE)) {
         fprintf(stderr, "Warning: userscript %s isn't executable and will be ignored.\n", path);
         continue;
       }
@@ -2537,8 +2556,17 @@ dwb_get_scripts() {
       g_file_get_contents(path, &content, NULL, NULL);
       if (content == NULL) 
         continue;
+      if (javascript) {
+        char *script = strchr(content, '\n');
+        if (script && *(script+1)) {
+          scripts_init_script(script+1);
+          g_free(content);
+          continue;
+        }
+      }
 
       char **lines = g_strsplit(content, "\n", -1);
+
 
       g_free(content);
       content = NULL;
