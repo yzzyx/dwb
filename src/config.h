@@ -45,6 +45,7 @@ static KeyValue KEYS[] = {
   { "hints_url_tab",         {   ";O",         0,                   },  },  
   { "hints_download",       {   ";d",           0 }, },
   { "hints_tab",             {   "F",         0,                   },  },  
+  { "hints_background",             {   ";b",         0,                   },  },  
   { "hints_win",             {   "wf",         0,                   },  },  
   { "hints_clipboard",      {   ";y",         0,                   },  },  
   { "hints_primary",        {   ";Y",         0,                   },  },  
@@ -344,59 +345,63 @@ static FunctionMap FMAP [] = {
     (Func)commands_tab_move,       NULL,                   ALWAYS_SM,  
     { .n = TAB_MOVE_RIGHT }, EP_NONE, { "tabr", NULL }, },
   
-  { { "hints",             "Follow hints",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints",             "follow",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_ALL }, EP_NONE, { "hi",  NULL }, },
   
-  { { "hints_links",       "Follow links",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_links",       "follow links",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No links",                          NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_LINKS }, EP_NONE, { "lhints", "lhi", NULL }, },
   
-  { { "hints_images",       "Follow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_images",       "follow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No images",                          NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_IMAGES }, EP_NONE, { "ihints", "ihi", NULL }, },
   
-  { { "hints_images_tab",       "Follow images in new tab",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_images_tab",       "tabfollow images",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No images",                          NEVER_SM,    
     { .n = OPEN_NEW_VIEW, .i = HINT_T_IMAGES }, EP_NONE, { "itabhints", "ithi", NULL }, },
   
-  { { "hints_editable",       "Follow editable",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_editable",       "follow editable",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          "No editable elements",           NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_EDITABLE }, EP_NONE, { "ehints", "ehi", NULL }, },
   
-  { { "hints_url",            "hintopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_url",            "follow url",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_URL }, EP_NONE, { "uhints", "uhi", NULL }, },
   
-  { { "hints_url_tab",         "hinttabopen",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_url_tab",         "tabfollow url",                      }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,           NEVER_SM,    
     { .n = OPEN_NEW_VIEW, .i = HINT_T_URL }, EP_NONE, { "utabhints", "uthi",  NULL }, },
   
-  { { "hints_tab",          "Follow hints in new tab",           }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_tab",          "tabfollow",           }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_NEW_VIEW, .i = HINT_T_ALL }, EP_NONE, { "tabhints", "thi", NULL }, },
+
+  { { "hints_background",          "backfollow",           }, CP_COMMANDLINE | CP_HAS_MODE, 
+    (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
+    { .n = OPEN_NEW_VIEW | OPEN_BACKGROUND, .i = HINT_T_ALL }, EP_NONE, { "backhints", "bhi", NULL }, },
   
-  { { "hints_win",          "Follow hints in new window",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_win",          "winfollow",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_NEW_WINDOW, .i = HINT_T_ALL }, EP_NONE, { "winhints", "whi", NULL }, },
   
-  { { "hints_clipboard",          "Copy to clipboard",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_clipboard",          "follow clipboard",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_CLIPBOARD }, EP_NONE, { "chints", "chi", NULL }, },
   
-  { { "hints_primary",          "Copy to primary",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_primary",          "follow primary",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_PRIMARY }, EP_NONE, { "phints", "phi", NULL }, },
 
-  { { "hints_rapid",          "Rapid hint mode",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_rapid",          "follow rapid",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_RAPID }, EP_NONE, { "rhints", "rhi", NULL }, },
 
-  { { "hints_rapid_win",          "Rapid hint mode",         }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_rapid_win",          "winfollow rapid",         }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_NORMAL, .i = HINT_T_RAPID_NW }, EP_NONE, { "wrhints", "wrhi", NULL }, },
   
-  { { "hints_download",         "Download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "hints_download",         "follow download",                          }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_show_hints,          NO_HINTS,                          NEVER_SM,    
     { .n = OPEN_DOWNLOAD }, EP_NONE, { "dhints", "dhi", NULL }, },
   

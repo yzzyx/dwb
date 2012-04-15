@@ -33,6 +33,7 @@ quit Quit dwb
 # hints Hints
 hints Follow hints
 hints_tab Follow hints, open link in a new tab
+hints_background Follow hints, open link in a new background tab
 hints_win Follow hints, open link in a new window
 hints_links Follow links
 hints_images Follow images

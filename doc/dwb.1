@@ -480,11 +480,18 @@ aliases:
 .BR hi ).
 .TP
 .BR F
-Show hints, open link in a new tab. (command
+Show hints, open link in a new foreground tab. (command
 .BR hints_tab ,
 aliases:
 .BR tabhints , 
 .BR thi ).
+.TP
+.BR ;b
+Show hints, open link in a new background tab. (command
+.BR hints_background ,
+aliases:
+.BR backhints , 
+.BR bhi ).
 .TP
 .BR wf
 Show hints, open link in a new tab. (command
@@ -1029,6 +1036,7 @@ focus_prev              |tabprev         |Focus previous tab
 focus_tab               |tab             |Focus nth tab
 fullscreen              |fs              |Toggle fullscreen
 hints                   |hi              |Follow hints
+hints_background        |backhints, bhi  |Follow hints in a background tab
 hints_clipboard         |chints, chi     |Save link location to clipboard
 hints_download          |dhints, dhi     |Download via hints
 hints_editable          |ehints, ehi     |Focus editable elements

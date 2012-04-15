@@ -364,9 +364,10 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     return true;
   }
   if (webkit_web_navigation_action_get_button(action) == 2) {
+    gboolean background = dwb.state.nv & OPEN_BACKGROUND;
     dwb.state.nv = OPEN_NORMAL;
     webkit_web_policy_decision_ignore(policy);
-    view_add(uri, dwb.state.background_tabs);
+    view_add(uri, background);
     return true;
   }
   /* In single mode (without tabs), this seems to be the only way of creating a
