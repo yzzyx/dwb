@@ -1509,9 +1509,7 @@ dwb_evaluate_hints(const char *buffer) {
   if (!g_strcmp0(buffer, "undefined")) 
     return ret;
   else if (!g_strcmp0("_dwb_no_hints_", buffer)) {
-    dwb_set_error_message(dwb.state.fview, NO_HINTS);
-    dwb_change_mode(NORMAL_MODE, false);
-    ret = STATUS_ERROR;
+    ret = STATUS_OK;
   }
   else if (!g_strcmp0(buffer, "_dwb_input_")) {
     dwb_change_mode(INSERT_MODE);
