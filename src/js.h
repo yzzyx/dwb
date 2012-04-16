@@ -27,5 +27,6 @@ char * js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *nam
 double  js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 JSObjectRef js_create_object(WebKitWebFrame *, const char *);
 char * js_call_as_function(WebKitWebFrame *, JSObjectRef, const char *string, const char *args, char **char_ret);
+JSValueRef js_char_to_value(JSContextRef ctx, const char *text);
 
 #endif

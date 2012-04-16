@@ -2538,16 +2538,15 @@ dwb_get_scripts() {
           fgets(buf, 11, f);
           if (!g_strcmp0(buf, "javascript")) {
             int next = fgetc(f);
-            if (g_ascii_isspace(next))
+            if (g_ascii_isspace(next)) {
               javascript = true;
+            }
           }
         }
         fclose(f);
 
       }
 
-      if (javascript)
-        puts("script found");
       if (!javascript && !g_file_test(path, G_FILE_TEST_IS_EXECUTABLE)) {
         fprintf(stderr, "Warning: userscript %s isn't executable and will be ignored.\n", path);
         continue;
@@ -2610,6 +2609,7 @@ dwb_get_scripts() {
     }
     g_dir_close(dir);
   }
+  scripts_init();
   return gl;
 }/*}}}*/
 

@@ -20,5 +20,20 @@
 #define SCRIPTS_H
 
 void scripts_init_script(const char *);
+void scripts_init();
+enum SIGNALS {
+  SCRIPT_SIG_FIRST        = 0,
+  SCRIPT_SIG_NAVIGATION   = 0,
+  SCRIPT_SIG_LOAD_STATUS  = 1,
+  SCRIPT_SIG_MIME_TYPE    = 2, 
+  SCRIPT_SIG_DOWNLOAD     = 3, 
+  SCRIPT_SIG_LAST, 
+};
+gboolean scripts_emit(JSObjectRef , int , const char *);
+void scripts_create_tab(GList *gl);
+
+#define EMIT_SCRIPT(gl, sig)  (VIEW(gl)->script != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)))
+#define SCRIPTS_EMIT(gl, sig, json)  scripts_emit(VIEW(gl)->script, SCRIPT_SIG_##sig, json)
+#define JSON_STRING(x)  "\""#x"\":\"%s\""
 
 #endif

@@ -40,6 +40,13 @@ js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
 
 }/*}}}*/
 
+JSValueRef 
+js_char_to_value(JSContextRef ctx, const char *text) {
+  JSStringRef string = JSStringCreateWithUTF8CString(text);
+  JSValueRef ret = JSValueMakeString(ctx, string);
+  JSStringRelease(string);
+  return ret;
+}
 /* js_get_string_property {{{*/
 char * 
 js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name) {

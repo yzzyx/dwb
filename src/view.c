@@ -31,6 +31,7 @@
 #include "soup.h"
 #include "adblock.h"
 #include "js.h"
+#include "scripts.h"
 
 static void view_ssl_state(GList *);
 static unsigned long _click_time;
@@ -240,6 +241,25 @@ view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
 /* view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
 static gboolean 
 view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
+  char *json = NULL;
+  if (EMIT_SCRIPT(gl, DOWNLOAD)) {
+    gboolean ret;
+    json = g_strdup_printf("{" 
+        JSON_STRING(uri) ","
+        JSON_STRING(filename) ","
+        JSON_STRING(referer) ","
+        JSON_STRING(mimeType) ","
+        "\"totalsize\": %lu }",
+         webkit_download_get_uri(download), 
+         webkit_download_get_suggested_filename(download), 
+         soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
+         dwb.state.mimetype_request, 
+         webkit_download_get_total_size(download));
+    ret = SCRIPTS_EMIT(gl, DOWNLOAD, json);
+    g_free(json);
+    if (ret) 
+      return true;
+  }
   download_get_path(gl, download);
   return true;
 }/*}}}*/
@@ -304,6 +324,17 @@ view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwor
   /* Prevents from segfault if proxy is set */
   if ( !mimetype || strlen(mimetype) == 0 )
     return false;
+  gboolean ret;
+  if (EMIT_SCRIPT(gl, MIME_TYPE)) {
+    char *json = g_strdup_printf("{" 
+        JSON_STRING(uri) "," 
+        JSON_STRING(mimeType) "}", 
+        webkit_network_request_get_uri(request), mimetype);
+    ret = SCRIPTS_EMIT(gl, MIME_TYPE, json);
+    g_free(json);
+    if (ret)
+      return true;
+  }
 
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv & OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
@@ -321,6 +352,13 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
+  if (EMIT_SCRIPT(gl, NAVIGATION) && frame == webkit_web_view_get_main_frame(web)) {
+    char *json = g_strdup_printf("{"JSON_STRING(uri)", \"reason\" : %d }", uri, reason);
+    ret = SCRIPTS_EMIT(gl, NAVIGATION, json);
+    g_free(json);
+    if (ret)
+      return true;
+  }
 
   if (!g_str_has_prefix(uri, "http:") && !g_str_has_prefix(uri, "https:") &&
       !g_str_has_prefix(uri, "about:") && !g_str_has_prefix(uri, "dwb:") &&
@@ -538,6 +576,10 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   View *v = VIEW(gl);
   char *host =  NULL;
   const char *uri = webkit_web_view_get_uri(web);
+  if (EMIT_SCRIPT(gl, LOAD_STATUS)) {
+    char *json = g_strdup_printf("{\"uri\" : \"%s\", \"status\" : %d }", uri, status);
+    SCRIPTS_EMIT(gl, LOAD_STATUS, json);
+  }
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
@@ -811,6 +853,7 @@ view_create_web_view() {
 
   gtk_container_add(GTK_CONTAINER(v->tabevent), v->tabbox);
 
+
   /* gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel); */
 
   DWB_WIDGET_OVERRIDE_FONT(v->tablabel, dwb.font.fd_inactive);
@@ -1013,6 +1056,7 @@ view_add(const char *uri, gboolean background) {
   if (GET_BOOL("adblocker"))
     adblock_connect(ret);
 
+  scripts_create_tab(ret);
   dwb_update_layout();
 
   if (uri != NULL) {

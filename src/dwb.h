@@ -610,6 +610,7 @@ struct _View {
   } hover;
   WebKitDOMElement *status_element;
   JSObjectRef hint_object;
+  JSObjectRef script;
 };
 struct _Color {
   DwbColor active_fg;
@@ -709,6 +710,7 @@ struct _Misc {
   int bar_height;
   TabPosition tab_position;
   char *hint_style;
+  int script_signals;
 };
 struct _Files {
   const char *bookmarks;
