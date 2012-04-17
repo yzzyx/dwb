@@ -19,8 +19,8 @@
 #ifndef JS_H
 #define JS_H
 
-char * js_string_to_char(JSContextRef ctx, JSStringRef jsstring);
-char * js_value_to_char(JSContextRef ctx, JSValueRef value);
+char * js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t );
+char * js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit);
 JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 char * js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name);
@@ -28,5 +28,7 @@ double  js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *na
 JSObjectRef js_create_object(WebKitWebFrame *, const char *);
 char * js_call_as_function(WebKitWebFrame *, JSObjectRef, const char *string, const char *args, char **char_ret);
 JSValueRef js_char_to_value(JSContextRef ctx, const char *text);
+
+#define  JS_STRING_MAX 1024
 
 #endif

@@ -20,7 +20,6 @@
 #include "dwb.h"
 #include "util.h"
 #include "js.h"
-#define JS_STRING_MAX 1024
 
 /* js_get_object_property {{{*/
 JSObjectRef 
@@ -56,7 +55,7 @@ js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
   JSStringRelease(buffer);
   if (exc != NULL || !JSValueIsString(ctx, val) )
     return NULL;
-  return js_value_to_char(ctx, val);
+  return js_value_to_char(ctx, val, JS_STRING_MAX);
 }/*}}}*/
 
 /* js_get_double_property {{{*/
@@ -79,8 +78,12 @@ js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
  * Converts a JSStringRef, return a newly allocated char.
  * {{{*/
 char *
-js_string_to_char(JSContextRef ctx, JSStringRef jsstring) {
-  size_t length = MIN(JSStringGetLength(jsstring), JS_STRING_MAX) + 1;
+js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t size) {
+  size_t length;
+  if (size > 0) 
+    length = MIN(JSStringGetLength(jsstring), size) + 1;
+  else 
+    length = JSStringGetLength(jsstring)+1;
 
   char *ret = g_new(char, length);
   size_t written = JSStringGetUTF8CString(jsstring, ret, length);
@@ -162,7 +165,7 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, const char *string, 
     js_ret = JSObjectCallAsFunction(ctx, function_object, NULL, 0, NULL, NULL);
   }
   if (char_ret != NULL) {
-    ret = js_value_to_char(ctx, js_ret);
+    ret = js_value_to_char(ctx, js_ret, JS_STRING_MAX);
   }
 error_out: 
   if (js_name)
@@ -174,7 +177,7 @@ error_out:
 
 /*{{{*/
 char *
-js_value_to_char(JSContextRef ctx, JSValueRef value) {
+js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit) {
   JSValueRef exc = NULL;
   if (value == NULL)
     return NULL;
@@ -184,7 +187,7 @@ js_value_to_char(JSContextRef ctx, JSValueRef value) {
   if (exc != NULL) 
     return NULL;
 
-  char *ret = js_string_to_char(ctx, jsstring);
+  char *ret = js_string_to_char(ctx, jsstring, limit);
   JSStringRelease(jsstring);
   return ret;
 }/*}}}*/

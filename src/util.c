@@ -339,6 +339,9 @@ util_set_file_content(const char *filename, const char *content) {
   char *dname = NULL;
   char *realpath = NULL;
   char buffer[PATH_MAX];
+  if (content == NULL || filename == NULL)
+    return false;
+
   filename = util_expand_home(buffer, filename, PATH_MAX);
   if (g_file_test(filename, G_FILE_TEST_IS_SYMLINK)) {
      link = g_file_read_link(filename, &error);
