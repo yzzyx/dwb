@@ -33,8 +33,10 @@ typedef struct _Sigmap {
 } Sigmap;
 
 static JSValueRef scripts_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef scripts_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef scripts_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef scripts_include(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+
+static JSValueRef scripts_system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef scripts_system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef scripts_set(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef scripts_get(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
@@ -45,6 +47,7 @@ static JSValueRef scripts_io_write(JSContextRef ctx, JSObjectRef function, JSObj
 
 static JSStaticFunction static_functions[] = { 
   { "execute",         scripts_execute,         kJSDefaultFunction },
+  { "include",         scripts_include,         kJSDefaultFunction },
   { 0, 0, 0 }, 
 };
 
@@ -61,6 +64,7 @@ static JSObjectRef _sigObjects[SCRIPT_SIG_LAST];
 static JSContextRef _global_context;
 static JSObjectRef _signals;
 static JSClassRef _viewClass;
+static GString *_script;
 
 static void 
 scripts_create_global_object() {
@@ -102,8 +106,8 @@ scripts_create_global_object() {
   cd = kJSClassDefinitionEmpty;
   cd.className = "system";
   JSStaticFunction system_functions[] = { 
-    { "spawn",           scripts_spawn,           kJSDefaultFunction },
-    { "getEnv",          scripts_get_env,           kJSDefaultFunction },
+    { "spawn",           scripts_system_spawn,           kJSDefaultFunction },
+    { "getEnv",          scripts_system_get_env,           kJSDefaultFunction },
     //{ "print",           scripts_print,           kJSDefaultFunction },
     { 0, 0, 0 }, 
   };
@@ -215,9 +219,29 @@ scripts_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, 
   }
   return JSValueMakeBoolean(ctx, status == STATUS_OK);
 }
+static JSValueRef 
+scripts_include(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  gboolean ret = false;
+  if (argc < 1)
+    return JSValueMakeBoolean(ctx, false);
+  char *path = NULL, *content = NULL; 
+  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX)) == NULL) 
+    goto error_out;
+  if ( (content = util_get_file_content(path)) == NULL) 
+    goto error_out;
+  JSStringRef script = JSStringCreateWithUTF8CString(content);
+  if (JSEvaluateScript(ctx, script, NULL, NULL, 0, NULL)  != NULL) 
+    ret = true;
+  JSStringRelease(script);
+
+error_out: 
+  g_free(content);
+  g_free(path);
+  return JSValueMakeBoolean(ctx, ret);
+}
 
 static JSValueRef 
-scripts_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+scripts_system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1)
     return JSValueMakeNull(ctx);
   char *name = js_value_to_char(ctx, argv[0], -1);
@@ -230,7 +254,7 @@ scripts_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, 
 }
 
 static JSValueRef 
-scripts_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+scripts_system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false; 
   if (argc < 1)
     return JSValueMakeBoolean(ctx, false);
@@ -352,18 +376,25 @@ void
 scripts_init_script(const char *script) {
   if (_global_context == NULL) 
     scripts_create_global_object();
-
-  JSStringRef js_script = JSStringCreateWithUTF8CString(script);
-  JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
-  JSStringRelease(js_script);
+  if (_script == NULL)
+    _script = g_string_new(script);
+  else {
+    g_string_append(_script, script);
+  }
+  //JSStringRef js_script = JSStringCreateWithUTF8CString(script);
+  //JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
+  //JSStringRelease(js_script);
 }
 void 
 scripts_init() {
   dwb.misc.script_signals = 0;
   if (_global_context == NULL)
     return;
-  //JSObjectRef global_object = JSContextGetGlobalObject(_global_context);
 
+  JSStringRef js_script = JSStringCreateWithUTF8CString(_script->str);
+  JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
+  JSStringRelease(js_script);
+  g_string_free(_script, true);
   for (int i=SCRIPT_SIG_FIRST; i<SCRIPT_SIG_LAST; i++) {
     JSStringRef name = JSStringCreateWithUTF8CString(_sigmap[i].name);
     if (!JSObjectHasProperty(_global_context, _signals, name)) 
