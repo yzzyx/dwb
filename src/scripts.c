@@ -38,8 +38,8 @@ static JSValueRef scripts_set(JSContextRef ctx, JSObjectRef function, JSObjectRe
 static JSValueRef scripts_get(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef scripts_io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef scripts_io_get_file_content(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef scripts_io_set_file_content(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef scripts_io_read(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef scripts_io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSStaticFunction static_functions[] = { 
   { "execute",         scripts_execute,         kJSDefaultFunction },
@@ -87,8 +87,8 @@ scripts_create_global_object() {
   cd.className = "io";
   JSStaticFunction io_functions[] = { 
     { "print",     scripts_io_print,            kJSDefaultFunction },
-    { "getFile",   scripts_io_get_file_content, kJSDefaultFunction },
-    { "setFile",   scripts_io_set_file_content, kJSDefaultFunction },
+    { "read",      scripts_io_read,             kJSDefaultFunction },
+    { "write",     scripts_io_write,            kJSDefaultFunction },
     { 0,           0,           0 },
   };
   cd.staticFunctions = io_functions;
@@ -215,16 +215,14 @@ scripts_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, si
 
 /* IO {{{*/
 static JSValueRef 
-scripts_io_get_file_content(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+scripts_io_read(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = NULL;
   char *path = NULL, *content = NULL;
   if (argc < 1)
     return JSValueMakeNull(ctx);
-  path = js_value_to_char(ctx, argv[0], PATH_MAX);
-  if (path == NULL)
+  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX) ) == NULL )
     goto error_out;
-  content = util_get_file_content(path);
-  if (content == NULL)
+  if ( (content = util_get_file_content(path) ) == NULL )
     goto error_out;
   ret = js_char_to_value(ctx, content);
 
@@ -238,18 +236,30 @@ error_out:
 }
 
 static JSValueRef 
-scripts_io_set_file_content(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  char *path = NULL, *content = NULL;
+scripts_io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false;
-  if (argc < 2)
+  FILE *f;
+  char *path = NULL, *content = NULL, *mode = NULL;
+  if (argc < 3)
     return JSValueMakeBoolean(ctx, false);
-  path = js_value_to_char(ctx, argv[0], PATH_MAX);
-  content = js_value_to_char(ctx, argv[1], -1);
-  ret = util_set_file_content(path, content);
+  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX)) == NULL )
+    goto error_out;
+  if ( (mode = js_value_to_char(ctx, argv[1], -1)) == NULL )
+    goto error_out;
+  if (g_strcmp0(mode, "w") && g_strcmp0(mode, "a"))
+    goto error_out;
+  if ( (content = js_value_to_char(ctx, argv[2], -1)) == NULL ) 
+    goto error_out;
+  if ( (f = fopen(path, mode)) != NULL) {
+    fprintf(f, content);
+    fclose(f);
+  }
+error_out:
   g_free(path);
+  g_free(mode);
   g_free(content);
   return JSValueMakeBoolean(ctx, ret);
-}
+}/* }}} */
 
 static JSValueRef 
 scripts_io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
