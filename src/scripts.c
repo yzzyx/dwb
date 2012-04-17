@@ -34,6 +34,8 @@ typedef struct _Sigmap {
 
 static JSValueRef scripts_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef scripts_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef scripts_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+
 static JSValueRef scripts_set(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef scripts_get(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
@@ -43,10 +45,9 @@ static JSValueRef scripts_io_write(JSContextRef ctx, JSObjectRef function, JSObj
 
 static JSStaticFunction static_functions[] = { 
   { "execute",         scripts_execute,         kJSDefaultFunction },
-  { "spawn",           scripts_spawn,           kJSDefaultFunction },
-  //{ "print",           scripts_print,           kJSDefaultFunction },
   { 0, 0, 0 }, 
 };
+
 static JSStaticValue static_values[] = { 
   {0, 0, 0, 0},
 };
@@ -95,6 +96,21 @@ scripts_create_global_object() {
   class = JSClassCreate(&cd);
   JSObjectRef io = JSObjectMake(_global_context, class, NULL);
   JSObjectSetProperty(_global_context, JSContextGetGlobalObject(_global_context), name, io, kJSPropertyAttributeReadOnly|kJSPropertyAttributeDontDelete, NULL);
+  JSStringRelease(name);
+
+  name = JSStringCreateWithUTF8CString("system");
+  cd = kJSClassDefinitionEmpty;
+  cd.className = "system";
+  JSStaticFunction system_functions[] = { 
+    { "spawn",           scripts_spawn,           kJSDefaultFunction },
+    { "getEnv",          scripts_get_env,           kJSDefaultFunction },
+    //{ "print",           scripts_print,           kJSDefaultFunction },
+    { 0, 0, 0 }, 
+  };
+  cd.staticFunctions = system_functions;
+  class = JSClassCreate(&cd);
+  JSObjectRef system = JSObjectMake(_global_context, class, NULL);
+  JSObjectSetProperty(_global_context, JSContextGetGlobalObject(_global_context), name, system, kJSPropertyAttributeReadOnly|kJSPropertyAttributeDontDelete, NULL);
   JSStringRelease(name);
   
 }
@@ -201,6 +217,19 @@ scripts_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, 
 }
 
 static JSValueRef 
+scripts_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1)
+    return JSValueMakeNull(ctx);
+  char *name = js_value_to_char(ctx, argv[0], -1);
+  if (name == NULL) 
+    return JSValueMakeNull(ctx);
+  const char *env = g_getenv(name);
+  if (env == NULL)
+    return JSValueMakeNull(ctx);
+  return js_char_to_value(ctx, env);
+}
+
+static JSValueRef 
 scripts_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false; 
   if (argc < 1)
@@ -212,6 +241,7 @@ scripts_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, si
   }
   return JSValueMakeBoolean(ctx, ret);
 }/*}}}*/
+
 
 /* IO {{{*/
 static JSValueRef 
