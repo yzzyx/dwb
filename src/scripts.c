@@ -113,10 +113,6 @@ scripts_create_view_class() {
 }
 
 static JSValueRef 
-scripts_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  return NULL;
-}
-static JSValueRef 
 scripts_get_generic(JSContextRef ctx, GObject *o, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1)
     return JSValueMakeBoolean(ctx, false);
@@ -189,9 +185,35 @@ scripts_set(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t arg
   return scripts_set_generic(ctx, G_OBJECT(s), function, this, argc, argv, exc);
 
 }
-static JSValueRef scripts_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  return NULL;
+
+/* GLOBAL {{{*/
+static JSValueRef 
+scripts_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  DwbStatus status = STATUS_ERROR;
+  if (argc < 1)
+    return JSValueMakeBoolean(ctx, false);
+  char *command = js_value_to_char(ctx, argv[0], -1);
+  if (command != NULL) {
+    status = dwb_parse_command_line(command);
+    g_free(command);
+  }
+  return JSValueMakeBoolean(ctx, status == STATUS_OK);
 }
+
+static JSValueRef 
+scripts_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  gboolean ret = false; 
+  if (argc < 1)
+    return JSValueMakeBoolean(ctx, false);
+  char *cmdline = js_value_to_char(ctx, argv[0], -1);
+  if (cmdline) {
+    ret = g_spawn_command_line_async(cmdline, NULL);
+    g_free(cmdline);
+  }
+  return JSValueMakeBoolean(ctx, ret);
+}/*}}}*/
+
+/* IO {{{*/
 static JSValueRef 
 scripts_io_get_file_content(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = NULL;
@@ -214,6 +236,7 @@ error_out:
   return ret;
 
 }
+
 static JSValueRef 
 scripts_io_set_file_content(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   char *path = NULL, *content = NULL;
@@ -227,6 +250,7 @@ scripts_io_set_file_content(JSContextRef ctx, JSObjectRef function, JSObjectRef 
   g_free(content);
   return JSValueMakeBoolean(ctx, ret);
 }
+
 static JSValueRef 
 scripts_io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc == 0)
@@ -254,7 +278,7 @@ scripts_io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject,
     default : break;
   }
   return JSValueMakeUndefined(ctx);
-}
+}/*}}}*/
 
 gboolean
 scripts_emit(JSObjectRef obj, int signal, const char *json) {
