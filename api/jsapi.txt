@@ -1,0 +1,308 @@
+= api documentation =
+
+== Abstract == 
+
+*dwb* can be extended with different types of userscripts. 
+This api documentation describes the javascript interface. 
+
+== Getting Started == 
+Scripts that use the javascript api must be located in
++$XDG_CONFIG_HOME/dwb/userscripts+ like any other script. 
+To include a userscript that uses this api the script must have the following
+shebang
+-------
+#!javascript
+-------
+
+All scripts with this shebang will be executed in the same global context so it
+must be taken care to encapsulate the data if more than one script is used (see
+als <<Encapsulation>>. 
+
+
+:numbered!:
+[[Functions]]
+== Functions ==
+
+=== Global functions ===
+Functions from the global object.
+
+.Example
+---------------------------------
+execute("tabopen ixquick.com");
+---------------------------------
+[options="header", cols="1s,1s,2,2,3"]
+|=============================================
+|function               2+| parameter | returns |description 
+
+|execute
+|command
+| dwb-command to execute, required                       | 
++true+ if successfull, +false+ otherwise  |
+Executes a dwb-command in the focused tab.    
+
+|include
+|file| Path to a file to include, required        | 
++true+ if file was included, +false+ otherwise  |
+Includes a file. Note that there is only one global context, all scripts are
+executed in this context. Included files are always included in the global
+context, even if you include it inside a function the included contents will be
+visible outside that function.
+
+|=============================================
+
+[[io]]
+=== io ===
+A global object that implements functions for input and output. 
+
+.Example
+---------------------------------
+var text = io.read("/home/foo/textfile.txt");
+io.print(text);
+--------------------------------
+
+[options="header", cols="1s,1s,2,2,3"]
+|=============================================
+|function               2+| parameter | returns |description 
+.2+|print
+|text | Text to print, required
+.2+| - 
+.2+|Print text to stdout
+|stream | Pass +"stderr"+ to print to stderr, optional
+
+.3+|write          | 
+path| Path to a file to write to, required .3+|
++true+ if successfull, +false+ otherwise .3+|
+Write text to a local file
+|mode|Either "a" if the text should be appended or "r" to create a new file, required
+|text | Text that should be written to the file, required
+
+| read| file | A path to a file to read, required
+| a string with the content of the file if reading was successfull, +null+
+otherwise.|Get content of a local file
+
+|=============================================
+
+[[system]]
+=== system ===
+
+A global object that implements system functions.
+
+[options="header", cols="1s,1s,2,2,3"]
+|=============================================
+|function               2+| parameter | returns |description 
+|spawn 
+|command | Command to execute, required
+|+true+ if successfull, +false+ otherwise
+|Executes a shell command using the default searchpath.
+
+|getEnv 
+|name | Name of the variable, required
+|String containing the variable or +null+ if the variable was not found
+|Get a system environment variable.
+|=============================================
+
+.Example
+------------
+var home = system.getEnv("HOME");
+io.print(home);
+------------
+
+[[webview]]
+=== webview ===
+The webview object represents the widget that actually displays the site
+content.
+The webview object will be the first parameter of every signal function. 
+.Example
+------------
+signals.onNavigation = function (o, obj) {
+  if (/.*youtube.*/.test(obj.uri)) {
+    o.set({"enable-plugins" : true});
+  }
+}
+------------
+[options="header", cols="1s,1s,2,2,3"]
+|=============================================
+|function               2+| parameter | returns |description 
+|set 
+|object       |A json object with properties to set, required
+|+false+ if an error occurs, +true+ otherwise   
+|Sets the webviews properties, valid properties are the properties of 
+http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
+
+|get 
+|name       |The name of the property to get, required
+|A String containing the property value
+|Sets the webviews properties, valid properties are the properties of 
+http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
+Note that this function always returns a String, for boolean values it returns
++TRUE+ or +FALSE+.
+
+|loadUri 
+|uri       |The uri to load, required
+|- 
+|Loads a new uri in the webview 
+
+|history 
+|steps       |Steps to load 
+|- 
+|Loads the history item +steps+ away from the current item. 
+
+|reload 
+|-       |-
+|- 
+|Reload the webview
+
+|=============================================
+
+[[tabs]]
+== tabs ==
+The global tabs object implements functions to get webview objects. 
+
+.Example 
+----
+var c = tabs.getCurrent();
+c.loadUri("http://www.ixquick.de");
+----
+
+
+[options="header", cols="1s,1s,2,2,3"]
+|=============================================
+|function               2+| parameter | returns |description 
+|current |- |  | A <<webview>> object | Gets the currently focused tab
+|length |- |  | A number | The total number of tabs
+focused webview
+|number |- |  | A number | The total number of tabs
+|nth |n |Number of the tab, counting from 0, required | A <<webview>> object or +null+ if
+an error occured | Gets the webview object of the nth tab.
+|=============================================
+
+
+== Signals ==
+With the signals object *dwb* communicates with the script on certain events. To connect to a signal
+one can set callback-function as the signals property which will be called then.
+The callback function always has 2 parameters, the webview and another object
+which contains values relevant to the signal.
+
+.Example 
+--------
+signals.onLoadStatus = function(webview, object) {
+    if (object.status == 2 && /.*google.*/.test(object.uri)) {
+      webview.history(-1);
+    }
+}
+--------
+
+It is only possible to connect to a signal once. If more then one script is
+included it may be better to connect to a signal with a connect function, in
+order to connect to the signal muliple times: 
+------------
+function connect(sig, func) 
+{
+  var old = signals[sig];
+  signals[sig] = function (o, obj) {
+    if (old)
+      old(o, obj);
+    func(o, obj);
+  };
+}
+------------
+The above example would then be equivalent to
+------------
+connect("onLoadStatus", function(o, obj) {
+    if (object.status == 2 && /.*google.*/.test(object.uri)) {
+      webview.history(-1);
+    }
+});
+------------
+
+The signals in detail are
+
+[options="header", cols="1s,1s,2,3"]
+|=============================================
+|signal                 2+|object  |description 
+
+.5+|onDownload 
+|filename|The suggested filename 
+.5+|Emitted before a download starts. Return +true+ to handle the signal or +false+ to let *dwb* handle the signal.
+|mimeType|The mimetype of the file or +unknown+
+|referer|The referer of the request
+|uri|The uri of the file to download
+|totalsize|The total size of the file
+
+.2+|onLoadStatus
+|status|The loadstatus where +status+ is one of
+http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebNavigationAction.html[WebKitLoadStatus]
+.2+|Emitted when the load status changes.
+|uri|Uri that is currently loaded
+
+.2+|onMimeType 
+|mimeType| The mime-type
+.2+|Decide whether or not to show a given mimetype. Return true to stop the request.
+|uri| Uri of the request
+
+.2+|onNavigation          
+|uri | Uri of the request 
+.2+| Emitted before a new site is loaded, return *true* to stop the request.
+|reason | Reason for the request where +reason+ is a
+http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebNavigationAction.html#WebKitWebNavigationReason[WebKitWebNavigationReason]
+|=============================================
+
+[[Encapsulation]]
+== Encapsulation == 
+Since all scripts share the same context, they have the same global scope, so it
+must be taken care to encapsulate the data. 
+Consider the following scenario, Script 1 being in the userscripts-directory, 
+
+.Script 1
+-------
+#!javascript
+
+function whoAmI(name) {
+  io.print("I am " + name);
+}
+var me = "Script 1";
+include("/path/to/Script 2");
+whoAmI(me);
+-------
+
+.Script 2
+-------
+var me = "Script 2";
+whoAmI(me);
+-------
+
+Since both scripts have have the same scope this will produce 
+-------
+I am Script 2
+I am Script 2
+-------
+
+To avoid this it is recommended to encapsulate the scripts in a function, e.g. 
+
+.Script 1
+-------
+#!javascript
+
+function whoAmI(a) {
+  io.print("I am " + a);
+}
+(function () {
+  var a = "Script 1";
+  include("/path/to/Script 2");
+  whoAmI(a);
+})();
+-------
+
+.Script 2
+-------
+(function () {
+  var a = "Script 2";
+  whoAmI(a);
+})();
+-------
+This will produce 
+-------
+I am Script 2
+I am Script 1
+-------
+as expected.

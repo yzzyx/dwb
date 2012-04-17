@@ -253,7 +253,7 @@ view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *
          webkit_download_get_uri(download), 
          webkit_download_get_suggested_filename(download), 
          soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
-         dwb.state.mimetype_request, 
+         dwb.state.mimetype_request ? dwb.state.mimetype_request : "unknown", 
          webkit_download_get_total_size(download));
     ret = SCRIPTS_EMIT(gl, DOWNLOAD, json);
     g_free(json);
