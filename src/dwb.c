@@ -2717,6 +2717,7 @@ dwb_clean_up() {
   dwb_soup_end();
   adblock_end();
   domain_end();
+  scripts_end();
 
   util_rmdir(dwb.files.cachedir, true, true);
   gtk_widget_destroy(dwb.gui.window);

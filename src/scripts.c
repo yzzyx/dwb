@@ -56,10 +56,10 @@ static Sigmap _sigmap[] = {
   { SCRIPT_SIG_DOWNLOAD, "download" } 
 };
 static JSObjectRef _sigObjects[SCRIPT_SIG_LAST];
-static JSContextRef _global_context;
+static JSGlobalContextRef _global_context;
 static JSObjectRef _signals;
-static JSClassRef _viewClass;
-static GString *_script;
+static JSClassRef _view_class;
+static GSList *_script_list;
 
 #if 0
 gboolean
@@ -95,6 +95,16 @@ scripts_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, 
   *exception = js_char_to_value(ctx, message);
 }
 #endif
+
+void 
+scripts_evaluate(const char *script) {
+  if (script == NULL)
+    return;
+  JSStringRef js_script = JSStringCreateWithUTF8CString(script);
+  JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
+  JSStringRelease(js_script);
+}
+
 JSClassRef 
 scripts_create_class(const char *name, JSStaticFunction staticFunctions[], JSStaticValue staticValues[]) {
   JSClassDefinition cd = kJSClassDefinitionEmpty;
@@ -107,171 +117,13 @@ JSObjectRef
 scripts_create_object(JSContextRef ctx, JSObjectRef obj, const char *name, JSStaticFunction staticFunctions[], JSStaticValue staticValues[], void *private) {
   JSClassRef class = scripts_create_class(name, staticFunctions, staticValues);
   JSObjectRef ret = JSObjectMake(ctx, class, private);
+  JSClassRelease(class);
   JSStringRef js_name = JSStringCreateWithUTF8CString(name);
   JSObjectSetProperty(ctx, obj, js_name, ret, kJSPropertyAttributeReadOnly|kJSPropertyAttributeDontDelete, NULL);
   JSStringRelease(js_name);
   return ret;
-  /* Global object */
-}
-static JSValueRef 
-scripts_tabs_get_current(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  return VIEW(dwb.state.fview)->script;
-}
-static JSValueRef 
-scripts_tabs_get_number(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  return JSValueMakeNumber(ctx, g_list_position(dwb.state.views, dwb.state.fview));
-}
-static JSValueRef 
-scripts_tabs_get_length(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  return JSValueMakeNumber(ctx, g_list_length(dwb.state.views));
-}
-static JSValueRef 
-scripts_tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1)
-    return JSValueMakeNull(ctx);
-  double n = JSValueToNumber(ctx, argv[0], NULL);
-  if (n == NAN)
-    return JSValueMakeNull(ctx);
-  GList *nth = g_list_nth(dwb.state.views, (int)n);
-  if (nth == NULL)
-    return JSValueMakeNull(ctx);
-  return VIEW(nth)->script;
-
 }
 
-static void 
-scripts_create_global_object() {
-  JSStaticFunction global_functions[] = { 
-    { "execute",         scripts_execute,         kJSDefaultFunction },
-    { "include",         scripts_include,         kJSDefaultFunction },
-    { 0, 0, 0 }, 
-  };
-
-  //JSStaticValue static_values[] = { 
-  //  {0, 0, 0, 0},
-  //};
-  JSClassRef class = scripts_create_class("dwb", global_functions, NULL);
-  _global_context = JSGlobalContextCreate(class);
-
-  JSObjectRef global_object = JSContextGetGlobalObject(_global_context);
-
-  _signals = scripts_create_object(_global_context, global_object, "signals", NULL, NULL, NULL);
-
-  JSStaticFunction io_functions[] = { 
-    { "print",     scripts_io_print,            kJSDefaultFunction },
-    { "read",      scripts_io_read,             kJSDefaultFunction },
-    { "write",     scripts_io_write,            kJSDefaultFunction },
-    { 0,           0,           0 },
-  };
-  scripts_create_object(_global_context, global_object, "io", io_functions, NULL, NULL);
-
-  JSStaticFunction system_functions[] = { 
-    { "spawn",           scripts_system_spawn,           kJSDefaultFunction },
-    { "getEnv",          scripts_system_get_env,           kJSDefaultFunction },
-    //{ "print",           scripts_print,           kJSDefaultFunction },
-    { 0, 0, 0 }, 
-  };
-  scripts_create_object(_global_context, global_object, "system", system_functions, NULL, NULL);
-
-  JSStaticFunction tab_functions[] = { 
-    { "current",      scripts_tabs_get_current,    kJSDefaultFunction },
-    { "number",       scripts_tabs_get_number,     kJSDefaultFunction },
-    { "length",       scripts_tabs_get_length,     kJSDefaultFunction },
-    { "nth",          scripts_tabs_get_nth,        kJSDefaultFunction },
-    { 0, 0, 0 }, 
-  };
-  scripts_create_object(_global_context, global_object, "tabs", tab_functions, NULL, NULL);
-}
-
-static JSValueRef 
-scripts_tab_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  WebKitWebView *wv = SCRIPT_WEBVIEW(this);
-  if (wv != NULL && argc >= 1) {
-    char *uri = js_value_to_char(ctx, argv[0], -1);
-    webkit_web_view_load_uri(wv, uri);
-    g_free(uri);
-  }
-  return JSValueMakeUndefined(ctx);
-
-}
-static JSValueRef 
-scripts_tab_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc >= 1) {
-    double steps = JSValueToNumber(ctx, argv[0], NULL);
-    if (steps != NAN) {
-      webkit_web_view_go_back_or_forward(SCRIPT_WEBVIEW(this), (int)steps);
-    }
-  }
-  return JSValueMakeUndefined(ctx);
-}
-static JSValueRef 
-scripts_tab_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  webkit_web_view_reload(SCRIPT_WEBVIEW(this));
-  return JSValueMakeUndefined(ctx);
-}
-JSValueRef 
-scripts_tab_get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  char *name = js_string_to_char(ctx, js_name, -1);
-  WebKitWebView *wv = SCRIPT_WEBVIEW(object);
-  GValue v = G_VALUE_INIT;
-  g_value_init(&v, G_TYPE_STRING);
-  g_object_get_property(G_OBJECT(wv), name, &v);
-  g_free(name);
-
-  const char *val = g_value_get_string(&v);
-  return js_char_to_value(ctx, val);
-}
-bool 
-scripts_tab_set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef value, JSValueRef* exception) {
-  WebKitWebView *wv = SCRIPT_WEBVIEW(object);
-  char *name = js_string_to_char(ctx, js_name, -1);
-  GValue v = G_VALUE_INIT;
-  g_value_init(&v, G_TYPE_STRING);
-  g_object_set_property(G_OBJECT(wv), name, &v);
-  g_free(name);
-  return true;
-}
-
-static void 
-scripts_create_view_class() {
-  JSStaticFunction functions[] = { 
-    { "set",             scripts_tab_set,             kJSDefaultFunction },
-    { "get",             scripts_tab_get,             kJSDefaultFunction },
-    { "loadUri",         scripts_tab_load_uri,             kJSDefaultFunction },
-    { "history",         scripts_tab_history,             kJSDefaultFunction },
-    { "reload",          scripts_tab_reload,             kJSDefaultFunction },
-    { 0, 0, 0 }, 
-  };
-  JSStaticValue values[] = {
-    { "uri", scripts_tab_get_property, NULL, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly  },
-    { "title", scripts_tab_get_property, NULL, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly  },
-    { 0, 0, 0 }, 
-  };
-  JSClassDefinition vcd = kJSClassDefinitionEmpty;
-  vcd.className = "view";
-  vcd.staticFunctions = functions;
-  vcd.staticValues = values;
-  _viewClass = JSClassCreate(&vcd);
-}
-
-static JSValueRef 
-scripts_get_generic(JSContextRef ctx, GObject *o, JSObjectRef this, const JSValueRef arg, JSValueRef* exc) {
-  char *name = js_value_to_char(ctx, arg, -1);
-  GValue v = G_VALUE_INIT;
-  g_value_init(&v, G_TYPE_STRING);
-  g_object_get_property(o, name, &v);
-
-  const char *val = g_value_get_string(&v);
-  return js_char_to_value(ctx, val);
-}
-static JSValueRef 
-scripts_tab_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1)
-    return JSValueMakeUndefined(ctx);
-  GList *gl = JSObjectGetPrivate(this);
-  WebKitWebSettings *s = webkit_web_view_get_settings(WEBVIEW(gl));
-  return scripts_get_generic(ctx, G_OBJECT(s), function, argv[0], exc);
-}
 static JSValueRef 
 scripts_set_generic(JSContextRef ctx, GObject *o, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   char *sval = NULL;
@@ -320,13 +172,110 @@ scripts_set_generic(JSContextRef ctx, GObject *o, JSObjectRef function, JSObject
   JSPropertyNameArrayRelease(names);
   return JSValueMakeBoolean(ctx, true);
 }
+
+static JSValueRef 
+scripts_get_generic(JSContextRef ctx, GObject *o, JSObjectRef this, const JSValueRef arg, JSValueRef* exc) {
+  char *name = js_value_to_char(ctx, arg, -1);
+  GValue v = G_VALUE_INIT;
+  g_value_init(&v, G_TYPE_STRING);
+  g_object_get_property(o, name, &v);
+
+  const char *val = g_value_get_string(&v);
+  return js_char_to_value(ctx, val);
+}
+
+/* TABS {{{*/
+static JSValueRef 
+scripts_tabs_current(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
+  return VIEW(dwb.state.fview)->script;
+}
+static JSValueRef 
+scripts_tabs_number(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
+  return JSValueMakeNumber(ctx, g_list_position(dwb.state.views, dwb.state.fview));
+}
+static JSValueRef 
+scripts_tabs_length(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
+  return JSValueMakeNumber(ctx, g_list_length(dwb.state.views));
+}
+static JSValueRef 
+scripts_tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1)
+    return JSValueMakeNull(ctx);
+  double n = JSValueToNumber(ctx, argv[0], NULL);
+  if (n == NAN)
+    return JSValueMakeNull(ctx);
+  GList *nth = g_list_nth(dwb.state.views, (int)n);
+  if (nth == NULL)
+    return JSValueMakeNull(ctx);
+  return VIEW(nth)->script;
+}
+
+
+static bool 
+scripts_tab_set_uri(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef arg, JSValueRef* exc) {
+  WebKitWebView *wv = SCRIPT_WEBVIEW(this);
+  if (wv != NULL && JSValueIsString(ctx, arg)) {
+    char *uri = js_value_to_char(ctx, arg, -1);
+    webkit_web_view_load_uri(wv, uri);
+    g_free(uri);
+    return true;
+  }
+  return false;
+}
+static JSValueRef 
+scripts_tab_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc >= 1) {
+    double steps = JSValueToNumber(ctx, argv[0], NULL);
+    if (steps != NAN) {
+      webkit_web_view_go_back_or_forward(SCRIPT_WEBVIEW(this), (int)steps);
+    }
+  }
+  return JSValueMakeUndefined(ctx);
+}
+static JSValueRef 
+scripts_tab_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  webkit_web_view_reload(SCRIPT_WEBVIEW(this));
+  return JSValueMakeUndefined(ctx);
+}
+JSValueRef 
+scripts_tab_get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  char *name = js_string_to_char(ctx, js_name, -1);
+  puts(name);
+  WebKitWebView *wv = SCRIPT_WEBVIEW(object);
+  GValue v = G_VALUE_INIT;
+  g_value_init(&v, G_TYPE_STRING);
+  g_object_get_property(G_OBJECT(wv), name, &v);
+  g_free(name);
+
+  const char *val = g_value_get_string(&v);
+  return js_char_to_value(ctx, val);
+}
+bool 
+scripts_tab_set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef value, JSValueRef* exception) {
+  WebKitWebView *wv = SCRIPT_WEBVIEW(object);
+  char *name = js_string_to_char(ctx, js_name, -1);
+  GValue v = G_VALUE_INIT;
+  g_value_init(&v, G_TYPE_STRING);
+  g_object_set_property(G_OBJECT(wv), name, &v);
+  g_free(name);
+  return true;
+}
+
+static JSValueRef 
+scripts_tab_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1)
+    return JSValueMakeUndefined(ctx);
+  GList *gl = JSObjectGetPrivate(this);
+  WebKitWebSettings *s = webkit_web_view_get_settings(WEBVIEW(gl));
+  return scripts_get_generic(ctx, G_OBJECT(s), function, argv[0], exc);
+}
 static JSValueRef 
 scripts_tab_set(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   GList *gl = JSObjectGetPrivate(this);
   WebKitWebSettings *s = webkit_web_view_get_settings(WEBVIEW(gl));
   return scripts_set_generic(ctx, G_OBJECT(s), function, this, argc, argv, exc);
 
-}
+}/*}}}*/
 
 /* GLOBAL {{{*/
 static JSValueRef 
@@ -342,7 +291,7 @@ scripts_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, 
   return JSValueMakeBoolean(ctx, status == STATUS_OK);
 }
 static JSValueRef 
-scripts_include(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+scripts_include(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false;
   if (argc < 1)
     return JSValueMakeBoolean(ctx, false);
@@ -352,8 +301,11 @@ scripts_include(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, 
   if ( (content = util_get_file_content(path)) == NULL) 
     goto error_out;
   JSStringRef script = JSStringCreateWithUTF8CString(content);
-  if (JSEvaluateScript(ctx, script, NULL, NULL, 0, NULL)  != NULL) 
-    ret = true;
+  JSObjectRef function = JSObjectMakeFunction(ctx, NULL, 0, NULL, script, NULL, 0, NULL);
+  if (function != NULL) {
+    if (JSObjectCallAsFunction(_global_context, function, NULL, 0, NULL, NULL) != NULL) 
+      ret = true;
+  }
   JSStringRelease(script);
 
 error_out: 
@@ -387,7 +339,6 @@ scripts_system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObj
   }
   return JSValueMakeBoolean(ctx, ret);
 }/*}}}*/
-
 
 /* IO {{{*/
 static JSValueRef 
@@ -435,7 +386,7 @@ error_out:
   g_free(mode);
   g_free(content);
   return JSValueMakeBoolean(ctx, ret);
-}/* }}} */
+}
 
 static JSValueRef 
 scripts_io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -490,36 +441,92 @@ scripts_emit(JSObjectRef obj, int signal, const char *json) {
   return false;
 }
 
+static void 
+scripts_create_global_object() {
+  JSStaticFunction global_functions[] = { 
+    { "execute",         scripts_execute,         kJSDefaultFunction },
+    { "include",         scripts_include,         kJSDefaultFunction },
+    { 0, 0, 0 }, 
+  };
+
+  JSClassRef class = scripts_create_class("dwb", global_functions, NULL);
+  _global_context = JSGlobalContextCreate(class);
+  JSClassRelease(class);
+
+  JSObjectRef global_object = JSContextGetGlobalObject(_global_context);
+
+
+  JSStaticFunction wv_functions[] = { 
+    { "set",             scripts_tab_set,             kJSDefaultFunction },
+    { "get",             scripts_tab_get,             kJSDefaultFunction },
+    { "history",         scripts_tab_history,             kJSDefaultFunction },
+    { "reload",          scripts_tab_reload,             kJSDefaultFunction },
+    { 0, 0, 0 }, 
+  };
+  JSStaticValue wv_values[] = {
+    { "uri",    scripts_tab_get_property, scripts_tab_set_uri, kJSPropertyAttributeDontDelete },
+    { "title",  scripts_tab_get_property, NULL, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly  },
+    { 0, 0, 0 }, 
+  };
+
+  _view_class = scripts_create_class("webview", wv_functions, wv_values);
+
+  JSStaticFunction io_functions[] = { 
+    { "print",     scripts_io_print,            kJSDefaultFunction },
+    { "read",      scripts_io_read,             kJSDefaultFunction },
+    { "write",     scripts_io_write,            kJSDefaultFunction },
+    { 0,           0,           0 },
+  };
+  scripts_create_object(_global_context, global_object, "io", io_functions, NULL, NULL);
+
+  JSStaticFunction system_functions[] = { 
+    { "spawn",           scripts_system_spawn,           kJSDefaultFunction },
+    { "getEnv",          scripts_system_get_env,           kJSDefaultFunction },
+    { 0, 0, 0 }, 
+  };
+  scripts_create_object(_global_context, global_object, "system", system_functions, NULL, NULL);
+
+  JSStaticFunction tab_functions[] = { 
+    { "nth",          scripts_tabs_get_nth,        kJSDefaultFunction },
+    { 0, 0, 0 }, 
+  };
+  JSStaticValue tab_values[] = { 
+    { "current",      scripts_tabs_current, NULL,   kJSDefaultFunction },
+    { "number",       scripts_tabs_number,  NULL,   kJSDefaultFunction },
+    { "length",       scripts_tabs_length,  NULL,   kJSDefaultFunction },
+    { 0, 0, 0, 0 }, 
+  };
+  scripts_create_object(_global_context, global_object, "tabs", tab_functions, tab_values, NULL);
+
+  _signals = scripts_create_object(_global_context, global_object, "signals", NULL, NULL, NULL);
+}
 void 
 scripts_create_tab(GList *gl) {
   if (_global_context == NULL )  {
     VIEW(gl)->script = NULL;
     return;
   }
-  if (_viewClass == NULL ) 
-    scripts_create_view_class();
   if (_global_context == NULL ) 
     scripts_create_global_object();
-  VIEW(gl)->script = JSObjectMake(_global_context, _viewClass, gl);
+  VIEW(gl)->script = JSObjectMake(_global_context, _view_class, gl);
 }
 
 void
 scripts_init_script(const char *script) {
   if (_global_context == NULL) 
     scripts_create_global_object();
-  if (_script == NULL)
-    _script = g_string_new(script);
-  else {
-    g_string_append(_script, script);
+  //if (_script == NULL)
+  //  _script = g_string_new(script);
+  //else {
+  JSStringRef body = JSStringCreateWithUTF8CString(script);
+  JSObjectRef function = JSObjectMakeFunction(_global_context, NULL, 0, NULL, body, NULL, 0, NULL);
+  if (function != NULL) {
+    _script_list = g_slist_append(_script_list, function);
   }
-}
-void 
-scripts_evaluate(const char *script) {
-  if (script == NULL)
-    return;
-  JSStringRef js_script = JSStringCreateWithUTF8CString(script);
-  JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
-  JSStringRelease(js_script);
+  else {
+    fprintf(stderr, "An error occured creating script : \n%s\n", script);
+  }
+  JSStringRelease(body);
 }
 void 
 scripts_init() {
@@ -537,8 +544,12 @@ scripts_init() {
     
   }
 
-  scripts_evaluate(_script->str);
-  g_string_free(_script, true);
+  for (GSList *l = _script_list; l; l=l->next) {
+    JSObjectCallAsFunction(_global_context, l->data, NULL, 0, NULL, NULL);
+  }
+  g_slist_free(_script_list);
+  _script_list = NULL;
+
   for (int i=SCRIPT_SIG_FIRST; i<SCRIPT_SIG_LAST; i++) {
     JSStringRef name = JSStringCreateWithUTF8CString(_sigmap[i].name);
     if (!JSObjectHasProperty(_global_context, _signals, name)) 
@@ -556,3 +567,11 @@ release:
     JSStringRelease(name);
   }
 }
+void
+scripts_end() {
+  if (_global_context != NULL) {
+    JSClassRelease(_view_class);
+    JSGlobalContextRelease(_global_context);
+  }
+}
+

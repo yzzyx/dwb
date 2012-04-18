@@ -17,7 +17,6 @@ Object.defineProperty(signals, "emit", {
 Object.defineProperty(signals, "connect", {
   value : function(sig, func) {
     signals._maxId++;
-    io.print(signals._maxId);
     if (signals._registered[sig] === undefined || signals._registered[sig] === null) {
       signals._registered[sig] = [];
       signals[sig] = function (wv, o) {
@@ -41,4 +40,3 @@ Object.defineProperty(signals, "disconnect", {
     }
   }
 });
-io.print("a :" + a);

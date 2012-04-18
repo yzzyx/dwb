@@ -20,29 +20,34 @@ also <<Encapsulation>>).
 
 
 :numbered!:
+:caption:
 [[Functions]]
 == Functions ==
 
 === Global functions ===
 Functions from the global object.
 
-[options="header", cols="1s,1s,2,2,4"]
+[options="header", cols="1s,1m,2,2,4"]
 |=============================================
 |function               2+| parameter | returns |description 
 
 |execute
-|command
+|String
 | dwb-command to execute; required                       | 
 +true+ if successfull, +false+ otherwise  |
 Executes a dwb-command in the focused tab.    
 
 |include
-|file| Path to a file to include; required        | 
+|String| Path to a file to include; required        | 
 +true+ if file was included, +false+ otherwise  |
 Includes a file. Note that there is only one context, all scripts are
 executed in this context. Included files are always included in the global
-scope. Even if *include* is executed inside another function all global objects
-in the script will be visible outside of that function.
+scope but encapsulated in a function. 
+
+|plugin [red]#todo#
+|String | Name of the plugin to load 
+| - 
+|Loads a system plugin
 
 |=============================================
 
@@ -53,25 +58,26 @@ execute("tabopen ixquick.com");
 
 [[io]]
 === io ===
-A global object that implements functions for input and output. 
+The +io+ object implements functions for input and output. 
 
-[options="header", cols="1s,1s,3,2,2"]
+[options="header", cols="1s,1m,3,2,2"]
 |=============================================
 |function               2+| parameter | returns |description 
 .2+|print
-|text | Text to print; required
+|String | Text to print; required
 .2+| - 
 .2+|Print text to stdout
-|stream | Pass +"stderr"+ to print to stderr; optional
+|String | Pass +"stderr"+ to print to stderr; optional
 
 .3+|write          | 
-path| Path to a file to write to; required .3+|
+String| Path to a file to write to; required .3+|
 +true+ if successfull, +false+ otherwise .3+|
 Write text to a local file
-|mode|Either +"a"+ if the text should be appended or +"w"+ to create a new file; required
-|text | Text that should be written to the file; required
+|String|Either +"a"+ if the text should be appended or +"w"+ to create a new file; required
+|String | Text that should be written to the file; required
 
-| read| file | A path to a file to read; required
+| read
+| String | A path to a file to read; required
 | a string with the content of the file if reading was successfull, +null+
 otherwise.|Get content of a local file
 
@@ -86,18 +92,18 @@ io.print(text);
 [[system]]
 === system ===
 
-A global object that implements system functions.
+The +system+ object implements system functions.
 
-[options="header", cols="1s,1s,2,2,2"]
+[options="header", cols="1s,1m,2,2,2"]
 |=============================================
 |function               2+| parameter | returns |description 
 |spawn 
-|command | Command to execute; required
+|String | Command to execute; required
 |+true+ if successfull, +false+ otherwise
 |Executes a shell command using the default searchpath.
 
 |getEnv 
-|name | Name of the variable; required
+|String | Name of the variable; required
 |String containing the variable or +null+ if the variable was not found
 |Get a system environment variable.
 |=============================================
@@ -110,46 +116,64 @@ system.spawn("xterm -e vim " + home + "/.bashrc");
 
 [[webview]]
 === webview ===
-The webview object represents the widget that actually displays the site
+The +webview+ object represents the widget that actually displays the site
 content.
-The webview object will be the first parameter of every signal function. 
-[options="header", cols="1s,1s,2,2,4"]
+The +webview+ object will be the first parameter of every signal function. 
+
+.Properties
+[options="header", cols="2s,2m,1s,10"]
+|=============================================
+|name |type | mode| description
+|uri |String |rw | The uri of the +webview+
+|title |String|ro | The title of the +webview+
+|=============================================
+
+.Example
+------------
+if (wv.title == "Title") {
+  wv.uri = "http://example.com";
+}
+------------
+
+.Functions
+
+[options="header", cols="1s,1m,2,2,4"]
 |=============================================
 |function               2+| parameter | returns |description 
 |set 
-|object       |A json object with properties to set; required
+|Object       |A object with properties to set; required
 |+false+ if an error occurs, +true+ otherwise   
 |Sets the webviews properties, valid properties are the properties of 
 http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
 
 |get 
-|name       |The name of the property to get; required
+|String       |The name of the property to get; required
 |A String containing the property value
 |Sets the webviews properties, valid properties are the properties of 
 http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
 Note that this function always returns a String, for boolean values it returns
 +TRUE+ or +FALSE+.
 
-|loadUri 
-|uri       |The uri to load; required
-|- 
-|Loads a new uri in the webview 
+|inject [red]#todo# 
+|String | Script to inject
+|-
+|Injects a script into the +webview+
 
 |history 
-|steps       |Number of steps
+|Number       |Number of steps
 |- 
 |Loads the history item +steps+ away from the current item. 
 
 |reload 
 |-       |
 |- 
-|Reload the webview
+|Reload the +webview+
 
 |=============================================
 
 .Example
 ------------
-signals.onNavigation = function (o, obj) {
+signals.navigation = function (o, obj) {
   if (/.*youtube.*/.test(obj.uri)) {
     o.set({
       "enable-plugins" : true, 
@@ -161,27 +185,31 @@ signals.onNavigation = function (o, obj) {
 
 [[tabs]]
 === tabs ===
-A global object that implements functions to get webview objects. 
+A +tabs+ object implements functions and properties to get +webview+ objects. 
 
-[options="header", cols="1s,1s,3,2,2"]
+.Properties
+[options="header", cols="2s,2m,1s,10"]
+|=============================================
+|name |type|mode| description
+|current |<<webview>>| ro |The currently focused tab
+|length |Number |ro| The total number of tabs
+|number |Number |ro| The number of the currently focused tab
+
+|=============================================
+
+.Functions
+[options="header", cols="1s,1m,3,2,2"]
 |=============================================
 |function               2+| parameter | returns |description 
-
-|current |- |  | A <<webview>> object | Gets the currently focused tab
-
-|length |- |  | A number | The total number of tabs
-
-|number |- |  | A number | The number of the currently focused tab
-
-|nth |n |Number of the tab, counting from 0; required | A <<webview>> object or +null+ if
+|nth |Number |Number of the tab, counting from 0; required | A <<webview>> object or +null+ if
 an error occured | Gets the webview object of the nth tab.
 
 |=============================================
 
 .Example 
 ----
-var c = tabs.current();
-c.loadUri("http://www.ixquick.de");
+var c = tabs.current;
+tabs.nth(2).uri = c.uri;
 ----
 
 
@@ -239,37 +267,38 @@ which contains values relevant to the signal.
 
 The signals object implements the following functions
 
-[options="header", cols="1s,1s,3,2,2"]
+.Functions
+[options="header", cols="1s,1m,3,2,2"]
 |=============================================
 |function               2+| parameter | returns | description 
 
-.2+|connect |signal |The signal name to connect to; required .2+| The
+.2+|connect 
+|String |The signal name to connect to; required .2+| The
 signal id of the signal.
 .2+| Connects to a signal.
 
-|callback | The callback to call when the signal is emitted
+|Function | The callback to call when the signal is emitted; required
 
 |disconnect 
-|id |The signal id to disconnect; required | - 
+|Number |The signal id of the signal; required | - 
 | Disconnects from a signal, the id is the id returned by 
 +connect+.
 
 
 .3+|emit 
-|signal |The signal name to emit; required .3+| - 
+|String |The signal name to emit; required .3+| - 
 .3+| Emits a signal. 
 
-|object |Object passed to the callback function; required
-|values |Object passed to the callback function; required
+|Object |Object passed to the callback function; optional
+|Object |Object passed to the callback function; optional
 
-|callback | The callback passed to connect
 |=============================================
 
 The signals implemented by *dwb* are 
 
-[options="header", cols="1s,1s,2,3"]
+[options="header", cols="1s,1m,2,3"]
 |=============================================
-|signal                 2+|object  |description 
+|signal                 2+|object properties  |description 
 
 .5+|download 
 |filename|The suggested filename 
@@ -311,59 +340,53 @@ signals.connect("loadStatus", loadStatusCallback);
 [[Encapsulation]]
 == Encapsulation == 
 Since all scripts share the same context, they have the same global scope, so it
-must be taken care to encapsulate the data. 
-Consider the following scenario, Script 1 being in the userscripts-directory:
+must be taken care to encapsulate the data, all scripts are encapsulated in a
+function but global variables may be visible in other scripts. 
+Consider the following scenario:
 
 .Script 1
 -------
 #!javascript
 
-function whoAmI(name) {
-  io.print("I am " + name);
-}
-var me = "Script 1";
-include("/path/to/Script 2");
-whoAmI(me);
+script1 = "Script 1";
+io.print(script2);
 -------
 
 .Script 2
 -------
-var me = "Script 2";
-whoAmI(me);
+#!javascript
+
+script2 = "Script 2";
+io.print(script1);
 -------
 
-Since both scripts have have the same scope this will produce 
+Since both scripts share one execution context this will produce either 
 -------
-I am Script 2
-I am Script 2
+Script 2
 -------
+or 
+-------
+Script 1
+-------
+depending on which script is included first.
 
-To avoid this it is recommended to encapsulate scripts in a function, e.g. 
+To avoid this always use +var+ for global variables. 
 
 .Script 1
 -------
 #!javascript
 
-function whoAmI(a) {
-  io.print("I am " + a);
-}
-(function () {
-  var a = "Script 1";
-  include("/path/to/Script 2");
-  whoAmI(a);
-})();
+var script1 = "Script 1";
+io.print(script2);
 -------
 
 .Script 2
 -------
-(function () {
-  var a = "Script 2";
-  whoAmI(a);
-})();
+#!javascript
+
+var script2 = "Script 2";
+io.print(script1);
 -------
-This will produce 
--------
-I am Script 2
-I am Script 1
--------
-as expected.
+This will produce no output, as expected. The same holds for scripts included
+with *include*.
+
