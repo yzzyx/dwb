@@ -8,6 +8,7 @@ DOCDIR=doc
 SRCDIR=src
 JSDIR=scripts
 LIBDIR=lib
+LIBJSDIR=$(JSDIR)/$(LIBDIR)
 SHAREDIR=share
 UTILDIR=util
 SUBDIRS=$(SRCDIR) $(UTILDIR) 
@@ -123,6 +124,7 @@ CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 CFLAGS += -DLOCAL_FILE=\"$(LOCAL_FILE)\"
 CFLAGS += -DHINT_SCRIPT=\"$(HINT_SCRIPT)\"
 CFLAGS += -DSYSTEM_DATA_DIR=\"$(DATADIR)\"
+CFLAGS += -DLIBJS_DIR=\"$(LIBJSDIR)\"
 
 # If execinfo.h is not available, e.g. freebsd
 ifneq (${WITHOUT_EXECINFO}, 1)

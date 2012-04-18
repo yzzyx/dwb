@@ -50,10 +50,10 @@ static JSValueRef scripts_io_write(JSContextRef ctx, JSObjectRef function, JSObj
 
 static JSValueRef scripts_get_generic(JSContextRef ctx, GObject *o, JSObjectRef this, const JSValueRef arg, JSValueRef* exc);
 static Sigmap _sigmap[] = {
-  { SCRIPT_SIG_NAVIGATION, "onNavigation" },
-  { SCRIPT_SIG_LOAD_STATUS, "onLoadStatus" },
-  { SCRIPT_SIG_MIME_TYPE, "onMimeType" },
-  { SCRIPT_SIG_DOWNLOAD, "onDownload" } 
+  { SCRIPT_SIG_NAVIGATION, "navigation" },
+  { SCRIPT_SIG_LOAD_STATUS, "loadStatus" },
+  { SCRIPT_SIG_MIME_TYPE, "mimeType" },
+  { SCRIPT_SIG_DOWNLOAD, "download" } 
 };
 static JSObjectRef _sigObjects[SCRIPT_SIG_LAST];
 static JSContextRef _global_context;
@@ -98,7 +98,10 @@ scripts_tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObj
   double n = JSValueToNumber(ctx, argv[0], NULL);
   if (n == NAN)
     return JSValueMakeNull(ctx);
-  return VIEW(g_list_nth(dwb.state.views, (int)n))->script;
+  GList *nth = g_list_nth(dwb.state.views, (int)n);
+  if (nth == NULL)
+    return JSValueMakeNull(ctx);
+  return VIEW(nth)->script;
 
 }
 
@@ -332,6 +335,7 @@ scripts_system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisO
   if (name == NULL) 
     return JSValueMakeNull(ctx);
   const char *env = g_getenv(name);
+  g_free(name);
   if (env == NULL)
     return JSValueMakeNull(ctx);
   return js_char_to_value(ctx, env);
@@ -476,14 +480,30 @@ scripts_init_script(const char *script) {
   }
 }
 void 
+scripts_evaluate(const char *script) {
+  if (script == NULL)
+    return;
+  JSStringRef js_script = JSStringCreateWithUTF8CString(script);
+  JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
+  JSStringRelease(js_script);
+}
+void 
 scripts_init() {
   dwb.misc.script_signals = 0;
   if (_global_context == NULL)
     return;
 
-  JSStringRef js_script = JSStringCreateWithUTF8CString(_script->str);
-  JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
-  JSStringRelease(js_script);
+  char *dir = util_get_data_dir(LIBJS_DIR);
+  if (dir != NULL) {
+    GString *content = g_string_new(NULL);
+    util_get_directory_content(content, dir, "js");
+    scripts_evaluate(content->str);
+    g_string_free(content, true);
+    g_free(dir);
+    
+  }
+
+  scripts_evaluate(_script->str);
   g_string_free(_script, true);
   for (int i=SCRIPT_SIG_FIRST; i<SCRIPT_SIG_LAST; i++) {
     JSStringRef name = JSStringCreateWithUTF8CString(_sigmap[i].name);

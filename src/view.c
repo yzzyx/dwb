@@ -1051,12 +1051,12 @@ view_add(const char *uri, gboolean background) {
     dwb_focus(ret);
   }
 
+  scripts_create_tab(ret);
   view_init_signals(ret);
   view_init_settings(ret);
   if (GET_BOOL("adblocker"))
     adblock_connect(ret);
 
-  scripts_create_tab(ret);
   dwb_update_layout();
 
   if (uri != NULL) {

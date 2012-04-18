@@ -32,8 +32,9 @@ enum SIGNALS {
 gboolean scripts_emit(JSObjectRef , int , const char *);
 void scripts_create_tab(GList *gl);
 
-#define EMIT_SCRIPT(gl, sig)  (VIEW(gl)->script != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)) \
-    && webkit_web_view_get_uri(WEBVIEW(gl)) != NULL && *webkit_web_view_get_uri(WEBVIEW(gl)))
+//#define EMIT_SCRIPT(gl, sig)  (VIEW(gl)->script != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)) 
+//    && webkit_web_view_get_uri(WEBVIEW(gl)) != NULL && *webkit_web_view_get_uri(WEBVIEW(gl)))
+#define EMIT_SCRIPT(gl, sig)  (VIEW(gl)->script != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)))
 #define SCRIPTS_EMIT(gl, sig, json)  scripts_emit(VIEW(gl)->script, SCRIPT_SIG_##sig, json)
 #define JSON_STRING(x)  "\""#x"\":\"%s\""
 

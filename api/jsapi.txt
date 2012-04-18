@@ -16,7 +16,7 @@ shebang
 
 All scripts with this shebang will be executed in the same global context so it
 must be taken care to encapsulate the data if more than one script is used (see
-als <<Encapsulation>>. 
+also <<Encapsulation>>). 
 
 
 :numbered!:
@@ -26,61 +26,62 @@ als <<Encapsulation>>.
 === Global functions ===
 Functions from the global object.
 
-.Example
----------------------------------
-execute("tabopen ixquick.com");
----------------------------------
 [options="header", cols="1s,1s,2,2,3"]
 |=============================================
 |function               2+| parameter | returns |description 
 
 |execute
 |command
-| dwb-command to execute, required                       | 
+| dwb-command to execute; required                       | 
 +true+ if successfull, +false+ otherwise  |
 Executes a dwb-command in the focused tab.    
 
 |include
-|file| Path to a file to include, required        | 
+|file| Path to a file to include; required        | 
 +true+ if file was included, +false+ otherwise  |
-Includes a file. Note that there is only one global context, all scripts are
+Includes a file. Note that there is only one context, all scripts are
 executed in this context. Included files are always included in the global
-context, even if you include it inside a function the included contents will be
-visible outside that function.
+scope. Even if *include* is executed inside another function all global objects
+in the script will be visible outside of that function.
 
 |=============================================
+
+.Example
+---------------------------------
+execute("tabopen ixquick.com");
+---------------------------------
 
 [[io]]
 === io ===
 A global object that implements functions for input and output. 
+
+[options="header", cols="1s,1s,2,2,3"]
+|=============================================
+|function               2+| parameter | returns |description 
+.2+|print
+|text | Text to print; required
+.2+| - 
+.2+|Print text to stdout
+|stream | Pass +"stderr"+ to print to stderr; optional
+
+.3+|write          | 
+path| Path to a file to write to; required .3+|
++true+ if successfull, +false+ otherwise .3+|
+Write text to a local file
+|mode|Either +"a"+ if the text should be appended or +"w"+ to create a new file; required
+|text | Text that should be written to the file; required
+
+| read| file | A path to a file to read; required
+| a string with the content of the file if reading was successfull, +null+
+otherwise.|Get content of a local file
+
+|=============================================
 
 .Example
 ---------------------------------
 var text = io.read("/home/foo/textfile.txt");
 io.print(text);
 --------------------------------
-
-[options="header", cols="1s,1s,2,2,3"]
-|=============================================
-|function               2+| parameter | returns |description 
-.2+|print
-|text | Text to print, required
-.2+| - 
-.2+|Print text to stdout
-|stream | Pass +"stderr"+ to print to stderr, optional
-
-.3+|write          | 
-path| Path to a file to write to, required .3+|
-+true+ if successfull, +false+ otherwise .3+|
-Write text to a local file
-|mode|Either "a" if the text should be appended or "r" to create a new file, required
-|text | Text that should be written to the file, required
-
-| read| file | A path to a file to read, required
-| a string with the content of the file if reading was successfull, +null+
-otherwise.|Get content of a local file
-
-|=============================================
 
 [[system]]
 === system ===
@@ -91,12 +92,12 @@ A global object that implements system functions.
 |=============================================
 |function               2+| parameter | returns |description 
 |spawn 
-|command | Command to execute, required
+|command | Command to execute; required
 |+true+ if successfull, +false+ otherwise
 |Executes a shell command using the default searchpath.
 
 |getEnv 
-|name | Name of the variable, required
+|name | Name of the variable; required
 |String containing the variable or +null+ if the variable was not found
 |Get a system environment variable.
 |=============================================
@@ -104,7 +105,7 @@ A global object that implements system functions.
 .Example
 ------------
 var home = system.getEnv("HOME");
-io.print(home);
+system.spawn("xterm -e vim " + home + "/.bashrc");
 ------------
 
 [[webview]]
@@ -112,25 +113,17 @@ io.print(home);
 The webview object represents the widget that actually displays the site
 content.
 The webview object will be the first parameter of every signal function. 
-.Example
-------------
-signals.onNavigation = function (o, obj) {
-  if (/.*youtube.*/.test(obj.uri)) {
-    o.set({"enable-plugins" : true});
-  }
-}
-------------
 [options="header", cols="1s,1s,2,2,3"]
 |=============================================
 |function               2+| parameter | returns |description 
 |set 
-|object       |A json object with properties to set, required
+|object       |A json object with properties to set; required
 |+false+ if an error occurs, +true+ otherwise   
 |Sets the webviews properties, valid properties are the properties of 
 http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
 
 |get 
-|name       |The name of the property to get, required
+|name       |The name of the property to get; required
 |A String containing the property value
 |Sets the webviews properties, valid properties are the properties of 
 http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
@@ -138,90 +131,148 @@ Note that this function always returns a String, for boolean values it returns
 +TRUE+ or +FALSE+.
 
 |loadUri 
-|uri       |The uri to load, required
+|uri       |The uri to load; required
 |- 
 |Loads a new uri in the webview 
 
 |history 
-|steps       |Steps to load 
+|steps       |Number of steps
 |- 
 |Loads the history item +steps+ away from the current item. 
 
 |reload 
-|-       |-
+|-       |
 |- 
 |Reload the webview
 
 |=============================================
 
+.Example
+------------
+signals.onNavigation = function (o, obj) {
+  if (/.*youtube.*/.test(obj.uri)) {
+    o.set({
+      "enable-plugins" : true, 
+      "enable-scripts" : true
+    });
+  }
+}
+------------
+
 [[tabs]]
-== tabs ==
-The global tabs object implements functions to get webview objects. 
-
-.Example 
-----
-var c = tabs.getCurrent();
-c.loadUri("http://www.ixquick.de");
-----
-
+=== tabs ===
+A global object that implements functions to get webview objects. 
 
 [options="header", cols="1s,1s,2,2,3"]
 |=============================================
 |function               2+| parameter | returns |description 
+
 |current |- |  | A <<webview>> object | Gets the currently focused tab
+
 |length |- |  | A number | The total number of tabs
-focused webview
-|number |- |  | A number | The total number of tabs
-|nth |n |Number of the tab, counting from 0, required | A <<webview>> object or +null+ if
+
+|number |- |  | A number | The number of the currently focused tab
+
+|nth |n |Number of the tab, counting from 0; required | A <<webview>> object or +null+ if
 an error occured | Gets the webview object of the nth tab.
+
 |=============================================
+
+.Example 
+----
+var c = tabs.current();
+c.loadUri("http://www.ixquick.de");
+----
 
 
 == Signals ==
-With the signals object *dwb* communicates with the script on certain events. To connect to a signal
+With the +signals+ object *dwb* communicates with the script on certain events. To connect to a signal
 one can set callback-function as the signals property which will be called then.
-The callback function always has 2 parameters, the webview and another object
+However it is better to connect to signals using the connect function.
+The callback function always has 2 parameters, the object which
+received the signal and another object
 which contains values relevant to the signal.
 
-.Example 
---------
-signals.onLoadStatus = function(webview, object) {
-    if (object.status == 2 && /.*google.*/.test(object.uri)) {
-      webview.history(-1);
-    }
-}
---------
+//
+//
+//.Example 
+//--------
+//signals.loadStatus = function(webview, object) {
+//    if (object.status == 2 && /.*google.*/.test(object.uri)) {
+//      webview.history(-1);
+//    }
+//}
+//--------
+//
+//It is only possible to connect to a signal once. If more then one script is
+//included it may be better to connect to a signal with a connect function, in
+//order to connect to the signal muliple times: 
+//------------
+//signals.registered = new Object();
+//signals.emit = function(sig, wv, o) {
+//  var s = signals.registered[sig];
+//  for (var i=0; i<s.length; i++) {
+//    s[i](wv, o);
+//  }
+//}
+//signals.connect = function(sig, func) 
+//{
+//  var connected = signals.registered[sig] != undefined && signals.registered[sig] != null;
+//  if (!connected)
+//    signals.registered[sig] = [];
+//  signals.registered[sig].push(func);
+//  if (!connected) {
+//    signals[sig] = function (wv, o) {
+//      signals.emit(sig, wv, o);
+//    };
+//  }
+//}
+//------------
+//The above example would then be equivalent to
+//------------
+//signals.connect("loadStatus", function(o, obj) {
+//    if (object.status == 2 && /.*google.*/.test(object.uri)) {
+//      webview.history(-1);
+//    }
+//});
+//------------
 
-It is only possible to connect to a signal once. If more then one script is
-included it may be better to connect to a signal with a connect function, in
-order to connect to the signal muliple times: 
-------------
-function connect(sig, func) 
-{
-  var old = signals[sig];
-  signals[sig] = function (o, obj) {
-    if (old)
-      old(o, obj);
-    func(o, obj);
-  };
-}
-------------
-The above example would then be equivalent to
-------------
-connect("onLoadStatus", function(o, obj) {
-    if (object.status == 2 && /.*google.*/.test(object.uri)) {
-      webview.history(-1);
-    }
-});
-------------
+The signals object implements the following functions
 
-The signals in detail are
+[options="header", cols="1s,1s,2,2,3"]
+|=============================================
+|function               2+| parameter | returns | description 
+
+.2+|connect |signal |The signal name to connect to; required .2+| - 
+.2+| Connects to a signal.
+If you want to disconnect from that signal +callback+ may not be a closure. 
+
+|callback | The callback to call when the signal is emitted
+
+.2+|disconnect 
+|signal |The signal name to disconnect; required .2+| - 
+.2+| Disconnects from a signal. The parameters must be the same as passed to
++connect+.
+
+|callback | The callback passed to connect
+
+.3+|emit 
+|signal |The signal name to emit; required .3+| - 
+.3+| Emits a signal. 
+
+|object |Object passed to the callback function; required
+|values |Object passed to the callback function; required
+
+|callback | The callback passed to connect
+|=============================================
+
+The signals implemented by *dwb* are 
 
 [options="header", cols="1s,1s,2,3"]
 |=============================================
 |signal                 2+|object  |description 
 
-.5+|onDownload 
+.5+|download 
 |filename|The suggested filename 
 .5+|Emitted before a download starts. Return +true+ to handle the signal or +false+ to let *dwb* handle the signal.
 |mimeType|The mimetype of the file or +unknown+
@@ -229,29 +280,40 @@ The signals in detail are
 |uri|The uri of the file to download
 |totalsize|The total size of the file
 
-.2+|onLoadStatus
+.2+|loadStatus
 |status|The loadstatus where +status+ is one of
 http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebNavigationAction.html[WebKitLoadStatus]
 .2+|Emitted when the load status changes.
 |uri|Uri that is currently loaded
 
-.2+|onMimeType 
+.2+|mimeType 
 |mimeType| The mime-type
 .2+|Decide whether or not to show a given mimetype. Return true to stop the request.
 |uri| Uri of the request
 
-.2+|onNavigation          
+.2+|navigation          
 |uri | Uri of the request 
 .2+| Emitted before a new site is loaded, return *true* to stop the request.
 |reason | Reason for the request where +reason+ is a
 http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebNavigationAction.html#WebKitWebNavigationReason[WebKitWebNavigationReason]
 |=============================================
 
+.Example 
+------
+function loadStatusCallback(wv, values) {
+  if (/.*google.com.*/.test(values.uri && obj.status == 2) {
+    wv.loadUri("http://www.ixquick.com");
+    signals.disconnect("loadStatus", loadStatusCallback);
+  }
+}
+signals.connect("loadStatus", loadStatusCallback);
+------
+
 [[Encapsulation]]
 == Encapsulation == 
 Since all scripts share the same context, they have the same global scope, so it
 must be taken care to encapsulate the data. 
-Consider the following scenario, Script 1 being in the userscripts-directory, 
+Consider the following scenario, Script 1 being in the userscripts-directory:
 
 .Script 1
 -------
@@ -277,7 +339,7 @@ I am Script 2
 I am Script 2
 -------
 
-To avoid this it is recommended to encapsulate the scripts in a function, e.g. 
+To avoid this it is recommended to encapsulate scripts in a function, e.g. 
 
 .Script 1
 -------

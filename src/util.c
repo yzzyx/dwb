@@ -243,7 +243,7 @@ util_web_settings_sort_second(WebSettings *a, WebSettings *b) {
 
 /*util_get_directory_content(GString **, const char *filename) {{{*/
 void 
-util_get_directory_content(GString **buffer, const char *dirname, const char *extension) {
+util_get_directory_content(GString *buffer, const char *dirname, const char *extension) {
   GDir *dir;
   char *content;
   GError *error = NULL;
@@ -263,7 +263,7 @@ util_get_directory_content(GString **buffer, const char *dirname, const char *ex
       }
       filepath = g_build_filename(dirname, filename, NULL);
       if (g_file_get_contents(filepath, &content, NULL, &error)) {
-        g_string_append((*buffer), content);
+        g_string_append(buffer, content);
       }
       else {
         fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
@@ -422,6 +422,16 @@ util_get_user_data_dir(const char *dir) {
   }
   return path;
 }/*}}}*/
+
+char *
+util_get_data_dir(const char *dir) {
+  char *path;
+  if ( (path = util_get_user_data_dir(dir)) )
+    return path;
+  if ( (path = util_get_system_data_dir(dir)) )
+    return path;
+  return NULL;
+}
 
 
 /* util_get_data_file(const char *filename)   return: filename (alloc) or NULL {{{*/
