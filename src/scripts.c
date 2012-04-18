@@ -61,6 +61,40 @@ static JSObjectRef _signals;
 static JSClassRef _viewClass;
 static GString *_script;
 
+#if 0
+gboolean
+scripts_print_exception(JSContextRef ctx, JSValueRef exception) {
+  gboolean ret = false;
+  char *message = NULL;
+  if (!JSValueIsObject(ctx, exception))
+    return false;
+  JSObjectRef o = JSValueToObject(ctx, exception, NULL);
+  if (o == NULL) 
+    return false;
+
+  double line = js_get_double_property(ctx, o, "line");
+  if (line == NAN)
+    return false;
+  message = js_get_string_property(ctx, o, "message");
+  if (message == NULL)
+    goto error_out;
+  fprintf(stderr, "EXCEPTION in line %d: %s\n", (int)line, message);
+  ret = true;
+error_out:
+  g_free(message);
+  return ret;
+}
+void
+scripts_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, ...) {
+  va_list arg_list; 
+  
+  va_start(arg_list, format);
+  gchar message[JS_STRING_MAX];
+  vsnprintf(message, JS_STRING_MAX, format, arg_list);
+  va_end(arg_list);
+  *exception = js_char_to_value(ctx, message);
+}
+#endif
 JSClassRef 
 scripts_create_class(const char *name, JSStaticFunction staticFunctions[], JSStaticValue staticValues[]) {
   JSClassDefinition cd = kJSClassDefinitionEmpty;

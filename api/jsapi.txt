@@ -26,7 +26,7 @@ also <<Encapsulation>>).
 === Global functions ===
 Functions from the global object.
 
-[options="header", cols="1s,1s,2,2,3"]
+[options="header", cols="1s,1s,2,2,4"]
 |=============================================
 |function               2+| parameter | returns |description 
 
@@ -55,7 +55,7 @@ execute("tabopen ixquick.com");
 === io ===
 A global object that implements functions for input and output. 
 
-[options="header", cols="1s,1s,2,2,3"]
+[options="header", cols="1s,1s,3,2,2"]
 |=============================================
 |function               2+| parameter | returns |description 
 .2+|print
@@ -88,7 +88,7 @@ io.print(text);
 
 A global object that implements system functions.
 
-[options="header", cols="1s,1s,2,2,3"]
+[options="header", cols="1s,1s,2,2,2"]
 |=============================================
 |function               2+| parameter | returns |description 
 |spawn 
@@ -113,7 +113,7 @@ system.spawn("xterm -e vim " + home + "/.bashrc");
 The webview object represents the widget that actually displays the site
 content.
 The webview object will be the first parameter of every signal function. 
-[options="header", cols="1s,1s,2,2,3"]
+[options="header", cols="1s,1s,2,2,4"]
 |=============================================
 |function               2+| parameter | returns |description 
 |set 
@@ -163,7 +163,7 @@ signals.onNavigation = function (o, obj) {
 === tabs ===
 A global object that implements functions to get webview objects. 
 
-[options="header", cols="1s,1s,2,2,3"]
+[options="header", cols="1s,1s,3,2,2"]
 |=============================================
 |function               2+| parameter | returns |description 
 
@@ -239,22 +239,21 @@ which contains values relevant to the signal.
 
 The signals object implements the following functions
 
-[options="header", cols="1s,1s,2,2,3"]
+[options="header", cols="1s,1s,3,2,2"]
 |=============================================
 |function               2+| parameter | returns | description 
 
-.2+|connect |signal |The signal name to connect to; required .2+| - 
+.2+|connect |signal |The signal name to connect to; required .2+| The
+signal id of the signal.
 .2+| Connects to a signal.
-If you want to disconnect from that signal +callback+ may not be a closure. 
 
 |callback | The callback to call when the signal is emitted
 
-.2+|disconnect 
-|signal |The signal name to disconnect; required .2+| - 
-.2+| Disconnects from a signal. The parameters must be the same as passed to
+|disconnect 
+|id |The signal id to disconnect; required | - 
+| Disconnects from a signal, the id is the id returned by 
 +connect+.
 
-|callback | The callback passed to connect
 
 .3+|emit 
 |signal |The signal name to emit; required .3+| - 

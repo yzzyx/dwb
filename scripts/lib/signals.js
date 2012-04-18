@@ -1,32 +1,44 @@
 
-Object.defineProperty(signals, "registered", {
+Object.defineProperty(signals, "_registered", {
   value : {}
+});
+Object.defineProperty(signals, "_maxId", {
+  value : 0,
+  writable : true
 });
 Object.defineProperty(signals, "emit", {
   value : function(sig, wv, o) {
-    var sigs = signals.registered[sig];
+    var sigs = signals._registered[sig];
     for (var i=0; i<sigs.length; i++) {
-      sigs[i](wv, o);
+      sigs[i].callback(wv, o);
     }
   }
 });
 Object.defineProperty(signals, "connect", {
   value : function(sig, func) {
-    var connected = signals.registered[sig] !== undefined && signals.registered[sig] !== null;
-    if (!connected)
-      signals.registered[sig] = [];
-    signals.registered[sig].push(func);
-    if (!connected) {
+    signals._maxId++;
+    io.print(signals._maxId);
+    if (signals._registered[sig] === undefined || signals._registered[sig] === null) {
+      signals._registered[sig] = [];
       signals[sig] = function (wv, o) {
         signals.emit(sig, wv, o);
       };
     }
+    signals._registered[sig].push({callback : func, id : signals._maxId });
+    return signals._maxId;
   }
 });
 Object.defineProperty(signals, "disconnect", {
-  value : function(sig, func) {
-    var sigs = signals.registered[sig];
-    if (sigs) 
-      delete sigs.splice(sigs.indexOf(func), 1);
+  value : function(id) {
+    var s, i, a;
+    for (s in signals._registered) {
+      a = signals._registered[s];
+      for (i = 0; i<a.length; i++) {
+        if (a[i].id == id) {
+          delete a.splice(i, 1);
+        }
+      }
+    }
   }
 });
+io.print("a :" + a);
