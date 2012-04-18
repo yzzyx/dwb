@@ -53,7 +53,8 @@ static Sigmap _sigmap[] = {
   { SCRIPT_SIG_NAVIGATION, "navigation" },
   { SCRIPT_SIG_LOAD_STATUS, "loadStatus" },
   { SCRIPT_SIG_MIME_TYPE, "mimeType" },
-  { SCRIPT_SIG_DOWNLOAD, "download" } 
+  { SCRIPT_SIG_DOWNLOAD, "download" }, 
+  { SCRIPT_SIG_RESOURCE, "resource" },
 };
 static JSObjectRef _sigObjects[SCRIPT_SIG_LAST];
 static JSGlobalContextRef _global_context;
@@ -237,6 +238,34 @@ scripts_tab_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, siz
   webkit_web_view_reload(SCRIPT_WEBVIEW(this));
   return JSValueMakeUndefined(ctx);
 }
+static JSValueRef 
+scripts_tab_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  gboolean ret = false, global = false;
+  if (argc < 1)
+    return JSValueMakeBoolean(ctx, false);
+  if (argc > 1 && JSValueIsBoolean(ctx, argv[1])) 
+    global = JSValueToBoolean(ctx, argv[1]);
+    
+  JSStringRef script = JSValueToStringCopy(ctx, argv[0], NULL);
+  if (script == NULL)
+    return JSValueMakeBoolean(ctx, false);
+
+  GList *gl = JSObjectGetPrivate(this);
+  JSContextRef wctx = JS_CONTEXT_REF(gl);
+
+  if (global) {
+    ret = JSEvaluateScript(wctx, script, NULL, NULL, 0, NULL) != NULL;
+  }
+  else {
+    JSObjectRef function = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, NULL);
+    if (function != NULL) {
+      ret = JSObjectCallAsFunction(wctx, function, NULL, 0, NULL, NULL) != NULL;
+    }
+  }
+
+  JSStringRelease(script);
+  return JSValueMakeBoolean(ctx, ret);
+}
 JSValueRef 
 scripts_tab_get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   char *name = js_string_to_char(ctx, js_name, -1);
@@ -292,26 +321,39 @@ scripts_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, 
 }
 static JSValueRef 
 scripts_include(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  gboolean ret = false;
+  JSValueRef ret = NULL;
+  gboolean global = false;
   if (argc < 1)
-    return JSValueMakeBoolean(ctx, false);
+    return JSValueMakeNull(ctx);
+  if (argc > 1 && JSValueIsBoolean(ctx, argv[1])) 
+    global = JSValueToBoolean(ctx, argv[1]);
+
   char *path = NULL, *content = NULL; 
   if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX)) == NULL) 
     goto error_out;
   if ( (content = util_get_file_content(path)) == NULL) 
     goto error_out;
   JSStringRef script = JSStringCreateWithUTF8CString(content);
-  JSObjectRef function = JSObjectMakeFunction(ctx, NULL, 0, NULL, script, NULL, 0, NULL);
-  if (function != NULL) {
-    if (JSObjectCallAsFunction(_global_context, function, NULL, 0, NULL, NULL) != NULL) 
-      ret = true;
+  //ret = scripts_execute_in_scope(ctx, script, global);
+
+  if (global) {
+    ret = JSEvaluateScript(ctx, script, NULL, NULL, 0, NULL);
   }
+  else {
+    JSObjectRef function = JSObjectMakeFunction(ctx, NULL, 0, NULL, script, NULL, 0, NULL);
+    if (function != NULL) {
+      ret = JSObjectCallAsFunction(ctx, function, NULL, 0, NULL, NULL);
+    }
+  }
+
   JSStringRelease(script);
 
 error_out: 
   g_free(content);
   g_free(path);
-  return JSValueMakeBoolean(ctx, ret);
+  if (ret == NULL)
+    return JSValueMakeNull(ctx);
+  return ret;
 }
 static JSValueRef 
 scripts_system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -461,6 +503,7 @@ scripts_create_global_object() {
     { "get",             scripts_tab_get,             kJSDefaultFunction },
     { "history",         scripts_tab_history,             kJSDefaultFunction },
     { "reload",          scripts_tab_reload,             kJSDefaultFunction },
+    { "inject",          scripts_tab_inject,             kJSDefaultFunction },
     { 0, 0, 0 }, 
   };
   JSStaticValue wv_values[] = {

@@ -1,4 +1,4 @@
-= api documentation =
+= *dwb's JavaScript API documentation* =
 
 == Abstract == 
 
@@ -27,22 +27,28 @@ also <<Encapsulation>>).
 === Global functions ===
 Functions from the global object.
 
-[options="header", cols="1s,1m,2,2,4"]
+[options="header", cols="1s,1m,3,3,3"]
 |=============================================
 |function               2+| parameter | returns |description 
 
 |execute
 |String
-| dwb-command to execute; required                       | 
+| dwb-command to execute; *required*                       | 
 +true+ if successfull, +false+ otherwise  |
 Executes a dwb-command in the focused tab.    
 
-|include
-|String| Path to a file to include; required        | 
-+true+ if file was included, +false+ otherwise  |
-Includes a file. Note that there is only one context, all scripts are
+[[include]]
+.2+|include
+|String| Path to a file to include; *required*        
+.2+| The value returned from the script. Note that a value can only be returned
+from a script that is encapsulated either by encapsulating the script yourself, 
+or by omitting or passing +false+ to the second parameter. 
+.2+| Includes a file. Note that there is only one context, all scripts are
 executed in this context. Included files are always included in the global
 scope but encapsulated in a function. 
+|Boolean| +true+ if the script should be applied to the global scope, objects in
+the script will be visible in all scripts, +false+ to encapsulate the script;
+*optional*, default +false+
 
 |plugin [red]#todo#
 |String | Name of the plugin to load 
@@ -64,20 +70,20 @@ The +io+ object implements functions for input and output.
 |=============================================
 |function               2+| parameter | returns |description 
 .2+|print
-|String | Text to print; required
+|String | Text to print; *required*
 .2+| - 
 .2+|Print text to stdout
-|String | Pass +"stderr"+ to print to stderr; optional
+|String | Pass +"stderr"+ to print to stderr; *optional*
 
 .3+|write          | 
-String| Path to a file to write to; required .3+|
+String| Path to a file to write to; *required* .3+|
 +true+ if successfull, +false+ otherwise .3+|
 Write text to a local file
-|String|Either +"a"+ if the text should be appended or +"w"+ to create a new file; required
-|String | Text that should be written to the file; required
+|String|Either +"a"+ if the text should be appended or +"w"+ to create a new file; *required*
+|String | Text that should be written to the file; *required*
 
 | read
-| String | A path to a file to read; required
+| String | A path to a file to read; *required*
 | a string with the content of the file if reading was successfull, +null+
 otherwise.|Get content of a local file
 
@@ -98,12 +104,12 @@ The +system+ object implements system functions.
 |=============================================
 |function               2+| parameter | returns |description 
 |spawn 
-|String | Command to execute; required
+|String | Command to execute; *required*
 |+true+ if successfull, +false+ otherwise
 |Executes a shell command using the default searchpath.
 
 |getEnv 
-|String | Name of the variable; required
+|String | Name of the variable; *required*
 |String containing the variable or +null+ if the variable was not found
 |Get a system environment variable.
 |=============================================
@@ -141,27 +147,29 @@ if (wv.title == "Title") {
 |=============================================
 |function               2+| parameter | returns |description 
 |set 
-|Object       |A object with properties to set; required
+|Object       |An object with properties to set; *required*
 |+false+ if an error occurs, +true+ otherwise   
 |Sets the webviews properties, valid properties are the properties of 
 http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
 
 |get 
-|String       |The name of the property to get; required
+|String       |The name of the property to get; *required*
 |A String containing the property value
 |Sets the webviews properties, valid properties are the properties of 
 http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
 Note that this function always returns a String, for boolean values it returns
 +TRUE+ or +FALSE+.
 
-|inject [red]#todo# 
+.2+|inject 
 |String | Script to inject
-|-
-|Injects a script into the +webview+
+.2+|+true+ if the script was injected, +false+ otherwise.
+.2+|Injects a script into the +webview+
+|Boolean | +true+ to inject the script in the global scope, +false+ to encapsulate it
+in a function; *optional*, default +false+
 
 |history 
-|Number       |Number of steps
-|- 
+|Number       |Number of steps; *required*
+|-
 |Loads the history item +steps+ away from the current item. 
 
 |reload 
@@ -185,7 +193,7 @@ signals.navigation = function (o, obj) {
 
 [[tabs]]
 === tabs ===
-A +tabs+ object implements functions and properties to get +webview+ objects. 
+The +tabs+ object implements functions and properties to get +webview+ objects. 
 
 .Properties
 [options="header", cols="2s,2m,1s,10"]
@@ -201,7 +209,7 @@ A +tabs+ object implements functions and properties to get +webview+ objects.
 [options="header", cols="1s,1m,3,2,2"]
 |=============================================
 |function               2+| parameter | returns |description 
-|nth |Number |Number of the tab, counting from 0; required | A <<webview>> object or +null+ if
+|nth |Number |Number of the tab, counting from 0; *required* | A <<webview>> object or +null+ if
 an error occured | Gets the webview object of the nth tab.
 
 |=============================================
@@ -215,55 +223,16 @@ tabs.nth(2).uri = c.uri;
 
 == Signals ==
 With the +signals+ object *dwb* communicates with the script on certain events. To connect to a signal
-one can set callback-function as the signals property which will be called then.
+one can set callback function as the signals property which will be called then.
 However it is better to connect to signals using the connect function.
-The callback function always has 2 parameters, the object which
-received the signal and another object
-which contains values relevant to the signal.
 
-//
-//
-//.Example 
-//--------
-//signals.loadStatus = function(webview, object) {
-//    if (object.status == 2 && /.*google.*/.test(object.uri)) {
-//      webview.history(-1);
-//    }
-//}
-//--------
-//
-//It is only possible to connect to a signal once. If more then one script is
-//included it may be better to connect to a signal with a connect function, in
-//order to connect to the signal muliple times: 
-//------------
-//signals.registered = new Object();
-//signals.emit = function(sig, wv, o) {
-//  var s = signals.registered[sig];
-//  for (var i=0; i<s.length; i++) {
-//    s[i](wv, o);
-//  }
-//}
-//signals.connect = function(sig, func) 
-//{
-//  var connected = signals.registered[sig] != undefined && signals.registered[sig] != null;
-//  if (!connected)
-//    signals.registered[sig] = [];
-//  signals.registered[sig].push(func);
-//  if (!connected) {
-//    signals[sig] = function (wv, o) {
-//      signals.emit(sig, wv, o);
-//    };
-//  }
-//}
-//------------
-//The above example would then be equivalent to
-//------------
-//signals.connect("loadStatus", function(o, obj) {
-//    if (object.status == 2 && /.*google.*/.test(object.uri)) {
-//      webview.history(-1);
-//    }
-//});
-//------------
+The callback function always has 2 parameters, the object which
+received the signal and another object which contains values relevant to the
+signal. A callback function should either return +true+ or +false+ or nothing which is
+equivalent to +false+.
+If multiple callbacks are connected to the same signal and one callback
+function returns +true+ the overall return value will be +true+.
+
 
 The signals object implements the following functions
 
@@ -273,26 +242,66 @@ The signals object implements the following functions
 |function               2+| parameter | returns | description 
 
 .2+|connect 
-|String |The signal name to connect to; required .2+| The
-signal id of the signal.
+|String |The signal to connect to; *required* .2+| The
+signal id of the signal or +-1+ if signal was not connected.
 .2+| Connects to a signal.
 
-|Function | The callback to call when the signal is emitted; required
+|Function | The callback to call when the signal is emitted; *required*
 
 |disconnect 
-|Number |The signal id of the signal; required | - 
+|Number |The signal id of the signal; *required* | - 
 | Disconnects from a signal, the id is the id returned by 
 +connect+.
 
 
 .3+|emit 
-|String |The signal name to emit; required .3+| - 
+|String |The signal to emit; *required* .3+| - 
 .3+| Emits a signal. 
+|Object |Object passed to the callback function; *optional*
+|Object |Object passed to the callback function; *optional*
 
-|Object |Object passed to the callback function; optional
-|Object |Object passed to the callback function; optional
+|register 
+|String |The signal to register; *required* | - 
+| Registers a signal. 
+
 
 |=============================================
+
+All signals provided by dwb must be registered when the script is loaded.
+When a script is included using *include* the signals in the included file
+must be registered in the script that includes the file.
+If *connect* is called when the script is loaded or a file is included when the
+script is loaded, explicit registration is not *required*. 
+
+.Example
+
+A construct like 
+------
+signals.connect("download", function (o, obj) {
+  signals.connect("navigation", function (o, obj) {
+    doSomething();
+  });
+});
+------
+
+will not work without explicit registration since the +navigation+ signal is not
+registered when the script is loaded, the +download+ signal is registered by
+connect. Use
+------
+signals.connect("download", function (o, obj) {
+  signals.connect("navigation", function (o, obj) {
+    doSomething();
+  });
+});
+signals.register("navigation");
+------
+instead or, equivalently 
+-----
+signals.connect("navigation", null);
+-----
+
+
+
 
 The signals implemented by *dwb* are 
 
@@ -309,8 +318,8 @@ The signals implemented by *dwb* are
 |totalsize|The total size of the file
 
 .2+|loadStatus
-|status|The loadstatus where +status+ is one of
-http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebNavigationAction.html[WebKitLoadStatus]
+|status|The loadstatus where +status+ is a
+<<LoadStatus>>
 .2+|Emitted when the load status changes.
 |uri|Uri that is currently loaded
 
@@ -321,21 +330,45 @@ http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebNavigationAction.html[W
 
 .2+|navigation          
 |uri | Uri of the request 
-.2+| Emitted before a new site is loaded, return *true* to stop the request.
+.2+| Emitted before a new site is loaded, return +true+ to stop the request.
 |reason | Reason for the request where +reason+ is a
-http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebNavigationAction.html#WebKitWebNavigationReason[WebKitWebNavigationReason]
+
+
+|resource 
+|uri | Uri of the request 
+|Emitted before a new resource is loaded, return +true+ to stop the request.
 |=============================================
 
 .Example 
 ------
 function loadStatusCallback(wv, values) {
-  if (/.*google.com.*/.test(values.uri && obj.status == 2) {
-    wv.loadUri("http://www.ixquick.com");
-    signals.disconnect("loadStatus", loadStatusCallback);
+  if (/.*google.com.*/.test(values.uri) && obj.status == 2) {
+    wv.uri = "http://www.ixquick.com";
+    signals.disconnect(id);
   }
 }
-signals.connect("loadStatus", loadStatusCallback);
+var id = signals.connect("loadStatus", loadStatusCallback);
 ------
+
+== Helper objects ==
+Helper objects are objects that have only readonly properties. 
+
+[[LoadStatus]]
+=== LoadStatus ===
+
+---------
+const LoadStatus = { 
+  provisional       : 0, 
+  committed         : 1,
+  finished          : 2,
+  firstVisualLayout : 3,
+  failed            : 4
+};
+---------
+
+
+
+
 
 [[Encapsulation]]
 == Encapsulation == 
@@ -387,6 +420,6 @@ io.print(script2);
 var script2 = "Script 2";
 io.print(script1);
 -------
-This will produce no output, as expected. The same holds for scripts included
-with *include*.
+This will produce no output, as expected. The same holds for encapsulated scripts included
+with <<include>>. 
 

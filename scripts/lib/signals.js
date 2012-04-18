@@ -1,4 +1,3 @@
-
 Object.defineProperty(signals, "_registered", {
   value : {}
 });
@@ -9,22 +8,32 @@ Object.defineProperty(signals, "_maxId", {
 Object.defineProperty(signals, "emit", {
   value : function(sig, wv, o) {
     var sigs = signals._registered[sig];
+    var ret = false;
     for (var i=0; i<sigs.length; i++) {
-      sigs[i].callback(wv, o);
+      ret = sigs[i].callback(wv, o) || ret;
     }
+    return ret;
   }
 });
 Object.defineProperty(signals, "connect", {
   value : function(sig, func) {
-    signals._maxId++;
     if (signals._registered[sig] === undefined || signals._registered[sig] === null) {
       signals._registered[sig] = [];
       signals[sig] = function (wv, o) {
-        signals.emit(sig, wv, o);
+        return signals.emit(sig, wv, o);
       };
     }
-    signals._registered[sig].push({callback : func, id : signals._maxId });
-    return signals._maxId;
+    if (func !== null && typeof func === "function") {
+      signals._maxId++;
+      signals._registered[sig].push({callback : func, id : signals._maxId });
+      return signals._maxId;
+    }
+    return -1;
+  }
+});
+Object.defineProperty(signals, "register", {
+  value : function (sig) {
+    signals.connect(sig, null);
   }
 });
 Object.defineProperty(signals, "disconnect", {
