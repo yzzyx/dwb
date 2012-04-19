@@ -331,6 +331,9 @@ typedef enum {
   BOOLEAN     = 0x04,
   COLOR_CHAR  = 0x05,
   HTML_STRING = 0x06,
+  ULONG       = 0x07,
+  LONG        = 0x08,
+  UINTEGER    = 0x09,
 } DwbType;
 
 typedef enum { 
@@ -847,7 +850,7 @@ void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *, GList **);
 char * dwb_get_host(WebKitWebView *);
-void dwb_focus_view(GList *);
+gboolean dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
 void dwb_set_key(const char *, char *);
 DwbStatus dwb_set_setting(const char *, char *value, int);

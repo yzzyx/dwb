@@ -58,6 +58,7 @@ the script will be visible in all scripts, +false+ to encapsulate the script;
 |=============================================
 
 .Example
+[source,javascript]
 ---------------------------------
 execute("tabopen ixquick.com");
 ---------------------------------
@@ -90,6 +91,7 @@ otherwise.|Get content of a local file
 |=============================================
 
 .Example
+[source,javascript]
 ---------------------------------
 var text = io.read("/home/foo/textfile.txt");
 io.print(text);
@@ -115,6 +117,7 @@ The +system+ object implements system functions.
 |=============================================
 
 .Example
+[source,javascript]
 ------------
 var home = system.getEnv("HOME");
 system.spawn("xterm -e vim " + home + "/.bashrc");
@@ -135,6 +138,7 @@ The +webview+ object will be the first parameter of every signal function.
 |=============================================
 
 .Example
+[source,javascript]
 ------------
 if (wv.title == "Title") {
   wv.uri = "http://example.com";
@@ -180,6 +184,7 @@ in a function; *optional*, default +false+
 |=============================================
 
 .Example
+[source,javascript]
 ------------
 signals.navigation = function (o, obj) {
   if (/.*youtube.*/.test(obj.uri)) {
@@ -215,6 +220,7 @@ an error occured | Gets the webview object of the nth tab.
 |=============================================
 
 .Example 
+[source,javascript]
 ----
 var c = tabs.current;
 tabs.nth(2).uri = c.uri;
@@ -243,7 +249,7 @@ The signals object implements the following functions
 
 .2+|connect 
 |String |The signal to connect to; *required* .2+| The
-signal id of the signal or +-1+ if signal was not connected.
+signal id of the signal or +-1+ if the signal was not connected.
 .2+| Connects to a signal.
 
 |Function | The callback to call when the signal is emitted; *required*
@@ -260,46 +266,8 @@ signal id of the signal or +-1+ if signal was not connected.
 |Object |Object passed to the callback function; *optional*
 |Object |Object passed to the callback function; *optional*
 
-|register 
-|String |The signal to register; *required* | - 
-| Registers a signal. 
-
 
 |=============================================
-
-All signals provided by dwb must be registered when the script is loaded.
-When a script is included using *include* the signals in the included file
-must be registered in the script that includes the file.
-If *connect* is called when the script is loaded or a file is included when the
-script is loaded, explicit registration is not *required*. 
-
-.Example
-
-A construct like 
-------
-signals.connect("download", function (o, obj) {
-  signals.connect("navigation", function (o, obj) {
-    doSomething();
-  });
-});
-------
-
-will not work without explicit registration since the +navigation+ signal is not
-registered when the script is loaded, the +download+ signal is registered by
-connect. Use
-------
-signals.connect("download", function (o, obj) {
-  signals.connect("navigation", function (o, obj) {
-    doSomething();
-  });
-});
-signals.register("navigation");
-------
-instead or, equivalently 
------
-signals.connect("navigation", null);
------
-
 
 
 
@@ -309,13 +277,47 @@ The signals implemented by *dwb* are
 |=============================================
 |signal                 2+|object properties  |description 
 
+.9+|buttonPress 
+|button|The button that is pressed, usually a value between 1 and 5
+.9+|Emitted when a button is pressed, only clicks on the webview are noticed;
+return +true+ to stop the default action
+|context|A <<ButtonContext>>, i.e. the element under the cursor when the button
+was pressed
+|state|A <<Modifier>> 
+|time|The time in milliseconds when the button was pressed 
+|type|A <<ClickType>>
+|x|x-position relative to the window
+|xRoot|x-position relative to the screen
+|y|y-position relative to the window
+|yRoot|y-position relative to the screen
+
+|buttonRelease 
+2+d|Same as *buttonPress* but without +type+
+|Emitted when a button is released, only clicks on the webview are noticed;
+return +true+ to stop the default action
+
 .5+|download 
 |filename|The suggested filename 
 .5+|Emitted before a download starts. Return +true+ to handle the signal or +false+ to let *dwb* handle the signal.
 |mimeType|The mimetype of the file or +unknown+
 |referer|The referer of the request
 |uri|The uri of the file to download
-|totalsize|The total size of the file
+|totalSize|The total size of the file
+
+.5+|keyPress 
+|isModifies | Whether or not the key is a modifier
+.5+|Emitted when a key is pressed, the first parameter of the callback function
+will always be the currently focued <<webview>>; return +true+ to stop the
+default action
+|keyCode | The hardware keycode
+|keyVal | Keycode as listed in gdkkeysyms.h 
+|name | A string represantation of the key
+|state | The modifier state, see <<Modifier>>
+
+|keyRelease 2+d|Same as *keyPress*
+|Emitted when a key is released; return +true+ to stop the
+default action
+
 
 .2+|loadStatus
 |status|The loadstatus where +status+ is a
@@ -337,13 +339,20 @@ The signals implemented by *dwb* are
 |resource 
 |uri | Uri of the request 
 |Emitted before a new resource is loaded, return +true+ to stop the request.
+
+|tabFocus
+|last| Number of the previously focused tab
+|Emitted when a new tab gets focus, the first parameter will be the new
+<<webview>>; return +true+ to prevent the tab being changed
+
 |=============================================
 
 .Example 
+[source,javascript]
 ------
 function loadStatusCallback(wv, values) {
-  if (/.*google.com.*/.test(values.uri) && obj.status == 2) {
-    wv.uri = "http://www.ixquick.com";
+  if (obj.status == LoadStatus.finished) {
+    io.print(values.uri);
     signals.disconnect(id);
   }
 }
@@ -353,8 +362,33 @@ var id = signals.connect("loadStatus", loadStatusCallback);
 == Helper objects ==
 Helper objects are objects that have only readonly properties. 
 
+[[ButtonContext]]
+.ButtonContext
+
+--------
+const ButtonContext = {
+  document   : 1 << 1,
+  link       : 1 << 2,
+  image      : 1 << 3,
+  media      : 1 << 4,
+  selection  : 1 << 5,
+  editable   : 1 << 6
+};
+--------
+
+[[ClickType]]
+.ClickType
+
+--------
+const ClickType = {
+  click       : 4,
+  doubleClick : 5,
+  tripleClick : 6
+};
+--------
+
 [[LoadStatus]]
-=== LoadStatus ===
+.LoadStatus
 
 ---------
 const LoadStatus = { 
@@ -366,7 +400,31 @@ const LoadStatus = {
 };
 ---------
 
+[[Modifier]]
+.Modifier
 
+--------
+const Modifier = {
+  Shift     : 1 << 0,
+  Lock	    : 1 << 1,
+  Control   : 1 << 2,
+  Mod1	    : 1 << 3,
+  Mod2	    : 1 << 4,
+  Mod3	    : 1 << 5,
+  Mod4	    : 1 << 6,
+  Mod5	    : 1 << 7,
+  Button1   : 1 << 8,
+  Button2   : 1 << 9,
+  Button3   : 1 << 10,
+  Button4   : 1 << 11,
+  Button5   : 1 << 12,
+  Super     : 1 << 26,
+  Hyper     : 1 << 27,
+  Meta      : 1 << 28,
+  Release   : 1 << 30,
+  Modifier  : 0x5c001fff
+};
+--------
 
 
 
@@ -378,6 +436,7 @@ function but global variables may be visible in other scripts.
 Consider the following scenario:
 
 .Script 1
+[source,javascript]
 -------
 #!javascript
 
@@ -386,6 +445,7 @@ io.print(script2);
 -------
 
 .Script 2
+[source,javascript]
 -------
 #!javascript
 
@@ -406,6 +466,7 @@ depending on which script is included first.
 To avoid this always use +var+ for global variables. 
 
 .Script 1
+[source,javascript]
 -------
 #!javascript
 
@@ -414,6 +475,7 @@ io.print(script2);
 -------
 
 .Script 2
+[source,javascript]
 -------
 #!javascript
 

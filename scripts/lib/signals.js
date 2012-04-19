@@ -31,11 +31,6 @@ Object.defineProperty(signals, "connect", {
     return -1;
   }
 });
-Object.defineProperty(signals, "register", {
-  value : function (sig) {
-    signals.connect(sig, null);
-  }
-});
 Object.defineProperty(signals, "disconnect", {
   value : function(id) {
     var s, i, a;
@@ -44,6 +39,8 @@ Object.defineProperty(signals, "disconnect", {
       for (i = 0; i<a.length; i++) {
         if (a[i].id == id) {
           delete a.splice(i, 1);
+          signals[s] = null;
+          return;
         }
       }
     }

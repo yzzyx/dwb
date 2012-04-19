@@ -73,12 +73,11 @@ view_main_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
 }/*}}}*/
 static void 
 view_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitWebResource *resource, WebKitNetworkRequest *request, WebKitNetworkResponse *response, GList *gl) {
-    char *json = g_strdup_printf("{"JSON_STRING(uri)"}", webkit_network_request_get_uri(request));
-    if (SCRIPTS_EMIT(gl, RESOURCE, json)) {
-      puts("blub");
-      webkit_network_request_set_uri(request, "about:blank");
-    }
-    g_free(json);
+  char *json = util_create_json(1, CHAR, "uri", webkit_network_request_get_uri(request));
+  if (SCRIPTS_EMIT(gl, RESOURCE, json)) {
+    webkit_network_request_set_uri(request, "about:blank");
+  }
+  g_free(json);
 }
 
 /* view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
@@ -127,6 +126,12 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   g_object_get(result, "context", &context, NULL);
   gboolean ret = false;
   _click_time = e->time;
+  SCRIPTS_EMIT_RETURN(gl, BUTTON_PRESS, 9, 
+      UINTEGER, "time", e->time, UINTEGER,    "type", e->type, 
+      DOUBLE,   "x", e->x, DOUBLE,            "y", e->y, 
+      UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
+      DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root,
+      UINTEGER, "context", context);
 
   if (gtk_widget_has_focus(dwb.gui.entry)) {
     dwb_focus_scroll(gl);
@@ -184,6 +189,13 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
 
   WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
   g_object_get(result, "context", &context, NULL);
+
+  SCRIPTS_EMIT_RETURN(gl, BUTTON_RELEASE, 8, 
+      UINTEGER, "time", e->time,    UINTEGER, "context", context,
+      DOUBLE,   "x", e->x,          DOUBLE,     "y", e->y, 
+      UINTEGER, "state", e->state,  UINTEGER,  "button", e->button, 
+      DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
+
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
     if (e->button == 2 || (e->time - _click_time < 200 && (e->button == 1 && e->state & GDK_CONTROL_MASK))) {
       g_object_get(result, "link-uri", &uri, NULL);
@@ -245,25 +257,12 @@ view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
 /* view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
 static gboolean 
 view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
-  char *json = NULL;
-  if (EMIT_SCRIPT(gl, DOWNLOAD)) {
-    gboolean ret;
-    json = g_strdup_printf("{" 
-        JSON_STRING(uri) ","
-        JSON_STRING(filename) ","
-        JSON_STRING(referer) ","
-        JSON_STRING(mimeType) ","
-        "\"totalsize\": %lu }",
-         webkit_download_get_uri(download), 
-         webkit_download_get_suggested_filename(download), 
-         soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
-         dwb.state.mimetype_request ? dwb.state.mimetype_request : "unknown", 
-         webkit_download_get_total_size(download));
-    ret = SCRIPTS_EMIT(gl, DOWNLOAD, json);
-    g_free(json);
-    if (ret) 
-      return true;
-  }
+  SCRIPTS_EMIT_RETURN(gl, DOWNLOAD, 5, 
+      CHAR, "uri", webkit_download_get_uri(download), 
+      CHAR, "filename", webkit_download_get_suggested_filename(download), 
+      CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
+      CHAR, "mimeType", dwb.state.mimetype_request ? dwb.state.mimetype_request : "undefined", 
+      ULONG, "totalSize", webkit_download_get_total_size(download));
   download_get_path(gl, download);
   return true;
 }/*}}}*/
@@ -328,17 +327,8 @@ view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwor
   /* Prevents from segfault if proxy is set */
   if ( !mimetype || strlen(mimetype) == 0 )
     return false;
-  gboolean ret;
-  if (EMIT_SCRIPT(gl, MIME_TYPE)) {
-    char *json = g_strdup_printf("{" 
-        JSON_STRING(uri) "," 
-        JSON_STRING(mimeType) "}", 
-        webkit_network_request_get_uri(request), mimetype);
-    ret = SCRIPTS_EMIT(gl, MIME_TYPE, json);
-    g_free(json);
-    if (ret)
-      return true;
-  }
+
+  SCRIPTS_EMIT_RETURN(gl, MIME_TYPE, 2, CHAR, "uri", webkit_network_request_get_uri(request), CHAR, "mimeType", mimetype);
 
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv & OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
@@ -348,6 +338,8 @@ view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwor
   return  false;
 }/*}}}*/
 
+
+
 /* view_navigation_policy_cb {{{*/
 static gboolean 
 view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
@@ -356,13 +348,8 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   char *uri = (char *) webkit_network_request_get_uri(request);
   gboolean ret = false;
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
-  if (EMIT_SCRIPT(gl, NAVIGATION) && frame == webkit_web_view_get_main_frame(web)) {
-    char *json = g_strdup_printf("{"JSON_STRING(uri)", \"reason\" : %d }", uri, reason);
-    ret = SCRIPTS_EMIT(gl, NAVIGATION, json);
-    g_free(json);
-    if (ret)
-      return true;
-  }
+
+  SCRIPTS_EMIT_RETURN(gl, NAVIGATION, 2, CHAR, "uri", uri, INTEGER, "reason", reason);
 
   if (!g_str_has_prefix(uri, "http:") && !g_str_has_prefix(uri, "https:") &&
       !g_str_has_prefix(uri, "about:") && !g_str_has_prefix(uri, "dwb:") &&
@@ -580,10 +567,8 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   View *v = VIEW(gl);
   char *host =  NULL;
   const char *uri = webkit_web_view_get_uri(web);
-  if (EMIT_SCRIPT(gl, LOAD_STATUS)) {
-    char *json = g_strdup_printf("{\"uri\" : \"%s\", \"status\" : %d }", uri, status);
-    SCRIPTS_EMIT(gl, LOAD_STATUS, json);
-  }
+
+  SCRIPTS_EMIT_NO_RETURN(gl, LOAD_STATUS, 2, CHAR, "uri", uri, INTEGER, "status", status);
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 

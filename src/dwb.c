@@ -1168,9 +1168,10 @@ dwb_get_host(WebKitWebView *web) {
 }/*}}}*/
 
 /* dwb_focus_view(GList *gl){{{*/
-void
+gboolean
 dwb_focus_view(GList *gl) {
   if (gl != dwb.state.fview) {
+    SCRIPTS_EMIT_RETURN(gl, TAB_FOCUS, 1, INTEGER, "last", g_list_position(dwb.state.views, dwb.state.fview));
     gtk_widget_show(VIEW(gl)->scroll);
     dwb_soup_clean();
     if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )
@@ -1178,7 +1179,9 @@ dwb_focus_view(GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
     dwb_unfocus();
     dwb_focus(gl);
+    return false;
   }
+  return true;
 }/*}}}*/
 
 /* dwb_toggle_allowed(const char *filename, const char *data) {{{*/
@@ -2717,10 +2720,10 @@ dwb_clean_up() {
   dwb_soup_end();
   adblock_end();
   domain_end();
-  scripts_end();
 
   util_rmdir(dwb.files.cachedir, true, true);
   gtk_widget_destroy(dwb.gui.window);
+  scripts_end();
   return true;
 }/*}}}*/
 

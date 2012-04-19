@@ -26,6 +26,11 @@ enum SIGNALS {
   SCRIPT_SIG_MIME_TYPE,
   SCRIPT_SIG_DOWNLOAD,
   SCRIPT_SIG_RESOURCE,
+  SCRIPT_SIG_KEY_PRESS,
+  SCRIPT_SIG_KEY_RELEASE,
+  SCRIPT_SIG_BUTTON_PRESS,
+  SCRIPT_SIG_BUTTON_RELEASE,
+  SCRIPT_SIG_TAB_FOCUS,
   SCRIPT_SIG_LAST, 
 };
 gboolean scripts_emit(JSObjectRef , int , const char *);
@@ -36,6 +41,19 @@ void scripts_init(void);
 
 #define EMIT_SCRIPT(gl, sig)  (VIEW(gl)->script != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)))
 #define SCRIPTS_EMIT(gl, sig, json)  scripts_emit(VIEW(gl)->script, SCRIPT_SIG_##sig, json)
-#define JSON_STRING(x)  "\""#x"\":\"%s\""
+
+#define SCRIPTS_EMIT_NO_RETURN(gl, sig, ...) G_STMT_START  \
+if (EMIT_SCRIPT(gl, sig))  {  \
+  char *__json_##sig = util_create_json(__VA_ARGS__); \
+  SCRIPTS_EMIT(gl, sig, __json_##sig); \
+  g_free(__json_##sig); \
+} G_STMT_END
+ 
+#define SCRIPTS_EMIT_RETURN(gl, sig, ...) G_STMT_START  \
+if (VIEW(gl)->script != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)))  {  \
+  char *__json_##sig = util_create_json(__VA_ARGS__); \
+  if (SCRIPTS_EMIT(gl, sig, __json_##sig)) { g_free(__json_##sig); return true; } \
+  else { g_free(__json_##sig); }  \
+} G_STMT_END
 
 #endif

@@ -718,5 +718,74 @@ util_str_chug(const char *str) {
   while (g_ascii_isspace(*str))
     str++;
   return str;
+}
+gchar *
+util_create_json(int n, ...) {
+  va_list args;
+  va_start(args, n);
+  const gchar *key, *cval;
+  gdouble dval;
+  gint ival; guint uival; gulong ulval; glong lval; 
+  gboolean bval;
+  gchar *ret;
 
+  gint type;
+
+  GString *string = g_string_new("{");
+
+  for (int i=0; i<n; i++) {
+    type = va_arg(args, gint);
+    key = va_arg(args, gchar*);
+    g_string_append_printf(string, "\"%s\":", key);
+    switch (type) {
+      case CHAR : 
+        cval = va_arg(args, gchar*); 
+        if (cval == NULL)  {
+          g_string_append(string, "null");
+        }
+        else {
+          g_string_append_c(string, '"');
+          while (*cval) {
+            if (*cval == '"') 
+              g_string_append_c(string, '\\');
+            g_string_append_c(string, *cval);
+            cval++;
+          }
+          g_string_append_c(string, '"');
+        }
+        break;
+      case INTEGER  : 
+        ival = va_arg(args, gint);
+        g_string_append_printf(string, "%d", ival);
+        break;
+      case UINTEGER  : 
+        uival = va_arg(args, guint);
+        g_string_append_printf(string, "%u", uival);
+        break;
+      case LONG  : 
+        lval = va_arg(args, glong);
+        g_string_append_printf(string, "%ld", lval);
+        break;
+      case ULONG  : 
+        ulval = va_arg(args, gulong);
+        g_string_append_printf(string, "%lu", ulval);
+        break;
+      case DOUBLE : 
+        dval = va_arg(args, double); 
+        g_string_append_printf(string, "%f", dval);
+        break;
+      case BOOLEAN:
+        bval = va_arg(args, gboolean);
+        g_string_append_printf(string, "%s", bval ? "true" : "false");
+        break;
+      default : g_string_append(string, "null"); break;
+    }
+    if (i<n-1)
+      g_string_append_c(string, ',');
+  }
+  va_end(args);
+  g_string_append_c(string, '}');
+  ret = string->str;
+  g_string_free(string, false);
+  return ret;
 }
