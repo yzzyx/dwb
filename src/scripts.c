@@ -40,6 +40,7 @@ static Sigmap _sigmap[] = {
   { SCRIPT_SIG_LOAD_STATUS, "loadStatus" },
   { SCRIPT_SIG_MIME_TYPE, "mimeType" },
   { SCRIPT_SIG_DOWNLOAD, "download" }, 
+  { SCRIPT_SIG_DOWNLOAD_STATUS, "downloadStatus" }, 
   { SCRIPT_SIG_RESOURCE, "resource" },
   { SCRIPT_SIG_KEY_PRESS, "keyPress" },
   { SCRIPT_SIG_KEY_RELEASE, "keyRelease" },

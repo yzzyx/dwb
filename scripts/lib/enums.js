@@ -38,3 +38,18 @@ const ClickType = {
   doubleClick : 5,
   tripleClick : 6
 };
+const NavigationReason = {
+  linkClicked     : 0,
+  formSubmitted   : 1,
+  backForward     : 2,
+  reload          : 3,
+  formResubmitted : 4,
+  other           : 5
+};
+const DownloadStatus = {
+  error       : -1,
+  created   : 0,
+  started   : 1, 
+  cancelled : 2,
+  finished  : 3
+};

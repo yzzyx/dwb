@@ -58,13 +58,13 @@ the script will be visible in all scripts, +false+ to encapsulate the script;
 
 .2+|timerStart 
 |Number |Interval in milliseconds
-.2+|A id for the timeout or -1 if an error occured
+.2+|An +id+ for the timeout or -1 if an error occured
 .2+|Executes a function repeatedly until the function returns false or
-*timerStop* is called on the id
+*timerStop* is called on the +id+ returned from *timerStart*
 |Function |Function to execute
 
 |timerStop 
-|Number |The id returned from *timerStart*
+|Number |The +id+ returned from *timerStart*
 |+true+ if the timeout was stopped
 |Stops execution of a function started by timoutStart
 
@@ -215,6 +215,13 @@ signals.connect("navigation",  function (o, obj) {
 });
 ------------
 
+NOTE: If a script is injected from a <<loadStatus>>-callback the script must be
+injected after +LoadStatus.committed+ has been emitted.
+On +LoadStatus.committed+ the document 
+hasn't been created, if the script modifies the DOM it should be injected on
++LoadStatus.finished+. 
+
+
 [[tabs]]
 === tabs ===
 The +tabs+ object implements functions and properties to get +webview+ objects. 
@@ -292,7 +299,7 @@ signal id of the signal or +-1+ if the signal was not connected.
 
 The signals implemented by *dwb* are 
 
-[options="header", cols="1s,1m,2,3"]
+[options="header", cols="2s,2m,5,4"]
 |=============================================
 |signal                 2+|object properties  |description 
 
@@ -323,12 +330,20 @@ return +true+ to stop the default action
 |uri|The uri of the file to download
 |totalSize|The total size of the file
 
+.4+|downloadStatus
+|filename|The filename 
+.4+|Emitted when the download status changes, the +webview+ is always the focused
++webview+
+|mimeType|Mimetype of the file or +unknown+
+|status|A <<DownloadStatus>>
+|uri|Original uri of the file
+
 .5+|keyPress 
 |isModifier | Whether or not the key is a modifier
 .5+|Emitted when a key is pressed, the first parameter of the callback function
 will always be the currently focued <<webview>>; return +true+ to stop the
 default action
-|keyCode | The hardware keycode
+|keyCode | Hardware keycode
 |keyVal | Keycode as listed in gdkkeysyms.h 
 |name | A string represantation of the key
 |state | A bitmap of modifiers pressed, see <<Modifier>>
@@ -338,7 +353,7 @@ default action
 default action
 
 
-.2+|loadStatus
+.2+|[[loadstatus]]loadStatus
 |status|The <<LoadStatus>>
 .2+|Emitted when the load status changes.
 |uri|Uri that is currently loaded
@@ -351,7 +366,7 @@ default action
 .2+|navigation          
 |uri | Uri of the request 
 .2+| Emitted before a new site is loaded, return +true+ to stop the request.
-|reason | Reason for the request where +reason+ is a
+|reason | Reason for the request where +reason+ is a <<NavigationReason>>
 
 
 |resource 
@@ -408,6 +423,20 @@ const ClickType = {
 };
 --------
 
+[[DownloadStatus]]
+.DownloadStatus
+
+[source,javascript]
+-------
+const DownloadStatus = {
+  error       : -1,
+  created     : 0,
+  started     : 1, 
+  cancelled   : 2,
+  finished    : 3
+};
+-------
+
 [[LoadStatus]]
 .LoadStatus
 
@@ -449,6 +478,20 @@ const Modifier = {
 };
 --------
 
+[[NavigationReason]]
+.NavigationReason
+
+[source,javascript]
+--------
+const NavigationReason = {
+  linkClicked     : 0,
+  formSubmitted   : 1,
+  backForward     : 2,
+  reload          : 3,
+  formResubmitted : 4,
+  other           : 5
+};
+--------
 
 
 [[Encapsulation]]
@@ -507,4 +550,6 @@ io.print(script1);
 -------
 This will produce no output, as expected. The same holds for encapsulated scripts included
 with <<include>>. 
+
+// vim: set ft=asciidoc:
 

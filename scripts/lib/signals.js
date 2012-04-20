@@ -33,15 +33,15 @@ Object.defineProperty(signals, "connect", {
 });
 Object.defineProperty(signals, "disconnect", {
   value : function(id) {
-    var s, i, a;
-    for (s in signals._registered) {
-      a = signals._registered[s];
-      for (i = 0; i<a.length; i++) {
-        if (a[i].id == id) {
-          delete a.splice(i, 1);
-          signals[s] = null;
-          return;
-        }
+    var name, i, sigs;
+    for (name in signals._registered) {
+      sigs = signals._registered[name];
+      for (i = 0; i<sigs.length; i++) {
+        if (sigs[i].id != id) 
+          continue;
+        delete sigs.splice(i, 1);
+        if (signals._registered[name].length === 0) 
+          signals[name] = null;
       }
     }
   }
