@@ -662,13 +662,13 @@ view_set_favicon(GList *gl, gboolean web) {
   GdkPixbuf *pb = NULL, *old;
   GdkPixbuf *new = NULL;
   if ( (old = gtk_image_get_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon))) ) {
-    gdk_pixbuf_unref(old);
+    g_object_unref(old);
   }
   if (web) {
     pb = webkit_web_view_get_icon_pixbuf(WEBVIEW(gl));
     if (pb) {
       new = gdk_pixbuf_scale_simple(pb, dwb.misc.bar_height, dwb.misc.bar_height, GDK_INTERP_BILINEAR);
-      gdk_pixbuf_unref(pb);
+      g_object_unref(pb);
     }
   }
   gtk_image_set_from_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon), new);
@@ -897,7 +897,7 @@ view_remove(GList *gl) {
   /* Favicon */ 
   GdkPixbuf *pb;
   if ( (pb = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
-    gdk_pixbuf_unref(pb);
+    g_object_unref(pb);
 
 
   dwb_focus(dwb.state.fview);

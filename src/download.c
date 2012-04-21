@@ -352,6 +352,8 @@ download_start(const char *path) {
   char *fullpath = NULL;
   const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
   const char *uri = webkit_download_get_uri(dwb.state.download);
+  WebKitNetworkRequest *request = webkit_network_request_new(uri);
+  dwb.state.download = webkit_download_new(request);
   //char *command = NULL;
   char *tmppath = NULL;
   const char *last_slash;
