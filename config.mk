@@ -9,6 +9,7 @@ SRCDIR=src
 JSDIR=scripts
 LIBDIR=lib
 LIBJSDIR=$(JSDIR)/$(LIBDIR)
+LIBJSFILES=$(LIBJSDIR)/signals.js $(LIBJSDIR)/enums.js $(LIBJSDIR)/data.js 
 SHAREDIR=share
 UTILDIR=util
 SUBDIRS=$(SRCDIR) $(UTILDIR) 

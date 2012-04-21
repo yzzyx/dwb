@@ -31,7 +31,7 @@ install-data: all
 	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)
 	install -m 644 $(JSDIR)/$(HINT_SCRIPT) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)/$(HINT_SCRIPT)
 	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBJSDIR)
-	install -m 644 $(LIBJSDIR)/signals.js $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBJSDIR)/signals.js
+	install -m 644 $(LIBJSFILES) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBJSDIR)/
 	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)
 	install -m 644 $(LIBDIR)/$(INFO_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(INFO_FILE)
 	install -m 644 $(LIBDIR)/$(HEAD_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(HEAD_FILE)

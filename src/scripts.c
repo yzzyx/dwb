@@ -24,9 +24,9 @@
 #include "scripts.h" 
 #include "util.h" 
 #include "js.h" 
-#define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete | kJSPropertyAttributeDontEnum)
+#define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete )
 //#define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete )
-#define kJSDefaultProperty  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontEnum)
+#define kJSDefaultProperty  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
 
 #define SCRIPT_WEBVIEW(o) (WEBVIEW(((GList*)JSObjectGetPrivate(o))))
 
@@ -48,6 +48,12 @@ static Sigmap _sigmap[] = {
   { SCRIPT_SIG_BUTTON_RELEASE, "buttonRelease" },
   { SCRIPT_SIG_TAB_FOCUS, "tabFocus" },
   { SCRIPT_SIG_FRAME_STATUS, "frameStatus" },
+};
+enum {
+  SPAWN_SUCCESS = 0, 
+  SPAWN_FAILED = 1<<0, 
+  SPAWN_STDOUT_FAILED = 1<<1, 
+  SPAWN_STDERR_FAILED = 1<<2, 
 };
 
 static JSObjectRef _sigObjects[SCRIPT_SIG_LAST];
@@ -350,6 +356,21 @@ global_timer_start(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size
   return JSValueMakeNumber(ctx, ret);
 }
 static JSValueRef 
+global_get_profile(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  return js_char_to_value(ctx, dwb.misc.profile);
+}
+static JSValueRef 
+global_get_cache_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  return js_char_to_value(ctx, dwb.files.cachedir);
+}
+static JSValueRef 
+global_get_config_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  char *dir = util_build_path();
+  JSValueRef ret = js_char_to_value(ctx, dir);
+  g_free(dir);
+  return ret;
+}
+static JSValueRef 
 system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1)
     return JSValueMakeNull(ctx);
@@ -362,18 +383,76 @@ system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, s
     return JSValueMakeNull(ctx);
   return js_char_to_value(ctx, env);
 }
+gboolean
+spawn_output(GIOChannel *channel, GIOCondition condition, JSObjectRef callback) {
+  char *content; 
+  gsize length;
+  if (condition == G_IO_HUP || condition == G_IO_ERR || condition == G_IO_NVAL) {
+    g_io_channel_unref(channel);
+    return false;
+  }
+  else if (g_io_channel_read_to_end(channel, &content, &length, NULL) == G_IO_STATUS_NORMAL && content != NULL)  {
+      JSValueRef arg = js_char_to_value(_global_context, content);
+      if (arg != NULL) {
+        JSValueRef argv[] = { arg };
+        JSObjectCallAsFunction(_global_context, callback, NULL, 1,  argv , NULL);
+      }
+      g_free(content);
+  }
+  return false;
+}
 
 static JSValueRef 
 system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  gboolean ret = false; 
+  int ret = 0; 
+  int outfd, errfd;
+  char **srgv = NULL;
+  int srgc;
+  GIOChannel *out_channel, *err_channel;
+  JSObjectRef oc = NULL, ec = NULL;
   if (argc < 1)
-    return JSValueMakeBoolean(ctx, false);
-  char *cmdline = js_value_to_char(ctx, argv[0], -1);
-  if (cmdline) {
-    ret = g_spawn_command_line_async(cmdline, NULL);
-    g_free(cmdline);
+    return JSValueMakeBoolean(ctx, SPAWN_FAILED);
+  if (argc > 1) {
+    oc = JSValueToObject(ctx, argv[1], NULL);
+    if ( oc == NULL || !JSObjectIsFunction(ctx, oc) )  {
+      if (!JSValueIsNull(ctx, argv[1])) 
+        ret |= SPAWN_STDOUT_FAILED;
+      oc = NULL;
+    }
   }
-  return JSValueMakeBoolean(ctx, ret);
+  if (argc > 2) {
+    ec = JSValueToObject(ctx, argv[2], NULL);
+    if ( ec == NULL || !JSObjectIsFunction(ctx, ec) ) {
+      if (!JSValueIsNull(ctx, argv[2])) 
+        ret |= SPAWN_STDERR_FAILED;
+      ec = NULL;
+    }
+  }
+  char *cmdline = js_value_to_char(ctx, argv[0], -1);
+  if (cmdline == NULL) {
+    ret |= SPAWN_FAILED;
+    goto error_out;
+  }
+
+  if (!g_shell_parse_argv(cmdline, &srgc, &srgv, NULL) || 
+     !g_spawn_async_with_pipes(NULL, srgv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, oc != NULL ? &outfd : NULL, ec != NULL ? &errfd : NULL, NULL)) {
+    ret |= SPAWN_FAILED;
+    goto error_out;
+  }
+  return JSValueMakeNumber(ctx, ret);
+  if (oc != NULL) {
+    out_channel = g_io_channel_unix_new(outfd);
+    g_io_add_watch(out_channel, G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL, (GIOFunc)spawn_output, oc);
+    g_io_channel_set_close_on_unref(out_channel, true);
+  }
+  if (ec != NULL) {
+    err_channel = g_io_channel_unix_new(errfd);
+    g_io_add_watch(err_channel, G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL, (GIOFunc)spawn_output, ec);
+    g_io_channel_set_close_on_unref(err_channel, true);
+  }
+error_out:
+  g_free(cmdline);
+  return JSValueMakeNumber(ctx, ret);
 }/*}}}*/
 
 /* IO {{{*/
@@ -514,8 +593,17 @@ create_global_object() {
   _global_context = JSGlobalContextCreate(class);
   JSClassRelease(class);
 
+
   JSObjectRef global_object = JSContextGetGlobalObject(_global_context);
 
+  JSStaticValue data_values[] = {
+    { "profile",      global_get_profile, NULL, kJSDefaultFunction },
+    { "cacheDir",     global_get_cache_dir, NULL, kJSDefaultFunction },
+    { "configDir",    global_get_config_dir, NULL, kJSDefaultFunction },
+    { 0, 0, 0,  0 }, 
+  };
+  class = create_class("io", NULL, data_values);
+  create_object(_global_context, class, global_object, "data", NULL);
 
   JSStaticFunction wv_functions[] = { 
     { "set",             tab_set,             kJSDefaultFunction },
