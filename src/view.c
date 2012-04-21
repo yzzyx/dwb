@@ -587,6 +587,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       js_call_as_function(webkit_web_view_get_main_frame(web), v->hint_object, "createStyleSheet", NULL, NULL);
       break;
     case WEBKIT_LOAD_COMMITTED: 
+      SCRIPTS_EMIT_NO_RETURN(SCRIPT(gl), LOAD_COMMITTED, 1, CHAR, "uri", uri);
       if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
@@ -614,6 +615,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
+      SCRIPTS_EMIT_NO_RETURN(SCRIPT(gl), LOAD_FINISHED, 1, CHAR, "uri", uri);
       /* TODO sqlite */
       if (!dwb.misc.private_browsing 
           && g_strcmp0(uri, "about:blank")
@@ -982,10 +984,7 @@ view_ssl_state(GList *gl) {
 
   const char *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   if (uri && g_str_has_prefix(uri, "https")) {
-    WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
-    WebKitWebDataSource *ds = webkit_web_frame_get_data_source(frame);
-    WebKitNetworkRequest *request = webkit_web_data_source_get_request(ds);
-    SoupMessage *msg = webkit_network_request_get_message(request);
+    SoupMessage *msg = dwb_soup_get_message(WEBKIT_WEB_VIEW(v->web));
     if (msg) {
       ssl = soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED 
         ? SSL_TRUSTED 

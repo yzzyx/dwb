@@ -408,10 +408,20 @@ in a function; *optional*, default +false+
 [options="header", cols="2s,2m,2m,4,4"]
 |=============================================
 |signal               |first parameter  2+|object properties  |description 
-.2+|[[loadstatus]]loadStatus .2+| <<webview>>
+.2+|[[loadStatus]]loadStatus .2+| <<webview>>
 |status|The <<LoadStatus>>
 .2+|Emitted when the load status changes.
 |uri|Uri that is currently loaded
+
+|[[loadCommitted]]loadCommitted | <<webview>>
+|uri|Uri that will be loaded
+|Emitted when the load has just commited, no data has been loaded when this
+signal is emitted. This
+is the preferred signal for injected scripts that do not manipulate the DOM.
+
+|[[loadFinished]]loadFinished | <<webview>>
+|uri|Uri that is has been loaded
+|Emitted when the site has completely loaded. 
 
 .2+|mimeType .2+| <<webview>>
 |mimeType| The mime-type
@@ -448,6 +458,8 @@ injected after +LoadStatus.committed+ has been emitted.
 On +LoadStatus.committed+ the document 
 hasn't been created, if the script modifies the DOM it should be injected on
 +LoadStatus.finished+. 
+If only +LoadStatus.committed+ or +loadFinished.committed+ are used it is better
+to use the corresponding signals instead to reduce overhead. 
 
 
 [[frame]]

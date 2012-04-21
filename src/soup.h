@@ -24,6 +24,7 @@ void dwb_soup_sync_cookies(void);
 void dwb_soup_allow_cookie_tmp(void);
 DwbStatus dwb_soup_allow_cookie(GList **, const char *, CookieStorePolicy);
 const char * dwb_soup_get_host_from_request(WebKitNetworkRequest *);
+SoupMessage * dwb_soup_get_message(WebKitWebView *);
 DwbStatus dwb_soup_set_cookie_accept_policy(const char *);
 void dwb_soup_set_ntlm(gboolean);
 void dwb_soup_cookies_set_accept_policy(Arg *);

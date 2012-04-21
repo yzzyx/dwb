@@ -24,6 +24,8 @@
 #include "scripts.h" 
 #include "util.h" 
 #include "js.h" 
+#include "soup.h" 
+#include "domain.h" 
 #define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete )
 //#define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete )
 #define kJSDefaultProperty  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
@@ -48,6 +50,8 @@ static Sigmap _sigmap[] = {
   { SCRIPT_SIG_BUTTON_RELEASE, "buttonRelease" },
   { SCRIPT_SIG_TAB_FOCUS, "tabFocus" },
   { SCRIPT_SIG_FRAME_STATUS, "frameStatus" },
+  { SCRIPT_SIG_LOAD_FINISHED, "loadFinished" },
+  { SCRIPT_SIG_LOAD_COMMITTED, "loadCommitted" },
 };
 enum {
   SPAWN_SUCCESS = 0, 
@@ -249,6 +253,24 @@ JSValueRef
 tab_get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   return get_property(ctx, G_OBJECT(SCRIPT_WEBVIEW(object)), js_name, exception);
 }
+JSValueRef 
+tab_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  SoupMessage *msg = dwb_soup_get_message(SCRIPT_WEBVIEW(object));
+  if (msg == NULL)
+    return JSValueMakeNull(ctx);
+  SoupURI *uri = soup_message_get_uri(msg);
+  const char *host = soup_uri_get_host(uri);
+  return js_char_to_value(ctx, domain_get_base_for_host(host));
+}
+
+JSValueRef 
+tab_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  SoupMessage *msg = dwb_soup_get_message(SCRIPT_WEBVIEW(object));
+  if (msg == NULL)
+    return JSValueMakeNull(ctx);
+  SoupURI *uri = soup_message_get_uri(msg);
+  return js_char_to_value(ctx, soup_uri_get_host(uri));
+}
 
 static JSValueRef 
 tab_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -439,7 +461,6 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
     ret |= SPAWN_FAILED;
     goto error_out;
   }
-  return JSValueMakeNumber(ctx, ret);
   if (oc != NULL) {
     out_channel = g_io_channel_unix_new(outfd);
     g_io_add_watch(out_channel, G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL, (GIOFunc)spawn_output, oc);
@@ -616,6 +637,8 @@ create_global_object() {
   JSStaticValue wv_values[] = {
     { "uri",    tab_get_property, tab_set_uri, kJSPropertyAttributeDontDelete },
     { "title",  tab_get_property, NULL, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly  },
+    { "domain", tab_get_domain, NULL, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly  },
+    { "host",   tab_get_host, NULL, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly  },
     { 0, 0, 0 }, 
   };
   _view_class = create_class("webview", wv_functions, wv_values);
