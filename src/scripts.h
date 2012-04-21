@@ -32,29 +32,33 @@ enum SIGNALS {
   SCRIPT_SIG_BUTTON_PRESS,
   SCRIPT_SIG_BUTTON_RELEASE,
   SCRIPT_SIG_TAB_FOCUS,
+  SCRIPT_SIG_FRAME_STATUS,
   SCRIPT_SIG_LAST, 
 };
 gboolean scripts_emit(JSObjectRef , int , const char *);
 void scripts_create_tab(GList *gl);
+JSObjectRef scripts_create_frame(WebKitWebFrame *frame);
 void scripts_end(void);
 void scripts_init_script(const char *);
 void scripts_init(void);
 
-#define EMIT_SCRIPT(gl, sig)  (VIEW(gl)->script != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)))
-#define SCRIPTS_EMIT(gl, sig, json)  scripts_emit(VIEW(gl)->script, SCRIPT_SIG_##sig, json)
+#define EMIT_SCRIPT(obj, sig)  (obj != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)))
+#define SCRIPTS_EMIT(obj, sig, json)  scripts_emit(obj, SCRIPT_SIG_##sig, json)
 
-#define SCRIPTS_EMIT_NO_RETURN(gl, sig, ...) G_STMT_START  \
-if (EMIT_SCRIPT(gl, sig))  {  \
+#define SCRIPTS_EMIT_NO_RETURN(obj, sig, ...) G_STMT_START  \
+if (EMIT_SCRIPT(obj, sig))  {  \
   char *__json_##sig = util_create_json(__VA_ARGS__); \
-  SCRIPTS_EMIT(gl, sig, __json_##sig); \
+  SCRIPTS_EMIT(obj, sig, __json_##sig); \
   g_free(__json_##sig); \
 } G_STMT_END
  
-#define SCRIPTS_EMIT_RETURN(gl, sig, ...) G_STMT_START  \
-if (VIEW(gl)->script != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)))  {  \
+#define SCRIPTS_EMIT_RETURN(obj, sig, ...) G_STMT_START  \
+if (EMIT_SCRIPT(obj, sig))  {  \
   char *__json_##sig = util_create_json(__VA_ARGS__); \
-  if (SCRIPTS_EMIT(gl, sig, __json_##sig)) { g_free(__json_##sig); return true; } \
+  if (SCRIPTS_EMIT(obj, sig, __json_##sig)) { g_free(__json_##sig); return true; } \
   else { g_free(__json_##sig); }  \
 } G_STMT_END
+
+#define SCRIPT(gl) (VIEW(gl)->script)
 
 #endif

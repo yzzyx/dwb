@@ -74,7 +74,7 @@ view_main_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
 static void 
 view_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitWebResource *resource, WebKitNetworkRequest *request, WebKitNetworkResponse *response, GList *gl) {
   char *json = util_create_json(1, CHAR, "uri", webkit_network_request_get_uri(request));
-  if (SCRIPTS_EMIT(gl, RESOURCE, json)) {
+  if (SCRIPTS_EMIT(SCRIPT(gl), RESOURCE, json)) {
     webkit_network_request_set_uri(request, "about:blank");
   }
   g_free(json);
@@ -126,7 +126,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   g_object_get(result, "context", &context, NULL);
   gboolean ret = false;
   _click_time = e->time;
-  SCRIPTS_EMIT_RETURN(gl, BUTTON_PRESS, 9, 
+  SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_PRESS, 9, 
       UINTEGER, "time", e->time, UINTEGER,    "type", e->type, 
       DOUBLE,   "x", e->x, DOUBLE,            "y", e->y, 
       UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
@@ -190,7 +190,7 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
   g_object_get(result, "context", &context, NULL);
 
-  SCRIPTS_EMIT_RETURN(gl, BUTTON_RELEASE, 8, 
+  SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_RELEASE, 8, 
       UINTEGER, "time", e->time,    UINTEGER, "context", context,
       DOUBLE,   "x", e->x,          DOUBLE,     "y", e->y, 
       UINTEGER, "state", e->state,  UINTEGER,  "button", e->button, 
@@ -216,7 +216,9 @@ view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 
 /* view_frame_committed_cb {{{*/
 static void 
-view_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
+view_frame_committed_cb(WebKitWebFrame *frame, JSObjectRef js_frame) {
+  SCRIPTS_EMIT_NO_RETURN(scripts_create_frame(frame), FRAME_STATUS, 1,
+      INTEGER, "status", webkit_web_frame_get_load_status(frame));
   WebKitLoadStatus status = webkit_web_frame_get_load_status(frame);
   switch (status) {
     case WEBKIT_LOAD_COMMITTED: 
@@ -232,7 +234,12 @@ view_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
 /* view_frame_created_cb {{{*/
 static void 
 view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  g_signal_connect(frame, "notify::load-status", G_CALLBACK(view_frame_committed_cb), gl);
+  JSObjectRef js_frame = NULL;
+  if (EMIT_SCRIPT(SCRIPT(gl), FRAME_STATUS)) {
+    puts("create");
+    js_frame = scripts_create_frame(frame);
+  }
+  g_signal_connect(frame, "notify::load-status", G_CALLBACK(view_frame_committed_cb), js_frame);
 }/*}}}*/
 
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
@@ -257,7 +264,7 @@ view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
 /* view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
 static gboolean 
 view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
-  SCRIPTS_EMIT_RETURN(gl, DOWNLOAD, 5, 
+  SCRIPTS_EMIT_RETURN(SCRIPT(gl), DOWNLOAD, 5, 
       CHAR, "uri", webkit_download_get_uri(download), 
       CHAR, "filename", webkit_download_get_suggested_filename(download), 
       CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
@@ -328,7 +335,7 @@ view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwor
   if ( !mimetype || strlen(mimetype) == 0 )
     return false;
 
-  SCRIPTS_EMIT_RETURN(gl, MIME_TYPE, 2, CHAR, "uri", webkit_network_request_get_uri(request), CHAR, "mimeType", mimetype);
+  SCRIPTS_EMIT_RETURN(SCRIPT(gl), MIME_TYPE, 2, CHAR, "uri", webkit_network_request_get_uri(request), CHAR, "mimeType", mimetype);
 
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv & OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
@@ -349,7 +356,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   gboolean ret = false;
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
-  SCRIPTS_EMIT_RETURN(gl, NAVIGATION, 2, CHAR, "uri", uri, INTEGER, "reason", reason);
+  SCRIPTS_EMIT_RETURN(SCRIPT(gl), NAVIGATION, 2, CHAR, "uri", uri, INTEGER, "reason", reason);
 
   if (!g_str_has_prefix(uri, "http:") && !g_str_has_prefix(uri, "https:") &&
       !g_str_has_prefix(uri, "about:") && !g_str_has_prefix(uri, "dwb:") &&
@@ -568,7 +575,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   char *host =  NULL;
   const char *uri = webkit_web_view_get_uri(web);
 
-  SCRIPTS_EMIT_NO_RETURN(gl, LOAD_STATUS, 2, CHAR, "uri", uri, INTEGER, "status", status);
+  SCRIPTS_EMIT_NO_RETURN(SCRIPT(gl), LOAD_STATUS, 2, CHAR, "uri", uri, INTEGER, "status", status);
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 

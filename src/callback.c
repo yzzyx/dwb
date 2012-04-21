@@ -148,7 +148,7 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
   gboolean ret = false;
   Mode mode = CLEAN_MODE(dwb.state.mode);
 
-  SCRIPTS_EMIT_RETURN(dwb.state.fview, KEY_PRESS, 5, UINTEGER, "state", e->state, 
+  SCRIPTS_EMIT_RETURN(SCRIPT(dwb.state.fview), KEY_PRESS, 5, UINTEGER, "state", e->state, 
         UINTEGER, "keyVal", e->keyval, UINTEGER, "keyCode", e->hardware_keycode,
         BOOLEAN, "isModifier", e->is_modifier, CHAR, "name", gdk_keyval_name(e->keyval));
 
@@ -192,7 +192,7 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
 /* dwb_key_release_cb {{{*/
 gboolean 
 callback_key_release(GtkWidget *w, GdkEventKey *e) {
-  SCRIPTS_EMIT_RETURN(dwb.state.fview, KEY_RELEASE, 5, UINTEGER, "state", e->state, 
+  SCRIPTS_EMIT_RETURN(SCRIPT(dwb.state.fview), KEY_RELEASE, 5, UINTEGER, "state", e->state, 
         UINTEGER, "keyVal", e->keyval, UINTEGER, "keyCode", e->hardware_keycode,
         BOOLEAN, "isModifier", e->is_modifier, CHAR, "name", gdk_keyval_name(e->keyval));
   if (DWB_TAB_KEY(e)) {

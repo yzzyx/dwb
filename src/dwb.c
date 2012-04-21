@@ -1171,7 +1171,7 @@ dwb_get_host(WebKitWebView *web) {
 gboolean
 dwb_focus_view(GList *gl) {
   if (gl != dwb.state.fview) {
-    SCRIPTS_EMIT_RETURN(gl, TAB_FOCUS, 1, INTEGER, "last", g_list_position(dwb.state.views, dwb.state.fview));
+    SCRIPTS_EMIT_RETURN(SCRIPT(gl), TAB_FOCUS, 1, INTEGER, "last", g_list_position(dwb.state.views, dwb.state.fview));
     gtk_widget_show(VIEW(gl)->scroll);
     dwb_soup_clean();
     if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )

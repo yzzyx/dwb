@@ -222,6 +222,37 @@ hasn't been created, if the script modifies the DOM it should be injected on
 +LoadStatus.finished+. 
 
 
+[[frame]]
+=== frame ===
+
+A frame represents a +frame+ or +iframe+. Due to cross site scripting policy it
+is not possible to inject scripts from a <<webview>> into iframes with a
+different domain. For this purpose the +frame+ object can be used. 
+
+.Properties
+[options="header", cols="2s,2m,1s,10"]
+|=============================================
+|name |type | mode| description
+|name |String |ro | The name of the +frame+
+|uri |String |ro | The uri of the +frame+
+|title |String|ro | The title of the +frame+
+|=============================================
+
+.Functions
+
+[options="header", cols="1s,1m,3,2,2"]
+|=============================================
+|function               2+| parameter | returns |description 
+.2+|inject 
+|String | Script to inject
+.2+|+true+ if the script was injected, +false+ otherwise.
+.2+|Injects a script into the +frame+, see also <<webview>>
+|Boolean | +true+ to inject the script in the global scope, +false+ to encapsulate it
+in a function; *optional*, default +false+
+|=============================================
+
+
+
 [[tabs]]
 === tabs ===
 The +tabs+ object implements functions and properties to get +webview+ objects. 
@@ -299,11 +330,11 @@ signal id of the signal or +-1+ if the signal was not connected.
 
 The signals implemented by *dwb* are 
 
-[options="header", cols="2s,2m,5,4"]
+[options="header", cols="2s,2m,2m,4,4"]
 |=============================================
-|signal                 2+|object properties  |description 
+|signal               |first parameter  2+|object properties  |description 
 
-.9+|buttonPress 
+.9+|buttonPress .9+| focused <<webview>>
 |button|The button that is pressed, usually a value between 1 and 5
 .9+|Emitted when a button is pressed, only clicks on the webview are noticed;
 return +true+ to stop the default action
@@ -317,12 +348,12 @@ was pressed
 |y|y-position relative to the window
 |yRoot|y-position relative to the screen
 
-|buttonRelease 
+|buttonRelease | focused <<webview>>
 2+d|Same as *buttonPress* but without +type+
 |Emitted when a button is released, only clicks on the webview are noticed;
 return +true+ to stop the default action
 
-.5+|download 
+.5+|download .5+| focused <<webview>>
 |filename|The suggested filename 
 .5+|Emitted before a download starts. Return +true+ to handle the signal or +false+ to let *dwb* handle the signal.
 |mimeType|The mimetype of the file or +unknown+
@@ -330,7 +361,7 @@ return +true+ to stop the default action
 |uri|The uri of the file to download
 |totalSize|The total size of the file
 
-.4+|downloadStatus
+.4+|downloadStatus .4+| focused <<webview>>
 |filename|The filename 
 .4+|Emitted when the download status changes, the +webview+ is always the focused
 +webview+
@@ -338,7 +369,14 @@ return +true+ to stop the default action
 |status|A <<DownloadStatus>>
 |uri|Original uri of the file
 
-.5+|keyPress 
+.4+|frameStatus .4+| <<frame>>
+|name |Name of the frame
+.4+| Emitted when the load status changes
+|status |<<LoadStatus>>
+|title |Title of the frame
+|uri |Uri of the frame
+
+.5+|keyPress .5+| focused <<webview>>
 |isModifier | Whether or not the key is a modifier
 .5+|Emitted when a key is pressed, the first parameter of the callback function
 will always be the currently focued <<webview>>; return +true+ to stop the
@@ -348,37 +386,38 @@ default action
 |name | A string represantation of the key
 |state | A bitmap of modifiers pressed, see <<Modifier>>
 
-|keyRelease 2+d|Same as *keyPress*
+|keyRelease | focused <<webview>>
+2+d|Same as *keyPress*
 |Emitted when a key is released; return +true+ to stop the
 default action
 
 
-.2+|[[loadstatus]]loadStatus
+.2+|[[loadstatus]]loadStatus .2+| focused <<webview>>
 |status|The <<LoadStatus>>
 .2+|Emitted when the load status changes.
 |uri|Uri that is currently loaded
 
-.2+|mimeType 
+.2+|mimeType .2+| focused <<webview>>
 |mimeType| The mime-type
 .2+|Decide whether or not to show a given mimetype. Return true to stop the request.
 |uri| Uri of the request
 
-.2+|navigation          
+.2+|navigation          .2+| focused <<webview>>
 |uri | Uri of the request 
 .2+| Emitted before a new site is loaded, return +true+ to stop the request.
 |reason | Reason for the request where +reason+ is a <<NavigationReason>>
 
 
-|resource 
+|resource | focused <<webview>>
 |uri | Uri of the request 
 |Emitted before a new resource is loaded, return +true+ to stop the request.
 
-|tabFocus
+|tabFocus | focused <<webview>>
 |last| Number of the previously focused tab
 |Emitted when a new tab gets focus, the first parameter will be the new
 <<webview>>; return +true+ to prevent the tab being changed
-
 |=============================================
+
 
 .Example 
 [source,javascript]
