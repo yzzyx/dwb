@@ -21,6 +21,17 @@
 #include "util.h"
 #include "js.h"
 
+void
+js_make_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, ...) {
+  va_list arg_list; 
+  
+  va_start(arg_list, format);
+  gchar message[STRING_LENGTH];
+  vsnprintf(message, STRING_LENGTH, format, arg_list);
+  puts("message");
+  va_end(arg_list);
+  *exception = js_char_to_value(ctx, message);
+}
 /* js_get_object_property {{{*/
 JSObjectRef 
 js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
@@ -55,7 +66,7 @@ js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
   JSStringRelease(buffer);
   if (exc != NULL || !JSValueIsString(ctx, val) )
     return NULL;
-  return js_value_to_char(ctx, val, JS_STRING_MAX);
+  return js_value_to_char(ctx, val, JS_STRING_MAX, NULL);
 }/*}}}*/
 
 /* js_get_double_property {{{*/
@@ -165,7 +176,7 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, const char *string, 
     js_ret = JSObjectCallAsFunction(ctx, function_object, NULL, 0, NULL, NULL);
   }
   if (char_ret != NULL) {
-    ret = js_value_to_char(ctx, js_ret, JS_STRING_MAX);
+    ret = js_value_to_char(ctx, js_ret, JS_STRING_MAX, NULL);
   }
 error_out: 
   if (js_name)
@@ -177,14 +188,13 @@ error_out:
 
 /*{{{*/
 char *
-js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit) {
-  JSValueRef exc = NULL;
+js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *exc) {
   if (value == NULL)
     return NULL;
   if (! JSValueIsString(ctx, value)) 
     return NULL;
-  JSStringRef jsstring = JSValueToStringCopy(ctx, value, &exc);
-  if (exc != NULL) 
+  JSStringRef jsstring = JSValueToStringCopy(ctx, value, exc);
+  if (jsstring == NULL) 
     return NULL;
 
   char *ret = js_string_to_char(ctx, jsstring, limit);

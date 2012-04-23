@@ -19,8 +19,9 @@
 #ifndef JS_H
 #define JS_H
 
+void js_make_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, ...);
 char * js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t );
-char * js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit);
+char * js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *);
 JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 char * js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name);

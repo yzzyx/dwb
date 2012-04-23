@@ -173,20 +173,15 @@ parameter.
 the script will be visible in all scripts, +false+ to encapsulate the script;
 *optional*, default +false+
 
-|plugin [red]#todo#
-|String | Name of the plugin to load 
-| - 
-|Loads a system plugin
-
 .2+|timerStart 
-|Number |Interval in milliseconds
+|Number |Interval in milliseconds; *required*
 .2+|An +id+ for the timeout or -1 if an error occured
 .2+|Executes a function repeatedly until the function returns false or
 *timerStop* is called on the +id+ returned from *timerStart*
-|Function() |Function to execute
+|Function() |Function to execute; *required*
 
 |timerStop 
-|Number |The +id+ returned from *timerStart*
+|Number |The +id+ returned from *timerStart*; *required*
 |+true+ if the timeout was stopped
 |Stops execution of a function started by timoutStart
 
@@ -299,7 +294,7 @@ The +system+ object implements system functions.
 [source,javascript]
 ------------
 var home = system.getEnv("HOME");
-// async wrapped read
+// asynchronous wrapped read
 function asyncread(filename) {
   system.spawn("cat " + filename, function (response) {
       ...
@@ -626,62 +621,141 @@ const SpawnError = {
 };
 --------
 
+[[Extensions]] 
+== Extensions ==
+*dwb* provides the possibility to load extensions.
+It is recommended to implement javascript-userscripts as an extension to have 
+consistent configuration locations for scripts. Functions and variables from
+extensions are not visible unless you explicitly make them visible, see <<Encapsulation>>.
+extensions can be loaded in userscripts:
+
+The +extensions+ object has the following properties and functions
+
+.Properties
+
+[options="header", cols="2s,2m,10"]
+|=============================================
+|name |type | description
+|config|Object|Object that holds data for all extensions
+
+|=============================================
+
+.Functions
+
+[options="header", cols="1s,1m,3,2,2"]
+|=============================================
+|function               2+| parameter | returns |description 
+|load               
+|String |name of the extension 
+| +true+ if the extension was successfully loaded
+|Load an extension 
+
+.2+|error               
+|String |name of the extension 
+.2+| -
+.2+|Print a consistent error message to stderr. 
+|String |The message to print
+
+.2+|message               
+|String |name of the extension 
+.2+| -
+.2+|Print a consistent message to stderr. 
+|String |The message to print
+
+.2+|warning               
+|String |name of the extension 
+.2+| -
+.2+|Print a consistent warning message to stderr. 
+|String |The message to print
+
+|=============================================
+
+.Example
+
+[source,javascript]
+--------
+#!javascript 
+
+extensions.load("foobar");
+--------
+
+.Writing extensions
+
+*dwb* searches for extensions in +$XDG_DATA_HOME/dwb/extensions+ and
++SHARE_DIR/dwb/extensions+ where the default
+SHARE_DIR is +/usr/share/dwb/extensions+.
+The config for extensions is in +$XDG_CONFIG_HOME/dwb/extensionsrc+ and should
+return a javascript object. 
+
+Every plugin must implement one function named +plugin+ that takes one
+argument, the config for the extension. The function should return +true+ if the plugin was
+successfully loaded, +false+ otherwise. The function should be returned from the plugin.
+
+.Example
+
+A plugin called *foobar* in +$HOME/.local/share/dwb/extensions/foobar+.
+
+[source,javascript]
+--------
+function foo(val) {
+  ....
+}
+function bar(val) {
+  ....
+}
+return {
+  init : function (config) {
+    if (config.foo > 36) {
+      bar(config.foo);
+      foo(config.bar);
+      return true;
+    }
+    return false;
+  }
+};
+--------
+
+.Example extensionrc
+[source,javascript]
+--------
+return {
+  foobar : { bar : "X", foo : 37 }, 
+  barfoo : {  }
+  
+};
+--------
+
+
 [[Encapsulation]]
 == Encapsulation == 
-Since all scripts share the same context, they have the same global scope, so it
-must be taken care to encapsulate the data, all scripts are encapsulated in a
-function but global variables may be visible in other scripts. 
-Consider the following scenario:
+Since all scripts share the same execution context, they have the same global scope, so it
+must be taken care to encapsulate the data. All scripts are encapsulated in a
+function but global variables may be visible in other scripts. Scripts like 
 
-.Script 1
 [source,javascript]
 -------
 #!javascript
 
-script1 = "Script 1";
-io.print(script2);
+me = "i am you";
+whoAmI = function () {
+  return me;
+}
+io.print(whoAmI());
 -------
 
-.Script 2
+should be avoided since +me+ and +whoAmI+ will be visible in other scripts, use 
 [source,javascript]
 -------
 #!javascript
 
-script2 = "Script 2";
-io.print(script1);
+var me = "i am you";
+function whoAmI() {
+  return me;
+}
+io.print(whoAmI());
 -------
 
-Since both scripts share one execution context this will produce either 
--------
-Script 2
--------
-or 
--------
-Script 1
--------
-depending on which script is included first.
-
-To avoid this always use +var+ for global variables. 
-
-.Script 1
-[source,javascript]
--------
-#!javascript
-
-var script1 = "Script 1";
-io.print(script2);
--------
-
-.Script 2
-[source,javascript]
--------
-#!javascript
-
-var script2 = "Script 2";
-io.print(script1);
--------
-This will produce no output, as expected. The same holds for encapsulated scripts included
-with <<include>>. 
+instead. The same holds for encapsulated scripts included with <<include>>. 
 
 // vim: set ft=asciidoc:
 

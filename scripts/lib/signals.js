@@ -9,7 +9,8 @@ Object.defineProperty(signals, "emit", {
   value : function(sig, wv, o) {
     var sigs = signals._registered[sig];
     var ret = false;
-    for (var i=0; i<sigs.length; i++) {
+    var i;
+    for (i=0; i<sigs.length; i++) {
       ret = sigs[i].callback(wv, o) || ret;
     }
     return ret;
@@ -37,11 +38,12 @@ Object.defineProperty(signals, "disconnect", {
     for (name in signals._registered) {
       sigs = signals._registered[name];
       for (i = 0; i<sigs.length; i++) {
-        if (sigs[i].id != id) 
-          continue;
-        delete sigs.splice(i, 1);
-        if (signals._registered[name].length === 0) 
-          signals[name] = null;
+        if (sigs[i].id == id) {
+          delete sigs.splice(i, 1);
+          if (signals._registered[name].length === 0) 
+            signals[name] = null;
+          return;
+        }
       }
     }
   }

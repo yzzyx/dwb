@@ -1659,7 +1659,7 @@ dwb_execute_script(WebKitWebFrame *frame, const char *com, gboolean ret) {
     return NULL;
 
   if (eval_ret && ret) {
-    return js_value_to_char(context, eval_ret, JS_STRING_MAX);
+    return js_value_to_char(context, eval_ret, JS_STRING_MAX, NULL);
   }
   return NULL;
 }

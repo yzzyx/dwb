@@ -31,6 +31,7 @@
 #define kJSDefaultProperty  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
 
 #define SCRIPT_WEBVIEW(o) (WEBVIEW(((GList*)JSObjectGetPrivate(o))))
+#define EXCEPTION(X)   "DWB EXCEPTION : "X
 
 typedef struct _Sigmap {
   int sig;
@@ -62,7 +63,6 @@ enum {
 
 static JSObjectRef _sigObjects[SCRIPT_SIG_LAST];
 static JSGlobalContextRef _global_context;
-static JSObjectRef _signals;
 static JSClassRef _view_class;
 static GSList *_script_list;
 
@@ -96,25 +96,26 @@ create_object(JSContextRef ctx, JSClassRef class, JSObjectRef obj, const char *n
 static JSValueRef
 inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false, global = false;
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("webview.inject: missing argument"));
     return JSValueMakeBoolean(ctx, false);
+  }
   if (argc > 1 && JSValueIsBoolean(ctx, argv[1])) 
     global = JSValueToBoolean(ctx, argv[1]);
     
-  JSStringRef script = JSValueToStringCopy(ctx, argv[0], NULL);
+  JSStringRef script = JSValueToStringCopy(ctx, argv[0], exc);
   if (script == NULL)
     return JSValueMakeBoolean(ctx, false);
 
   if (global) {
-    ret = JSEvaluateScript(wctx, script, NULL, NULL, 0, NULL) != NULL;
+    ret = JSEvaluateScript(wctx, script, NULL, NULL, 0, exc) != NULL;
   }
   else {
-    JSObjectRef function = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, NULL);
+    JSObjectRef function = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, exc);
     if (function != NULL) {
-      ret = JSObjectCallAsFunction(wctx, function, NULL, 0, NULL, NULL) != NULL;
+      ret = JSObjectCallAsFunction(wctx, function, NULL, 0, NULL, exc) != NULL;
     }
   }
-
   JSStringRelease(script);
   return JSValueMakeBoolean(ctx, ret);
 }
@@ -124,11 +125,13 @@ set_generic(JSContextRef ctx, GObject *o, JSObjectRef function, JSObjectRef this
   char *sval = NULL;
   char dval;
   char *propname = NULL;
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("webview.set: missing argument"));
     return JSValueMakeBoolean(ctx, false);
+  }
   if (!JSValueIsObject(ctx, argv[0])) 
     return JSValueMakeBoolean(ctx, false);
-  JSObjectRef argobj = JSValueToObject(ctx, argv[0], NULL);
+  JSObjectRef argobj = JSValueToObject(ctx, argv[0], exc);
   if (argobj == NULL)
     return JSValueMakeBoolean(ctx, false);
   JSPropertyNameArrayRef names = JSObjectCopyPropertyNames(ctx, argobj);
@@ -140,7 +143,7 @@ set_generic(JSContextRef ctx, GObject *o, JSObjectRef function, JSObjectRef this
     int type = JSValueGetType(ctx, value);
     switch (type) {
       case  kJSTypeString : 
-        sval = js_value_to_char(ctx, value, -1);
+        sval = js_value_to_char(ctx, value, -1, exc);
         if (sval == NULL) 
           return JSValueMakeBoolean(ctx, false);
         g_value_init(&v, G_TYPE_STRING);
@@ -170,7 +173,7 @@ set_generic(JSContextRef ctx, GObject *o, JSObjectRef function, JSObjectRef this
 
 static JSValueRef 
 get_generic(JSContextRef ctx, GObject *o, JSObjectRef this, const JSValueRef arg, JSValueRef* exc) {
-  char *name = js_value_to_char(ctx, arg, -1);
+  char *name = js_value_to_char(ctx, arg, -1, exc);
   GValue v = G_VALUE_INIT;
   g_value_init(&v, G_TYPE_STRING);
   g_object_get_property(o, name, &v);
@@ -194,9 +197,11 @@ tabs_length(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* ex
 }
 static JSValueRef 
 tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("tabs.nth: missing argument"));
     return JSValueMakeNull(ctx);
-  double n = JSValueToNumber(ctx, argv[0], NULL);
+  }
+  double n = JSValueToNumber(ctx, argv[0], exc);
   if (n == NAN)
     return JSValueMakeNull(ctx);
   GList *nth = g_list_nth(dwb.state.views, (int)n);
@@ -209,8 +214,10 @@ tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
 static bool 
 tab_set_uri(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef arg, JSValueRef* exc) {
   WebKitWebView *wv = SCRIPT_WEBVIEW(this);
-  if (wv != NULL && JSValueIsString(ctx, arg)) {
-    char *uri = js_value_to_char(ctx, arg, -1);
+  if (wv != NULL) {
+    char *uri = js_value_to_char(ctx, arg, -1, exc);
+    if (uri == NULL)
+      return false;
     webkit_web_view_load_uri(wv, uri);
     g_free(uri);
     return true;
@@ -219,13 +226,16 @@ tab_set_uri(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef arg
 }
 static JSValueRef 
 tab_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc >= 1) {
-    double steps = JSValueToNumber(ctx, argv[0], NULL);
-    if (steps != NAN) {
-      webkit_web_view_go_back_or_forward(SCRIPT_WEBVIEW(this), (int)steps);
-    }
+  JSValueRef ret = JSValueMakeUndefined(ctx);
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("webview.history: missing argument."));
+    return ret;
   }
-  return JSValueMakeUndefined(ctx);
+  double steps = JSValueToNumber(ctx, argv[0], NULL);
+  if (steps != NAN) {
+    webkit_web_view_go_back_or_forward(SCRIPT_WEBVIEW(this), (int)steps);
+  }
+  return ret;
 }
 static JSValueRef 
 tab_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -274,8 +284,10 @@ tab_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueR
 
 static JSValueRef 
 tab_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("webview.get: missing argument."));
     return JSValueMakeUndefined(ctx);
+  }
   GList *gl = JSObjectGetPrivate(this);
   WebKitWebSettings *s = webkit_web_view_get_settings(WEBVIEW(gl));
   return get_generic(ctx, G_OBJECT(s), function, argv[0], exc);
@@ -303,9 +315,11 @@ object_get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, J
 static JSValueRef 
 global_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   DwbStatus status = STATUS_ERROR;
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("execute: missing argument."));
     return JSValueMakeBoolean(ctx, false);
-  char *command = js_value_to_char(ctx, argv[0], -1);
+  }
+  char *command = js_value_to_char(ctx, argv[0], -1, exc);
   if (command != NULL) {
     status = dwb_parse_command_line(command);
     g_free(command);
@@ -316,25 +330,29 @@ static JSValueRef
 global_include(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = NULL;
   gboolean global = false;
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("include: missing argument."));
     return JSValueMakeNull(ctx);
+  }
   if (argc > 1 && JSValueIsBoolean(ctx, argv[1])) 
     global = JSValueToBoolean(ctx, argv[1]);
 
   char *path = NULL, *content = NULL; 
-  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX)) == NULL) 
+  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX, exc)) == NULL) 
     goto error_out;
-  if ( (content = util_get_file_content(path)) == NULL) 
+  if ( (content = util_get_file_content(path)) == NULL) {
+    js_make_exception(ctx, exc, EXCEPTION("include: reading %s failed."), path);
     goto error_out;
+  }
   JSStringRef script = JSStringCreateWithUTF8CString(content);
 
   if (global) {
-    ret = JSEvaluateScript(ctx, script, NULL, NULL, 0, NULL);
+    ret = JSEvaluateScript(ctx, script, NULL, NULL, 0, exc);
   }
   else {
-    JSObjectRef function = JSObjectMakeFunction(ctx, NULL, 0, NULL, script, NULL, 0, NULL);
+    JSObjectRef function = JSObjectMakeFunction(ctx, NULL, 0, NULL, script, NULL, 0, exc);
     if (function != NULL) {
-      ret = JSObjectCallAsFunction(ctx, function, NULL, 0, NULL, NULL);
+      ret = JSObjectCallAsFunction(ctx, function, NULL, 0, NULL, exc);
     }
   }
 
@@ -358,7 +376,11 @@ timeout_callback(JSObjectRef obj) {
 static JSValueRef 
 global_timer_stop(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gdouble sigid;
-  if (argc > 0 && JSValueIsNumber(ctx, argv[0]) && (sigid = JSValueToNumber(ctx, argv[0], NULL)) != NAN) {
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("timerStop: missing argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  if ((sigid = JSValueToNumber(ctx, argv[0], exc)) != NAN) {
     g_source_remove((int)sigid);
     return JSValueMakeBoolean(ctx, true);
   }
@@ -366,37 +388,69 @@ global_timer_stop(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_
 }
 static JSValueRef 
 global_timer_start(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 2) 
+  if (argc < 2) {
+    js_make_exception(ctx, exc, EXCEPTION("timerStart: missing argument."));
     return JSValueMakeNumber(ctx, -1);
+  }
   double msec = 10;
-  if (!JSValueIsNumber(ctx, argv[0]) || ((msec = JSValueToNumber(ctx, argv[0], NULL)) == NAN ))
+  if ((msec = JSValueToNumber(ctx, argv[0], exc)) == NAN )
     return JSValueMakeNumber(ctx, -1);
-  JSObjectRef func = JSValueToObject(ctx, argv[1], NULL);
-  if (func == NULL || !JSObjectIsFunction(ctx, func))
+  JSObjectRef func = JSValueToObject(ctx, argv[1], exc);
+  if (func == NULL || !JSObjectIsFunction(ctx, func)) {
+    js_make_exception(ctx, exc, EXCEPTION("timerStart: argument 2 is not a function."));
     return JSValueMakeNumber(ctx, -1);
+  }
   int ret = g_timeout_add((int)msec, (GSourceFunc)timeout_callback, func);
   return JSValueMakeNumber(ctx, ret);
 }
 static JSValueRef 
-global_get_profile(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+data_get_profile(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   return js_char_to_value(ctx, dwb.misc.profile);
 }
 static JSValueRef 
-global_get_cache_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+data_get_cache_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   return js_char_to_value(ctx, dwb.files.cachedir);
 }
 static JSValueRef 
-global_get_config_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+data_get_config_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   char *dir = util_build_path();
+  if (dir == NULL) {
+    js_make_exception(ctx, exception, EXCEPTION("configDir: cannot get config path."));
+    return JSValueMakeNull(ctx);
+  }
+  JSValueRef ret = js_char_to_value(ctx, dir);
+  g_free(dir);
+  return ret;
+}
+static JSValueRef 
+data_get_system_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  char *dir = util_get_system_data_dir(NULL);
+  if (dir == NULL) {
+    js_make_exception(ctx, exception, EXCEPTION("systemDataDir: cannot get system data directory."));
+    return JSValueMakeNull(ctx);
+  }
+  JSValueRef ret = js_char_to_value(ctx, dir);
+  g_free(dir);
+  return ret;
+}
+static JSValueRef 
+data_get_user_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  char *dir = util_get_user_data_dir(NULL);
+  if (dir == NULL) {
+    js_make_exception(ctx, exception, EXCEPTION("userDataDir: cannot get user data directory."));
+    return JSValueMakeNull(ctx);
+  }
   JSValueRef ret = js_char_to_value(ctx, dir);
   g_free(dir);
   return ret;
 }
 static JSValueRef 
 system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("system.getEnv: missing argument"));
     return JSValueMakeNull(ctx);
-  char *name = js_value_to_char(ctx, argv[0], -1);
+  }
+  char *name = js_value_to_char(ctx, argv[0], -1, exc);
   if (name == NULL) 
     return JSValueMakeNull(ctx);
   const char *env = g_getenv(name);
@@ -432,8 +486,10 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   int srgc;
   GIOChannel *out_channel, *err_channel;
   JSObjectRef oc = NULL, ec = NULL;
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("spawn needs an argument."));
     return JSValueMakeBoolean(ctx, SPAWN_FAILED);
+  }
   if (argc > 1) {
     oc = JSValueToObject(ctx, argv[1], NULL);
     if ( oc == NULL || !JSObjectIsFunction(ctx, oc) )  {
@@ -450,7 +506,7 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
       ec = NULL;
     }
   }
-  char *cmdline = js_value_to_char(ctx, argv[0], -1);
+  char *cmdline = js_value_to_char(ctx, argv[0], -1, exc);
   if (cmdline == NULL) {
     ret |= SPAWN_FAILED;
     goto error_out;
@@ -458,6 +514,7 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
 
   if (!g_shell_parse_argv(cmdline, &srgc, &srgv, NULL) || 
      !g_spawn_async_with_pipes(NULL, srgv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, oc != NULL ? &outfd : NULL, ec != NULL ? &errfd : NULL, NULL)) {
+    js_make_exception(ctx, exc, EXCEPTION("spawning %s failed."), cmdline);
     ret |= SPAWN_FAILED;
     goto error_out;
   }
@@ -481,12 +538,15 @@ static JSValueRef
 io_read(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = NULL;
   char *path = NULL, *content = NULL;
-  if (argc < 1)
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("io.read needs an argument."));
     return JSValueMakeNull(ctx);
-  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX) ) == NULL )
+  }
+  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX, exc) ) == NULL )
     goto error_out;
-  if ( (content = util_get_file_content(path) ) == NULL )
+  if ( (content = util_get_file_content(path) ) == NULL ) {
     goto error_out;
+  }
   ret = js_char_to_value(ctx, content);
 
 error_out:
@@ -503,19 +563,26 @@ io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
   gboolean ret = false;
   FILE *f;
   char *path = NULL, *content = NULL, *mode = NULL;
-  if (argc < 3)
+  if (argc < 3) {
+    js_make_exception(ctx, exc, EXCEPTION("io.write needs 3 arguments."));
     return JSValueMakeBoolean(ctx, false);
-  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX)) == NULL )
+  }
+  if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX, exc)) == NULL )
     goto error_out;
-  if ( (mode = js_value_to_char(ctx, argv[1], -1)) == NULL )
+  if ( (mode = js_value_to_char(ctx, argv[1], -1, exc)) == NULL )
     goto error_out;
-  if (g_strcmp0(mode, "w") && g_strcmp0(mode, "a"))
+  if (g_strcmp0(mode, "w") && g_strcmp0(mode, "a")) {
+    js_make_exception(ctx, exc, EXCEPTION("io.write: invalid mode."));
     goto error_out;
-  if ( (content = js_value_to_char(ctx, argv[2], -1)) == NULL ) 
+  }
+  if ( (content = js_value_to_char(ctx, argv[2], -1, exc)) == NULL ) 
     goto error_out;
   if ( (f = fopen(path, mode)) != NULL) {
     fprintf(f, content);
     fclose(f);
+  }
+  else {
+    js_make_exception(ctx, exc, EXCEPTION("io.write: cannot open %s for writing."), path);
   }
 error_out:
   g_free(path);
@@ -526,12 +593,14 @@ error_out:
 
 static JSValueRef 
 io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc == 0)
+  if (argc == 0) {
+    js_make_exception(ctx, exc, EXCEPTION("io.print needs an argument."));
     return JSValueMakeUndefined(_global_context);
+  }
 
   FILE *stream = stdout;
   if (argc >= 2) {
-    char *fd = js_value_to_char(ctx, argv[1], -1);
+    char *fd = js_value_to_char(ctx, argv[1], -1, exc);
     if (!g_strcmp0(fd, "stderr")) 
       stream = stderr;
     g_free(fd);
@@ -542,7 +611,7 @@ io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
   int type = JSValueGetType(ctx, argv[0]);
   switch (type) {
     case kJSTypeString : 
-      out = js_value_to_char(ctx, argv[0], -1);
+      out = js_value_to_char(ctx, argv[0], -1, exc);
       if (out != NULL) { 
         fprintf(stream, "%s\n", out);
         g_free(out);
@@ -552,7 +621,7 @@ io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
       fprintf(stream, "%s\n", JSValueToBoolean(ctx, argv[0]) ? "true" : "false");
       break;
     case kJSTypeNumber : 
-      dout = JSValueToNumber(ctx, argv[0], NULL);
+      dout = JSValueToNumber(ctx, argv[0], exc);
       if (dout != NAN) 
         fprintf(stream, "%f\n", dout);
       break;
@@ -574,7 +643,7 @@ signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef
       continue;
     if (JSValueIsNull(ctx, value)) 
       dwb.misc.script_signals &= ~(1<<i);
-    else if ( (o = JSValueToObject(ctx, value, NULL)) != NULL && JSObjectIsFunction(ctx, o)) {
+    else if ( (o = JSValueToObject(ctx, value, exception)) != NULL && JSObjectIsFunction(ctx, o)) {
       _sigObjects[i] = o;
       dwb.misc.script_signals |= (1<<i);
     }
@@ -618,12 +687,14 @@ create_global_object() {
   JSObjectRef global_object = JSContextGetGlobalObject(_global_context);
 
   JSStaticValue data_values[] = {
-    { "profile",      global_get_profile, NULL, kJSDefaultFunction },
-    { "cacheDir",     global_get_cache_dir, NULL, kJSDefaultFunction },
-    { "configDir",    global_get_config_dir, NULL, kJSDefaultFunction },
+    { "profile",        data_get_profile, NULL, kJSDefaultFunction },
+    { "cacheDir",       data_get_cache_dir, NULL, kJSDefaultFunction },
+    { "configDir",      data_get_config_dir, NULL, kJSDefaultFunction },
+    { "systemDataDir",  data_get_system_data_dir, NULL, kJSDefaultFunction },
+    { "userDataDir",    data_get_user_data_dir, NULL, kJSDefaultFunction },
     { 0, 0, 0,  0 }, 
   };
-  class = create_class("io", NULL, data_values);
+  class = create_class("data", NULL, data_values);
   create_object(_global_context, class, global_object, "data", NULL);
 
   JSStaticFunction wv_functions[] = { 
@@ -678,7 +749,10 @@ create_global_object() {
   cd.setProperty = signal_set;
   class = JSClassCreate(&cd);
   
-  _signals = create_object(_global_context, class, global_object, "signals", NULL);
+  create_object(_global_context, class, global_object, "signals", NULL);
+
+  class = create_class("extensions", NULL, NULL);
+  create_object(_global_context, class, global_object, "extensions", NULL);
 }
 void 
 scripts_create_tab(GList *gl) {
@@ -708,6 +782,7 @@ scripts_create_frame(WebKitWebFrame *frame) {
 
 void
 scripts_init_script(const char *script) {
+  puts(script);
   if (_global_context == NULL) 
     create_global_object();
   JSStringRef body = JSStringCreateWithUTF8CString(script);
@@ -749,4 +824,3 @@ scripts_end() {
     _global_context = NULL;
   }
 }
-
