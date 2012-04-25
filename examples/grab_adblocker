@@ -55,6 +55,9 @@ URLS=(
 
 # Fanboy Tracking list
 #http://www.fanboy.co.nz/adblock/fanboy-tracking.txt
+
+# Antisocial
+#https://adversity.googlecode.com/hg/Antisocial.txt
 )
 
 
