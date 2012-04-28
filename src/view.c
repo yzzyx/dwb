@@ -64,13 +64,13 @@ static void view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *, GList *);
 /* WEB_VIEW_CALL_BACKS {{{*/
 
 /* view_main_frame_committed_cb {{{*/
+#if 0
 void
 view_main_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
-  if (gl == dwb.state.fview && (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE)) {
-    dwb_change_mode(NORMAL_MODE, true);
-  }
+//  if (gl == dwb.state.fview && (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE)) {
+//    dwb_change_mode(NORMAL_MODE, true);
+//  }
 }/*}}}*/
-#if 0
 static void 
 view_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitWebResource *resource, WebKitNetworkRequest *request, WebKitNetworkResponse *response, GList *gl) {
 }
@@ -541,6 +541,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
+      dwb_clean_load_begin(gl);
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       /* This is more or less a dummy call, to compile the script and speed up
@@ -555,7 +556,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       }
       if (v->plugins->status & PLUGIN_STATUS_ENABLED) 
         plugins_connect(gl);
-      dwb_clean_load_begin(gl);
       if (VIEW(gl)->status->scripts & SCRIPTS_BLOCKED 
           && (((host = dwb_get_host(web)) 
           && (g_list_find_custom(dwb.fc.pers_scripts, host, (GCompareFunc)g_strcmp0) || g_list_find_custom(dwb.fc.pers_scripts, uri, (GCompareFunc)g_strcmp0) 
@@ -729,7 +729,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_MIME_TYPE]             = g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(view_mime_type_policy_cb), gl);
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
-  //v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+  v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
   v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_FRAME_CREATED]         = g_signal_connect(v->web, "frame-created",                         G_CALLBACK(view_frame_created_cb), gl);
 
@@ -749,7 +749,7 @@ view_init_signals(GList *gl) {
 
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
-  v->status->signals[SIG_MAIN_FRAME_COMMITTED]  = g_signal_connect(frame, "load-committed", G_CALLBACK(view_main_frame_committed_cb), gl);
+  //v->status->signals[SIG_MAIN_FRAME_COMMITTED]  = g_signal_connect(frame, "load-committed", G_CALLBACK(view_main_frame_committed_cb), gl);
 
   /* WebInspector */
   WebKitWebInspector *inspector = webkit_web_view_get_inspector(WEBKIT_WEB_VIEW(v->web));
