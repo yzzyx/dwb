@@ -744,7 +744,6 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir) {
 static void
 dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
   char *content = util_get_file_content(info->filename);
-  printf("%s", content);
   WebKitDOMElement *e = NULL;
   WebKitWebView *wv;
   if (content == NULL) 
