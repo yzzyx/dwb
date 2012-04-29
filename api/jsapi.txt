@@ -15,11 +15,18 @@ shebang
 #!javascript
 -------
 
-in the userscripts directory.
-All scripts with this shebang will be executed in the same global context so it
-must be taken care to encapsulate the data if more than one script is used (see
-also <<Encapsulation>>). 
+in the userscripts directory. 
 
+All native javascript methods can be used in scripts, however there are
+limitations:  
+
+* The execution context of userscripts is completely seperated from the web
+execution context. Due to security concerns it is not possible to communicate
+with the web execution context, it is only possible to inject scripts into the
+web context.
+* In contrast to the global +window+ object in the web execution context, 
+the global object is a readonly object, i.e. it is not possible to set
+properties on the global object, see also <<Globaldata,global data>> for details.
 
 :numbered!:
 :caption:
@@ -30,108 +37,371 @@ To connect to a signal one can call the connect function that is implemented by
 the signals object, that takes 2 arguments, the name of the signal and a
 callback function. 
 
-The callback function always has 2 parameters, the object which
-received the signal and another object which contains values relevant to the
-signal. A callback function should either return +true+ or +false+ or nothing which is
+The callback function has a varying number of parameters, the first paramteter
+is always the <<webview>> which received the signal or the focused <<webview>>.
+The last paramter is always a json-object which might be empty or contain
+additional data relevant to the signal. 
+A callback function should either return +true+ or +false+ or nothing which is
 equivalent to +false+.
 If multiple callbacks are connected to the same signal and one callback
 function returns +true+ the overall return value will be +true+.
 
 *dwb* only emits signals as long as one callback is connected to a signal. To
-reduce overhead one should disconnect from the signal when it is no longer
+reduce overhead one should disconnect from signals when no longer
 needed. 
 
 The signals object implements the following functions
 
-.Functions
-[options="header", cols="1s,1m,3,2,2"]
+
+=== Functions ===
+
+[[connect]]
+==== connect() ====
+
+[source,javascript]
+----
+Number connect(String signal, Function callback) 
+----
+Connect to a signal
+
+_signal_:: The signal to connect to 
+_callback_:: The callback function which will be called when the signal is emitted
+_returns_::  Unique id for this connection, can be passed to <<disconnect>>
+
+[[emit]]
+==== emit() ==== 
+
+[source,javascript]
+----
+Boolean emit(String signal,  ...)
+----
+
+Emits a signal with a variable number of arguments passed to the callback
+function
+
+_signal_:: The signal to emit
+_..._:: Objects passed to the callback function
+_returns_:: Overall return value from all connected callback functions
+
+[[disconnect]]
+==== disconnect() ====
+
+[source,javascript]
+----
+Boolean disconnect(Number id) 
+----
+disconnect from a signal 
+
+_id_:: The id returned from <<connect>>
+_returns_:: +true+ if the signal was disconnected, +false+ if the signal
+wasn't found or was already disconnected. 
+
+
+[[disconnectByFunction]]
+==== disconnectByFunction() ====
+
+[source,javascript]
+----
+Boolean disconnectByFunction(Function callback) 
+----
+disconnect from all signals with matching callback function
+
+_callback_:: The callback function passed to <<connect>>
+_returns_:: +true+ if signals were disconnected, +false+ if no signal
+was
+
+[[disconnectByName]]
+==== disconnectByName() ====
+
+[source,javascript]
+----
+Boolean disconnectByName(String signal) 
+----
+
+disconnect from all signals with matching name
+
+_signal_:: The callback function passed to <<connect>>
+_returns_:: +true+ if signals were disconnected, +false+ if no signal
+was disconnected
+
+
+//[options="header", cols="1s,1m,3,2,2"]
+//|=============================================
+//|function               2+| parameter | returns | description 
+//
+//.2+|connect 
+//|String |The signal to connect to; *required* .2+| The
+//signal id of the signal or +-1+ if the signal was not connected.
+//.2+| Connects to a signal.
+//
+//|Function(+Object+, +Object+) | The callback to call when the signal is emitted; *required*
+//
+//|disconnect 
+//|Number |The signal id of the signal; *required* | - 
+//| Disconnects from a signal, the id is the id returned by 
+//+connect+.
+//
+//
+//.2+|emit 
+//|String |The signal to emit; *required* .2+| - 
+//.2+| Emits a signal. 
+//|Objects |Objects passed to the callback function; *optional*
+//
+//
+//|=============================================
+
+
+=== Internal signals ===
+
+Internal signals are signals implemented by dwb. It should be avoided to call <<disconnectByName>>
+on signals implemented by dwb since it will completely stop the emission of the
+signal in all scripts.
+
+[[buttonPress]]
+==== buttonPress ====  
+
+[source,javascript]
+----
+Boolean callback(webview, hittestresult, json) 
+----
+
+Emitted when a button is pressed on the <<webview>>, return +true+ to prevent
+the default action
+
+ ::
+
+_webview_;; The <<webview>> which received the signal
+_hittestresult_;; Hittestresult under the cursor
+_json.button_;; The button that is pressed, usually a value between 1 and 5
+_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
+_json.time_;; The time in milliseconds when the button was pressed 
+_json.type_;; A <<ClickType>>
+_json.x_;; x-position relative to the window
+_json.xRoot_;; x-position relative to the screen
+_json.y_;; y-position relative to the window
+_json.yRoot_;; y-position relative to the screen
+  
+[[buttonRelease]]
+==== buttonRelease ====  
+
+[source,javascript]
+----
+Boolean callback(webview, hittestresult, json) 
+----
+
+Emitted when a button is released, return +true+ to prevent the default action
+
+ ::
+
+_webview_;; The <<webview>> which received the signal
+_hittestresult_;; Hittestresult under the cursor
+_json_;; Same as <<buttonPress>> but without _json.type_
+
+
+[[keyPress]]
+==== keyPress ====
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when a key is pressed, return +true+ to prevent the default action
+
+_webview_;; The focused webview
+_json.isModifier_;; Whether or not the key is a modifier
+_json.keyCode_;; Hardware keycode
+_json.keyVal_;; Keycode as listed in gdkkeysyms.h 
+_json.name_;; A string represantation of the key
+_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
+
+[[keyRelease]]
+==== keyRelease ====
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when a key is released, return +true+ to prevent the default action
+
+ ::
+
+_webview_;; The focused webview
+_json_;; Same as <<keyPress>>
+
+
+[[loadCommitted]]
+==== loadCommitted ====
+
+[source,javascript]
+----
+void callback(webview) 
+----
+
+Emitted when the load has just commited, no data has been loaded when this
+signal is emitted. This is the preferred signal for injected scripts that do not
+manipulate the DOM.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+
+[[loadFinished]]
+==== loadFinished ====
+
+[source,javascript]
+----
+Boolean callback(webview) 
+----
+
+Emitted when the site has completely loaded. 
+
+ ::
+
+_webview_;; The webview that emitted the signal
+
+[[loadStatus]]
+==== loadStatus ====
+
+[source,javascript]
+----
+void callback(webview) 
+----
+
+Emitted when the load status changes
+
+  ::
+
+_webview_;; The webview that emitted the signal
+
+[[mimeType]]
+==== mimeType ====
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, json) 
+----
+
+Decide whether or not to show a given mimetype. Return +true+ to stop the request.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frames requires the decision 
+_request_;; The network request
+_json.mimeType_;; The mimetype
+
+[[navigation]]
+==== navigation ====
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, action) 
+----
+
+Emitted before a new site is loaded, return +true+ to stop the request.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frame that requires the navigation 
+_request_;; The network request
+_action_;; The navigation action
+
+[[resource]]
+==== resource ====
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, response) 
+----
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;;   The frame that dispatched the request
+_request_;; The network request
+_response_;; The network response
+
+[[tabFocus]]
+==== tabFocus ====
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when another tab is focused, return +true+ to stop the event
+
+ ::
+
+_webview_;; The new tab
+_json.last_;; The number of the previously focused tab
+
+
+[options="header", cols="2s,2m,4,4"]
 |=============================================
-|function               2+| parameter | returns | description 
+|signal               2+|parameter  |description 
 
-.2+|connect 
-|String |The signal to connect to; *required* .2+| The
-signal id of the signal or +-1+ if the signal was not connected.
-.2+| Connects to a signal.
-
-|Function(+Object+, +Object+) | The callback to call when the signal is emitted; *required*
-
-|disconnect 
-|Number |The signal id of the signal; *required* | - 
-| Disconnects from a signal, the id is the id returned by 
-+connect+.
-
-
-.3+|emit 
-|String |The signal to emit; *required* .3+| - 
-.3+| Emits a signal. 
-|Object |Object passed to the callback function; *optional*
-|Object |Object passed to the callback function; *optional*
-
-
-|=============================================
-
-The global signals implemented by *dwb* are
-
-[options="header", cols="2s,2m,2m,4,4"]
-|=============================================
-|signal               |first parameter  2+|object properties  |description 
-
-.9+|buttonPress .9+| focused <<webview>>
-|button|The button that is pressed, usually a value between 1 and 5
-.9+|Emitted when a button is pressed, only clicks on the webview are noticed;
+.3+|buttonPress 
+| <<webview>> | currently focused webview
+.3+|Emitted when a button is pressed, only clicks on the webview are noticed;
 return +true+ to stop the default action
-|context|A <<ButtonContext>>, i.e. the element under the cursor when the button
-was pressed
-|state|A bitmap of modifiers pressed, see <<Modifier>>
-|time|The time in milliseconds when the button was pressed 
-|type|A <<ClickType>>
-|x|x-position relative to the window
-|xRoot|x-position relative to the screen
-|y|y-position relative to the window
-|yRoot|y-position relative to the screen
+| <<hittestresult>> | the hit test result under the cursor
+|json  |
 
-|buttonRelease | focused <<webview>>
-2+d|Same as *buttonPress* but without +type+
-|Emitted when a button is released, only clicks on the webview are noticed;
-return +true+ to stop the default action
+* button The button that is pressed, usually a value between 1 and 5
+* state A bitmap of modifiers pressed, see <<Modifier>>
+time:: The time in milliseconds when the button was pressed 
+type:: A <<ClickType>>
+x:: x-position relative to the window
+xRoot:: x-position relative to the screen
+y:: y-position relative to the window
+yRoot:: y-position relative to the screen
 
-.5+|download .5+| focused <<webview>>
-|filename|The suggested filename 
-.5+|Emitted before a download starts. Return +true+ to handle the signal or +false+ to let *dwb* handle the signal.
-|mimeType|The mimetype of the file or +unknown+
-|referer|The referer of the request
-|uri|The uri of the file to download
-|totalSize|The total size of the file
-
-.4+|downloadStatus .4+| focused <<webview>>
-|filename|The filename 
-.4+|Emitted when the download status changes
-|mimeType|Mimetype of the file or +unknown+
-|status|A <<DownloadStatus>>
-|uri|Original uri of the file
-
-.5+|keyPress .5+| focused <<webview>>
-|isModifier | Whether or not the key is a modifier
-.5+|Emitted when a key is pressed, the first parameter of the callback function
-will always be the currently focued <<webview>>; return +true+ to stop the
-default action
-|keyCode | Hardware keycode
-|keyVal | Keycode as listed in gdkkeysyms.h 
-|name | A string represantation of the key
-|state | A bitmap of modifiers pressed, see <<Modifier>>
-
-|keyRelease | focused <<webview>>
-2+d|Same as *keyPress*
-|Emitted when a key is released; return +true+ to stop the
-default action
-
-
-|tabFocus | focused <<webview>>
-|last| Number of the previously focused tab
-|Emitted when a new tab gets focus, the first parameter will be the new
-<<webview>>; return +true+ to prevent the tab being changed
 |=============================================
 
+//|buttonRelease | focused <<webview>>
+//2+d|Same as *buttonPress* but without +type+
+//|Emitted when a button is released, only clicks on the webview are noticed;
+//return +true+ to stop the default action
+//
+//.5+|download .5+| focused <<webview>>
+//|filename|The suggested filename 
+//.5+|Emitted before a download starts. Return +true+ to handle the signal or +false+ to let *dwb* handle the signal.
+//|mimeType|The mimetype of the file or +unknown+
+//|referer|The referer of the request
+//|uri|The uri of the file to download
+//|totalSize|The total size of the file
+//
+//.4+|downloadStatus .4+| focused <<webview>>
+//|filename|The filename 
+//.4+|Emitted when the download status changes
+//|mimeType|Mimetype of the file or +unknown+
+//|status|A <<DownloadStatus>>
+//|uri|Original uri of the file
+//
+//.5+|keyPress .5+| focused <<webview>>
+//|isModifier | Whether or not the key is a modifier
+//.5+|Emitted when a key is pressed, the first parameter of the callback function
+//will always be the currently focued <<webview>>; return +true+ to stop the
+//default action
+//|keyCode | Hardware keycode
+//|keyVal | Keycode as listed in gdkkeysyms.h 
+//|name | A string represantation of the key
+//|state | A bitmap of modifiers pressed, see <<Modifier>>
+//
+//|keyRelease | focused <<webview>>
+//2+d|Same as *keyPress*
+//|Emitted when a key is released; return +true+ to stop the
+//default action
+//
+//
+//|tabFocus | focused <<webview>>
+//|last| Number of the previously focused tab
+//|Emitted when a new tab gets focus, the first parameter will be the new
+//<<webview>>; return +true+ to prevent the tab being changed
 
 .Example 
 [source,javascript]
@@ -185,6 +455,9 @@ the script will be visible in all scripts, +false+ to encapsulate the script;
 |+true+ if the timeout was stopped
 |Stops execution of a function started by timoutStart
 
+|domainFromHost |String | Host name | The domain name
+|Returns the domain part of a hostname.
+
 |=============================================
 
 .Example
@@ -198,6 +471,27 @@ timerStart(2000, function() {
   return false;
 });
 ---------------------------------
+
+NOTE: Scripts included with +include+ are either visible in the global scope or
+invisible, even in the including script. To use an included script it can return
+an object with its public objects: 
+[source,javascript]
+---------------------------------
+// included script 
+
+var private = 37;
+return {
+  getPrivate : function () {
+    return private;
+  }
+};
+
+// Scripts that includes the above
+var i = include("/path/to/script");
+var p = i.getPrivate();               // 37
+---------------------------------
+
+
 
 [[Globalobjects]]
 == Global Objects ==
@@ -460,7 +754,7 @@ to use the corresponding signals instead to reduce overhead.
 [[frame]]
 === frame ===
 
-A frame represents a +frame+ or +iframe+. Due to cross site scripting policy it
+A frame represents a +frame+ or +iframe+. Due to same origin policy it
 is not possible to inject scripts from a <<webview>> into iframes with a
 different domain. For this purpose the +frame+ object can be used. 
 
@@ -507,6 +801,15 @@ signals.connect("frameStatus", function(frame, o) {
 });
 --------
 
+[[request]]
+=== request ===
+
+todo 
+
+[[navigationAction]]
+=== navigationAction ===
+
+todo 
 
 == Enum objects ==
 Enum objects are objects that have only readonly properties, mapping
@@ -621,13 +924,101 @@ const SpawnError = {
 };
 --------
 
+[[Globaldata]]
+== Global data == 
+Since all scripts share the same execution context, they are encapsulated in a
+function. To avoid conflicts with other scripts it is not allowed to set properties
+on the global object, i.e. 
+
+[source,javascript]
+-------
+#!javascript
+
+// not allowed, the global object is readonly
+number = 0;
+io.print(number);     // undefined
+
+// always you var instead
+var number = 0;
+io.print(number2);    // 0
+
+// won't work either
+function foo() {
+  bar = 1;
+}
+foo();
+io.print(bar);        // undefined
+-------
+
+For sharing data between scripts either signals can be created or the
++globals+-object can be used. To share data with the globals object securely when the
+scripts are loaded the script can return an +init+ function that will be called
+after all scripts have been initialized:
+
+
+.Script 1
+[source,javascript]
+-------
+#!javascript 
+
+// set when the script is initialized. 
+globals.foo = "bar";
+-------
+
+.Script 2
+[source,javascript]
+-------
+#!javascript 
+
+//  The behaviour is undefined, depending on if Script 1 was initialized before
+//  Script 2 or the other way round.
+io.print(globals.foo)       // undefined or "bar"
+
+// Will be called after all scripts have been initialized
+return  {
+  init : function () {
+    // globals.foo has been initialized
+    io.print(globals.foo); // "bar"
+  }
+};
+-------
+
+One exception is <<include>>, scripts that are explicitly included into the
+global scope setting the second parameter to true are visible in every script.
+
+.foo 
+[source,javascript]
+-------
+var foo = "bar";
+-------
+
+.Script 1
+
+[source,javascript]
+-------
+#!javascript 
+
+include("/path/to/foo", true); // visible in every script
+-------
+.Script 2
+
+[source,javascript]
+-------
+#!javascript 
+
+// Make sure Script 1 has been initialized
+return {
+  init : function() {
+    io.print(foo);                // "bar";
+  }
+};
+-------
+
 [[Extensions]] 
 == Extensions ==
 *dwb* provides the possibility to load extensions.
 It is recommended to implement javascript-userscripts as an extension to have 
-consistent configuration locations for scripts. Functions and variables from
-extensions are not visible unless you explicitly make them visible, see <<Encapsulation>>.
-extensions can be loaded in userscripts:
+consistent configuration locations for scripts. 
 
 The +extensions+ object has the following properties and functions
 
@@ -681,19 +1072,21 @@ extensions.load("foobar");
 
 .Writing extensions
 
-*dwb* searches for extensions in +$XDG_DATA_HOME/dwb/extensions+ and
-+SHARE_DIR/dwb/extensions+ where the default
-SHARE_DIR is +/usr/share/dwb/extensions+.
-The config for extensions is in +$XDG_CONFIG_HOME/dwb/extensionsrc+ and should
+The default searchpath for extensions isn +$XDG_DATA_HOME/dwb/extensions+ and
++SHARE_DIR/dwb/extensions+ where the 
++SHARE_DIR+ with sharedirectory being the share-dir of the installation.
+
+The configuration for extensions is in +$XDG_CONFIG_HOME/dwb/extensionsrc+ and should
 return a javascript object. 
 
-Every plugin must implement one function named +plugin+ that takes one
-argument, the config for the extension. The function should return +true+ if the plugin was
-successfully loaded, +false+ otherwise. The function should be returned from the plugin.
+Every extension must implement one function named +init+ that takes one
+argument, the config for the extension. The function should return +true+ if the
+extension was successfully loaded, +false+ otherwise.
++init+ should be returned from the extension.
 
 .Example
 
-A plugin called *foobar* in +$HOME/.local/share/dwb/extensions/foobar+.
+A extension called *foobar* in +$HOME/.local/share/dwb/extensions/foobar+.
 
 [source,javascript]
 --------
@@ -719,43 +1112,13 @@ return {
 [source,javascript]
 --------
 return {
-  foobar : { bar : "X", foo : 37 }, 
-  barfoo : {  }
+  foobar : { bar : "X", foo : 37 }, // config for extension foobar
+  barfoo : {  }                     // config for extension barfoo
   
 };
 --------
 
 
-[[Encapsulation]]
-== Encapsulation == 
-Since all scripts share the same execution context, they have the same global scope, so it
-must be taken care to encapsulate the data. All scripts are encapsulated in a
-function but global variables may be visible in other scripts. Scripts like 
-
-[source,javascript]
--------
-#!javascript
-
-me = "i am you";
-whoAmI = function () {
-  return me;
-}
-io.print(whoAmI());
--------
-
-should be avoided since +me+ and +whoAmI+ will be visible in other scripts, use 
-[source,javascript]
--------
-#!javascript
-
-var me = "i am you";
-function whoAmI() {
-  return me;
-}
-io.print(whoAmI());
--------
-
-instead. The same holds for encapsulated scripts included with <<include>>. 
 
 // vim: set ft=asciidoc:
 

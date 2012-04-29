@@ -1171,7 +1171,12 @@ dwb_get_host(WebKitWebView *web) {
 gboolean
 dwb_focus_view(GList *gl) {
   if (gl != dwb.state.fview) {
-    SCRIPTS_EMIT_RETURN(SCRIPT(gl), TAB_FOCUS, 1, INTEGER, "last", g_list_position(dwb.state.views, dwb.state.fview));
+    if (EMIT_SCRIPT(TAB_FOCUS)) {
+      char *json = util_create_json(1, INTEGER, "last", g_list_position(dwb.state.views, dwb.state.fview));
+      ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(json, TAB_FOCUS, 0) };
+      SCRIPTS_EMIT_RETURN(signal, json);
+    }
+    //SCRIPTS_EMIT_RETURN(SCRIPT(gl), TAB_FOCUS, 1, INTEGER, "last", g_list_position(dwb.state.views, dwb.state.fview));
     gtk_widget_show(VIEW(gl)->scroll);
     dwb_soup_clean();
     if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )
@@ -2612,7 +2617,6 @@ dwb_get_scripts() {
     }
     g_dir_close(dir);
   }
-  scripts_init();
   return gl;
 }/*}}}*/
 
@@ -3686,10 +3690,10 @@ dwb_init() {
   dwb_init_key_map();
   dwb_init_style();
   dwb_init_gui();
-  dwb_init_scripts();
   dwb_init_custom_keys(false);
   domain_init();
   adblock_init();
+  dwb_init_scripts();
 
   dwb_soup_init();
 } /*}}}*/ /*}}}*/

@@ -71,13 +71,14 @@ view_main_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
   }
 }/*}}}*/
+
 static void 
 view_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitWebResource *resource, WebKitNetworkRequest *request, WebKitNetworkResponse *response, GList *gl) {
-  char *json = util_create_json(1, CHAR, "uri", webkit_network_request_get_uri(request));
-  if (SCRIPTS_EMIT(SCRIPT(gl), RESOURCE, json)) {
-    webkit_network_request_set_uri(request, "about:blank");
+  if (EMIT_SCRIPT(RESOURCE))  {
+    ScriptSignal signal = {
+      SCRIPTS_WV(gl), .objects = { G_OBJECT(frame), G_OBJECT(request), G_OBJECT(response) }, SCRIPTS_SIG_META(NULL, RESOURCE, 3) };
+    scripts_emit(&signal);
   }
-  g_free(json);
 }
 
 /* view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
@@ -126,12 +127,21 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   g_object_get(result, "context", &context, NULL);
   gboolean ret = false;
   _click_time = e->time;
-  SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_PRESS, 9, 
+  if (EMIT_SCRIPT(BUTTON_PRESS)) {
+    char *json = util_create_json(8, 
       UINTEGER, "time", e->time, UINTEGER,    "type", e->type, 
       DOUBLE,   "x", e->x, DOUBLE,            "y", e->y, 
       UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
-      DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root,
-      UINTEGER, "context", context);
+      DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
+    ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(result) }, SCRIPTS_SIG_META(json, BUTTON_PRESS, 1) };
+    SCRIPTS_EMIT_RETURN(signal, json);
+  }
+ // SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_PRESS, 9, 
+ //     UINTEGER, "time", e->time, UINTEGER,    "type", e->type, 
+ //     DOUBLE,   "x", e->x, DOUBLE,            "y", e->y, 
+ //     UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
+ //     DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root,
+ //     UINTEGER, "context", context);
 
   if (gtk_widget_has_focus(dwb.gui.entry)) {
     dwb_focus_scroll(gl);
@@ -190,11 +200,13 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
   g_object_get(result, "context", &context, NULL);
 
-  SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_RELEASE, 8, 
-      UINTEGER, "time", e->time,    UINTEGER, "context", context,
-      DOUBLE,   "x", e->x,          DOUBLE,     "y", e->y, 
-      UINTEGER, "state", e->state,  UINTEGER,  "button", e->button, 
-      DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
+  if (EMIT_SCRIPT(BUTTON_RELEASE)) {
+  }
+  //SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_RELEASE, 8, 
+  //    UINTEGER, "time", e->time,    UINTEGER, "context", context,
+  //    DOUBLE,   "x", e->x,          DOUBLE,     "y", e->y, 
+  //    UINTEGER, "state", e->state,  UINTEGER,  "button", e->button, 
+  //    DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
     if (e->button == 2 || (e->time - _click_time < 200 && (e->button == 1 && e->state & GDK_CONTROL_MASK))) {
@@ -216,9 +228,15 @@ view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 
 /* view_frame_committed_cb {{{*/
 static void 
-view_frame_committed_cb(WebKitWebFrame *frame, JSObjectRef js_frame) {
-  SCRIPTS_EMIT_NO_RETURN(scripts_create_frame(frame), FRAME_STATUS, 1,
-      INTEGER, "status", webkit_web_frame_get_load_status(frame));
+view_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
+  //SCRIPTS_EMIT(FRAME_STATUS, 2, frame, NULL);
+  //SCRIPTS_EMIT_NO_RETURN(scripts_create_frame(frame), FRAME_STATUS, 1,
+  //    INTEGER, "status", webkit_web_frame_get_load_status(frame));
+  if (EMIT_SCRIPT(FRAME_STATUS)) {
+    ScriptSignal signal = { SCRIPTS_WV(gl), 
+      .objects = { G_OBJECT(frame) }, SCRIPTS_SIG_META(NULL, FRAME_STATUS, 1) };
+    scripts_emit(&signal);
+  }
   WebKitLoadStatus status = webkit_web_frame_get_load_status(frame);
   switch (status) {
     case WEBKIT_LOAD_COMMITTED: 
@@ -234,12 +252,7 @@ view_frame_committed_cb(WebKitWebFrame *frame, JSObjectRef js_frame) {
 /* view_frame_created_cb {{{*/
 static void 
 view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  JSObjectRef js_frame = NULL;
-  if (EMIT_SCRIPT(SCRIPT(gl), FRAME_STATUS)) {
-    puts("create");
-    js_frame = scripts_create_frame(frame);
-  }
-  g_signal_connect(frame, "notify::load-status", G_CALLBACK(view_frame_committed_cb), js_frame);
+  g_signal_connect(frame, "notify::load-status", G_CALLBACK(view_frame_committed_cb), gl);
 }/*}}}*/
 
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
@@ -264,12 +277,17 @@ view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
 /* view_download_requested_cb(WebKitWebView *, WebKitDownload *, GList *) {{{*/
 static gboolean 
 view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
-  SCRIPTS_EMIT_RETURN(SCRIPT(gl), DOWNLOAD, 5, 
-      CHAR, "uri", webkit_download_get_uri(download), 
-      CHAR, "filename", webkit_download_get_suggested_filename(download), 
-      CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
-      CHAR, "mimeType", dwb.state.mimetype_request ? dwb.state.mimetype_request : "undefined", 
-      ULONG, "totalSize", webkit_download_get_total_size(download));
+  if (EMIT_SCRIPT(DOWNLOAD)) {
+    char *json = util_create_json(1, CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"));
+    ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { G_OBJECT(download) }, SCRIPTS_SIG_META(json, DOWNLOAD, 1) };
+    SCRIPTS_EMIT_RETURN(signal, json);
+  }
+  //SCRIPTS_EMIT_RETURN(SCRIPT(gl), DOWNLOAD, 5, 
+  //    CHAR, "uri", webkit_download_get_uri(download), 
+  //    CHAR, "filename", webkit_download_get_suggested_filename(download), 
+  //    CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
+  //    CHAR, "mimeType", dwb.state.mimetype_request ? dwb.state.mimetype_request : "undefined", 
+  //    ULONG, "totalSize", webkit_download_get_total_size(download));
   download_get_path(gl, download);
   return true;
 }/*}}}*/
@@ -335,7 +353,12 @@ view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwor
   if ( !mimetype || strlen(mimetype) == 0 )
     return false;
 
-  SCRIPTS_EMIT_RETURN(SCRIPT(gl), MIME_TYPE, 2, CHAR, "uri", webkit_network_request_get_uri(request), CHAR, "mimeType", mimetype);
+  if (EMIT_SCRIPT(MIME_TYPE)) {
+    char *json = util_create_json(1, CHAR, "mimeType", mimetype);
+    ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(frame), G_OBJECT(request) }, SCRIPTS_SIG_META(json, MIME_TYPE, 2) };
+    SCRIPTS_EMIT_RETURN(signal, json);
+  }
+  //SCRIPTS_EMIT_RETURN(SCRIPT(gl), MIME_TYPE, 2, CHAR, "uri", webkit_network_request_get_uri(request), CHAR, "mimeType", mimetype);
 
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv & OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
@@ -356,7 +379,12 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
   gboolean ret = false;
   WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
-  SCRIPTS_EMIT_RETURN(SCRIPT(gl), NAVIGATION, 2, CHAR, "uri", uri, INTEGER, "reason", reason);
+  if (EMIT_SCRIPT(NAVIGATION)) {
+    ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(frame), G_OBJECT(request), G_OBJECT(action) }, SCRIPTS_SIG_META(NULL, NAVIGATION, 3) };
+    SCRIPTS_EMIT_RETURN(signal, NULL);
+  }
+  //SCRIPTS_EMIT_RETURN(SCRIPT(gl), NAVIGATION, 2, CHAR, "uri", uri, INTEGER, "reason", reason);
+  //SCRIPTS_EMIT(NAVIGATION, 4, web, frame, request, NULL);
 
   if (!g_str_has_prefix(uri, "http:") && !g_str_has_prefix(uri, "https:") &&
       !g_str_has_prefix(uri, "about:") && !g_str_has_prefix(uri, "dwb:") &&
@@ -575,7 +603,10 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   char *host =  NULL;
   const char *uri = webkit_web_view_get_uri(web);
 
-  SCRIPTS_EMIT_NO_RETURN(SCRIPT(gl), LOAD_STATUS, 2, CHAR, "uri", uri, INTEGER, "status", status);
+  if (EMIT_SCRIPT(LOAD_STATUS)) {
+      ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_STATUS, 0) };
+      scripts_emit(&signal);
+  }
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
@@ -587,7 +618,10 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       js_call_as_function(webkit_web_view_get_main_frame(web), v->hint_object, "createStyleSheet", NULL, NULL);
       break;
     case WEBKIT_LOAD_COMMITTED: 
-      SCRIPTS_EMIT_NO_RETURN(SCRIPT(gl), LOAD_COMMITTED, 1, CHAR, "uri", uri);
+      if (EMIT_SCRIPT(LOAD_COMMITTED)) {
+        ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_COMMITTED, 0) };
+        scripts_emit(&signal);
+      }
       if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
@@ -615,7 +649,10 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
-      SCRIPTS_EMIT_NO_RETURN(SCRIPT(gl), LOAD_FINISHED, 1, CHAR, "uri", uri);
+      if (EMIT_SCRIPT(LOAD_FINISHED)) {
+        ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_FINISHED, 0) };
+        scripts_emit(&signal);
+      }
       /* TODO sqlite */
       if (!dwb.misc.private_browsing 
           && g_strcmp0(uri, "about:blank")
@@ -771,8 +808,7 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_MIME_TYPE]             = g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(view_mime_type_policy_cb), gl);
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
-  if (EMIT_SCRIPT(gl, RESOURCE)) 
-    v->status->signals[SIG_RESOURCE_REQUEST]    = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+  v->status->signals[SIG_RESOURCE_REQUEST]    = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
   v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_FRAME_CREATED]         = g_signal_connect(v->web, "frame-created",                         G_CALLBACK(view_frame_created_cb), gl);
 
@@ -950,6 +986,8 @@ view_remove(GList *gl) {
   /*  clean up */ 
   dwb_source_remove();
   plugins_free(v->plugins);
+
+  scripts_remove_tab(v->script_wv);
 
   if (v->status->style) {
     g_object_unref(v->status->style);

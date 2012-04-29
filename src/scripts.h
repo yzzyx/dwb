@@ -19,48 +19,54 @@
 #ifndef SCRIPTS_H
 #define SCRIPTS_H
 
+#include <JavaScriptCore/JavaScript.h>
+
 enum SIGNALS {
-  SCRIPT_SIG_FIRST        = 0,
-  SCRIPT_SIG_NAVIGATION   = 0,
-  SCRIPT_SIG_LOAD_STATUS,
-  SCRIPT_SIG_MIME_TYPE,
-  SCRIPT_SIG_DOWNLOAD,
-  SCRIPT_SIG_DOWNLOAD_STATUS,
-  SCRIPT_SIG_RESOURCE,
-  SCRIPT_SIG_KEY_PRESS,
-  SCRIPT_SIG_KEY_RELEASE,
-  SCRIPT_SIG_BUTTON_PRESS,
-  SCRIPT_SIG_BUTTON_RELEASE,
-  SCRIPT_SIG_TAB_FOCUS,
-  SCRIPT_SIG_FRAME_STATUS,
-  SCRIPT_SIG_LOAD_FINISHED,
-  SCRIPT_SIG_LOAD_COMMITTED,
-  SCRIPT_SIG_LAST, 
-};
-gboolean scripts_emit(JSObjectRef , int , const char *);
+  SCRIPTS_SIG_FIRST        = 0,
+  SCRIPTS_SIG_NAVIGATION   = 0,
+  SCRIPTS_SIG_LOAD_STATUS,
+  SCRIPTS_SIG_MIME_TYPE,
+  SCRIPTS_SIG_DOWNLOAD,
+  SCRIPTS_SIG_DOWNLOAD_STATUS,
+  SCRIPTS_SIG_RESOURCE,
+  SCRIPTS_SIG_KEY_PRESS,
+  SCRIPTS_SIG_KEY_RELEASE,
+  SCRIPTS_SIG_BUTTON_PRESS,
+  SCRIPTS_SIG_BUTTON_RELEASE,
+  SCRIPTS_SIG_TAB_FOCUS,
+  SCRIPTS_SIG_FRAME_STATUS,
+  SCRIPTS_SIG_LOAD_FINISHED,
+  SCRIPTS_SIG_LOAD_COMMITTED,
+  SCRIPTS_SIG_LAST, 
+} ;
+
+#define SCRIPT_MAX_SIG_OBJECTS 8
+typedef struct _ScriptSignal {
+  JSObjectRef jsobj;
+  GObject *objects[SCRIPT_MAX_SIG_OBJECTS]; 
+  char *json;
+  unsigned int signal;
+  int numobj;
+} ScriptSignal;
+//gboolean scripts_emit(JSObjectRef , int , const char *);
+//gboolean scripts_emit(GObject , int, int , ...);
+//gboolean scripts_emit(int signal, int numargs, ...);
+gboolean scripts_emit(ScriptSignal *);
 void scripts_create_tab(GList *gl);
-JSObjectRef scripts_create_frame(WebKitWebFrame *frame);
+void scripts_remove_tab(JSObjectRef );
 void scripts_end(void);
 void scripts_init_script(const char *);
 void scripts_init(void);
+JSObjectRef scripts_make_object(JSContextRef ctx, const char *key, GObject *o);
 
-#define EMIT_SCRIPT(obj, sig)  (obj != NULL && (dwb.misc.script_signals & (1<<SCRIPT_SIG_##sig)))
-#define SCRIPTS_EMIT(obj, sig, json)  scripts_emit(obj, SCRIPT_SIG_##sig, json)
+#define EMIT_SCRIPT(sig)  ((dwb.misc.script_signals & (1<<SCRIPTS_SIG_##sig)))
+#define SCRIPTS_EMIT_RETURN(signal, json) G_STMT_START  \
+  if (scripts_emit(&signal)) { \
+    g_free(json); \
+    return true; \
+  } else g_free(json); \
+G_STMT_END
 
-#define SCRIPTS_EMIT_NO_RETURN(obj, sig, ...) G_STMT_START  \
-if (EMIT_SCRIPT(obj, sig))  {  \
-  char *__json_##sig = util_create_json(__VA_ARGS__); \
-  SCRIPTS_EMIT(obj, sig, __json_##sig); \
-  g_free(__json_##sig); \
-} G_STMT_END
- 
-#define SCRIPTS_EMIT_RETURN(obj, sig, ...) G_STMT_START  \
-if (EMIT_SCRIPT(obj, sig))  {  \
-  char *__json_##sig = util_create_json(__VA_ARGS__); \
-  if (SCRIPTS_EMIT(obj, sig, __json_##sig)) { g_free(__json_##sig); return true; } \
-  else { g_free(__json_##sig); }  \
-} G_STMT_END
-
-#define SCRIPT(gl) (VIEW(gl)->script)
-
+#define SCRIPTS_WV(gl) .jsobj = VIEW(gl)->script_wv
+#define SCRIPTS_SIG_META(js, sig, num)  .json = js, .signal = SCRIPTS_SIG_##sig, .numobj = num
 #endif

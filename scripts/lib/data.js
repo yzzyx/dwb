@@ -1,60 +1,34 @@
-Object.defineProperty(data, "bookmarks", {
-  value : data.configDir + "/" + data.profile + "/bookmarks",
-  enumerable : true
-});
-Object.defineProperty(data, "history", {
-  value : data.configDir + "/" + data.profile + "/history",
-  enumerable : true
-});
-Object.defineProperty(data, "cookies", {
-  value : data.configDir + "/" + data.profile + "/cookies",
-  enumerable : true
-});
-Object.defineProperty(data, "quickmarks", {
-  value : data.configDir + "/" + data.profile + "/cookies",
-  enumerable : true
-});
-Object.defineProperty(data, "cookies", {
-  value : data.configDir + "/" + data.profile + "/cookies",
-  enumerable : true
-});
-Object.defineProperty(data, "cookiesWhitelist", {
-  value : data.configDir + "/" + data.profile + "/cookies.allow",
-  enumerable : true
-});
-Object.defineProperty(data, "sessionCookiesWhitelist", {
-  value : data.configDir + "/" + data.profile + "/cookies_session.allow",
-  enumerable : true
-});
-Object.defineProperty(data, "sessionCookiesWhitelist", {
-  value : data.configDir + "/" + data.profile + "/cookies_session.allow",
-  enumerable : true
-});
-Object.defineProperty(data, "pluginsWhitelist", {
-  value : data.configDir + "/" + data.profile + "/plugins.allow",
-  enumerable : true
-});
-Object.defineProperty(data, "scriptWhitelist", {
-  value : data.configDir + "/" + data.profile + "/scripts.allow",
-  enumerable : true
-});
-Object.defineProperty(data, "session", {
-  value : data.configDir + "/" + data.profile + "/session",
-  enumerable : true
-});
-Object.defineProperty(data, "customKeys", {
-  value : data.configDir + "/" + data.profile + "/custom_keys",
-  enumerable : true
-});
-Object.defineProperty(data, "keys", {
-  value : data.configDir + "/keys",
-  enumerable : true
-});
-Object.defineProperty(data, "settings", {
-  value : data.configDir + "/settings",
-  enumerable : true
-});
-Object.defineProperty(data, "searchEngines", {
-  value : data.configDir + "/searchengines",
-  enumerable : true
-});
+(function () {
+  var configDir = data.configDir;
+  var profile = data.profile;
+  Object.defineProperties(data, {
+      "bookmarks" :  { value : configDir + "/" + profile + "/bookmarks", enumerable : true }, 
+      "history"   :  { value : configDir + "/" + profile + "/history", enumerable : true },
+      "cookies"   :  { value : configDir + "/" + profile + "/cookies", enumerable : true }, 
+      "quickmarks" : { value : configDir + "/" + profile + "/cookies", enumerable : true },
+      "cookies"   :  { value : configDir + "/" + profile + "/cookies", enumerable : true }, 
+      "cookiesWhitelist"  :  { value : configDir + "/" + profile + "/cookies.allow", enumerable : true }, 
+      "sessionCookiesWhitelist"   :  { value : configDir + "/" + profile + "/cookies_session.allow", enumerable : true }, 
+      "sessionCookiesWhitelist"   :  { value : configDir + "/" + profile + "/cookies_session.allow", enumerable : true }, 
+      "pluginsWhitelist"  :  { value : configDir + "/" + profile + "/plugins.allow", enumerable : true }, 
+      "scriptWhitelist"   :  { value : configDir + "/" + profile + "/scripts.allow", enumerable : true }, 
+      "session"   :  { value : configDir + "/" + profile + "/session", enumerable : true }, 
+      "customKeys"  :  { value : configDir + "/" + profile + "/custom_keys", enumerable : true }, 
+      "keys"  :  { value : configDir + "/keys", enumerable : true }, 
+      "settings"  :  { value : configDir + "/settings", enumerable : true }, 
+      "searchEngines"   :  { value : configDir + "/searchengines", enumerable : true }, 
+      "cookies"   :  { value : configDir + "/" + profile + "/cookies", enumerable : true }, 
+      "quickmarks"  :  { value : configDir + "/" + profile + "/cookies", enumerable : true }, 
+      "cookies"   :  { value : configDir + "/" + profile + "/cookies", enumerable : true }, 
+      "cookiesWhitelist"  :  { value : configDir + "/" + profile + "/cookies.allow", enumerable : true }, 
+      "sessionCookiesWhitelist"   :  { value : configDir + "/" + profile + "/cookies_session.allow", enumerable : true }, 
+      "sessionCookiesWhitelist"   :  { value : configDir + "/" + profile + "/cookies_session.allow", enumerable : true }, 
+      "pluginsWhitelist"  :  { value : configDir + "/" + profile + "/plugins.allow", enumerable : true }, 
+      "scriptWhitelist"   :  { value : configDir + "/" + profile + "/scripts.allow", enumerable : true }, 
+      "session"   :  { value : configDir + "/" + profile + "/session", enumerable : true }, 
+      "customKeys"  :  { value : configDir + "/" + profile + "/custom_keys", enumerable : true }, 
+      "keys"  :  { value : configDir + "/keys", enumerable : true }, 
+      "settings"  :  { value : configDir + "/settings", enumerable : true }, 
+      "searchEngines"   :  { value : configDir + "/searchengines", enumerable : true }
+  });
+})();

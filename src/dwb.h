@@ -614,6 +614,7 @@ struct _View {
   WebKitDOMElement *status_element;
   JSObjectRef hint_object;
   JSObjectRef script;
+  JSObjectRef script_wv;
 };
 struct _Color {
   DwbColor active_fg;

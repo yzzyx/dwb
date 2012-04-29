@@ -24,6 +24,7 @@
 #include "view.h"
 #include "session.h"
 #include "util.h"
+#include "scripts.h"
 
 static gboolean application_parse_option(const gchar *, const gchar *, gpointer , GError **);
 static void application_execute_args(char **);
@@ -331,6 +332,7 @@ application_start(GApplication *app, char **argv) {
   gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
   g_object_unref(layout);
 
+  scripts_init();
   dwb_init_signals();
   g_application_hold(app);
 }/*}}}*/

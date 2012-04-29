@@ -245,11 +245,11 @@ download_delay(DwbDownload *download) {
 static void
 download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *dstatus) {
   WebKitDownloadStatus status = webkit_download_get_status(download);
-  SCRIPTS_EMIT_NO_RETURN(SCRIPT(dwb.state.fview), DOWNLOAD_STATUS, 4, 
-      INTEGER, "status", status, 
-      CHAR, "filename", webkit_download_get_destination_uri(download),
-      CHAR, "uri", webkit_download_get_uri(download),
-      CHAR, "mimeType", dstatus->download->mimetype) ;
+  //SCRIPTS_EMIT_NO_RETURN(SCRIPT(dwb.state.fview), DOWNLOAD_STATUS, 4, 
+  //    INTEGER, "status", status, 
+  //    CHAR, "filename", webkit_download_get_destination_uri(download),
+  //    CHAR, "uri", webkit_download_get_uri(download),
+  //    CHAR, "mimeType", dstatus->download->mimetype) ;
 
   if (status == WEBKIT_DOWNLOAD_STATUS_FINISHED || status == WEBKIT_DOWNLOAD_STATUS_CANCELLED || status == WEBKIT_DOWNLOAD_STATUS_ERROR) {
     GList *list = download_get_download_label(download);

@@ -201,3 +201,16 @@ js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *e
   JSStringRelease(jsstring);
   return ret;
 }/*}}}*/
+
+char *
+js_value_to_json(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *exc) {
+  if (value == NULL)
+    return NULL;
+  JSStringRef js_json = JSValueCreateJSONString(ctx, value, 2, exc);
+  if (js_json == NULL)
+    return NULL;
+  char *json = js_string_to_char(ctx, js_json, limit);
+  JSStringRelease(js_json);
+  return json;
+}
+
