@@ -56,7 +56,7 @@ The signals object implements the following functions
 === Functions ===
 
 [[connect]]
-==== connect() ====
+.connect()
 
 [source,javascript]
 ----
@@ -64,12 +64,14 @@ Number connect(String signal, Function callback)
 ----
 Connect to a signal
 
-_signal_:: The signal to connect to 
-_callback_:: The callback function which will be called when the signal is emitted
-_returns_::  Unique id for this connection, can be passed to <<disconnect>>
+ ::
+
+_signal_;; The signal to connect to 
+_callback_;; The callback function which will be called when the signal is emitted
+_returns_;;  Unique id for this connection, can be passed to <<disconnect>>
 
 [[emit]]
-==== emit() ==== 
+.emit() 
 
 [source,javascript]
 ----
@@ -79,12 +81,14 @@ Boolean emit(String signal,  ...)
 Emits a signal with a variable number of arguments passed to the callback
 function
 
-_signal_:: The signal to emit
-_..._:: Objects passed to the callback function
-_returns_:: Overall return value from all connected callback functions
+ :: 
+
+_signal_;; The signal to emit
+_..._;; Objects passed to the callback function
+_returns_;; Overall return value from all connected callback functions
 
 [[disconnect]]
-==== disconnect() ====
+.disconnect() 
 
 [source,javascript]
 ----
@@ -92,13 +96,15 @@ Boolean disconnect(Number id)
 ----
 disconnect from a signal 
 
-_id_:: The id returned from <<connect>>
-_returns_:: +true+ if the signal was disconnected, +false+ if the signal
+ ::
+
+_id_;; The id returned from <<connect>>
+_returns_;; +true+ if the signal was disconnected, +false+ if the signal
 wasn't found or was already disconnected. 
 
 
 [[disconnectByFunction]]
-==== disconnectByFunction() ====
+.disconnectByFunction() 
 
 [source,javascript]
 ----
@@ -106,12 +112,14 @@ Boolean disconnectByFunction(Function callback)
 ----
 disconnect from all signals with matching callback function
 
-_callback_:: The callback function passed to <<connect>>
-_returns_:: +true+ if signals were disconnected, +false+ if no signal
+ ::
+
+_callback_;; The callback function passed to <<connect>>
+_returns_;; +true+ if signals were disconnected, +false+ if no signal
 was
 
 [[disconnectByName]]
-==== disconnectByName() ====
+.disconnectByName() 
 
 [source,javascript]
 ----
@@ -120,8 +128,10 @@ Boolean disconnectByName(String signal)
 
 disconnect from all signals with matching name
 
-_signal_:: The callback function passed to <<connect>>
-_returns_:: +true+ if signals were disconnected, +false+ if no signal
+ ::
+
+_signal_;; The callback function passed to <<connect>>
+_returns_;; +true+ if signals were disconnected, +false+ if no signal
 was disconnected
 
 
@@ -158,7 +168,7 @@ on signals implemented by dwb since it will completely stop the emission of the
 signal in all scripts.
 
 [[buttonPress]]
-==== buttonPress ====  
+.buttonPress 
 
 [source,javascript]
 ----
@@ -182,7 +192,7 @@ _json.y_;; y-position relative to the window
 _json.yRoot_;; y-position relative to the screen
   
 [[buttonRelease]]
-==== buttonRelease ====  
+.buttonRelease 
 
 [source,javascript]
 ----
@@ -197,9 +207,24 @@ _webview_;; The <<webview>> which received the signal
 _hittestresult_;; Hittestresult under the cursor
 _json_;; Same as <<buttonPress>> but without _json.type_
 
+[[frameStatus]]
+.frameStatus 
+
+[source,javascript]
+----
+void callback(webview, frame) 
+----
+
+Emitted when the <<LoadStatus>> of a frame changes
+
+ ::
+
+_webview_;; The webview the frame belongs to
+_frame_;; The frame 
+
 
 [[keyPress]]
-==== keyPress ====
+.keyPress 
 
 [source,javascript]
 ----
@@ -207,6 +232,8 @@ Boolean callback(webview, json)
 ----
 
 Emitted when a key is pressed, return +true+ to prevent the default action
+
+ ::
 
 _webview_;; The focused webview
 _json.isModifier_;; Whether or not the key is a modifier
@@ -216,7 +243,7 @@ _json.name_;; A string represantation of the key
 _json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
 
 [[keyRelease]]
-==== keyRelease ====
+.keyRelease 
 
 [source,javascript]
 ----
@@ -232,7 +259,7 @@ _json_;; Same as <<keyPress>>
 
 
 [[loadCommitted]]
-==== loadCommitted ====
+.loadCommitted 
 
 [source,javascript]
 ----
@@ -248,7 +275,7 @@ manipulate the DOM.
 _webview_;; The webview that emitted the signal
 
 [[loadFinished]]
-==== loadFinished ====
+.loadFinished 
 
 [source,javascript]
 ----
@@ -262,7 +289,7 @@ Emitted when the site has completely loaded.
 _webview_;; The webview that emitted the signal
 
 [[loadStatus]]
-==== loadStatus ====
+.loadStatus 
 
 [source,javascript]
 ----
@@ -276,7 +303,7 @@ Emitted when the load status changes
 _webview_;; The webview that emitted the signal
 
 [[mimeType]]
-==== mimeType ====
+.mimeType 
 
 [source,javascript]
 ----
@@ -293,7 +320,7 @@ _request_;; The network request
 _json.mimeType_;; The mimetype
 
 [[navigation]]
-==== navigation ====
+.navigation 
 
 [source,javascript]
 ----
@@ -310,12 +337,14 @@ _request_;; The network request
 _action_;; The navigation action
 
 [[resource]]
-==== resource ====
+.resource 
 
 [source,javascript]
 ----
 Boolean callback(webview, frame, request, response) 
 ----
+
+Emitted before a new resource is going to be loaded
 
  ::
 
@@ -325,14 +354,14 @@ _request_;; The network request
 _response_;; The network response
 
 [[tabFocus]]
-==== tabFocus ====
+.tabFocus 
 
 [source,javascript]
 ----
 Boolean callback(webview, json) 
 ----
 
-Emitted when another tab is focused, return +true+ to stop the event
+Emitted when another tab gets focus, return +true+ to stop the event
 
  ::
 
@@ -340,27 +369,27 @@ _webview_;; The new tab
 _json.last_;; The number of the previously focused tab
 
 
-[options="header", cols="2s,2m,4,4"]
-|=============================================
-|signal               2+|parameter  |description 
-
-.3+|buttonPress 
-| <<webview>> | currently focused webview
-.3+|Emitted when a button is pressed, only clicks on the webview are noticed;
-return +true+ to stop the default action
-| <<hittestresult>> | the hit test result under the cursor
-|json  |
-
-* button The button that is pressed, usually a value between 1 and 5
-* state A bitmap of modifiers pressed, see <<Modifier>>
-time:: The time in milliseconds when the button was pressed 
-type:: A <<ClickType>>
-x:: x-position relative to the window
-xRoot:: x-position relative to the screen
-y:: y-position relative to the window
-yRoot:: y-position relative to the screen
-
-|=============================================
+//[options="header", cols="2s,2m,4,4"]
+//|=============================================
+//|signal               2+|parameter  |description 
+//
+//.3+|buttonPress 
+//| <<webview>> | currently focused webview
+//.3+|Emitted when a button is pressed, only clicks on the webview are noticed;
+//return +true+ to stop the default action
+//| <<hittestresult>> | the hit test result under the cursor
+//|json  |
+//
+//* button The button that is pressed, usually a value between 1 and 5
+//* state A bitmap of modifiers pressed, see <<Modifier>>
+//time:: The time in milliseconds when the button was pressed 
+//type:: A <<ClickType>>
+//x:: x-position relative to the window
+//xRoot:: x-position relative to the screen
+//y:: y-position relative to the window
+//yRoot:: y-position relative to the screen
+//
+//|=============================================
 
 //|buttonRelease | focused <<webview>>
 //2+d|Same as *buttonPress* but without +type+
@@ -406,59 +435,152 @@ yRoot:: y-position relative to the screen
 .Example 
 [source,javascript]
 ------
-function loadStatusCallback(wv, values) {
-  if (obj.status == LoadStatus.finished) {
-    io.print(values.uri);
-    signals.disconnect(id);
+// Prevent example.com from being loaded
+function navigationCallback(wv, frame, request, action) {
+  if (/.*\.example\.com.*/.test(request.uri)) {
+    return true;
   }
 }
-var id = signals.connect("loadStatus", loadStatusCallback);
+signals.connect("navigation", navigationCallback);
 ------
 
 
-== Global functions ==
+== Global ==
+
 Functions from the global object.
 
-[options="header", cols="1s,1m,3,3,3"]
-|=============================================
-|function               2+| parameter | returns |description 
+=== Functions ===
 
-|execute
-|String
-| dwb-command to execute; *required*                       | 
-+true+ if successfull, +false+ otherwise  |
-Executes a dwb-command in the focused tab.    
+[[execute]]
+.execute() 
+
+[source,javascript]
+----
+Boolean execute(String command)
+----
+
+[source,javascript]
+----
+Boolean execute(String command)
+----
+
+Executes a dwb command
+
+ ::
+
+_command_;; a dwb command to execute, will be parsed the same way as if executed
+from commandline
+_returns_;; +true+ if execution was successful
+
 
 [[include]]
-.2+|include
-|String| Path to a file to include; *required*        
-.2+| The value returned from the script. Note that a value can only be returned
-from a script that is encapsulated either by encapsulating the script yourself, 
-or by omitting or passing +false+ to the second parameter. 
-.2+| Includes a file. Note that there is only one context, all scripts are
-executed in this context. Included files are always included in the global
-scope but encapsulated in a function unless you pass +true+ as the second
-parameter. 
-|Boolean| +true+ if the script should be applied to the global scope, objects in
-the script will be visible in all scripts, +false+ to encapsulate the script;
-*optional*, default +false+
+.include() 
 
-.2+|timerStart 
-|Number |Interval in milliseconds; *required*
-.2+|An +id+ for the timeout or -1 if an error occured
-.2+|Executes a function repeatedly until the function returns false or
-*timerStop* is called on the +id+ returned from *timerStart*
-|Function() |Function to execute; *required*
+[source,javascript]
+----
+Boolean include(String path, [Boolean global])
+----
 
-|timerStop 
-|Number |The +id+ returned from *timerStart*; *required*
-|+true+ if the timeout was stopped
-|Stops execution of a function started by timoutStart
+Includes a file. Note that there is only one context, all scripts are
+executed in this context. Included files are not visible in other scripts unless
++true+ is passed as second parameter. 
 
-|domainFromHost |String | Host name | The domain name
-|Returns the domain part of a hostname.
+ ::
 
-|=============================================
+_path_;; Path to a file to include
+_global_;; Whether to include the script into the global scope, optional
+_returns_;; The return value of the included file
+
+[[timerStart]]
+.timerStart() 
+
+[source,javascript]
+----
+Number timerStart(Number interval, Function func)
+----
+
+Executes a function repeatedly until the function returns +false+ or
+<<timerStop>> is called on the +id+ returned from this function
+
+ ::
+
+_interval_;; Interval in milliseconds
+_func_;; Function to execute
+_returns_;; An id that can be passed to timerStop
+
+
+[[timerStop]]
+.timerStop() 
+
+[source,javascript]
+----
+Number timerStop(Number id)
+----
+
+Stops a timer started by <<timerStart>>
+
+ ::
+
+_id_;; The id returned from <<timerStart>>
+_returns_;; +true+ if the timer was stopped
+
+[[domainFromHost]]
+.domainFromHost() 
+
+[source,javascript]
+----
+String domainFromHost(String hostname)
+----
+
+Gets the base domain name from a hostname where the base domain name is the
+effective second level domain name, e.g. for www.example.com it will be
+example.com, for www.example.co.uk it will be example.co.uk.
+
+ :: 
+
+_hostname_;; a hostname
+_returns_;; the base domain 
+
+//[options="header", cols="1s,1m,3,3,3"]
+//|=============================================
+//|function               2+| parameter | returns |description 
+//
+//|execute
+//|String
+//| dwb-command to execute; *required*                       | 
+//+true+ if successfull, +false+ otherwise  |
+//Executes a dwb-command in the focused tab.    
+//
+//[[include]]
+//.2+|include
+//|String| Path to a file to include; *required*        
+//.2+| The value returned from the script. Note that a value can only be returned
+//from a script that is encapsulated either by encapsulating the script yourself, 
+//or by omitting or passing +false+ to the second parameter. 
+//.2+| Includes a file. Note that there is only one context, all scripts are
+//executed in this context. Included files are always included in the global
+//scope but encapsulated in a function unless you pass +true+ as the second
+//parameter. 
+//|Boolean| +true+ if the script should be applied to the global scope, objects in
+//the script will be visible in all scripts, +false+ to encapsulate the script;
+//*optional*, default +false+
+//
+//.2+|timerStart 
+//|Number |Interval in milliseconds; *required*
+//.2+|An +id+ for the timeout or -1 if an error occured
+//.2+|Executes a function repeatedly until the function returns false or
+//*timerStop* is called on the +id+ returned from *timerStart*
+//|Function() |Function to execute; *required*
+//
+//|timerStop 
+//|Number |The +id+ returned from *timerStart*; *required*
+//|+true+ if the timeout was stopped
+//|Stops execution of a function started by timoutStart
+//
+//|domainFromHost |String | Host name | The domain name
+//|Returns the domain part of a hostname.
+//
+//|=============================================
 
 .Example
 [source,javascript]
@@ -501,26 +623,45 @@ var p = i.getPrivate();               // 37
 The +data+ object can be used to determine internally used data securely. All
 properties are readonly Strings.
 
-.Properties
-[options="header", cols="2s,10"]
-|=============================================
-|bookmarks  |Bookmark file 
-|cacheDir  |Cache directory 
-|configDir  |Config directory 
-|cookies  |Cookie file 
-|cookiesWhitelist  |Whitelist for persistent cookies 
-|customKeys  |Custom keyboard shortcuts 
-|history  |History file 
-|keys  |Shortcuts configuration file 
-|pluginsWhitelist  |Whitelist for the plugin blocker
-|profile  |Profile which will be +default+ unless another profile is specified on command line
-|quickmarks  |Quickmark file 
-|scriptWhitelist  |Whitelist for scripts
-|session  |File with stored sessions for this profile
-|sessionCookiesWhitelist  |Whitelist for session cookies
-|settings  |Settings configuration file
-|searchEngines  |Searchengines 
-|=============================================
+ ::
+
+_data.bookmarks_;; Bookmark file 
+_data.cacheDir_;; Cache directory 
+_data.configDir_;; Config directory 
+_data.cookies_;; Cookie file 
+_data.cookiesWhitelist_;; Whitelist for persistent cookies 
+_data.customKeys_;; Custom keyboard shortcuts 
+_data.history_;; History file 
+_data.keys_;; Shortcuts configuration file 
+_data.pluginsWhitelist_;; Whitelist for the plugin blocker
+_data.profile_;; Profile which will be +default+ unless another profile is specified on command line
+_data.quickmarks_;; Quickmark file 
+_data.scriptWhitelist_;; Whitelist for scripts
+_data.session_;; File with stored sessions for this profile
+_data.sessionCookiesWhitelist_;; Whitelist for session cookies
+_data.settings_;; Settings configuration file
+_data.searchEngines_;; Searchengines 
+
+//.Properties
+//[options="header", cols="2s,10"]
+//|=============================================
+//|bookmarks  |Bookmark file 
+//|cacheDir  |Cache directory 
+//|configDir  |Config directory 
+//|cookies  |Cookie file 
+//|cookiesWhitelist  |Whitelist for persistent cookies 
+//|customKeys  |Custom keyboard shortcuts 
+//|history  |History file 
+//|keys  |Shortcuts configuration file 
+//|pluginsWhitelist  |Whitelist for the plugin blocker
+//|profile  |Profile which will be +default+ unless another profile is specified on command line
+//|quickmarks  |Quickmark file 
+//|scriptWhitelist  |Whitelist for scripts
+//|session  |File with stored sessions for this profile
+//|sessionCookiesWhitelist  |Whitelist for session cookies
+//|settings  |Settings configuration file
+//|searchEngines  |Searchengines 
+//|=============================================
 
 .Example
 [source,javascript]
@@ -533,28 +674,78 @@ var bookmarks = io.read(data.bookmarks);
 === io ===
 The +io+ object implements functions for input and output. 
 
-[options="header", cols="1s,1m,3,2,2"]
-|=============================================
-|function               2+| parameter | returns |description 
-.2+|print
-|String | Text to print; *required*
-.2+| - 
-.2+|Print text to +stdout+ or +stderr+
-|String | Pass +"stderr"+ to print to stderr; *optional*
+[[print]]
+.print() 
 
-.3+|write          | 
-String| Path to a file to write to; *required* .3+|
-+true+ if successfull, +false+ otherwise .3+|
-Write text to a local file
-|String|Either +"a"+ if the text should be appended or +"w"+ to create a new file; *required*
-|String | Text that should be written to the file; *required*
+[source,javascript]
+----
+void io.print(String text, [String stream])
+----
 
-| read
-| String | A path to a file to read; *required*
-| A string with the content of the file if reading was successfull, +null+
-otherwise.|Get content of a local file
+Print text to +stdout+ or +stderr+ 
 
-|=============================================
+ :: 
+
+_text_;; the text to print
+_stream_;; pass +"stderr"+ to print to stderr, optional
+
+[[write]]
+.write() 
+
+[source,javascript]
+----
+Boolean io.write(String path, String mode, String text)
+----
+
+Write to a file
+
+ ::
+
+_path_;; Path to a file to write to
+_mode_;; Either +"a"+ to append to the file, or +"w"+ to strip the file or
+create a new file.
+_mode_;; The text that should be written to the file
+_returns_;; +true+ if writing was successful
+
+[[read]]
+.read() 
+
+[source,javascript]
+----
+String io.read(String path)
+----
+
+Read from a file.
+
+ ::
+
+_path_;; Path to a file that should be read
+_returns_;; A string with the file content
+
+
+
+//[options="header", cols="1s,1m,3,2,2"]
+//|=============================================
+//|function               2+| parameter | returns |description 
+//.2+|print
+//|String | Text to print; *required*
+//.2+| - 
+//.2+|Print text to +stdout+ or +stderr+
+//|String | Pass +"stderr"+ to print to stderr; *optional*
+//
+//.3+|write          | 
+//String| Path to a file to write to; *required* .3+|
+//+true+ if successfull, +false+ otherwise .3+|
+//Write text to a local file
+//|String|Either +"a"+ if the text should be appended or +"w"+ to create a new file; *required*
+//|String | Text that should be written to the file; *required*
+//
+//| read
+//| String | A path to a file to read; *required*
+//| A string with the content of the file if reading was successfull, +null+
+//otherwise.|Get content of a local file
+//
+//|=============================================
 
 .Example
 [source,javascript]
@@ -568,21 +759,54 @@ io.print(text);
 
 The +system+ object implements system functions.
 
-[options="header", cols="1s,1m,2,2,2"]
-|=============================================
-|function               2+| parameter | returns |description 
-.3+|spawn 
-|String | Command to execute; *required*
-.3+|Returns <<SpawnError>>
-.3+|Executes a shell command using the default searchpath
-|Function(+String+) | callback for stdout, pass +null+ if only stderr is needed; *optional*
-|Function(+String+) | callback for stderr; *optional*
+[[spawn]]
+.spawn() 
 
-|getEnv 
-|String | Name of the variable; *required*
-|String containing the variable or +null+ if the variable was not found
-|Get a system environment variable.
-|=============================================
+[source,javascript]
+----
+SpawnError system.spawn(String command, [Function stdin], [Function stderr])
+----
+
+Executes a shell command using the default search path
+
+ ::
+
+_command_;; The command to execute
+_stdin(String)_;; Callback function for stdin, pass +null+ if only stderr is
+needed, optional
+_stderr(String)_;; Callback function for stderr, optional
+_returns_;; <<SpawnError>> if an error occured, 0 otherwise
+
+[[getEnv]]
+.getEnv() 
+
+[source,javascript]
+----
+String system.getEnv(String name) 
+----
+
+Get a system environment variable
+
+ :: 
+
+_name_;; Name of the variable
+_returns_;; The variable or +null+ if the variable wasn't found
+
+//[options="header", cols="1s,1m,2,2,2"]
+//|=============================================
+//|function               2+| parameter | returns |description 
+//.3+|spawn 
+//|String | Command to execute; *required*
+//.3+|Returns <<SpawnError>>
+//.3+|Executes a shell command using the default searchpath
+//|Function(+String+) | callback for stdout, pass +null+ if only stderr is needed; *optional*
+//|Function(+String+) | callback for stderr; *optional*
+//
+//|getEnv 
+//|String | Name of the variable; *required*
+//|String containing the variable or +null+ if the variable was not found
+//|Get a system environment variable.
+//|=============================================
 
 .Example
 [source,javascript]
@@ -602,24 +826,69 @@ asyncread(home + "/.bashrc");
 === tabs ===
 The +tabs+ object implements functions and properties to get +webview+ objects. 
 
-.Properties
-[options="header", cols="2s,2m,1s,10"]
-|=============================================
-|name |type|mode| description
-|current |<<webview>>| ro |The currently focused tab
-|length |Number |ro| The total number of tabs
-|number |Number |ro| The number of the currently focused tab
+==== Properties ====
 
-|=============================================
+.current
 
-.Functions
-[options="header", cols="1s,1m,3,2,2"]
-|=============================================
-|function               2+| parameter | returns |description 
-|nth |Number |Number of the tab, counting from 0; *required* | A <<webview>> object or +null+ if
-an error occured | Gets the webview object of the nth tab.
+[source,javascript]
+----
+tabs.current        webview     read
+----
 
-|=============================================
+The currently focused webview
+
+.length
+
+[source,javascript]
+----
+tabs.length         Number      read
+----
+
+Total number of tabs
+
+.number 
+
+[source,javascript]
+----
+tabs.number         Number      read
+----
+
+Number of the currently focused tab
+
+
+
+//[options="header", cols="2s,2m,1s,10"]
+//|=============================================
+//|name |type|mode| description
+//|current |<<webview>>| ro |The currently focused tab
+//|length |Number |ro| The total number of tabs
+//|number |Number |ro| The number of the currently focused tab
+//
+//|=============================================
+
+==== Functions ====
+
+.nth()
+
+[source,javascript]
+----
+webview tabs.nth(Number n) 
+----
+
+Gets the webview object the nth tab
+
+ ::
+
+_n_;; Number of the tab
+_returns_;; The corresponding <<webview>>
+
+//[options="header", cols="1s,1m,3,2,2"]
+//|=============================================
+//|function               2+| parameter | returns |description 
+//|nth |Number |Number of the tab, counting from 0; *required* | A <<webview>> object or +null+ if
+//an error occured | Gets the webview object of the nth tab.
+//
+//|=============================================
 
 
 .Example 
@@ -635,112 +904,171 @@ tabs.nth(2).uri = c.uri;
 [[webview]]
 === webview ===
 The +webview+ object represents the widget that actually displays the site
-content.
-The +webview+ object will be the first parameter of every signal function. 
+content. 
 
-.Properties
-[options="header", cols="2s,2m,1s,10"]
-|=============================================
-|name |type | mode| description
-|uri |String |rw | The uri of the +webview+
-|title |String|ro | The title of the +webview+
-|=============================================
+==== Properties ====
 
-.Example
+The properties correspond to the gobject properties in camelcase
+
+==== Functions ====
+
+.inject() 
+
 [source,javascript]
-------------
-if (wv.title == "Title") {
-  wv.uri = "http://example.com";
-}
-------------
+----
+Boolean wv.inject(String script, [Boolean global]) 
+----
 
-.Functions
+Injects a script into a webview
 
-[options="header", cols="1s,1m,2,2,4"]
-|=============================================
-|function               2+| parameter | returns |description 
-|set 
-|Object       |An object with properties to set; *required*
-|+false+ if an error occurs, +true+ otherwise   
-|Sets the webviews properties, valid properties are the properties of 
-http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
+ ::
 
-|get 
-|String       |The name of the property to get; *required*
-|A String containing the property value
-|Sets the webviews properties, valid properties are the properties of 
-http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
-Note that this function always returns a String, for boolean values it returns
-+TRUE+ or +FALSE+.
+_script_;; the script to inject
+_global_;; +true+ to inject it into the global scope, +false+ to encapsulate it
+in a function, optional
+_returns_;; +true+ if the script was injected, +false+ if an error occured
 
-.2+|inject 
-|String | Script to inject
-.2+|+true+ if the script was injected, +false+ otherwise.
-.2+|Injects a script into the +webview+
-|Boolean | +true+ to inject the script in the global scope, +false+ to encapsulate it
-in a function; *optional*, default +false+
+.history()
 
-|history 
-|Number       |Number of steps; *required*
-|-
-|Loads the history item +steps+ away from the current item. 
+[source,javascript]
+----
+void wv.history(Number steps) 
+----
 
-|reload 
-|-       |
-|- 
-|Reload the +webview+
+Loads a history item +steps+ away from the current history item
 
-|=============================================
+ ::
+
+_steps_;; Number of steps, pass a negative value to go back in history
+
+.loadUri() 
+
+[source,javascript]
+----
+Boolean wv.loadUri(String uri, [Function callback]) 
+----
+
+Load an uri in a webview. 
+
+ ::
+
+_uri_;; The uri to load
+_callback_;; A callback function that will be called when the load status
+changes, return +true+ to stop the emission, optional
+_returns_;; +true+ if the uri is loaded
 
 
-.Signals
-[options="header", cols="2s,2m,2m,4,4"]
-|=============================================
-|signal               |first parameter  2+|object properties  |description 
-.2+|[[loadStatus]]loadStatus .2+| <<webview>>
-|status|The <<LoadStatus>>
-.2+|Emitted when the load status changes.
-|uri|Uri that is currently loaded
+.reload()
 
-|[[loadCommitted]]loadCommitted | <<webview>>
-|uri|Uri that will be loaded
-|Emitted when the load has just commited, no data has been loaded when this
-signal is emitted. This
-is the preferred signal for injected scripts that do not manipulate the DOM.
+[source,javascript]
+----
+void wv.reload(void) 
+----
 
-|[[loadFinished]]loadFinished | <<webview>>
-|uri|Uri that is has been loaded
-|Emitted when the site has completely loaded. 
-
-.2+|mimeType .2+| <<webview>>
-|mimeType| The mime-type
-.2+|Decide whether or not to show a given mimetype. Return true to stop the request.
-|uri| Uri of the request
-
-.2+|navigation          .2+| <<webview>>
-|uri | Uri of the request 
-.2+| Emitted before a new site is loaded, return +true+ to stop the request.
-|reason | Reason for the request where +reason+ is a <<NavigationReason>>
-
-
-|resource | <<webview>>
-|uri | Uri of the request 
-|Emitted before a new resource is loaded, return +true+ to stop the request.
-|=============================================
+Reload a webview 
 
 
 .Example
 [source,javascript]
 ------------
-signals.connect("navigation",  function (o, obj) {
-  if (/.*youtube.*/.test(obj.uri)) {
-    o.set({
-      "enable-plugins" : true, 
-      "enable-scripts" : true
-    });
+var wv = tabs.current;
+
+wv.loadUri("http://www.example.com", function() {
+  if (wv.loadStatus == LoadStatus.finished) {
+    wv.inject("alert('Hello ' + wv.uri + "!!!");
+
+    return true;
   }
 });
 ------------
+
+//.Functions
+//
+//[options="header", cols="1s,1m,2,2,4"]
+//|=============================================
+//|function               2+| parameter | returns |description 
+//|set 
+//|Object       |An object with properties to set; *required*
+//|+false+ if an error occurs, +true+ otherwise   
+//|Sets the webviews properties, valid properties are the properties of 
+//http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
+//
+//|get 
+//|String       |The name of the property to get; *required*
+//|A String containing the property value
+//|Sets the webviews properties, valid properties are the properties of 
+//http://webkitgtk.org/reference/webkitgtk/stable/WebKitWebSettings.html[WebKitWebSettings].
+//Note that this function always returns a String, for boolean values it returns
+//+TRUE+ or +FALSE+.
+//
+//.2+|inject 
+//|String | Script to inject
+//.2+|+true+ if the script was injected, +false+ otherwise.
+//.2+|Injects a script into the +webview+
+//|Boolean | +true+ to inject the script in the global scope, +false+ to encapsulate it
+//in a function; *optional*, default +false+
+//
+//|history 
+//|Number       |Number of steps; *required*
+//|-
+//|Loads the history item +steps+ away from the current item. 
+//
+//|reload 
+//|-       |
+//|- 
+//|Reload the +webview+
+//
+//|=============================================
+
+
+//.Signals
+//[options="header", cols="2s,2m,2m,4,4"]
+//|=============================================
+//|signal               |first parameter  2+|object properties  |description 
+//.2+|[[loadStatus]]loadStatus .2+| <<webview>>
+//|status|The <<LoadStatus>>
+//.2+|Emitted when the load status changes.
+//|uri|Uri that is currently loaded
+//
+//|[[loadCommitted]]loadCommitted | <<webview>>
+//|uri|Uri that will be loaded
+//|Emitted when the load has just commited, no data has been loaded when this
+//signal is emitted. This
+//is the preferred signal for injected scripts that do not manipulate the DOM.
+//
+//|[[loadFinished]]loadFinished | <<webview>>
+//|uri|Uri that is has been loaded
+//|Emitted when the site has completely loaded. 
+//
+//.2+|mimeType .2+| <<webview>>
+//|mimeType| The mime-type
+//.2+|Decide whether or not to show a given mimetype. Return true to stop the request.
+//|uri| Uri of the request
+//
+//.2+|navigation          .2+| <<webview>>
+//|uri | Uri of the request 
+//.2+| Emitted before a new site is loaded, return +true+ to stop the request.
+//|reason | Reason for the request where +reason+ is a <<NavigationReason>>
+//
+//
+//|resource | <<webview>>
+//|uri | Uri of the request 
+//|Emitted before a new resource is loaded, return +true+ to stop the request.
+//|=============================================
+
+
+//.Example
+//[source,javascript]
+//------------
+//signals.connect("navigation",  function (wv, frame, navigation, action) {
+//  if (/.*youtube.*/.test(navigation.uri)) {
+//    o.set({
+//      "enable-plugins" : true, 
+//      "enable-scripts" : true
+//    });
+//  }
+//});
+//------------
 
 NOTE: If a script is injected from a <<loadStatus>>-callback the script must be
 injected after +LoadStatus.committed+ has been emitted.
@@ -758,58 +1086,70 @@ A frame represents a +frame+ or +iframe+. Due to same origin policy it
 is not possible to inject scripts from a <<webview>> into iframes with a
 different domain. For this purpose the +frame+ object can be used. 
 
-.Properties
-[options="header", cols="2s,2m,1s,10"]
-|=============================================
-|name |type | mode| description
-|name |String |ro | The name of the +frame+
-|uri |String |ro | The uri of the +frame+
-|title |String|ro | The title of the +frame+
-|=============================================
+==== Properties ====
 
-.Functions
+The properties correspond to the gobject properties in camelcase.
 
-[options="header", cols="1s,1m,3,2,2"]
-|=============================================
-|function               2+| parameter | returns |description 
-.2+|inject 
-|String | Script to inject
-.2+|+true+ if the script was injected, +false+ otherwise.
-.2+|Injects a script into the +frame+, see also <<frameStatus>>
-|Boolean | +true+ to inject the script in the global scope, +false+ to encapsulate it
-in a function; *optional*, default +false+
-|=============================================
+==== Functions ====
 
-.Signals
-[options="header", cols="2s,2m,2m,4,4"]
-|=============================================
-|signal               |first parameter  2+|object properties  |description 
-|frameStatus[[frameStatus]] | <<frame>>
-|status |<<LoadStatus>>
-| Emitted when the load status of a frame changes changes, scripts should be
-injected into a frame either on +LoadStatus.committed+ or +LoadStatus.finished+
+.inject() 
 
-|=============================================
-
-.Example
 [source,javascript]
--------- 
-signals.connect("frameStatus", function(frame, o) {
-  if (o.status == LoadStatus.finished) {
-    frame.inject("document.body.innerHTML = '';");
-  }
-});
---------
+----
+Boolean frame.inject(String script, [Boolean global])
+----
+
+Injects a script into a frame
+
+ ::
+
+_script_;; the script to inject
+_global_;; +true+ to inject it into the global scope, +false+ to encapsulate it
+in a function, optional
+_returns_;; +true+ if the script was injected, +false+ if an error occured
+
+
+//[options="header", cols="1s,1m,3,2,2"]
+//|=============================================
+//|function               2+| parameter | returns |description 
+//.2+|inject 
+//|String | Script to inject
+//.2+|+true+ if the script was injected, +false+ otherwise.
+//.2+|Injects a script into the +frame+, see also <<frameStatus>>
+//|Boolean | +true+ to inject the script in the global scope, +false+ to encapsulate it
+//in a function; *optional*, default +false+
+//|=============================================
+
+//.Signals
+//[options="header", cols="2s,2m,2m,4,4"]
+//|=============================================
+//|signal               |first parameter  2+|object properties  |description 
+//|frameStatus[[frameStatus]] | <<frame>>
+//|status |<<LoadStatus>>
+//| Emitted when the load status of a frame changes changes, scripts should be
+//injected into a frame either on +LoadStatus.committed+ or +LoadStatus.finished+
+//
+//|=============================================
+//
+//.Example
+//[source,javascript]
+//-------- 
+//signals.connect("frameStatus", function(frame, o) {
+//  if (o.status == LoadStatus.finished) {
+//    frame.inject("document.body.innerHTML = '';");
+//  }
+//});
+//--------
 
 [[request]]
 === request ===
 
-todo 
+Corresponds to a +WebKitNavigationRequest+.
 
 [[navigationAction]]
 === navigationAction ===
 
-todo 
+Corresponds to a +WebKitWebNavigationAction+.
 
 == Enum objects ==
 Enum objects are objects that have only readonly properties, mapping
