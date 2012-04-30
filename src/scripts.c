@@ -244,7 +244,7 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
 /* TABS {{{*/
 static JSValueRef 
 tabs_current(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
-  return scripts_make_object(_global_context, NULL, G_OBJECT(CURRENT_WEBVIEW()));
+  return scripts_make_object(_global_context, G_OBJECT(CURRENT_WEBVIEW()));
 }
 static JSValueRef 
 tabs_number(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
@@ -375,7 +375,6 @@ set_property(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSV
 JSValueRef
 get_gobject_property(JSContextRef ctx, JSObjectRef jsobj, GObject *o, JSStringRef js_name, JSValueRef *exception) {
   char buf[PROP_LENGTH];
-  char keyint[PROP_LENGTH + 8];
   JSValueRef ret = NULL;
   char *name = js_string_to_char(ctx, js_name, -1);
   if (name == NULL)
@@ -424,12 +423,7 @@ get_gobject_property(JSContextRef ctx, JSObjectRef jsobj, GObject *o, JSStringRe
     g_object_get(o, buf, &object, NULL);
     if (object == NULL)
       return NULL;
-    strcpy(keyint, "DWB_INT_");
-    strcat(keyint, buf);
-    JSObjectRef retobj = g_object_get_data(object, keyint);
-    if (retobj == NULL) {
-      retobj = scripts_make_object(ctx, NULL, object);
-    }
+    JSObjectRef retobj = scripts_make_object(ctx, object);
     g_object_unref(object);
     ret = retobj;
   }
@@ -441,7 +435,7 @@ object_finalize(JSObjectRef o) {
 }
 // TODO : creating 1000000 objects leaks ~ 4MB  
 JSObjectRef 
-scripts_make_object(JSContextRef ctx, const char *key, GObject *o) {
+scripts_make_object(JSContextRef ctx, GObject *o) {
   static int counter;
   printf("%d\n", counter++);
   if (o == NULL) {
@@ -459,11 +453,6 @@ scripts_make_object(JSContextRef ctx, const char *key, GObject *o) {
     class = _default_class;
 
   JSObjectRef retobj = JSObjectMake(ctx, class, o);
-  //if (key != NULL) {
-  //  GQuark quark = g_quark_from_string(key);
-  //  g_object_set_qdata(o, quark, (gpointer*)retobj);
-  //}
-  //JSClassRelease(jsclass);
   return retobj;
 }
 JSValueRef 
@@ -927,7 +916,7 @@ scripts_emit(ScriptSignal *sig) {
   int i = 0;
   val[i++] = sig->jsobj;
   for (int j=0; j<sig->numobj; j++) {
-    val[i++] = scripts_make_object(_global_context, NULL, G_OBJECT(sig->objects[j]));
+    val[i++] = scripts_make_object(_global_context, G_OBJECT(sig->objects[j]));
   }
   JSValueRef vson = NULL;
   JSStringRef js_json = JSStringCreateWithUTF8CString(sig->json == NULL ? "{}" : sig->json);
@@ -1053,7 +1042,7 @@ scripts_create_tab(GList *gl) {
     VIEW(gl)->script = NULL;
     return;
   }
-  JSObjectRef o = scripts_make_object(_global_context, NULL, G_OBJECT(VIEW(gl)->web));
+  JSObjectRef o = scripts_make_object(_global_context, G_OBJECT(VIEW(gl)->web));
   JSValueProtect(_global_context, o);
   VIEW(gl)->script_wv = o;
 }

@@ -57,7 +57,7 @@ void scripts_remove_tab(JSObjectRef );
 void scripts_end(void);
 void scripts_init_script(const char *);
 void scripts_init(void);
-JSObjectRef scripts_make_object(JSContextRef ctx, const char *key, GObject *o);
+JSObjectRef scripts_make_object(JSContextRef ctx, GObject *o);
 
 #define EMIT_SCRIPT(sig)  ((dwb.misc.script_signals & (1<<SCRIPTS_SIG_##sig)))
 #define SCRIPTS_EMIT_RETURN(signal, json) G_STMT_START  \
