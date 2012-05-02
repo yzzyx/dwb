@@ -92,10 +92,10 @@ download_spawn_external(const char *uri, const char *filename, WebKitDownload *d
   }
   if (referer != NULL) {
     list = g_slist_prepend(list, dwb_navigation_new("DWB_REFERER", referer));
-    if ( (newcommand = util_string_replace(command, "dwb_referer", referer)) ) {
-      g_free(command);
-      command = newcommand;
-    }
+  }
+  if ( (newcommand = util_string_replace(command, "dwb_referer", referer == NULL ? "" : referer)) ) {
+    g_free(command);
+    command = newcommand;
   }
   if (user_agent != NULL) 
     list = g_slist_prepend(list, dwb_navigation_new("DWB_USER_AGENT", user_agent));

@@ -37,12 +37,12 @@ util_get_temp_filename(const char *prefix) {
   return cache_path;
 }
 char *
-util_string_replace(const char *haystack, const char *needle, const char *replacemant) {
-  char **token;
+util_string_replace(const char *haystack, const char *needle, const char *replacement) {
   char *ret = NULL;
-  if ( haystack && needle && (token = g_regex_split_simple(needle, haystack, 0, 0)) && g_strcmp0(token[0], haystack)) {
-    ret = g_strconcat(token[0], replacemant, token[1], NULL);
-    g_strfreev(token);
+  if ( haystack && needle) { //&& (token = g_regex_split_simple(needle, haystack, 0, 0)) && g_strcmp0(token[0], haystack)) {
+    GRegex *regex = g_regex_new(needle, 0, 0, NULL);
+    ret = g_regex_replace_literal(regex, haystack, -1, 0, replacement, 0, NULL);
+    g_regex_unref(regex);
   }
   return ret;
 }/*}}}*/
