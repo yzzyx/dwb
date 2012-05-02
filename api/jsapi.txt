@@ -704,7 +704,7 @@ Write to a file
 _path_;; Path to a file to write to
 _mode_;; Either +"a"+ to append to the file, or +"w"+ to strip the file or
 create a new file.
-_mode_;; The text that should be written to the file
+_text_;; The text that should be written to the file
 _returns_;; +true+ if writing was successful
 
 [[read]]
@@ -875,7 +875,7 @@ Number of the currently focused tab
 webview tabs.nth(Number n) 
 ----
 
-Gets the webview object the nth tab
+Gets the webview object of the nth tab
 
  ::
 
@@ -1362,44 +1362,68 @@ consistent configuration locations for scripts.
 
 The +extensions+ object has the following properties and functions
 
-.Properties
+=== Functions ===
 
-[options="header", cols="2s,2m,10"]
-|=============================================
-|name |type | description
-|config|Object|Object that holds data for all extensions
+[[extensionload,load]]
+.load()
 
-|=============================================
+[source,javascript]
+----
+Boolean extensions.load(String name) 
+----
+Loads an extension
 
-.Functions
+ ::
 
-[options="header", cols="1s,1m,3,2,2"]
-|=============================================
-|function               2+| parameter | returns |description 
-|load               
-|String |name of the extension 
-| +true+ if the extension was successfully loaded
-|Load an extension 
+_name_;; Name of the extension
+_returns_;;  True if the extension was loaded
 
-.2+|error               
-|String |name of the extension 
-.2+| -
-.2+|Print a consistent error message to stderr. 
-|String |The message to print
+[[error]]
+.error()
 
-.2+|message               
-|String |name of the extension 
-.2+| -
-.2+|Print a consistent message to stderr. 
-|String |The message to print
+[source,javascript]
+----
+void extensions.error(String name, String message) 
+----
 
-.2+|warning               
-|String |name of the extension 
-.2+| -
-.2+|Print a consistent warning message to stderr. 
-|String |The message to print
+Print a consistent error to stderr
 
-|=============================================
+ ::
+
+_name_;; Name of the extension
+_message_;; The error message
+
+[[message]]
+.message()
+
+[source,javascript]
+----
+void extensions.message(String name, String message) 
+----
+
+Print a consistent message to stderr
+
+ ::
+
+_name_;; Name of the extension
+_message_;; The message
+
+
+[[warning]]
+.warning()
+
+[source,javascript]
+----
+void extensions.warning(String name, String message) 
+----
+
+Print a consistent warning to stderr
+
+ ::
+
+_name_;; Name of the extension
+_message_;; The warning message
+
 
 .Example
 
