@@ -66,6 +66,7 @@ static Sigmap _sigmap[] = {
   { SCRIPTS_SIG_LOAD_FINISHED, "loadFinished" },
   { SCRIPTS_SIG_LOAD_COMMITTED, "loadCommitted" },
   { SCRIPTS_SIG_HOVERING_OVER_LINK, "hoveringOverLink" },
+  { SCRIPTS_SIG_CLOSE_TAB, "closeTab" },
 };
 
 
@@ -1066,6 +1067,10 @@ scripts_create_tab(GList *gl) {
 void 
 scripts_remove_tab(JSObjectRef obj) {
   if (obj != NULL) {
+    if (EMIT_SCRIPT(CLOSE_TAB)) {
+      ScriptSignal signal = { obj, SCRIPTS_SIG_META(NULL, CLOSE_TAB, 0) };
+      scripts_emit(&signal);
+    }
     JSValueUnprotect(_global_context, obj);
   }
 }

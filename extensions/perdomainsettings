@@ -1,0 +1,126 @@
+/*
+ * Per domain settings extension
+ *
+ * This extensions can be used for per-domain-settings. Valid settings are
+ * the properties of WebKitWebSettings but in camelcase, see 
+ * http://webkitgtk.org/reference/webkitgtk/unstable/WebKitWebSettings.html
+ * for details. 
+ *
+ * The config needs three objects, 
+ *
+ * + domains:   Settings applied based on the second level domain
+ * + hosts:     Settings applied based on the hostname
+ * + defaults:  Default settings, for each setting in domains and hosts a
+ *              default-value should be specified
+ *
+ * Example extensionrc object: 
+ *
+ * perdomainsettings : {
+ *   domains : { 
+ *      "example.com" : { 
+ *           "enablePlugins"  : true 
+ *      },
+ *      "example.uk.com" :  { 
+ *           "enablePlugins"  : true, 
+ *           "enableScripts"  : false 
+ *      } 
+ *   }, 
+ *   hosts : { 
+ *      "www.example1.com" :  { 
+ *           "autoLoadImages" : true 
+ *      } 
+ *   },
+ *   defaults : {
+ *      "enablePlugins"   : false,
+ *      "autoLoadImages"  : false,
+ *      "enableScripts"   :  true
+ *   }
+ * }
+ *
+ * */ 
+
+var me = "perdomainsettings";
+var domains = null;
+var hosts = null;
+var uris = null;
+var defaults = null;
+var webviews = [];
+
+function apply(o, settings) {
+  var key;
+  var defaults = true;
+  var websettings = o.webview.settings;
+  for (key in settings) {
+    if (!o.set[key]) {
+      websettings[key] = settings[key];
+      o.set[key] = true;
+    }
+    else {
+      defaults = false;
+    }
+  }
+  return defaults;
+}
+
+function onNavigation(wv, frame, request, action) {
+  var length = webviews.length; 
+  var i;
+  var found = false;
+  var o = null;
+  for (i=0; i<length; i++) {
+    if (webviews[i].webview === wv) {
+      o = webviews[i];
+      break;
+    }
+  }
+  if (o === null) {
+    o = { webview : wv, defaults : false };
+    webviews.push(o);
+  }
+  o.set = {};
+  if (frame.uri == wv.mainFrame.uri) {
+    var host = request.uri.split(/:\/\/|:|\//, 2)[1];
+    var domain = domainFromHost(host);
+    if (hosts[host]) {
+      apply(o, hosts[host]);
+      o.defaults = false;
+    }
+    if (domains[domain]) {
+      apply(o, domains[domain]);
+      o.defaults = false;
+    }
+    if (o.defaults === false && apply(o, defaults)) {
+      o.defaults = true;
+    }
+  }
+}
+function onCloseTab(wv) {
+  var i;
+  for (i=0; i<webviews.length; i++) {
+    if (webviews[i].webview === wv) {
+      webviews.splice(i, 1);
+      return;
+    }
+  }
+}
+function initImpl(config) {
+  domains = config.domains || null;
+  hosts = config.hosts || null;
+  uris = config.uris || null;
+  defaults = config.defaults || null;
+  signals.connect("navigation", onNavigation);
+  signals.connect("closeTab", onCloseTab);
+}
+
+return {
+  init : function (config) {
+    if (!config) {
+      extensions.error(me, "Missing config");
+      return false;
+    }
+    initImpl(config);
+    return true;
+  }
+};
+
+// vim: set ft=javascript:

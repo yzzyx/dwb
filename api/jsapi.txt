@@ -41,12 +41,8 @@ Functions from the global object.
 
 ****
 [[execute]]
-.execute() 
-
-[source,javascript]
-----
-Boolean execute(String command)
-----
+[float]
+==== *execute()* ==== 
 
 [source,javascript]
 ----
@@ -65,7 +61,8 @@ _returns_;; +true+ if execution was successful
 
 ****
 [[include]]
-.include() 
+[float]
+==== *include()* ==== 
 
 [source,javascript]
 ----
@@ -85,7 +82,8 @@ _returns_;; The return value of the included file
 
 ****
 [[timerStart]]
-.timerStart() 
+[float]
+==== *timerStart()* ==== 
 
 [source,javascript]
 ----
@@ -104,7 +102,8 @@ _returns_;; An id that can be passed to timerStop
 
 ****
 [[timerStop]]
-.timerStop() 
+[float]
+==== *timerStop()* ==== 
 
 [source,javascript]
 ----
@@ -121,7 +120,8 @@ _returns_;; +true+ if the timer was stopped
 
 ****
 [[domainFromHost]]
-.domainFromHost() 
+[float]
+==== *domainFromHost()* ==== 
 
 [source,javascript]
 ----
@@ -282,7 +282,8 @@ The +io+ object implements functions for input and output.
 
 ****
 [[print]]
-.print() 
+[float]
+==== *print()* ==== 
 
 [source,javascript]
 ----
@@ -299,7 +300,8 @@ _stream_;; pass +"stderr"+ to print to stderr, optional
 
 ****
 [[write]]
-.write() 
+[float]
+==== *write()* ==== 
 
 [source,javascript]
 ----
@@ -319,7 +321,8 @@ _returns_;; +true+ if writing was successful
 
 ****
 [[read]]
-.read() 
+[float]
+==== *read()* ==== 
 
 [source,javascript]
 ----
@@ -375,7 +378,8 @@ The +system+ object implements system functions.
 
 ****
 [[spawn]]
-.spawn() 
+[float]
+==== *spawn()* ==== 
 
 [source,javascript]
 ----
@@ -395,7 +399,8 @@ _returns_;; <<SpawnError>> if an error occured, 0 otherwise
 
 ****
 [[getEnv]]
-.getEnv() 
+[float]
+==== *getEnv()* ==== 
 
 [source,javascript]
 ----
@@ -449,7 +454,8 @@ The +tabs+ object implements functions and properties to get +webview+ objects.
 ==== Properties ====
 
 ****
-.current
+[float]
+==== *current* ====
 
 [source,javascript]
 ----
@@ -460,7 +466,8 @@ The currently focused webview
 ****
 
 ****
-.length
+[float]
+==== *length* ====
 
 [source,javascript]
 ----
@@ -471,7 +478,8 @@ Total number of tabs
 ****
 
 ****
-.number 
+[float]
+==== *number* ==== 
 
 [source,javascript]
 ----
@@ -495,7 +503,8 @@ Number of the currently focused tab
 ==== Functions ====
 
 ****
-.nth()
+[float]
+==== *nth()* ====
 
 [source,javascript]
 ----
@@ -520,7 +529,7 @@ _returns_;; The corresponding <<webview>>
 
 
 ====
-.Example 
+.Example
 [source,javascript]
 ----
 var c = tabs.current;
@@ -542,7 +551,8 @@ The properties correspond to the gobject properties in camelcase. Additional
 properties are
 
 ****
-.mainFrame
+[float]
+==== *mainFrame* ====
 
 [source,javascript]
 ----
@@ -555,7 +565,8 @@ The main frame of the webview
 ==== Functions ====
 
 ****
-.inject() 
+[float]
+==== *inject()* ==== 
 
 [source,javascript]
 ----
@@ -573,7 +584,8 @@ _returns_;; +true+ if the script was injected, +false+ if an error occured
 ****
 
 ****
-.history()
+[float]
+==== *history()* ====
 
 [source,javascript]
 ----
@@ -588,7 +600,8 @@ _steps_;; Number of steps, pass a negative value to go back in history
 ****
 
 ****
-.loadUri() 
+[float]
+==== *loadUri()* ==== 
 
 [source,javascript]
 ----
@@ -607,7 +620,8 @@ _returns_;; +true+ if the uri is loaded
 
 
 ****
-.reload()
+[float]
+==== *reload()* ====
 
 [source,javascript]
 ----
@@ -619,7 +633,8 @@ Reload a webview
 
 
 ====
-.Example
+[float]
+==== *Example* ====
 [source,javascript]
 ------------
 var wv = tabs.current;
@@ -744,7 +759,8 @@ The properties correspond to the gobject properties in camelcase.
 Additional properties are 
 
 ****
-.domain
+[float]
+==== *domain* ====
 
 [source,javascript]
 ----
@@ -755,7 +771,8 @@ The domain name of the frame which is the effective second level domain
 ****
 
 ****
-.host
+[float]
+==== *host* ====
 
 [source,javascript]
 ----
@@ -780,7 +797,8 @@ can be used.
 ==== Functions ====
 
 ****
-.inject() 
+[float]
+==== *inject()* ==== 
 
 [source,javascript]
 ----
@@ -865,7 +883,8 @@ The signals object implements the following functions
 === Functions ===
 
 [[connect]]
-.connect()
+[float]
+==== *connect()* ====
 
 ****
 [source,javascript]
@@ -883,7 +902,8 @@ _returns_;;  Unique id for this connection, can be passed to <<disconnect>>
 
 ****
 [[emit]]
-.emit() 
+[float]
+==== *emit()* ==== 
 
 [source,javascript]
 ----
@@ -902,7 +922,8 @@ _returns_;; Overall return value from all connected callback functions
 
 ****
 [[disconnect]]
-.disconnect() 
+[float]
+==== *disconnect()* ==== 
 
 [source,javascript]
 ----
@@ -920,7 +941,8 @@ wasn't found or was already disconnected.
 
 ****
 [[disconnectByFunction]]
-.disconnectByFunction() 
+[float]
+==== *disconnectByFunction()* ==== 
 
 [source,javascript]
 ----
@@ -937,7 +959,8 @@ was disconnected
 
 ****
 [[disconnectByName]]
-.disconnectByName() 
+[float]
+==== *disconnectByName()* ==== 
 
 [source,javascript]
 ----
@@ -989,7 +1012,8 @@ signal in all scripts.
 
 ****
 [[buttonPress]]
-.buttonPress 
+[float]
+==== *buttonPress* ==== 
 
 [source,javascript]
 ----
@@ -1015,7 +1039,8 @@ _json.yRoot_;; y-position relative to the screen
   
 ****
 [[buttonRelease]]
-.buttonRelease 
+[float]
+==== *buttonRelease* ==== 
 
 [source,javascript]
 ----
@@ -1032,8 +1057,26 @@ _json_;; Same as <<buttonPress>> but without _json.type_
 ****
 
 ****
+[[closeTab]]
+[float]
+==== *closeTab* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview) 
+----
+
+Emitted when a tab is closed
+
+ ::
+
+_webview_;; The <<webview>> that corresponds to the tab
+****
+
+****
 [[frameStatus]]
-.frameStatus 
+[float]
+==== *frameStatus* ==== 
 
 [source,javascript]
 ----
@@ -1050,7 +1093,8 @@ _frame_;; The frame
 
 ****
 [[hoveringOverLink]]
-.hoveringOverLink 
+[float]
+==== *hoveringOverLink* ==== 
 
 [source,javascript]
 ----
@@ -1068,7 +1112,8 @@ _json.title_;; The link's title or +null+ if the pointer left a link
 
 ****
 [[keyPress]]
-.keyPress 
+[float]
+==== *keyPress* ==== 
 
 [source,javascript]
 ----
@@ -1089,7 +1134,8 @@ _json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
 
 ****
 [[keyRelease]]
-.keyRelease 
+[float]
+==== *keyRelease* ==== 
 
 [source,javascript]
 ----
@@ -1107,7 +1153,8 @@ _json_;; Same as <<keyPress>>
 
 ****
 [[loadCommitted]]
-.loadCommitted 
+[float]
+==== *loadCommitted* ==== 
 
 [source,javascript]
 ----
@@ -1125,7 +1172,8 @@ _webview_;; The webview that emitted the signal
 
 ****
 [[loadFinished]]
-.loadFinished 
+[float]
+==== *loadFinished* ==== 
 
 [source,javascript]
 ----
@@ -1141,7 +1189,8 @@ _webview_;; The webview that emitted the signal
 
 ****
 [[loadStatus]]
-.loadStatus 
+[float]
+==== *loadStatus* ==== 
 
 [source,javascript]
 ----
@@ -1157,7 +1206,8 @@ _webview_;; The webview that emitted the signal
 
 ****
 [[mimeType]]
-.mimeType 
+[float]
+==== *mimeType* ==== 
 
 [source,javascript]
 ----
@@ -1176,7 +1226,8 @@ _json.mimeType_;; The mimetype
 
 ****
 [[navigation]]
-.navigation 
+[float]
+==== *navigation* ==== 
 
 [source,javascript]
 ----
@@ -1195,7 +1246,8 @@ _action_;; The navigation action
 
 ****
 [[resource]]
-.resource 
+[float]
+==== *resource* ==== 
 
 [source,javascript]
 ----
@@ -1214,7 +1266,8 @@ _response_;; The network response
 
 ****
 [[tabFocus]]
-.tabFocus 
+[float]
+==== *tabFocus* ==== 
 
 [source,javascript]
 ----
@@ -1313,7 +1366,8 @@ gtk/webkit enums to javascript objects.
 
 ****
 [[ButtonContext]]
-.ButtonContext
+[float]
+==== *ButtonContext* ====
 
 [source,javascript]
 --------
@@ -1330,7 +1384,8 @@ const ButtonContext = {
 
 ****
 [[ClickType]]
-.ClickType
+[float]
+==== *ClickType* ====
 
 [source,javascript]
 --------
@@ -1344,7 +1399,8 @@ const ClickType = {
 
 ****
 [[DownloadStatus]]
-.DownloadStatus
+[float]
+==== *DownloadStatus* ====
 
 [source,javascript]
 -------
@@ -1360,7 +1416,8 @@ const DownloadStatus = {
 
 ****
 [[LoadStatus]]
-.LoadStatus
+[float]
+==== *LoadStatus* ====
 
 [source,javascript]
 ---------
@@ -1376,7 +1433,8 @@ const LoadStatus = {
 
 ****
 [[Modifier]]
-.Modifier
+[float]
+==== *Modifier* ====
 
 [source,javascript]
 --------
@@ -1405,7 +1463,8 @@ const Modifier = {
 
 ****
 [[NavigationReason]]
-.NavigationReason
+[float]
+==== *NavigationReason* ====
 
 [source,javascript]
 --------
@@ -1422,7 +1481,8 @@ const NavigationReason = {
 
 ****
 [[SpawnError]]
-.SpawnError
+[float]
+==== *SpawnError* ====
 [source,javascript]
 --------
 const SpawnError = {
@@ -1537,7 +1597,8 @@ The +extensions+ object has the following properties and functions
 
 ****
 [[extensionload,load]]
-.load()
+[float]
+==== *load()* ====
 
 [source,javascript]
 ----
@@ -1553,7 +1614,8 @@ _returns_;;  True if the extension was loaded
 
 ****
 [[error]]
-.error()
+[float]
+==== *error()* ====
 
 [source,javascript]
 ----
@@ -1570,7 +1632,8 @@ _message_;; The error message
 
 ****
 [[message]]
-.message()
+[float]
+==== *message()* ====
 
 [source,javascript]
 ----
@@ -1588,7 +1651,8 @@ _message_;; The message
 
 ****
 [[warning]]
-.warning()
+[float]
+==== *warning()* ====
 
 [source,javascript]
 ----

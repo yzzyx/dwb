@@ -1,0 +1,63 @@
+/*
+ * autoquvi 
+ * This plugin automatically loads videos supported by quvi with an external
+ * video player
+ *
+ * Config variables
+ *
+ * quvi   : quvi command
+ * player : external player
+ *
+ * */ 
+
+
+var myname = "autoquvi";
+var config = { 
+  quvi : "quvi",  
+  player : "mplayer %u"
+};
+
+var supported = [];
+function quviSpawn(wv) {
+  for (var i=0; i<supported.length; i++) {
+    var s = supported[i];
+    if (s.test(wv.uri)) {
+      system.spawn(config.quvi + " " + wv.uri + " --exec " + JSON.stringify(config.player));
+      return;
+    }
+  }
+}
+function stdoutCallback(response) {
+  var lines = response.split("\n");
+  for (var i=0; i<lines.length; i++) {
+    if (lines[i]) {
+      try {
+        var pattern = lines[i].match(/^\s*\S+/)[0];
+        supported.push(new RegExp(pattern.replace(/%/g, "\\")));
+      } 
+      catch(e) {
+        extensions.error(myname, e);
+      }
+    }
+  }
+  signals.connect("loadCommitted", quviSpawn);
+}
+return { 
+  init : function (conf) {
+    var stat;
+    if (conf !== null)
+      config = conf;
+    try {
+      stat = system.spawn(config.quvi + " --support", stdoutCallback);
+      if (stat == 0) {
+        return true;
+      }
+    }
+    catch(e) {
+      extensions.error(myname, "Initiating quvi failed, aborting: " + e);
+    }
+    return false;
+  }
+};
+
+// vim: set ft=javascript:

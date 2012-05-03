@@ -43,7 +43,15 @@ Object.defineProperties(extensions, {
         }
 
         /* Load extension */
-        plugin = include(data.userDataDir + "/extensions/" + name);
+        var filename = data.userDataDir + "/extensions/" + name;
+        try {
+          plugin = include(filename);
+        }
+        catch(e) {
+          io.print(e.line);
+          extensions.error(name, "Error in line " + e.line + " parsing " + filename);
+          return false;
+        }
         if (plugin === null) {
           plugin = include(data.systemDataDir + "/extensions/" + name);
           if (plugin === null) {
@@ -52,12 +60,18 @@ Object.defineProperties(extensions, {
           }
 
         }
-        if (plugin.init(extConfig)) {
-          extensions.message(name, "Successfully loaded and initialized.");
-          return true;
+        try {
+          if (plugin.init(extConfig)) {
+            extensions.message(name, "Successfully loaded and initialized.");
+            return true;
+          }
+          else {
+            extensions.error(name, "Initialization failed.");
+            return false;
+          }
         }
-        else {
-          extensions.error(name, "Initialization failed.");
+        catch (e) {
+          extensions.error(name, "Initialization failed: " + e);
           return false;
         }
       };
