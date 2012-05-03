@@ -1028,7 +1028,7 @@ view_ssl_state(GList *gl) {
 
   const char *uri = webkit_web_view_get_uri(WEBKIT_WEB_VIEW(v->web));
   if (uri && g_str_has_prefix(uri, "https")) {
-    SoupMessage *msg = dwb_soup_get_message(WEBKIT_WEB_VIEW(v->web));
+    SoupMessage *msg = dwb_soup_get_message(MAIN_FRAME_CAST(v->web));
     if (msg) {
       ssl = soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED 
         ? SSL_TRUSTED 

@@ -31,433 +31,6 @@ properties on the global object, see also <<Globaldata,global data>> for details
 :numbered!:
 :caption:
 
-== Signals ==
-With the +signals+ object *dwb* communicates with the script on certain events. 
-To connect to a signal one can call the connect function that is implemented by
-the signals object, that takes 2 arguments, the name of the signal and a
-callback function. 
-
-The callback function has a varying number of parameters, the first paramteter
-is always the <<webview>> which received the signal or the focused <<webview>>.
-The last paramter is always a json-object which might be empty or contain
-additional data relevant to the signal. 
-A callback function should either return +true+ or +false+ or nothing which is
-equivalent to +false+.
-If multiple callbacks are connected to the same signal and one callback
-function returns +true+ the overall return value will be +true+.
-
-*dwb* only emits signals as long as one callback is connected to a signal. To
-reduce overhead one should disconnect from signals when no longer
-needed. 
-
-The signals object implements the following functions
-
-
-=== Functions ===
-
-[[connect]]
-.connect()
-
-[source,javascript]
-----
-Number connect(String signal, Function callback) 
-----
-Connect to a signal
-
- ::
-
-_signal_;; The signal to connect to 
-_callback_;; The callback function which will be called when the signal is emitted
-_returns_;;  Unique id for this connection, can be passed to <<disconnect>>
-
-[[emit]]
-.emit() 
-
-[source,javascript]
-----
-Boolean emit(String signal,  ...)
-----
-
-Emits a signal with a variable number of arguments passed to the callback
-function
-
- :: 
-
-_signal_;; The signal to emit
-_..._;; Objects passed to the callback function
-_returns_;; Overall return value from all connected callback functions
-
-[[disconnect]]
-.disconnect() 
-
-[source,javascript]
-----
-Boolean disconnect(Number id) 
-----
-disconnect from a signal 
-
- ::
-
-_id_;; The id returned from <<connect>>
-_returns_;; +true+ if the signal was disconnected, +false+ if the signal
-wasn't found or was already disconnected. 
-
-
-[[disconnectByFunction]]
-.disconnectByFunction() 
-
-[source,javascript]
-----
-Boolean disconnectByFunction(Function callback) 
-----
-disconnect from all signals with matching callback function
-
- ::
-
-_callback_;; The callback function passed to <<connect>>
-_returns_;; +true+ if signals were disconnected, +false+ if no signal
-was
-
-[[disconnectByName]]
-.disconnectByName() 
-
-[source,javascript]
-----
-Boolean disconnectByName(String signal) 
-----
-
-disconnect from all signals with matching name
-
- ::
-
-_signal_;; The callback function passed to <<connect>>
-_returns_;; +true+ if signals were disconnected, +false+ if no signal
-was disconnected
-
-
-//[options="header", cols="1s,1m,3,2,2"]
-//|=============================================
-//|function               2+| parameter | returns | description 
-//
-//.2+|connect 
-//|String |The signal to connect to; *required* .2+| The
-//signal id of the signal or +-1+ if the signal was not connected.
-//.2+| Connects to a signal.
-//
-//|Function(+Object+, +Object+) | The callback to call when the signal is emitted; *required*
-//
-//|disconnect 
-//|Number |The signal id of the signal; *required* | - 
-//| Disconnects from a signal, the id is the id returned by 
-//+connect+.
-//
-//
-//.2+|emit 
-//|String |The signal to emit; *required* .2+| - 
-//.2+| Emits a signal. 
-//|Objects |Objects passed to the callback function; *optional*
-//
-//
-//|=============================================
-
-
-=== Internal signals ===
-
-Internal signals are signals implemented by dwb. It should be avoided to call <<disconnectByName>>
-on signals implemented by dwb since it will completely stop the emission of the
-signal in all scripts.
-
-[[buttonPress]]
-.buttonPress 
-
-[source,javascript]
-----
-Boolean callback(webview, hittestresult, json) 
-----
-
-Emitted when a button is pressed on the <<webview>>, return +true+ to prevent
-the default action
-
- ::
-
-_webview_;; The <<webview>> which received the signal
-_hittestresult_;; Hittestresult under the cursor
-_json.button_;; The button that is pressed, usually a value between 1 and 5
-_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
-_json.time_;; The time in milliseconds when the button was pressed 
-_json.type_;; A <<ClickType>>
-_json.x_;; x-position relative to the window
-_json.xRoot_;; x-position relative to the screen
-_json.y_;; y-position relative to the window
-_json.yRoot_;; y-position relative to the screen
-  
-[[buttonRelease]]
-.buttonRelease 
-
-[source,javascript]
-----
-Boolean callback(webview, hittestresult, json) 
-----
-
-Emitted when a button is released, return +true+ to prevent the default action
-
- ::
-
-_webview_;; The <<webview>> which received the signal
-_hittestresult_;; Hittestresult under the cursor
-_json_;; Same as <<buttonPress>> but without _json.type_
-
-[[frameStatus]]
-.frameStatus 
-
-[source,javascript]
-----
-void callback(webview, frame) 
-----
-
-Emitted when the <<LoadStatus>> of a frame changes
-
- ::
-
-_webview_;; The webview the frame belongs to
-_frame_;; The frame 
-
-[[hoveringOverLink]]
-.hoveringOverLink 
-
-[source,javascript]
-----
-void callback(webview, json) 
-----
-
-Emitted when the mouse is over a link
-
- ::
-
-_webview_;; The webview that emitted the signal
-_json.uri_;; The uri of the link or +null+ if there is no link under the pointer, i.e. the pointer left a link
-_json.title_;; The link's title or +null+ if the pointer left a link
-
-[[keyPress]]
-.keyPress 
-
-[source,javascript]
-----
-Boolean callback(webview, json) 
-----
-
-Emitted when a key is pressed, return +true+ to prevent the default action
-
- ::
-
-_webview_;; The focused webview
-_json.isModifier_;; Whether or not the key is a modifier
-_json.keyCode_;; Hardware keycode
-_json.keyVal_;; Keycode as listed in gdkkeysyms.h 
-_json.name_;; A string represantation of the key
-_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
-
-[[keyRelease]]
-.keyRelease 
-
-[source,javascript]
-----
-Boolean callback(webview, json) 
-----
-
-Emitted when a key is released, return +true+ to prevent the default action
-
- ::
-
-_webview_;; The focused webview
-_json_;; Same as <<keyPress>>
-
-
-[[loadCommitted]]
-.loadCommitted 
-
-[source,javascript]
-----
-void callback(webview) 
-----
-
-Emitted when the load has just commited, no data has been loaded when this
-signal is emitted. This is the preferred signal for injected scripts that do not
-manipulate the DOM.
-
- ::
-
-_webview_;; The webview that emitted the signal
-
-[[loadFinished]]
-.loadFinished 
-
-[source,javascript]
-----
-Boolean callback(webview) 
-----
-
-Emitted when the site has completely loaded. 
-
- ::
-
-_webview_;; The webview that emitted the signal
-
-[[loadStatus]]
-.loadStatus 
-
-[source,javascript]
-----
-void callback(webview) 
-----
-
-Emitted when the load status changes
-
-  ::
-
-_webview_;; The webview that emitted the signal
-
-[[mimeType]]
-.mimeType 
-
-[source,javascript]
-----
-Boolean callback(webview, frame, request, json) 
-----
-
-Decide whether or not to show a given mimetype. Return +true+ to stop the request.
-
- ::
-
-_webview_;; The webview that emitted the signal
-_frame_;; The frames requires the decision 
-_request_;; The network request
-_json.mimeType_;; The mimetype
-
-[[navigation]]
-.navigation 
-
-[source,javascript]
-----
-Boolean callback(webview, frame, request, action) 
-----
-
-Emitted before a new site is loaded, return +true+ to stop the request.
-
- ::
-
-_webview_;; The webview that emitted the signal
-_frame_;; The frame that requires the navigation 
-_request_;; The network request
-_action_;; The navigation action
-
-[[resource]]
-.resource 
-
-[source,javascript]
-----
-Boolean callback(webview, frame, request, response) 
-----
-
-Emitted before a new resource is going to be loaded
-
- ::
-
-_webview_;; The webview that emitted the signal
-_frame_;;   The frame that dispatched the request
-_request_;; The network request
-_response_;; The network response
-
-[[tabFocus]]
-.tabFocus 
-
-[source,javascript]
-----
-Boolean callback(webview, json) 
-----
-
-Emitted when another tab gets focus, return +true+ to stop the event
-
- ::
-
-_webview_;; The new tab
-_json.last_;; The number of the previously focused tab
-
-
-//[options="header", cols="2s,2m,4,4"]
-//|=============================================
-//|signal               2+|parameter  |description 
-//
-//.3+|buttonPress 
-//| <<webview>> | currently focused webview
-//.3+|Emitted when a button is pressed, only clicks on the webview are noticed;
-//return +true+ to stop the default action
-//| <<hittestresult>> | the hit test result under the cursor
-//|json  |
-//
-//* button The button that is pressed, usually a value between 1 and 5
-//* state A bitmap of modifiers pressed, see <<Modifier>>
-//time:: The time in milliseconds when the button was pressed 
-//type:: A <<ClickType>>
-//x:: x-position relative to the window
-//xRoot:: x-position relative to the screen
-//y:: y-position relative to the window
-//yRoot:: y-position relative to the screen
-//
-//|=============================================
-
-//|buttonRelease | focused <<webview>>
-//2+d|Same as *buttonPress* but without +type+
-//|Emitted when a button is released, only clicks on the webview are noticed;
-//return +true+ to stop the default action
-//
-//.5+|download .5+| focused <<webview>>
-//|filename|The suggested filename 
-//.5+|Emitted before a download starts. Return +true+ to handle the signal or +false+ to let *dwb* handle the signal.
-//|mimeType|The mimetype of the file or +unknown+
-//|referer|The referer of the request
-//|uri|The uri of the file to download
-//|totalSize|The total size of the file
-//
-//.4+|downloadStatus .4+| focused <<webview>>
-//|filename|The filename 
-//.4+|Emitted when the download status changes
-//|mimeType|Mimetype of the file or +unknown+
-//|status|A <<DownloadStatus>>
-//|uri|Original uri of the file
-//
-//.5+|keyPress .5+| focused <<webview>>
-//|isModifier | Whether or not the key is a modifier
-//.5+|Emitted when a key is pressed, the first parameter of the callback function
-//will always be the currently focued <<webview>>; return +true+ to stop the
-//default action
-//|keyCode | Hardware keycode
-//|keyVal | Keycode as listed in gdkkeysyms.h 
-//|name | A string represantation of the key
-//|state | A bitmap of modifiers pressed, see <<Modifier>>
-//
-//|keyRelease | focused <<webview>>
-//2+d|Same as *keyPress*
-//|Emitted when a key is released; return +true+ to stop the
-//default action
-//
-//
-//|tabFocus | focused <<webview>>
-//|last| Number of the previously focused tab
-//|Emitted when a new tab gets focus, the first parameter will be the new
-//<<webview>>; return +true+ to prevent the tab being changed
-
-.Example 
-[source,javascript]
-------
-// Prevent example.com from being loaded
-function navigationCallback(wv, frame, request, action) {
-  if (/.*\.example\.com.*/.test(request.uri)) {
-    return true;
-  }
-}
-signals.connect("navigation", navigationCallback);
-------
 
 
 == Global ==
@@ -466,6 +39,7 @@ Functions from the global object.
 
 === Functions ===
 
+****
 [[execute]]
 .execute() 
 
@@ -486,8 +60,10 @@ Executes a dwb command
 _command_;; a dwb command to execute, will be parsed the same way as if executed
 from commandline
 _returns_;; +true+ if execution was successful
+****
 
 
+****
 [[include]]
 .include() 
 
@@ -505,7 +81,9 @@ executed in this context. Included files are not visible in other scripts unless
 _path_;; Path to a file to include
 _global_;; Whether to include the script into the global scope, optional
 _returns_;; The return value of the included file
+****
 
+****
 [[timerStart]]
 .timerStart() 
 
@@ -522,8 +100,9 @@ Executes a function repeatedly until the function returns +false+ or
 _interval_;; Interval in milliseconds
 _func_;; Function to execute
 _returns_;; An id that can be passed to timerStop
+****
 
-
+****
 [[timerStop]]
 .timerStop() 
 
@@ -538,7 +117,9 @@ Stops a timer started by <<timerStart>>
 
 _id_;; The id returned from <<timerStart>>
 _returns_;; +true+ if the timer was stopped
+****
 
+****
 [[domainFromHost]]
 .domainFromHost() 
 
@@ -555,6 +136,7 @@ example.com, for www.example.co.uk it will be example.co.uk.
 
 _hostname_;; a hostname
 _returns_;; the base domain 
+****
 
 //[options="header", cols="1s,1m,3,3,3"]
 //|=============================================
@@ -597,6 +179,7 @@ _returns_;; the base domain
 //
 //|=============================================
 
+======
 .Example
 [source,javascript]
 ---------------------------------
@@ -608,10 +191,13 @@ timerStart(2000, function() {
   return false;
 });
 ---------------------------------
+======
 
 NOTE: Scripts included with +include+ are either visible in the global scope or
 invisible, even in the including script. To use an included script it can return
 an object with its public objects: 
+
+======
 [source,javascript]
 ---------------------------------
 // included script 
@@ -627,6 +213,7 @@ return {
 var i = include("/path/to/script");
 var p = i.getPrivate();               // 37
 ---------------------------------
+======
 
 
 
@@ -638,6 +225,7 @@ var p = i.getPrivate();               // 37
 The +data+ object can be used to determine internally used data securely. All
 properties are readonly Strings.
 
+****
  ::
 
 _data.bookmarks_;; Bookmark file 
@@ -656,6 +244,7 @@ _data.session_;; File with stored sessions for this profile
 _data.sessionCookiesWhitelist_;; Whitelist for session cookies
 _data.settings_;; Settings configuration file
 _data.searchEngines_;; Searchengines 
+****
 
 //.Properties
 //[options="header", cols="2s,10"]
@@ -678,17 +267,20 @@ _data.searchEngines_;; Searchengines
 //|searchEngines  |Searchengines 
 //|=============================================
 
+====
 .Example
 [source,javascript]
 ---------------------------------
 // Get contents of the currently used bookmark file
 var bookmarks = io.read(data.bookmarks);
 --------------------------------
+====
 
 [[io]]
 === io ===
 The +io+ object implements functions for input and output. 
 
+****
 [[print]]
 .print() 
 
@@ -703,7 +295,9 @@ Print text to +stdout+ or +stderr+
 
 _text_;; the text to print
 _stream_;; pass +"stderr"+ to print to stderr, optional
+****
 
+****
 [[write]]
 .write() 
 
@@ -721,7 +315,9 @@ _mode_;; Either +"a"+ to append to the file, or +"w"+ to strip the file or
 create a new file.
 _text_;; The text that should be written to the file
 _returns_;; +true+ if writing was successful
+****
 
+****
 [[read]]
 .read() 
 
@@ -736,6 +332,7 @@ Read from a file.
 
 _path_;; Path to a file that should be read
 _returns_;; A string with the file content
+****
 
 
 
@@ -762,18 +359,21 @@ _returns_;; A string with the file content
 //
 //|=============================================
 
+====
 .Example
 [source,javascript]
 ---------------------------------
 var text = io.read("/home/foo/textfile.txt");
 io.print(text);
 --------------------------------
+====
 
 [[system]]
 === system ===
 
 The +system+ object implements system functions.
 
+****
 [[spawn]]
 .spawn() 
 
@@ -791,7 +391,9 @@ _stdin(String)_;; Callback function for stdin, pass +null+ if only stderr is
 needed, optional
 _stderr(String)_;; Callback function for stderr, optional
 _returns_;; <<SpawnError>> if an error occured, 0 otherwise
+****
 
+****
 [[getEnv]]
 .getEnv() 
 
@@ -806,6 +408,7 @@ Get a system environment variable
 
 _name_;; Name of the variable
 _returns_;; The variable or +null+ if the variable wasn't found
+****
 
 //[options="header", cols="1s,1m,2,2,2"]
 //|=============================================
@@ -823,6 +426,7 @@ _returns_;; The variable or +null+ if the variable wasn't found
 //|Get a system environment variable.
 //|=============================================
 
+====
 .Example
 [source,javascript]
 ------------
@@ -835,6 +439,7 @@ function asyncread(filename) {
 }
 asyncread(home + "/.bashrc");
 ------------
+====
 
 
 [[tabs]]
@@ -843,6 +448,7 @@ The +tabs+ object implements functions and properties to get +webview+ objects.
 
 ==== Properties ====
 
+****
 .current
 
 [source,javascript]
@@ -851,7 +457,9 @@ tabs.current        webview     read
 ----
 
 The currently focused webview
+****
 
+****
 .length
 
 [source,javascript]
@@ -860,7 +468,9 @@ tabs.length         Number      read
 ----
 
 Total number of tabs
+****
 
+****
 .number 
 
 [source,javascript]
@@ -869,6 +479,7 @@ tabs.number         Number      read
 ----
 
 Number of the currently focused tab
+****
 
 
 
@@ -883,6 +494,7 @@ Number of the currently focused tab
 
 ==== Functions ====
 
+****
 .nth()
 
 [source,javascript]
@@ -896,6 +508,7 @@ Gets the webview object of the nth tab
 
 _n_;; Number of the tab
 _returns_;; The corresponding <<webview>>
+****
 
 //[options="header", cols="1s,1m,3,2,2"]
 //|=============================================
@@ -906,12 +519,14 @@ _returns_;; The corresponding <<webview>>
 //|=============================================
 
 
+====
 .Example 
 [source,javascript]
 ----
 var c = tabs.current;
-tabs.nth(2).uri = c.uri;
+tabs.nth(2).loadUri(c.uri);
 ----
+====
 
 [[Webkitobjects]]
 == Webkit objects ==
@@ -923,10 +538,23 @@ content.
 
 ==== Properties ====
 
-The properties correspond to the gobject properties in camelcase
+The properties correspond to the gobject properties in camelcase. Additional
+properties are
+
+****
+.mainFrame
+
+[source,javascript]
+----
+wv.mainFrame        frame     read
+----
+
+The main frame of the webview
+****
 
 ==== Functions ====
 
+****
 .inject() 
 
 [source,javascript]
@@ -942,7 +570,9 @@ _script_;; the script to inject
 _global_;; +true+ to inject it into the global scope, +false+ to encapsulate it
 in a function, optional
 _returns_;; +true+ if the script was injected, +false+ if an error occured
+****
 
+****
 .history()
 
 [source,javascript]
@@ -955,7 +585,9 @@ Loads a history item +steps+ away from the current history item
  ::
 
 _steps_;; Number of steps, pass a negative value to go back in history
+****
 
+****
 .loadUri() 
 
 [source,javascript]
@@ -971,8 +603,10 @@ _uri_;; The uri to load
 _callback_;; A callback function that will be called when the load status
 changes, return +true+ to stop the emission, optional
 _returns_;; +true+ if the uri is loaded
+****
 
 
+****
 .reload()
 
 [source,javascript]
@@ -981,8 +615,10 @@ void wv.reload(void)
 ----
 
 Reload a webview 
+****
 
 
+====
 .Example
 [source,javascript]
 ------------
@@ -996,6 +632,7 @@ wv.loadUri("http://www.example.com", function() {
   }
 });
 ------------
+====
 
 //.Functions
 //
@@ -1104,9 +741,45 @@ different domain. For this purpose the +frame+ object can be used.
 ==== Properties ====
 
 The properties correspond to the gobject properties in camelcase.
+Additional properties are 
+
+****
+.domain
+
+[source,javascript]
+----
+frame.domain        frame     read
+----
+
+The domain name of the frame which is the effective second level domain
+****
+
+****
+.host
+
+[source,javascript]
+----
+frame.host        frame     read
+----
+
+The host name of the frame
+****
+
+====
+To get the domain or hostname of a webview 
+[source,javascript]
+----
+webview.mainFrame.domain
+webview.mainFrame.host
+----
+can be used.
+====
+
+
 
 ==== Functions ====
 
+****
 .inject() 
 
 [source,javascript]
@@ -1122,6 +795,7 @@ _script_;; the script to inject
 _global_;; +true+ to inject it into the global scope, +false+ to encapsulate it
 in a function, optional
 _returns_;; +true+ if the script was injected, +false+ if an error occured
+****
 
 
 //[options="header", cols="1s,1m,3,2,2"]
@@ -1162,14 +836,482 @@ _returns_;; +true+ if the script was injected, +false+ if an error occured
 Corresponds to a +WebKitNavigationRequest+.
 
 [[navigationAction]]
-=== navigationAction ===
+== navigationAction ==
 
 Corresponds to a +WebKitWebNavigationAction+.
+
+== Signals ==
+With the +signals+ object *dwb* communicates with the script on certain events. 
+To connect to a signal one can call the connect function that is implemented by
+the signals object, that takes 2 arguments, the name of the signal and a
+callback function. 
+
+The callback function has a varying number of parameters, the first paramteter
+is always the <<webview>> which received the signal or the focused <<webview>>.
+The last paramter is always a json-object which might be empty or contain
+additional data relevant to the signal. 
+A callback function should either return +true+ or +false+ or nothing which is
+equivalent to +false+.
+If multiple callbacks are connected to the same signal and one callback
+function returns +true+ the overall return value will be +true+.
+
+*dwb* only emits signals as long as one callback is connected to a signal. To
+reduce overhead one should disconnect from signals when no longer
+needed. 
+
+The signals object implements the following functions
+
+
+=== Functions ===
+
+[[connect]]
+.connect()
+
+****
+[source,javascript]
+----
+Number signals.connect(String signal, Function callback) 
+----
+Connect to a signal
+
+ ::
+
+_signal_;; The signal to connect to 
+_callback_;; The callback function which will be called when the signal is emitted
+_returns_;;  Unique id for this connection, can be passed to <<disconnect>>
+****
+
+****
+[[emit]]
+.emit() 
+
+[source,javascript]
+----
+Boolean signals.emit(String signal,  ...)
+----
+
+Emits a signal with a variable number of arguments passed to the callback
+function
+
+ :: 
+
+_signal_;; The signal to emit
+_..._;; Objects passed to the callback function
+_returns_;; Overall return value from all connected callback functions
+****
+
+****
+[[disconnect]]
+.disconnect() 
+
+[source,javascript]
+----
+Boolean signals.disconnect(Number id) 
+----
+disconnect from a signal 
+
+ ::
+
+_id_;; The id returned from <<connect>>
+_returns_;; +true+ if the signal was disconnected, +false+ if the signal
+wasn't found or was already disconnected. 
+****
+
+
+****
+[[disconnectByFunction]]
+.disconnectByFunction() 
+
+[source,javascript]
+----
+Boolean signals.disconnectByFunction(Function callback) 
+----
+disconnect from all signals with matching callback function
+
+ ::
+
+_callback_;; The callback function passed to <<connect>>
+_returns_;; +true+ if signals were disconnected, +false+ if no signal
+was disconnected
+****
+
+****
+[[disconnectByName]]
+.disconnectByName() 
+
+[source,javascript]
+----
+Boolean signals.disconnectByName(String signal) 
+----
+
+disconnect from all signals with matching name
+
+ ::
+
+_signal_;; The callback function passed to <<connect>>
+_returns_;; +true+ if signals were disconnected, +false+ if no signal
+was disconnected
+****
+
+
+//[options="header", cols="1s,1m,3,2,2"]
+//|=============================================
+//|function               2+| parameter | returns | description 
+//
+//.2+|connect 
+//|String |The signal to connect to; *required* .2+| The
+//signal id of the signal or +-1+ if the signal was not connected.
+//.2+| Connects to a signal.
+//
+//|Function(+Object+, +Object+) | The callback to call when the signal is emitted; *required*
+//
+//|disconnect 
+//|Number |The signal id of the signal; *required* | - 
+//| Disconnects from a signal, the id is the id returned by 
+//+connect+.
+//
+//
+//.2+|emit 
+//|String |The signal to emit; *required* .2+| - 
+//.2+| Emits a signal. 
+//|Objects |Objects passed to the callback function; *optional*
+//
+//
+//|=============================================
+
+
+=== Internal signals ===
+
+Internal signals are signals implemented by dwb. It should be avoided to call <<disconnectByName>>
+on signals implemented by dwb since it will completely stop the emission of the
+signal in all scripts.
+
+
+****
+[[buttonPress]]
+.buttonPress 
+
+[source,javascript]
+----
+Boolean callback(webview, hittestresult, json) 
+----
+
+Emitted when a button is pressed on the <<webview>>, return +true+ to prevent
+the default action
+
+ ::
+
+_webview_;; The <<webview>> which received the signal
+_hittestresult_;; Hittestresult under the cursor
+_json.button_;; The button that is pressed, usually a value between 1 and 5
+_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
+_json.time_;; The time in milliseconds when the button was pressed 
+_json.type_;; A <<ClickType>>
+_json.x_;; x-position relative to the window
+_json.xRoot_;; x-position relative to the screen
+_json.y_;; y-position relative to the window
+_json.yRoot_;; y-position relative to the screen
+****
+  
+****
+[[buttonRelease]]
+.buttonRelease 
+
+[source,javascript]
+----
+Boolean callback(webview, hittestresult, json) 
+----
+
+Emitted when a button is released, return +true+ to prevent the default action
+
+ ::
+
+_webview_;; The <<webview>> which received the signal
+_hittestresult_;; Hittestresult under the cursor
+_json_;; Same as <<buttonPress>> but without _json.type_
+****
+
+****
+[[frameStatus]]
+.frameStatus 
+
+[source,javascript]
+----
+void callback(webview, frame) 
+----
+
+Emitted when the <<LoadStatus>> of a frame changes
+
+ ::
+
+_webview_;; The webview the frame belongs to
+_frame_;; The frame 
+****
+
+****
+[[hoveringOverLink]]
+.hoveringOverLink 
+
+[source,javascript]
+----
+void callback(webview, json) 
+----
+
+Emitted when the mouse is over a link
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_json.uri_;; The uri of the link or +null+ if there is no link under the pointer, i.e. the pointer left a link
+_json.title_;; The link's title or +null+ if the pointer left a link
+****
+
+****
+[[keyPress]]
+.keyPress 
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when a key is pressed, return +true+ to prevent the default action
+
+ ::
+
+_webview_;; The focused webview
+_json.isModifier_;; Whether or not the key is a modifier
+_json.keyCode_;; Hardware keycode
+_json.keyVal_;; Keycode as listed in gdkkeysyms.h 
+_json.name_;; A string represantation of the key
+_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
+****
+
+****
+[[keyRelease]]
+.keyRelease 
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when a key is released, return +true+ to prevent the default action
+
+ ::
+
+_webview_;; The focused webview
+_json_;; Same as <<keyPress>>
+****
+
+
+****
+[[loadCommitted]]
+.loadCommitted 
+
+[source,javascript]
+----
+void callback(webview) 
+----
+
+Emitted when the load has just commited, no data has been loaded when this
+signal is emitted. This is the preferred signal for injected scripts that do not
+manipulate the DOM.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+****
+
+****
+[[loadFinished]]
+.loadFinished 
+
+[source,javascript]
+----
+Boolean callback(webview) 
+----
+
+Emitted when the site has completely loaded. 
+
+ ::
+
+_webview_;; The webview that emitted the signal
+****
+
+****
+[[loadStatus]]
+.loadStatus 
+
+[source,javascript]
+----
+void callback(webview) 
+----
+
+Emitted when the load status changes
+
+  ::
+
+_webview_;; The webview that emitted the signal
+****
+
+****
+[[mimeType]]
+.mimeType 
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, json) 
+----
+
+Decide whether or not to show a given mimetype. Return +true+ to stop the request.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frames requires the decision 
+_request_;; The network request
+_json.mimeType_;; The mimetype
+****
+
+****
+[[navigation]]
+.navigation 
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, action) 
+----
+
+Emitted before a new site is loaded, return +true+ to stop the request.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frame that requires the navigation 
+_request_;; The network request
+_action_;; The navigation action
+****
+
+****
+[[resource]]
+.resource 
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, response) 
+----
+
+Emitted before a new resource is going to be loaded
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;;   The frame that dispatched the request
+_request_;; The network request
+_response_;; The network response
+****
+
+****
+[[tabFocus]]
+.tabFocus 
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when another tab gets focus, return +true+ to stop the event
+
+ ::
+
+_webview_;; The new tab
+_json.last_;; The number of the previously focused tab
+****
+
+
+//[options="header", cols="2s,2m,4,4"]
+//|=============================================
+//|signal               2+|parameter  |description 
+//
+//.3+|buttonPress 
+//| <<webview>> | currently focused webview
+//.3+|Emitted when a button is pressed, only clicks on the webview are noticed;
+//return +true+ to stop the default action
+//| <<hittestresult>> | the hit test result under the cursor
+//|json  |
+//
+//* button The button that is pressed, usually a value between 1 and 5
+//* state A bitmap of modifiers pressed, see <<Modifier>>
+//time:: The time in milliseconds when the button was pressed 
+//type:: A <<ClickType>>
+//x:: x-position relative to the window
+//xRoot:: x-position relative to the screen
+//y:: y-position relative to the window
+//yRoot:: y-position relative to the screen
+//
+//|=============================================
+
+//|buttonRelease | focused <<webview>>
+//2+d|Same as *buttonPress* but without +type+
+//|Emitted when a button is released, only clicks on the webview are noticed;
+//return +true+ to stop the default action
+//
+//.5+|download .5+| focused <<webview>>
+//|filename|The suggested filename 
+//.5+|Emitted before a download starts. Return +true+ to handle the signal or +false+ to let *dwb* handle the signal.
+//|mimeType|The mimetype of the file or +unknown+
+//|referer|The referer of the request
+//|uri|The uri of the file to download
+//|totalSize|The total size of the file
+//
+//.4+|downloadStatus .4+| focused <<webview>>
+//|filename|The filename 
+//.4+|Emitted when the download status changes
+//|mimeType|Mimetype of the file or +unknown+
+//|status|A <<DownloadStatus>>
+//|uri|Original uri of the file
+//
+//.5+|keyPress .5+| focused <<webview>>
+//|isModifier | Whether or not the key is a modifier
+//.5+|Emitted when a key is pressed, the first parameter of the callback function
+//will always be the currently focued <<webview>>; return +true+ to stop the
+//default action
+//|keyCode | Hardware keycode
+//|keyVal | Keycode as listed in gdkkeysyms.h 
+//|name | A string represantation of the key
+//|state | A bitmap of modifiers pressed, see <<Modifier>>
+//
+//|keyRelease | focused <<webview>>
+//2+d|Same as *keyPress*
+//|Emitted when a key is released; return +true+ to stop the
+//default action
+//
+//
+//|tabFocus | focused <<webview>>
+//|last| Number of the previously focused tab
+//|Emitted when a new tab gets focus, the first parameter will be the new
+//<<webview>>; return +true+ to prevent the tab being changed
+
+====
+.Example 
+[source,javascript]
+------
+// Prevent example.com from being loaded
+function navigationCallback(wv, frame, request, action) {
+  if (/.*\.example\.com.*/.test(request.uri)) {
+    return true;
+  }
+}
+signals.connect("navigation", navigationCallback);
+------
+====
 
 == Enum objects ==
 Enum objects are objects that have only readonly properties, mapping
 gtk/webkit enums to javascript objects. 
 
+****
 [[ButtonContext]]
 .ButtonContext
 
@@ -1184,7 +1326,9 @@ const ButtonContext = {
   editable   : 1 << 6
 };
 --------
+****
 
+****
 [[ClickType]]
 .ClickType
 
@@ -1196,7 +1340,9 @@ const ClickType = {
   tripleClick : 6
 };
 --------
+****
 
+****
 [[DownloadStatus]]
 .DownloadStatus
 
@@ -1210,7 +1356,9 @@ const DownloadStatus = {
   finished    : 3
 };
 -------
+****
 
+****
 [[LoadStatus]]
 .LoadStatus
 
@@ -1224,7 +1372,9 @@ const LoadStatus = {
   failed            : 4
 };
 ---------
+****
 
+****
 [[Modifier]]
 .Modifier
 
@@ -1251,7 +1401,9 @@ const Modifier = {
   Modifier  : 0x5c001fff
 };
 --------
+****
 
+****
 [[NavigationReason]]
 .NavigationReason
 
@@ -1266,7 +1418,9 @@ const NavigationReason = {
   other           : 5
 };
 --------
+****
 
+****
 [[SpawnError]]
 .SpawnError
 [source,javascript]
@@ -1278,6 +1432,8 @@ const SpawnError = {
   stderrFailed  : 1<<2
 };
 --------
+****
+
 
 [[Globaldata]]
 == Global data == 
@@ -1379,6 +1535,7 @@ The +extensions+ object has the following properties and functions
 
 === Functions ===
 
+****
 [[extensionload,load]]
 .load()
 
@@ -1392,7 +1549,9 @@ Loads an extension
 
 _name_;; Name of the extension
 _returns_;;  True if the extension was loaded
+****
 
+****
 [[error]]
 .error()
 
@@ -1407,7 +1566,9 @@ Print a consistent error to stderr
 
 _name_;; Name of the extension
 _message_;; The error message
+****
 
+****
 [[message]]
 .message()
 
@@ -1422,8 +1583,10 @@ Print a consistent message to stderr
 
 _name_;; Name of the extension
 _message_;; The message
+****
 
 
+****
 [[warning]]
 .warning()
 
@@ -1438,6 +1601,7 @@ Print a consistent warning to stderr
 
 _name_;; Name of the extension
 _message_;; The warning message
+****
 
 
 .Example
@@ -1487,6 +1651,7 @@ return {
 };
 --------
 
+====
 .Example extensionrc
 [source,javascript]
 --------
@@ -1496,6 +1661,7 @@ return {
   
 };
 --------
+====
 
 
 

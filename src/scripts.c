@@ -80,11 +80,23 @@ static JSStaticFunction wv_functions[] = {
     { "inject",          wv_inject,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
+static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSStaticValue wv_values[] = {
+  { "mainFrame", wv_get_main_frame, NULL, kJSDefaultAttributes }, 
+  { 0, 0, 0, 0 }, 
+};
 
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
   { "inject",          frame_inject,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
+};
+static JSValueRef frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef frame_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSStaticValue frame_values[] = {
+  { "host", frame_get_host, NULL, kJSDefaultAttributes }, 
+  { "domain", frame_get_domain, NULL, kJSDefaultAttributes }, 
+  { 0, 0, 0, 0 }, 
 };
 
 static JSValueRef download_start(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
@@ -325,6 +337,13 @@ wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc,
   JSContextRef wctx = webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(wv));
   return inject(ctx, wctx, function, this, argc, argv, exc);
 }
+JSValueRef 
+wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  WebKitWebView *wv = JSObjectGetPrivate(object);
+  WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
+  return scripts_make_object(ctx, G_OBJECT(frame));
+}
+
 bool
 set_gobject_property(JSContextRef ctx, GObject *o, JSStringRef js_name, JSValueRef jsvalue, JSValueRef* exception) {
   char buf[PROP_LENGTH];
@@ -437,8 +456,6 @@ object_finalize(JSObjectRef o) {
 // TODO : creating 1000000 objects leaks ~ 4MB  
 JSObjectRef 
 scripts_make_object(JSContextRef ctx, GObject *o) {
-  static int counter;
-  printf("%d\n", counter++);
   if (o == NULL) {
     JSValueRef v = JSValueMakeNull(ctx);
     return JSValueToObject(ctx, v, NULL);
@@ -461,27 +478,23 @@ get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueR
   return get_gobject_property(ctx, object, G_OBJECT(JSObjectGetPrivate(object)), js_name, exception);
 }
 
-#if 0
 JSValueRef 
-tab_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  SoupMessage *msg = dwb_soup_get_message(SCRIPT_WEBVIEW(object));
+frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  SoupMessage *msg = dwb_soup_get_message(JSObjectGetPrivate(object));
   if (msg == NULL)
     return JSValueMakeNull(ctx);
   SoupURI *uri = soup_message_get_uri(msg);
   const char *host = soup_uri_get_host(uri);
   return js_char_to_value(ctx, domain_get_base_for_host(host));
 }
-
 JSValueRef 
-tab_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  SoupMessage *msg = dwb_soup_get_message(SCRIPT_WEBVIEW(object));
+frame_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  SoupMessage *msg = dwb_soup_get_message(JSObjectGetPrivate(object));
   if (msg == NULL)
     return JSValueMakeNull(ctx);
   SoupURI *uri = soup_message_get_uri(msg);
   return js_char_to_value(ctx, soup_uri_get_host(uri));
 }
-#endif
-
 static JSValueRef 
 frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   WebKitWebFrame *frame = JSObjectGetPrivate(this);
@@ -1022,15 +1035,18 @@ create_global_object() {
 
   /* Webview */
   cd.staticFunctions = wv_functions;
+  cd.staticValues = wv_values;
   _webview_class = JSClassCreate(&cd);
 
   /* Frame */
   cd.staticFunctions = frame_functions;
+  cd.staticValues = frame_values;
   _frame_class = JSClassCreate(&cd);
 
   /* download */
   cd.className = "Download";
   cd.staticFunctions = download_functions;
+  cd.staticValues = NULL;
   _download_class = JSClassCreate(&cd);
   JSObjectRef constructor = JSObjectMakeConstructor(_global_context, _download_class, download_constructor_cb);
   JSStringRef name = JSStringCreateWithUTF8CString("Download");
