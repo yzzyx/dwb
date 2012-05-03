@@ -302,11 +302,17 @@ dwb_soup_set_ntlm(gboolean use_ntlm) {
 /* dwb_soup_init_session_features() {{{*/
 DwbStatus 
 dwb_soup_init_session_features() {
+#ifdef WITH_LIBSOUP_2_38
+  gboolean cert = GET_BOOL("ssl-use-system-ca-file");
+  g_object_set(dwb.misc.soupsession, 
+      SOUP_SESSION_SSL_USE_SYSTEM_CA_FILE, cert, NULL);
+#else 
   char *cert = GET_CHAR("ssl-ca-cert");
   if (cert != NULL && g_file_test(cert, G_FILE_TEST_EXISTS)) {
     g_object_set(dwb.misc.soupsession, 
         SOUP_SESSION_SSL_CA_FILE, cert, NULL);
   }
+#endif
   g_object_set(dwb.misc.soupsession, SOUP_SESSION_SSL_STRICT, GET_BOOL("ssl-strict"), NULL);
   dwb_soup_set_ntlm(GET_BOOL("use-ntlm"));
   return STATUS_OK;

@@ -21,7 +21,7 @@ proxy checkbox Whether to use a HTTP-proxy
 proxy-url text The HTTP-proxy url
 save-session checkbox Whether to Automatically save sessions
 single-instance checkbox Whether to have only one instance
-ssl-ca-cert text Path to ssl-certificate
+SSL_CERTIFICATION
 ssl-strict checkbox Whether to allow only save ssl-certificates
 use-ntlm checkbox Whether to use ntlm-authentication
 user-agent text The user agent string
@@ -145,3 +145,4 @@ scheme-handler Application or script that handles uris with schemes that cannot 
 sync-files text Interval to save history to disk, 0 means save immediately
 tab-key-cycles-through-elements checkbox Tab cycles through elements in insert mode
 update-search-delay text Delay before updating search results in milliseconds
+

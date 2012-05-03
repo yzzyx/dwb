@@ -46,6 +46,8 @@ ifeq ($(shell pkg-config --exists javascriptcoregtk-1.0 && echo 1), 1)
 GTK2LIBS+=javascriptcoregtk-1.0
 endif
 
+
+
 LIBSOUP=libsoup-2.4
 
 ifeq ($(shell pkg-config --exists $(LIBSOUP) && echo 1), 1)
@@ -123,6 +125,10 @@ CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 CFLAGS += -DLOCAL_FILE=\"$(LOCAL_FILE)\"
 CFLAGS += -DHINT_SCRIPT=\"$(HINT_SCRIPT)\"
 CFLAGS += -DSYSTEM_DATA_DIR=\"$(DATADIR)\"
+
+ifeq ($(shell pkg-config --exists '$(LIBSOUP) >= 2.38' && echo 1), 1)
+CFLAGS += -DWITH_LIBSOUP_2_38=1
+endif
 
 # If execinfo.h is not available, e.g. freebsd
 ifneq (${WITHOUT_EXECINFO}, 1)
