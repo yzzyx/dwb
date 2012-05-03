@@ -222,6 +222,21 @@ Emitted when the <<LoadStatus>> of a frame changes
 _webview_;; The webview the frame belongs to
 _frame_;; The frame 
 
+[[hoveringOverLink]]
+.hoveringOverLink 
+
+[source,javascript]
+----
+void callback(webview, json) 
+----
+
+Emitted when the mouse is over a link
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_json.uri_;; The uri of the link or +null+ if there is no link under the pointer, i.e. the pointer left a link
+_json.title_;; The link's title or +null+ if the pointer left a link
 
 [[keyPress]]
 .keyPress 

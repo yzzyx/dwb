@@ -326,6 +326,12 @@ view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList
 /* view_hovering_over_link_cb(WebKitWebView *, char *title, char *uri, GList *) {{{*/
 static void 
 view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl) {
+  if (EMIT_SCRIPT(HOVERING_OVER_LINK)) {
+    char *json = util_create_json(2, CHAR, "uri", uri, CHAR, "title", title);
+    ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(json, HOVERING_OVER_LINK, 0) };
+    scripts_emit(&signal);
+    g_free(json);
+  }
   if (uri) {
     VIEW(gl)->status->hover_uri = g_strdup(uri);
     dwb_set_status_bar_text(dwb.gui.urilabel, uri, &dwb.color.active_fg, NULL, false);
