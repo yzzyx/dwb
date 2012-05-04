@@ -766,11 +766,14 @@ commands_execute_javascript(KeyMap *km, Arg *arg) {
 /* commands_set {{{*/
 DwbStatus
 commands_set(KeyMap *km, Arg *arg) {
+  DwbStatus ret = STATUS_ERROR;
   const char *command = util_str_chug(arg->p);
-  char **args = g_strsplit(command, " ", 2);
-  DwbStatus ret = dwb_set_setting(args[0], args[1], arg->n);
-  //DwbStatus ret = dwb_set_setting(args[0], args[1], 0);
-  g_strfreev(args);
+  if (command && *command) {
+    char **args = g_strsplit(command, " ", 2);
+    if (g_strv_length(args) >= 2)
+      ret = dwb_set_setting(args[0], args[1], arg->n);
+    g_strfreev(args);
+  }
   return ret;
 }/*}}}*/
 /* commands_set {{{*/
