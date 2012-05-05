@@ -28,22 +28,29 @@ install-man: all
 	install -m 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
 
 install-data: all
-	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)
-	install -m 644 $(JSDIR)/$(HINT_SCRIPT) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)/$(HINT_SCRIPT)
-	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBJSDIR)
-	install -m 644 $(LIBJSFILES) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBJSDIR)/
+	@# Lib
 	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)
-	install -m 644 $(LIBDIR)/$(INFO_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(INFO_FILE)
-	install -m 644 $(LIBDIR)/$(HEAD_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(HEAD_FILE)
-	install -m 644 $(LIBDIR)/$(SETTINGS_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(SETTINGS_FILE)
-	install -m 644 $(LIBDIR)/$(KEY_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(KEY_FILE)
-	install -m 644 $(LIBDIR)/$(PLUGIN_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(PLUGIN_FILE)
-	install -m 644 $(LIBDIR)/$(ERROR_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(ERROR_FILE)
-	install -m 644 $(LIBDIR)/$(LOCAL_FILE) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBDIR)/$(LOCAL_FILE)
+	for file in $(LIBDIR)/*; do \
+		install -m 644 $$file $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$$file; \
+	done
+	@# Share
 	install -d $(DESTDIR)$(DATADIR)/pixmaps
 	install -m 644 $(SHAREDIR)/dwb.png $(DESTDIR)$(DATADIR)/pixmaps/dwb.png
 	install -d $(DESTDIR)$(DATADIR)/applications
 	install -m 644 $(SHAREDIR)/dwb.desktop $(DESTDIR)$(DATADIR)/applications/dwb.desktop
+	@# Extensions
+	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(EXTENSIONSDIR)
+	for extension in $(EXTENSIONSDIR)/*; do \
+		install -m 644 $$extension $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$$extension; \
+	done
+	@# Libjs
+	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBJSDIR)
+	for file in $(LIBJSDIR)/*; do \
+		install -m 644 $$file $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$$file; \
+	done
+	@# Hints
+	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)
+	install -m 644 $(JSDIR)/$(HINT_SCRIPT) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)/$(HINT_SCRIPT)
 
 uninstall: uninstall-man uninstall-data
 	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"

@@ -5,9 +5,6 @@
  *
  * Config options:
  *
- * defaultShorcut     : The default shortcut that executes the main function of
- *                      this extension
- *
  * domainSalts        : Object of domain salts that will additionally be used
  *                      in the form 
  *
@@ -27,6 +24,9 @@
  *
  * saveMasterPassword : Whether to save the masterpassword, if set to false one
  *                      will be prompted each time this plugin executed
+ *
+ * shortcut           : The default shortcut that executes the main function of
+ *                      this extension
  *
  * */
 
@@ -119,13 +119,15 @@ return {
     // con
     config.salt = c.salt || defaultConfig.salt;
     config.numberOfHashes = c.numberOfHashes || defaultConfig.numberOfHashes;
-    config.hashMethod = c.hashMethod >= ChecksumType.md5 && c.hashMethod.sha256 ? c.hashMethod : defaultConfig.hashMethod;
+    config.hashMethod = c.hashMethod >= ChecksumType.md5 && c.hashMethod.sha256
+      ? c.hashMethod : defaultConfig.hashMethod;
     config.domainSalts = c.domainSalts || defaultConfig.domainSalts;
-    config.defaultShorcut = c.defaultShorcut || defaultConfig.defaultShorcut;
-    config.saveMasterPassword = c.saveMasterPassword !== undefined && c.saveMasterPassword !== null ? c.saveMasterPassword : defaultConfig.saveMasterPassword;
+    config.shortcut = c.defaultShorcut || defaultConfig.defaultShorcut;
+    config.saveMasterPassword = c.saveMasterPassword !== undefined && c.saveMasterPassword !== null 
+      ? c.saveMasterPassword : defaultConfig.saveMasterPassword;
     config.passwordLength = c.passwordLength || defaultConfig.passwordLength;
 
-    bind(config.defaultShorcut, setPass);
+    bind(config.shortcut, setPass);
     signals.connect("frameCreated", addFrame);
     signals.connect("loadStatus", loadStatus);
 
