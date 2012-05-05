@@ -35,6 +35,7 @@
 #define SCRIPT_WEBVIEW(o) (WEBVIEW(((GList*)JSObjectGetPrivate(o))))
 #define EXCEPTION(X)   "DWB EXCEPTION : "X
 #define PROP_LENGTH 128
+#define G_FILE_TEST_VALID (G_FILE_TEST_IS_REGULAR | G_FILE_TEST_IS_SYMLINK | G_FILE_TEST_IS_DIR | G_FILE_TEST_IS_EXECUTABLE | G_FILE_TEST_EXISTS)
 
 typedef struct _Sigmap {
   int sig;
@@ -860,6 +861,22 @@ error_out:
   return ret;
 
 }
+static JSValueRef 
+io_file_test(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 2) {
+    js_make_exception(ctx, exc, EXCEPTION("io.read needs an argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  char *path = js_value_to_char(ctx, argv[0], PATH_MAX, exc);
+  if (path == NULL) 
+    return JSValueMakeBoolean(ctx, false);
+  double test = JSValueToNumber(ctx, argv[1], exc);
+  if (test == NAN || ! ( (((guint)test) & G_FILE_TEST_VALID) == (guint)test) ) 
+    return JSValueMakeBoolean(ctx, false);
+  gboolean ret = g_file_test(path, (GFileTest) test);
+  g_free(path);
+  return JSValueMakeBoolean(ctx, ret);
+}
 
 static JSValueRef 
 io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -1079,6 +1096,7 @@ create_global_object() {
     { "prompt",    io_prompt,         kJSDefaultAttributes },
     { "read",      io_read,             kJSDefaultAttributes },
     { "write",     io_write,            kJSDefaultAttributes },
+    { "fileTest",  io_file_test,            kJSDefaultAttributes },
     { 0,           0,           0 },
   };
   class = create_class("io", io_functions, NULL);

@@ -42,7 +42,6 @@ var defaultConfig = {
 
 var config = {};
 var master = null;
-var frames = [];
 
 // Modified base64-encode converts groups of 2 characters (8-bit since the hash
 // is hexadecimal) to 4 modified base64 encoded characters that contain no / and +
@@ -83,6 +82,7 @@ function injectFunction(password) {
 }
 // Main function
 function setPass() {
+  var i;
   var domain = tabs.current.mainFrame.domain;
   if (master === null) {
     master = io.prompt("Master password:", false);
@@ -96,24 +96,14 @@ function setPass() {
   if (config.domainSalts[domain]) {
     salt += config.domainSalts[domain];
   }
-  for (var i=0; i<config.numberOfHashes; i++) {
+  for (i=0; i<config.numberOfHashes; i++) {
     pass = checksum(pass + salt, config.hashMethod);
   }
   pass = encode(pass);
   pass = extract(pass);
-  for (var i=0; i<frames.length; i++) {
-    frames[i].inject("(" + String(injectFunction) + ")('" + pass + "');");
-  }
+  // TODO inject into all frames
+  tabs.current.mainFrame.inject("(" + String(injectFunction) + ")('" + pass + "');");
 }
-function addFrame(wv, frame) {
-  frames.push(frame);
-}
-function loadStatus(wv) {
-  if (wv.loadStatus == LoadStatus.provisional) {
-    frames = [ wv.mainFrame ];
-  }
-}
-
 return {
   init : function (c) {
     // con
@@ -128,9 +118,6 @@ return {
     config.passwordLength = c.passwordLength || defaultConfig.passwordLength;
 
     bind(config.shortcut, setPass);
-    signals.connect("frameCreated", addFrame);
-    signals.connect("loadStatus", loadStatus);
-
     return true;
   }
 };

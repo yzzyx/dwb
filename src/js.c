@@ -28,7 +28,6 @@ js_make_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, 
   va_start(arg_list, format);
   gchar message[STRING_LENGTH];
   vsnprintf(message, STRING_LENGTH, format, arg_list);
-  puts("message");
   va_end(arg_list);
   *exception = js_char_to_value(ctx, message);
 }

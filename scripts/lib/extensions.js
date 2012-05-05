@@ -17,13 +17,25 @@ Object.defineProperties(extensions, {
   "load" : {
     value : (function () {
       var _config = undefined;
+      function getPlugin(name, filename) {
+        var ret = null;
+        try {
+          if (io.fileTest(filename, FileTest.exists)) {
+            ret = include(filename);
+          }
+        }
+        catch(e) {
+          extensions.error(name, "Error in line " + e.line + " parsing " + filename);
+        }
+        return ret;
+      }
 
       return function(name) {
         var boldname = "\033[1m" + name + "\033[0m";
 
-        var config, dataBase, pluginPath, plugin;
+        var config, dataBase, pluginPath, plugin = null;
         var extConfig = null;
-
+        
         /* Get default config if the config hasn't been read yet */
         if (_config === undefined) {
           try {
@@ -45,21 +57,13 @@ Object.defineProperties(extensions, {
 
         /* Load extension */
         var filename = data.userDataDir + "/extensions/" + name;
-        try {
-          plugin = include(filename);
-        }
-        catch(e) {
-          io.print(e.line);
-          extensions.error(name, "Error in line " + e.line + " parsing " + filename);
-          return false;
-        }
+        plugin = getPlugin(name, data.userDataDir + "/extensions/" + name);
         if (plugin === null) {
-          plugin = include(data.systemDataDir + "/extensions/" + name);
+          plugin = getPlugin(name, data.systemDataDir + "/extensions/" + name);
           if (plugin === null) {
             extensions.error(name, "Couldn't find extension.");
             return false;
           }
-
         }
         try {
           if (plugin.init(extConfig)) {

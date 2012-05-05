@@ -359,6 +359,25 @@ _path_;; Path to a file that should be read
 _returns_;; A string with the file content
 ****
 
+****
+[[fileTest]]
+[float]
+==== *fileTest()* ==== 
+
+[source,javascript]
+----
+Boolean io.fileTest(String path, FileTest flags)
+----
+
+Checks for <<FileTest>> flags on a file.
+
+ ::
+
+_path_;; Path to a file to check
+_flags_;; The flags to test
+_returns_;; +true+ if any of the test on the flags is true
+****
+
 
 
 //[options="header", cols="1s,1m,3,2,2"]
@@ -1461,6 +1480,19 @@ const DownloadStatus = {
   finished    : 3
 };
 -------
+****
+
+****
+[[FileTest]]
+[float]
+==== *FileTest* ====
+const FileTest = {
+  regular    : 1 << 0,
+  symlink    : 1 << 1,
+  dir        : 1 << 2,
+  executable : 1 << 3,
+  exists     : 1 << 4
+};
 ****
 
 ****

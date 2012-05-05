@@ -64,3 +64,10 @@ const ChecksumType = {
   sha1    : 1, 
   sha256  : 2 
 };
+const FileTest = {
+  regular    : 1 << 0,
+  symlink    : 1 << 1,
+  dir        : 1 << 2,
+  executable : 1 << 3,
+  exists     : 1 << 4
+};
