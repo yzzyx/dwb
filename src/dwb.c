@@ -1731,6 +1731,19 @@ dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
   dwb.state.mode &= ~CONFIRM;
   return true;
 }/*}}}*/
+static gboolean
+dwb_prompt_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
+  gboolean ret = false;
+  if (e->type == GDK_KEY_RELEASE) 
+    return false;
+  switch (e->keyval) {
+    case GDK_KEY_Return:       *state = 0; ret = true; break;
+    case GDK_KEY_Escape:  ret = true; break;
+    default:              return false;
+  }
+  dwb.state.mode &= ~CONFIRM;
+  return ret;
+}
 
 /* dwb_confirm()  return confirmed (gboolean) {{{
  * yes / no confirmation
@@ -1761,6 +1774,36 @@ dwb_confirm(GList *gl, char *prompt, ...) {
   gtk_key_snooper_remove(id);
   return state > 0;
 }/*}}}*/
+
+const char *
+dwb_prompt(gboolean visibility, char *prompt, ...) {
+  const char *ret;
+  dwb.state.mode |= CONFIRM;
+
+  va_list arg_list; 
+  va_start(arg_list, prompt);
+  char message[STRING_LENGTH];
+  vsnprintf(message, STRING_LENGTH, prompt, arg_list);
+  va_end(arg_list);
+  dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.active_fg, dwb.font.fd_active, false);
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
+    gtk_widget_show(dwb.gui.bottombox);
+  gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), visibility);
+  int state = -1;
+  entry_focus();
+  int id = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_prompt_snooper_cb, &state);
+  while ((dwb.state.mode & CONFIRM) && state == -1) {
+    gtk_main_iteration();
+  }
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
+    gtk_widget_hide(dwb.gui.bottombox);
+  gtk_key_snooper_remove(id);
+  dwb_focus_scroll(dwb.state.fview);
+  CLEAR_COMMAND_TEXT();
+  
+  gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
+  return state == 0 ? GET_TEXT() : NULL;
+}
 
 /* dwb_save_quickmark(const char *key) {{{*/
 void 

@@ -59,3 +59,8 @@ const SpawnError = {
   stdoutFailed  : 1<<1, 
   stderrFailed  : 1<<2
 };
+const ChecksumType = {
+  md5     : 0, 
+  sha1    : 1, 
+  sha256  : 2 
+};

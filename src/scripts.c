@@ -21,6 +21,7 @@
 #include <string.h>
 #include <math.h>
 #include <JavaScriptCore/JavaScript.h>
+#include <glib.h>
 #include "dwb.h"
 #include "scripts.h" 
 #include "util.h" 
@@ -67,6 +68,7 @@ static Sigmap _sigmap[] = {
   { SCRIPTS_SIG_LOAD_COMMITTED, "loadCommitted" },
   { SCRIPTS_SIG_HOVERING_OVER_LINK, "hoveringOverLink" },
   { SCRIPTS_SIG_CLOSE_TAB, "closeTab" },
+  { SCRIPTS_SIG_FRAME_CREATED, "frameCreated" },
 };
 
 
@@ -82,8 +84,10 @@ static JSStaticFunction wv_functions[] = {
     { 0, 0, 0 }, 
 };
 static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSStaticValue wv_values[] = {
   { "mainFrame", wv_get_main_frame, NULL, kJSDefaultAttributes }, 
+  { "focusedFrame", wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
   { 0, 0, 0, 0 }, 
 };
 
@@ -241,14 +245,17 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
   JSStringRef script = JSValueToStringCopy(ctx, argv[0], exc);
   if (script == NULL)
     return JSValueMakeBoolean(ctx, false);
+  
+  if (!JSCheckScriptSyntax(wctx, script, NULL, 0, NULL)) 
+    return JSValueMakeBoolean(ctx, false);
 
   if (global) {
-    ret = JSEvaluateScript(wctx, script, NULL, NULL, 0, exc) != NULL;
+    ret = JSEvaluateScript(wctx, script, NULL, NULL, 0, NULL) != NULL;
   }
   else {
-    JSObjectRef function = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, exc);
-    if (function != NULL) {
-      ret = JSObjectCallAsFunction(wctx, function, NULL, 0, NULL, exc) != NULL;
+    JSObjectRef function = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, NULL);
+    if (function != NULL && JSObjectIsFunction(ctx, function)) {
+      ret = JSObjectCallAsFunction(wctx, function, NULL, 0, NULL, NULL) != NULL;
     }
   }
   JSStringRelease(script);
@@ -258,7 +265,7 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
 /* TABS {{{*/
 static JSValueRef 
 tabs_current(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
-  return scripts_make_object(_global_context, G_OBJECT(CURRENT_WEBVIEW()));
+  return CURRENT_VIEW()->script_wv;
 }
 static JSValueRef 
 tabs_number(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
@@ -342,6 +349,12 @@ JSValueRef
 wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   WebKitWebView *wv = JSObjectGetPrivate(object);
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
+  return scripts_make_object(ctx, G_OBJECT(frame));
+}
+JSValueRef 
+wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  WebKitWebView *wv = JSObjectGetPrivate(object);
+  WebKitWebFrame *frame = webkit_web_view_get_focused_frame(wv);
   return scripts_make_object(ctx, G_OBJECT(frame));
 }
 
@@ -504,6 +517,73 @@ frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t ar
 }
 
 /* GLOBAL {{{*/
+static JSValueRef 
+global_checksum(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  JSValueRef ret;
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("checksum: missing argument."));
+    return JSValueMakeNull(ctx);
+  }
+  guchar *original = (guchar*)js_value_to_char(ctx, argv[0], -1, exc);
+  if (original == NULL)
+    return JSValueMakeNull(ctx);
+  GChecksumType type = G_CHECKSUM_SHA256;
+  if (argc > 1) {
+    type = JSValueToNumber(ctx, argv[1], exc);
+    if (type == NAN) {
+      ret = JSValueMakeNull(ctx);
+      goto error_out;
+    }
+    type = MIN(MAX(type, G_CHECKSUM_MD5), G_CHECKSUM_SHA256);
+  }
+  char *checksum = g_compute_checksum_for_data(type, original, -1);
+
+  ret = js_char_to_value(ctx, checksum);
+  
+error_out:
+  g_free(original);
+  g_free(checksum);
+  return ret;
+}
+DwbStatus
+scripts_eval_key(KeyMap *m, Arg *arg) {
+  JSObjectCallAsFunction(_global_context, arg->p, NULL, 0, NULL, NULL);
+  return STATUS_OK;
+}
+static JSValueRef 
+global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  gboolean ret = false;
+  if (argc < 2) {
+    js_make_exception(ctx, exc, EXCEPTION("bind: missing argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  char *keystr = js_value_to_char(ctx, argv[0], JS_STRING_MAX, exc);
+  if (keystr == NULL) 
+    goto error_out;
+  JSObjectRef func = JSValueToObject(ctx, argv[1], exc);
+  if (func == NULL)
+    goto error_out;
+  if (!JSObjectIsFunction(ctx, func)) {
+    js_make_exception(ctx, exc, EXCEPTION("bind: not a function."));
+    goto error_out;
+  }
+  JSValueProtect(ctx, func);
+  KeyMap *map = dwb_malloc(sizeof(KeyMap));
+  FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
+  Key key = dwb_str_to_key(keystr);
+  map->key = key.str;
+  map->mod = key.mod;
+  FunctionMap fm = { { NULL, NULL }, CP_DONT_SAVE, (Func)scripts_eval_key, NULL, POST_SM, { .p = func, .ro = true } };
+  *fmap = fm;
+  map->map = fmap;
+  dwb.keymap = g_list_prepend(dwb.keymap, map);
+
+
+  ret = true;
+error_out:
+  g_free(keystr);
+  return JSValueMakeBoolean(ctx, ret);
+}
 static JSValueRef 
 global_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   DwbStatus status = STATUS_ERROR;
@@ -741,6 +821,23 @@ error_out:
 
 /* IO {{{*/
 static JSValueRef 
+io_prompt(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  char *prompt = NULL;
+  gboolean visibility = true;
+  if (argc > 0) {
+    prompt = js_value_to_char(ctx, argv[0], JS_STRING_MAX, exc);
+  }
+  if (argc > 1 && JSValueIsBoolean(ctx, argv[1])) 
+    visibility = JSValueToBoolean(ctx, argv[1]);
+
+  const char *response = dwb_prompt(visibility, prompt);
+  g_free(prompt);
+  if (response == NULL)
+    return JSValueMakeNull(ctx);
+
+  return js_char_to_value(ctx, response);
+}
+static JSValueRef 
 io_read(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = NULL;
   char *path = NULL, *content = NULL;
@@ -949,6 +1046,8 @@ static void
 create_global_object() {
   JSStaticFunction global_functions[] = { 
     { "execute",         global_execute,         kJSDefaultAttributes },
+    { "bind",           global_bind,         kJSDefaultAttributes },
+    { "checksum",           global_checksum,         kJSDefaultAttributes },
     { "include",         global_include,         kJSDefaultAttributes },
     { "timerStart",    global_timer_start,         kJSDefaultAttributes },
     { "timerStop",     global_timer_stop,         kJSDefaultAttributes },
@@ -977,6 +1076,7 @@ create_global_object() {
 
   JSStaticFunction io_functions[] = { 
     { "print",     io_print,            kJSDefaultAttributes },
+    { "prompt",    io_prompt,         kJSDefaultAttributes },
     { "read",      io_read,             kJSDefaultAttributes },
     { "write",     io_write,            kJSDefaultAttributes },
     { 0,           0,           0 },

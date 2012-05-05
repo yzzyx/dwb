@@ -17,6 +17,7 @@ Object.defineProperties(extensions, {
   "load" : {
     value : (function () {
       var _config = undefined;
+
       return function(name) {
         var boldname = "\033[1m" + name + "\033[0m";
 

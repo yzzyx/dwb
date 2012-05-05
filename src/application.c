@@ -303,6 +303,7 @@ application_start(GApplication *app, char **argv) {
   dwb_init();
 
   dwb_pack(GET_CHAR("widget-packing"), false);
+  scripts_init();
 
   if (opt_force) 
     session_flags |= SESSION_FORCE;
@@ -332,7 +333,6 @@ application_start(GApplication *app, char **argv) {
   gtk_widget_set_size_request(dwb.gui.entry, -1, dwb.misc.bar_height);
   g_object_unref(layout);
 
-  scripts_init();
   dwb_init_signals();
   g_application_hold(app);
 }/*}}}*/

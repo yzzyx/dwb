@@ -39,6 +39,7 @@ enum SIGNALS {
   SCRIPTS_SIG_LOAD_COMMITTED,
   SCRIPTS_SIG_HOVERING_OVER_LINK,
   SCRIPTS_SIG_CLOSE_TAB, 
+  SCRIPTS_SIG_FRAME_CREATED,
   SCRIPTS_SIG_LAST, 
 } ;
 
@@ -59,6 +60,7 @@ void scripts_remove_tab(JSObjectRef );
 void scripts_end(void);
 void scripts_init_script(const char *);
 void scripts_init(void);
+DwbStatus scripts_eval_key(KeyMap *m, Arg *arg);
 JSObjectRef scripts_make_object(JSContextRef ctx, GObject *o);
 
 #define EMIT_SCRIPT(sig)  ((dwb.misc.script_signals & (1<<SCRIPTS_SIG_##sig)))
@@ -69,6 +71,6 @@ JSObjectRef scripts_make_object(JSContextRef ctx, GObject *o);
   } else g_free(json); \
 G_STMT_END
 
-#define SCRIPTS_WV(gl) .jsobj = VIEW(gl)->script_wv
+#define SCRIPTS_WV(gl) .jsobj = (VIEW(gl)->script_wv)
 #define SCRIPTS_SIG_META(js, sig, num)  .json = js, .signal = SCRIPTS_SIG_##sig, .numobj = num
 #endif

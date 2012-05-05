@@ -39,6 +39,28 @@ Functions from the global object.
 
 === Functions ===
 
+
+****
+[[bind]]
+[float]
+==== *bind()* ==== 
+
+[source,javascript]
+----
+void bind(String shortcut, Function callback)
+----
+
+Bind a javascript function to a shortcut. This is the preferred method of
+binding keys to shortcuts since the shortcut is evaluated using the native
+method, but also the keyPress-signal can be used to bind shortcuts. 
+
+ ::
+
+_shortcut_;; a shortcut shortcut, will be parsed the same way as if set in
+dwb:keys
+_callback_;; callback function that will be called when the shortcut is pressed
+****
+
 ****
 [[execute]]
 [float]
@@ -560,6 +582,18 @@ wv.mainFrame        frame     read
 ----
 
 The main frame of the webview
+****
+
+****
+[float]
+==== *focusedFrame* ====
+
+[source,javascript]
+----
+wv.focusedFrame        frame     read
+----
+
+The focused frame of the webview
 ****
 
 ==== Functions ====
@@ -1378,6 +1412,21 @@ const ButtonContext = {
   media      : 1 << 4,
   selection  : 1 << 5,
   editable   : 1 << 6
+};
+--------
+****
+
+****
+[[ChecksumType]]
+[float]
+==== *ChecksumType* ====
+
+[source,javascript]
+--------
+const ChecksumType = {
+  md5     : 0, 
+  sha1    : 1, 
+  sha256  : 2 
 };
 --------
 ****

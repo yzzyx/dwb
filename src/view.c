@@ -252,6 +252,10 @@ view_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
 /* view_frame_created_cb {{{*/
 static void 
 view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
+  if (EMIT_SCRIPT(FRAME_CREATED)) {
+    ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { G_OBJECT(frame) }, SCRIPTS_SIG_META(NULL, FRAME_CREATED, 1) };
+    scripts_emit(&signal);
+  }
   g_signal_connect(frame, "notify::load-status", G_CALLBACK(view_frame_committed_cb), gl);
 }/*}}}*/
 

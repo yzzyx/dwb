@@ -898,6 +898,7 @@ void dwb_init_signals(void);
 void dwb_parse_commands(const char *line);
 DwbStatus dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request);
 GList *dwb_get_simple_list(GList *, const char *filename);
+const char * dwb_prompt(gboolean visibility, char *prompt, ...);
 
 gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 char * dwb_get_raw_data(GList *gl);

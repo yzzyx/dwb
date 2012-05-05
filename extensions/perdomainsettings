@@ -49,7 +49,7 @@ var webviews = [];
 function apply(o, settings) {
   var key;
   var defaults = true;
-  var websettings = o.webview.settings;
+  var websettings = o.settings;
   for (key in settings) {
     if (!o.set[key]) {
       websettings[key] = settings[key];
@@ -74,7 +74,7 @@ function onNavigation(wv, frame, request, action) {
     }
   }
   if (o === null) {
-    o = { webview : wv, defaults : false };
+    o = { webview : wv, defaults : false, settings : wv.settings };
     webviews.push(o);
   }
   o.set = {};
