@@ -877,6 +877,28 @@ io_file_test(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   g_free(path);
   return JSValueMakeBoolean(ctx, ret);
 }
+static JSValueRef 
+io_notify(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1) 
+    return JSValueMakeUndefined(ctx);
+  char *message = js_value_to_char(ctx, argv[0], -1, exc);
+  if (message != NULL) {
+    dwb_set_normal_message(dwb.state.fview, true, message);
+    g_free(message);
+  }
+  return JSValueMakeUndefined(ctx);
+}
+static JSValueRef 
+io_error(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1) 
+    return JSValueMakeUndefined(ctx);
+  char *message = js_value_to_char(ctx, argv[0], -1, exc);
+  if (message != NULL) {
+    dwb_set_error_message(dwb.state.fview, message);
+    g_free(message);
+  }
+  return JSValueMakeUndefined(ctx);
+}
 
 static JSValueRef 
 io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -1062,13 +1084,13 @@ scripts_emit(ScriptSignal *sig) {
 static void 
 create_global_object() {
   JSStaticFunction global_functions[] = { 
-    { "execute",         global_execute,         kJSDefaultAttributes },
-    { "bind",           global_bind,         kJSDefaultAttributes },
-    { "checksum",           global_checksum,         kJSDefaultAttributes },
-    { "include",         global_include,         kJSDefaultAttributes },
-    { "timerStart",    global_timer_start,         kJSDefaultAttributes },
-    { "timerStop",     global_timer_stop,         kJSDefaultAttributes },
-    { "domainFromHost",     global_domain_from_host,         kJSDefaultAttributes },
+    { "execute",          global_execute,         kJSDefaultAttributes },
+    { "bind",             global_bind,         kJSDefaultAttributes },
+    { "checksum",         global_checksum,         kJSDefaultAttributes },
+    { "include",          global_include,         kJSDefaultAttributes },
+    { "timerStart",       global_timer_start,         kJSDefaultAttributes },
+    { "timerStop",        global_timer_stop,         kJSDefaultAttributes },
+    { "domainFromHost",   global_domain_from_host,         kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
 
@@ -1097,6 +1119,8 @@ create_global_object() {
     { "read",      io_read,             kJSDefaultAttributes },
     { "write",     io_write,            kJSDefaultAttributes },
     { "fileTest",  io_file_test,            kJSDefaultAttributes },
+    { "notify",    io_notify,           kJSDefaultAttributes },
+    { "error",     io_error,           kJSDefaultAttributes },
     { 0,           0,           0 },
   };
   class = create_class("io", io_functions, NULL);

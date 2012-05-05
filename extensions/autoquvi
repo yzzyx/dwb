@@ -1,24 +1,35 @@
 /*
  * autoquvi 
+ *
  * This plugin automatically loads videos supported by quvi with an external
  * video player
  *
- * Config variables
+ * Config options:
  *
- * quvi   : quvi command
- * player : external player
+ * quvi       : quvi command
+ * player     : external player
+ * autoPlay   : whether to autoplay videos
+ * shortcut   : the shortcut that spawns quvi
  *
  * */ 
 
 
-var myname = "autoquvi";
-var config = { 
-  quvi : "quvi",  
-  player : "mplayer %u"
+var me = "autoquvi";
+var defaultConfig = { 
+  quvi      : "quvi",  
+  player    : "mplayer %u", 
+  autoPlay  : true, 
+  shortcut  : null
 };
+var config = {};
 
 var supported = [];
 function quviSpawn(wv) {
+  var auto = true;
+  if (wv == undefined) {
+    wv = tabs.current;
+    auto = false;
+  }
   for (var i=0; i<supported.length; i++) {
     var s = supported[i];
     if (s.test(wv.uri)) {
@@ -26,6 +37,8 @@ function quviSpawn(wv) {
       return;
     }
   }
+  if (auto === false) 
+    io.error("Not supported by quvi");
 }
 function stdoutCallback(response) {
   var lines = response.split("\n");
@@ -36,17 +49,28 @@ function stdoutCallback(response) {
         supported.push(new RegExp(pattern.replace(/%/g, "\\")));
       } 
       catch(e) {
-        extensions.error(myname, e);
+        extensions.error(me, e);
       }
     }
   }
-  signals.connect("loadCommitted", quviSpawn);
+  if (config.autoPlay) {
+    signals.connect("loadCommitted", quviSpawn);
+  }
+  if (typeof config.shortcut === "string") {
+    io.print(config.shortcut);
+    bind(config.shortcut, quviSpawn);
+  }
 }
 return { 
-  init : function (conf) {
+  init : function (c) {
     var stat;
-    if (conf !== null)
-      config = conf;
+    var key;
+    if (c !== null) {
+      for (key in defaultConfig) {
+        config[key] = c[key] !== undefined ? c[key] : defaultConfig[key];
+      }
+
+    }
     try {
       stat = system.spawn(config.quvi + " --support", stdoutCallback);
       if (stat == 0) {
@@ -54,7 +78,7 @@ return {
       }
     }
     catch(e) {
-      extensions.error(myname, "Initiating quvi failed, aborting: " + e);
+      extensions.error(me, "Initiating quvi failed, aborting: " + e);
     }
     return false;
   }

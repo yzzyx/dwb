@@ -1777,7 +1777,6 @@ dwb_confirm(GList *gl, char *prompt, ...) {
 
 const char *
 dwb_prompt(gboolean visibility, char *prompt, ...) {
-  const char *ret;
   dwb.state.mode |= CONFIRM;
 
   va_list arg_list; 
