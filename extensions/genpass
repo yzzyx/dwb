@@ -101,8 +101,11 @@ function setPass() {
   }
   pass = encode(pass);
   pass = extract(pass);
-  // TODO inject into all frames
-  tabs.current.mainFrame.inject("(" + String(injectFunction) + ")('" + pass + "');");
+
+  var frames = tabs.current.allFrames;
+  for (i = 0; i<frames.length; i++) {
+    frames[i].inject("(" + String(injectFunction) + ")('" + pass + "');");
+  }
 }
 
 return {

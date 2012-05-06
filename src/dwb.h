@@ -597,6 +597,7 @@ struct _ViewStatus {
   GSList *allowed_plugins;
   unsigned int lockprotect;
   WebKitDOMElement *style;
+  GSList *frames;
 };
 struct _View {
   GtkWidget *web;

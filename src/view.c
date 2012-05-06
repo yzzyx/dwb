@@ -257,6 +257,7 @@ view_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
     scripts_emit(&signal);
   }
   g_signal_connect(frame, "notify::load-status", G_CALLBACK(view_frame_committed_cb), gl);
+  VIEW(gl)->status->frames = g_slist_prepend(VIEW(gl)->status->frames, frame);
 }/*}}}*/
 
 /* view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourceid, GList *gl) {{{*/
@@ -282,7 +283,9 @@ view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
 static gboolean 
 view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *gl) {
   if (EMIT_SCRIPT(DOWNLOAD)) {
-    char *json = util_create_json(1, CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"));
+    char *json = util_create_json(2, 
+        CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
+        CHAR, "mimeType", dwb.state.mimetype_request);
     ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { G_OBJECT(download) }, SCRIPTS_SIG_META(json, DOWNLOAD, 1) };
     SCRIPTS_EMIT_RETURN(signal, json);
   }
@@ -857,6 +860,7 @@ view_create_web_view() {
   status->allowed_plugins = NULL;
   status->style = NULL;
   status->lockprotect = 0;
+  status->frames = NULL;
 
   v->hint_object = NULL;
   v->plugins = plugins_new();

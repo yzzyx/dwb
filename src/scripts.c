@@ -87,9 +87,11 @@ static JSStaticFunction wv_functions[] = {
 };
 static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSValueRef wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSStaticValue wv_values[] = {
   { "mainFrame", wv_get_main_frame, NULL, kJSDefaultAttributes }, 
   { "focusedFrame", wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
+  { "allFrames",  wv_get_all_frames, NULL, kJSDefaultAttributes }, 
   { 0, 0, 0, 0 }, 
 };
 
@@ -358,6 +360,20 @@ wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, 
   WebKitWebView *wv = JSObjectGetPrivate(object);
   WebKitWebFrame *frame = webkit_web_view_get_focused_frame(wv);
   return scripts_make_object(ctx, G_OBJECT(frame));
+}
+JSValueRef 
+wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  GList *gl = NULL;
+  for (gl = dwb.state.views; gl && VIEW(gl)->script_wv != object; gl=gl->next);
+  if (gl == NULL)
+    return JSValueMakeNull(ctx);
+  int argc = g_slist_length(VIEW(gl)->status->frames);
+  JSValueRef argv[argc];
+  int n=0;
+  for (GSList *sl = VIEW(gl)->status->frames; sl; sl=sl->next) {
+    argv[n++] = scripts_make_object(ctx, G_OBJECT(sl->data));
+  }
+  return JSObjectMakeArray(ctx, argc, argv, exception);
 }
 
 bool
@@ -1066,7 +1082,8 @@ scripts_emit(ScriptSignal *sig) {
   int numargs = MIN(sig->numobj, SCRIPT_MAX_SIG_OBJECTS)+2;
   JSValueRef val[numargs];
   int i = 0;
-  val[i++] = sig->jsobj;
+  if (sig->jsobj != NULL)
+    val[i++] = sig->jsobj;
   for (int j=0; j<sig->numobj; j++) {
     val[i++] = scripts_make_object(_global_context, G_OBJECT(sig->objects[j]));
   }

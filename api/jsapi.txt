@@ -627,6 +627,18 @@ properties are
 
 ****
 [float]
+==== *allFrames* ====
+
+[source,javascript]
+----
+wv.allFrames        array of frames     read
+----
+
+All frames of a webview including the mainframe
+****
+
+****
+[float]
 ==== *mainFrame* ====
 
 [source,javascript]
@@ -945,6 +957,11 @@ Corresponds to a +WebKitNavigationRequest+.
 
 Corresponds to a +WebKitWebNavigationAction+.
 
+[[Download]]
+== download ==
+
+Corresponds to a +WebKitDownload+.
+
 == Signals ==
 With the +signals+ object *dwb* communicates with the script on certain events. 
 To connect to a signal one can call the connect function that is implemented by
@@ -1176,6 +1193,44 @@ Emitted when a tab is closed
 
 _webview_;; The <<webview>> that corresponds to the tab
 ****
+
+****
+[[download]]
+[float]
+==== *download* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, download, json) 
+----
+
+Emitted before a download starts, return +true+ if the signal was handled. 
+
+ ::
+
+_webview_;; The <<webview>> that emitted the signal
+_download_;; The <<Download>> 
+_json.referer_;; The referer
+_json.mimeType_;; The mimetype of the file
+****
+
+****
+[[downloadStatus]]
+[float]
+==== *downloadStatus* ==== 
+
+[source,javascript]
+----
+Boolean callback(download) 
+----
+
+Emitted when the <<DownloadStatus>> changes. 
+
+ ::
+
+_download_;; The <<Download>> 
+****
+
 
 ****
 [[frameCreated]]

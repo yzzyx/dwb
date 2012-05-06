@@ -1316,6 +1316,9 @@ dwb_clean_load_begin(GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
   }
   view_set_favicon(gl, false);
+  g_slist_free(v->status->frames);
+  v->status->frames = NULL;
+  v->status->frames = g_slist_prepend(v->status->frames, webkit_web_view_get_main_frame(WEBVIEW(gl)));
 }/*}}}*/
 
 /* dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *)   return: (alloc) Navigation* {{{*/
