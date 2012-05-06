@@ -91,7 +91,6 @@ static gint
 dwb_application_command_line(GApplication *app, GApplicationCommandLine *cl) {
   gint argc;
   gchar **argv = g_application_command_line_get_arguments(cl, &argc);
-  opt_exe = NULL;
 
   GOptionContext *c = application_get_option_context();
   if (!g_option_context_parse(c, &argc, &argv, NULL)) {
@@ -280,15 +279,18 @@ dwb_application_new (const gchar *id, GApplicationFlags flags)
 
 static void /* application_execute_args(char **argv) {{{*/
 application_execute_args(char **argv) {
+  static int offset = 0;
   if (argv != NULL && argv[1] != NULL) {
     for (int i=1; argv[i] != NULL; i++) {
       view_add(argv[i], false);
     }
   }
   if (opt_exe != NULL) {
-    for (int i=0; opt_exe[i] != NULL; i++) {
+    int length = g_strv_length(opt_exe);
+    for (int i=offset; i<length; i++) {
       dwb_parse_commands(opt_exe[i]);
     }
+    offset = length;
   }
 }/*}}}*/
 
