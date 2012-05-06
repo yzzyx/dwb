@@ -104,12 +104,6 @@ function setPass() {
   // TODO inject into all frames
   tabs.current.mainFrame.inject("(" + String(injectFunction) + ")('" + pass + "');");
 }
-function frameCreatedCallback(wv, frame) {
-  wv._genpassFrameArray.push(frame);
-  io.print(wv._genpassFrameArray.length);
-}
-function navigationCallback(wv) {
-}
 
 return {
   init : function (c) {
