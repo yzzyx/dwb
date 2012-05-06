@@ -1144,6 +1144,23 @@ _json_;; Same as <<buttonPress>> but without _json.type_
 ****
 
 ****
+[[createTab]]
+[float]
+==== *createTab* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview) 
+----
+
+Emitted when a tab is created
+
+ ::
+
+_webview_;; The <<webview>> that corresponds to the created tab
+****
+
+****
 [[closeTab]]
 [float]
 ==== *closeTab* ==== 
@@ -1158,6 +1175,24 @@ Emitted when a tab is closed
  ::
 
 _webview_;; The <<webview>> that corresponds to the tab
+****
+
+****
+[[frameCreated]]
+[float]
+==== *frameCreated* ==== 
+
+[source,javascript]
+----
+void callback(webview, frame) 
+----
+
+Emitted when the frame is created
+
+ ::
+
+_webview_;; The webview the frame belongs to
+_frame_;; The frame 
 ****
 
 ****

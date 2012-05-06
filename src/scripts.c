@@ -69,6 +69,7 @@ static Sigmap _sigmap[] = {
   { SCRIPTS_SIG_LOAD_COMMITTED, "loadCommitted" },
   { SCRIPTS_SIG_HOVERING_OVER_LINK, "hoveringOverLink" },
   { SCRIPTS_SIG_CLOSE_TAB, "closeTab" },
+  { SCRIPTS_SIG_CREATE_TAB, "createTab" },
   { SCRIPTS_SIG_FRAME_CREATED, "frameCreated" },
 };
 
@@ -1203,6 +1204,12 @@ scripts_create_tab(GList *gl) {
     return;
   }
   JSObjectRef o = scripts_make_object(_global_context, G_OBJECT(VIEW(gl)->web));
+
+  if (EMIT_SCRIPT(CREATE_TAB)) {
+    ScriptSignal signal = { o, SCRIPTS_SIG_META(NULL, CREATE_TAB, 0) };
+    scripts_emit(&signal);
+  }
+
   JSValueProtect(_global_context, o);
   VIEW(gl)->script_wv = o;
 }

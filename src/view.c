@@ -286,12 +286,6 @@ view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *
     ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { G_OBJECT(download) }, SCRIPTS_SIG_META(json, DOWNLOAD, 1) };
     SCRIPTS_EMIT_RETURN(signal, json);
   }
-  //SCRIPTS_EMIT_RETURN(SCRIPT(gl), DOWNLOAD, 5, 
-  //    CHAR, "uri", webkit_download_get_uri(download), 
-  //    CHAR, "filename", webkit_download_get_suggested_filename(download), 
-  //    CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
-  //    CHAR, "mimeType", dwb.state.mimetype_request ? dwb.state.mimetype_request : "undefined", 
-  //    ULONG, "totalSize", webkit_download_get_total_size(download));
   download_get_path(gl, download);
   return true;
 }/*}}}*/
@@ -366,9 +360,13 @@ view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwor
   if (EMIT_SCRIPT(MIME_TYPE)) {
     char *json = util_create_json(1, CHAR, "mimeType", mimetype);
     ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(frame), G_OBJECT(request) }, SCRIPTS_SIG_META(json, MIME_TYPE, 2) };
-    SCRIPTS_EMIT_RETURN(signal, json);
+    if (scripts_emit(&signal)) {
+      webkit_web_policy_decision_ignore(policy);
+      g_free(json);
+      return true;
+    }
+    g_free(json);
   }
-  //SCRIPTS_EMIT_RETURN(SCRIPT(gl), MIME_TYPE, 2, CHAR, "uri", webkit_network_request_get_uri(request), CHAR, "mimeType", mimetype);
 
   if (!webkit_web_view_can_show_mime_type(web, mimetype) ||  dwb.state.nv & OPEN_DOWNLOAD) {
     dwb.state.mimetype_request = g_strdup(mimetype);
@@ -391,10 +389,11 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
 
   if (EMIT_SCRIPT(NAVIGATION)) {
     ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(frame), G_OBJECT(request), G_OBJECT(action) }, SCRIPTS_SIG_META(NULL, NAVIGATION, 3) };
-    SCRIPTS_EMIT_RETURN(signal, NULL);
+    if (scripts_emit(&signal)) {
+      webkit_web_policy_decision_ignore(policy);
+      return true;
+    }
   }
-  //SCRIPTS_EMIT_RETURN(SCRIPT(gl), NAVIGATION, 2, CHAR, "uri", uri, INTEGER, "reason", reason);
-  //SCRIPTS_EMIT(NAVIGATION, 4, web, frame, request, NULL);
 
   if (!g_str_has_prefix(uri, "http:") && !g_str_has_prefix(uri, "https:") &&
       !g_str_has_prefix(uri, "about:") && !g_str_has_prefix(uri, "dwb:") &&
