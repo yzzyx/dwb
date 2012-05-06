@@ -1111,5 +1111,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "tabbar-visible",                         "Number of seconds the tabbar is shown when switching tabs", },                   
     SETTING_GLOBAL | SETTING_ONINIT,  INTEGER, { .i = 2 }, (S_Func)dwb_set_tabbar_delay,   }, 
   { { "new-tab-position-policy",                         "Number of seconds the tabbar is shown when switching tabs", },                   
-    SETTING_GLOBAL | SETTING_ONINIT,  CHAR, { .p = "right" }, (S_Func)dwb_set_new_tab_position_policy,   }, 
+    SETTING_GLOBAL | SETTING_ONINIT,  CHAR, { .p = "right", .n = CLOSE_TAB_POSITION_MASK, .i = 0 }, (S_Func)dwb_set_new_tab_position_policy,   }, 
+  { { "close-tab-focus-policy",                         "Number of seconds the tabbar is shown when switching tabs", },                   
+    SETTING_GLOBAL | SETTING_ONINIT,  CHAR, { .p = "left" }, (S_Func)dwb_set_close_tab_position_policy,   }, 
 };/*}}}*/
