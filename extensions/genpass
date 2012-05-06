@@ -1,12 +1,12 @@
 /*
  * genpass is an extension that creates domain based passwords, it uses a 
- * modified base64 encoded hash of the salted password and injects the password
- * into password fields.
+ * modified base64 encoded hash (sha256, sha1 or md5) of a salted master
+ * password and injects the password into password fields.
  *
  * Config options:
  *
  * domainSalts        : Object of domain salts that will additionally be used
- *                      in the form 
+ *                      for passwords
  *
  *                      domainSalts : { 
  *                        "example.com"   : "eisll3§slajbBAkll2j4klaöalkjfkslk", 
@@ -50,9 +50,9 @@ function encode(string) {
   var current, i;
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   var n24;
-  for (i=0; i<string.length; i+=2) {
-    current = parseInt(string.substring(i, i+2), 16);
-    n24 = (current << 16) + (current << 8) + current;
+  for (i=0; i<string.length-6; i+=6) {
+    current = parseInt(string.substring(i, i+2), 16) ;
+    n24 = (parseInt(string.substring(i, i+2), 16) << 16) + (parseInt(string.substring(i+2, i+4), 16) << 8) + parseInt(string.substring(i+4, i+6), 16);
     result += chars[n24>>18 & 63] + chars[n24>>12 & 63] + chars[n24>>6 & 63] + chars[n24 & 63]; 
   }
   return result;
