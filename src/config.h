@@ -595,7 +595,7 @@ static FunctionMap FMAP [] = {
     (Func)commands_show,           NULL,                              ALWAYS_SM, 
     { .p = "dwb:quickmarks", .ro = true }, EP_NONE, { "squickmarks", NULL }, },
 
-  { { "show_history",             "Show quickmarks",                 }, CP_COMMANDLINE, 
+  { { "show_history",             "Show history",                 }, CP_COMMANDLINE, 
     (Func)commands_show,           NULL,                              ALWAYS_SM, 
     { .p = "dwb:history", .ro = true }, EP_NONE, { "shistory", NULL }, },
 
