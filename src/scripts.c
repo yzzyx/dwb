@@ -74,15 +74,22 @@ static Sigmap _sigmap[] = {
 };
 
 
+static JSValueRef equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+
 static JSValueRef wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSStaticFunction default_functions[] = { 
+    { "equals",          equals,             kJSDefaultAttributes },
+    { 0, 0, 0 }, 
+};
 static JSStaticFunction wv_functions[] = { 
     { "loadUri",         wv_load_uri,             kJSDefaultAttributes },
     { "history",         wv_history,             kJSDefaultAttributes },
     { "reload",          wv_reload,             kJSDefaultAttributes },
     { "inject",          wv_inject,             kJSDefaultAttributes },
+    { "equals",          equals,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
 static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
@@ -98,6 +105,7 @@ static JSStaticValue wv_values[] = {
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
   { "inject",          frame_inject,             kJSDefaultAttributes },
+  { "equals",          equals,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
 };
 static JSValueRef frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
@@ -113,6 +121,7 @@ static JSValueRef download_cancel(JSContextRef ctx, JSObjectRef function, JSObje
 static JSStaticFunction download_functions[] = { 
   { "start",          download_start,        kJSDefaultAttributes },
   { "cancel",         download_cancel,        kJSDefaultAttributes },
+  { "equals",          equals,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
 };
 enum {
@@ -294,7 +303,22 @@ tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   return VIEW(nth)->script;
 }
 
-static void make_callback(JSContextRef ctx, JSObjectRef this, GObject *gobject, const char *signalname, JSValueRef value, StopCallbackNotify notify, JSValueRef *exception);
+static JSValueRef 
+equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("object.equals: missing argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  JSObjectRef jscomp = JSValueToObject(ctx, argv[0], exc);
+  if (jscomp == NULL) 
+    return JSValueMakeBoolean(ctx, false);
+  GObject *comp = JSObjectGetPrivate(jscomp);
+  if (comp == NULL)
+    return JSValueMakeBoolean(ctx, false);
+  GObject *o = JSObjectGetPrivate(this);
+  return JSValueMakeBoolean(ctx, o == comp);
+
+}
 static gboolean 
 wv_status_cb(CallbackData *c) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(WEBKIT_WEB_VIEW(c->gobject));
@@ -1187,6 +1211,7 @@ create_global_object() {
 
   /* Default gobject class */
   cd = kJSClassDefinitionEmpty;
+  cd.staticFunctions = default_functions;
   cd.getProperty = get_property;
   cd.setProperty = set_property;
   cd.finalize = object_finalize;

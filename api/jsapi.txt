@@ -615,6 +615,59 @@ tabs.nth(2).loadUri(c.uri);
 [[Webkitobjects]]
 == Webkit objects ==
 
+All webkit objects correspond to gobject objects, i.e. they have the same
+properties, but the javascript properties are all camelcase. 
+For example, a +WebKitWebView+ has the property +zoom-level+, the corresponding
+javascript property is +zoomLevel+:
+
+====
+[source,javascript]
+---------------------------------
+var webview = tabs.current
+webview.zoomLevel = webview.zoomLevel * 2;
+---------------------------------
+====
+
+Webkit objects should not be compared using +==+, since it may happen that the
+same gobject is represented by different javascript objects, instead every
+webkit object implements an equals method. 
+
+****
+[float]
+==== *equals()* ==== 
+
+[source,javascript]
+----
+Boolean object.equals(Object compareObject) 
+----
+
+Compare two webkit objects
+
+ ::
+
+_compareObject_;; The object to compare
+_returns_;; +true+ if the the corresponding gobjects are equal
+****
+
+
+====
+[float]
+==== *Example* ====
+[source,javascript]
+------------
+signals.connect("navigation" function(wv, frame) {
+  if (frame.equals(wv.mainFrame) {
+    ...
+  }
+});
+------------
+====
+
+An exception is the webview object, if two webview objects are compared with +==+ it
+is guaranteed that the corresponding gobjects are equal or not, however they
+also implement the equals function.
+
+
 [[webview]]
 === webview ===
 The +webview+ object represents the widget that actually displays the site
