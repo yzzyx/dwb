@@ -947,20 +947,85 @@ _returns_;; +true+ if the script was injected, +false+ if an error occured
 //});
 //--------
 
+[[Download]]
+=== download ===
+
+Corresponds to a +WebKitDownload+. 
+
+==== Constructor ====
+
+****
+[float]
+==== *Download()* ==== 
+[source,javascript]
+----
+new Download(String uri)
+----
+
+Constructs a new download
+
+ ::
+_uri_;; The uri of the download
+****
+
+==== Functions ====
+
+****
+[float]
+==== *start()* ==== 
+
+[source,javascript]
+----
+Boolean download.start([Function callback])
+----
+
+Starts a download
+
+ ::
+
+_callback_;; A callback function that will be executed whenever the
+<<DownloadStatus>> changes, return +true+ to stop the emission, optional.
+****
+
+
+****
+[float]
+==== *cancel()* ==== 
+
+[source,javascript]
+----
+void download.cancel()
+----
+
+Cancels a download
+****
+
+====
+.Example 
+[source,javascript]
+------
+var download = new Download("http://www.example.org/foo.pdf");
+var filename = "/tmp/" + download.suggestedFilename;
+download.destinationUri = "file://" + filename;
+download.start(function () {
+  if (download.status == DownloadStatus.finished) {
+    system.spawn("xpdf " + filename);
+  }
+});
+------
+====
+
+
 [[request]]
 === request ===
 
 Corresponds to a +WebKitNavigationRequest+.
 
 [[navigationAction]]
-== navigationAction ==
+=== navigationAction ===
 
 Corresponds to a +WebKitWebNavigationAction+.
 
-[[Download]]
-== download ==
-
-Corresponds to a +WebKitDownload+.
 
 == Signals ==
 With the +signals+ object *dwb* communicates with the script on certain events. 

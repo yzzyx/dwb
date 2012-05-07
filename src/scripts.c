@@ -376,8 +376,10 @@ wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSV
   return JSObjectMakeArray(ctx, argc, argv, exception);
 }
 
+//bool
+//set_gobject_property(JSContextRef ctx, GObject *o, JSStringRef js_name, JSValueRef jsvalue, JSValueRef* exception) {
 bool
-set_gobject_property(JSContextRef ctx, GObject *o, JSStringRef js_name, JSValueRef jsvalue, JSValueRef* exception) {
+set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef jsvalue, JSValueRef* exception) {
   char buf[PROP_LENGTH];
   char *name = js_string_to_char(ctx, js_name, -1);
   if (name == NULL)
@@ -385,6 +387,7 @@ set_gobject_property(JSContextRef ctx, GObject *o, JSStringRef js_name, JSValueR
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
+  GObject *o = JSObjectGetPrivate(object);
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
   GParamSpec *pspec = g_object_class_find_property(class, buf);
 
@@ -420,12 +423,11 @@ set_gobject_property(JSContextRef ctx, GObject *o, JSStringRef js_name, JSValueR
   return false;
   // TODO object
 }
-bool
-set_property(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSValueRef* exception) {
-  return set_gobject_property(ctx, G_OBJECT(JSObjectGetPrivate(object)), propertyName, value, exception);
-}
+//set_property(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSValueRef* exception) {
+//  return set_gobject_property(ctx, G_OBJECT(JSObjectGetPrivate(object)), propertyName, value, exception);
+//}
 JSValueRef
-get_gobject_property(JSContextRef ctx, JSObjectRef jsobj, GObject *o, JSStringRef js_name, JSValueRef *exception) {
+get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRef *exception) {
   char buf[PROP_LENGTH];
   JSValueRef ret = NULL;
   char *name = js_string_to_char(ctx, js_name, -1);
@@ -434,6 +436,7 @@ get_gobject_property(JSContextRef ctx, JSObjectRef jsobj, GObject *o, JSStringRe
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
+  GObject *o = JSObjectGetPrivate(jsobj);
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
   GParamSpec *pspec = g_object_class_find_property(class, buf);
   if (pspec == NULL)
@@ -504,10 +507,6 @@ scripts_make_object(JSContextRef ctx, GObject *o) {
 
   JSObjectRef retobj = JSObjectMake(ctx, class, o);
   return retobj;
-}
-JSValueRef 
-get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  return get_gobject_property(ctx, object, G_OBJECT(JSObjectGetPrivate(object)), js_name, exception);
 }
 
 JSValueRef 
