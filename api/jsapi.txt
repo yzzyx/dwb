@@ -663,9 +663,8 @@ signals.connect("navigation" function(wv, frame) {
 ------------
 ====
 
-An exception is the webview object, if two webview objects are compared with +==+ it
-is guaranteed that the corresponding gobjects are equal or not, however they
-also implement the equals function.
+An exception is the webview object, for webview objects +==+ always gives the
+same result as +equals+.
 
 
 [[webview]]
