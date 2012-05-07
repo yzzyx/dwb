@@ -303,23 +303,6 @@ var bookmarks = io.read(data.bookmarks);
 The +io+ object implements functions for input and output. 
 
 ****
-[[notify]]
-[float]
-==== *notify()* ==== 
-
-[source,javascript]
-----
-void io.notify(String text)
-----
-
-Shows a message in the browser window.
-
- :: 
-
-_text_;; The message to show
-****
-
-****
 [[error]]
 [float]
 ==== *error()* ==== 
@@ -330,6 +313,23 @@ void io.error(String text)
 ----
 
 Shows an error message in the browser window.
+
+ :: 
+
+_text_;; The message to show
+****
+
+****
+[[notify]]
+[float]
+==== *notify()* ==== 
+
+[source,javascript]
+----
+void io.notify(String text)
+----
+
+Shows a message in the browser window.
 
  :: 
 
@@ -353,6 +353,27 @@ Print text to +stdout+ or +stderr+
 _text_;; the text to print
 _stream_;; pass +"stderr"+ to print to stderr, optional
 ****
+
+****
+[[prompt]]
+[float]
+==== *prompt()* ==== 
+
+[source,javascript]
+----
+String io.prompt(String text, [Boolean visible])
+----
+
+Gets user input synchronously.
+
+ :: 
+
+_text_;; The message for the prompt
+_visible_;; Whether the chars should be visible, pass +false+ for a password
+prompt, default +true+, optional
+_returns_;; The text that was entered or +null+
+****
+
 
 ****
 [[write]]

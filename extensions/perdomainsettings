@@ -10,6 +10,7 @@
  *
  * + domains:   Settings applied based on the second level domain
  * + hosts:     Settings applied based on the hostname
+ * + uris:      Settings applied based on the uri
  * + defaults:  Default settings, for each setting in domains and hosts a
  *              default-value should be specified
  *
@@ -28,6 +29,11 @@
  *   hosts : { 
  *      "www.example1.com" :  { 
  *           "autoLoadImages" : true 
+ *      } 
+ *   },
+ *   uris : { 
+ *      "http://www.example2.com/login.php" :  { 
+ *           "autoLoadImages" : false 
  *      } 
  *   },
  *   defaults : {
@@ -78,19 +84,29 @@ function onNavigation(wv, frame, request, action) {
     webviews.push(o);
   }
   o.set = {};
-  if (frame.uri == wv.mainFrame.uri) {
-    var host = request.uri.split(/:\/\/|:|\//, 2)[1];
-    var domain = domainFromHost(host);
-    if (hosts[host]) {
-      apply(o, hosts[host]);
-      o.defaults = false;
+  if (frame.equals(wv.mainFrame)) {
+    try {
+      var uri = request.uri;
+      var host = uri.split(/:\/\/|:|\//, 2)[1];
+      var domain = domainFromHost(host);
+      if (domains[domain]) {
+        apply(o, domains[domain]);
+        o.defaults = false;
+      }
+      if (hosts[host]) {
+        apply(o, hosts[host]);
+        o.defaults = false;
+      }
+      if (uris[uri]) {
+        apply(o, uris[uri]);
+        o.defaults = false;
+      }
+      if (o.defaults === false && apply(o, defaults)) {
+        o.defaults = true;
+      }
     }
-    if (domains[domain]) {
-      apply(o, domains[domain]);
-      o.defaults = false;
-    }
-    if (o.defaults === false && apply(o, defaults)) {
-      o.defaults = true;
+    catch (e) {
+      extensions.error(me, e);
     }
   }
 }
@@ -104,10 +120,10 @@ function onCloseTab(wv) {
   }
 }
 function initImpl(config) {
-  domains = config.domains || null;
-  hosts = config.hosts || null;
-  uris = config.uris || null;
-  defaults = config.defaults || null;
+  domains = config.domains || {};
+  hosts = config.hosts || {};
+  uris = config.uris || {};
+  defaults = config.defaults || {};
   signals.connect("navigation", onNavigation);
   signals.connect("closeTab", onCloseTab);
 }

@@ -25,6 +25,7 @@ var me = "userscripts";
 var onStart = []; 
 var onEnd = []; 
 var scripts;
+
 function UserScript() 
 {
   this.description = null;
@@ -43,6 +44,7 @@ function UserScript()
   this.version = null;
   this.script = null;
 }
+
 // Reused regular expressions
 var regexes = {
   isTld : /\.tld(?:\/|:|$)/, 
