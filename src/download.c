@@ -102,7 +102,10 @@ download_spawn_external(const char *uri, const char *filename, WebKitDownload *d
   if (user_agent != NULL) 
     list = g_slist_prepend(list, dwb_navigation_new("DWB_USER_AGENT", user_agent));
   list = g_slist_prepend(list, dwb_navigation_new("DWB_MIME_TYPE", dwb.state.mimetype_request));
-  char **argv = g_strsplit(command, " ", -1);
+
+  char **argv; 
+  int argc;
+  g_shell_parse_argv(command, &argc, &argv, NULL);
   g_free(command);
   if (!g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, (GSpawnChildSetupFunc)dwb_setup_environment, list, NULL, &error)) {
     perror(error->message);
@@ -357,6 +360,10 @@ download_start(const char *path) {
   char *fullpath = NULL;
   const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
   const char *uri = webkit_download_get_uri(dwb.state.download);
+  /* FIXME seems to be a bug in webkit ? */
+  WebKitNetworkRequest *request = webkit_download_get_network_request(dwb.state.download);
+  dwb.state.download = webkit_download_new(request);
+  
   //char *command = NULL;
   char *tmppath = NULL;
   const char *last_slash;

@@ -1348,23 +1348,6 @@ dwb_unfocus() {
   }
 } /*}}}*/
 
-/* dwb_get_default_settings()         return: GHashTable {{{*/
-GHashTable * 
-dwb_get_default_settings() {
-  GHashTable *ret = g_hash_table_new(g_str_hash, g_str_equal);
-  GList *l;
-  for (l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
-    WebSettings *s = l->data;
-    WebSettings *new = dwb_malloc(sizeof(WebSettings));
-    *new = *s;
-    char *value = g_strdup(s->n.first);
-    g_hash_table_insert(ret, value, new);
-  }
-  if (l != NULL)
-    g_list_free(l);
-  return ret;
-}/*}}}*/
-
 /* dwb_focus_scroll (GList *){{{*/
 void
 dwb_focus_scroll(GList *gl) {

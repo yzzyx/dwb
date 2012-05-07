@@ -751,13 +751,13 @@ view_set_favicon(GList *gl, gboolean web) {
   GdkPixbuf *pb = NULL, *old;
   GdkPixbuf *new = NULL;
   if ( (old = gtk_image_get_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon))) ) {
-    gdk_pixbuf_unref(old);
+    g_object_unref(old);
   }
   if (web) {
     pb = webkit_web_view_get_icon_pixbuf(WEBVIEW(gl));
     if (pb) {
       new = gdk_pixbuf_scale_simple(pb, dwb.misc.bar_height, dwb.misc.bar_height, GDK_INTERP_BILINEAR);
-      gdk_pixbuf_unref(pb);
+      g_object_unref(pb);
     }
   }
   gtk_image_set_from_pixbuf(GTK_IMAGE(VIEW(gl)->tabicon), new);
@@ -792,10 +792,8 @@ static void
 view_init_settings(GList *gl) {
   View *v = gl->data;
   webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
-  /* apply settings */
-  v->setting = dwb_get_default_settings();
   GList *l;
-  for (l = g_hash_table_get_values(v->setting); l; l=l->next) {
+  for (l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
     if (s->apply & SETTING_PER_VIEW && s->func != NULL) {
       s->func(gl, s);
@@ -990,11 +988,16 @@ view_remove(GList *gl) {
   /* Favicon */ 
   GdkPixbuf *pb;
   if ( (pb = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
-    gdk_pixbuf_unref(pb);
+    g_object_unref(pb);
 
 
   dwb_focus(dwb.state.fview);
+
+  gtk_widget_destroy(v->tabicon);
+  gtk_widget_destroy(v->tablabel);
+  gtk_widget_destroy(v->tabbox);
   gtk_widget_destroy(v->tabevent);
+
 
   /*  clean up */ 
   dwb_source_remove();
