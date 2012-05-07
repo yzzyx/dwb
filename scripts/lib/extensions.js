@@ -30,29 +30,35 @@ Object.defineProperties(extensions, {
         return ret;
       }
 
-      return function(name) {
+      return function(name, c) {
         var boldname = "\033[1m" + name + "\033[0m";
 
         var config, dataBase, pluginPath, plugin = null;
         var extConfig = null;
+        io.print(arguments.length);
         
         /* Get default config if the config hasn't been read yet */
-        if (_config === undefined) {
-          try {
-            config = include(data.configDir + "/extensionrc");
-          }
-          catch (e) {
-            extensions.error(name, "loading config failed : " + e);
-          }
-          if (config === null) {
-            extensions.warning(name, "Could not load config.");
-          }
-          else {
-            _config = config;
-          }
+        if (arguments.length == 2) {
+          extConfig = c;
         }
-        if (_config) {
-          extConfig = _config[name] || null;
+        else {
+          if (_config === undefined) {
+            try {
+              config = include(data.configDir + "/extensionrc");
+            }
+            catch (e) {
+              extensions.error(name, "loading config failed : " + e);
+            }
+            if (config === null) {
+              extensions.warning(name, "Could not load config.");
+            }
+            else {
+              _config = config;
+            }
+          }
+          if (_config) {
+            extConfig = _config[name] || null;
+          }
         }
 
         /* Load extension */

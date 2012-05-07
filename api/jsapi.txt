@@ -1876,13 +1876,15 @@ The +extensions+ object has the following properties and functions
 
 [source,javascript]
 ----
-Boolean extensions.load(String name) 
+Boolean extensions.load(String name, [Object config]) 
 ----
 Loads an extension
 
  ::
 
 _name_;; Name of the extension
+_config_;; The config for the script, if omitted the config is read from
+$XDG_CONFIG_HOME/dwb/extensionrc, optional
 _returns_;;  True if the extension was loaded
 ****
 
