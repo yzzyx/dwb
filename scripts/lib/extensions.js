@@ -35,7 +35,6 @@ Object.defineProperties(extensions, {
 
         var config, dataBase, pluginPath, plugin = null;
         var extConfig = null;
-        io.print(arguments.length);
         
         /* Get default config if the config hasn't been read yet */
         if (arguments.length == 2) {
