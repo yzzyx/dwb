@@ -1552,6 +1552,16 @@ and
 Webbrowser increases loading speed but increases memory usage, documentviewer
 reduces memory usage but also decreases browsing speed. Default Value:
 .IR webbrowser .
+.TP
+.BR close-tab-focus-policy
+Controls the focus when the focused tab is closed, possible values are 
+.IR right ,
+.IR left , 
+.IR rightmost , 
+and
+.IR leftmost ;
+default value: 
+.IR right .
 .TP 
 .BR complete-bookmarks
 Whether to complete bookmarks with tab-completion. Possible values: true/false,
@@ -1819,7 +1829,7 @@ default value:
 .IR 500 .
 .TP
 .BR new-tab-position-policy
-Affects the position a new tab is created, possible values are 
+Controls the position of a newly created tab, possible values are 
 .IR right ,
 a new tab is created right of the current tab, 
 .IR left , 

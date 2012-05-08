@@ -70,6 +70,7 @@ download-gradient-end text End color for download progress gradient color
 
 # lt Layout
 background-tabs checkbox Whether to open tabs in background
+close-tab-focus-policy select @right @left @rightmost @leftmost Controls the focused tab when a tab is closed
 default-height text Default height of the window
 default-width text Default width of the window
 enable-frame-flattening checkbox Whether to enable frame flattening

@@ -873,12 +873,35 @@ view_remove(GList *gl) {
     CLEAR_COMMAND_TEXT();
     return;
   }
+  /* Get new focused tab */
+  GList *new_fview = dwb.state.fview;
   if (gl == dwb.state.fview) {
-    if ( !(dwb.state.fview = dwb.state.fview->prev) ) {
-      dwb.state.fview = g_list_first(dwb.state.views)->next;
-      if (dwb.state.bar_visible & BAR_VIS_TOP) 
-        gtk_widget_show_all(dwb.gui.topbox);
+    if (dwb.misc.tab_position & TAB_CLOSE_POSITION_RIGHTMOST) {
+      if (dwb.state.fview->next) {
+        new_fview = g_list_last(dwb.state.views);
+      }
+      else {
+        new_fview = g_list_last(dwb.state.views)->prev;
+      }
     }
+    else if (dwb.misc.tab_position & TAB_CLOSE_POSITION_RIGHT) {
+      if ( !(new_fview = dwb.state.fview->next) ) {
+        new_fview = g_list_last(dwb.state.views)->prev;
+      }
+    }
+    else if (dwb.misc.tab_position & TAB_CLOSE_POSITION_LEFTMOST) {
+      if (dwb.state.fview == dwb.state.views) 
+        new_fview = dwb.state.views->next;
+      else 
+        new_fview = dwb.state.views;
+    }
+    else { // tab.misc.tab_position & TAB_CLOSE_POSITION_LEFT
+      if ( !(new_fview = dwb.state.fview->prev) ) {
+        new_fview = g_list_first(dwb.state.views)->next;
+      }
+    }
+    if (dwb.state.bar_visible & BAR_VIS_TOP && !gtk_widget_get_visible(dwb.gui.topbox)) 
+      gtk_widget_show_all(dwb.gui.topbox);
   }
   /* Get History for the undo list */
   WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
@@ -900,7 +923,7 @@ view_remove(GList *gl) {
     g_object_unref(pb);
 
 
-  dwb_focus(dwb.state.fview);
+  dwb_focus(new_fview);
 
   gtk_widget_destroy(v->tabicon);
   gtk_widget_destroy(v->tablabel);
@@ -973,21 +996,15 @@ view_add(const char *uri, gboolean background) {
   gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
   if (dwb.state.fview) {
     int p;
-    switch (dwb.misc.tab_position) {
-      case TAB_POSITION_RIGHTMOST: 
-        p = g_list_length(dwb.state.views);
-        break;
-      case TAB_POSITION_LEFT: 
-        p = g_list_position(dwb.state.views, dwb.state.fview);
-        break;
-      case TAB_POSITION_LEFTMOST: 
-        p = 0;
-        break;
-      case TAB_POSITION_RIGHT: 
-      default :
-        p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
-        break;
-    }
+    if (dwb.misc.tab_position & TAB_POSITION_RIGHTMOST) 
+      p = g_list_length(dwb.state.views);
+    else if (dwb.misc.tab_position & TAB_POSITION_LEFT) 
+      p = g_list_position(dwb.state.views, dwb.state.fview);
+    else if (dwb.misc.tab_position & TAB_POSITION_LEFTMOST) 
+      p = 0;
+    else 
+      p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
+
     gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
     gtk_box_insert(GTK_BOX(dwb.gui.mainbox), v->scroll, true, true, 0, p, GTK_PACK_START);
     dwb.state.views = g_list_insert(dwb.state.views, v, p);

@@ -60,6 +60,7 @@ static DwbStatus dwb_set_sync_interval(GList *, WebSettings *);
 static DwbStatus dwb_set_scroll_step(GList *, WebSettings *);
 static DwbStatus dwb_set_private_browsing(GList *, WebSettings *);
 static DwbStatus dwb_set_new_tab_position_policy(GList *, WebSettings *);
+static DwbStatus dwb_set_close_tab_position_policy(GList *, WebSettings *);
 static DwbStatus dwb_set_cookies(GList *, WebSettings *);
 static DwbStatus dwb_set_widget_packing(GList *, WebSettings *);
 static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
@@ -198,21 +199,30 @@ dwb_set_private_browsing(GList *gl, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
-/* dwb_set_new_tab_position_policy {{{ */
 static DwbStatus
-dwb_set_new_tab_position_policy(GList *gl, WebSettings *s) {
+dwb_tab_position_policy(WebSettings *s, unsigned int shift, unsigned int mask) {
   if (!g_strcmp0(s->arg_local.p, "right"))
-    dwb.misc.tab_position = TAB_POSITION_RIGHT;
+    dwb.misc.tab_position = ( TAB_POSITION_RIGHT << shift ) | (dwb.misc.tab_position & mask);
   else if (!g_strcmp0(s->arg_local.p, "left"))
-    dwb.misc.tab_position = TAB_POSITION_LEFT;
+    dwb.misc.tab_position = (TAB_POSITION_LEFT << shift ) | (dwb.misc.tab_position & mask);
   else if (!g_strcmp0(s->arg_local.p, "rightmost"))
-    dwb.misc.tab_position = TAB_POSITION_RIGHTMOST;
+    dwb.misc.tab_position = (TAB_POSITION_RIGHTMOST << shift ) | (dwb.misc.tab_position & mask);
   else if (!g_strcmp0(s->arg_local.p, "leftmost"))
-    dwb.misc.tab_position = TAB_POSITION_LEFTMOST;
+    dwb.misc.tab_position = (TAB_POSITION_LEFTMOST << shift ) | (dwb.misc.tab_position & mask);
   else 
     return STATUS_ERROR;
   return STATUS_OK;
+
+}
+/* dwb_set_new_tab_position_policy {{{ */
+static DwbStatus
+dwb_set_new_tab_position_policy(GList *gl, WebSettings *s) {
+  return dwb_tab_position_policy(s, 0, CLOSE_TAB_POSITION_MASK);
 }/*}}}*/
+static DwbStatus
+dwb_set_close_tab_position_policy(GList *gl, WebSettings *s) {
+  return dwb_tab_position_policy(s, 4, NEW_TAB_POSITION_MASK);
+}
 
 /* dwb_set_cookie_accept_policy {{{ */
 static DwbStatus
