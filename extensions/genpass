@@ -43,7 +43,7 @@ var defaultConfig = {
 var config = {};
 var master = null;
 
-// Modified base64-encode converts groups of 2 characters (8-bit since the hash
+// Modified base64-encode converts 3 * 2 characters (8-bit since the hash
 // is hexadecimal) to 4 modified base64 encoded characters that contain no / and +
 function encode(string) {
   var result = new String();

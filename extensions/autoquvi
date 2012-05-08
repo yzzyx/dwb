@@ -70,6 +70,9 @@ return {
       }
 
     }
+    else {
+      config = defaultConfig;
+    }
     try {
       stat = system.spawn(config.quvi + " --support", stdoutCallback);
       if (stat == 0) {
