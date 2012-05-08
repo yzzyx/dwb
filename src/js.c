@@ -91,15 +91,13 @@ char *
 js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t size) {
   size_t length;
   if (size > 0) 
-    length = MIN(JSStringGetLength(jsstring), size) + 1;
+    length = MIN(JSStringGetMaximumUTF8CStringSize(jsstring), size);
   else 
-    length = JSStringGetLength(jsstring)+1;
+    length = JSStringGetMaximumUTF8CStringSize(jsstring);
 
-  char *ret = g_new(char, length);
+  char *ret = g_malloc(sizeof(gchar) * length);
   size_t written = JSStringGetUTF8CString(jsstring, ret, length);
     /* TODO: handle length error */
-  if (written != length)
-    return NULL;
   return ret;
 }/*}}}*/
 

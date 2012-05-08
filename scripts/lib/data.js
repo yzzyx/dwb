@@ -32,3 +32,4 @@
       "searchEngines"   :  { value : configDir + "/searchengines", enumerable : true }
   });
 })();
+Object.freeze(data);

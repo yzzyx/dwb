@@ -586,6 +586,7 @@ error_out:
   g_free(checksum);
   return ret;
 }
+
 DwbStatus
 scripts_eval_key(KeyMap *m, Arg *arg) {
   JSObjectCallAsFunction(_global_context, arg->p, NULL, 0, NULL, NULL);
