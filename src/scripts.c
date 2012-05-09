@@ -425,7 +425,7 @@ set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueR
   if (jstype == kJSTypeNumber && 
       (gtype == G_TYPE_INT || gtype == G_TYPE_UINT || gtype == G_TYPE_LONG || gtype == G_TYPE_ULONG ||
       gtype == G_TYPE_FLOAT || gtype == G_TYPE_DOUBLE || gtype == G_TYPE_ENUM || gtype == G_TYPE_INT64 ||
-      gtype == G_TYPE_UINT64))  {
+      gtype == G_TYPE_UINT64 || gtype == G_TYPE_FLAGS))  {
     double value = JSValueToNumber(ctx, jsvalue, exception);
     if (value != NAN) {
       g_object_set(o, buf, value, NULL);
