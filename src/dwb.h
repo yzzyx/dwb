@@ -614,7 +614,6 @@ struct _View {
   } hover;
   WebKitDOMElement *status_element;
   JSObjectRef hint_object;
-  JSObjectRef script;
   JSObjectRef script_wv;
 };
 struct _Color {

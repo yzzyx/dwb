@@ -300,7 +300,7 @@ tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   GList *nth = g_list_nth(dwb.state.views, (int)n);
   if (nth == NULL)
     return JSValueMakeNull(ctx);
-  return VIEW(nth)->script;
+  return VIEW(nth)->script_wv;
 }
 
 static JSValueRef 
@@ -456,7 +456,7 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
   JSValueRef ret = NULL;
   char *name = js_string_to_char(ctx, js_name, -1);
   if (name == NULL)
-    return NULL;
+    return JSValueMakeNull(ctx);
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
@@ -464,9 +464,9 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
   GParamSpec *pspec = g_object_class_find_property(class, buf);
   if (pspec == NULL)
-    goto error_out;
+    return JSValueMakeNull(ctx);
   if (! (pspec->flags & G_PARAM_READABLE))
-    goto error_out;
+    return JSValueMakeNull(ctx);
 
   GType gtype = pspec->value_type, act; 
   while ((act = g_type_parent(gtype))) {
@@ -501,17 +501,14 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
     GObject *object;
     g_object_get(o, buf, &object, NULL);
     if (object == NULL)
-      return NULL;
+      return JSValueMakeNull(ctx);
     JSObjectRef retobj = scripts_make_object(ctx, object);
     g_object_unref(object);
     ret = retobj;
   }
-error_out:
  return ret;
 }
-void
-object_finalize(JSObjectRef o) {
-}
+
 // TODO : creating 1000000 objects leaks ~ 4MB  
 JSObjectRef 
 scripts_make_object(JSContextRef ctx, GObject *o) {
@@ -620,7 +617,6 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
   map->map = fmap;
   dwb.keymap = g_list_prepend(dwb.keymap, map);
 
-
   ret = true;
 error_out:
   g_free(keystr);
@@ -708,8 +704,8 @@ global_timer_stop(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_
     return JSValueMakeBoolean(ctx, false);
   }
   if ((sigid = JSValueToNumber(ctx, argv[0], exc)) != NAN) {
-    g_source_remove((int)sigid);
-    return JSValueMakeBoolean(ctx, true);
+    gboolean ret = g_source_remove((int)sigid);
+    return JSValueMakeBoolean(ctx, ret);
   }
   return JSValueMakeBoolean(ctx, false);
 }
@@ -983,10 +979,10 @@ io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
 
   FILE *stream = stdout;
   if (argc >= 2) {
-    char *fd = js_value_to_char(ctx, argv[1], -1, exc);
-    if (!g_strcmp0(fd, "stderr")) 
+    JSStringRef js_string = JSValueToStringCopy(ctx, argv[1], exc);
+    if (JSStringIsEqualToUTF8CString(js_string, "stderr")) 
       stream = stderr;
-    g_free(fd);
+    JSStringRelease(js_string);
   }
 
   char *out;
@@ -1008,6 +1004,8 @@ io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
       dout = JSValueToNumber(ctx, argv[0], exc);
       if (dout != NAN) 
         fprintf(stream, "%f\n", dout);
+      else 
+        fprintf(stream, "NAN\n");
       break;
     case kJSTypeUndefined : 
       fprintf(stream, "undefined\n");
@@ -1121,6 +1119,9 @@ scripts_emit(ScriptSignal *sig) {
     return JSValueToBoolean(_global_context, js_ret);
   }
   return false;
+}
+void
+object_finalize(JSObjectRef o) {
 }
 
 static void 
@@ -1267,7 +1268,6 @@ scripts_remove_tab(JSObjectRef obj) {
 }
 gboolean
 print_exception(JSContextRef ctx, JSValueRef exception) {
-  JSValueRef exc = NULL;
   if (exception == NULL) 
     return false;
   if (!JSValueIsObject(ctx, exception))
@@ -1277,12 +1277,9 @@ print_exception(JSContextRef ctx, JSValueRef exception) {
     return false;
 
   gint line = (int)js_get_double_property(ctx, o, "line");
-  if (exc != NULL)
-    return false;
   gchar *message = js_get_string_property(ctx, o, "message");
-  if (exc != NULL)
-    return false;
-  fprintf(stderr, "DWB SCRIPT EXCEPTION: in line %d: %s\n", line, message);
+  fprintf(stderr, "DWB SCRIPT EXCEPTION: in line %d: %s\n", line, message == NULL ? "unknown" : message);
+  g_free(message);
   return true;
 }
 

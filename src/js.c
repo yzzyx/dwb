@@ -96,8 +96,7 @@ js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t size) {
     length = JSStringGetMaximumUTF8CStringSize(jsstring);
 
   char *ret = g_malloc(sizeof(gchar) * length);
-  size_t written = JSStringGetUTF8CString(jsstring, ret, length);
-    /* TODO: handle length error */
+  JSStringGetUTF8CString(jsstring, ret, length);
   return ret;
 }/*}}}*/
 
