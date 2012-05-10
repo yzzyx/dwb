@@ -174,7 +174,9 @@ function getPassword() {
 }
 function insertPassword() {
   var pass = getPassword();
-  inject(pass);
+  if (pass) {
+    inject(pass);
+  }
 }
 function printPassword() {
   var pass = getPassword();
