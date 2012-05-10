@@ -60,7 +60,11 @@ soup_get_header_from_request(WebKitNetworkRequest *request, const char *name) {
 SoupMessage *
 dwb_soup_get_message(WebKitWebFrame *frame) {
   WebKitWebDataSource *ds = webkit_web_frame_get_data_source(frame);
+  if (ds == NULL) 
+    return NULL;
   WebKitNetworkRequest *request = webkit_web_data_source_get_request(ds);
+  if (request == NULL)
+    return NULL;
   return webkit_network_request_get_message(request);
 }
 const char *

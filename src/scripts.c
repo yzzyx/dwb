@@ -134,6 +134,7 @@ enum {
 
 static void callback(CallbackData *c);
 static void make_callback(JSContextRef ctx, JSObjectRef this, GObject *gobject, const char *signalname, JSValueRef value, StopCallbackNotify notify, JSValueRef *exception);
+static void apply_scripts(void);
 
 static JSValueRef get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSObjectRef _sigObjects[SCRIPTS_SIG_LAST];
@@ -456,7 +457,7 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
   JSValueRef ret = NULL;
   char *name = js_string_to_char(ctx, js_name, -1);
   if (name == NULL)
-    return JSValueMakeNull(ctx);
+    return NULL;
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
@@ -464,9 +465,9 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
   GParamSpec *pspec = g_object_class_find_property(class, buf);
   if (pspec == NULL)
-    return JSValueMakeNull(ctx);
+    return NULL;
   if (! (pspec->flags & G_PARAM_READABLE))
-    return JSValueMakeNull(ctx);
+    return NULL;
 
   GType gtype = pspec->value_type, act; 
   while ((act = g_type_parent(gtype))) {
@@ -501,7 +502,7 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
     GObject *object;
     g_object_get(o, buf, &object, NULL);
     if (object == NULL)
-      return JSValueMakeNull(ctx);
+      return NULL;
     JSObjectRef retobj = scripts_make_object(ctx, object);
     g_object_unref(object);
     ret = retobj;
@@ -1120,9 +1121,6 @@ scripts_emit(ScriptSignal *sig) {
   }
   return false;
 }
-void
-object_finalize(JSObjectRef o) {
-}
 
 static void 
 create_global_object() {
@@ -1216,7 +1214,6 @@ create_global_object() {
   cd.staticFunctions = default_functions;
   cd.getProperty = get_property;
   cd.setProperty = set_property;
-  cd.finalize = object_finalize;
 
   _default_class = JSClassCreate(&cd);
 
@@ -1242,6 +1239,7 @@ create_global_object() {
 }
 void 
 scripts_create_tab(GList *gl) {
+  static gboolean applied = false;
   if (_global_context == NULL )  {
     VIEW(gl)->script_wv = NULL;
     return;
@@ -1255,6 +1253,10 @@ scripts_create_tab(GList *gl) {
 
   JSValueProtect(_global_context, o);
   VIEW(gl)->script_wv = o;
+  if (!applied) {
+    apply_scripts();
+    applied = true;
+  }
 }
 void 
 scripts_remove_tab(JSObjectRef obj) {
@@ -1299,20 +1301,7 @@ scripts_init_script(const char *script) {
   JSStringRelease(body);
 }
 void 
-scripts_init() {
-  dwb.misc.script_signals = 0;
-  if (_global_context == NULL)
-    return;
-
-  char *dir = util_get_data_dir(LIBJS_DIR);
-  if (dir != NULL) {
-    GString *content = g_string_new(NULL);
-    util_get_directory_content(content, dir, "js");
-    evaluate(content->str);
-    g_string_free(content, true);
-    g_free(dir);
-  }
-
+apply_scripts() {
   JSStringRef on_init = JSStringCreateWithUTF8CString("init");
   JSValueRef ret, init;
   JSObjectRef retobj, initobj;
@@ -1336,6 +1325,21 @@ scripts_init() {
   g_slist_free(scripts);
   _script_list = NULL;
   JSStringRelease(on_init);
+}
+void 
+scripts_init() {
+  dwb.misc.script_signals = 0;
+  if (_global_context == NULL)
+    return;
+
+  char *dir = util_get_data_dir(LIBJS_DIR);
+  if (dir != NULL) {
+    GString *content = g_string_new(NULL);
+    util_get_directory_content(content, dir, "js");
+    evaluate(content->str);
+    g_string_free(content, true);
+    g_free(dir);
+  }
 }
 void
 scripts_end() {
