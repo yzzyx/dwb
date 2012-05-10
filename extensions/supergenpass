@@ -125,6 +125,7 @@ function inject(pass) {
  * Converts a hexstring to a base64-encoded string without padding '='. 
  * +/ are replaced with 98
  * */
+
 function hex2base64(string) {
   var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678998";
   var result = new String();
@@ -137,18 +138,17 @@ function hex2base64(string) {
   } 
   return result;
 }
+
 function base64hash(string) {
   string = checksum(string, config.hashMethod);
   return hex2base64(string);
 }
 
-var regValidate = /^[a-z].*(?:[A-Z].*[0-9]|[0-9].*[A-Z]).*/;
-
 function generate() {
-  var i, mainFrame, host, salt, pass;
+  var regValidate = /^[a-z].*(?:[A-Z].*[0-9]|[0-9].*[A-Z]).*/;
+  var i, host, salt, pass;
 
-  mainFrame = tabs.current.mainFrame;
-  host = config.stripSubdomains ? mainFrame.domain : mainFrame.host;
+  host = config.stripSubdomains ? tabs.current.mainFrame.domain : tabs.current.mainFrame.host;
 
   salt = config.salt;
   if (config.domainSalts[host]) 

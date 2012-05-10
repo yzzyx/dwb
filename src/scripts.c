@@ -1242,7 +1242,7 @@ create_global_object() {
 void 
 scripts_create_tab(GList *gl) {
   if (_global_context == NULL )  {
-    VIEW(gl)->script = NULL;
+    VIEW(gl)->script_wv = NULL;
     return;
   }
   JSObjectRef o = scripts_make_object(_global_context, G_OBJECT(VIEW(gl)->web));
