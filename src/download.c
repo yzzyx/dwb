@@ -316,7 +316,11 @@ static DwbDownload *
 download_add_progress_label(GList *gl, const char *filename, gint length) {
   DwbDownload *l = g_malloc(sizeof(DwbDownload));
 
+#if _HAS_GTK3
+  GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
+#else 
   GtkWidget *hbox = gtk_hbox_new(false, 3);
+#endif
   l->event = gtk_event_box_new();
   l->rlabel = gtk_label_new("???");
   char *name = g_strdup_printf("%d: %s", length, filename);

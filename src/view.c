@@ -793,7 +793,12 @@ view_create_web_view() {
 
   /* Tabbar */
   v->tabevent = gtk_event_box_new();
+#if _HAS_GTK3
+  v->tabbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+#else 
   v->tabbox = gtk_hbox_new(false, 1);
+#endif
+
   v->tablabel = gtk_label_new(NULL);
 
   gtk_label_set_use_markup(GTK_LABEL(v->tablabel), true);

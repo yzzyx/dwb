@@ -61,7 +61,12 @@ completion_get_completion_item(const char  *left, const char *right, const char 
   c->event = gtk_event_box_new();
   c->data = data;
   gboolean expand = middle != NULL && right != NULL;
+#if _HAS_GTK3
+  GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_box_set_homogeneous(GTK_BOX(hbox), expand);
+#else 
   GtkWidget *hbox = gtk_hbox_new(expand, 0);
+#endif
 
   gtk_box_pack_start(GTK_BOX(hbox), c->llabel, true, true, 5);
   gtk_box_pack_start(GTK_BOX(hbox), c->mlabel, middle != NULL, true, 5);
@@ -519,7 +524,12 @@ completion_complete(CompletionType type, int back) {
 
   dwb.state.mode &= ~(COMPLETE_PATH | AUTO_COMPLETE | COMPLETE_COMMAND_MODE);
   if ( !(dwb.state.mode & COMPLETION_MODE) ) {
+#if _HAS_GTK3
+    dwb.gui.compbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_box_set_homogeneous(GTK_BOX(dwb.gui.compbox), true);
+#else 
     dwb.gui.compbox = gtk_vbox_new(true, 0);
+#endif
     gtk_box_pack_start(GTK_BOX(dwb.gui.bottombox), dwb.gui.compbox, false, false, 0);
     switch (type) {
       case COMP_SETTINGS:    dwb.comps.completions = completion_get_settings_completion(); break;
@@ -591,7 +601,12 @@ completion_init_autocompletion(GList *gl) {
   GList *ret = NULL;
   char buffer[128];
 
+#if _HAS_GTK3
+  dwb.gui.autocompletion = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+  gtk_box_set_homogeneous(GTK_BOX(dwb.gui.autocompletion), true);
+#else 
   dwb.gui.autocompletion = gtk_hbox_new(true, 2);
+#endif
   int i=0;
   for (GList *l=gl; l; l=l->next, i++) {
     KeyMap *m = l->data;

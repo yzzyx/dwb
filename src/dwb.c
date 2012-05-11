@@ -3310,12 +3310,25 @@ dwb_init_gui() {
 
 
   /* Main */
+#if _HAS_GTK3 
+  dwb.gui.vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+  dwb.gui.topbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+  gtk_box_set_homogeneous(GTK_BOX(dwb.gui.topbox), true);
+  dwb.gui.mainbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+  gtk_box_set_homogeneous(GTK_BOX(dwb.gui.mainbox), true);
+#else
   dwb.gui.vbox = gtk_vbox_new(false, 1);
   dwb.gui.topbox = gtk_hbox_new(true, 1);
   dwb.gui.mainbox = gtk_hbox_new(true, 1);
+#endif
 
   /* Downloadbar */
+#if _HAS_GTK3 
+  dwb.gui.downloadbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
+#else
   dwb.gui.downloadbar = gtk_hbox_new(false, 3);
+#endif
+
 
   /* entry */
   dwb.gui.entry = gtk_entry_new();
@@ -3325,7 +3338,11 @@ dwb_init_gui() {
   gtk_entry_set_inner_border(GTK_ENTRY(dwb.gui.entry), false);
 
   GtkWidget *status_hbox;
+#if _HAS_GTK3 
+  dwb.gui.bottombox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+#else
   dwb.gui.bottombox = gtk_vbox_new(false, 0);
+#endif
   dwb.gui.statusbox = gtk_event_box_new();
   dwb.gui.lstatus = gtk_label_new(NULL);
   dwb.gui.urilabel = gtk_label_new(NULL);
@@ -3341,7 +3358,11 @@ dwb_init_gui() {
 
   DWB_WIDGET_OVERRIDE_COLOR(dwb.gui.urilabel, GTK_STATE_NORMAL, &dwb.color.active_fg);
 
+#if _HAS_GTK3
+  status_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+#else 
   status_hbox = gtk_hbox_new(false, 2);
+#endif
   gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.lstatus, false, false, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.entry, true, true, 0);
   gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.urilabel, true, true, 0);
