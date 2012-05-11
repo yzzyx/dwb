@@ -93,10 +93,9 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
   if (script == NULL)
     return NULL;
 
-  JSStringRef prop_name, js_script;
-  JSValueRef prop, ret, exc = NULL;
+  JSStringRef js_script;
+  JSValueRef ret, exc = NULL;
   JSObjectRef return_object;
-  JSPropertyNameArrayRef array;
 
   JSContextRef ctx = webkit_web_frame_get_global_context(frame);
   js_script = JSStringCreateWithUTF8CString(script);
@@ -109,15 +108,6 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
   if (exc != NULL)
     return NULL;
   JSValueProtect(ctx, ret);
-  array = JSObjectCopyPropertyNames(ctx, return_object);
-  for (int i=0; i<JSPropertyNameArrayGetCount(array); i++) {
-    prop_name = JSPropertyNameArrayGetNameAtIndex(array, i);
-    prop = JSObjectGetProperty(ctx, return_object, prop_name, NULL);
-    JSObjectDeleteProperty(ctx, return_object, prop_name, NULL);
-    JSObjectSetProperty(ctx, return_object, prop_name, prop, 
-        kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete | kJSPropertyAttributeDontEnum, NULL);
-  }
-  JSPropertyNameArrayRelease(array);
   return return_object;
 }/*}}}*/
 

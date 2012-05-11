@@ -1,4 +1,4 @@
-(function () {
+Object.freeze((function () {
   String.prototype.isInt = function () { 
     return !isNaN(parseInt(this, 10)); 
   };
@@ -647,4 +647,4 @@
             obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks, obj.hintAutoFollow);
       }
   };
-})();
+})());
