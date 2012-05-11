@@ -1,0 +1,48 @@
+Changes since 2012-02-01 
+
+New features:
+  * New settings 'close-tab-focus-policy', 'new-tab-position-policy''
+  * New setting 'ssl-use-system-ca-file' for libsoup > 2.38
+  * New commands 'hints_background' 'hints_images_background', 'hints_url_background', opens hints in a background tab
+  * New setting 'update-search-delay'
+  * New commands 'back_open', 'backopen_url'
+  * Adding case sensitive search
+  * Tilde expansion for downloads and pathcompletion
+  * New command 'dump'
+  * New commands 'toggle_local_setting', 'local_set'
+  * New settings 'font-hidden-statusbar'
+  * New setting 'hint-auto-follow'
+  * New command 'normal_mode'
+  * New setting 'use-ntlm'
+  * New dwb-uri 'dwb:searchengines'
+  * New command 'cancel_download'
+  * New command 'clear_tab'
+  * New settings 'download-gradient-start', 'download-gradient-end'
+  * New setting 'auto-insert-mode'
+  * New command 'reload_userscripts'
+  * New commands 'tab_move', 'tab_move_left', 'tab_move_right'
+  * Adding 'DWB_MIME_TYPE' environment variable for external download scripts
+  * New setting 'tabbar-visible'
+  * Adding to small status bars if the statusbar is hidden that show links under
+    pointer and insert mode state 
+
+Changed: 
+  * All dwb://<name> uris are replaced with dwb:<name>
+  * Additional dbus backend for single instance handling
+  * Possibility to send commands in userscripts to stdout, must be sent to
+    $DWB_FIFO instead
+
+Removed: 
+  * Removed settings 'mail-handler', 'ftp-handler'
+
+
+
+Bug fixes: 
+  * Fixing broken downloads with libwebkit > 1.8.0
+  * Fixing a possible segfault in the proxy setting
+  * Fixing several memory leaks
+  * Fixing not saved mimetypes for downloads opened with external applications
+  * Fixing segfault when startpage is not set
+  * Fixing several typos 
+  * Several minor bug fixes
+
