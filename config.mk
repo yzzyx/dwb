@@ -1,5 +1,4 @@
 REAL_NAME=dwb
-REAL_VERSION=0.1.0
 COPYRIGHT="© 2011 portix"
 
 # dirs
@@ -17,6 +16,7 @@ HG_VERSION=$(shell hg id -n 2>/dev/null)
 VERSION=$(shell if [ $(HG_VERSION) ]; then echo "rev.\ $(HG_VERSION)"; else echo "$(REAL_VERSION)"; fi)
 NAME=$(shell if [ $(HG_VERSION) ]; then echo "$(REAL_NAME)-hg"; else echo "$(REAL_NAME)"; fi)
 BUILDDATE=`date +%Y.%m.%d`
+REAL_VERSION=$(NAME)-$(BUILDDATE)
 
 # Targets
 TARGET = $(REAL_NAME)
