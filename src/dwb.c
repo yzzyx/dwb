@@ -1221,12 +1221,12 @@ dwb_toggle_allowed(const char *filename, const char *data, GList **pers) {
     if (pers != NULL) {
       dwb_free_list(*pers, (void_func)g_free);
       *pers = NULL;
-    }
-    if (lines != NULL) {
-      for (int i=0; lines[i] != NULL; i++) {
-        if (strlen(lines[i]) && g_strcmp0(lines[i], data)) {
-          g_string_append_printf(buffer, "%s\n", lines[i]);
-          *pers = g_list_prepend(*pers, lines[i]);
+      if (lines != NULL) {
+        for (int i=0; lines[i] != NULL; i++) {
+          if (strlen(lines[i]) && g_strcmp0(lines[i], data)) {
+            g_string_append_printf(buffer, "%s\n", lines[i]);
+            *pers = g_list_prepend(*pers, lines[i]);
+          }
         }
       }
     }
@@ -1933,7 +1933,7 @@ dwb_load_uri(GList *gl, const char *arg) {
 
   tmpuri = backuri;
 
-  if (*tmpuri == '\0') {
+  if (tmpuri == NULL || *tmpuri == '\0') {
     goto clean;
   }
   if (gl == NULL)
