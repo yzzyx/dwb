@@ -134,64 +134,16 @@ enum {
 
 static void callback(CallbackData *c);
 static void make_callback(JSContextRef ctx, JSObjectRef this, GObject *gobject, const char *signalname, JSValueRef value, StopCallbackNotify notify, JSValueRef *exception);
-static void apply_scripts(void);
+static JSObjectRef make_object(JSContextRef ctx, GObject *o);
 
-static JSValueRef get_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSObjectRef _sigObjects[SCRIPTS_SIG_LAST];
 static JSGlobalContextRef _global_context;
 static GSList *_script_list;
 static JSClassRef _webview_class, _frame_class, _download_class, _default_class, _download_class;
 
-static CallbackData * 
-callback_data_new(GObject *gobject, JSObjectRef object, JSObjectRef callback, StopCallbackNotify notify)  {
-  CallbackData *c = g_malloc(sizeof(CallbackData));
-  c->gobject = gobject != NULL ? g_object_ref(gobject) : NULL;
-  if (object != NULL) {
-    JSValueProtect(_global_context, object);
-    c->object = object;
-  }
-  if (object != NULL) {
-    JSValueProtect(_global_context, callback);
-    c->callback = callback;
-  }
-  c->notify = notify;
-  return c;
-}
-static void
-callback_data_free(CallbackData *c) {
-  if (c != NULL) {
-    if (c->gobject != NULL) 
-      g_object_unref(c->gobject);
-    if (c->object != NULL) 
-      JSValueUnprotect(_global_context, c->object);
-    JSValueUnprotect(_global_context, c->object);
-    if (c->object != NULL) 
-      JSValueUnprotect(_global_context, c->callback);
-    g_free(c);
-  }
-}
-static void 
-callback(CallbackData *c) {
-  gboolean ret = false;
-  JSValueRef val[] = { c->object != NULL ? c->object : JSValueMakeNull(_global_context) };
-  JSValueRef jsret = JSObjectCallAsFunction(_global_context, c->callback, NULL, 1, val, NULL);
-  if (JSValueIsBoolean(_global_context, jsret))
-    ret = JSValueToBoolean(_global_context, jsret);
-  if (ret || (c != NULL && c->gobject != NULL && c->notify != NULL && c->notify(c))) {
-    g_signal_handlers_disconnect_by_func(c->gobject, callback, c);
-    callback_data_free(c);
-  }
-}
-static void 
-make_callback(JSContextRef ctx, JSObjectRef this, GObject *gobject, const char *signalname, JSValueRef value, StopCallbackNotify notify, JSValueRef *exception) {
-  JSObjectRef func = JSValueToObject(ctx, value, exception);
-  if (func != NULL && JSObjectIsFunction(ctx, func)) {
-    CallbackData *c = callback_data_new(gobject, this, func, notify);
-    g_signal_connect_swapped(gobject, signalname, G_CALLBACK(callback), c);
-  }
-}
-
-char *
+/* MISC {{{*/
+/* uncamelize {{{*/
+static char *
 uncamelize(char *uncamel, const char *camel, char rep, size_t length) {
   char *ret = uncamel;
   size_t written = 0;
@@ -212,40 +164,38 @@ uncamelize(char *uncamel, const char *camel, char rep, size_t length) {
   }
   while (!(*uncamel = 0) && written++<length-1);
   return ret;
-}
+}/*}}}*/
 
-void 
+/* print_exception {{{*/
+static gboolean
+print_exception(JSContextRef ctx, JSValueRef exception) {
+  if (exception == NULL) 
+    return false;
+  if (!JSValueIsObject(ctx, exception))
+    return false;
+  JSObjectRef o = JSValueToObject(ctx, exception, NULL);
+  if (o == NULL) 
+    return false;
+
+  gint line = (int)js_get_double_property(ctx, o, "line");
+  gchar *message = js_get_string_property(ctx, o, "message");
+  fprintf(stderr, "DWB SCRIPT EXCEPTION: in line %d: %s\n", line, message == NULL ? "unknown" : message);
+  g_free(message);
+  return true;
+}
+/*}}}*/
+
+/* evaluate {{{*/
+static void 
 evaluate(const char *script) {
   if (script == NULL)
     return;
   JSStringRef js_script = JSStringCreateWithUTF8CString(script);
   JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
   JSStringRelease(js_script);
-}
+}/*}}}*/
 
-bool
-set_property_cb(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSValueRef* exception) {
-  return true;
-}
-
-static JSClassRef 
-create_class(const char *name, JSStaticFunction staticFunctions[], JSStaticValue staticValues[]) {
-  JSClassDefinition cd = kJSClassDefinitionEmpty;
-  cd.className = name;
-  cd.staticFunctions = staticFunctions;
-  cd.staticValues = staticValues;
-  cd.setProperty = set_property_cb;
-  return JSClassCreate(&cd);
-}
-static JSObjectRef 
-create_object(JSContextRef ctx, JSClassRef class, JSObjectRef obj, JSClassAttributes attr, const char *name, void *private) {
-  JSObjectRef ret = JSObjectMake(ctx, class, private);
-  JSStringRef js_name = JSStringCreateWithUTF8CString(name);
-  JSObjectSetProperty(ctx, obj, js_name, ret, attr, NULL);
-  JSStringRelease(js_name);
-  return ret;
-}
-
+/* inject {{{*/
 static JSValueRef
 inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false, global = false;
@@ -274,21 +224,87 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
   }
   JSStringRelease(script);
   return JSValueMakeBoolean(ctx, ret);
-}
+}/*}}}*/
+/*}}}*/
+
+/* CALLBACK {{{*/
+/* callback_data_new {{{*/
+static CallbackData * 
+callback_data_new(GObject *gobject, JSObjectRef object, JSObjectRef callback, StopCallbackNotify notify)  {
+  CallbackData *c = g_malloc(sizeof(CallbackData));
+  c->gobject = gobject != NULL ? g_object_ref(gobject) : NULL;
+  if (object != NULL) {
+    JSValueProtect(_global_context, object);
+    c->object = object;
+  }
+  if (object != NULL) {
+    JSValueProtect(_global_context, callback);
+    c->callback = callback;
+  }
+  c->notify = notify;
+  return c;
+}/*}}}*/
+
+/* callback_data_free {{{*/
+static void
+callback_data_free(CallbackData *c) {
+  if (c != NULL) {
+    if (c->gobject != NULL) 
+      g_object_unref(c->gobject);
+    if (c->object != NULL) 
+      JSValueUnprotect(_global_context, c->object);
+    JSValueUnprotect(_global_context, c->object);
+    if (c->object != NULL) 
+      JSValueUnprotect(_global_context, c->callback);
+    g_free(c);
+  }
+}/*}}}*/
+
+/* make_callback {{{*/
+static void 
+make_callback(JSContextRef ctx, JSObjectRef this, GObject *gobject, const char *signalname, JSValueRef value, StopCallbackNotify notify, JSValueRef *exception) {
+  JSObjectRef func = JSValueToObject(ctx, value, exception);
+  if (func != NULL && JSObjectIsFunction(ctx, func)) {
+    CallbackData *c = callback_data_new(gobject, this, func, notify);
+    g_signal_connect_swapped(gobject, signalname, G_CALLBACK(callback), c);
+  }
+}/*}}}*/
+
+/* callback {{{*/
+static void 
+callback(CallbackData *c) {
+  gboolean ret = false;
+  JSValueRef val[] = { c->object != NULL ? c->object : JSValueMakeNull(_global_context) };
+  JSValueRef jsret = JSObjectCallAsFunction(_global_context, c->callback, NULL, 1, val, NULL);
+  if (JSValueIsBoolean(_global_context, jsret))
+    ret = JSValueToBoolean(_global_context, jsret);
+  if (ret || (c != NULL && c->gobject != NULL && c->notify != NULL && c->notify(c))) {
+    g_signal_handlers_disconnect_by_func(c->gobject, callback, c);
+    callback_data_free(c);
+  }
+}/*}}}*/
+/*}}}*/
 
 /* TABS {{{*/
+/* tabs_current {{{*/
 static JSValueRef 
 tabs_current(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
   return CURRENT_VIEW()->script_wv;
-}
+}/*}}}*/
+
+/* tabs_number {{{*/
 static JSValueRef 
 tabs_number(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
   return JSValueMakeNumber(ctx, g_list_position(dwb.state.views, dwb.state.fview));
-}
+}/*}}}*/
+
+/* tabs_length {{{*/
 static JSValueRef 
 tabs_length(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
   return JSValueMakeNumber(ctx, g_list_length(dwb.state.views));
-}
+}/*}}}*/
+
+/* tabs_get_nth {{{*/
 static JSValueRef 
 tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1) {
@@ -302,24 +318,11 @@ tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   if (nth == NULL)
     return JSValueMakeNull(ctx);
   return VIEW(nth)->script_wv;
-}
+}/*}}}*/
+/*}}}*/
 
-static JSValueRef 
-equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1) {
-    js_make_exception(ctx, exc, EXCEPTION("object.equals: missing argument."));
-    return JSValueMakeBoolean(ctx, false);
-  }
-  JSObjectRef jscomp = JSValueToObject(ctx, argv[0], exc);
-  if (jscomp == NULL) 
-    return JSValueMakeBoolean(ctx, false);
-  GObject *comp = JSObjectGetPrivate(jscomp);
-  if (comp == NULL)
-    return JSValueMakeBoolean(ctx, false);
-  GObject *o = JSObjectGetPrivate(this);
-  return JSValueMakeBoolean(ctx, o == comp);
-
-}
+/* WEBVIEW {{{*/
+/* wv_status_cb {{{*/
 static gboolean 
 wv_status_cb(CallbackData *c) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(WEBKIT_WEB_VIEW(c->gobject));
@@ -327,8 +330,9 @@ wv_status_cb(CallbackData *c) {
     return true;
   }
   return false;
-}
+}/*}}}*/
 
+/* wv_load_uri {{{*/
 static JSValueRef 
 wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc == 0) {
@@ -349,7 +353,9 @@ wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t arg
     return JSValueMakeBoolean(ctx, true);
   }
   return false;
-}
+}/*}}}*/
+
+/* wv_history {{{*/
 static JSValueRef 
 wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = JSValueMakeUndefined(ctx);
@@ -362,31 +368,41 @@ wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc
     webkit_web_view_go_back_or_forward(JSObjectGetPrivate(this), (int)steps);
   }
   return ret;
-}
+}/*}}}*/
+
+/* wv_reload {{{*/
 static JSValueRef 
 wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   webkit_web_view_reload(JSObjectGetPrivate(this));
   return JSValueMakeUndefined(ctx);
-}
+}/*}}}*/
+
+/* wv_inject {{{*/
 static JSValueRef 
 wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   WebKitWebView *wv = JSObjectGetPrivate(this);
   JSContextRef wctx = webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(wv));
   return inject(ctx, wctx, function, this, argc, argv, exc);
-}
-JSValueRef 
+}/*}}}*/
+
+/* wv_get_main_frame {{{*/
+static JSValueRef 
 wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   WebKitWebView *wv = JSObjectGetPrivate(object);
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
-  return scripts_make_object(ctx, G_OBJECT(frame));
-}
-JSValueRef 
+  return make_object(ctx, G_OBJECT(frame));
+}/*}}}*/
+
+/* wv_get_focused_frame {{{*/
+static JSValueRef 
 wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   WebKitWebView *wv = JSObjectGetPrivate(object);
   WebKitWebFrame *frame = webkit_web_view_get_focused_frame(wv);
-  return scripts_make_object(ctx, G_OBJECT(frame));
-}
-JSValueRef 
+  return make_object(ctx, G_OBJECT(frame));
+}/*}}}*/
+
+/* wv_get_all_frames {{{*/
+static JSValueRef 
 wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   GList *gl = NULL;
   for (gl = dwb.state.views; gl && VIEW(gl)->script_wv != object; gl=gl->next);
@@ -396,142 +412,15 @@ wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSV
   JSValueRef argv[argc];
   int n=0;
   for (GSList *sl = VIEW(gl)->status->frames; sl; sl=sl->next) {
-    argv[n++] = scripts_make_object(ctx, G_OBJECT(sl->data));
+    argv[n++] = make_object(ctx, G_OBJECT(sl->data));
   }
   return JSObjectMakeArray(ctx, argc, argv, exception);
-}
+}/*}}}*/
+/*}}}*/
 
-//bool
-//set_gobject_property(JSContextRef ctx, GObject *o, JSStringRef js_name, JSValueRef jsvalue, JSValueRef* exception) {
-bool
-set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef jsvalue, JSValueRef* exception) {
-  char buf[PROP_LENGTH];
-  char *name = js_string_to_char(ctx, js_name, -1);
-  if (name == NULL)
-    return false;
-  uncamelize(buf, name, '-', PROP_LENGTH);
-  g_free(name);
-
-  GObject *o = JSObjectGetPrivate(object);
-  GObjectClass *class = G_OBJECT_GET_CLASS(o);
-  GParamSpec *pspec = g_object_class_find_property(class, buf);
-
-  if (pspec == NULL)
-    return false;
-  if (! (pspec->flags & G_PARAM_WRITABLE))
-    return false;
-  int jstype = JSValueGetType(ctx, jsvalue);
-  GType gtype = G_TYPE_IS_FUNDAMENTAL(pspec->value_type) ? pspec->value_type : g_type_parent(pspec->value_type);
-
-  if (jstype == kJSTypeNumber && 
-      (gtype == G_TYPE_INT || gtype == G_TYPE_UINT || gtype == G_TYPE_LONG || gtype == G_TYPE_ULONG ||
-      gtype == G_TYPE_FLOAT || gtype == G_TYPE_DOUBLE || gtype == G_TYPE_ENUM || gtype == G_TYPE_INT64 ||
-      gtype == G_TYPE_UINT64 || gtype == G_TYPE_FLAGS))  {
-    double value = JSValueToNumber(ctx, jsvalue, exception);
-    if (value != NAN) {
-      g_object_set(o, buf, value, NULL);
-      return true;
-    }
-    return false;
-  }
-  else if (jstype == kJSTypeBoolean && gtype == G_TYPE_BOOLEAN) {
-    bool value = JSValueToBoolean(ctx, jsvalue);
-    g_object_set(o, buf, value, NULL);
-    return true;
-  }
-  else if (jstype == kJSTypeString && gtype == G_TYPE_STRING) {
-    char *value = js_value_to_char(ctx, jsvalue, -1, exception);
-    g_object_set(o, buf, value, NULL);
-    g_free(value);
-    return true;
-  }
-  return false;
-  // TODO object
-}
-//set_property(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSValueRef* exception) {
-//  return set_gobject_property(ctx, G_OBJECT(JSObjectGetPrivate(object)), propertyName, value, exception);
-//}
-JSValueRef
-get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRef *exception) {
-  char buf[PROP_LENGTH];
-  JSValueRef ret = NULL;
-  char *name = js_string_to_char(ctx, js_name, -1);
-  if (name == NULL)
-    return NULL;
-  uncamelize(buf, name, '-', PROP_LENGTH);
-  g_free(name);
-
-  GObject *o = JSObjectGetPrivate(jsobj);
-  GObjectClass *class = G_OBJECT_GET_CLASS(o);
-  GParamSpec *pspec = g_object_class_find_property(class, buf);
-  if (pspec == NULL)
-    return NULL;
-  if (! (pspec->flags & G_PARAM_READABLE))
-    return NULL;
-
-  GType gtype = pspec->value_type, act; 
-  while ((act = g_type_parent(gtype))) {
-    gtype = act;
-  }
-#define CHECK_NUMBER(GTYPE, TYPE) G_STMT_START if (gtype == G_TYPE_##GTYPE) { \
-  TYPE value; g_object_get(o, buf, &value, NULL); return JSValueMakeNumber(ctx, (double)value); \
-}    G_STMT_END
-  CHECK_NUMBER(INT, gint);
-  CHECK_NUMBER(UINT, guint);
-  CHECK_NUMBER(LONG, glong);
-  CHECK_NUMBER(ULONG, gulong);
-  CHECK_NUMBER(FLOAT, gfloat);
-  CHECK_NUMBER(DOUBLE, gdouble);
-  CHECK_NUMBER(ENUM, gint);
-  CHECK_NUMBER(INT64, gint64);
-  CHECK_NUMBER(UINT64, guint64);
-  CHECK_NUMBER(FLAGS, guint);
-#undef CHECK_NUMBER
-  if (pspec->value_type == G_TYPE_BOOLEAN) {
-    gboolean bval;
-    g_object_get(o, buf, &bval, NULL);
-    ret = JSValueMakeBoolean(ctx, bval);
-  }
-  else if (pspec->value_type == G_TYPE_STRING) {
-    char *value;
-    g_object_get(o, buf, &value, NULL);
-    ret = js_char_to_value(ctx, value);
-    g_free(value);
-  }
-  else if (G_TYPE_IS_CLASSED(gtype)) {
-    GObject *object;
-    g_object_get(o, buf, &object, NULL);
-    if (object == NULL)
-      return NULL;
-    JSObjectRef retobj = scripts_make_object(ctx, object);
-    g_object_unref(object);
-    ret = retobj;
-  }
- return ret;
-}
-
-// TODO : creating 1000000 objects leaks ~ 4MB  
-JSObjectRef 
-scripts_make_object(JSContextRef ctx, GObject *o) {
-  if (o == NULL) {
-    JSValueRef v = JSValueMakeNull(ctx);
-    return JSValueToObject(ctx, v, NULL);
-  }
-  JSClassRef class;
-  if (WEBKIT_IS_WEB_VIEW(o)) 
-     class = _webview_class;
-  else if (WEBKIT_IS_WEB_FRAME(o))
-     class = _frame_class;
-  else if (WEBKIT_IS_DOWNLOAD(o)) 
-    class = _download_class;
-  else 
-    class = _default_class;
-
-  JSObjectRef retobj = JSObjectMake(ctx, class, o);
-  return retobj;
-}
-
-JSValueRef 
+/* FRAMES {{{*/
+/* frame_get_domain {{{*/
+static JSValueRef 
 frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   SoupMessage *msg = dwb_soup_get_message(JSObjectGetPrivate(object));
   if (msg == NULL)
@@ -539,23 +428,29 @@ frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVa
   SoupURI *uri = soup_message_get_uri(msg);
   const char *host = soup_uri_get_host(uri);
   return js_char_to_value(ctx, domain_get_base_for_host(host));
-}
-JSValueRef 
+}/*}}}*/
+
+/* frame_get_host {{{*/
+static JSValueRef 
 frame_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   SoupMessage *msg = dwb_soup_get_message(JSObjectGetPrivate(object));
   if (msg == NULL)
     return JSValueMakeNull(ctx);
   SoupURI *uri = soup_message_get_uri(msg);
   return js_char_to_value(ctx, soup_uri_get_host(uri));
-}
+}/*}}}*/
+
+/* frame_inject {{{*/
 static JSValueRef 
 frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   WebKitWebFrame *frame = JSObjectGetPrivate(this);
   JSContextRef wctx = webkit_web_frame_get_global_context(frame);
   return inject(ctx, wctx, function, this, argc, argv, exc);
-}
+}/*}}}*/
+/*}}}*/
 
 /* GLOBAL {{{*/
+/* global_checksum {{{*/
 static JSValueRef 
 global_checksum(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret;
@@ -583,13 +478,16 @@ error_out:
   g_free(original);
   g_free(checksum);
   return ret;
-}
+}/*}}}*/
 
+/* scripts_eval_key {{{*/
 DwbStatus
 scripts_eval_key(KeyMap *m, Arg *arg) {
   JSObjectCallAsFunction(_global_context, arg->p, NULL, 0, NULL, NULL);
   return STATUS_OK;
-}
+}/*}}}*/
+
+/* global_bind {{{*/
 static JSValueRef 
 global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false;
@@ -622,7 +520,9 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
 error_out:
   g_free(keystr);
   return JSValueMakeBoolean(ctx, ret);
-}
+}/*}}}*/
+
+/* global_execute {{{*/
 static JSValueRef 
 global_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   DwbStatus status = STATUS_ERROR;
@@ -636,7 +536,9 @@ global_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, s
     g_free(command);
   }
   return JSValueMakeBoolean(ctx, status == STATUS_OK);
-}
+}/*}}}*/
+
+/* global_include {{{*/
 static JSValueRef 
 global_include(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = NULL;
@@ -674,7 +576,9 @@ error_out:
   if (ret == NULL)
     return JSValueMakeNull(ctx);
   return ret;
-}
+}/*}}}*/
+
+/* global_domain_from_host {{{*/
 static JSValueRef 
 global_domain_from_host(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1) {
@@ -688,15 +592,18 @@ global_domain_from_host(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject,
   JSValueRef ret = js_char_to_value(ctx, domain);
   g_free(host);
   return ret;
-}
+}/*}}}*/
 
+/* timeout_callback {{{*/
 static gboolean
 timeout_callback(JSObjectRef obj) {
   JSValueRef val = JSObjectCallAsFunction(_global_context, obj, NULL, 0, NULL, NULL);
   if (val == NULL)
     return false;
   return !JSValueIsBoolean(_global_context, val) || JSValueToBoolean(_global_context, val);
-}
+}/*}}}*/
+
+/* global_timer_stop {{{*/
 static JSValueRef 
 global_timer_stop(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gdouble sigid;
@@ -709,7 +616,9 @@ global_timer_stop(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_
     return JSValueMakeBoolean(ctx, ret);
   }
   return JSValueMakeBoolean(ctx, false);
-}
+}/*}}}*/
+
+/* global_timer_start {{{*/
 static JSValueRef 
 global_timer_start(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 2) {
@@ -726,15 +635,23 @@ global_timer_start(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size
   }
   int ret = g_timeout_add((int)msec, (GSourceFunc)timeout_callback, func);
   return JSValueMakeNumber(ctx, ret);
-}
+}/*}}}*/
+/*}}}*/
+
+/* DATA {{{*/
+/* data_get_profile {{{*/
 static JSValueRef 
 data_get_profile(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   return js_char_to_value(ctx, dwb.misc.profile);
-}
+}/*}}}*/
+
+/* data_get_cache_dir {{{*/
 static JSValueRef 
 data_get_cache_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   return js_char_to_value(ctx, dwb.files.cachedir);
-}
+}/*}}}*/
+
+/* data_get_config_dir {{{*/
 static JSValueRef 
 data_get_config_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   char *dir = util_build_path();
@@ -745,7 +662,9 @@ data_get_config_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, J
   JSValueRef ret = js_char_to_value(ctx, dir);
   g_free(dir);
   return ret;
-}
+}/*}}}*/
+
+/* data_get_system_data_dir {{{*/
 static JSValueRef 
 data_get_system_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   char *dir = util_get_system_data_dir(NULL);
@@ -756,7 +675,9 @@ data_get_system_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_na
   JSValueRef ret = js_char_to_value(ctx, dir);
   g_free(dir);
   return ret;
-}
+}/*}}}*/
+
+/* data_get_user_data_dir {{{*/
 static JSValueRef 
 data_get_user_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   char *dir = util_get_user_data_dir(NULL);
@@ -767,7 +688,11 @@ data_get_user_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name
   JSValueRef ret = js_char_to_value(ctx, dir);
   g_free(dir);
   return ret;
-}
+}/*}}}*/
+/*}}}*/
+
+/* SYSTEM {{{*/
+/* system_get_env {{{*/
 static JSValueRef 
 system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1) {
@@ -782,8 +707,10 @@ system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, s
   if (env == NULL)
     return JSValueMakeNull(ctx);
   return js_char_to_value(ctx, env);
-}
-gboolean
+}/*}}}*/
+
+/* spawn_output {{{*/
+static gboolean
 spawn_output(GIOChannel *channel, GIOCondition condition, JSObjectRef callback) {
   char *content; 
   gsize length;
@@ -801,8 +728,9 @@ spawn_output(GIOChannel *channel, GIOCondition condition, JSObjectRef callback) 
       return true;
   }
   return false;
-}
+}/*}}}*/
 
+/* system_spawn {{{*/
 static JSValueRef 
 system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   int ret = 0; 
@@ -857,8 +785,10 @@ error_out:
   g_free(cmdline);
   return JSValueMakeNumber(ctx, ret);
 }/*}}}*/
+/*}}}*/
 
 /* IO {{{*/
+/* io_prompt {{{*/
 static JSValueRef 
 io_prompt(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   char *prompt = NULL;
@@ -875,7 +805,9 @@ io_prompt(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t
     return JSValueMakeNull(ctx);
 
   return js_char_to_value(ctx, response);
-}
+}/*}}}*/
+
+/* io_read {{{*/
 static JSValueRef 
 io_read(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = NULL;
@@ -898,7 +830,9 @@ error_out:
     return JSValueMakeNull(ctx);
   return ret;
 
-}
+}/*}}}*/
+
+/* io_file_test {{{*/
 static JSValueRef 
 io_file_test(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 2) {
@@ -914,7 +848,9 @@ io_file_test(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   gboolean ret = g_file_test(path, (GFileTest) test);
   g_free(path);
   return JSValueMakeBoolean(ctx, ret);
-}
+}/*}}}*/
+
+/* io_notify {{{*/
 static JSValueRef 
 io_notify(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1) 
@@ -925,7 +861,9 @@ io_notify(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t
     g_free(message);
   }
   return JSValueMakeUndefined(ctx);
-}
+}/*}}}*/
+
+/* io_error {{{*/
 static JSValueRef 
 io_error(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1) 
@@ -936,8 +874,9 @@ io_error(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
     g_free(message);
   }
   return JSValueMakeUndefined(ctx);
-}
+}/*}}}*/
 
+/* io_write {{{*/
 static JSValueRef 
 io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false;
@@ -969,8 +908,9 @@ error_out:
   g_free(mode);
   g_free(content);
   return JSValueMakeBoolean(ctx, ret);
-}
+}/*}}}*/
 
+/* io_print {{{*/
 static JSValueRef 
 io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc == 0) {
@@ -1025,8 +965,11 @@ io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
   }
   return JSValueMakeUndefined(ctx);
 }/*}}}*/
+/*}}}*/
 
-JSObjectRef 
+/* DOWNLOAD {{{*/
+/* download_constructor_cb {{{*/
+static JSObjectRef 
 download_constructor_cb(JSContextRef ctx, JSObjectRef constructor, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
   if (argc<1) {
     js_make_exception(ctx, exception, EXCEPTION("Download constructor: missing argument"));
@@ -1045,8 +988,9 @@ download_constructor_cb(JSContextRef ctx, JSObjectRef constructor, size_t argc, 
   }
   WebKitDownload *download = webkit_download_new(request);
   return JSObjectMake(ctx, _download_class, download);
-}
+}/*}}}*/
 
+/* stop_download_notify {{{*/
 static gboolean 
 stop_download_notify(CallbackData *c) {
   WebKitDownloadStatus status = webkit_download_get_status(WEBKIT_DOWNLOAD(c->gobject));
@@ -1054,7 +998,9 @@ stop_download_notify(CallbackData *c) {
     return true;
   }
   return false;
-}
+}/*}}}*/
+
+/* download_start {{{*/
 static JSValueRef 
 download_start(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   WebKitDownload *download = JSObjectGetPrivate(this);
@@ -1068,13 +1014,18 @@ download_start(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
   webkit_download_start(download);
   return JSValueMakeBoolean(ctx, true);
 
-}
+}/*}}}*/
+
+/* download_cancel {{{*/
 static JSValueRef 
 download_cancel(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   webkit_download_cancel(JSObjectGetPrivate(this));
   return JSValueMakeUndefined(ctx);
-}
-/* SIGNAL {{{*/
+}/*}}}*/
+/*}}}*/
+
+/* SIGNALS {{{*/
+/* signal_set {{{*/
 static bool
 signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef value, JSValueRef* exception) {
   char *name = js_string_to_char(ctx, js_name, -1);
@@ -1095,8 +1046,9 @@ signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef
     break;
   }
   return false;
-}
+}/*}}}*/
 
+/* scripts_emit {{{*/
 gboolean
 scripts_emit(ScriptSignal *sig) {
   JSObjectRef function = _sigObjects[sig->signal];
@@ -1108,7 +1060,7 @@ scripts_emit(ScriptSignal *sig) {
   if (sig->jsobj != NULL)
     val[i++] = sig->jsobj;
   for (int j=0; j<sig->numobj; j++) {
-    val[i++] = scripts_make_object(_global_context, G_OBJECT(sig->objects[j]));
+    val[i++] = make_object(_global_context, G_OBJECT(sig->objects[j]));
   }
   JSValueRef vson = NULL;
   JSStringRef js_json = JSStringCreateWithUTF8CString(sig->json == NULL ? "{}" : sig->json);
@@ -1120,8 +1072,184 @@ scripts_emit(ScriptSignal *sig) {
     return JSValueToBoolean(_global_context, js_ret);
   }
   return false;
-}
+}/*}}}*/
+/*}}}*/
 
+/* OBJECTS {{{*/
+// TODO : creating 1000000 objects leaks ~ 4MB  
+/* make_object {{{*/
+static JSObjectRef 
+make_object(JSContextRef ctx, GObject *o) {
+  if (o == NULL) {
+    JSValueRef v = JSValueMakeNull(ctx);
+    return JSValueToObject(ctx, v, NULL);
+  }
+  JSClassRef class;
+  if (WEBKIT_IS_WEB_VIEW(o)) 
+     class = _webview_class;
+  else if (WEBKIT_IS_WEB_FRAME(o))
+     class = _frame_class;
+  else if (WEBKIT_IS_DOWNLOAD(o)) 
+    class = _download_class;
+  else 
+    class = _default_class;
+
+  JSObjectRef retobj = JSObjectMake(ctx, class, o);
+  return retobj;
+}/*}}}*/
+
+/* equals {{{*/
+static JSValueRef 
+equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("object.equals: missing argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  JSObjectRef jscomp = JSValueToObject(ctx, argv[0], exc);
+  if (jscomp == NULL) 
+    return JSValueMakeBoolean(ctx, false);
+  GObject *comp = JSObjectGetPrivate(jscomp);
+  if (comp == NULL)
+    return JSValueMakeBoolean(ctx, false);
+  GObject *o = JSObjectGetPrivate(this);
+  return JSValueMakeBoolean(ctx, o == comp);
+}/*}}}*/
+
+/* set_property_cb {{{*/
+static bool
+set_property_cb(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSValueRef* exception) {
+  return true;
+}/*}}}*/
+
+/* create_class {{{*/
+static JSClassRef 
+create_class(const char *name, JSStaticFunction staticFunctions[], JSStaticValue staticValues[]) {
+  JSClassDefinition cd = kJSClassDefinitionEmpty;
+  cd.className = name;
+  cd.staticFunctions = staticFunctions;
+  cd.staticValues = staticValues;
+  cd.setProperty = set_property_cb;
+  return JSClassCreate(&cd);
+}/*}}}*/
+
+/* create_object {{{*/
+static JSObjectRef 
+create_object(JSContextRef ctx, JSClassRef class, JSObjectRef obj, JSClassAttributes attr, const char *name, void *private) {
+  JSObjectRef ret = JSObjectMake(ctx, class, private);
+  JSStringRef js_name = JSStringCreateWithUTF8CString(name);
+  JSObjectSetProperty(ctx, obj, js_name, ret, attr, NULL);
+  JSStringRelease(js_name);
+  return ret;
+}/*}}}*/
+
+/* set_property {{{*/
+static bool
+set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef jsvalue, JSValueRef* exception) {
+  char buf[PROP_LENGTH];
+  char *name = js_string_to_char(ctx, js_name, -1);
+  if (name == NULL)
+    return false;
+  uncamelize(buf, name, '-', PROP_LENGTH);
+  g_free(name);
+
+  GObject *o = JSObjectGetPrivate(object);
+  GObjectClass *class = G_OBJECT_GET_CLASS(o);
+  GParamSpec *pspec = g_object_class_find_property(class, buf);
+
+  if (pspec == NULL)
+    return false;
+  if (! (pspec->flags & G_PARAM_WRITABLE))
+    return false;
+  int jstype = JSValueGetType(ctx, jsvalue);
+  GType gtype = G_TYPE_IS_FUNDAMENTAL(pspec->value_type) ? pspec->value_type : g_type_parent(pspec->value_type);
+
+  if (jstype == kJSTypeNumber && 
+      (gtype == G_TYPE_INT || gtype == G_TYPE_UINT || gtype == G_TYPE_LONG || gtype == G_TYPE_ULONG ||
+      gtype == G_TYPE_FLOAT || gtype == G_TYPE_DOUBLE || gtype == G_TYPE_ENUM || gtype == G_TYPE_INT64 ||
+      gtype == G_TYPE_UINT64 || gtype == G_TYPE_FLAGS))  {
+    double value = JSValueToNumber(ctx, jsvalue, exception);
+    if (value != NAN) {
+      g_object_set(o, buf, value, NULL);
+      return true;
+    }
+    return false;
+  }
+  else if (jstype == kJSTypeBoolean && gtype == G_TYPE_BOOLEAN) {
+    bool value = JSValueToBoolean(ctx, jsvalue);
+    g_object_set(o, buf, value, NULL);
+    return true;
+  }
+  else if (jstype == kJSTypeString && gtype == G_TYPE_STRING) {
+    char *value = js_value_to_char(ctx, jsvalue, -1, exception);
+    g_object_set(o, buf, value, NULL);
+    g_free(value);
+    return true;
+  }
+  return false;
+  // TODO object
+}/*}}}*/
+
+/* get_property {{{*/
+static JSValueRef
+get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRef *exception) {
+  char buf[PROP_LENGTH];
+  JSValueRef ret = NULL;
+  char *name = js_string_to_char(ctx, js_name, -1);
+  if (name == NULL)
+    return NULL;
+  uncamelize(buf, name, '-', PROP_LENGTH);
+  g_free(name);
+
+  GObject *o = JSObjectGetPrivate(jsobj);
+  GObjectClass *class = G_OBJECT_GET_CLASS(o);
+  GParamSpec *pspec = g_object_class_find_property(class, buf);
+  if (pspec == NULL)
+    return NULL;
+  if (! (pspec->flags & G_PARAM_READABLE))
+    return NULL;
+
+  GType gtype = pspec->value_type, act; 
+  while ((act = g_type_parent(gtype))) {
+    gtype = act;
+  }
+#define CHECK_NUMBER(GTYPE, TYPE) G_STMT_START if (gtype == G_TYPE_##GTYPE) { \
+  TYPE value; g_object_get(o, buf, &value, NULL); return JSValueMakeNumber(ctx, (double)value); \
+}    G_STMT_END
+  CHECK_NUMBER(INT, gint);
+  CHECK_NUMBER(UINT, guint);
+  CHECK_NUMBER(LONG, glong);
+  CHECK_NUMBER(ULONG, gulong);
+  CHECK_NUMBER(FLOAT, gfloat);
+  CHECK_NUMBER(DOUBLE, gdouble);
+  CHECK_NUMBER(ENUM, gint);
+  CHECK_NUMBER(INT64, gint64);
+  CHECK_NUMBER(UINT64, guint64);
+  CHECK_NUMBER(FLAGS, guint);
+#undef CHECK_NUMBER
+  if (pspec->value_type == G_TYPE_BOOLEAN) {
+    gboolean bval;
+    g_object_get(o, buf, &bval, NULL);
+    ret = JSValueMakeBoolean(ctx, bval);
+  }
+  else if (pspec->value_type == G_TYPE_STRING) {
+    char *value;
+    g_object_get(o, buf, &value, NULL);
+    ret = js_char_to_value(ctx, value);
+    g_free(value);
+  }
+  else if (G_TYPE_IS_CLASSED(gtype)) {
+    GObject *object;
+    g_object_get(o, buf, &object, NULL);
+    if (object == NULL)
+      return NULL;
+    JSObjectRef retobj = make_object(ctx, object);
+    g_object_unref(object);
+    ret = retobj;
+  }
+ return ret;
+}/*}}}*/
+
+/* create_global_object {{{*/
 static void 
 create_global_object() {
   JSStaticFunction global_functions[] = { 
@@ -1236,71 +1364,12 @@ create_global_object() {
   JSStringRef name = JSStringCreateWithUTF8CString("Download");
   JSObjectSetProperty(_global_context, JSContextGetGlobalObject(_global_context), name, constructor, kJSDefaultProperty, NULL);
   JSStringRelease(name);
-}
-void 
-scripts_create_tab(GList *gl) {
-  static gboolean applied = false;
-  if (_global_context == NULL )  {
-    VIEW(gl)->script_wv = NULL;
-    return;
-  }
-  JSObjectRef o = scripts_make_object(_global_context, G_OBJECT(VIEW(gl)->web));
+}/*}}}*/
+/*}}}*/
 
-  if (EMIT_SCRIPT(CREATE_TAB)) {
-    ScriptSignal signal = { o, SCRIPTS_SIG_META(NULL, CREATE_TAB, 0) };
-    scripts_emit(&signal);
-  }
-
-  JSValueProtect(_global_context, o);
-  VIEW(gl)->script_wv = o;
-  if (!applied) {
-    apply_scripts();
-    applied = true;
-  }
-}
-void 
-scripts_remove_tab(JSObjectRef obj) {
-  if (obj != NULL) {
-    if (EMIT_SCRIPT(CLOSE_TAB)) {
-      ScriptSignal signal = { obj, SCRIPTS_SIG_META(NULL, CLOSE_TAB, 0) };
-      scripts_emit(&signal);
-    }
-    JSValueUnprotect(_global_context, obj);
-  }
-}
-gboolean
-print_exception(JSContextRef ctx, JSValueRef exception) {
-  if (exception == NULL) 
-    return false;
-  if (!JSValueIsObject(ctx, exception))
-    return false;
-  JSObjectRef o = JSValueToObject(ctx, exception, NULL);
-  if (o == NULL) 
-    return false;
-
-  gint line = (int)js_get_double_property(ctx, o, "line");
-  gchar *message = js_get_string_property(ctx, o, "message");
-  fprintf(stderr, "DWB SCRIPT EXCEPTION: in line %d: %s\n", line, message == NULL ? "unknown" : message);
-  g_free(message);
-  return true;
-}
-
-void
-scripts_init_script(const char *script) {
-  if (_global_context == NULL) 
-    create_global_object();
-  JSStringRef body = JSStringCreateWithUTF8CString(script);
-  JSValueRef exc = NULL;
-  JSObjectRef function = JSObjectMakeFunction(_global_context, NULL, 0, NULL, body, NULL, 0, &exc);
-  if (function != NULL) {
-    _script_list = g_slist_prepend(_script_list, function);
-  }
-  else {
-    print_exception(_global_context, exc);
-  }
-  JSStringRelease(body);
-}
-void 
+/* INIT AND END {{{*/
+/* apply_scripts {{{*/
+static void 
 apply_scripts() {
   JSStringRef on_init = JSStringCreateWithUTF8CString("init");
   JSValueRef ret, init;
@@ -1325,7 +1394,61 @@ apply_scripts() {
   g_slist_free(scripts);
   _script_list = NULL;
   JSStringRelease(on_init);
-}
+}/*}}}*/
+
+/* scripts_create_tab {{{*/
+void 
+scripts_create_tab(GList *gl) {
+  static gboolean applied = false;
+  if (_global_context == NULL )  {
+    VIEW(gl)->script_wv = NULL;
+    return;
+  }
+  JSObjectRef o = make_object(_global_context, G_OBJECT(VIEW(gl)->web));
+
+  if (EMIT_SCRIPT(CREATE_TAB)) {
+    ScriptSignal signal = { o, SCRIPTS_SIG_META(NULL, CREATE_TAB, 0) };
+    scripts_emit(&signal);
+  }
+
+  JSValueProtect(_global_context, o);
+  VIEW(gl)->script_wv = o;
+  if (!applied) {
+    apply_scripts();
+    applied = true;
+  }
+}/*}}}*/
+
+/* scripts_remove_tab {{{*/
+void 
+scripts_remove_tab(JSObjectRef obj) {
+  if (obj != NULL) {
+    if (EMIT_SCRIPT(CLOSE_TAB)) {
+      ScriptSignal signal = { obj, SCRIPTS_SIG_META(NULL, CLOSE_TAB, 0) };
+      scripts_emit(&signal);
+    }
+    JSValueUnprotect(_global_context, obj);
+  }
+}/*}}}*/
+
+/* scripts_init_script {{{*/
+void
+scripts_init_script(const char *script) {
+  if (_global_context == NULL) 
+    create_global_object();
+  JSStringRef body = JSStringCreateWithUTF8CString(script);
+  JSValueRef exc = NULL;
+  JSObjectRef function = JSObjectMakeFunction(_global_context, NULL, 0, NULL, body, NULL, 0, &exc);
+  if (function != NULL) {
+    _script_list = g_slist_prepend(_script_list, function);
+  }
+  else {
+    print_exception(_global_context, exc);
+  }
+  JSStringRelease(body);
+}/*}}}*/
+
+/* scripts_init {{{*/
 void 
 scripts_init() {
   dwb.misc.script_signals = 0;
@@ -1340,7 +1463,9 @@ scripts_init() {
     g_string_free(content, true);
     g_free(dir);
   }
-}
+}/*}}}*/
+
+/* scripts_end {{{*/
 void
 scripts_end() {
   if (_global_context != NULL) {
@@ -1351,4 +1476,4 @@ scripts_end() {
     JSGlobalContextRelease(_global_context);
     _global_context = NULL;
   }
-}
+}/*}}}*//*}}}*/

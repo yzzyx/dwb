@@ -45,6 +45,7 @@ enum SIGNALS {
 } ;
 
 #define SCRIPT_MAX_SIG_OBJECTS 8
+
 typedef struct _ScriptSignal {
   JSObjectRef jsobj;
   GObject *objects[SCRIPT_MAX_SIG_OBJECTS]; 
@@ -52,9 +53,7 @@ typedef struct _ScriptSignal {
   unsigned int signal;
   int numobj;
 } ScriptSignal;
-//gboolean scripts_emit(JSObjectRef , int , const char *);
-//gboolean scripts_emit(GObject , int, int , ...);
-//gboolean scripts_emit(int signal, int numargs, ...);
+
 gboolean scripts_emit(ScriptSignal *);
 void scripts_create_tab(GList *gl);
 void scripts_remove_tab(JSObjectRef );
@@ -62,7 +61,6 @@ void scripts_end(void);
 void scripts_init_script(const char *);
 void scripts_init(void);
 DwbStatus scripts_eval_key(KeyMap *m, Arg *arg);
-JSObjectRef scripts_make_object(JSContextRef ctx, GObject *o);
 
 #define EMIT_SCRIPT(sig)  ((dwb.misc.script_signals & (1<<SCRIPTS_SIG_##sig)))
 #define SCRIPTS_EMIT_RETURN(signal, json) G_STMT_START  \
