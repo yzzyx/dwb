@@ -148,9 +148,64 @@ function parseIncludeExclude(array) //{{{
   }
 }//}}}
 
+function urlSplit(url) 
+{
+  var parts, scheme, host, path, idx; 
+  parts = url.split("://");
+  if (parts[0] === url) 
+    return null;
+  scheme = parts[0];
+  idx = parts[1].indexOf("/");
+  if (idx == -1) {
+    host = parts[1];
+    path = null;
+  }
+  else {
+    host = parts[1].substring(0, idx);
+    path = parts[1].substring(idx);
+  }
+  return { path : path, host: host, scheme : scheme }; 
+}
+
+var hostValidator = /^(?:\*\..*|[^*]*|\*)$/;
+var pathValidator = /^\/.*/;
+
+function parseMatch(m) 
+{
+  var i, scheme, host, path, parts, j; 
+  if (m === "<all_urls>") {
+    return { allUrls : true };
+  }
+
+  var o = urlSplit(m);
+  if (o === null) {
+    extensions.warning(me, "Invalid or unsupported match rule: " + m);
+    return null;
+  }
+  if (!(/\*|http|https|file/.test(o.scheme))) {
+    extensions.warning(me, "Invalid scheme pattern: " + m);
+    return null;
+  }
+  if (o.host && ! (/^(?:\*\.[^*\/]*|[^*]*|\*)$/.test(o.host))) {
+    extensions.warning(me, "Invalid host pattern: " + m);
+    return null;
+  }
+  else {
+    o.host = new RegExp(o.host.replace(/([.?+^$[\]\\(){}|-])/g, "\\$1").replace("*", ".*"));
+  }
+  if (o.path === null || ! (/^\/.*/.test(o.path))) { 
+    extensions.warning(me, "Invalid path pattern: " + m);
+    return null;
+  }
+  else if (o.path !== null) {
+    o.path = new RegExp(o.path.replace(/([.?+^$[\]\\(){}|-])/g, "\\$1").replace("*", ".*"));
+  }
+  return { host : o.host, scheme : o.scheme, path : o.path, allUrls : false };
+}
+
 function parseMetaData(script) //{{{
 {
-  var i, j, items, key, value, idx;
+  var i, j, items, key, value, idx, m, matches = [];
   var metaStart = script.search(/(^|\n)\/\/ ==UserScript==/);
   var metaEnd = script.search(/\n\/\/ ==\/UserScript==/);
   if (metaStart == -1 || metaEnd == -1) 
@@ -198,6 +253,14 @@ function parseMetaData(script) //{{{
   }
   parseIncludeExclude(userscript.include);
   parseIncludeExclude(userscript.exclude);
+  
+  for (i=0; i<userscript.match.length; i++) {
+    m = parseMatch(userscript.match[i]);
+    if (m !== null) {
+      matches.push(m);
+    }
+  }
+  userscript.match = matches;
   if (userscript.runAt == "document-start")
     onStart.push(userscript);
   else 
@@ -227,8 +290,8 @@ function parseScripts() //{{{
 
 return {
   init : function (c) {
-    if (c instanceof Array && c.length > 0)  {
-      scripts = c;
+    if (c.scripts instanceof Array && c.scripts.length > 0)  {
+      scripts = c.scripts;
       parseScripts();
       return true;
     }
