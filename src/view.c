@@ -136,12 +136,6 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(result) }, SCRIPTS_SIG_META(json, BUTTON_PRESS, 1) };
     SCRIPTS_EMIT_RETURN(signal, json);
   }
- // SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_PRESS, 9, 
- //     UINTEGER, "time", e->time, UINTEGER,    "type", e->type, 
- //     DOUBLE,   "x", e->x, DOUBLE,            "y", e->y, 
- //     UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
- //     DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root,
- //     UINTEGER, "context", context);
 
   if (gtk_widget_has_focus(dwb.gui.entry)) {
     dwb_focus_scroll(gl);
@@ -209,11 +203,6 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(result) }, SCRIPTS_SIG_META(json, BUTTON_RELEASE, 1) };
     SCRIPTS_EMIT_RETURN(signal, json);
   }
-  //SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_RELEASE, 8, 
-  //    UINTEGER, "time", e->time,    UINTEGER, "context", context,
-  //    DOUBLE,   "x", e->x,          DOUBLE,     "y", e->y, 
-  //    UINTEGER, "state", e->state,  UINTEGER,  "button", e->button, 
-  //    DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
     if (e->button == 2 || (e->time - _click_time < 200 && (e->button == 1 && e->state & GDK_CONTROL_MASK))) {
@@ -236,9 +225,6 @@ view_close_web_view_cb(WebKitWebView *web, GList *gl) {
 /* view_frame_committed_cb {{{*/
 static void 
 view_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
-  //SCRIPTS_EMIT(FRAME_STATUS, 2, frame, NULL);
-  //SCRIPTS_EMIT_NO_RETURN(scripts_create_frame(frame), FRAME_STATUS, 1,
-  //    INTEGER, "status", webkit_web_frame_get_load_status(frame));
   if (EMIT_SCRIPT(FRAME_STATUS)) {
     ScriptSignal signal = { SCRIPTS_WV(gl), 
       .objects = { G_OBJECT(frame) }, SCRIPTS_SIG_META(NULL, FRAME_STATUS, 1) };

@@ -1699,7 +1699,6 @@ dwb_prepend_navigation(GList *gl, GList **fc) {
     return STATUS_OK;
   }
   return STATUS_ERROR;
-
 }/*}}}*/
 
 /* dwb_confirm_snooper {{{*/
