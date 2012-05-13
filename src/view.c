@@ -201,6 +201,13 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   g_object_get(result, "context", &context, NULL);
 
   if (EMIT_SCRIPT(BUTTON_RELEASE)) {
+    char *json = util_create_json(7, 
+      UINTEGER, "time", e->time, 
+      DOUBLE,   "x", e->x, DOUBLE,            "y", e->y, 
+      UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
+      DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
+    ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(result) }, SCRIPTS_SIG_META(json, BUTTON_RELEASE, 1) };
+    SCRIPTS_EMIT_RETURN(signal, json);
   }
   //SCRIPTS_EMIT_RETURN(SCRIPT(gl), BUTTON_RELEASE, 8, 
   //    UINTEGER, "time", e->time,    UINTEGER, "context", context,

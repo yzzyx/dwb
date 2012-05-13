@@ -6,10 +6,32 @@
  *
  * Config options:
  *
- * quvi       : quvi command
- * player     : external player
- * autoPlay   : whether to autoplay videos
- * shortcut   : the shortcut that spawns quvi
+ * quvi       quvi command,                   default: "quvi"
+ *
+ * player     external player,                default:  "mplayer %u"
+ *
+ * autoPlay   whether to autoplay videos,     default: true
+ *
+ * shortcut   the shortcut that spawns quvi   default: null
+ *
+ * Example extensionsrc: 
+ *
+ * return {
+ *    foo : { ... },
+ *
+ *    autoquvi : {
+ *      quvi      : "quvi -f best",
+ *      player    : "mplayer -fs %u", 
+ *      autoPlay  : false, 
+ *      shortcut  : "eq"
+ *    }
+ * }
+ *
+ * Example using extensions.load: 
+ *
+ * extensions.load("autoquvi", { autoplay : false, shortcut : "eq" });
+ *
+ *
  *
  * */ 
 

@@ -212,8 +212,10 @@ function parseConfig(c) {
       case ChecksumType.sha1   : pwdMax = 28; break;
       default:                   pwdMax = 24; break;
     }
-    if (config.password < 4 || config.length > pwdMax)
+    if (config.password < 4 || config.length > pwdMax) {
       extensions.warning(me, "Invalid password length, using " + defaultConfig.length + " instead");
+      config.length = pwdMax;
+    }
 
     bind(config.shortcut, insertPassword);
     if (config.shortcutPrint) {

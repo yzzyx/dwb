@@ -1054,11 +1054,15 @@ scripts_emit(ScriptSignal *sig) {
   JSObjectRef function = _sigObjects[sig->signal];
   if (function == NULL)
     return false;
-  int numargs = MIN(sig->numobj, SCRIPT_MAX_SIG_OBJECTS)+2;
+
+  int additional = sig->jsobj != NULL ? 2 : 1;
+  int numargs = MIN(sig->numobj, SCRIPT_MAX_SIG_OBJECTS)+additional;
   JSValueRef val[numargs];
   int i = 0;
-  if (sig->jsobj != NULL)
+  
+  if (sig->jsobj != NULL) {
     val[i++] = sig->jsobj;
+  }
   for (int j=0; j<sig->numobj; j++) {
     val[i++] = make_object(_global_context, G_OBJECT(sig->objects[j]));
   }

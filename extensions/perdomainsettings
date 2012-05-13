@@ -6,42 +6,58 @@
  * http://webkitgtk.org/reference/webkitgtk/unstable/WebKitWebSettings.html
  * for details. 
  *
- * The config needs three objects, 
+ * The config can consist of four objects, 
  *
- * + domains:   Settings applied based on the second level domain
- * + hosts:     Settings applied based on the hostname
- * + uris:      Settings applied based on the uri
- * + defaults:  Default settings, for each setting in domains and hosts a
+ * domains:   Settings applied based on the second level domain
+ *
+ * hosts:     Settings applied based on the hostname
+ *
+ * uris:      Settings applied based on the uri
+ *
+ * defaults:  Default settings, for each setting in domains, hosts and uris a
  *              default-value should be specified
  *
- * Example extensionrc object: 
+ * Example extensionrc: 
  *
- * perdomainsettings : {
- *   domains : { 
- *      "example.com" : { 
- *           "enablePlugins"  : true 
+ * return { 
+ *    foo : { ... },
+ *
+ *    perdomainsettings : {
+ *      domains : { 
+ *         "example.com" : { 
+ *              "enablePlugins"  : true 
+ *         },
+ *         "example.uk.com" :  { 
+ *              "enablePlugins"  : true, 
+ *              "enableScripts"  : false 
+ *         } 
+ *      }, 
+ *      hosts : { 
+ *         "www.example1.com" :  { 
+ *              "autoLoadImages" : true 
+ *         } 
  *      },
- *      "example.uk.com" :  { 
- *           "enablePlugins"  : true, 
- *           "enableScripts"  : false 
- *      } 
- *   }, 
- *   hosts : { 
- *      "www.example1.com" :  { 
- *           "autoLoadImages" : true 
- *      } 
- *   },
- *   uris : { 
- *      "http://www.example2.com/login.php" :  { 
- *           "autoLoadImages" : false 
- *      } 
- *   },
- *   defaults : {
- *      "enablePlugins"   : false,
- *      "autoLoadImages"  : false,
- *      "enableScripts"   :  true
- *   }
+ *      uris : { 
+ *         "http://www.example2.com/login.php" :  { 
+ *              "autoLoadImages" : false 
+ *         } 
+ *      },
+ *      defaults : {
+ *         "enablePlugins"   : false,
+ *         "autoLoadImages"  : false,
+ *         "enableScripts"   :  true
+ *      }
+ *    },
+ *
+ *    bar : { ... }
  * }
+ *
+ * Example using extensions.load: 
+ *
+ * extensions.load("perdomainsettings", { 
+ *  domains : { "example.com" : { "enablePlugins" : true }  }, 
+ *  defaults : { "enablePlugins" : false }
+ * });
  *
  * */ 
 
