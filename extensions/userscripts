@@ -51,7 +51,6 @@ var regexes = {
   isRegExp : /^\/.*\/$/
 };
 
-
 function inject(wv, item) //{{{
 {
   var i;
@@ -66,48 +65,65 @@ function inject(wv, item) //{{{
   }
 }//}}}
 
-function matchIncludeExclude(wv, item) //{{{
+function matchIncludeExclude(wv, items) //{{{
 {
   var uri = wv.uri;
-  if (item.isTld) {
-    io.print("TODO: isTld");
-    return false;
-  }
-  else if (item.regExp.test(uri)) {
-    return true;
+  var domain = wv.mainFrame.domain;
+  var i;
+  for (i=0; i<items.length; i++) {
+    try {
+      if (items[i].isTld && domain !== null) {
+        var reg = new RegExp("(?=.)" + domain + "($|/|:)");
+        var newDomain = domain.substring(0, domain.indexOf(".")) + ".tld$1";
+        uri = uri.replace(reg, newDomain);
+      }
+      if (items[i].regExp.test(uri)) {
+        return true;
+      }
+    }
+    catch(e) {
+      extensions.error(me, e);
+    }
   }
   return false;
 }//}}}
 
-function matchMatches(wv, item) //{{{
+function matchMatches(wv, items) //{{{
 {
-  io.print("TODO: match");
+  var i, item;
+  var o = uriSplit(wv.uri);
+  if (o === null)
+    return false;
+  for (i=0; i<items.length; i++) {
+    item = items[i];
+    if (item.allUrls || 
+        (item.scheme.test(o.scheme)  &&  
+        item.host.test(o.host)      &&  
+        (o.path === null  || item.path.test(o.path)))) {
+      return true;
+    }
+
+  }
   return false;
 }//}}}
 
 function handleItem(wv, item) //{{{
 {
   var includes, excludes, matches;
-  var i;
-  excludes = item.exclude;
-  for (i=0; i<excludes.length; i++) {
-    if (matchIncludeExclude(wv, excludes[i])) {
+  var o;
+  try {
+    if (matchIncludeExclude(wv, item.exclude)) 
       return;
+
+    if (matchIncludeExclude(wv, item.include)) {
+      inject(wv, item);
+    }
+    else if (matchMatches(wv, item.match)) {
+      inject(wv, item);
     }
   }
-  includes = item.include;
-  for (i=0; i<includes.length; i++) {
-    if (matchIncludeExclude(wv, includes[i])) {
-      inject(wv, item);
-      return;
-    }
-  }
-  matches = item.match;
-  for (i=0; i<matches.length; i++) {
-    if (matchMatches(wv, matches[i])) {
-      inject(wv, item);
-      return;
-    }
+  catch (e) {
+    extensions.error(me, e);
   }
 }//}}}
 
@@ -119,7 +135,7 @@ function handle(wv, array) //{{{
       handleItem(wv, array[i]);
     }
     catch (e) {
-      io.print(e);
+      extensions.debug(me);
     }
   }
 }//}}}
@@ -148,11 +164,11 @@ function parseIncludeExclude(array) //{{{
   }
 }//}}}
 
-function urlSplit(url) 
+function uriSplit(uri) 
 {
   var parts, scheme, host, path, idx; 
-  parts = url.split("://");
-  if (parts[0] === url) 
+  parts = uri.split("://");
+  if (parts[0] === uri) 
     return null;
   scheme = parts[0];
   idx = parts[1].indexOf("/");
@@ -167,9 +183,6 @@ function urlSplit(url)
   return { path : path, host: host, scheme : scheme }; 
 }
 
-var hostValidator = /^(?:\*\..*|[^*]*|\*)$/;
-var pathValidator = /^\/.*/;
-
 function parseMatch(m) 
 {
   var i, scheme, host, path, parts, j; 
@@ -177,7 +190,7 @@ function parseMatch(m)
     return { allUrls : true };
   }
 
-  var o = urlSplit(m);
+  var o = uriSplit(m);
   if (o === null) {
     extensions.warning(me, "Invalid or unsupported match rule: " + m);
     return null;
@@ -186,14 +199,17 @@ function parseMatch(m)
     extensions.warning(me, "Invalid scheme pattern: " + m);
     return null;
   }
-  if (o.host && ! (/^(?:\*\.[^*\/]*|[^*]*|\*)$/.test(o.host))) {
+  else {
+    o.scheme = new RegExp(o.scheme.replace("*", ".*"));
+  }
+  if (! (/^(?:\*\.[^*\/]*|[^*]*|\*)$/.test(o.host))) {
     extensions.warning(me, "Invalid host pattern: " + m);
     return null;
   }
   else {
     o.host = new RegExp(o.host.replace(/([.?+^$[\]\\(){}|-])/g, "\\$1").replace("*", ".*"));
   }
-  if (o.path === null || ! (/^\/.*/.test(o.path))) { 
+  if (! (/^\/.*/.test(o.path))) { 
     extensions.warning(me, "Invalid path pattern: " + m);
     return null;
   }
@@ -247,7 +263,7 @@ function parseMetaData(script) //{{{
       }
     }
     catch(e) {
-      extensions.error(me, e);
+      extensions.debug(me, e);
     }
 
   }

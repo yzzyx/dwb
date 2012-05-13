@@ -1627,7 +1627,39 @@ consistent configuration locations for scripts.
 
 The +extensions+ object has the following properties and functions
 
+=== Properties === 
+
+****
+[float]
+==== *enableDebugging* ==== 
+
+[source,javascript]
+----
+extensions.enableDebugging         Boolean      read
+----
+
+Whether to enable debugging messages.
+****
+
 === Functions ===
+
+****
+[[extensiondebug,debug]]
+[float]
+==== *debug()* ====
+
+[source,javascript]
+----
+void extensions.debug(String name, String message) 
+----
+Prints a debug message and the call stack to stdout, +enableDebugging+ must be
+set to +true+ in order to print debug messages. 
+
+ ::
+
+_name_;; Name of the extension
+_message_;; The debug message to print.
+****
 
 ****
 [[extensionload,load]]
@@ -1655,15 +1687,17 @@ _returns_;;  True if the extension was loaded
 
 [source,javascript]
 ----
-void extensions.error(String name, String message) 
+void extensions.error(String name, String message|Error e, [String message]) 
 ----
 
-Print a consistent error to stderr
+Print an error message and call stack to stderr.
 
  ::
 
 _name_;; Name of the extension
-_message_;; The error message
+_message|e_;; The error message or and Error
+_message_;; If the second parameter is an Error, an optional message can be
+specified.
 ****
 
 ****
