@@ -90,21 +90,42 @@ static GList *
 completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, void *data, const char *value) {
   Navigation *n;
   const char *input = GET_TEXT();
+  gboolean match;
+  char **token = NULL;
   _typed = g_strdup(input);
   if (dwb.state.mode & COMMAND_MODE) 
     input = strchr(input, ' ');
-  if (input == NULL)
+  if (input == NULL) 
     input = "";
+  else 
+    token = g_strsplit(input, " ", -1);
   Match_Func func = word_beginnings ? (Match_Func)g_str_has_prefix : (Match_Func)util_strcasestr;
+
 
   for (GList *l = gl; l; l=l->next) {
     n = l->data;
-    if (func(n->first, input) || (!word_beginnings && n->second && func(n->second, input))) {
+    match = false;
+    if (*input == 0)  {
+      match = true;
+    }
+    else {
+      for (int i=0; token[i]; i++) {
+        if (func(n->first, token[i]) || (!word_beginnings && n->second && func(n->second, token[i]))) {
+          match = true;
+        }
+        else {
+          match = false; 
+          break;
+        }
+      }
+    }
+    if (match) {
       Completion *c = completion_get_completion_item(n->first, n->second, value, data);
       gtk_box_pack_start(GTK_BOX(dwb.gui.compbox), c->event, false, false, 0);
       store = g_list_append(store, c);
     }
   }
+  g_strfreev(token);
   return store;
 }/*}}}*/
 
