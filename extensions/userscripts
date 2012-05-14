@@ -8,15 +8,16 @@
  *
  * Example (loading with extensions load):
  * 
- * extensions.load("userscripts", [ "/path/to/script1", "/path/to/script2" ]);
+ * extensions.load("userscripts", { scripts : [ "/path/to/script1", "/path/to/script2" ] });
  *
  * Example (extensionsrc): 
  *
  * return {
  *   ... : {  ...  },  // other config objects 
  *   
- *   userscripts : [ "/path/to/script1", "/path/to/script2" ]
+ *   userscripts : { scripts : [ "/path/to/script1", "/path/to/script2" ] },
  *
+ *   ... : {  ...  }  // other config objects 
  * }
  *
  * */

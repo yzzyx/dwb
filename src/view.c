@@ -608,13 +608,12 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   char *host =  NULL;
   const char *uri = webkit_web_view_get_uri(web);
 
-  if (EMIT_SCRIPT(LOAD_STATUS)) {
-      ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_STATUS, 0) };
-      scripts_emit(&signal);
-  }
 
   switch (status) {
     case WEBKIT_LOAD_PROVISIONAL: 
+      g_slist_free(v->status->frames);
+      v->status->frames = NULL;
+      v->status->frames = g_slist_prepend(v->status->frames, webkit_web_view_get_main_frame(WEBVIEW(gl)));
       break;
     case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT: 
       /* This is more or less a dummy call, to compile the script and speed up
@@ -623,10 +622,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       js_call_as_function(webkit_web_view_get_main_frame(web), v->hint_object, "createStyleSheet", NULL, NULL);
       break;
     case WEBKIT_LOAD_COMMITTED: 
-      if (EMIT_SCRIPT(LOAD_COMMITTED)) {
-        ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_COMMITTED, 0) };
-        scripts_emit(&signal);
-      }
       if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
         g_object_set(webkit_web_view_get_settings(web), "enable-scripts", false, NULL);
         v->status->scripts &= ~SCRIPTS_ALLOWED_TEMPORARY;
@@ -649,15 +644,15 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
             )) {
         plugins_disconnect(gl);
       }
+      if (EMIT_SCRIPT(LOAD_COMMITTED)) {
+        ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_COMMITTED, 0) };
+        scripts_emit(&signal);
+      }
       view_ssl_state(gl);
       g_free(host);
       break;
     case WEBKIT_LOAD_FINISHED:
       dwb_update_status(gl);
-      if (EMIT_SCRIPT(LOAD_FINISHED)) {
-        ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_FINISHED, 0) };
-        scripts_emit(&signal);
-      }
       /* TODO sqlite */
       if (!dwb.misc.private_browsing 
           && g_strcmp0(uri, "about:blank")
@@ -669,11 +664,19 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts_onload, false);
       if (dwb.state.auto_insert_mode) 
         dwb_check_auto_insert(gl);
+      if (EMIT_SCRIPT(LOAD_FINISHED)) {
+        ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_FINISHED, 0) };
+        scripts_emit(&signal);
+      }
       break;
     case WEBKIT_LOAD_FAILED: 
       break;
     default:
       break;
+  }
+  if (EMIT_SCRIPT(LOAD_STATUS)) {
+      ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(NULL, LOAD_STATUS, 0) };
+      scripts_emit(&signal);
   }
 }/*}}}*/
 

@@ -130,7 +130,7 @@ CFLAGS += -DLIBJS_DIR=\"$(LIBJSDIR)\"
 
 # If execinfo.h is not available, e.g. freebsd
 ifneq (${WITHOUT_EXECINFO}, 1)
-CPPFLAGS += -DHAS_EXECINFO
+CFLAGS += -DHAS_EXECINFO
 endif
 
 ifeq (USEGTK3, 1) 
