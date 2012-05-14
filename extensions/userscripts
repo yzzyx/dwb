@@ -292,7 +292,7 @@ function parseScripts() //{{{
   var userscript = null;
   var script;
   for (i=0; i<scripts.length; i++) {
-    if (io.fileTest(scripts[i], FileTest.regular)) {
+    if (system.fileTest(scripts[i], FileTest.regular)) {
       script = io.read(scripts[i]);
       userscript = parseMetaData(script);
     }

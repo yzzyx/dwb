@@ -99,7 +99,6 @@ static KeyValue KEYS[] = {
   { "zoom",                     {   "=",         0,                  },  },  
   { "zoom_out",                 {   "-",         0,                  },  },  
   { "save_search_field",        {   "gs",         0,                  },  },  
-  { "reload_scripts",           {   NULL,           0,                  },  },
   { "reload_userscripts",       {   NULL,           0,                  },  },
   { "proxy",                    {   "p" ,           GDK_CONTROL_MASK,  },  },
   { "focus_input",              {   "gi",           0, }, }, 
@@ -690,9 +689,6 @@ static FunctionMap FMAP [] = {
     (Func)commands_web_inspector,              "Enable developer extras for the webinspector",           POST_SM, 
     { 0 }, EP_NONE, { "inspect", "insp", NULL }, },
   
-  { { "reload_scripts",         "Reload scripts", },             CP_COMMANDLINE, 
-    (Func)commands_reload_scripts,              NULL,                              ALWAYS_SM, 
-    { 0 }, EP_NONE, { NULL }, },
   { { "reload_userscripts",         "Reload userscripts", },             CP_COMMANDLINE, 
     (Func)commands_reload_user_scripts,              NULL,                              POST_SM, 
     { 0 }, EP_NONE, { NULL }, },

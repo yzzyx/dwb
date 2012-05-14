@@ -171,6 +171,7 @@ GTimer *__timer;
 #define BPGB 1073741824
 
 #define DEFAULT_WIDGET_PACKING "dtws"
+#define WIDGET_PACK_LENGTH 4
 
 /*}}}*/
 
@@ -681,8 +682,6 @@ struct _Misc {
   char *scripts_onload;
   char *hints;
   /* applied to all frames */
-  char *allscripts;
-  char *allscripts_onload;
   const char *profile;
   const char *default_search;
   gint find_delay;
@@ -728,7 +727,6 @@ struct _Files {
   const char *keys;
   const char *mimetypes;
   const char *quickmarks;
-  const char *scriptdir;
   const char *searchengines;
   const char *session;
   const char *settings;

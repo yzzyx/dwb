@@ -2,12 +2,12 @@
 .\"     Title: dwb
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 05/13/2012
+.\"      Date: 05/14/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB" "1" "05/13/2012" "\ \&" "\ \&"
+.TH "DWB" "1" "05/14/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1345,7 +1345,6 @@ lt lt lt
 lt lt lt
 lt lt lt
 lt lt lt
-lt lt lt
 lt lt lt.
 T{
 .sp
@@ -1946,15 +1945,6 @@ refull
 T}:T{
 .sp
 Reload without using cached data
-T}
-T{
-.sp
-reload_scripts
-T}:T{
-.sp
-T}:T{
-.sp
-Reload all javascript userscripts
 T}
 T{
 .sp
@@ -3517,40 +3507,11 @@ means that the statusbar won\(cqt be visible\&. Default value:
 \fIdtws\fR\&.
 .RE
 .SH "FILES"
-.SS "Scripts"
-.sp
-Javascript userscripts can be stored in \fI~/\&.config/dwb/scripts\fR\&. The scripts are applied to pages depending on their filename extension, there are 4 possible extensions:
-.sp
-Scripts with extension
-.PP
-\fB\&.js\fR
-.RS 4
-are injected into the page directly after the load of a new page is committed\&.
-.RE
-.PP
-\fB\&.all\&.js\fR
-.RS 4
-Scripts with extension
-\fI\&.all\&.js\fR
-are injected into all frames of a page directly after the load of a new frame is committed\&.
-.RE
-.PP
-\fB\&.onload\&.js\fR
-.RS 4
-Scripts with extension
-\fI\&.onload\&.js\fR
-are injected into the page directly when loading of a page is done\&.
-.RE
-.PP
-\fB\&.onload\&.all\&.js\fR
-.RS 4
-Scripts with extension
-\fI\&.onload\&.all\&.js\fR
-are injected into all frames of a page when the load of a frame is done\&.
-.RE
 .SS "Userscripts"
 .sp
 Userscripts can be stored in \fI~/\&.config/dwb/userscripts\fR\&. The first argument of the script will be the current url, the second argument is the title, the third argument will be the profile name, the fourth argument is the numerical modifier and the fifth argument is a commandline argument\&. Also the variables \fIDWB_URI\fR, \fIDWB_TITLE\fR, \fIDWB_PROFILE\fR, \fIDWB_NUMMOD\fR, \fIDWB_ARGUMENT\fR, \fIDWB_REFERER\fR, and \fIDWB_USER_AGENT\fR are set\&. The keybinding for the script must be defined in the script itself in a commented line of the form \fB<comment symbols> dwb: <keybinding>\fR\&.
+.sp
+dwb also provides a small javascript api, scripts that use the api must have the special shebang \fB#!javascript\fR, for details see http://portix\&.bitbucket\&.org/dwb/resources/jsapi\&.html\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -3585,6 +3546,32 @@ Popup an alert dialog:
 # dwb: Control h
 
 echo "js window\&.alert(\*(AqHello world\*(Aq);" > ${DWB_FIFO}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Block requests from specific sites:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+var block = [ new RegExp("https://example\&.org\&.*"), new RegExp("https://example\&.co\&.uk\&.*") ];
+
+signals\&.connect("resource", function(wv, frame, request) {
+  var i, r;
+  for (i=0; i<block\&.length; i++)
+  {
+    if (block[i]\&.test(request\&.uri))
+    {
+      request\&.uri = "about:blank";
+      return true;
+    }
+  }
+});
 .fi
 .if n \{\
 .RE

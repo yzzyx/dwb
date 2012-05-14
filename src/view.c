@@ -230,16 +230,6 @@ view_frame_committed_cb(WebKitWebFrame *frame, GList *gl) {
       .objects = { G_OBJECT(frame) }, SCRIPTS_SIG_META(NULL, FRAME_STATUS, 1) };
     scripts_emit(&signal);
   }
-  WebKitLoadStatus status = webkit_web_frame_get_load_status(frame);
-  switch (status) {
-    case WEBKIT_LOAD_COMMITTED: 
-      dwb_execute_script(frame, dwb.misc.allscripts, false);
-      break;
-    case WEBKIT_LOAD_FINISHED: 
-      dwb_execute_script(frame, dwb.misc.allscripts_onload, false);
-      break;
-    default: return;
-  }
 }/*}}}*/
 
 /* view_frame_created_cb {{{*/

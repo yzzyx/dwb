@@ -352,25 +352,6 @@ _path_;; Path to a file that should be read
 _returns_;; A string with the file content
 ****
 
-****
-[[fileTest]]
-[float]
-==== *fileTest()* ==== 
-
-[source,javascript]
-----
-Boolean io.fileTest(String path, FileTest flags)
-----
-
-Checks for <<FileTest>> flags on a file.
-
- ::
-
-_path_;; Path to a file to check
-_flags_;; The flags to test
-_returns_;; +true+ if any of the test on the flags is true
-****
-
 
 ====
 .Example
@@ -385,6 +366,44 @@ io.print(text);
 === system ===
 
 The +system+ object implements system functions.
+
+****
+[[fileTest]]
+[float]
+==== *fileTest()* ==== 
+
+[source,javascript]
+----
+Boolean system.fileTest(String path, FileTest flags)
+----
+
+Checks for <<FileTest>> flags on a file.
+
+ ::
+
+_path_;; Path to a file to check
+_flags_;; The flags to test
+_returns_;; +true+ if any of the test on the flags is true
+****
+
+****
+[[mkdir]]
+[float]
+==== *mkdir()* ==== 
+
+[source,javascript]
+----
+Boolean system.mkdir(String path, Number mode)
+----
+
+Creates a directory and all parent directories.
+
+ ::
+
+_path_;; Path to create
+_mode_;; The permissions the directory will get
+_returns_;; +true+ if creation was successful or directory already existed 
+****
 
 ****
 [[spawn]]
@@ -1695,7 +1714,7 @@ Print an error message and call stack to stderr.
  ::
 
 _name_;; Name of the extension
-_message|e_;; The error message or and Error
+_message|e_;; The error message or an Error
 _message_;; If the second parameter is an Error, an optional message can be
 specified.
 ****

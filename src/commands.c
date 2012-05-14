@@ -650,15 +650,6 @@ commands_quit(KeyMap *km, Arg *arg) {
   return STATUS_END;
 }/*}}}*/
 
-/* commands_reload_scripts {{{*/
-DwbStatus
-commands_reload_scripts(KeyMap *km, Arg *arg) {
-  dwb_init_scripts();
-  for (GList *l = dwb.state.views; l; l=l->next) {
-    webkit_web_view_reload(WEBVIEW(l));
-  }
-  return STATUS_OK;
-}/*}}}*/
 DwbStatus
 commands_reload_user_scripts(KeyMap *km, Arg *arg) {
   dwb_reload_userscripts();

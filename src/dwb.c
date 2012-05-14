@@ -3125,35 +3125,9 @@ dwb_init_settings() {
     g_strfreev(keys);
 }/*}}}*/
 
-/* dwb_init_scripts{{{*/
-void 
-dwb_init_scripts() {
-  g_free(dwb.misc.scripts);
-  GString *normalbuffer = g_string_new(NULL);
-  GString *allbuffer    = g_string_new(NULL);
-
-  setlocale(LC_NUMERIC, "C");
-  /* user scripts */
-  util_get_directory_content(allbuffer, dwb.files.scriptdir, "onload.all.js");
-  dwb.misc.allscripts_onload = g_strdup(allbuffer->str);
-  util_get_directory_content(allbuffer, dwb.files.scriptdir, "onload.js");
-  dwb.misc.scripts_onload    = g_strdup(allbuffer->str);
-  g_string_erase(allbuffer, 0, -1);
-
-  util_get_directory_content(normalbuffer, dwb.files.scriptdir, "js");
-  util_get_directory_content(allbuffer, dwb.files.scriptdir, "all.js");
-
-  /* systemscripts */
-  g_string_append(normalbuffer, allbuffer->str);
-  dwb.misc.scripts = normalbuffer->str;
-  dwb.misc.allscripts = allbuffer->str;
-  g_string_free(normalbuffer, false);
-  g_string_free(allbuffer, false);
-  dwb_init_hints(NULL, NULL);
-}/*}}}*/
-
 static DwbStatus 
 dwb_init_hints(GList *gl, WebSettings *s) {
+  setlocale(LC_NUMERIC, "C");
   g_free(dwb.misc.hints);
   char *scriptpath = util_get_data_file(HINT_SCRIPT, "scripts");
   dwb.misc.hints = util_get_file_content(scriptpath);
@@ -3262,13 +3236,13 @@ dwb_pack(const char *layout, gboolean rebuild) {
   }
   while (g_ascii_isspace(*layout))
     layout++;
-  if (strlen(layout) != 4) {
+  if (strlen(layout) != WIDGET_PACK_LENGTH) {
     layout = default_layout;
     ret = STATUS_ERROR;
   }
 
   const char *valid_chars = default_layout;
-  char *buf = g_ascii_strdown(layout, 4);
+  char *buf = g_ascii_strdown(layout, WIDGET_PACK_LENGTH);
   char *matched;
   while (*valid_chars) {
     if ((matched = strchr(buf, *valid_chars)) == NULL) {
@@ -3498,7 +3472,7 @@ void
 dwb_init_files() {
   char *path           = util_build_path();
   char *profile_path   = util_check_directory(g_build_filename(path, dwb.misc.profile, NULL));
-  char *userscripts, *scripts, *cachedir;
+  char *userscripts, *cachedir;
 
   dwb.fc.bookmarks = NULL;
   dwb.fc.history = NULL;
@@ -3544,8 +3518,6 @@ dwb_init_files() {
   dwb.files.custom_keys     = g_build_filename(profile_path, "custom_keys",      NULL);
   dwb_check_create(dwb.files.custom_keys);
 
-  scripts                   = g_build_filename(path, "scripts",      NULL);
-  dwb.files.scriptdir       = util_check_directory(scripts);
   userscripts               = g_build_filename(path, "userscripts",   NULL);
   dwb.files.userscripts     = util_check_directory(userscripts);
 
@@ -3717,7 +3689,7 @@ dwb_init() {
   dwb_init_custom_keys(false);
   domain_init();
   adblock_init();
-  dwb_init_scripts();
+  dwb_init_hints(NULL, NULL);
 
   dwb_soup_init();
 } /*}}}*/ /*}}}*/

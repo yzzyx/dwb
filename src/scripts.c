@@ -785,6 +785,43 @@ error_out:
   g_free(cmdline);
   return JSValueMakeNumber(ctx, ret);
 }/*}}}*/
+
+/* system_file_test {{{*/
+static JSValueRef 
+system_file_test(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 2) {
+    js_make_exception(ctx, exc, EXCEPTION("system.fileTest needs an argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  char *path = js_value_to_char(ctx, argv[0], PATH_MAX, exc);
+  if (path == NULL) 
+    return JSValueMakeBoolean(ctx, false);
+  double test = JSValueToNumber(ctx, argv[1], exc);
+  if (test == NAN || ! ( (((guint)test) & G_FILE_TEST_VALID) == (guint)test) ) 
+    return JSValueMakeBoolean(ctx, false);
+  gboolean ret = g_file_test(path, (GFileTest) test);
+  g_free(path);
+  return JSValueMakeBoolean(ctx, ret);
+}/*}}}*/
+
+/* system_mkdir {{{*/
+static JSValueRef 
+system_mkdir(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  gboolean ret = false;
+  if (argc < 2) {
+    js_make_exception(ctx, exc, EXCEPTION("system.mkdir needs an argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  char *path = js_value_to_char(ctx, argv[0], PATH_MAX, exc);
+  double mode = JSValueToNumber(ctx, argv[1], exc);
+  if (path != NULL && mode != NAN) {
+    ret = g_mkdir_with_parents(path, (gint)mode) == 0;
+  }
+  g_free(path);
+  return JSValueMakeBoolean(ctx, ret);
+
+}/*}}}*/
+
 /*}}}*/
 
 /* IO {{{*/
@@ -830,24 +867,6 @@ error_out:
     return JSValueMakeNull(ctx);
   return ret;
 
-}/*}}}*/
-
-/* io_file_test {{{*/
-static JSValueRef 
-io_file_test(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 2) {
-    js_make_exception(ctx, exc, EXCEPTION("io.read needs an argument."));
-    return JSValueMakeBoolean(ctx, false);
-  }
-  char *path = js_value_to_char(ctx, argv[0], PATH_MAX, exc);
-  if (path == NULL) 
-    return JSValueMakeBoolean(ctx, false);
-  double test = JSValueToNumber(ctx, argv[1], exc);
-  if (test == NAN || ! ( (((guint)test) & G_FILE_TEST_VALID) == (guint)test) ) 
-    return JSValueMakeBoolean(ctx, false);
-  gboolean ret = g_file_test(path, (GFileTest) test);
-  g_free(path);
-  return JSValueMakeBoolean(ctx, ret);
 }/*}}}*/
 
 /* io_notify {{{*/
@@ -1292,7 +1311,6 @@ create_global_object() {
     { "prompt",    io_prompt,         kJSDefaultAttributes },
     { "read",      io_read,             kJSDefaultAttributes },
     { "write",     io_write,            kJSDefaultAttributes },
-    { "fileTest",  io_file_test,            kJSDefaultAttributes },
     { "notify",    io_notify,           kJSDefaultAttributes },
     { "error",     io_error,           kJSDefaultAttributes },
     { 0,           0,           0 },
@@ -1304,6 +1322,8 @@ create_global_object() {
   JSStaticFunction system_functions[] = { 
     { "spawn",           system_spawn,           kJSDefaultAttributes },
     { "getEnv",          system_get_env,           kJSDefaultAttributes },
+    { "fileTest",        system_file_test,            kJSDefaultAttributes },
+    { "mkdir",           system_mkdir,            kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
   class = create_class("system", system_functions, NULL);

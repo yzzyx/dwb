@@ -4,7 +4,7 @@
   function getPlugin(name, filename) {
     var ret = null;
     try {
-      if (io.fileTest(filename, FileTest.exists)) {
+      if (system.fileTest(filename, FileTest.exists)) {
         ret = include(filename);
       }
     }
