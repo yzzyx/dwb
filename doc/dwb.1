@@ -1,2120 +1,3597 @@
-.TH DWB 1 "March 2012" dwb "USER COMMANDS"
-.SH NAME
+'\" t
+.\"     Title: dwb
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 05/13/2012
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "DWB" "1" "05/13/2012" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
 dwb \- dynamic web browser
-.SH SYNOPSIS
-.B dwb
-[ options ] [ <urls> ] 
-.SH DESCRIPTION
-dwb is a small webbrowser based on WebKit and GTK which aims to be mostly
-keyboard-driven. 
-
-.SH COMMAND LINE ARGUMENTS
-.TP
-.BR \-e ,\  --embed \ <wid>
-Embed dwb into <wid>.
-.TP
-.BR \-f ,\  --force \ <wid>
-Force restoring a previously saved session, even if it seems that another
-process has opened a session with the same name. 
-.TP
-.BR \-l ,\  --list-sessions
-List previously saved sessions. A 
-.I *
-indicates that another instance has currently opened the session.
-.TP
-.BR \-n ,\  --new-instance 
-New instance, overrides setting 
-.IR single-instance .
-.TP
-.BR \-p ,\  --profile \ <name>
-Load configuration for profile  
-.I <name>
-.TP
-.BR \-r ,\  --restore \ <name>
-Restore session with name 
-.I <sessionname> 
-or the default session, if sessionname is omitted.
-.TP
-.BR \-R ,\  --override-restore 
-Open a new session, even if 
-.I save-session 
-is enabled.
-.TP
-.BR \-x ,\  --execute \ <commands>
-Execute a list of dwb commands separated by
-.IR ;; , 
-see 
-.B CUSTOM COMMANDS 
-and
-.B COMMAND OVERVIEW
-for details.
-If 
-.I single instance 
-is enabled all commands will be executed in the primary instance. 
-.TP
-.B \-v
-Show version information and exit.
-.TP
-.B <urls>
-URLs loaded on startup.
-
-.SH MODES
-dwb has different modes:
-.TP
-.B Normal mode
-The default mode. Pressing "Escape" will get you always back to
-normal mode.
-.TP
-.B Insert mode 
-Used for editing text elements in a webpage. 
-.TP
-.B Hint mode 
-Follow links via hints. 
-.TP
-.B Command mode 
-Execute dwb commands from the builtin commandline.
-
-
-.SH SHORTCUTS
-Note: all shortcuts are case sensitive, e.g. C-H means Control-Shift-h. 
-.SS "Normal mode shortcuts:"
-.TP
-.BR [n]j
-Scroll [n times] down (command: 
-.BR scroll_down , 
-aliases: 
-.BR down ).
-.TP
-.BR [n]k
-Scroll [n times] up (command: 
-.BR scroll_up ,
-aliases:
-.BR up ).
-.TP
-.BR [n]h
-Scroll [n times] left (command: 
-.BR scroll_left ,
-aliases:
-.BR left ).
-.TP
-.BR [n]l
-Scroll [n times] right (command 
-.BR scroll_right ,
-aliases:
-.BR right ).
-.TP
-.BR [n]gg
-Scroll to the top or to n% of the page (command 
-.BR scroll_top ,
-aliases:
-.BR top ).
-.TP
-.BR [n]G
-Scroll to the bottom or to n% of the page (command 
-.BR scroll_bottom ,
-aliases:
-.BR bottom ).
-.TP
-.BR  [n]C-f
-Scroll [n] pages down (command
-.BR scroll_page_down ,
-aliases:
-.BR pagedown ).
-.TP
-.BR [n]C-b
-Scroll [n] pages up (comman
-.BR scroll_page_up  ,
-aliases:
-.BR pageup ).
-.TP
-.BR  [n]C-d
-Scroll [n] half pages down (command
-.BR scroll_halfpage_down ,
-aliases:
-.BR halfdown ).
-.TP
-.BR [n]C-u
-Scroll [n] half pages up (command
-.BR scroll_halfpage_up  ,
-aliases:
-.BR halfup ).
-.TP
-.B : 
-Enter Command mode.
-.TP
-.BR o 
-Open new url in the focused tab, the argument $URI will be replaced by the
-current uri (command
-.BR open ,
-aliases:
-.BR o ).
-.TP
-.BR go 
-Open url in the focused tab, set current url in the navigation bar (command
-.BR open_url ).
-.TP
-.BR O 
-Open url in a new tab, the argument $URI will be replaced by the current uri (command 
-.BR tabopen ,
-aliases:
-.BR topen , 
-.BR t ).
-.TP
-.BR gO 
-Open url in a new tab, set current url in the navigation bar (command 
-.IR tabopen_url ).
-.TP
-.BR xo 
-Open url in a new tab in background, the argument $URI will be repaced with the
-current uri (command 
-.BR backopen ,
-aliases:
-.BR bopen ).
-.TP
-.BR xO 
-Open url in a new tab in background, set current url in the navigation bar (command 
-.IR backopen_url ).
-.TP
-.BR wo 
-Open url in a new instance (command 
-.BR winopen ,
-aliases:
-.BR wopen ,
-.BR w ).
-.TP
-.BR wO 
-Open url in a new window, set current url in the navigation bar (command
-.BR winopen_url ).
-.TP
-.BR i 
-Enter insert mode (command 
-.BR insert_mode ,
-aliases:
-.BR i , 
-.BR insert ).
-.TP
-.B C-n 
-Enter normal mode.
-.TP
-.BR ga 
-Add a new blank tab (command
-.BR tab_new ).
-.TP
-.BR d
-Close current tab (command
-.BR close_tab ,
-aliases:
-.BR close ).
-.TP
-.BR [n]gc
-Clear tab n or of current tab, clears the history of the tab and loads 
-.IR about:blank .
-(command
-.BR clear_tab ,
-aliases:
-.BR clear ).
-.TP
-.BR co
-Close all tabs except for the current one (command
-.BR only ).
-.TP
-.BR C-q
-Quit (command
-.BR quit ,
-aliases:
-.BR q ).
-.TP
-.BR u
-Undo closing last tab (command
-.BR undo ,
-aliases:
-.BR u ).
-.TP
-.BR C-h
-Open the default startpage (command
-.BR start_page ,
-aliases:
-.BR home ).
-.TP
-.BR H  
-Go back (command 
-.BR history_back ,
-aliases:
-.BR back ,
-.BR ba ).
-.TP
-.BR L 
-Go forward (command 
-.BR history_forward ,
-aliases:
-.BR forward , 
-.BR fo ).
-.TP
-.BR th  
-Go back in a new tab (command 
-.BR tab_hist_back,
-aliases:
-.BR tabback ,
-.BR tba ).
-.TP
-.BR tl 
-Go forward in a new tab (command 
-.BR tab_hist_forward ,
-aliases:
-.BR tabforward ,
-.BR tfo ).
-.TP
-.BR wh  
-Go back in a new window (command 
-.BR win_hist_back ,
-aliases:
-.BR winback ,
-.BR wba ).
-.TP
-.BR wl 
-Go forward in a new window (command 
-.BR win_hist_forward ,
-aliases:
-.BR winforward ,
-.BR wfo ).
-.TP
-.BR /
-Find forward (command
-.BR find_forward ,
-alias: 
-.BR ffind ).
-.TP
-.BR ?
-Find backward (command
-.BR find_backward ,
-alias
-.BR bfind ).
-.TP
-.BR c/
-Find forward, ignore case (command
-.BR find_forward_ic ,
-alias: 
-.BR iffind ).
-.TP
-.BR c?
-Find backward, ignore case (command
-.BR find_backward_ic ,
-alias
-.BR ibfind ).
-.TP
-.BR M
-Add a bookmark (command
-.BR bookmark ,
-aliases:
-.BR bmark , 
-.BR bma ).
-.TP 
-.B gb
-Show Bookmarks (command
-.BR bookmarks ,
-aliases:
-.BR bmarks ,
-.BR bmas ).
-.TP 
-.B gB
-Show Bookmarks, open bookmark in a new tab (command
-.BR tab_bookmarks ,
-aliases:
-.BR tabmarks ).
-.TP 
-.B wB
-Show Bookmarks, open bookmark in a new window (command
-.BR win_bookmarks ,
-aliases:
-.BR winmarks ).
-.TP
-.BR m
-Add a quickmark (command 
-.BR save_quickmark ,
-aliases:
-.BR quickmark , 
-.BR qmark ).
-.TP
-.BR b
-Open quickmark (command 
-.BR quickmark ,
-aliases:
-.BR qmarks ).
-.TP
-.BR B
-Open quickmark in a new tab (command
-.BR tab_quickmark ,
-aliases:
-.BR tabqmarks ).
-.TP
-.BR wb[:graph:]
-Open quickmark in a new window (command
-.BR win_quickmark ,
-aliases:
-.BR winqmarks ).
-.TP
-.BR [n]r
-Reload tab n or current tab if n is omitted (command
-.BR reload ,
-aliases:
-.BR re ).
-.TP
-.BR [n]R
-Reload tab n or current tab if n is omitted without using any cached data (command
-.BR reload_bypass_cache ,
-aliases:
-.BR refull ).
-.TP
-.BR [n]C-s
-Stop loading of tab n or of current tab is [n] is omitted (command
-.BR stop_loading ,
-aliases:
-.BR stop ,
-.BR st ).
-.TP
-.BR [n]+
-Zoom in [n times] (command
-.BR zoom_in ,
-aliases:
-.BR zi ).
-.TP
-.BR [n]-
-Zoom out [n times] (command 
-.BR zoom_out ,
-aliases:
-.BR zo ).
-.TP
-.BR [n]=
-Zoom to n percent or to 100% if n is omitted(command 
-.BR zoom,
-aliases:
-.BR z ).
-.TP
-.BR sf
-Save all configuration files (command
-.BR save ).
-.TP
-.BR ZZ
-Save current session and exit (command 
-.BR save_session ,
-aliases:
-.BR wq ).
-.TP
-.BR gZZ 
-Save current session with name and exit (command 
-.BR save_named_session ,
-aliases:
-.BR wqn ).
-.TP
-.BR [n]J
-Cycle focus [n tab] forwards. (command 
-.BR focus_next ,
-aliases:
-.BR tabnext ).
-.TP
-.BR [n]K
-Cycle focus [n tab] backwards. (command 
-.BR focus_prev ,
-aliases:
-.BR tabprev ).
-.TP
-.BR [n]T
-Focus nth tab or first, if n is omitted. 
-(command 
-.BR focus_tab ,
-aliases:
-.BR tab ).
-.TP
-.BR [n]gm
-Move current tab to position [n] or to first position if n is omitted.
-(command 
-.BR tab_move ,
-aliases:
-.BR tabm ).
-.TP
-.BR [n]gl
-Move current tab [n] positions left.
-(command 
-.BR tab_move_left ,
-aliases:
-.BR tabl ).
-.TP
-.BR [n]gr
-Move current tab [n] positions right.
-(command 
-.BR tab_move_right ,
-aliases:
-.BR tabr ).
-.TP
-.BR gt
-Show all open tabs. (command 
-.BR buffers ,
-aliases:
-.BR bu ).
-.TP
-.BR [n]C-P
-Protect tab [n]. Closing this tab must be confirmed (command 
-.BR protect ,
-aliases:
-.BR prot ).
-.TP
-.BR [n]xd
-Lock tab [n]. Locking a tab will lock this tab to the current domain, it's not
-possible to navigate to another domain until unlocked. 
-.BR lock_domain ,
-aliases:
-.BR dlock ).
-.TP
-.BR [n]xu
-Lock tab [n]. Locking a tab will lock this tab to the current uri, it's not
-possible to navigate to another uri until unlocked. 
-.BR lock_uri ,
-aliases:
-.BR ulock ).
-.TP
-.BR f 
-Show hints (command 
-.BR hints ,
-aliases:
-.BR hints , 
-.BR hi ).
-.TP
-.BR F
-Show hints, open link in a new foreground tab. (command
-.BR hints_tab ,
-aliases:
-.BR tabhints , 
-.BR thi ).
-.TP
-.BR ;b
-Show hints, open link in a new background tab. (command
-.BR hints_background ,
-aliases:
-.BR backhints , 
-.BR bhi ).
-.TP
-.BR wf
-Show hints, open link in a new tab. (command
-.BR hints_win ,
-aliases:
-.BR winhints ,
-.BR whi ).
-.TP
-.BR ;i 
-Follow image (command 
-.BR hints_images ,
-aliases:
-.BR ihints ,
-ihi ).
-.TP
-.BR ;I 
-Follow image in a new tab (command 
-.BR hints_images_tab ,
-aliases:
-.BR itabhints ,
-.BR ithi ).
-.TP
-.BR .i 
-Follow image in a background tab (command 
-.BR hints_images_background ,
-aliases:
-.BR ibackhints ).
-.TP
-.BR ;e 
-Focus editable elements via hints (command 
-.BR hints_editable ,
-aliases:
-.BR ehints ,
-.BR ehi ).
-.TP
-.BR ;o 
-Set hint\'s url in commandline (command 
-.BR hints_url ,
-aliases:
-.BR uhints ,
-.BR uhi ).
-.TP
-.BR ;O 
-Set hint\'s url in commandline, open in a new tab (command 
-.BR hints_url_tab ,
-aliases:
-.BR utabhints ,
-.BR uthi ).
-.TP
-.BR .o 
-Set hint\'s url in commandline, open in a background tab (command 
-.BR hints_url_background ,
-aliases:
-.BR ubackhints ).
-.TP
-.BR ;d 
-Download via hints (command 
-.BR hints_download ,
-aliases:
-.BR dhints ).
-.TP
-.BR ;y 
-Save link location to clipboard (command 
-.BR hints_clipboard ,
-aliases:
-.BR chints ,
-.BR chi ).
-.TP
-.BR ;Y
-Save link location to primary selection (command 
-.BR hints_primary ,
-aliases:
-.BR phints ,
-.BR phi ).
-.TP
-.BR ;r
-Rapid hint mode, each matching hint opens a new tab in background. (command 
-.BR hints_rapid ,
-aliases:
-.BR rhints ,
-.BR rhi ).
-.TP
-.BR ;R
-Rapid hint mode, each matching hint opens a new window. (command 
-.BR hints_rapid_win ,
-aliases:
-.BR wrhints ,
-.BR wrhi ).
-.TP
-.BR gf 
-Toggle "view source" (command 
-.BR view_source ,
-aliases:
-.BR source ,
-.BR so ).
-.TP
-.BR CC 
-Allow persistent cookie for the current website. The domain will be saved in  
-.IR cookies.allow .
-Cookies that are allowed by the cookies.allow whitelist are stored in
-$XDG_CONFIG_HOME/dwb/$profilename/cookies.  (command
-.BR allow_cookie ,
-aliases:
-.BR cookie ).
-.TP
-.BR CS 
-Allow session cookie for the current website. The domain will be saved in 
-.IR cookies_session.allow .
-This is only useful if 'cookies-store-policy' is set to 'never', see
-cookies-store-policy for details. (command
-.BR allow_session_cookie ,
-aliases:
-.BR scookie ).
-.TP
-.BR CT 
-Allow session cookies for the current website temporarily. Only first party
-cookies are allowed. The domain is not saved to a whitelist and the cookies will
-not be saved persitently. (command
-.BR allow_session_cookie_tmp ,
-aliases:
-.BR tcookie ).
-.TP
-.BR [n]yy
-Yank the url of tab n or of current tab if n is omitted to clipboard
-(command 
-.BR yank ).
-.TP
-.BR yY
-Yank the url of tab n or of current tab if n is omitted to primary
-selection (command 
-.BR yank_primary ,
-aliases:
-.BR pyank ).
-.TP
-.BR yt
-Yank the title of tab n or of current tab if n is omitted to clipboard
-(command 
-.BR yank_title ,
-aliases:
-.BR tyank ).
-.TP
-.BR yT
-Yank the title of tab n or of current tab if n is omitted to primary
-selection (command 
-.BR yank_title_primary ,
-aliases:
-.BR tpyank ).
-.TP
-.BR pp
-Paste from clipboard (command 
-.BR paste ).
-.TP
-.BR pP
-Paste from primary selection (command
-.BR paste_primary ,
-aliases:
-.BR ppaste ).
-.TP
-.BR Pp
-Paste from clipboard and load in a new tab (command 
-.BR tab_paste ,
-aliases:
-.BR tpaste ).
-.TP
-.BR PP
-Paste from primary selection and load in a new tab (command
-.BR tab_paste_primary ,
-aliases:
-.BR tppaste ).
-.TP
-.BR wp
-Paste from clipboard and load in a new window (command 
-.BR paste_nw ,
-aliases:
-.BR winpaste ).
-.TP
-.BR wP
-Paste from primary selection and load in a new window (command
-.BR paste_primary_nw ,
-aliases:
-.BR winppaste ).
-.TP
-.BR [n]ad
-Cancel the download with number n or the first download in the lists of running
-downloads if n is omitted. (command 
-.BR cancel_download ).
-.TP
-.BR gs
-Add a searchengine. Textfields can be chosen with tab and a keyword must be
-specified. The first defined searchengine will be the default searchengine. The
-keyword can be used in all open commands, e.g. 
-.I :open <keyword> <searchterm>
-(command 
-.BR save_search_field ,
-aliases:
-.BR search ).
-.TP
-.BR Sb 
-Show bookmarks (command
-.BR show_bookmarks ,
-aliases:
-.BR sbookmarks ).
-.TP
-.BR Sq 
-Show quickmarks (command
-.BR show_quickmarks ,
-aliases:
-.BR squickmarks ).
-.TP
-.BR Sh 
-Show history (command
-.BR show_history ,
-aliases:
-.BR shistory ).
-.TP
-.BR Sd 
-Show download (command
-.BR show_downloads ,
-aliases:
-.BR sdownloads ).
-.TP
-.BR Sk 
-Show keys (command
-.BR show_keys ,
-aliases:
-.BR skeys ).
-.TP
-.BR Ss 
-Show settings (command
-.BR show_settings ,
-aliases:
-.BR ssettings ).
-.TP
-.BR ss 
-Set setting, the interactive version of the command set, for changing settings
-in scripts use set instead (command
-.BR set_setting ).
-.TP
-.BR sl 
-Set local setting, changes a setting but doesn't save the setting to
-configuration file. The interactive version of the command local_set, for
-changing settings locally in scripts use local_set instead
-(command
-.BR set_local_setting ).
-.TP
-.BR sk
-Set keyboard shortcut (command
-.BR set_key ,
-aliases:
-.BR keys ).
-.TP
-.BR C-p 
-Toggle proxy (command
-.BR proxy ).
-.TP
-.BR tsh
-Toggle scripts for current host permanently (command
-.BR toggle_scripts_host ,
-aliases:
-.BR hscript ).
-.TP
-.BR tsu
-Toggle scripts for current url permanently (command
-.BR toggle_scripts_uri ,
-aliases:
-.BR uscript ).
-.TP
-.BR tth
-Toggle scripts for current host temporarily (command
-.BR toggle_scripts_host_tmp ,
-aliases:
-.BR thscript ).
-.TP
-.BR ttu
-Toggle scripts for current url temporarily (command
-.BR toggle_scripts_uri_tmp ,
-aliases:
-.BR tuscript ).
-.TP
-.BR ph
-Toggle plugins for current host permanently (command
-.BR toggle_plugins_host ,
-aliases:
-.BR hplugin ).
-.TP
-.BR pu
-Toggle plugins for current url permanently (command
-.BR toggle_plugins_uri ,
-aliases:
-.BR uplugin ).
-.TP
-.BR pth
-Toggle plugins for current host temporarily (command
-.BR toggle_plugins_host_tmp ,
-aliases:
-.BR thplugin ).
-.TP
-.BR ptu
-Toggle plugins for current url temporarily (command
-.BR toggle_plugins_uri_tmp ,
-aliases:
-.BR tuplugin ).
-.TP
-.BR V
-Next navigation action will be opened in a new tab (command
-.BR new_tab ).
-.TP
-.BR W
-Next navigation action will be opened in a new window (command
-.BR new_win ).
-.TP
-.BR eu
-Show userscripts (command 
-.TP 
-.BR [n]wi
-Show the webinspector of tab n or of current tab if n is omitted. Note that 'enable-developer-extras' has to be set. 
-(commmand
-.BR web_inspector , 
-aliases: 
-.BR inspect ,
-.BR insp ).
-.TP 
-.BR C-e
-Open external editor for current input/textarea (command
-.BR open_editor ,
-aliases:
-.BR editor ).
-.TP 
-.BR g.
-Toggle hidden files when browsing local filesystem. 
-(command 
-.BR open_editor ,
-aliases: 
-editor ).
-.TP 
-.BR F11
-Toggle fullscreen 
-(command 
-.BR fullscreen , 
-aliases: 
-.BR fs ).
-.TP 
-.BR F12
-Toggle presentation mode.
-(command 
-.BR presentation_mode , 
-aliases: 
-.BR present ).
-.TP 
-.BR xx
-Toggle visibility of tabbar and statusbar.
-(command 
-.BR toggle_bars , 
-aliases: 
-.BR bars ).
-.TP 
-.BR xt
-Toggle visibility of tabbar.
-(command 
-.BR toggle_tabbar , 
-aliases: 
-.BR tbar ).
-.TP 
-.BR xb
-Toggle visibility of statusbar.
-(command 
-.BR toggle_statusbar , 
-aliases: 
-.BR sbar ).
-.TP 
-.BR xv
-Toggle visibility of a tab.
-(command 
-.BR visible , 
-aliases: 
-.BR vis ).
-.TP 
-.BR [n]C-M-p
-Print focused frame of tab n or of current tab if n is omitted.
-(command 
-.BR print , 
-aliases: 
-.BR ha ).
-.TP
-.BR unbound 
-Execute a javascript snippet (command 
-.BR execute_javascript ,
-aliases: 
-.BR exja, js ).
-.TP
-.BR unbound 
-Set a setting from commandline (command 
-.BR set ).
-.TP
-.BR unbound 
-Toggle a boolean setting from commandline (command 
-.BR toggle_setting ,
-aliases:
-.BR toggle , 
-.BR tog ).
-.TP
-.BR unbound 
-Load a html string. This command is mainly intended for use in userscripts (command 
-.BR load_html ).
-.TP
-.BR unbound 
-Load a html string in a new tab. This command is mainly intended for use in userscripts (command 
-.BR load_html_tab ).
-.TP 
-.B Tab (S-Tab) 
-In normal mode Tab shows the next (previous) shortcut, that matches the
-currently entered keysequence. 
-When opening a url, the next (previous) item in command
-history, bookmarks or history will be completed. In hint mode the next (previous)
-hint will get focus. Tab also completes settings and shortcut-settings. 
-When initiating a download, full paths (downloads and spawning programs) and
-binaries (spawning programs) in PATH will be completed. 
-In command mode tab will complete builtin commands and urls if the command
-accepts an url.
-
-.SS "Textentry shortcuts"
-.TP
-.BR C-h
-Delete a single letter.
-.TP
-.BR C-w
-Delete word back.
-.TP
-.BR C-e
-Delete word forward.
-.TP
-.BR C-u
-Delete to the beginning of the entry.
-.TP
-.BR C-i
-Delete to the end of the entry.
-.TP
-.BR C-f
-Move cursor one word forward.
-.TP
-.BR C-b
-Move cursor one word back.
-.TP
-.BR C-j
-Show next item in command history.
-.TP
-.BR C-k
-Show previous item in command history.
-.TP
-.BR C-x
-When initalizing a download, C-x toggles between choosing a file path and
-choosing a spawning application.
-.TP
-.BR C-g
-Alternative shortcut for activate. 
-.TP
-.BR C-c
-Alternative shortcut for escape, the corresponding setting is 
-.IR entry_escape . 
-.TP
-.BR C-p
-Init local path completion.
-.TP
-.BR C-H
-Init history completion. 
-.TP
-.BR C-B
-Init bookmark completion. 
-.TP
-.BR C-I
-Init input history completion. 
-.TP
-.BR C-S
-Init searchengine completion.
-.TP
-.BR C-U
-Init userscript completion.
-.TP
-.BR C-p
-Complete local path.
-
-.SS Shortcut Syntax
-All printable shortcuts are case sensitive, i.e. aH means press a then press
-shift, then press h. Shortcuts can be combined with a modifier, valid modifiers
-are
-.BR Control ,
-.BR Mod1 ,
-.BR Mod4 ,
-.BR Button1 ,
-.BR Button2 ,
-.BR Button3 ,
-.BR Button4 ,
-.BR Button5 
-and
-.B Shift 
-where Shift can only be used with non printable keys such as F1, space, Tab, ... .
-Non printable keys must be surrounded by @, e.g. "Control @F1@", Shift @space@.
-\e and @ itself must be escaped with \e.
-
-.SH CUSTOM COMMANDS
-Custom commands are a sequence of dwb commands that can be bound to a shortcut.
-The syntax is
-.RS
-
-.I <shortcut>:<command>;;<command>;;...
-
-.RE 
-where shortcut is the shortcut for the commandsequence, 
-.B : 
-may be escaped with
-.BR \e: 
-and command is of the form 
-.RS
-
-.I [numerical modifier]<command or alias> [argument for the command]
-
-.RE 
-for example
-.RS 
-
-.I Control W:tabopen http://example.com;; 150zoom
-
+.SH "SYNOPSIS"
+.sp
+\fBdwb\fR [\fIOPTIONS\fR] [ \fIURLS\fR ]
+.SH "DESCRIPTION"
+.sp
+dwb(1) is a small webbrowser based on WebKit and GTK which aims to be mostly keyboard\-driven\&.
+.SH "OPTIONS"
+.PP
+\fB\-e, \-\-embed\fR=\fIwid\fR
+.RS 4
+Embed dwb into <wid>\&.
 .RE
-opens http://example.com in a new tab and zooms to 150%.
-
-
-.SH COMMAND OVERVIEW
-.nf
-Command                 |Alias           |Description
----------------------------------------------------------------------------
-allow_cookie            |cookie          |Allow persistent cookies for site
-allow_session_cookie    |scookie         |Allow session cookies for site
-allow_session_cookie_tmp|tcookie         |Allow session cookies for site
-                        |                |temporarily
-bookmark                |bma, bmark      |Bookmark current page
-bookmarks               |bmas, bmarks    |Show bookmarks 
-buffers                 |bu              |Show all open tabs
-cancel_download         |                |Cancel a download
-clear_tab               |clear           |Clear tab
-close_tab               |close           |Close tab
-dump                    |                |Write html of current website to a
-                        |                |file or stdout if no argument is given
-execute_javascript      |exja, js        |Execute a javascript snippet
-execute_userscript      |                |Execute userscript
-find_backward           |bfind           |Find backward
-find_backward_ic        |ibfind          |Find backward case sensitive
-find_forward            |ffind           |Find forward
-find_forward_ic         |iffind          |Find forward case sensitive
-find_next               |fnext           |Find next
-find_previous           |fprev           |Find previous
-focus_input             |                |Focus next input
-focus_next              |tabnext         |Focus next tab
-focus_prev              |tabprev         |Focus previous tab
-focus_tab               |tab             |Focus nth tab
-fullscreen              |fs              |Toggle fullscreen
-hints                   |hi              |Follow hints
-hints_background        |backhints, bhi  |Follow hints in a background tab
-hints_clipboard         |chints, chi     |Save link location to clipboard
-hints_download          |dhints, dhi     |Download via hints
-hints_editable          |ehints, ehi     |Focus editable elements
-hints_images            |ihints, ihi     |Follow images
-hints_images_tab        |itabhints, ithi |Follow images in a new tab
-hints_images_background |ibackhints      |Follow images in a background tab
-hints_links             |lhints, lhi     |Follow links
-hints_primary           |phints, phi     |Save link location to primary
-                        |                |selection
-hints_rapid             |rhints, rhi     |Open new tabs in background
-                        |                |rapidly
-hints_rapid_win         |wrhints, wrhi   |Open new windows rapidly
-hints_tab               |tabhints, thi   |Follow hints in a new tab
-hints_url               |uhints, uhi     |Set hints url in commandline
-hints_url_tab           |utabhints, uthi |Set hints url in commandline,
-                        |                |open in a new tab
-hints_url_background    |ubackhints      |Set hints url in commandline,
-                        |                |open in a background tab
-hints_win               |winhints, whi   |Follow hints in a new window
-history_back            |ba, back        |Go back
-history_forward         |fo, forward     |Go forward
-insert_mode             |i, insert       |Insert mode
-local_set               |                |Set a setting only for the running
-                        |                |instance, don't save it to the
-                        |                |configuration file
-lock_domain             |dlock           |Lock tab to current domain
-lock_uri                |ulock           |Lock tab to current uri
-new_tab                 |                |Open next navigation action in
-                        |                |new tab
-new_win                 |                |Open next navigation action in
-                        |                |new window
-only                    |                |Close all tabs except for the 
-                        |                |current one
-open                    |o               |Open url
-open_editor             |editor          |Open external editor for
-                        |                |input/textarea.
-open_url                |                |Open, edit current url
-paste                   |                |Open from clipboard
-paste_primary           |ppaste          |Open from primary selection
-presentation_mode       |present         |Toggle presentation mode
-print                   |ha              |Print page
-protect                 |prot            |Protect/unprotect tab 
-proxy                   |                |Toggle proxy
-quickmark               |qmarks          |Open quickmark
-quit                    |q               |Quit
-reload                  |re              |Reload current page
-reload_bypass_cache     |refull          |Reload without using cached data
-reload_scripts          |                |Reload all javascript userscripts 
-reload_userscripts      |                |Reload userscripts
-save                    |                |Save all configuration files
-save_named_session      |wqn             |Save current session with name
-save_quickmark          |qmark, quickmark|Save a quickmark
-save_search_field       |search          |Add a new searchengine 
-save_session            |wq              |Save current session
-scroll_bottom           |bottom          |Scroll to bottom of the page
-scroll_down             |down            |Scroll down
-scroll_halfpage_down    |halfdown        |Scroll one-half page down
-scroll_halfpage_up      |halfup          |Scroll one-half page up
-scroll_left             |left            |Scroll left
-scroll_page_down        |pagedown        |Scroll one page down
-scroll_page_up          |pageup          |Scroll one page up
-scroll_right            |right           |Scroll right 
-scroll_top              |top             |Scroll to the top of the page
-scroll_up               |up              |Scroll up
-set                     |                |Set a setting
-set_key                 |keys            |Set keybinding
-set_local_setting       |                |Set a setting for the running instance
-                        |                |interactively
-set_setting             |                |Set a setting interactive
-show_keys               |skeys           |Show and modify keyboard
-                        |                |configuration
-show_settings           |ssettings       |Show and modify global properties
-start_page              |home            |Open the default homepage
-stop_loading            |st, stop        |Stop loading current page
-tab_bookmarks           |tabmarks        |Show bookmarks, open in new tab
-tab_hist_back           |tba, tabback    |Go back in a new tab
-tab_hist_forward        |tfo, tabforward |Go forward in a new tab
-tab_move                |tabm            |Move tab
-tab_move_left           |tabl            |Move tab left
-tab_move_right          |tabr            |Move tab right
-tab_new                 |                |Open a new blank tab
-tab_paste               |tpaste          |Open from clipboard in a new tab
-tab_paste_primary       |tppaste         |Open from primary selection in a 
-                        |                |new tab
-tab_quickmark           |tabqmarks       |Open quickmark in a new tab
-tabopen                 |t, topen        |Open in a new tab
-tabopen_url             |                |Open in a new tab, edit current
-                        |                |url
-toggle_bars             |bars            |Toggle tabbar and statusbar
-toggle_hidden_files     |hidden          |Toggle hidden files in directory
-                        |                |listings
-toggle_plugins_host     |hplugin         |Toggle plugin blocker for host
-toggle_plugins_host_tmp |tuplugin        |Toggle plugin blocker for domain 
-                        |                |for this session
-toggle_plugins_uri      |uplugin         |Toggle plugin blocker for uri
-toggle_plugins_uri_tmp  |tuplugin        |Toggle plugin blocker for uri for 
-                        |                |this session
-toggle_scripts_host     |hscript         |Toggle scripts for current domain
-toggle_scripts_host_tmp |thscript        |Toggle scripts for current host 
-                        |                |for this session
-toggle_scripts_uri      |uscript         |Toggle scripts for current uri
-toggle_scripts_uri_tmp  |tuscript        |Toggle scripts for current uri 
-                        |                |for this session
-toggle_setting          |tog, toggle     |Toggle a setting
-toggle_local_setting    |loctog          |Toggle a setting for the current
-                        |                |session
-toggle_statusbar        |sbar            |Toggle statusbar
-toggle_tabbar           |tbar            |Toggle tabbar
-undo                    |u               |Undo closing last tab
-view_source             |so, source      |View page source
-visible                 |vis             |Toggle visibility of a tab
-web_inspector           |insp, inspect   |Open the webinspector
-win_bookmarks           |winmarks        |Show bookmarks, open in new
-                        |                |window
-win_hist_back           |wba, winback    |Go back in a new window
-win_hist_forward        |wfo, winforward |Go forward in a new window
-win_paste               |wpaste          |Open from clipboard in a new
-                        |                |window
-win_paste_primary       |wppaste         |Open primary selection in a new
-                        |                |window
-win_quickmark           |winqmarks       |Open quickmark in a new window
-winopen                 |w, wopen        |Open in a new window
-winopen_url             |                |Open in a new window, edit
-                        |                |current url
-yank                    |                |Yank url to clipboard
-yank_primary            |pyank           |Yank url to primary selection
-yank_title              |tyank           |Yank title to clipboard
-yank_title_primary      |tpyank          |Yank title to primary selection
-zoom                    |z               |Zoom
-zoom_in                 |zi              |Zoom in
-zoom_out                |zo              |Zoom out
-.fi
-
-.SH CUSTOMIZATION
-dwb can be  customized in a web interface (command 
-.BR show_settings ) 
-or via command line (command
-.BR set_setting ). 
-Modified settings
-will be saved in 
-.IR ~/.config/dwb/settings 
-when closing dwb. 
-Shorcuts can also be modified in a web interface (command 
-.BR show_keys ) 
-or via command line (command 
-.BR set_key ). 
-Shortcuts will be saved in 
-.IR ~/.config/dwb/keys .
-
-If a string value is set to 
-.IR NULL
-the default value will be used. The settings in detail are: 
-
-.SS WebKit builtin settings
-.TP
-.BR adblocker
-Block advertisements using a filterlist, see also 
-.IR adblocker-filterlist .
-Default value:
-.IR false .
-.TP
-.BR adblocker-filterlist
-A path to a adblock plus compatible filterlist for the adblocker.
-Default value:
-.IR NULL .
-.TP
-.BR auto-load-images  
-Load images automatically. Possible values: true/false, 
-default value:
-.IR true .
-.TP
-.BR auto-resize-window
-Resize window through DOM-methods. Possible values: true/false, 
-default value:
-.IR false .
-.TP
-.BR auto-shrink-images
-Automatically shrink standalone images to fit. Possible values: true/false, 
-default value:
-.IR true .
-.TP
-.BR cursive-font-family
-Default cursive font family used to display text. Possible values: a font description or 
-NULL, 
-default value:
-.IR NULL .
-.TP
-.BR custom-encoding
-A custom encoding used for the webview. Possible values: encoding string or 
-NULL,
-default value:
-.IR NULL .
-.TP
-.BR default-encoding
-The default encoding used to display text. Possible values: encoding string or 
-NULL,
-default value:
-.IR NULL .
-.TP
-.BR default-font-family
-The default font family used to display text. Possible values: a font
-description or
-NULL, 
-default value:
-.IR sans-serif .
-.TP
-.BR default-font-size
-The default font size used to display text. Possible values: a font size
-(integer),
-default value:
-.IR 12 .
-.TP
-.BR default-monospace-font-size
-The default font size used to display monospace text. Possible values: a font size
-(integer),
-default value:
-.IR 10 .
-.TP
-.BR editable
-Whether the content of a webpage should be editable. Possible values:
-true/false,
-default value:
-.IR false .
-.TP
-.BR enable-caret-browsing
-Whether to enable caret browsing. Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR enable-default-context-menu
-Whether right-clicks open a context menu. Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR enable-dns-prefetching
-Whether webkit prefetches domain names. 
-default value:
-.IR true .
-.TP
-.BR enable-developer-extras
-Whether the web-inspector should be enabled. Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR enable-dom-paste
-Whether enable DOM-paste. Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR enable-frame-flattening
-Whether to enable the Frame Flattening. With this setting each subframe is expanded
-to its contents, which will flatten all the frames to become one scrollable page.
-Whether file uris can be accessed. Possible values: true/false, 
-default value:
-.IR false .
-.TP
-.BR enable-file-access-from-file-uris
-Whether file uris can be accessed. Possible values: true/false, 
-default value:
-.IR true .
-.TP
-.BR enable-html5-database
-Whether to enable HTML5 client-side SQL database support.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR enable-html5-local-storage
-Whether to enable HTML5 localStorage support.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR enable-java-applet
-Whether to enable Java <applet>-tag.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR enable-offline-web-application-cache
-Enable or disable HTML5 offline web application cache support.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR enable-page-cache
-Enable or disable page cache.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR enable-plugins
-Enable or disable embedded plugins.
-Possible values: true/false, 
-default value:
-.IR true .
-.TP
-.BR enable-private-browsing
-Enable or disable private browsing. 
-Possible values: true/false, 
-default value:
-.IR false .
-.TP
-.BR enable-scripts
-Enable or disable embedded scripting-languages.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR enable-site-specific-quirks
-Enables the site-specific compatibility workarounds.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR enable-spatial-navigation
-Whether to enable the Spatial Navigation. This feature consists in the ability
-to navigate between focusable elements in a Web page, such as hyperlinks and
-form controls, by using Left, Right, Up and Down arrow keys.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR enable-spell-checking
-Whether to enable spell checking.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR enable-universal-access-from-file-uris
-Whether to allow files loaded through file:// URIs universal access to all pages.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR enable-xss-auditor
-Whether to enable the XSS Auditor. This feature filters some kinds of reflective
-XSS attacks on vulnerable web sites.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR enforce-96-dpi
-Enforce a resolution of 96 DPI.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR fantasy-font-family
-Default fantasy font family used to display text. Possible values: a font description or 
-NULL,
-default value:
-.IR serif .
-.TP
-.BR javascript-can-access-clipboard
-Whether javascript can access Clipboard.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR full-content-zoom
-Whether the full content is scaled when zooming.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR javascript-can-open-windows-automatically
-Whether JavaScript can open popup windows automatically without user intervention.
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR minimum-font-size
-The minimum font size used to display text. Possible values: a font size
-(integer),
-default value:
-.IR 5 .
-.TP
-.BR minimum-logical-font-size
-The minimum logical font size used to display text. Possible values: a font size
-(integer),
-default value:
-.IR 5 .
-.TP
-.BR monospace-font-family
-Default font family used to display monospace text. Possible values: a font description or 
-NULL,
-default value:
-.IR monospace .
-.TP
-.BR print-backgrounds
-Whether background images should be printed. 
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR resizable-text-areas
-Whether text areas are resizable.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR sans-serif-font-family
-Default sans-serif font family used to display text. Possible values: a font description or 
-NULL,
-default value:
-.IR sans-serif .
-.TP
-.BR serif-font-family
-Default serif font family used to display text. Possible values: a font description or 
-NULL,
-default value:
-.IR serif .
-.TP
-.BR spell-checking-language
-The languages to be used for spell checking, separated by commas. Possible
-values: a string or 
-NULL,
-default value:
-.IR NULL .
-.TP
-.BR tab-cycles-through-elements
-Whether the tab key cycles through elements on the page.
-Possible values: true/false,
-default value:
-.IR true .
-.TP
-.BR user-agent
-The user-agent-string. Possible values: a user-agent or 
-NULL,
-default value:
-.IR NULL .
-.TP
-.BR user-stylesheet-uri
-The URI of a stylesheet that is applied to every page. If a local file is used,
-must start with file://. Possible values: an
-uri-string or NULL,
-default value:
-.IR NULL .
-.TP
-.BR zoom-level
-The zoom level of the content. Possible values: a decimal,
-default value:
-.IR 1.0 .
-.TP
-.BR zoom-step
-The value by which the zoom level is changed when zooming in or out. Possible
-values: a decimal,
-default value:
-.IR 0.1 .
-
-.SS Other settings
-.TP 
-.BR active-completion-bg-color
-The background color for an active element in tab-completion. Possible values:
-an rgb color-string,
-default value:
-.IR #000000 .
-.TP 
-.BR active-completion-fg-color
-The foreground color for an active element in tab-completion. Possible values:
-an rgb color-string.
-default value:
-.IR #53868b .
-.TP 
-.BR background-color
-The background color of the statusbar. Possible values: an rgb color-string,
-default value:
-.IR #000000 .
-.TP 
-.TP 
-.BR foreground-color
-The foreground color of statusbar. Possible values: an rgb color-string.
-default value:
-.IR #ffffff .
-.TP 
-.BR auto-completion
-Whether possible keystrokes should be shown. (Shift-) Tab cycles through keystrokes.
-Possible values: true/false,
-default value:
-.IR true .
-.TP 
-.BR auto-insert-mode
-Whether to go automatically in insert mode if an editable element has focus
-after loading a site. 
-Possible values: true/false,
-default value:
-.IR false .
-.TP 
-.BR background-tabs
-Open new tabs in background. 
-Possible values: true/false,
-default value:
-.IR false .
-.TP
-.BR cache-model
-The cache model used by webkit, possible values are
-.B webbrowser 
-and 
-.BR documentviewer .
-Webbrowser increases loading speed but increases memory usage, documentviewer
-reduces memory usage but also decreases browsing speed. Default Value:
-.IR webbrowser .
-.TP 
-.BR complete-bookmarks
-Whether to complete bookmarks with tab-completion. Possible values: true/false,
-default value:
-.IR true .
-.TP 
-.BR complete-history
-Whether to complete browsing history with tab-completion. Possible values:
-true/false,
-default value:
-.IR true .
-.TP 
-.BR complete-searchengines
-Whether to complete searchengines with tab-completion. Possible values:
-true/false,
-default value:
-.IR false .
-.TP 
-.BR complete-userscripts
-Whether to complete userscripts with tab-completion. Possible values:
-true/false,
-default value:
-.IR false .
-.TP 
-.BR cookies-store-policy
-The storage policy for cookies, possible values are 
-.IR session , 
-.IR persistent , 
-and 
-.IR never . 
-If set to 
-.I session
-all session cookies are accepted, only cookies with a matching domain in
-cookies.allow will be stored persistently.
-If set to 
-.I persistent 
-all cookies are stored persistently. 
-If set to 
-.I never 
-the cookies allowed by cookies_session.allow are allowed for the current
-session and cookies allowed by cookies.allow are save persistently, all other
-cookies are rejected. 
-Default value:
-.IR session .
-.TP 
-.BR cookies-accept-policy
-The accept policy for cookies. 
-.IR always
-will accept all cookies, 
-.IR nothirdparty 
-will accept all cookies except for third party cookies,
-.IR never 
-will reject all cookies. This setting also affects session cookies.
-default value:
-.IR always .
-.TP 
-.TP 
-.BR default-width
-The default width of dwb's window. Possible values: width in pixel,
-default value:
-.IR 800 .
-.TP 
-.BR default-height
-The default height of dwb's window. Possible values: height in pixel,
-default value:
-.IR 600 .
-.TP 
-.BR download-fg-color 
-The foreground color of the download bar, default value: 
-.IR #ffffff .
-.TP 
-.BR download-bg-color 
-The background color of the download bar, default value: 
-.IR #000000 .
-.TP 
-.BR download-gradient-start 
-The start color for the download progress gradient color, default value 
-.IR #0000aa .
-.TP 
-.BR download-gradient-stop 
-The end color for the download progress gradient color, default value 
-.IR #00aa00 .
-.TP 
-.BR download-external-command
-A command that will be invoked if 'download-use-external-program' is set. There
-are four variables that can be used in the command: 
-.IR dwb_uri
-will be replaced with the download-uri, 
-.IR dwb_output
-will be replaced with the fullpath of the destination, 
-.IR dwb_cookies
-will be replaced with the path to the cookie-file,
-.IR dwb_referer 
-will be replaced with the uri of the site the download started. 
-Additionally the environment-variables
-.IR DWB_URI , 
-.IR DWB_FILENAME , 
-.IR DWB_COOKIES , 
-.IR DWB_REFERER ,
-.IR DWB_MIME_TYPE 
-and 
-.I DWB_USER_AGENT  
-are set. 
-Default value:
-.I xterm -e wget dwb_uri -O dwb_output --load-cookies
-.IR dwb_cookies .
-.TP
-.BR download-directory
-The default download directory, if empty, the current working directory is used
-or the last download path is used.
-default value: 
-.IR NULL .
-.TP
-.BR download-no-confirm
-Whether to start downloads immediately without asking for a path,
-.I download-directory 
-needs to be set to an existing path. 
-default value: 
-.IR false .
-.TP
-.BR download-use-external-program
-Whether to use an external download program specified in
-\'download-external-programm\' or the builtin download helper.
-Possible values: true/false,
-default value:
-.IR true .
-.TP 
-.BR editor
-External editor used for inputs/textareas.
-default value:
-.IR xterm\ -e\ vim\ dwb_uri .
-.TP 
-.BR enable-favicon
-Whether to show a favicon in the tab. 
-default value:
-.IR true .
-.TP 
-.BR error-color
-The color for error-messages. Possible values: an rgb color-string,
-default value:
-.IR #ff0000 .
-.TP 
-.BR error-color
-The color for prompt-messages. Possible values: an rgb color-string,
-default value:
-.IR #00ff00 .
-.TP 
-.BR font
-The font used for the ui. Possible values: a font description
-string,
-default value:
-.I monospace\ 8.
-.TP 
-.BR font-completion
-The font used for tabcompletion. Possible values: a font description
-string,
-default value: 
-.TP 
-.BR font-entry
-The font used for the address bar. Possible values: a font description
-string,
-default value: 
-.TP 
-.BR font-hidden-statusbar
-The font used for status elements if the statusbar is hidden. Possible values: a
-css font description. 
-Default value: 
-.BR normal 10px helvetica .
-.TP 
-.BR font-nofocus
-The font used for tablabels without focus and completion items without focus. Possible values: a font description
-string,
-default value: 
-.TP 
-.BR hint-active-color
-The background color for active link, i.e. the link followed when Return is
-pressed. Possible values: a rgb color string,
-default value:
-.IR #00ff00 .
-.TP 
-.BR hint-autofollow
-Whether to follow hints automatically if only one hint matches the typed
-letters. Default value: 
-.IR true .
-.TP 
-.BR hint-bg-color
-The background color used for hints. Possible values: a rgb color string,
-default value:
-.IR #000088 .
-.TP 
-.BR hint-border
-The boreder used for hints. Possible values: a css border description,
-default value:
-.IR 2px\ dashed\ #000000 .
-.TP 
-.BR hint-fg-color
-The foreground color used for hints. Possible values: a rgb color string,
-default value:
-.IR #ffffff .
-.TP 
-.BR hint-font
-The font used for hints. Possible values: css font description,
-default value:
-.IR bold\ 10px\ monospace .
-.TP 
-.BR hint-highlight-links
-Wether to highlight all links in hint-mode,
-default value:
-.IR false .
-.TP 
-.BR hint-letter-seq
-A letter sequence used for letter hints. Possible values: a letter sequence,
-every letter should appear only once.
-Default value:
-.IR FDSARTGBVECWXQYIOPMNHZULKJ .
-.TP 
-.BR hint-normal-color
-The background color for a normal link. Possible values: a rgb color string,
-default value:
-.IR #ffff99 .
-.TP 
-.BR hint-opacity
-The opacity of a hint. Possible values: a decimal from 0.0 to 1.0, 
-default value:
-.IR 0.75 .
-.TP 
-.BR hint-style
-The type of hints, that are used. When set to "number", letters will match the
-links text. Possible values: letter/number,
-default value:
-.IR letter .
-.TP 
-.BR history-length
-The urls that are saved in the browsing history. Specifying a too large value
-can make tab-completion slow. Possible values: number of urls,
-default value:
-.IR 500 .
-.TP 
-.BR insertmode-bg-color
-The background color of the statusbar in insertmode. Possible values: an rgb
-color-string,
-default value:
-.IR #dddddd .
-.TP 
-.BR insertmode-fg-color
-The foreground color of the statusbar in insertmode. Possible values: an rgb
-color-string,
-default value:
-.IR #000000 .
-.TP 
-.BR javascript-schemes
-Whether to allow loading javascript snippets with scheme 'javascript',
-default value:
-.IR true .
-.TP 
-.BR message-delay
-The duration messages are shown. Possible values: duration in seconds (integer),
-default value:
-.IR 2 .
-.TP
-.BR navigation-history-max
-Maximum length of navigation history. 'enable-private-browsing' must be disabled to
-save command history at all. 
-default value:
-.IR 500 .
-.TP
-.BR new-tab-position-policy
-Affects the position a new tab is created, possible values are 
-.IR right ,
-a new tab is created right of the current tab, 
-.IR left , 
-a new tab is created left of the current tab, 
-.IR rightmost , 
-a new tab is created left of the last tab and
-.IR leftmost , 
-a new tab is created left of the first tab. 
-Default value: 
-.IR right .
-.TP 
-.BR normal-completion-bg-color
-The background color of inactive element in tab-completion. Possible values: an
-rgb color-string,
-default value:
-.IR #151515 .
-.TP 
-.BR normal-completion-fg-color
-The foreground color of inactive element in tab-completion. Possible values: an rgb color-string.
-color-string,
-default value:
-.IR #eeeeee .
-.TP 
-.BR proxy
-Whether to use a HTTP-proxy. Possible values: true/false,
-default value:
-.IR false .
-.TP 
-.BR proxy-url
-The proxy-url, can also be set via the http_proxy environment variable. Possible
-values: an url string,
-default value:
-.IR NULL .
-.TP 
-.BR save-session
-Save the session when dwb is closed and restore the last saved session when
-invoking dwb. Possible values: true/false,
-default value:
-.IR false .
-.TP 
-.BR scheme-handler 
-A script or application that handles uris that cannot be loaded by dwb. dwb only
-loads uris with scheme 
-.BR http , 
-.BR https , 
-.BR file , 
-.B about 
-and 
-.BR dwb ; 
-support for e.g. ftp is provided through a scheme handler. The scheme handler
-can either be an application or a script. The first command line argument will
-be the uri for your application, so you can simply set this to 
-.IR xdg-open .
-There are also the environment variables 
-.IR DWB_URI , 
-.IR DWB_SCHEME , 
-.IR DWB_COOKIES , 
-.IR DWB_USER_AGENT , 
-and 
-.I DWB_REFERER
-available which can be used in a script, for example:
-
-.nf
-  #!/bin/sh
-
-  case ${DWB_SCHEME} in 
-    mailto) xterm -\(hye "mutt ${DWB_URI}";;
-    ftp) xterm \(hye "ncftp ${DWB_URI}";;
-    *) xdg-open ${DWB_URI}
-  esac
-.fi
-
-.TP 
-.BR scroll-step
-The step-increment in pixels for scrolling. If set to a value lower or equal 0,
-the default step-increment will be used.
-default value: 
-.IR 0.0 .
-.TP 
-.BR scrollbars
-Wether scrollbars should be enabled. 
-default value: 
-.IR false .
-.TP 
-.BR single-instance
-Only one instance of dwb per user. This option will be overridden by the
-commandlineoption \(hyn. Possible values: true/false,
-default value:
-.IR true .
-.TP 
-.BR ssl-strict
-Whether to allow only save ssl-certificates.
-default value:
-.IR true .
-.TP 
-.BR ssl-ca-cert
-Path to ssl-certificate.
-.TP 
-.BR ssl-trusted-color
-Color of the url in the statusbar for ssl-encrypted sites and trusted
-certificate.
-default value:
-.IR #00ff00 .
-.TP 
-.BR ssl-untrusted-color
-Color of the url in the statusbar for ssl-encrypted sites and untrusted
-certificate.
-default value:
-.IR #ff0000 .
-.TP 
-.BR startpage
-The default startpage. Possible values: an url or "about:blank" for an empty
-startpage,
-default value:
-.IR about:blank .
-.TP 
-.BR sync-files 
-Interval in seconds to save history and cookies to hdd or 0 to immediately save
-to hdd, default value: 0.
-.TP 
-.BR tabbar-visible
-When the tabbar is hidden specifies the number of seconds the tabbar is visible
-when switching between tabs.
-.IR 2 .
-.TP 
-.BR tab-active-bg-color
-The background color the tab of the focused tab. Possible values: an rgb
-color-string,
-default value:
-.IR #000000 .
-.TP 
-.BR tab-active-fg-color
-The foreground color of the tab of the focused tab. Possible values: an rgb
-color-string,
-default value:
-.IR #ffffff .
-.TP 
-.BR tab-normal-bg-color
-The background color the tab of a not focused tab. Possible values: an rgb
-color-string,
-default value:
-.IR #505050 .
-.TP 
-.BR tab-normal-fg-color
-The foreground color of the tab of a not focused tab. Possible values: an rgb
-color-string,
-default value:
-.IR #cccccc .
-.TP 
-.BR tab-normal-fg-color
-The foreground color of the tab of a not focused tab. Possible values: an rgb
-color-string,
-default value:
-.IR #cccccc .
-.TP 
-.BR tab-protected-color
-The color of the tabnumber of protected tabs. Possible values: an rgb color-string,
-default value:
-.IR #ff0000 .
-.TP 
-.BR tab-number-color
-The color of the tabnumber. Possible values: an rgb color-string,
-default value:
-.IR #ff0000 .
-.TP 
-.BR tabbed-browsing
-Enable tabbed-browsing. If disabled, all new window/new tab requests will be
-opened in a new window,
-default value:
-.IR true .
-.TP
-.BR update-search-delay 
-Delay in milliseconds before updating search results. If set to 0 search results
-will be updated after every keypress. If set to a value greater than 0 search
-results will be updated after that delay but only if the search-term has not
-changed since the timeout started. It is recommended to set this value greater
-than 0, default value: 
-.IR 200 .
-.TP 
-.BR use-ntlm
-Whether to use NTLM-authentication, 
-default value:
-.IR false .
-.TP 
-.BR widget-packing
-A string consisting of 4 characters, where possible characters are: 
-.BR d , 
-.BR w , 
-.B T , 
-.BR t , 
-.B S  
-and 
-.BR s .
-The order of the widgets correspond the the order of characters in the string
-where 
-.B d
-corresponds to the download bar, 
-.B t 
-and 
-.B T
-to the tab bar where 
-.B T  
-means that the tabbar will not be visible, 
-.B w
-to the webview and
-.B s 
-and 
-.B S
-to the statusbar where 
-.B S
-means that the statusbar won't be visible.
-Default value:
-.IR dtws .
-
-.SH FILES
-.SS Scripts
-Javascript userscripts can be stored in 
-.IR ~/.config/dwb/scripts . 
-The scripts are applied to pages depending on their filename extension, there
-are 4 possible extensions: 
-.TP
-.B .js
-Scripts with extension 
-.I .js
-are injected into the page directly after the load of a
-new page is committed. 
-.TP
-.B .all.js 
-Scripts with extension 
-.I .all.js
-are injected into all frames of a page directly after the load of a
-new frame is committed. 
-.TP
-.B .onload.js 
-Scripts with extension 
-.I .onload.js
-are injected into the page directly when loading of a page is done. 
-.TP
-.B .onload.all.js 
-Scripts with extension 
-.I .onload.all.js
-are injected into all frames of a page when the load of a
-frame is done. 
-
-.SS CSS
-dwb creates some html-elements at runtime, namely hints and a bar that show the
-current url under the cursor. They can be styled in user-stylesheets using the
-selector 
-.I .dwb_hint
-for hints and 
-.I #dwb_hover_element
-for the hover element. 
-
-.SS Userscripts
-Userscripts can be stored in 
-.IR ~/.config/dwb/userscripts .
-The first argument of the script will be the current url, the second argument is
-the title, the third argument will be the profile name, the fourth argument is
-the numerical modifier and the fifth argument is a commandline argument. Also
-the variables 
-.IR DWB_URI ,
-.IR DWB_TITLE ,
-.IR DWB_PROFILE ,
-.IR DWB_NUMMOD ,
-.IR DWB_ARGUMENT ,
-.IR DWB_REFERER ,
+.PP
+\fB\-f, \-\-force\fR
+.RS 4
+Force restoring a previously saved session, even if it seems that another process has opened a session with the same name\&.
+.RE
+.PP
+\fB\-l, \-\-list\-sessions\fR
+.RS 4
+List previously saved sessions\&. A
+\fI*\fR
+indicates that another instance has currently opened the session\&.
+.RE
+.PP
+\fB\-n, \-\-new\-instance\fR
+.RS 4
+New instance, overrides setting
+\fIsingle\-instance\fR\&.
+.RE
+.PP
+\fB\-p, \-\-profile\fR=\fIprofilename\fR
+.RS 4
+Load configuration for profile
+\fIprofilename\fR\&.
+.RE
+.PP
+\fB\-r, \-\-profile\fR=\fIsessionname\fR
+.RS 4
+Restore session with name
+\fIsessionname\fR
+or the default session, if
+\fIsessionname\fR
+is omitted\&.
+.RE
+.PP
+\fB\-R, \-\-override\-restore\fR
+.RS 4
+Open a new session, even if
+\fIsave\-session\fR
+is enabled\&.
+.RE
+.PP
+\fB\-x, \-\-execute\fR=\fIcommands\fR
+.RS 4
+Execute a list of dwb commands seperated by
+\fI;;\fR, see
+\fICUSTOM COMMANDS\fR
 and
-.I DWB_USER_AGENT
-are set.
-The keybinding for
-the script must be defined in the script itself in a commented line of the form
-.B <comment symbols> dwb: <keybinding>.
-Commands can be executed by sending the command to ${DWB_FIFO}.
-
-.SS Examples
-The following script will download the actual webpage:
+\fICOMMAND OVERVIEW\fR
+for details\&. If
+\fIsingle instance\fR
+is enabled all commands will be executed in the primary instance\&.
+.RE
+.PP
+\fB\-v, \-\-version\fR
+.RS 4
+Show version information and exit\&.
+.RE
+.SH "MODES"
+.sp
+dwb has different modes:
+.PP
+\fBNormal mode\fR
+.RS 4
+The default mode\&. Pressing
+\fIEscape\fR
+always enter normal mode, all keyboard inputs will be interpreted as shortcuts, keypresses are not sent to the webview\&.
+.RE
+.PP
+\fBInsert mode\fR
+.RS 4
+Used for editing text elements in a webpage\&.
+.RE
+.PP
+\fBHint mode\fR
+.RS 4
+Follow links via hints\&.
+.RE
+.PP
+\fBCommand mode\fR
+.RS 4
+Execute dwb commands from the builtin commandline\&.
+.RE
+.SH "SHORTCUTS"
+.SS "Normal mode shortcuts"
+.PP
+\fB[n]j\fR
+.RS 4
+Scroll [n times] down (command:
+\fIscroll_down\fR, aliases:
+\fIdown\fR)\&.
+.RE
+.PP
+\fB[n]k\fR
+.RS 4
+Scroll [n times] up (command:
+\fIscroll_up\fR, aliases:
+\fIup\fR)\&.
+.RE
+.PP
+\fB[n]h\fR
+.RS 4
+Scroll [n times] left (command:
+\fIscroll_left\fR, aliases:
+\fIleft\fR)\&.
+.RE
+.PP
+\fB[n]l\fR
+.RS 4
+Scroll [n times] right (command:
+\fIscroll_right\fR, aliases:
+\fIright\fR)\&.
+.RE
+.PP
+\fB[n]gg\fR
+.RS 4
+Scroll to the top or to n% of the page (command:
+\fIscroll_top\fR, aliases:
+\fItop\fR)\&.
+.RE
+.PP
+\fB[n]G\fR
+.RS 4
+Scroll to the bottom or to n% of the page (command:
+\fIscroll_bottom\fR, aliases:
+\fIbottom\fR)\&.
+.RE
+.PP
+\fB[n]C\-f\fR
+.RS 4
+Scroll [n] pages down (command:
+\fIscroll_page_down\fR, aliases:
+\fIpagedown\fR)\&.
+.RE
+.PP
+\fB[n]C\-b\fR
+.RS 4
+Scroll [n] pages up (command:
+\fIscroll_page_up\fR, aliases:
+\fIpageup\fR)\&.
+.RE
+.PP
+\fB[n]C\-d\fR
+.RS 4
+Scroll [n] half pages down (command:
+\fIscroll_halfpage_down\fR, aliases:
+\fIhalfdown\fR)\&.
+.RE
+.PP
+\fB[n]C\-u\fR
+.RS 4
+Scroll [n] half pages up (command:
+\fIscroll_halfpage_up\fR, aliases:
+\fIhalfup\fR)\&.
+.RE
+.PP
+\fB:\fR
+.RS 4
+Enter Command mode\&.
+.RE
+.PP
+\fBo\fR
+.RS 4
+Open new url in the focused tab, the argument $URI will be replaced by the current uri (command:
+\fIopen\fR, aliases:
+\fIo\fR)\&.
+.RE
+.PP
+\fBgo\fR
+.RS 4
+Open url in the focused tab, set current url in the navigation bar (command:
+\fIopen_url\fR)\&.
+.RE
+.PP
+\fBO\fR
+.RS 4
+Open url in a new tab, the argument $URI will be replaced by the current uri (command:
+\fItabopen\fR, aliases:
+\fItopen\fR,
+\fIt\fR)\&.
+.RE
+.PP
+\fBgO\fR
+.RS 4
+Open url in a new tab, set current url in the navigation bar (command
+\fItabopen_url\fR)\&.
+.RE
+.PP
+\fBxo\fR
+.RS 4
+Open url in a new tab in background, the argument $URI will be repaced with the current uri (command:
+\fIbackopen\fR, aliases:
+\fIbopen\fR
+)\&.
+.RE
+.PP
+\fBxO\fR
+.RS 4
+Open url in a new tab in background, set current url in the navigation bar (command:
+\fIbackopen_url\fR)\&.
+.RE
+.PP
+\fBwo\fR
+.RS 4
+Open url in a new instance (command:
+\fIwinopen\fR, aliases:
+\fIwopen\fR,
+\fIw\fR)\&.
+.RE
+.PP
+\fBi\fR
+.RS 4
+Enter insert mode (command:
+\fIinsert_mode\fR, aliases:
+\fIi\fR,
+\fIinsert\fR)\&.
+.RE
+.PP
+\fBC\-n\fR
+.RS 4
+Enter normal mode\&.
+.RE
+.PP
+\fBga\fR
+.RS 4
+Add a new blank tab (command:
+\fItab_new\fR)\&.
+.RE
+.PP
+\fBd\fR
+.RS 4
+Close current tab (command:
+\fIclose_tab\fR, aliases:
+\fIclose\fR)\&.
+.RE
+.PP
+\fB[n]gc\fR
+.RS 4
+Clear tab n or of current tab, clears the history of the tab and loads
+\fIabout:blank\fR\&. (command
+\fIclear_tab\fR, aliases:
+\fIclear\fR)\&.
+.RE
+.PP
+\fBco\fR
+.RS 4
+Close all tabs except for the current one (command
+\fIonly\fR)\&.
+.RE
+.PP
+\fBC\-q\fR
+.RS 4
+Quit (command
+\fIquit\fR, aliases:
+\fIq\fR)\&.
+.RE
+.PP
+\fBu\fR
+.RS 4
+Undo closing last tab (command
+\fIundo\fR, aliases:
+\fIu\fR)\&.
+.RE
+.PP
+\fBC\-h\fR
+.RS 4
+Open the default startpage (command
+\fIstart_page\fR, aliases:
+\fIhome\fR)\&.
+.RE
+.PP
+\fBH\fR
+.RS 4
+Go back (command
+\fIhistory_back\fR, aliases:
+\fIback\fR,
+\fIba\fR)\&.
+.RE
+.PP
+\fBL\fR
+.RS 4
+Go forward (command
+\fIhistory_forward\fR, aliases:
+\fIforward\fR,
+\fIfo\fR)\&.
+.RE
+.PP
+\fBth\fR
+.RS 4
+Go back in a new tab (command
+\fItab_hist_back\fR, aliases:
+\fItabback\fR,
+\fItba\fR)\&.
+.RE
+.PP
+\fBtl\fR
+.RS 4
+Go forward in a new tab (command
+\fItab_hist_forward\fR, aliases:
+\fItabforward\fR,
+\fItfo\fR)\&.
+.RE
+.PP
+\fBwh\fR
+.RS 4
+Go back in a new window (command
+\fIwin_hist_back\fR, aliases:
+\fIwinback\fR,
+\fIwba\fR)\&.
+.RE
+.PP
+\fBwl\fR
+.RS 4
+Go forward in a new window (command
+\fIwin_hist_forward\fR, aliases:
+\fIwinforward\fR,
+\fIwfo\fR)\&.
+.RE
+.PP
+\fB/\fR
+.RS 4
+Find forward (command
+\fIfind_forward\fR, alias:
+\fIffind\fR)\&.
+.RE
+.PP
+\fB?\fR
+.RS 4
+Find backward (command
+\fIfind_backward\fR, alias
+\fIbfind\fR)\&.
+.RE
+.PP
+\fBc/\fR
+.RS 4
+Find forward, ignore case (command
+\fIfind_forward_ic\fR, alias:
+\fIiffind\fR)\&.
+.RE
+.PP
+\fBc?\fR
+.RS 4
+Find backward, ignore case (command
+\fIfind_backward_ic\fR, alias
+\fIibfind\fR)\&.
+.RE
+.PP
+\fBM\fR
+.RS 4
+Add a bookmark (command
+\fIbookmark\fR, aliases:
+\fIbmark\fR,
+\fIbma\fR)\&.
+.RE
+.PP
+\fBgb\fR
+.RS 4
+Show Bookmarks (command
+\fIbookmarks\fR, aliases:
+\fIbmarks\fR,
+\fIbmas\fR)\&.
+.RE
+.PP
+\fBgB\fR
+.RS 4
+Show Bookmarks, open bookmark in a new tab (command
+\fItab_bookmarks\fR, aliases:
+\fItabmarks\fR)\&.
+.RE
+.PP
+\fBwB\fR
+.RS 4
+Show Bookmarks, open bookmark in a new window (command
+\fIwin_bookmarks\fR, aliases:
+\fIwinmarks\fR)\&.
+.RE
+.PP
+\fBm\fR
+.RS 4
+Add a quickmark (command
+\fIsave_quickmark\fR, aliases:
+\fIquickmark\fR,
+\fIqmark\fR)\&.
+.RE
+.PP
+\fBb\fR
+.RS 4
+Open quickmark (command
+\fIquickmark\fR, aliases:
+\fIqmarks\fR)\&.
+.RE
+.PP
+\fBB\fR
+.RS 4
+Open quickmark in a new tab (command
+\fItab_quickmark\fR, aliases:
+\fItabqmarks\fR)\&.
+.RE
+.PP
+\fBwb[:graph:]\fR
+.RS 4
+Open quickmark in a new window (command
+\fIwin_quickmark\fR, aliases:
+\fIwinqmarks\fR)\&.
+.RE
+.PP
+\fB[n]r\fR
+.RS 4
+Reload tab n or current tab if n is omitted (command
+\fIreload\fR, aliases:
+\fIre\fR)\&.
+.RE
+.PP
+\fB[n]R\fR
+.RS 4
+Reload tab n or current tab if n is omitted without using any cached data (command
+\fIreload_bypass_cache\fR, aliases:
+\fIrefull\fR)\&.
+.RE
+.PP
+\fB[n]C\-s\fR
+.RS 4
+Stop loading of tab n or of current tab is [n] is omitted (command
+\fIstop_loading\fR, aliases:
+\fIstop\fR,
+\fIst\fR)\&.
+.RE
+.PP
+\fB[n]+\fR
+.RS 4
+Zoom in [n times] (command
+\fIzoom_in\fR, aliases:
+\fIzi\fR)\&.
+.RE
+.PP
+\fB[n]\-\fR
+.RS 4
+Zoom out [n times] (command
+\fIzoom_out\fR, aliases:
+\fIzo\fR)\&.
+.RE
+.PP
+\fB[n]=\fR
+.RS 4
+Zoom to n percent or to 100% if n is omitted(command
+\fIzoom\fR, aliases:
+\fIz\fR)\&.
+.RE
+.PP
+\fBsf\fR
+.RS 4
+Save all configuration files (command
+\fIsave\fR)\&.
+.RE
+.PP
+\fBZZ\fR
+.RS 4
+Save current session and exit (command
+\fIsave_session\fR, aliases:
+\fIwq\fR)\&.
+.RE
+.PP
+*gZZ *
+.RS 4
+Save current session with name and exit (command
+\fIsave_named_session\fR, aliases:
+\fIwqn\fR)\&.
+.RE
+.PP
+\fB[n]J\fR
+.RS 4
+Cycle focus [n tab] forwards\&. (command
+\fIfocus_next\fR, aliases:
+\fItabnext\fR)\&.
+.RE
+.PP
+\fB[n]K\fR
+.RS 4
+Cycle focus [n tab] backwards\&. (command
+\fIfocus_prev\fR, aliases:
+\fItabprev\fR)\&.
+.RE
+.PP
+\fB[n]T\fR
+.RS 4
+Focus nth tab or first, if n is omitted\&. (command
+\fIfocus_tab\fR, aliases:
+\fItab\fR)\&.
+.RE
+.PP
+\fB[n]gm\fR
+.RS 4
+Move current tab to position [n] or to first position if n is omitted\&. (command
+\fItab_move\fR, aliases:
+\fItabm\fR)\&.
+.RE
+.PP
+\fB[n]gl\fR
+.RS 4
+Move current tab [n] positions left\&. (command
+\fItab_move_left\fR, aliases:
+\fItabl\fR)\&.
+.RE
+.PP
+\fB[n]gr\fR
+.RS 4
+Move current tab [n] positions right\&. (command
+\fItab_move_right\fR, aliases:
+\fItabr\fR)\&.
+.RE
+.PP
+\fBgt\fR
+.RS 4
+Show all open tabs\&. (command
+\fIbuffers\fR, aliases:
+\fIbu\fR)\&.
+.RE
+.PP
+\fB[n]C\-P\fR
+.RS 4
+Protect tab [n]\&. Closing this tab must be confirmed (command
+\fIprotect\fR, aliases:
+\fIprot\fR)\&.
+.RE
+.PP
+\fB[n]xd\fR
+.RS 4
+Lock tab [n]\&. Locking a tab will lock this tab to the current domain, it\(cqs not possible to navigate to another domain until unlocked\&.
+\fIlock_domain\fR, aliases:
+\fIdlock\fR)\&.
+.RE
+.PP
+\fB[n]xu\fR
+.RS 4
+Lock tab [n]\&. Locking a tab will lock this tab to the current uri, it\(cqs not possible to navigate to another uri until unlocked\&.
+\fIlock_uri\fR, aliases:
+\fIulock\fR)\&.
+.RE
+.PP
+\fBf\fR
+.RS 4
+Show hints (command
+\fIhints\fR, aliases:
+\fIhints\fR,
+\fIhi\fR)\&.
+.RE
+.PP
+\fBF\fR
+.RS 4
+Show hints, open link in a new foreground tab\&. (command
+\fIhints_tab\fR, aliases:
+\fItabhints\fR,
+\fIthi\fR)\&.
+.RE
+.PP
+\fB;b\fR
+.RS 4
+Show hints, open link in a new background tab\&. (command
+\fIhints_background\fR, aliases:
+\fIbackhints\fR,
+\fIbhi\fR)\&.
+.RE
+.PP
+\fBwf\fR
+.RS 4
+Show hints, open link in a new tab\&. (command
+\fIhints_win\fR, aliases:
+\fIwinhints\fR,
+\fIwhi\fR)\&.
+.RE
+.PP
+\fB;i\fR
+.RS 4
+Follow image (command
+\fIhints_images\fR, aliases:
+\fIihints\fR,
+\fIihi\fR)\&.
+.RE
+.PP
+\fB;I\fR
+.RS 4
+Follow image in a new tab (command
+\fIhints_images_tab\fR, aliases:
+\fIitabhints\fR,
+\fIithi\fR)\&.
+.RE
+.PP
+\fB\&.i\fR
+.RS 4
+Follow image in a background tab (command
+\fIhints_images_background\fR, aliases:
+\fIibackhints\fR)\&.
+.RE
+.PP
+\fB;e\fR
+.RS 4
+Focus editable elements via hints (command
+\fIhints_editable\fR, aliases:
+\fIehints\fR,
+\fIehi\fR)\&.
+.RE
+.PP
+\fB;o\fR
+.RS 4
+Set hint\(cqs url in commandline (command
+\fIhints_url\fR, aliases:
+\fIuhints\fR,
+\fIuhi\fR)\&.
+.RE
+.PP
+\fB;O\fR
+.RS 4
+Set hint\(cqs url in commandline, open in a new tab (command
+\fIhints_url_tab\fR, aliases:
+\fIutabhints\fR,
+\fIuthi\fR)\&.
+.RE
+.PP
+\fB\&.o\fR
+.RS 4
+Set hint\(cqs url in commandline, open in a background tab (command
+\fIhints_url_background\fR, aliases:
+\fIubackhints\fR)\&.
+.RE
+.PP
+\fB;d\fR
+.RS 4
+Download via hints (command
+\fIhints_download\fR, aliases:
+\fIdhints\fR)\&.
+.RE
+.PP
+\fB;y\fR
+.RS 4
+Save link location to clipboard (command
+\fIhints_clipboard\fR, aliases:
+\fIchints\fR,
+\fIchi\fR)\&.
+.RE
+.PP
+\fB;Y\fR
+.RS 4
+Save link location to primary selection (command
+\fIhints_primary\fR, aliases:
+\fIphints\fR,
+\fIphi\fR)\&.
+.RE
+.PP
+\fB;r\fR
+.RS 4
+Rapid hint mode, each matching hint opens a new tab in background\&. (command
+\fIhints_rapid\fR, aliases:
+\fIrhints\fR,
+\fIrhi\fR)\&.
+.RE
+.PP
+\fB;R\fR
+.RS 4
+Rapid hint mode, each matching hint opens a new window\&. (command
+\fIhints_rapid_win\fR, aliases:
+\fIwrhints\fR,
+\fIwrhi\fR)\&.
+.RE
+.PP
+\fBgf\fR
+.RS 4
+Toggle "view source" (command
+\fIview_source\fR, aliases:
+\fIsource\fR,
+\fIso\fR)\&.
+.RE
+.PP
+\fBCC\fR
+.RS 4
+Allow persistent cookie for the current website\&. The domain will be saved in
+\fIcookies\&.allow\fR\&. Cookies that are allowed by the cookies\&.allow whitelist are stored in $XDG_CONFIG_HOME/dwb/$profilename/cookies\&. (command
+\fIallow_cookie\fR, aliases:
+\fIcookie\fR)\&.
+.RE
+.PP
+\fBCS\fR
+.RS 4
+Allow session cookie for the current website\&. The domain will be saved in
+\fIcookies_session\&.allow\fR\&. This is only useful if
+\fIcookies\-store\-policy\fR
+is set to
+\fInever\fR, see cookies\-store\-policy for details\&. (command
+\fIallow_session_cookie\fR, aliases:
+\fIscookie\fR)\&.
+.RE
+.PP
+\fBCT\fR
+.RS 4
+Allow session cookies for the current website temporarily\&. Only first party cookies are allowed\&. The domain is not saved to a whitelist and the cookies will not be saved persitently\&. (command
+\fIallow_session_cookie_tmp\fR, aliases:
+\fItcookie\fR)\&.
+.RE
+.PP
+\fB[n]yy\fR
+.RS 4
+Yank the url of tab n or of current tab if n is omitted to clipboard (command
+\fIyank\fR)\&.
+.RE
+.PP
+\fByY\fR
+.RS 4
+Yank the url of tab n or of current tab if n is omitted to primary selection (command
+\fIyank_primary\fR, aliases:
+\fIpyank\fR)\&.
+.RE
+.PP
+\fByt\fR
+.RS 4
+Yank the title of tab n or of current tab if n is omitted to clipboard (command
+\fIyank_title\fR, aliases:
+\fItyank\fR)\&.
+.RE
+.PP
+\fByT\fR
+.RS 4
+Yank the title of tab n or of current tab if n is omitted to primary selection (command
+\fIyank_title_primary\fR, aliases:
+\fItpyank\fR)\&.
+.RE
+.PP
+\fBpp\fR
+.RS 4
+Paste from clipboard (command
+\fIpaste\fR)\&.
+.RE
+.PP
+\fBpP\fR
+.RS 4
+Paste from primary selection (command
+\fIpaste_primary\fR, aliases:
+\fIppaste\fR)\&.
+.RE
+.PP
+\fBPp\fR
+.RS 4
+Paste from clipboard and load in a new tab (command
+\fItab_paste\fR, aliases:
+\fItpaste\fR)\&.
+.RE
+.PP
+\fBPP\fR
+.RS 4
+Paste from primary selection and load in a new tab (command
+\fItab_paste_primary\fR, aliases:
+\fItppaste\fR)\&.
+.RE
+.PP
+\fBwp\fR
+.RS 4
+Paste from clipboard and load in a new window (command
+\fIpaste_nw\fR, aliases:
+\fIwinpaste\fR)\&.
+.RE
+.PP
+\fBwP\fR
+.RS 4
+Paste from primary selection and load in a new window (command
+\fIpaste_primary_nw\fR, aliases:
+\fIwinppaste\fR)\&.
+.RE
+.PP
+\fB[n]ad\fR
+.RS 4
+Cancel the download with number n or the first download in the lists of running downloads if n is omitted\&. (command
+\fIcancel_download\fR)\&.
+.RE
+.PP
+\fBgs\fR
+.RS 4
+Add a searchengine\&. Textfields can be chosen with tab and a keyword must be specified\&. The first defined searchengine will be the default searchengine\&. The keyword can be used in all open commands, e\&.g\&. \&.I :open <keyword> <searchterm> (command
+\fIsave_search_field\fR, aliases:
+\fIsearch\fR)\&.
+.RE
+.PP
+\fBSb\fR
+.RS 4
+Show bookmarks (command
+\fIshow_bookmarks\fR, aliases:
+\fIsbookmarks\fR)\&.
+.RE
+.PP
+\fBSq\fR
+.RS 4
+Show quickmarks (command
+\fIshow_quickmarks\fR, aliases:
+\fIsquickmarks\fR)\&.
+.RE
+.PP
+\fBSh\fR
+.RS 4
+Show history (command
+\fIshow_history\fR, aliases:
+\fIshistory\fR)\&.
+.RE
+.PP
+\fBSd\fR
+.RS 4
+Show download (command
+\fIshow_downloads\fR, aliases:
+\fIsdownloads\fR)\&.
+.RE
+.PP
+\fBSk\fR
+.RS 4
+Show keys (command
+\fIshow_keys\fR, aliases:
+\fIskeys\fR)\&.
+.RE
+.PP
+\fBSs\fR
+.RS 4
+Show settings (command
+\fIshow_settings\fR, aliases:
+\fIssettings\fR)\&.
+.RE
+.PP
+\fBss\fR
+.RS 4
+Set setting, the interactive version of the command set, for changing settings in scripts use set instead (command
+\fIset_setting\fR)\&.
+.RE
+.PP
+\fBsl\fR
+.RS 4
+Set local setting, changes a setting but doesn\(cqt save the setting to configuration file\&. The interactive version of the command local_set, for changing settings locally in scripts use local_set instead (command
+\fIset_local_setting\fR)\&.
+.RE
+.PP
+\fBsk\fR
+.RS 4
+Set keyboard shortcut (command
+\fIset_key\fR, aliases:
+\fIkeys\fR)\&.
+.RE
+.PP
+\fBC\-p\fR
+.RS 4
+Toggle proxy (command
+\fIproxy\fR)\&.
+.RE
+.PP
+\fBtsh\fR
+.RS 4
+Toggle scripts for current host permanently (command
+\fItoggle_scripts_host\fR, aliases:
+\fIhscript\fR)\&.
+.RE
+.PP
+\fBtsu\fR
+.RS 4
+Toggle scripts for current url permanently (command
+\fItoggle_scripts_uri\fR, aliases:
+\fIuscript\fR)\&.
+.RE
+.PP
+\fBtth\fR
+.RS 4
+Toggle scripts for current host temporarily (command
+\fItoggle_scripts_host_tmp\fR, aliases:
+\fIthscript\fR)\&.
+.RE
+.PP
+\fBttu\fR
+.RS 4
+Toggle scripts for current url temporarily (command
+\fItoggle_scripts_uri_tmp\fR, aliases:
+\fItuscript\fR)\&.
+.RE
+.PP
+\fBph\fR
+.RS 4
+Toggle plugins for current host permanently (command
+\fItoggle_plugins_host\fR, aliases:
+\fIhplugin\fR)\&.
+.RE
+.PP
+\fBpu\fR
+.RS 4
+Toggle plugins for current url permanently (command
+\fItoggle_plugins_uri\fR, aliases:
+\fIuplugin\fR)\&.
+.RE
+.PP
+\fBpth\fR
+.RS 4
+Toggle plugins for current host temporarily (command
+\fItoggle_plugins_host_tmp\fR, aliases:
+\fIthplugin\fR)\&.
+.RE
+.PP
+\fBptu\fR
+.RS 4
+Toggle plugins for current url temporarily (command
+\fItoggle_plugins_uri_tmp\fR, aliases:
+\fItuplugin\fR)\&.
+.RE
+.PP
+\fBV\fR
+.RS 4
+Next navigation action will be opened in a new tab (command
+\fInew_tab\fR)\&.
+.RE
+.PP
+\fBW\fR
+.RS 4
+Next navigation action will be opened in a new window (command
+\fInew_win\fR)\&. \&.TP \&.BR eu Show and execute userscripts (command
+\fIexecute_userscript\fR)\&.
+.RE
+.PP
+\fB[n]wi\fR
+.RS 4
+Show the webinspector of tab n or of current tab if n is omitted\&. Note that
+\fIenable\-developer\-extras\fR
+has to be set\&. (commmand
+\fIweb_inspector\fR, aliases:
+\fIinspect\fR,
+\fIinsp\fR)\&.
+.RE
+.PP
+\fBC\-e\fR
+.RS 4
+Open external editor for current input/textarea (command
+\fIopen_editor\fR, aliases:
+\fIeditor\fR)\&.
+.RE
+.PP
+\fBg\&.\fR
+.RS 4
+Toggle hidden files when browsing local filesystem\&. (command
+\fIopen_editor\fR, aliases:
+\fIeditor\fR)\&.
+.RE
+.PP
+\fBF11\fR
+.RS 4
+Toggle fullscreen (command
+\fIfullscreen\fR, aliases:
+\fIfs\fR)\&.
+.RE
+.PP
+\fBF12\fR
+.RS 4
+Toggle presentation mode\&. (command
+\fIpresentation_mode\fR, aliases:
+\fIpresent\fR)\&.
+.RE
+.PP
+\fBxx\fR
+.RS 4
+Toggle visibility of tabbar and statusbar\&. (command
+\fItoggle_bars\fR, aliases:
+\fIbars\fR)\&.
+.RE
+.PP
+\fBxt\fR
+.RS 4
+Toggle visibility of tabbar\&. (command
+\fItoggle_tabbar\fR, aliases:
+\fItbar\fR)\&.
+.RE
+.PP
+\fBxb\fR
+.RS 4
+Toggle visibility of statusbar\&. (command
+\fItoggle_statusbar\fR, aliases:
+\fIsbar\fR)\&.
+.RE
+.PP
+\fBxv\fR
+.RS 4
+Toggle visibility of a tab\&. (command
+\fIvisible\fR, aliases:
+\fIvis\fR)\&.
+.RE
+.PP
+\fB[n]C\-M\-p\fR
+.RS 4
+Print focused frame of tab n or of current tab if n is omitted\&. (command
+\fIprint\fR, aliases:
+\fIha\fR)\&.
+.RE
+.PP
+\fBunbound\fR
+.RS 4
+Execute a javascript snippet (command
+\fIexecute_javascript\fR, aliases:
+\fIexja\fR,
+\fIjs\fR)\&.
+.RE
+.PP
+\fBunbound\fR
+.RS 4
+Set a setting from commandline (command
+\fIset\fR)\&.
+.RE
+.PP
+\fBunbound\fR
+.RS 4
+Toggle a boolean setting from commandline (command
+\fItoggle_setting\fR, aliases:
+\fItoggle\fR,
+\fItog\fR)\&.
+.RE
+.PP
+\fBunbound\fR
+.RS 4
+Load a html string\&. This command is mainly intended for use in userscripts (command
+\fIload_html\fR)\&.
+.RE
+.PP
+\fBunbound\fR
+.RS 4
+Load a html string in a new tab\&. This command is mainly intended for use in userscripts (command
+\fIload_html_tab\fR)\&.
+.RE
+.PP
+\fBTab (S\-Tab)\fR
+.RS 4
+In normal mode Tab shows the next (previous) shortcut, that matches the currently entered keysequence\&. When opening a url, the next (previous) item in command history, bookmarks or history will be completed\&. In hint mode the next (previous) hint will get focus\&. Tab also completes settings and shortcut\-settings\&. When initiating a download, full paths (downloads and spawning programs) and binaries (spawning programs) in PATH will be completed\&. In command mode tab will complete builtin commands and urls if the command accepts an url\&.
+.RE
+.SS "Textentry shortcuts"
+.PP
+\fBC\-h\fR
+.RS 4
+Delete a single letter\&.
+.RE
+.PP
+\fBC\-w\fR
+.RS 4
+Delete word back\&.
+.RE
+.PP
+\fBC\-e\fR
+.RS 4
+Delete word forward\&.
+.RE
+.PP
+\fBC\-u\fR
+.RS 4
+Delete to the beginning of the entry\&.
+.RE
+.PP
+\fBC\-i\fR
+.RS 4
+Delete to the end of the entry\&.
+.RE
+.PP
+\fBC\-f\fR
+.RS 4
+Move cursor one word forward\&.
+.RE
+.PP
+\fBC\-b\fR
+.RS 4
+Move cursor one word back\&.
+.RE
+.PP
+\fBC\-j\fR
+.RS 4
+Show next item in command history\&.
+.RE
+.PP
+\fBC\-k\fR
+.RS 4
+Show previous item in command history\&.
+.RE
+.PP
+\fBC\-x\fR
+.RS 4
+When initalizing a download, C\-x toggles between choosing a file path and choosing a spawning application\&.
+.RE
+.PP
+\fBC\-g\fR
+.RS 4
+Alternative shortcut for activate\&.
+.RE
+.PP
+\fBC\-c\fR
+.RS 4
+Alternative shortcut for escape, the corresponding setting is \&.IR entry_escape \&.
+.RE
+.PP
+\fBC\-p\fR
+.RS 4
+Init local path completion\&.
+.RE
+.PP
+\fBC\-H\fR
+.RS 4
+Init history completion\&.
+.RE
+.PP
+\fBC\-B\fR
+.RS 4
+Init bookmark completion\&.
+.RE
+.PP
+\fBC\-I\fR
+.RS 4
+Init input history completion\&.
+.RE
+.PP
+\fBC\-S\fR
+.RS 4
+Init searchengine completion\&.
+.RE
+.PP
+\fBC\-U\fR
+.RS 4
+Init userscript completion\&.
+.RE
+.PP
+\fBC\-p\fR
+.RS 4
+Complete local path\&.
+.RE
+.SS "Shortcut syntax"
+.sp
+All printable shortcuts are case sensitive, i\&.e\&. aH means press a then press shift, then press h\&. Shortcuts can be combined with a modifier, valid modifiers are \fIControl\fR, \fIMod1\fR, \fIMod4\fR, \fIButton1\fR, \fIButton2\fR, \fIButton3\fR, \fIButton4\fR, \fIButton5\fR and \fIShift\fR where Shift can only be used with non printable keys such as F1, space, Tab, \&... \&. Non printable keys must be surrounded by @, e\&.g\&. "Control @F1@", Shift @space@\&. \e and @ itself must be escaped with \e\&.
+.SH "CUSTOM COMMANDS"
+.sp
+Custom commands are a sequence of dwb commands that can be bound to a shortcut\&. The syntax is
+.sp
+.if n \{\
+.RS 4
+.\}
 .nf
-
-  #!/bin/bash
-  # dwb: Control w
-  
-  wget $DWB_URI
-
+<shortcut>:<command>;;<command>;;\&.\&.\&.
 .fi
+.if n \{\
+.RE
+.\}
+.sp
+where shortcut is the shortcut for the commandsequence, \fB:\fR may be escaped with \fB\e:\fR and command is of the form
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[numerical modifier]<command or alias> [argument for the command]
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+for example
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Control W:tabopen http://example\&.com;; 150zoom
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+opens http://example\&.com in a new tab and zooms to 150%\&.
+.SH "COMMAND OVERVIEW"
+.TS
+allbox tab(:);
+ltB ltB ltB.
+T{
+Command
+T}:T{
+Alias
+T}:T{
+Description
+T}
+.T&
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt
+lt lt lt.
+T{
+.sp
+allow_cookie
+T}:T{
+.sp
+cookie
+T}:T{
+.sp
+Allow persistent cookies for site
+T}
+T{
+.sp
+allow_session_cookie
+T}:T{
+.sp
+scookie
+T}:T{
+.sp
+Allow session cookies for site
+T}
+T{
+.sp
+allow_session_cookie_tmp
+T}:T{
+.sp
+tcookie
+T}:T{
+.sp
+Allow session cookies for site temporarily
+T}
+T{
+.sp
+bookmark
+T}:T{
+.sp
+bma, bmark
+T}:T{
+.sp
+Bookmark current page
+T}
+T{
+.sp
+bookmarks
+T}:T{
+.sp
+bmas, bmarks
+T}:T{
+.sp
+Show bookmarks
+T}
+T{
+.sp
+buffers
+T}:T{
+.sp
+bu
+T}:T{
+.sp
+Show all open tabs
+T}
+T{
+.sp
+cancel_download
+T}:T{
+.sp
+T}:T{
+.sp
+Cancel a download
+T}
+T{
+.sp
+clear_tab
+T}:T{
+.sp
+clear
+T}:T{
+.sp
+Clear tab
+T}
+T{
+.sp
+close_tab
+T}:T{
+.sp
+close
+T}:T{
+.sp
+Close tab
+T}
+T{
+.sp
+dump
+T}:T{
+.sp
+T}:T{
+.sp
+Write html of current website to a file or stdout if no argument is given
+T}
+T{
+.sp
+execute_javascript
+T}:T{
+.sp
+exja, js
+T}:T{
+.sp
+Execute a javascript snippet
+T}
+T{
+.sp
+execute_userscript
+T}:T{
+.sp
+T}:T{
+.sp
+Execute userscript
+T}
+T{
+.sp
+find_backward
+T}:T{
+.sp
+bfind
+T}:T{
+.sp
+Find backward
+T}
+T{
+.sp
+find_backward_ic
+T}:T{
+.sp
+ibfind
+T}:T{
+.sp
+Find backward case sensitive
+T}
+T{
+.sp
+find_forward
+T}:T{
+.sp
+ffind
+T}:T{
+.sp
+Find forward
+T}
+T{
+.sp
+find_forward_ic
+T}:T{
+.sp
+iffind
+T}:T{
+.sp
+Find forward case sensitive
+T}
+T{
+.sp
+find_next
+T}:T{
+.sp
+fnext
+T}:T{
+.sp
+Find next
+T}
+T{
+.sp
+find_previous
+T}:T{
+.sp
+fprev
+T}:T{
+.sp
+Find previous
+T}
+T{
+.sp
+focus_input
+T}:T{
+.sp
+T}:T{
+.sp
+Focus next input
+T}
+T{
+.sp
+focus_next
+T}:T{
+.sp
+tabnext
+T}:T{
+.sp
+Focus next tab
+T}
+T{
+.sp
+focus_prev
+T}:T{
+.sp
+tabprev
+T}:T{
+.sp
+Focus previous tab
+T}
+T{
+.sp
+focus_tab
+T}:T{
+.sp
+tab
+T}:T{
+.sp
+Focus nth tab
+T}
+T{
+.sp
+fullscreen
+T}:T{
+.sp
+fs
+T}:T{
+.sp
+Toggle fullscreen
+T}
+T{
+.sp
+hints
+T}:T{
+.sp
+hi
+T}:T{
+.sp
+Follow hints
+T}
+T{
+.sp
+hints_background
+T}:T{
+.sp
+backhints, bhi
+T}:T{
+.sp
+Follow hints in a background tab
+T}
+T{
+.sp
+hints_clipboard
+T}:T{
+.sp
+chints, chi
+T}:T{
+.sp
+Save link location to clipboard
+T}
+T{
+.sp
+hints_download
+T}:T{
+.sp
+dhints, dhi
+T}:T{
+.sp
+Download via hints
+T}
+T{
+.sp
+hints_editable
+T}:T{
+.sp
+ehints, ehi
+T}:T{
+.sp
+Focus editable elements
+T}
+T{
+.sp
+hints_images
+T}:T{
+.sp
+ihints, ihi
+T}:T{
+.sp
+Follow images
+T}
+T{
+.sp
+hints_images_tab
+T}:T{
+.sp
+itabhints, ithi
+T}:T{
+.sp
+Follow images in a new tab
+T}
+T{
+.sp
+hints_images_background
+T}:T{
+.sp
+ibackhints
+T}:T{
+.sp
+Follow images in a background tab
+T}
+T{
+.sp
+hints_links
+T}:T{
+.sp
+lhints, lhi
+T}:T{
+.sp
+Follow links
+T}
+T{
+.sp
+hints_primary
+T}:T{
+.sp
+phints, phi
+T}:T{
+.sp
+Save link location to primary selection
+T}
+T{
+.sp
+hints_rapid
+T}:T{
+.sp
+rhints, rhi
+T}:T{
+.sp
+Open new tabs in background rapidly
+T}
+T{
+.sp
+hints_rapid_win
+T}:T{
+.sp
+wrhints, wrhi
+T}:T{
+.sp
+Open new windows rapidly
+T}
+T{
+.sp
+hints_tab
+T}:T{
+.sp
+tabhints, thi
+T}:T{
+.sp
+Follow hints in a new tab
+T}
+T{
+.sp
+hints_url
+T}:T{
+.sp
+uhints, uhi
+T}:T{
+.sp
+Set hints url in commandline
+T}
+T{
+.sp
+hints_url_tab
+T}:T{
+.sp
+utabhints, uthi
+T}:T{
+.sp
+Set hints url in commandline, open in a new tab
+T}
+T{
+.sp
+hints_url_background
+T}:T{
+.sp
+ubackhints
+T}:T{
+.sp
+Set hints url in commandline, open in a background tab
+T}
+T{
+.sp
+hints_win
+T}:T{
+.sp
+winhints, whi
+T}:T{
+.sp
+Follow hints in a new window
+T}
+T{
+.sp
+history_back
+T}:T{
+.sp
+ba, back
+T}:T{
+.sp
+Go back
+T}
+T{
+.sp
+history_forward
+T}:T{
+.sp
+fo, forward
+T}:T{
+.sp
+Go forward
+T}
+T{
+.sp
+insert_mode
+T}:T{
+.sp
+i, insert
+T}:T{
+.sp
+Insert mode local_set Set a setting only for the running instance, don\(cqt save it to the configuration file
+T}
+T{
+.sp
+lock_domain
+T}:T{
+.sp
+dlock
+T}:T{
+.sp
+Lock tab to current domain
+T}
+T{
+.sp
+lock_uri
+T}:T{
+.sp
+ulock
+T}:T{
+.sp
+Lock tab to current uri
+T}
+T{
+.sp
+new_tab
+T}:T{
+.sp
+T}:T{
+.sp
+Open next navigation action in new tab
+T}
+T{
+.sp
+new_win
+T}:T{
+.sp
+T}:T{
+.sp
+Open next navigation action in new window
+T}
+T{
+.sp
+only
+T}:T{
+.sp
+T}:T{
+.sp
+Close all tabs except for the current one
+T}
+T{
+.sp
+open
+T}:T{
+.sp
+o
+T}:T{
+.sp
+Open url
+T}
+T{
+.sp
+open_editor
+T}:T{
+.sp
+editor
+T}:T{
+.sp
+Open external editor for input/textarea\&.
+T}
+T{
+.sp
+open_url
+T}:T{
+.sp
+T}:T{
+.sp
+Open, edit current url
+T}
+T{
+.sp
+paste
+T}:T{
+.sp
+T}:T{
+.sp
+Open from clipboard
+T}
+T{
+.sp
+paste_primary
+T}:T{
+.sp
+ppaste
+T}:T{
+.sp
+Open from primary selection
+T}
+T{
+.sp
+presentation_mode
+T}:T{
+.sp
+present
+T}:T{
+.sp
+Toggle presentation mode
+T}
+T{
+.sp
+print
+T}:T{
+.sp
+ha
+T}:T{
+.sp
+Print page
+T}
+T{
+.sp
+protect
+T}:T{
+.sp
+prot
+T}:T{
+.sp
+Protect/unprotect tab
+T}
+T{
+.sp
+proxy
+T}:T{
+.sp
+T}:T{
+.sp
+Toggle proxy
+T}
+T{
+.sp
+quickmark
+T}:T{
+.sp
+qmarks
+T}:T{
+.sp
+Open quickmark
+T}
+T{
+.sp
+quit
+T}:T{
+.sp
+q
+T}:T{
+.sp
+Quit
+T}
+T{
+.sp
+reload
+T}:T{
+.sp
+re
+T}:T{
+.sp
+Reload current page
+T}
+T{
+.sp
+reload_bypass_cache
+T}:T{
+.sp
+refull
+T}:T{
+.sp
+Reload without using cached data
+T}
+T{
+.sp
+reload_scripts
+T}:T{
+.sp
+T}:T{
+.sp
+Reload all javascript userscripts
+T}
+T{
+.sp
+reload_userscripts
+T}:T{
+.sp
+T}:T{
+.sp
+Reload userscripts
+T}
+T{
+.sp
+save
+T}:T{
+.sp
+T}:T{
+.sp
+Save all configuration files
+T}
+T{
+.sp
+save_named_session
+T}:T{
+.sp
+wqn
+T}:T{
+.sp
+Save current session with name
+T}
+T{
+.sp
+save_quickmark
+T}:T{
+.sp
+qmark, quickmark
+T}:T{
+.sp
+Save a quickmark
+T}
+T{
+.sp
+save_search_field
+T}:T{
+.sp
+search
+T}:T{
+.sp
+Add a new searchengine
+T}
+T{
+.sp
+save_session
+T}:T{
+.sp
+wq
+T}:T{
+.sp
+Save current session
+T}
+T{
+.sp
+scroll_bottom
+T}:T{
+.sp
+bottom
+T}:T{
+.sp
+Scroll to bottom of the page
+T}
+T{
+.sp
+scroll_down
+T}:T{
+.sp
+down
+T}:T{
+.sp
+Scroll down
+T}
+T{
+.sp
+scroll_halfpage_down
+T}:T{
+.sp
+halfdown
+T}:T{
+.sp
+Scroll one\-half page down
+T}
+T{
+.sp
+scroll_halfpage_up
+T}:T{
+.sp
+halfup
+T}:T{
+.sp
+Scroll one\-half page up
+T}
+T{
+.sp
+scroll_left
+T}:T{
+.sp
+left
+T}:T{
+.sp
+Scroll left
+T}
+T{
+.sp
+scroll_page_down
+T}:T{
+.sp
+pagedown
+T}:T{
+.sp
+Scroll one page down
+T}
+T{
+.sp
+scroll_page_up
+T}:T{
+.sp
+pageup
+T}:T{
+.sp
+Scroll one page up
+T}
+T{
+.sp
+scroll_right
+T}:T{
+.sp
+right
+T}:T{
+.sp
+Scroll right
+T}
+T{
+.sp
+scroll_top
+T}:T{
+.sp
+top
+T}:T{
+.sp
+Scroll to the top of the page
+T}
+T{
+.sp
+scroll_up
+T}:T{
+.sp
+up
+T}:T{
+.sp
+Scroll up
+T}
+T{
+.sp
+set
+T}:T{
+.sp
+T}:T{
+.sp
+Set a setting
+T}
+T{
+.sp
+set_key
+T}:T{
+.sp
+keys
+T}:T{
+.sp
+Set keybinding
+T}
+T{
+.sp
+set_local_setting
+T}:T{
+.sp
+T}:T{
+.sp
+Set a setting for the running instance interactively
+T}
+T{
+.sp
+set_setting
+T}:T{
+.sp
+T}:T{
+.sp
+Set a setting interactive
+T}
+T{
+.sp
+show_keys
+T}:T{
+.sp
+skeys
+T}:T{
+.sp
+Show and modify keyboard configuration
+T}
+T{
+.sp
+show_settings
+T}:T{
+.sp
+ssettings
+T}:T{
+.sp
+Show and modify global properties
+T}
+T{
+.sp
+start_page
+T}:T{
+.sp
+home
+T}:T{
+.sp
+Open the default homepage
+T}
+T{
+.sp
+stop_loading
+T}:T{
+.sp
+st, stop
+T}:T{
+.sp
+Stop loading current page
+T}
+T{
+.sp
+tab_bookmarks
+T}:T{
+.sp
+tabmarks
+T}:T{
+.sp
+Show bookmarks, open in new tab
+T}
+T{
+.sp
+tab_hist_back
+T}:T{
+.sp
+tba, tabback
+T}:T{
+.sp
+Go back in a new tab
+T}
+T{
+.sp
+tab_hist_forward
+T}:T{
+.sp
+tfo, tabforward
+T}:T{
+.sp
+Go forward in a new tab
+T}
+T{
+.sp
+tab_move
+T}:T{
+.sp
+tabm
+T}:T{
+.sp
+Move tab
+T}
+T{
+.sp
+tab_move_left
+T}:T{
+.sp
+tabl
+T}:T{
+.sp
+Move tab left
+T}
+T{
+.sp
+tab_move_right
+T}:T{
+.sp
+tabr
+T}:T{
+.sp
+Move tab right
+T}
+T{
+.sp
+tab_new
+T}:T{
+.sp
+T}:T{
+.sp
+Open a new blank tab
+T}
+T{
+.sp
+tab_paste
+T}:T{
+.sp
+tpaste
+T}:T{
+.sp
+Open from clipboard in a new tab
+T}
+T{
+.sp
+tab_paste_primary
+T}:T{
+.sp
+tppaste
+T}:T{
+.sp
+Open from primary selection in a new tab
+T}
+T{
+.sp
+tab_quickmark
+T}:T{
+.sp
+tabqmarks
+T}:T{
+.sp
+Open quickmark in a new tab
+T}
+T{
+.sp
+tabopen
+T}:T{
+.sp
+t, topen
+T}:T{
+.sp
+Open in a new tab
+T}
+T{
+.sp
+tabopen_url
+T}:T{
+.sp
+T}:T{
+.sp
+Open in a new tab, edit current url
+T}
+T{
+.sp
+toggle_bars
+T}:T{
+.sp
+bars
+T}:T{
+.sp
+Toggle tabbar and statusbar
+T}
+T{
+.sp
+toggle_hidden_files
+T}:T{
+.sp
+hidden
+T}:T{
+.sp
+Toggle hidden files in directory listings
+T}
+T{
+.sp
+toggle_plugins_host
+T}:T{
+.sp
+hplugin
+T}:T{
+.sp
+Toggle plugin blocker for host
+T}
+T{
+.sp
+toggle_plugins_host_tmp
+T}:T{
+.sp
+tuplugin
+T}:T{
+.sp
+Toggle plugin blocker for domain for this session
+T}
+T{
+.sp
+toggle_plugins_uri
+T}:T{
+.sp
+uplugin
+T}:T{
+.sp
+Toggle plugin blocker for uri
+T}
+T{
+.sp
+toggle_plugins_uri_tmp
+T}:T{
+.sp
+tuplugin
+T}:T{
+.sp
+Toggle plugin blocker for uri for this session
+T}
+T{
+.sp
+toggle_scripts_host
+T}:T{
+.sp
+hscript
+T}:T{
+.sp
+Toggle scripts for current domain
+T}
+T{
+.sp
+toggle_scripts_host_tmp
+T}:T{
+.sp
+thscript
+T}:T{
+.sp
+Toggle scripts for current host for this session
+T}
+T{
+.sp
+toggle_scripts_uri
+T}:T{
+.sp
+uscript
+T}:T{
+.sp
+Toggle scripts for current uri
+T}
+T{
+.sp
+toggle_scripts_uri_tmp
+T}:T{
+.sp
+tuscript
+T}:T{
+.sp
+Toggle scripts for current uri for this session
+T}
+T{
+.sp
+toggle_setting
+T}:T{
+.sp
+tog, toggle
+T}:T{
+.sp
+Toggle a setting
+T}
+T{
+.sp
+toggle_local_setting
+T}:T{
+.sp
+loctog
+T}:T{
+.sp
+Toggle a setting for the current session
+T}
+T{
+.sp
+toggle_statusbar
+T}:T{
+.sp
+sbar
+T}:T{
+.sp
+Toggle statusbar
+T}
+T{
+.sp
+toggle_tabbar
+T}:T{
+.sp
+tbar
+T}:T{
+.sp
+Toggle tabbar
+T}
+T{
+.sp
+undo
+T}:T{
+.sp
+u
+T}:T{
+.sp
+Undo closing last tab
+T}
+T{
+.sp
+view_source
+T}:T{
+.sp
+so, source
+T}:T{
+.sp
+View page source
+T}
+T{
+.sp
+visible
+T}:T{
+.sp
+vis
+T}:T{
+.sp
+Toggle visibility of a tab
+T}
+T{
+.sp
+web_inspector
+T}:T{
+.sp
+insp, inspect
+T}:T{
+.sp
+Open the webinspector
+T}
+T{
+.sp
+win_bookmarks
+T}:T{
+.sp
+winmarks
+T}:T{
+.sp
+Show bookmarks, open in new window
+T}
+T{
+.sp
+win_hist_back
+T}:T{
+.sp
+wba, winback
+T}:T{
+.sp
+Go back in a new window
+T}
+T{
+.sp
+win_hist_forward
+T}:T{
+.sp
+wfo, winforward
+T}:T{
+.sp
+Go forward in a new window
+T}
+T{
+.sp
+win_paste
+T}:T{
+.sp
+wpaste
+T}:T{
+.sp
+Open from clipboard in a new window
+T}
+T{
+.sp
+win_paste_primary
+T}:T{
+.sp
+wppaste
+T}:T{
+.sp
+Open primary selection in a new window
+T}
+T{
+.sp
+win_quickmark
+T}:T{
+.sp
+winqmarks
+T}:T{
+.sp
+Open quickmark in a new window
+T}
+T{
+.sp
+winopen
+T}:T{
+.sp
+w, wopen
+T}:T{
+.sp
+Open in a new window
+T}
+T{
+.sp
+winopen_url
+T}:T{
+.sp
+T}:T{
+.sp
+Open in a new window, edit current url
+T}
+T{
+.sp
+yank
+T}:T{
+.sp
+T}:T{
+.sp
+Yank url to clipboard
+T}
+T{
+.sp
+yank_primary
+T}:T{
+.sp
+pyank
+T}:T{
+.sp
+Yank url to primary selection
+T}
+T{
+.sp
+yank_title
+T}:T{
+.sp
+tyank
+T}:T{
+.sp
+Yank title to clipboard
+T}
+T{
+.sp
+yank_title_primary
+T}:T{
+.sp
+tpyank
+T}:T{
+.sp
+Yank title to primary selection
+T}
+T{
+.sp
+zoom
+T}:T{
+.sp
+z
+T}:T{
+.sp
+Zoom
+T}
+T{
+.sp
+zoom_in
+T}:T{
+.sp
+zi
+T}:T{
+.sp
+Zoom in
+T}
+T{
+.sp
+zoom_out
+T}:T{
+.sp
+zo
+T}:T{
+.sp
+Zoom out
+T}
+.TE
+.sp 1
+.sp
+dwb can be customized in a web interface (command \fIshow_settings\fR) or via command line (command \fIset_setting\fR)\&. Modified settings will be saved in Modified settings will be saved in \fI~/\&.config/dwb/settings\fR when closing dwb\&. Shorcuts can also be modified in a web interface (command \fIshow_keys\fR) or via command line (command \fIset_key\fR)\&. Shortcuts will be saved in \fI$HOME/\&.config/dwb/keys\fR\&.
+.sp
+If a string value is set to \fINULL\fR the default value will be used\&.
+.SS "WebKit builtin settings"
+.PP
+\fBauto\-load\-images\fR
+.RS 4
+Load images automatically\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBauto\-resize\-window\fR
+.RS 4
+Resize window through DOM\-methods\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBauto\-shrink\-images\fR
+.RS 4
+Automatically shrink standalone images to fit\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBcursive\-font\-family\fR
+.RS 4
+Default cursive font family used to display text\&. Possible values: a font description or NULL, default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBcustom\-encoding\fR
+.RS 4
+A custom encoding used for the webview\&. Possible values: encoding string or NULL, default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBdefault\-encoding\fR
+.RS 4
+The default encoding used to display text\&. Possible values: encoding string or NULL, default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBdefault\-font\-family\fR
+.RS 4
+The default font family used to display text\&. Possible values: a font description or NULL, default value:
+\fIsans\-serif\fR\&.
+.RE
+.PP
+\fBdefault\-font\-size\fR
+.RS 4
+The default font size used to display text\&. Possible values: a font size (integer), default value:
+\fI12\fR\&.
+.RE
+.PP
+\fBdefault\-monospace\-font\-size\fR
+.RS 4
+The default font size used to display monospace text\&. Possible values: a font size (integer), default value:
+\fI10\fR\&.
+.RE
+.PP
+\fBeditable\fR
+.RS 4
+Whether the content of a webpage should be editable\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-caret\-browsing\fR
+.RS 4
+Whether to enable caret browsing\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-default\-context\-menu\fR
+.RS 4
+Whether right\-clicks open a context menu\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-dns\-prefetching\fR
+.RS 4
+Whether webkit prefetches domain names\&. default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-developer\-extras\fR
+.RS 4
+Whether the web\-inspector should be enabled\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-dom\-paste\fR
+.RS 4
+Whether enable DOM\-paste\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-frame\-flattening\fR
+.RS 4
+Whether to enable the Frame Flattening\&. With this setting each subframe is expanded to its contents, which will flatten all the frames to become one scrollable page\&. Whether file uris can be accessed\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-file\-access\-from\-file\-uris\fR
+.RS 4
+Whether file uris can be accessed\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-html5\-database\fR
+.RS 4
+Whether to enable HTML5 client\-side SQL database support\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-html5\-local\-storage\fR
+.RS 4
+Whether to enable HTML5 localStorage support\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-java\-applet\fR
+.RS 4
+Whether to enable Java <applet>\-tag\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-offline\-web\-application\-cache\fR
+.RS 4
+Enable or disable HTML5 offline web application cache support\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-page\-cache\fR
+.RS 4
+Enable or disable page cache\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-plugins\fR
+.RS 4
+Enable or disable embedded plugins\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-private\-browsing\fR
+.RS 4
+Enable or disable private browsing\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-scripts\fR
+.RS 4
+Enable or disable embedded scripting\-languages\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-site\-specific\-quirks\fR
+.RS 4
+Enables the site\-specific compatibility workarounds\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-spatial\-navigation\fR
+.RS 4
+Whether to enable the Spatial Navigation\&. This feature consists in the ability to navigate between focusable elements in a Web page, such as hyperlinks and form controls, by using Left, Right, Up and Down arrow keys\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-spell\-checking\fR
+.RS 4
+Whether to enable spell checking\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBenable\-universal\-access\-from\-file\-uris\fR
+.RS 4
+Whether to allow files loaded through file:// URIs universal access to all pages\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenable\-xss\-auditor\fR
+.RS 4
+Whether to enable the XSS Auditor\&. This feature filters some kinds of reflective XSS attacks on vulnerable web sites\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBenforce\-96\-dpi\fR
+.RS 4
+Enforce a resolution of 96 DPI\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBfantasy\-font\-family\fR
+.RS 4
+Default fantasy font family used to display text\&. Possible values: a font description or NULL, default value:
+\fIserif\fR\&.
+.RE
+.PP
+\fBjavascript\-can\-access\-clipboard\fR
+.RS 4
+Whether javascript can access Clipboard\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBfull\-content\-zoom\fR
+.RS 4
+Whether the full content is scaled when zooming\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBjavascript\-can\-open\-windows\-automatically\fR
+.RS 4
+Whether JavaScript can open popup windows automatically without user intervention\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBminimum\-font\-size\fR
+.RS 4
+The minimum font size used to display text\&. Possible values: a font size (integer), default value:
+\fI5\fR\&.
+.RE
+.PP
+\fBminimum\-logical\-font\-size\fR
+.RS 4
+The minimum logical font size used to display text\&. Possible values: a font size (integer), default value:
+\fI5\fR\&.
+.RE
+.PP
+\fBmonospace\-font\-family\fR
+.RS 4
+Default font family used to display monospace text\&. Possible values: a font description or NULL, default value:
+\fImonospace\fR\&.
+.RE
+.PP
+\fBprint\-backgrounds\fR
+.RS 4
+Whether background images should be printed\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBresizable\-text\-areas\fR
+.RS 4
+Whether text areas are resizable\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBsans\-serif\-font\-family\fR
+.RS 4
+Default sans\-serif font family used to display text\&. Possible values: a font description or NULL, default value:
+\fIsans\-serif\fR\&.
+.RE
+.PP
+\fBserif\-font\-family\fR
+.RS 4
+Default serif font family used to display text\&. Possible values: a font description or NULL, default value:
+\fIserif\fR\&.
+.RE
+.PP
+\fBspell\-checking\-language\fR
+.RS 4
+The languages to be used for spell checking, separated by commas\&. Possible values: a string or NULL, default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBtab\-cycles\-through\-elements\fR
+.RS 4
+Whether the tab key cycles through elements on the page\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBuser\-agent\fR
+.RS 4
+The user\-agent\-string\&. Possible values: a user\-agent or NULL, default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBuser\-stylesheet\-uri\fR
+.RS 4
+The URI of a stylesheet that is applied to every page\&. If a local file is used, must start with file://\&. Possible values: an uri\-string or NULL, default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBzoom\-level\fR
+.RS 4
+The zoom level of the content\&. Possible values: a decimal, default value:
+\fI1\&.0\fR\&.
+.RE
+.PP
+\fBzoom\-step\fR
+.RS 4
+The value by which the zoom level is changed when zooming in or out\&. Possible values: a decimal, default value:
+\fI0\&.1\fR\&.
+.RE
+.SS "Other settings"
+.PP
+\fBactive\-completion\-bg\-color\fR
+.RS 4
+The background color for an active element in tab\-completion\&. Possible values: an rgb color\-string, default value:
+\fI#000000\fR\&.
+.RE
+.PP
+\fBactive\-completion\-fg\-color\fR
+.RS 4
+The foreground color for an active element in tab\-completion\&. Possible values: an rgb color\-string\&. default value:
+\fI#53868b\fR\&.
+.RE
+.PP
+\fBadblocker\fR
+.RS 4
+Block advertisements using a filterlist, see also \&.IR adblocker\-filterlist \&. Default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBadblocker\-filterlist\fR
+.RS 4
+A path to a adblock plus compatible filterlist for the adblocker\&. Default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBbackground\-color\fR
+.RS 4
+The background color of the statusbar\&. Possible values: an rgb color\-string, default value:
+\fI#000000\fR\&.
+.RE
+.PP
+\fBforeground\-color\fR
+.RS 4
+The foreground color of statusbar\&. Possible values: an rgb color\-string\&. default value:
+\fI#ffffff\fR\&.
+.RE
+.PP
+\fBauto\-completion\fR
+.RS 4
+Whether possible keystrokes should be shown\&. (Shift\-) Tab cycles through keystrokes\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBauto\-insert\-mode\fR
+.RS 4
+Whether to go automatically in insert mode if an editable element has focus after loading a site\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBbackground\-tabs\fR
+.RS 4
+Open new tabs in background\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBcache\-model\fR
+.RS 4
+The cache model used by webkit, possible values are
+\fIwebbrowser\fR
+and
+\fIdocumentviewer\fR\&. Webbrowser increases loading speed but increases memory usage, documentviewer reduces memory usage but also decreases browsing speed\&. Default Value:
+\fIwebbrowser\fR\&.
+.RE
+.PP
+\fBclose\-tab\-focus\-policy\fR
+.RS 4
+Controls the focus when the focused tab is closed, possible values are
+\fIright\fR,
+\fIleft\fR,
+\fIrightmost\fR, and
+\fIleftmost\fR; default value:
+\fIright\fR\&.
+.RE
+.PP
+\fBcomplete\-bookmarks\fR
+.RS 4
+Whether to complete bookmarks with tab\-completion\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBcomplete\-history\fR
+.RS 4
+Whether to complete browsing history with tab\-completion\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBcomplete\-searchengines\fR
+.RS 4
+Whether to complete searchengines with tab\-completion\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBcomplete\-userscripts\fR
+.RS 4
+Whether to complete userscripts with tab\-completion\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBcookies\-store\-policy\fR
+.RS 4
+The storage policy for cookies, possible values are
+\fIsession\fR,
+\fIpersistent\fR, and
+\fInever\fR\&. If set to session all session cookies are accepted, only cookies with a matching domain in cookies\&.allow will be stored persistently\&. If set to
+\fIpersistent\fR
+all cookies are stored persistently\&. If set to
+\fInever\fR
+the cookies allowed by cookies_session\&.allow are allowed for the current session and cookies allowed by cookies\&.allow are save persistently, all other cookies are rejected\&. Default value:
+\fIsession\fR\&.
+.RE
+.PP
+\fBcookies\-accept\-policy\fR
+.RS 4
+The accept policy for cookies\&.
+\fIalways\fR
+will accept all cookies,
+\fInothirdparty\fR
+will accept all cookies except for third party cookies,
+\fInever\fR
+will reject all cookies\&. This setting also affects session cookies\&. default value:
+\fIalways\fR\&.
+.RE
+.PP
+\fBdefault\-width\fR
+.RS 4
+The default width of dwb\(cqs window\&. Possible values: width in pixel, default value:
+\fI800\fR\&.
+.RE
+.PP
+\fBdefault\-height\fR
+.RS 4
+The default height of dwb\(cqs window\&. Possible values: height in pixel, default value:
+\fI600\fR\&.
+.RE
+.PP
+\fBdownload\-fg\-color\fR
+.RS 4
+The foreground color of the download bar, default value:
+\fI#ffffff\fR\&.
+.RE
+.PP
+\fBdownload\-bg\-color\fR
+.RS 4
+The background color of the download bar, default value:
+\fI#000000\fR\&.
+.RE
+.PP
+\fBdownload\-gradient\-start\fR
+.RS 4
+The start color for the download progress gradient color, default value
+\fI#0000aa\fR\&.
+.RE
+.PP
+\fBdownload\-gradient\-stop\fR
+.RS 4
+The end color for the download progress gradient color, default value
+\fI#00aa00\fR\&.
+.RE
+.PP
+\fBdownload\-external\-command\fR
+.RS 4
+A command that will be invoked if
+\fIdownload\-use\-external\-program\fR
+is set\&. There are four variables that can be used in the command:
+\fIdwb_uri\fR
+will be replaced with the download\-uri,
+\fIdwb_output\fR
+will be replaced with the fullpath of the destination,
+\fIdwb_cookies\fR
+will be replaced with the path to the cookie\-file,
+\fIdwb_referer\fR
+will be replaced with the uri of the site the download started\&. Additionally the environment\-variables
+\fIDWB_URI\fR,
+\fIDWB_FILENAME\fR,
+\fIDWB_COOKIES\fR,
+\fIDWB_REFERER\fR,
+\fIDWB_MIME_TYPE\fR
+and
+\fIDWB_USER_AGENT\fR
+are set\&. Default value:
+\fIxterm \-e wget dwb_uri \-O dwb_output \-\-load\-cookies dwb_cookies\fR\&.
+.RE
+.PP
+\fBdownload\-directory\fR
+.RS 4
+The default download directory, if empty, the current working directory is used or the last download path is used\&. default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBdownload\-no\-confirm\fR
+.RS 4
+Whether to start downloads immediately without asking for a path,
+\fIdownload\-directory\fR
+needs to be set to an existing path\&. default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBdownload\-use\-external\-program\fR
+.RS 4
+Whether to use an external download program specified in \*(Aqdownload\-external\-programm\e\*(Aq or the builtin download helper\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBeditor\fR
+.RS 4
+External editor used for inputs/textareas\&. default value:
+\fIxterm \-e vim dwb_uri\fR\&.
+.RE
+.PP
+\fBenable\-favicon\fR
+.RS 4
+Whether to show a favicon in the tab\&. default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBerror\-color\fR
+.RS 4
+The color for error\-messages\&. Possible values: an rgb color\-string, default value:
+\fI#ff0000\fR\&.
+.RE
+.PP
+\fBerror\-color\fR
+.RS 4
+The color for prompt\-messages\&. Possible values: an rgb color\-string, default value:
+\fI#00ff00\fR\&.
+.RE
+.PP
+\fBfont\fR
+.RS 4
+The font used for the ui\&. Possible values: a font description string, default value:
+\fImonospace 8\fR\&.
+.RE
+.PP
+\fBfont\-completion\fR
+.RS 4
+The font used for tabcompletion\&. Possible values: a font description string\&.
+.RE
+.PP
+\fBfont\-entry\fR
+.RS 4
+The font used for the address bar\&. Possible values: a font description string\&.
+.RE
+.PP
+\fBfont\-hidden\-statusbar\fR
+.RS 4
+The font used for status elements if the statusbar is hidden\&. Possible values: a css font description\&. Default value: \*(Aqnormal\(cq10px helvetica \&.
+.RE
+.PP
+\fBfont\-nofocus\fR
+.RS 4
+The font used for tablabels without focus and completion items without focus\&. Possible values: a font description string\&.
+.RE
+.PP
+\fBhint\-active\-color\fR
+.RS 4
+The background color for active link, i\&.e\&. the link followed when Return is pressed\&. Possible values: a rgb color string, default value:
+\fI#00ff00\fR\&.
+.RE
+.PP
+\fBhint\-autofollow\fR
+.RS 4
+Whether to follow hints automatically if only one hint matches the typed letters\&. Default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBhint\-bg\-color\fR
+.RS 4
+The background color used for hints\&. Possible values: a rgb color string, default value:
+\fI#000088\fR\&.
+.RE
+.PP
+\fBhint\-border\fR
+.RS 4
+The boreder used for hints\&. Possible values: a css border description, default value:
+\fI2px dashed #000000\fR\&.
+.RE
+.PP
+\fBhint\-fg\-color\fR
+.RS 4
+The foreground color used for hints\&. Possible values: a rgb color string, default value:
+\fI#ffffff\fR\&.
+.RE
+.PP
+\fBhint\-font\fR
+.RS 4
+The font used for hints\&. Possible values: css font description, default value:
+\fIbold 10px monospace\fR\&.
+.RE
+.PP
+\fBhint\-highlight\-links\fR
+.RS 4
+Whether to highlight all links in hint\-mode, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBhint\-letter\-seq\fR
+.RS 4
+A letter sequence used for letter hints\&. Possible values: a letter sequence, every letter should appear only once\&. Default value:
+\fIFDSARTGBVECWXQYIOPMNHZULKJ\fR\&.
+.RE
+.PP
+\fBhint\-normal\-color\fR
+.RS 4
+The background color for a normal link\&. Possible values: a rgb color string, default value:
+\fI#ffff99\fR\&.
+.RE
+.PP
+\fBhint\-opacity\fR
+.RS 4
+The opacity of a hint\&. Possible values: a decimal from 0\&.0 to 1\&.0, default value:
+\fI0\&.75\fR\&.
+.RE
+.PP
+\fBhint\-style\fR
+.RS 4
+The type of hints, that are used\&. When set to "number", letters will match the links text\&. Possible values: letter/number, default value:
+\fIletter\fR\&.
+.RE
+.PP
+\fBhistory\-length\fR
+.RS 4
+The urls that are saved in the browsing history\&. Specifying a too large value can make tab\-completion slow\&. Possible values: number of urls, default value:
+\fI500\fR\&.
+.RE
+.PP
+\fBinsertmode\-bg\-color\fR
+.RS 4
+The background color of the statusbar in insertmode\&. Possible values: an rgb color\-string, default value:
+\fI#dddddd\fR\&.
+.RE
+.PP
+\fBinsertmode\-fg\-color\fR
+.RS 4
+The foreground color of the statusbar in insertmode\&. Possible values: an rgb color\-string, default value:
+\fI#000000\fR\&.
+.RE
+.PP
+\fBjavascript\-schemes\fR
+.RS 4
+Whether to allow loading javascript snippets with scheme
+\fIjavascript\fR, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBmessage\-delay\fR
+.RS 4
+The duration messages are shown\&. Possible values: duration in seconds (integer), default value:
+\fI2\fR\&.
+.RE
+.PP
+\fBnavigation\-history\-max\fR
+.RS 4
+Maximum length of navigation history\&.
+\fIenable\-private\-browsing\fR
+must be disabled to save command history at all\&. default value:
+\fI500\fR\&.
+.RE
+.PP
+\fBnew\-tab\-position\-policy\fR
+.RS 4
+Controls the position of a newly created tab, possible values are
+\fIright\fR, a new tab is created right of the current tab,
+\fIleft\fR, a new tab is created left of the current tab,
+\fIrightmost\fR, a new tab is created left of the last tab and
+\fIleftmost\fR, a new tab is created left of the first tab\&. Default value:
+\fIright\fR\&.
+.RE
+.PP
+\fBnormal\-completion\-bg\-color\fR
+.RS 4
+The background color of inactive element in tab\-completion\&. Possible values: an rgb color\-string, default value:
+\fI#151515\fR\&.
+.RE
+.PP
+\fBnormal\-completion\-fg\-color\fR
+.RS 4
+The foreground color of inactive element in tab\-completion\&. Possible values: an rgb color\-string\&. color\-string, default value:
+\fI#eeeeee\fR\&.
+.RE
+.PP
+\fBproxy\fR
+.RS 4
+Whether to use a HTTP\-proxy\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBproxy\-url\fR
+.RS 4
+The proxy\-url, can also be set via the http_proxy environment variable\&. Possible values: an url string, default value:
+\fINULL\fR\&.
+.RE
+.PP
+\fBsave\-session\fR
+.RS 4
+Save the session when dwb is closed and restore the last saved session when invoking dwb\&. Possible values: true/false, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBscheme\-handler\fR
+.RS 4
+A script or application that handles uris that cannot be loaded by dwb\&. dwb only loads uris with scheme
+\fIhttp\fR,
+\fIhttps\fR,
+\fIfile\fR,
+\fIabout\fR
+and
+\fIdwb\fR; support for e\&.g\&. ftp is provided through a scheme handler\&. The scheme handler can either be an application or a script\&. The first command line argument will be the uri for your application, so you can simply set this to
+\fIxdg\-open\fR\&. There are also the environment variables
+\fIDWB_URI\fR,
+\fIDWB_SCHEME\fR,
+\fIDWB_COOKIES\fR,
+\fIDWB_USER_AGENT\fR, and
+\fIDWB_REFERER\fR
+available which can be used in a script, for example:
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!/bin/sh
 
+case ${DWB_SCHEME} in
+  mailto) xterm \-\e(hye "mutt ${DWB_URI}";;
+  ftp) xterm \e(hye "ncftp ${DWB_URI}";;
+  *) xdg\-open ${DWB_URI}
+esac
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBscroll\-step\fR
+.RS 4
+The step\-increment in pixels for scrolling\&. If set to a value lower or equal 0, the default step\-increment will be used\&. default value:
+\fI0\&.0\fR\&.
+.RE
+.PP
+\fBscrollbars\fR
+.RS 4
+Whether scrollbars should be enabled\&. default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBsingle\-instance\fR
+.RS 4
+Only one instance of dwb per user\&. This option will be overridden by the commandlineoption \e(hyn\&. Possible values: true/false, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBssl\-strict\fR
+.RS 4
+Whether to allow only save ssl\-certificates\&. default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBssl\-ca\-cert\fR
+.RS 4
+Path to ssl\-certificate, only with libsoup < 2\&.38\&.
+.RE
+.PP
+\fBssl\-use\-system\-ca\-cert\fR
+.RS 4
+Path to ssl\-certificate, only with libsoup >= 2\&.38\&.
+.RE
+.PP
+\fBssl\-trusted\-color\fR
+.RS 4
+Color of the url in the statusbar for ssl\-encrypted sites and trusted certificate\&. default value:
+\fI#00ff00\fR\&.
+.RE
+.PP
+\fBssl\-untrusted\-color\fR
+.RS 4
+Color of the url in the statusbar for ssl\-encrypted sites and untrusted certificate\&. default value:
+\fI#ff0000\fR\&.
+.RE
+.PP
+\fBstartpage\fR
+.RS 4
+The default startpage\&. Possible values: an url or "about:blank" for an empty startpage, default value:
+\fIabout:blank\fR\&.
+.RE
+.PP
+\fBsync\-files\fR
+.RS 4
+Interval in seconds to save history and cookies to hdd or 0 to immediately save to hdd, default value: 0\&.
+.RE
+.PP
+\fBtabbar\-visible\fR
+.RS 4
+When the tabbar is hidden specifies the number of seconds the tabbar is visible when switching between tabs, default value:
+\fI2\fR\&.
+.RE
+.PP
+\fBtab\-active\-bg\-color\fR
+.RS 4
+The background color the tab of the focused tab\&. Possible values: an rgb color\-string, default value:
+\fI#000000\fR\&.
+.RE
+.PP
+\fBtab\-active\-fg\-color\fR
+.RS 4
+The foreground color of the tab of the focused tab\&. Possible values: an rgb color\-string, default value:
+\fI#ffffff\fR\&.
+.RE
+.PP
+\fBtab\-normal\-bg\-color\fR
+.RS 4
+The background color the tab of a not focused tab\&. Possible values: an rgb color\-string, default value:
+\fI#505050\fR\&.
+.RE
+.PP
+\fBtab\-normal\-fg\-color\fR
+.RS 4
+The foreground color of the tab of a not focused tab\&. Possible values: an rgb color\-string, default value:
+\fI#cccccc\fR\&.
+.RE
+.PP
+\fBtab\-normal\-fg\-color\fR
+.RS 4
+The foreground color of the tab of a not focused tab\&. Possible values: an rgb color\-string, default value:
+\fI#cccccc\fR\&.
+.RE
+.PP
+\fBtab\-protected\-color\fR
+.RS 4
+The color of the tabnumber of protected tabs\&. Possible values: an rgb color\-string, default value:
+\fI#ff0000\fR\&.
+.RE
+.PP
+\fBtab\-number\-color\fR
+.RS 4
+The color of the tabnumber\&. Possible values: an rgb color\-string, default value:
+\fI#ff0000\fR\&.
+.RE
+.PP
+\fBtabbed\-browsing\fR
+.RS 4
+Enable tabbed\-browsing\&. If disabled, all new window/new tab requests will be opened in a new window, default value:
+\fItrue\fR\&.
+.RE
+.PP
+\fBupdate\-search\-delay\fR
+.RS 4
+Delay in milliseconds before updating search results\&. If set to 0 search results will be updated after every keypress\&. If set to a value greater than 0 search results will be updated after that delay but only if the search\-term has not changed since the timeout started\&. It is recommended to set this value greater than 0, default value:
+\fI200\fR\&.
+.RE
+.PP
+\fBuse\-ntlm\fR
+.RS 4
+Whether to use NTLM\-authentication, default value:
+\fIfalse\fR\&.
+.RE
+.PP
+\fBwidget\-packing\fR
+.RS 4
+A string consisting of 4 characters, where possible characters are:
+\fId\fR,
+\fIw\fR,
+\fIT\fR,
+\fIt\fR,
+\fIS\fR
+and
+\fIs\fR\&. The order of the widgets correspond the the order of characters in the string where
+\fId\fR
+corresponds to the download bar,
+\fIt\fR
+and
+\fIT\fR
+to the tab bar where
+\fIT\fR
+means that the tabbar will not be visible,
+\fIw\fR
+to the webview and
+\fIs\fR
+and
+\fIS\fR
+to the statusbar where
+\fIS\fR
+means that the statusbar won\(cqt be visible\&. Default value:
+\fIdtws\fR\&.
+.RE
+.SH "FILES"
+.SS "Scripts"
+.sp
+Javascript userscripts can be stored in \fI~/\&.config/dwb/scripts\fR\&. The scripts are applied to pages depending on their filename extension, there are 4 possible extensions:
+.sp
+Scripts with extension
+.PP
+\fB\&.js\fR
+.RS 4
+are injected into the page directly after the load of a new page is committed\&.
+.RE
+.PP
+\fB\&.all\&.js\fR
+.RS 4
+Scripts with extension
+\fI\&.all\&.js\fR
+are injected into all frames of a page directly after the load of a new frame is committed\&.
+.RE
+.PP
+\fB\&.onload\&.js\fR
+.RS 4
+Scripts with extension
+\fI\&.onload\&.js\fR
+are injected into the page directly when loading of a page is done\&.
+.RE
+.PP
+\fB\&.onload\&.all\&.js\fR
+.RS 4
+Scripts with extension
+\fI\&.onload\&.all\&.js\fR
+are injected into all frames of a page when the load of a frame is done\&.
+.RE
+.SS "Userscripts"
+.sp
+Userscripts can be stored in \fI~/\&.config/dwb/userscripts\fR\&. The first argument of the script will be the current url, the second argument is the title, the third argument will be the profile name, the fourth argument is the numerical modifier and the fifth argument is a commandline argument\&. Also the variables \fIDWB_URI\fR, \fIDWB_TITLE\fR, \fIDWB_PROFILE\fR, \fIDWB_NUMMOD\fR, \fIDWB_ARGUMENT\fR, \fIDWB_REFERER\fR, and \fIDWB_USER_AGENT\fR are set\&. The keybinding for the script must be defined in the script itself in a commented line of the form \fB<comment symbols> dwb: <keybinding>\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBExamples\fR
+.RS 4
+.sp
+The following script will download the current webpage:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!/bin/bash
+# dwb: Control w
+
+wget $DWB_URI
+.fi
+.if n \{\
+.RE
+.\}
+.sp
 Popup an alert dialog:
+.sp
+.if n \{\
+.RS 4
+.\}
 .nf
+#!/bin/bash
+# dwb: Control h
 
-  #!/bin/bash
-  # dwb: Control h
-
-  echo "js window.alert('Hello world');" > ${DWB_FIFO}
-
+echo "js window\&.alert(\*(AqHello world\*(Aq);" > ${DWB_FIFO}
 .fi
-
-
-.SH AUTHOR
-portix <portix@gmx.net>
+.if n \{\
+.RE
+.\}
+.RE
+.SH "RESOURCES"
+.sp
+bitbucket: http://bitbucket\&.org/portix/dwb
+.sp
+homepage: http://portix\&.bitbucket\&.org/dwb/
