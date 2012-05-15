@@ -185,16 +185,6 @@ print_exception(JSContextRef ctx, JSValueRef exception) {
 }
 /*}}}*/
 
-/* evaluate {{{*/
-static void 
-evaluate(const char *script) {
-  if (script == NULL)
-    return;
-  JSStringRef js_script = JSStringCreateWithUTF8CString(script);
-  JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
-  JSStringRelease(js_script);
-}/*}}}*/
-
 /* inject {{{*/
 static JSValueRef
 inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -1484,7 +1474,11 @@ scripts_init() {
   if (dir != NULL) {
     GString *content = g_string_new(NULL);
     util_get_directory_content(content, dir, "js");
-    evaluate(content->str);
+    if (content != NULL)  {
+      JSStringRef js_script = JSStringCreateWithUTF8CString(content->str);
+      JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
+      JSStringRelease(js_script);
+    }
     g_string_free(content, true);
     g_free(dir);
   }
