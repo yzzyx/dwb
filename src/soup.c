@@ -27,6 +27,16 @@ static guint _changed_id;
 static SoupCookieJar *_tmpJar;
 static SoupCookieJar *_persJar;
 
+/*{{{*/
+static void
+dwb_soup_clear_jar(SoupCookieJar *jar) {
+  GSList *all_cookies = soup_cookie_jar_all_cookies(jar);
+  for (GSList *l = all_cookies; l; l=l->next) {
+    soup_cookie_jar_delete_cookie(jar, l->data);
+  }
+  soup_cookies_free(all_cookies);
+}/*}}}*/
+
 /* dwb_soup_allow_cookie(GList *, const char, CookieStorePolicy) {{{*/
 static DwbStatus
 dwb_soup_allow_cookie_simple(GList **whitelist, const char *filename, CookieStorePolicy policy) {
@@ -137,11 +147,7 @@ dwb_soup_allow_cookie(GList **whitelist, const char *filename, CookieStorePolicy
 /* dwb_soup_clean() {{{*/
 void 
 dwb_soup_clean() {
-  GSList *all_cookies = soup_cookie_jar_all_cookies(_tmpJar);
-  for (GSList *l = all_cookies; l; l=l->next) {
-    soup_cookie_jar_delete_cookie(_tmpJar, l->data);
-  }
-  soup_cookies_free(all_cookies);
+  dwb_soup_clear_jar(_tmpJar);
 }/*}}}*/
 
 /* dwb_soup_get_host_from_request(WebKitNetworkRequest ) {{{*/
@@ -253,6 +259,13 @@ dwb_soup_sync_cookies() {
   g_object_unref(j);
   flock(fd, LOCK_UN);
   close(fd);
+}
+
+void 
+dwb_soup_clear_cookies() {
+  dwb_soup_clear_jar(_tmpJar);
+  dwb_soup_clear_jar(_persJar);
+  dwb_soup_clear_jar(_jar);
 }
 
 /* dwb_soup_init_cookies {{{*/

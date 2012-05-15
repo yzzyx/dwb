@@ -83,7 +83,6 @@ static void dwb_init_key_map(void);
 static void dwb_init_style(void);
 static void dwb_apply_style(void);
 static void dwb_init_gui(void);
-static void dwb_free_list(GList *list, void (*func)(void*));
 
 static Navigation * dwb_get_search_completion(const char *text);
 
@@ -2622,7 +2621,7 @@ dwb_clean_vars() {
 }/*}}}*/
 
 /* dwb_free_list(GList *list, void (*func)(void*)) {{{*/
-static void
+void
 dwb_free_list(GList *list, void (*func)(void*)) {
   for (GList *l = list; l; l=l->next) {
     Navigation *n = l->data;

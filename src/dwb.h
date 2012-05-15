@@ -226,6 +226,15 @@ typedef enum  {
   COMP_QUICKMARK,
 } CompletionType;
 
+typedef enum  {
+  SANITIZE_HISTORY        = 1<<0, 
+  SANITIZE_COOKIES        = 1<<1, 
+  SANITIZE_CACHE          = 1<<2, 
+  SANITIZE_SESSION        = 1<<3, 
+  SANITIZE_ALLSESSIONS    = 1<<4, 
+} Sanitize;
+#define SANITIZE_ALL (SANITIZE_HISTORY | SANITIZE_CACHE | SANITIZE_COOKIES | SANITIZE_ALLSESSIONS)
+
 enum SetSetting {
   SET_GLOBAL, 
   SET_LOCAL, 
@@ -898,5 +907,7 @@ GList *dwb_get_simple_list(GList *, const char *filename);
 
 gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 char * dwb_get_raw_data(GList *gl);
+
+void dwb_free_list(GList *list, void (*func)(void*));
 
 #endif

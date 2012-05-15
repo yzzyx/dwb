@@ -123,7 +123,10 @@ session_load_status_callback(WebKitWebView *wv, GParamSpec *p, SessionTab *tab) 
     default: return;
   }
 }
-
+void
+session_clear_session() {
+  session_save_file(_session_name ? _session_name : "default", "", true);
+}
 
 /* session_load_webview(WebKitWebView *, char *, int *){{{*/
 static void

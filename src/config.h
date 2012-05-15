@@ -181,6 +181,7 @@ static KeyValue KEYS[] = {
   { "cancel_download",                    {   "ad",        0 }, }, 
   { "local_set",                    {   NULL,        0 }, }, 
   { "dump",                    {   NULL,        0 }, }, 
+  { "sanitize",                    {   NULL,        0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -823,6 +824,10 @@ static FunctionMap FMAP [] = {
   { { "fullscreen",    "Toggle fullscreen" },                 CP_COMMANDLINE, 
     (Func) commands_fullscreen, NULL,     ALWAYS_SM,    
     { 0 }, EP_NONE, { "fs", NULL }, },
+
+  { { "sanitize",    "Clear all private data" },                 CP_COMMANDLINE, 
+    (Func) commands_sanitize, "Invalid option for sanitize",     POST_SM,    
+    { 0 }, EP_NONE, { NULL }, },
   
   { { "open_editor",    "Open external editor" },                 CP_COMMANDLINE | CP_OVERRIDE_INSERT, 
     (Func) commands_open_editor, "No input focused",     POST_SM,    

@@ -705,5 +705,31 @@ util_str_chug(const char *str) {
   while (g_ascii_isspace(*str))
     str++;
   return str;
-
+}
+Sanitize
+util_string_to_sanitize(const char *string) {
+  Sanitize s = 0;
+  if (string == NULL || *string == 0) 
+    return SANITIZE_ALL;
+  char **token = g_strsplit(string, " ", -1);
+  for (int i=0; token[i]; i++) {
+    if (!strcmp(token[i], "history")) 
+      s |= SANITIZE_HISTORY;
+    else if (!strcmp(token[i], "cookies")) 
+      s |= SANITIZE_COOKIES;
+    else if (!strcmp(token[i], "cache")) 
+      s |= SANITIZE_CACHE;
+    else if (!strcmp(token[i], "all"))
+      s |= SANITIZE_ALL;
+    else if (!strcmp(token[i], "session"))
+      s |= SANITIZE_SESSION;
+    else if (!strcmp(token[i], "allsessions"))
+      s |= SANITIZE_ALLSESSIONS;
+    else {
+      s = -1;
+      break;
+    }
+  }
+  g_strfreev(token);
+  return s;
 }

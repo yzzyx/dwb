@@ -843,4 +843,37 @@ commands_dump(KeyMap *km, Arg *arg) {
   }
   return STATUS_OK;
 }
+/*{{{*/
+DwbStatus 
+commands_sanitize(KeyMap *km, Arg *arg) {
+  Sanitize s = util_string_to_sanitize(arg->p);
+  if (s == -1) {
+    return STATUS_ERROR;
+  }
+  if (s & SANITIZE_HISTORY) {
+    dwb_free_list(dwb.fc.history, (void_func)dwb_navigation_free);
+    dwb.fc.history = NULL;
+    remove(dwb.files.history);
+  }
+  if (s & (SANITIZE_HISTORY | SANITIZE_CACHE)) {
+    for (GList *gl = dwb.state.views; gl; gl=gl->next) {
+      WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(gl));
+      webkit_web_back_forward_list_clear(bf_list);
+    }
+  }
+  if (s & SANITIZE_COOKIES) {
+    remove(dwb.files.cookies);
+  }
+  if (s & (SANITIZE_CACHE | SANITIZE_COOKIES)) {
+    dwb_soup_clear_cookies();
+  }
+  if (s & (SANITIZE_SESSION)) {
+    session_clear_session();
+  }
+  if (s & (SANITIZE_ALLSESSIONS)) {
+    remove(dwb.files.session);
+  }
+  dwb_set_normal_message(dwb.state.fview, true, "Sanitized %s", arg->p ? arg->p : "all");
+  return STATUS_OK;
+}/*}}}*/
 /*}}}*/
