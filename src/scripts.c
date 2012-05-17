@@ -95,10 +95,12 @@ static JSStaticFunction wv_functions[] = {
 static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSValueRef wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSValueRef wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSStaticValue wv_values[] = {
   { "mainFrame", wv_get_main_frame, NULL, kJSDefaultAttributes }, 
   { "focusedFrame", wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
   { "allFrames",  wv_get_all_frames, NULL, kJSDefaultAttributes }, 
+  { "number",     wv_get_number, NULL, kJSDefaultAttributes }, 
   { 0, 0, 0, 0 }, 
 };
 
@@ -374,7 +376,6 @@ wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc,
   JSContextRef wctx = webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(wv));
   return inject(ctx, wctx, function, this, argc, argv, exc);
 }/*}}}*/
-
 /* wv_get_main_frame {{{*/
 static JSValueRef 
 wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
@@ -405,6 +406,18 @@ wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSV
     argv[n++] = make_object(ctx, G_OBJECT(sl->data));
   }
   return JSObjectMakeArray(ctx, argc, argv, exception);
+}/*}}}*/
+
+/* wv_get_number {{{*/
+static JSValueRef 
+wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  WebKitWebView *wv = JSObjectGetPrivate(object);
+  GList *gl = dwb.state.views;
+  for (int i=0; gl; i++, gl=gl->next) {
+    if (wv == WEBVIEW(gl)) 
+      return JSValueMakeNumber(ctx, i); 
+  }
+  return JSValueMakeNumber(ctx, -1); 
 }/*}}}*/
 /*}}}*/
 

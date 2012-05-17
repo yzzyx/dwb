@@ -12,7 +12,6 @@ LIBJSDIR=$(JSDIR)/$(LIBDIR)
 LIBJSFILES=$(LIBJSDIR)/signals.js $(LIBJSDIR)/enums.js $(LIBJSDIR)/data.js 
 SHAREDIR=share
 UTILDIR=util
-EXTENSIONSDIR=extensions
 SUBDIRS=$(SRCDIR) $(UTILDIR) 
 
 # Version info

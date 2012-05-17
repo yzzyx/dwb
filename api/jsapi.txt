@@ -625,6 +625,18 @@ The main frame of the webview
 
 ****
 [float]
+==== *number* ====
+
+[source,javascript]
+----
+wv.number        frame     read
+----
+
+The number of the webview, starting at 0
+****
+
+****
+[float]
 ==== *focusedFrame* ====
 
 [source,javascript]

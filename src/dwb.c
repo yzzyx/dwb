@@ -1172,11 +1172,11 @@ gboolean
 dwb_focus_view(GList *gl) {
   if (gl != dwb.state.fview) {
     if (EMIT_SCRIPT(TAB_FOCUS)) {
-      char *json = util_create_json(1, INTEGER, "last", g_list_position(dwb.state.views, dwb.state.fview));
-      ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(json, TAB_FOCUS, 0) };
-      SCRIPTS_EMIT_RETURN(signal, json);
+      //ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { SCRIPTS_WV(dwb.state.fview) }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
+    ScriptSignal signal = {
+      SCRIPTS_WV(gl), .objects = { G_OBJECT(VIEW(dwb.state.fview)->web)  }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
+      SCRIPTS_EMIT_RETURN(signal, NULL);
     }
-    //SCRIPTS_EMIT_RETURN(SCRIPT(gl), TAB_FOCUS, 1, INTEGER, "last", g_list_position(dwb.state.views, dwb.state.fview));
     gtk_widget_show(VIEW(gl)->scroll);
     dwb_soup_clean();
     if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )

@@ -38,11 +38,6 @@ install-data: all
 	install -m 644 $(SHAREDIR)/dwb.png $(DESTDIR)$(DATADIR)/pixmaps/dwb.png
 	install -d $(DESTDIR)$(DATADIR)/applications
 	install -m 644 $(SHAREDIR)/dwb.desktop $(DESTDIR)$(DATADIR)/applications/dwb.desktop
-	@# Extensions
-	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(EXTENSIONSDIR)
-	for extension in $(EXTENSIONSDIR)/*; do \
-		install -m 644 $$extension $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$$extension; \
-	done
 	@# Libjs
 	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBJSDIR)
 	for file in $(LIBJSDIR)/*; do \
