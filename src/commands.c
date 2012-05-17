@@ -360,7 +360,8 @@ commands_focus(KeyMap *km, Arg *arg) {
   if (dwb.state.views->next) {
     int pos = modulo(g_list_position(dwb.state.views, dwb.state.fview) + NUMMOD * arg->n, g_list_length(dwb.state.views));
     GList *g = g_list_nth(dwb.state.views, pos);
-    dwb_focus_view(g);
+    if (dwb_focus_view(g)) 
+      return STATUS_OK;
     if (! (dwb.state.bar_visible & BAR_VIS_TOP) && dwb.misc.tabbar_delay > 0) {
       gtk_widget_show(dwb.gui.topbox);
       if (running != 0) 
@@ -381,7 +382,8 @@ commands_focus_nth_view(KeyMap *km, Arg *arg) {
   GList *l = g_list_nth(dwb.state.views, dwb.state.nummod - 1);
   if (!l) 
     return STATUS_ERROR;
-  dwb_focus_view(l);
+  if (dwb_focus_view(l))
+    return STATUS_OK;
   if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
     gtk_widget_show(dwb.gui.topbox);
     if (running != 0) 
@@ -648,15 +650,6 @@ commands_quit(KeyMap *km, Arg *arg) {
   return STATUS_END;
 }/*}}}*/
 
-/* commands_reload_scripts {{{*/
-DwbStatus
-commands_reload_scripts(KeyMap *km, Arg *arg) {
-  dwb_init_scripts();
-  for (GList *l = dwb.state.views; l; l=l->next) {
-    webkit_web_view_reload(WEBVIEW(l));
-  }
-  return STATUS_OK;
-}/*}}}*/
 DwbStatus
 commands_reload_user_scripts(KeyMap *km, Arg *arg) {
   dwb_reload_userscripts();

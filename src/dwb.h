@@ -106,6 +106,7 @@
 #define CURRENT_WEBVIEW_WIDGET()    (((View*)dwb.state.fview->data)->web)
 #define CURRENT_WEBVIEW()           (WEBKIT_WEB_VIEW(((View*)dwb.state.fview->data)->web))
 #define MAIN_FRAME()                (webkit_web_view_get_main_frame(CURRENT_WEBVIEW()))  
+#define MAIN_FRAME_CAST(X)                (webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(X)))  
 #define FOCUSED_FRAME()             (webkit_web_view_get_focused_frame(CURRENT_WEBVIEW()))  
 #define VIEW_FROM_ARG(X)            (X && X->p ? ((GSList*)X->p)->data : dwb.state.fview->data)
 #define WEBVIEW_FROM_ARG(arg)       (WEBKIT_WEB_VIEW(((View*)(arg && arg->p ? ((GSList*)arg->p)->data : dwb.state.fview->data))->web))
@@ -170,6 +171,7 @@ GTimer *__timer;
 #define BPGB 1073741824
 
 #define DEFAULT_WIDGET_PACKING "dtws"
+#define WIDGET_PACK_LENGTH 4
 
 /*}}}*/
 
@@ -346,6 +348,9 @@ typedef enum {
   BOOLEAN     = 0x04,
   COLOR_CHAR  = 0x05,
   HTML_STRING = 0x06,
+  ULONG       = 0x07,
+  LONG        = 0x08,
+  UINTEGER    = 0x09,
 } DwbType;
 
 typedef enum { 
@@ -608,6 +613,7 @@ struct _ViewStatus {
   GSList *allowed_plugins;
   unsigned int lockprotect;
   WebKitDOMElement *style;
+  GSList *frames;
 };
 struct _View {
   GtkWidget *web;
@@ -624,6 +630,7 @@ struct _View {
   } hover;
   WebKitDOMElement *status_element;
   JSObjectRef hint_object;
+  JSObjectRef script_wv;
 };
 struct _Color {
   DwbColor active_fg;
@@ -690,8 +697,6 @@ struct _Misc {
   char *scripts_onload;
   char *hints;
   /* applied to all frames */
-  char *allscripts;
-  char *allscripts_onload;
   const char *profile;
   const char *default_search;
   gint find_delay;
@@ -723,6 +728,7 @@ struct _Misc {
   int bar_height;
   TabPosition tab_position;
   char *hint_style;
+  int script_signals;
 };
 struct _Files {
   const char *bookmarks;
@@ -736,7 +742,6 @@ struct _Files {
   const char *keys;
   const char *mimetypes;
   const char *quickmarks;
-  const char *scriptdir;
   const char *searchengines;
   const char *session;
   const char *settings;
@@ -858,7 +863,7 @@ void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *, GList **);
 char * dwb_get_host(WebKitWebView *);
-void dwb_focus_view(GList *);
+gboolean dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
 void dwb_set_key(const char *, char *);
 DwbStatus dwb_set_setting(const char *, char *value, int);
@@ -904,6 +909,7 @@ void dwb_init_signals(void);
 void dwb_parse_commands(const char *line);
 DwbStatus dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request);
 GList *dwb_get_simple_list(GList *, const char *filename);
+const char * dwb_prompt(gboolean visibility, char *prompt, ...);
 
 gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 char * dwb_get_raw_data(GList *gl);

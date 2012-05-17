@@ -21,15 +21,7 @@
 #include "entry.h"
 #include "util.h"
 #include "soup.h"
-
-typedef struct _DwbDownloadStatus {
-#if _HAS_GTK3 
-  gdouble blue, red, green, alpha;
-#else
-  guint blue, red, green;
-#endif
-  gint64 time;
-} DwbDownloadStatus;
+#include "scripts.h"
 
 typedef struct _DwbDownload {
   GtkWidget *event;
@@ -42,6 +34,16 @@ typedef struct _DwbDownload {
   guint sig_button;
   char *mimetype;
 } DwbDownload;
+typedef struct _DwbDownloadStatus {
+#if _HAS_GTK3 
+  gdouble blue, red, green, alpha;
+#else
+  guint blue, red, green;
+#endif
+  gint64 time;
+  DwbDownload *download;
+} DwbDownloadStatus;
+
 #define DWB_DOWNLOAD(X) ((DwbDownload*)((X)->data))
 
 static GList *_downloads = NULL;
@@ -246,7 +248,10 @@ download_delay(DwbDownload *download) {
 static void
 download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *dstatus) {
   WebKitDownloadStatus status = webkit_download_get_status(download);
-
+  if (EMIT_SCRIPT(DOWNLOAD_STATUS)) {
+    ScriptSignal signal = { .jsobj = NULL, { G_OBJECT(download) }, SCRIPTS_SIG_META(NULL, DOWNLOAD_STATUS, 1) };
+    scripts_emit(&signal);
+  }
   if (status == WEBKIT_DOWNLOAD_STATUS_FINISHED || status == WEBKIT_DOWNLOAD_STATUS_CANCELLED || status == WEBKIT_DOWNLOAD_STATUS_ERROR) {
     GList *list = download_get_download_label(download);
     if (list) {
@@ -447,6 +452,7 @@ download_start(const char *path) {
       _downloads = g_list_prepend(_downloads, active);
       DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
       s->blue = s->time = 0;
+      s->download = active;
       active->sig_button = g_signal_connect(active->event, "button-press-event", G_CALLBACK(download_button_press_cb), _downloads);
       g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(download_progress_cb), s);
       g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(download_status_cb), s);

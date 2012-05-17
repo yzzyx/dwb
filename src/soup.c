@@ -67,7 +67,16 @@ soup_get_header_from_request(WebKitNetworkRequest *request, const char *name) {
   }
   return NULL;
 }
-
+SoupMessage *
+dwb_soup_get_message(WebKitWebFrame *frame) {
+  WebKitWebDataSource *ds = webkit_web_frame_get_data_source(frame);
+  if (ds == NULL) 
+    return NULL;
+  WebKitNetworkRequest *request = webkit_web_data_source_get_request(ds);
+  if (request == NULL)
+    return NULL;
+  return webkit_network_request_get_message(request);
+}
 const char *
 soup_get_header(GList *gl, const char *name) {
   WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBVIEW(gl));

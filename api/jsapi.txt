@@ -1,0 +1,1832 @@
+= dwb's JavaScript API documentation =
+
+== Abstract == 
+
+*dwb* can be extended with different types of userscripts. 
+This api documentation describes the javascript interface. 
+
+== Getting Started == 
+Scripts that use the javascript api must be located in
++$XDG_CONFIG_HOME/dwb/userscripts+ like any other script. 
+To include a userscript put a script with
+shebang
+
+-------
+#!javascript
+-------
+
+in the userscripts directory. 
+
+All native javascript methods can be used in scripts, however there are
+limitations:  
+
+* The execution context of userscripts is completely seperated from the web
+execution context. Due to security concerns it is not possible to communicate
+with the web execution context, it is only possible to inject scripts into the
+web context.
+* In contrast to the global +window+ object in the web execution context, 
+the global object is a readonly object, i.e. it is not possible to set
+properties on the global object, see also <<Globaldata,global data>> for details.
+
+:numbered!:
+:caption:
+
+
+
+== Global ==
+
+Functions from the global object.
+
+=== Functions ===
+
+
+****
+[[bind]]
+[float]
+==== *bind()* ==== 
+
+[source,javascript]
+----
+void bind(String shortcut, Function callback)
+----
+
+Bind a javascript function to a shortcut. This is the preferred method of
+binding keys to shortcuts since the shortcut is evaluated using the native
+method, but also the keyPress-signal can be used to bind shortcuts. 
+
+ ::
+
+_shortcut_;; a shortcut shortcut, will be parsed the same way as if set in
+dwb:keys
+_callback_;; callback function that will be called when the shortcut is pressed
+****
+
+****
+[[execute]]
+[float]
+==== *execute()* ==== 
+
+[source,javascript]
+----
+Boolean execute(String command)
+----
+
+Executes a dwb command
+
+ ::
+
+_command_;; a dwb command to execute, will be parsed the same way as if executed
+from commandline
+_returns_;; +true+ if execution was successful
+****
+
+
+****
+[[include]]
+[float]
+==== *include()* ==== 
+
+[source,javascript]
+----
+Boolean include(String path, [Boolean global])
+----
+
+Includes a file. Note that there is only one context, all scripts are
+executed in this context. Included files are not visible in other scripts unless
++true+ is passed as second parameter. 
+
+ ::
+
+_path_;; Path to a file to include
+_global_;; Whether to include the script into the global scope, optional
+_returns_;; The return value of the included file
+****
+
+****
+[[timerStart]]
+[float]
+==== *timerStart()* ==== 
+
+[source,javascript]
+----
+Number timerStart(Number interval, Function func)
+----
+
+Executes a function repeatedly until the function returns +false+ or
+<<timerStop>> is called on the +id+ returned from this function
+
+ ::
+
+_interval_;; Interval in milliseconds
+_func_;; Function to execute
+_returns_;; An id that can be passed to timerStop
+****
+
+****
+[[timerStop]]
+[float]
+==== *timerStop()* ==== 
+
+[source,javascript]
+----
+Number timerStop(Number id)
+----
+
+Stops a timer started by <<timerStart>>
+
+ ::
+
+_id_;; The id returned from <<timerStart>>
+_returns_;; +true+ if the timer was stopped
+****
+
+****
+[[domainFromHost]]
+[float]
+==== *domainFromHost()* ==== 
+
+[source,javascript]
+----
+String domainFromHost(String hostname)
+----
+
+Gets the base domain name from a hostname where the base domain name is the
+effective second level domain name, e.g. for www.example.com it will be
+example.com, for www.example.co.uk it will be example.co.uk.
+
+ :: 
+
+_hostname_;; a hostname
+_returns_;; the base domain 
+****
+
+======
+.Example
+[source,javascript]
+---------------------------------
+execute("tabopen ixquick.com");
+
+// Execute a function once, similar to window.setTimeout()
+timerStart(2000, function() { 
+  tabs.current.inject("alert('Hello world')");
+  return false;
+});
+---------------------------------
+======
+
+NOTE: Scripts included with +include+ are either visible in the global scope or
+invisible, even in the including script. To use an included script it can return
+an object with its public objects: 
+
+======
+[source,javascript]
+---------------------------------
+// included script 
+
+var private = 37;
+return {
+  getPrivate : function () {
+    return private;
+  }
+};
+
+// Scripts that includes the above
+var i = include("/path/to/script");
+var p = i.getPrivate();               // 37
+---------------------------------
+======
+
+
+
+[[Globalobjects]]
+== Global Objects ==
+
+[[data]] 
+=== data ===
+The +data+ object can be used to determine internally used data securely. All
+properties are readonly Strings.
+
+****
+ ::
+
+_data.bookmarks_;; Bookmark file 
+_data.cacheDir_;; Cache directory 
+_data.configDir_;; Config directory 
+_data.cookies_;; Cookie file 
+_data.cookiesWhitelist_;; Whitelist for persistent cookies 
+_data.customKeys_;; Custom keyboard shortcuts 
+_data.history_;; History file 
+_data.keys_;; Shortcuts configuration file 
+_data.pluginsWhitelist_;; Whitelist for the plugin blocker
+_data.profile_;; Profile which will be +default+ unless another profile is specified on command line
+_data.quickmarks_;; Quickmark file 
+_data.scriptWhitelist_;; Whitelist for scripts
+_data.session_;; File with stored sessions for this profile
+_data.sessionCookiesWhitelist_;; Whitelist for session cookies
+_data.settings_;; Settings configuration file
+_data.searchEngines_;; Searchengines 
+****
+
+====
+.Example
+[source,javascript]
+---------------------------------
+// Get contents of the currently used bookmark file
+var bookmarks = io.read(data.bookmarks);
+--------------------------------
+====
+
+[[io]]
+=== io ===
+The +io+ object implements functions for input and output. 
+
+****
+[[error]]
+[float]
+==== *error()* ==== 
+
+[source,javascript]
+----
+void io.error(String text)
+----
+
+Shows an error message in the browser window.
+
+ :: 
+
+_text_;; The message to show
+****
+
+****
+[[notify]]
+[float]
+==== *notify()* ==== 
+
+[source,javascript]
+----
+void io.notify(String text)
+----
+
+Shows a message in the browser window.
+
+ :: 
+
+_text_;; The message to show
+****
+
+****
+[[print]]
+[float]
+==== *print()* ==== 
+
+[source,javascript]
+----
+void io.print(String text, [String stream])
+----
+
+Print text to +stdout+ or +stderr+ 
+
+ :: 
+
+_text_;; the text to print
+_stream_;; pass +"stderr"+ to print to stderr, optional
+****
+
+****
+[[prompt]]
+[float]
+==== *prompt()* ==== 
+
+[source,javascript]
+----
+String io.prompt(String text, [Boolean visible])
+----
+
+Gets user input synchronously.
+
+ :: 
+
+_text_;; The message for the prompt
+_visible_;; Whether the chars should be visible, pass +false+ for a password
+prompt, default +true+, optional
+_returns_;; The text that was entered or +null+
+****
+
+
+****
+[[write]]
+[float]
+==== *write()* ==== 
+
+[source,javascript]
+----
+Boolean io.write(String path, String mode, String text)
+----
+
+Write to a file
+
+ ::
+
+_path_;; Path to a file to write to
+_mode_;; Either +"a"+ to append to the file, or +"w"+ to strip the file or
+create a new file.
+_text_;; The text that should be written to the file
+_returns_;; +true+ if writing was successful
+****
+
+****
+[[read]]
+[float]
+==== *read()* ==== 
+
+[source,javascript]
+----
+String io.read(String path)
+----
+
+Read from a file.
+
+ ::
+
+_path_;; Path to a file that should be read
+_returns_;; A string with the file content
+****
+
+
+====
+.Example
+[source,javascript]
+---------------------------------
+var text = io.read("/home/foo/textfile.txt");
+io.print(text);
+--------------------------------
+====
+
+[[system]]
+=== system ===
+
+The +system+ object implements system functions.
+
+****
+[[fileTest]]
+[float]
+==== *fileTest()* ==== 
+
+[source,javascript]
+----
+Boolean system.fileTest(String path, FileTest flags)
+----
+
+Checks for <<FileTest>> flags on a file.
+
+ ::
+
+_path_;; Path to a file to check
+_flags_;; The flags to test
+_returns_;; +true+ if any of the test on the flags is true
+****
+
+****
+[[mkdir]]
+[float]
+==== *mkdir()* ==== 
+
+[source,javascript]
+----
+Boolean system.mkdir(String path, Number mode)
+----
+
+Creates a directory and all parent directories.
+
+ ::
+
+_path_;; Path to create
+_mode_;; The permissions the directory will get
+_returns_;; +true+ if creation was successful or directory already existed 
+****
+
+****
+[[spawn]]
+[float]
+==== *spawn()* ==== 
+
+[source,javascript]
+----
+SpawnError system.spawn(String command, [Function stdin], [Function stderr])
+----
+
+Executes a shell command using the default search path
+
+ ::
+
+_command_;; The command to execute
+_stdin(String)_;; Callback function for stdin, pass +null+ if only stderr is
+needed, optional
+_stderr(String)_;; Callback function for stderr, optional
+_returns_;; <<SpawnError>> if an error occured, 0 otherwise
+****
+
+****
+[[getEnv]]
+[float]
+==== *getEnv()* ==== 
+
+[source,javascript]
+----
+String system.getEnv(String name) 
+----
+
+Get a system environment variable
+
+ :: 
+
+_name_;; Name of the variable
+_returns_;; The variable or +null+ if the variable wasn't found
+****
+
+====
+.Example
+[source,javascript]
+------------
+var home = system.getEnv("HOME");
+// asynchronous wrapped read
+function asyncread(filename) {
+  system.spawn("cat " + filename, function (response) {
+      ...
+  });
+}
+asyncread(home + "/.bashrc");
+------------
+====
+
+
+[[tabs]]
+=== tabs ===
+The +tabs+ object implements functions and properties to get +webview+ objects. 
+
+==== Properties ====
+
+****
+[float]
+==== *current* ====
+
+[source,javascript]
+----
+tabs.current        webview     read
+----
+
+The currently focused webview
+****
+
+****
+[float]
+==== *length* ====
+
+[source,javascript]
+----
+tabs.length         Number      read
+----
+
+Total number of tabs
+****
+
+****
+[float]
+==== *number* ==== 
+
+[source,javascript]
+----
+tabs.number         Number      read
+----
+
+Number of the currently focused tab
+****
+
+
+
+
+==== Functions ====
+
+****
+[float]
+==== *nth()* ====
+
+[source,javascript]
+----
+webview tabs.nth(Number n) 
+----
+
+Gets the webview object of the nth tab
+
+ ::
+
+_n_;; Number of the tab
+_returns_;; The corresponding <<webview>>
+****
+
+
+====
+.Example
+[source,javascript]
+----
+var c = tabs.current;
+tabs.nth(2).loadUri(c.uri);
+----
+====
+
+[[Webkitobjects]]
+== Webkit objects ==
+
+All webkit objects correspond to gobject objects, i.e. they have the same
+properties, but the javascript properties are all camelcase. 
+For example, a +WebKitWebView+ has the property +zoom-level+, the corresponding
+javascript property is +zoomLevel+:
+
+====
+[source,javascript]
+---------------------------------
+var webview = tabs.current
+webview.zoomLevel = webview.zoomLevel * 2;
+---------------------------------
+====
+
+Webkit objects should not be compared using +==+, since it may happen that the
+same gobject is represented by different javascript objects, instead every
+webkit object implements an equals method. 
+
+****
+[float]
+==== *equals()* ==== 
+
+[source,javascript]
+----
+Boolean object.equals(Object compareObject) 
+----
+
+Compare two webkit objects
+
+ ::
+
+_compareObject_;; The object to compare
+_returns_;; +true+ if the the corresponding gobjects are equal
+****
+
+
+====
+[float]
+==== *Example* ====
+[source,javascript]
+------------
+signals.connect("navigation" function(wv, frame) {
+  if (frame.equals(wv.mainFrame) {
+    ...
+  }
+});
+------------
+====
+
+An exception is the webview object, for webview objects +==+ always gives the
+same result as +equals+.
+
+
+[[webview]]
+=== webview ===
+The +webview+ object represents the widget that actually displays the site
+content. 
+
+==== Properties ====
+
+The properties correspond to the gobject properties in camelcase. Additional
+properties are
+
+****
+[float]
+==== *allFrames* ====
+
+[source,javascript]
+----
+wv.allFrames        array of frames     read
+----
+
+All frames of a webview including the mainframe
+****
+
+****
+[float]
+==== *mainFrame* ====
+
+[source,javascript]
+----
+wv.mainFrame        frame     read
+----
+
+The main frame of the webview
+****
+
+****
+[float]
+==== *number* ====
+
+[source,javascript]
+----
+wv.number        frame     read
+----
+
+The number of the webview, starting at 0
+****
+
+****
+[float]
+==== *focusedFrame* ====
+
+[source,javascript]
+----
+wv.focusedFrame        frame     read
+----
+
+The focused frame of the webview
+****
+
+==== Functions ====
+
+****
+[float]
+==== *inject()* ==== 
+
+[source,javascript]
+----
+Boolean wv.inject(String script, [Boolean global]) 
+----
+
+Injects a script into a webview
+
+ ::
+
+_script_;; the script to inject
+_global_;; +true+ to inject it into the global scope, +false+ to encapsulate it
+in a function, optional
+_returns_;; +true+ if the script was injected, +false+ if an error occured
+****
+
+****
+[float]
+==== *history()* ====
+
+[source,javascript]
+----
+void wv.history(Number steps) 
+----
+
+Loads a history item +steps+ away from the current history item
+
+ ::
+
+_steps_;; Number of steps, pass a negative value to go back in history
+****
+
+****
+[float]
+==== *loadUri()* ==== 
+
+[source,javascript]
+----
+Boolean wv.loadUri(String uri, [Function callback]) 
+----
+
+Load an uri in a webview. 
+
+ ::
+
+_uri_;; The uri to load
+_callback_;; A callback function that will be called when the load status
+changes, return +true+ to stop the emission, optional
+_returns_;; +true+ if the uri is loaded
+****
+
+
+****
+[float]
+==== *reload()* ====
+
+[source,javascript]
+----
+void wv.reload(void) 
+----
+
+Reload a webview 
+****
+
+
+====
+[float]
+==== *Example* ====
+[source,javascript]
+------------
+var wv = tabs.current;
+
+wv.loadUri("http://www.example.com", function() {
+  if (wv.loadStatus == LoadStatus.finished) {
+    wv.inject("alert('Hello ' + wv.uri + "!!!");
+
+    return true;
+  }
+});
+------------
+====
+
+
+NOTE: If a script is injected from a <<loadStatus>>-callback the script must be
+injected after +LoadStatus.committed+ has been emitted.
+On +LoadStatus.committed+ the document 
+hasn't been created, if the script modifies the DOM it should be injected on
++LoadStatus.finished+. 
+If only +LoadStatus.committed+ or +loadFinished.committed+ are used it is better
+to use the corresponding signals instead to reduce overhead. 
+
+
+[[frame]]
+=== frame ===
+
+A frame represents a +frame+ or +iframe+. Due to same origin policy it
+is not possible to inject scripts from a <<webview>> into iframes with a
+different domain. For this purpose the +frame+ object can be used. 
+
+==== Properties ====
+
+The properties correspond to the gobject properties in camelcase.
+Additional properties are 
+
+****
+[float]
+==== *domain* ====
+
+[source,javascript]
+----
+frame.domain        frame     read
+----
+
+The domain name of the frame which is the effective second level domain
+****
+
+****
+[float]
+==== *host* ====
+
+[source,javascript]
+----
+frame.host        frame     read
+----
+
+The host name of the frame
+****
+
+====
+To get the domain or hostname of a webview 
+[source,javascript]
+----
+webview.mainFrame.domain
+webview.mainFrame.host
+----
+can be used.
+====
+
+
+
+==== Functions ====
+
+****
+[float]
+==== *inject()* ==== 
+
+[source,javascript]
+----
+Boolean frame.inject(String script, [Boolean global])
+----
+
+Injects a script into a frame
+
+ ::
+
+_script_;; the script to inject
+_global_;; +true+ to inject it into the global scope, +false+ to encapsulate it
+in a function, optional
+_returns_;; +true+ if the script was injected, +false+ if an error occured
+****
+
+
+[[Download]]
+=== download ===
+
+Corresponds to a +WebKitDownload+. 
+
+==== Constructor ====
+
+****
+[float]
+==== *Download()* ==== 
+[source,javascript]
+----
+new Download(String uri)
+----
+
+Constructs a new download
+
+ ::
+_uri_;; The uri of the download
+****
+
+==== Functions ====
+
+****
+[float]
+==== *start()* ==== 
+
+[source,javascript]
+----
+Boolean download.start([Function callback])
+----
+
+Starts a download
+
+ ::
+
+_callback_;; A callback function that will be executed whenever the
+<<DownloadStatus>> changes, return +true+ to stop the emission, optional.
+****
+
+
+****
+[float]
+==== *cancel()* ==== 
+
+[source,javascript]
+----
+void download.cancel()
+----
+
+Cancels a download
+****
+
+====
+.Example 
+[source,javascript]
+------
+var download = new Download("http://www.example.org/foo.pdf");
+var filename = "/tmp/" + download.suggestedFilename;
+download.destinationUri = "file://" + filename;
+download.start(function () {
+  if (download.status == DownloadStatus.finished) {
+    system.spawn("xpdf " + filename);
+  }
+});
+------
+====
+
+
+[[request]]
+=== request ===
+
+Corresponds to a +WebKitNavigationRequest+.
+
+[[navigationAction]]
+=== navigationAction ===
+
+Corresponds to a +WebKitWebNavigationAction+.
+
+
+== Signals ==
+With the +signals+ object *dwb* communicates with the script on certain events. 
+To connect to a signal one can call the connect function that is implemented by
+the signals object, that takes 2 arguments, the name of the signal and a
+callback function. 
+
+The callback function has a varying number of parameters.
+The last paramter is always a json-object which might be empty or contain
+additional data relevant to the signal. 
+A callback function should either return +true+ or +false+ or nothing which is
+equivalent to +false+.
+If multiple callbacks are connected to the same signal and one callback
+function returns +true+ the overall return value will be +true+.
+
+*dwb* only emits signals as long as one callback is connected to a signal. To
+reduce overhead one should disconnect from signals when no longer
+needed. 
+
+The +signals+ object is not a readonly object, properties can be added to the
+object which are visible in all scripts but it should be avoided to add
+properties on the +signals+ object. +signals+ should only be used to connect to
+signals or define custom signals. 
+
+The +signals+ object implements the following functions
+
+=== Functions ===
+
+[[connect]]
+[float]
+==== *connect()* ====
+
+****
+[source,javascript]
+----
+Number signals.connect(String signal, Function callback) 
+----
+Connect to a signal
+
+ ::
+
+_signal_;; The signal to connect to 
+_callback_;; The callback function which will be called when the signal is emitted
+_returns_;;  Unique id for this connection, can be passed to <<disconnect>>
+****
+
+****
+[[emit]]
+[float]
+==== *emit()* ==== 
+
+[source,javascript]
+----
+Boolean signals.emit(String signal,  ...)
+----
+
+Emits a signal with a variable number of arguments passed to the callback
+function
+
+ :: 
+
+_signal_;; The signal to emit
+_..._;; Objects passed to the callback function
+_returns_;; Overall return value from all connected callback functions
+****
+
+****
+[[disconnect]]
+[float]
+==== *disconnect()* ==== 
+
+[source,javascript]
+----
+Boolean signals.disconnect(Number id) 
+----
+disconnect from a signal 
+
+ ::
+
+_id_;; The id returned from <<connect>>
+_returns_;; +true+ if the signal was disconnected, +false+ if the signal
+wasn't found or was already disconnected. 
+****
+
+
+****
+[[disconnectByFunction]]
+[float]
+==== *disconnectByFunction()* ==== 
+
+[source,javascript]
+----
+Boolean signals.disconnectByFunction(Function callback) 
+----
+disconnect from all signals with matching callback function
+
+ ::
+
+_callback_;; The callback function passed to <<connect>>
+_returns_;; +true+ if signals were disconnected, +false+ if no signal
+was disconnected
+****
+
+****
+[[disconnectByName]]
+[float]
+==== *disconnectByName()* ==== 
+
+[source,javascript]
+----
+Boolean signals.disconnectByName(String signal) 
+----
+
+disconnect from all signals with matching name,
+It should be avoided to call +disconnectByName+
+on signals implemented by dwb since it will completely stop the emission of the
+signal in all scripts. 
+
+ ::
+
+_signal_;; The callback function passed to <<connect>>
+_returns_;; +true+ if signals were disconnected, +false+ if no signal
+was disconnected
+****
+
+=== Emitted signals ===
+
+Custom signals can be created by simply calling 
+
+[source,javascript]
+-----
+signals.connect("nameOfNewSignal", callbackFunction);
+-----
+
+
+
+Signals emitted by dwb are the following:
+
+
+****
+[[buttonPress]]
+[float]
+==== *buttonPress* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, hittestresult, json) 
+----
+
+Emitted when a button is pressed on the <<webview>>, return +true+ to prevent
+the default action
+
+ ::
+
+_webview_;; The <<webview>> which received the signal
+_hittestresult_;; Hittestresult under the cursor
+_json.button_;; The button that is pressed, usually a value between 1 and 5
+_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
+_json.time_;; The time in milliseconds when the button was pressed 
+_json.type_;; A <<ClickType>>
+_json.x_;; x-position relative to the window
+_json.xRoot_;; x-position relative to the screen
+_json.y_;; y-position relative to the window
+_json.yRoot_;; y-position relative to the screen
+****
+  
+****
+[[buttonRelease]]
+[float]
+==== *buttonRelease* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, hittestresult, json) 
+----
+
+Emitted when a button is released, return +true+ to prevent the default action
+
+ ::
+
+_webview_;; The <<webview>> which received the signal
+_hittestresult_;; Hittestresult under the cursor
+_json_;; Same as <<buttonPress>> but without _json.type_
+****
+
+****
+[[createTab]]
+[float]
+==== *createTab* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview) 
+----
+
+Emitted when a tab is created
+
+ ::
+
+_webview_;; The <<webview>> that corresponds to the created tab
+****
+
+****
+[[closeTab]]
+[float]
+==== *closeTab* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview) 
+----
+
+Emitted when a tab is closed
+
+ ::
+
+_webview_;; The <<webview>> that corresponds to the tab
+****
+
+****
+[[download]]
+[float]
+==== *download* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, download, json) 
+----
+
+Emitted before a download starts, return +true+ if the signal was handled. 
+
+ ::
+
+_webview_;; The <<webview>> that emitted the signal
+_download_;; The <<Download>> 
+_json.referer_;; The referer
+_json.mimeType_;; The mimetype of the file
+****
+
+****
+[[downloadStatus]]
+[float]
+==== *downloadStatus* ==== 
+
+[source,javascript]
+----
+Boolean callback(download) 
+----
+
+Emitted when the <<DownloadStatus>> changes. 
+
+ ::
+
+_download_;; The <<Download>> 
+****
+
+
+****
+[[frameCreated]]
+[float]
+==== *frameCreated* ==== 
+
+[source,javascript]
+----
+void callback(webview, frame) 
+----
+
+Emitted when the frame is created
+
+ ::
+
+_webview_;; The webview the frame belongs to
+_frame_;; The frame 
+****
+
+****
+[[frameStatus]]
+[float]
+==== *frameStatus* ==== 
+
+[source,javascript]
+----
+void callback(webview, frame) 
+----
+
+Emitted when the <<LoadStatus>> of a frame changes
+
+ ::
+
+_webview_;; The webview the frame belongs to
+_frame_;; The frame 
+****
+
+****
+[[hoveringOverLink]]
+[float]
+==== *hoveringOverLink* ==== 
+
+[source,javascript]
+----
+void callback(webview, json) 
+----
+
+Emitted when the mouse is over a link
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_json.uri_;; The uri of the link or +null+ if there is no link under the pointer, i.e. the pointer left a link
+_json.title_;; The link's title or +null+ if the pointer left a link
+****
+
+****
+[[keyPress]]
+[float]
+==== *keyPress* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when a key is pressed, return +true+ to prevent the default action
+
+ ::
+
+_webview_;; The focused webview
+_json.isModifier_;; Whether or not the key is a modifier
+_json.keyCode_;; Hardware keycode
+_json.keyVal_;; Keycode as listed in gdkkeysyms.h 
+_json.name_;; A string represantation of the key
+_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
+****
+
+****
+[[keyRelease]]
+[float]
+==== *keyRelease* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when a key is released, return +true+ to prevent the default action
+
+ ::
+
+_webview_;; The focused webview
+_json_;; Same as <<keyPress>>
+****
+
+
+****
+[[loadCommitted]]
+[float]
+==== *loadCommitted* ==== 
+
+[source,javascript]
+----
+void callback(webview) 
+----
+
+Emitted when the load has just commited, no data has been loaded when this
+signal is emitted. This is the preferred signal for injected scripts that do not
+manipulate the DOM.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+****
+
+****
+[[loadFinished]]
+[float]
+==== *loadFinished* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview) 
+----
+
+Emitted when the site has completely loaded. 
+
+ ::
+
+_webview_;; The webview that emitted the signal
+****
+
+****
+[[loadStatus]]
+[float]
+==== *loadStatus* ==== 
+
+[source,javascript]
+----
+void callback(webview) 
+----
+
+Emitted when the load status changes
+
+  ::
+
+_webview_;; The webview that emitted the signal
+****
+
+****
+[[mimeType]]
+[float]
+==== *mimeType* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, json) 
+----
+
+Decide whether or not to show a given mimetype. Return +true+ to stop the request.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frames requires the decision 
+_request_;; The network request
+_json.mimeType_;; The mimetype
+****
+
+****
+[[navigation]]
+[float]
+==== *navigation* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, action) 
+----
+
+Emitted before a new site is loaded, return +true+ to stop the request.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frame that requires the navigation 
+_request_;; The network request
+_action_;; The navigation action
+****
+
+****
+[[resource]]
+[float]
+==== *resource* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, frame, request, response) 
+----
+
+Emitted before a new resource is going to be loaded
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_frame_;;   The frame that dispatched the request
+_request_;; The network request
+_response_;; The network response
+****
+
+****
+[[tabFocus]]
+[float]
+==== *tabFocus* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted when another tab gets focus, return +true+ to stop the event
+
+ ::
+
+_webview_;; The new tab
+_json.last_;; The number of the previously focused tab
+****
+
+
+
+====
+.Example 
+[source,javascript]
+------
+// Prevent example.com from being loaded
+function navigationCallback(wv, frame, request, action) {
+  if (/.*\.example\.com.*/.test(request.uri)) {
+    return true;
+  }
+}
+signals.connect("navigation", navigationCallback);
+------
+====
+
+== Enum objects ==
+Enum objects are objects that have only readonly properties, mapping
+gtk/webkit enums to javascript objects. 
+
+****
+[[ButtonContext]]
+[float]
+==== *ButtonContext* ====
+
+[source,javascript]
+--------
+const ButtonContext = {
+  document   : 1 << 1,
+  link       : 1 << 2,
+  image      : 1 << 3,
+  media      : 1 << 4,
+  selection  : 1 << 5,
+  editable   : 1 << 6
+};
+--------
+****
+
+****
+[[ChecksumType]]
+[float]
+==== *ChecksumType* ====
+
+[source,javascript]
+--------
+const ChecksumType = {
+  md5     : 0, 
+  sha1    : 1, 
+  sha256  : 2 
+};
+--------
+****
+
+****
+[[ClickType]]
+[float]
+==== *ClickType* ====
+
+[source,javascript]
+--------
+const ClickType = {
+  click       : 4,
+  doubleClick : 5,
+  tripleClick : 6
+};
+--------
+****
+
+****
+[[DownloadStatus]]
+[float]
+==== *DownloadStatus* ====
+
+[source,javascript]
+-------
+const DownloadStatus = {
+  error       : -1,
+  created     : 0,
+  started     : 1, 
+  cancelled   : 2,
+  finished    : 3
+};
+-------
+****
+
+****
+[[FileTest]]
+[float]
+==== *FileTest* ====
+
+[source,javascript]
+-------
+const FileTest = {
+  regular    : 1 << 0,
+  symlink    : 1 << 1,
+  dir        : 1 << 2,
+  executable : 1 << 3,
+  exists     : 1 << 4
+};
+-------
+****
+
+****
+[[LoadStatus]]
+[float]
+==== *LoadStatus* ====
+
+[source,javascript]
+---------
+const LoadStatus = { 
+  provisional       : 0, 
+  committed         : 1,
+  finished          : 2,
+  firstVisualLayout : 3,
+  failed            : 4
+};
+---------
+****
+
+****
+[[Modifier]]
+[float]
+==== *Modifier* ====
+
+[source,javascript]
+--------
+const Modifier = {
+  Shift     : 1 << 0,
+  Lock	    : 1 << 1,
+  Control   : 1 << 2,
+  Mod1	    : 1 << 3,
+  Mod2	    : 1 << 4,
+  Mod3	    : 1 << 5,
+  Mod4	    : 1 << 6,
+  Mod5	    : 1 << 7,
+  Button1   : 1 << 8,
+  Button2   : 1 << 9,
+  Button3   : 1 << 10,
+  Button4   : 1 << 11,
+  Button5   : 1 << 12,
+  Super     : 1 << 26,
+  Hyper     : 1 << 27,
+  Meta      : 1 << 28,
+  Release   : 1 << 30,
+  Modifier  : 0x5c001fff
+};
+--------
+****
+
+****
+[[NavigationReason]]
+[float]
+==== *NavigationReason* ====
+
+[source,javascript]
+--------
+const NavigationReason = {
+  linkClicked     : 0,
+  formSubmitted   : 1,
+  backForward     : 2,
+  reload          : 3,
+  formResubmitted : 4,
+  other           : 5
+};
+--------
+****
+
+****
+[[SpawnError]]
+[float]
+==== *SpawnError* ====
+[source,javascript]
+--------
+const SpawnError = {
+  success       : 0, 
+  spawnFailed   : 1<<0, 
+  stdoutFailed  : 1<<1, 
+  stderrFailed  : 1<<2
+};
+--------
+****
+
+
+[[Globaldata]]
+== Global data == 
+Since all scripts share the same execution context, they are encapsulated in a
+function. To avoid conflicts with other scripts it is not allowed to set properties
+on the global object, i.e. 
+
+[source,javascript]
+-------
+#!javascript
+
+// not allowed, the global object is readonly
+number = 0;
+io.print(number);     // undefined
+
+// always use var instead
+var number = 0;
+io.print(number2);    // 0
+
+// won't work either
+function foo() {
+  bar = 1;
+}
+foo();
+io.print(bar);        // undefined
+-------
+
+For sharing data between scripts either signals can be created or the
++globals+-object can be used. To share data with the globals object securely when the
+scripts are loaded the script can return an +init+ function that will be called
+after all scripts have been initialized:
+
+
+.Script 1
+[source,javascript]
+-------
+#!javascript 
+
+// set when the script is initialized. 
+globals.foo = "bar";
+-------
+
+.Script 2
+[source,javascript]
+-------
+#!javascript 
+
+//  The behaviour is undefined, depending on if Script 1 was initialized before
+//  Script 2 or the other way round.
+io.print(globals.foo)       // undefined or "bar"
+
+// Will be called after all scripts have been initialized
+return  {
+  init : function () {
+    // globals.foo has been initialized
+    io.print(globals.foo); // "bar"
+  }
+};
+-------
+
+One exception is <<include>>, scripts that are explicitly included into the
+global scope setting the second parameter to true are visible in every script.
+
+.foo 
+[source,javascript]
+-------
+var foo = "bar";
+-------
+
+.Script 1
+
+[source,javascript]
+-------
+#!javascript 
+
+include("/path/to/foo", true); // visible in every script
+-------
+.Script 2
+
+[source,javascript]
+-------
+#!javascript 
+
+// Make sure Script 1 has been initialized
+return {
+  init : function() {
+    io.print(foo);                // "bar";
+  }
+};
+-------
+
+[[Extensions]] 
+== Extensions ==
+*dwb* provides the possibility to load extensions.
+It is recommended to implement javascript-userscripts as an extension to have 
+consistent configuration locations for scripts. 
+
+The +extensions+ object has the following properties and functions
+
+=== Properties === 
+
+****
+[float]
+==== *enableDebugging* ==== 
+
+[source,javascript]
+----
+extensions.enableDebugging         Boolean      read
+----
+
+Whether to enable debugging messages.
+****
+
+=== Functions ===
+
+****
+[[extensiondebug,debug]]
+[float]
+==== *debug()* ====
+
+[source,javascript]
+----
+void extensions.debug(String name, String message) 
+----
+Prints a debug message and the call stack to stdout, +enableDebugging+ must be
+set to +true+ in order to print debug messages. 
+
+ ::
+
+_name_;; Name of the extension
+_message_;; The debug message to print.
+****
+
+****
+[[extensionload,load]]
+[float]
+==== *load()* ====
+
+[source,javascript]
+----
+Boolean extensions.load(String name, [Object config]) 
+----
+Loads an extension
+
+ ::
+
+_name_;; Name of the extension
+_config_;; The config for the script, if omitted the config is read from
+$XDG_CONFIG_HOME/dwb/extensionrc, optional
+_returns_;;  True if the extension was loaded
+****
+
+****
+[[error]]
+[float]
+==== *error()* ====
+
+[source,javascript]
+----
+void extensions.error(String name, String message|Error e, [String message]) 
+----
+
+Print an error message and call stack to stderr.
+
+ ::
+
+_name_;; Name of the extension
+_message|e_;; The error message or an Error
+_message_;; If the second parameter is an Error, an optional message can be
+specified.
+****
+
+****
+[[message]]
+[float]
+==== *message()* ====
+
+[source,javascript]
+----
+void extensions.message(String name, String message) 
+----
+
+Print a consistent message to stderr
+
+ ::
+
+_name_;; Name of the extension
+_message_;; The message
+****
+
+
+****
+[[warning]]
+[float]
+==== *warning()* ====
+
+[source,javascript]
+----
+void extensions.warning(String name, String message) 
+----
+
+Print a consistent warning to stderr
+
+ ::
+
+_name_;; Name of the extension
+_message_;; The warning message
+****
+
+
+.Example
+
+[source,javascript]
+--------
+#!javascript 
+
+extensions.load("foobar");
+--------
+
+.Writing extensions
+
+The default searchpath for extensions isn +$XDG_DATA_HOME/dwb/extensions+ and
++SHARE_DIR/dwb/extensions+ where the 
++SHARE_DIR+ with sharedirectory being the share-dir of the installation.
+
+The configuration for extensions is in +$XDG_CONFIG_HOME/dwb/extensionsrc+ and should
+return a javascript object. 
+
+Every extension must implement one function named +init+ that takes one
+argument, the config for the extension. The function should return +true+ if the
+extension was successfully loaded, +false+ otherwise.
++init+ should be returned from the extension.
+
+.Example
+
+A extension called *foobar* in +$HOME/.local/share/dwb/extensions/foobar+.
+
+[source,javascript]
+--------
+function foo(val) {
+  ....
+}
+function bar(val) {
+  ....
+}
+return {
+  init : function (config) {
+    if (config.foo > 36) {
+      bar(config.foo);
+      foo(config.bar);
+      return true;
+    }
+    return false;
+  }
+};
+--------
+
+====
+.Example extensionrc
+[source,javascript]
+--------
+return {
+  foobar : { bar : "X", foo : 37 }, // config for extension foobar
+  barfoo : {  }                     // config for extension barfoo
+  
+};
+--------
+====
+
+
+// vim: set ft=asciidoc:

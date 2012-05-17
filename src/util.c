@@ -243,7 +243,7 @@ util_web_settings_sort_second(WebSettings *a, WebSettings *b) {
 
 /*util_get_directory_content(GString **, const char *filename) {{{*/
 void 
-util_get_directory_content(GString **buffer, const char *dirname, const char *extension) {
+util_get_directory_content(GString *buffer, const char *dirname, const char *extension) {
   GDir *dir;
   char *content;
   GError *error = NULL;
@@ -263,7 +263,7 @@ util_get_directory_content(GString **buffer, const char *dirname, const char *ex
       }
       filepath = g_build_filename(dirname, filename, NULL);
       if (g_file_get_contents(filepath, &content, NULL, &error)) {
-        g_string_append((*buffer), content);
+        g_string_append(buffer, content);
       }
       else {
         fprintf(stderr, "Cannot read %s: %s\n", filename, error->message);
@@ -339,6 +339,9 @@ util_set_file_content(const char *filename, const char *content) {
   char *dname = NULL;
   char *realpath = NULL;
   char buffer[PATH_MAX];
+  if (content == NULL || filename == NULL)
+    return false;
+
   filename = util_expand_home(buffer, filename, PATH_MAX);
   if (g_file_test(filename, G_FILE_TEST_IS_SYMLINK)) {
      link = g_file_read_link(filename, &error);
@@ -419,6 +422,16 @@ util_get_user_data_dir(const char *dir) {
   }
   return path;
 }/*}}}*/
+
+char *
+util_get_data_dir(const char *dir) {
+  char *path;
+  if ( (path = util_get_user_data_dir(dir)) )
+    return path;
+  if ( (path = util_get_system_data_dir(dir)) )
+    return path;
+  return NULL;
+}
 
 
 /* util_get_data_file(const char *filename)   return: filename (alloc) or NULL {{{*/
@@ -705,6 +718,76 @@ util_str_chug(const char *str) {
   while (g_ascii_isspace(*str))
     str++;
   return str;
+}
+gchar *
+util_create_json(int n, ...) {
+  va_list args;
+  va_start(args, n);
+  const gchar *key, *cval;
+  gdouble dval;
+  gint ival; guint uival; gulong ulval; glong lval; 
+  gboolean bval;
+  gchar *ret;
+
+  gint type;
+
+  GString *string = g_string_new("{");
+
+  for (int i=0; i<n; i++) {
+    type = va_arg(args, gint);
+    key = va_arg(args, gchar*);
+    g_string_append_printf(string, "\"%s\":", key);
+    switch (type) {
+      case CHAR : 
+        cval = va_arg(args, gchar*); 
+        if (cval == NULL)  {
+          g_string_append(string, "null");
+        }
+        else {
+          g_string_append_c(string, '"');
+          while (*cval) {
+            if (*cval == '"') 
+              g_string_append_c(string, '\\');
+            g_string_append_c(string, *cval);
+            cval++;
+          }
+          g_string_append_c(string, '"');
+        }
+        break;
+      case INTEGER  : 
+        ival = va_arg(args, gint);
+        g_string_append_printf(string, "%d", ival);
+        break;
+      case UINTEGER  : 
+        uival = va_arg(args, guint);
+        g_string_append_printf(string, "%u", uival);
+        break;
+      case LONG  : 
+        lval = va_arg(args, glong);
+        g_string_append_printf(string, "%ld", lval);
+        break;
+      case ULONG  : 
+        ulval = va_arg(args, gulong);
+        g_string_append_printf(string, "%lu", ulval);
+        break;
+      case DOUBLE : 
+        dval = va_arg(args, double); 
+        g_string_append_printf(string, "%f", dval);
+        break;
+      case BOOLEAN:
+        bval = va_arg(args, gboolean);
+        g_string_append_printf(string, "%s", bval ? "true" : "false");
+        break;
+      default : g_string_append(string, "null"); break;
+    }
+    if (i<n-1)
+      g_string_append_c(string, ',');
+  }
+  va_end(args);
+  g_string_append_c(string, '}');
+  ret = string->str;
+  g_string_free(string, false);
+  return ret;
 }
 Sanitize
 util_string_to_sanitize(const char *string) {

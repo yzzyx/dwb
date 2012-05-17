@@ -49,7 +49,7 @@ int util_web_settings_sort_first(WebSettings *, WebSettings *);
 
 // files
 char * util_expand_home(char *buffer, const char *filename, size_t length);
-void util_get_directory_content(GString **, const char *, const char *extension);
+void util_get_directory_content(GString *, const char *, const char *extension);
 char * util_get_file_content(const char *);
 char ** util_get_lines(const char *);
 gboolean util_set_file_content(const char *, const char *);
@@ -57,6 +57,7 @@ char * util_build_path(void);
 char * util_get_system_data_dir(const char *);
 char * util_get_user_data_dir(const char *);
 char * util_get_data_file(const char *, const char *);
+char * util_get_data_dir(const char *dir);
 
 // navigation
 Navigation * dwb_navigation_new_from_line(const char *);
@@ -95,5 +96,7 @@ char * util_check_directory(char *);
 int util_strlen_trailing_space(const char *str);
 const char * util_str_chug(const char *str);
 Sanitize util_string_to_sanitize(const char *);
+
+char *util_create_json(int, ...);
 
 #endif

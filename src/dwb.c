@@ -45,6 +45,7 @@
 #include "adblock.h"
 #include "domain.h"
 #include "application.h"
+#include "scripts.h"
 
 /* DECLARATIONS {{{*/
 static DwbStatus dwb_webkit_setting(GList *, WebSettings *);
@@ -1175,9 +1176,15 @@ dwb_get_host(WebKitWebView *web) {
 }/*}}}*/
 
 /* dwb_focus_view(GList *gl){{{*/
-void
+gboolean
 dwb_focus_view(GList *gl) {
   if (gl != dwb.state.fview) {
+    if (EMIT_SCRIPT(TAB_FOCUS)) {
+      //ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { SCRIPTS_WV(dwb.state.fview) }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
+    ScriptSignal signal = {
+      SCRIPTS_WV(gl), .objects = { G_OBJECT(VIEW(dwb.state.fview)->web)  }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
+      SCRIPTS_EMIT_RETURN(signal, NULL);
+    }
     gtk_widget_show(VIEW(gl)->scroll);
     dwb_soup_clean();
     if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )
@@ -1185,7 +1192,9 @@ dwb_focus_view(GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
     dwb_unfocus();
     dwb_focus(gl);
+    return false;
   }
+  return true;
 }/*}}}*/
 
 /* dwb_toggle_allowed(const char *filename, const char *data) {{{*/
@@ -1646,7 +1655,7 @@ dwb_execute_script(WebKitWebFrame *frame, const char *com, gboolean ret) {
     return NULL;
 
   if (eval_ret && ret) {
-    return js_value_to_char(context, eval_ret);
+    return js_value_to_char(context, eval_ret, JS_STRING_MAX, NULL);
   }
   return NULL;
 }
@@ -1695,7 +1704,6 @@ dwb_prepend_navigation(GList *gl, GList **fc) {
     return STATUS_OK;
   }
   return STATUS_ERROR;
-
 }/*}}}*/
 
 /* dwb_confirm_snooper {{{*/
@@ -1713,6 +1721,19 @@ dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
   dwb.state.mode &= ~CONFIRM;
   return true;
 }/*}}}*/
+static gboolean
+dwb_prompt_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
+  gboolean ret = false;
+  if (e->type == GDK_KEY_RELEASE) 
+    return false;
+  switch (e->keyval) {
+    case GDK_KEY_Return:       *state = 0; ret = true; break;
+    case GDK_KEY_Escape:  ret = true; break;
+    default:              return false;
+  }
+  dwb.state.mode &= ~CONFIRM;
+  return ret;
+}
 
 /* dwb_confirm()  return confirmed (gboolean) {{{
  * yes / no confirmation
@@ -1743,6 +1764,35 @@ dwb_confirm(GList *gl, char *prompt, ...) {
   gtk_key_snooper_remove(id);
   return state > 0;
 }/*}}}*/
+
+const char *
+dwb_prompt(gboolean visibility, char *prompt, ...) {
+  dwb.state.mode |= CONFIRM;
+
+  va_list arg_list; 
+  va_start(arg_list, prompt);
+  char message[STRING_LENGTH];
+  vsnprintf(message, STRING_LENGTH, prompt, arg_list);
+  va_end(arg_list);
+  dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.active_fg, dwb.font.fd_active, false);
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
+    gtk_widget_show(dwb.gui.bottombox);
+  gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), visibility);
+  int state = -1;
+  entry_focus();
+  int id = gtk_key_snooper_install((GtkKeySnoopFunc)dwb_prompt_snooper_cb, &state);
+  while ((dwb.state.mode & CONFIRM) && state == -1) {
+    gtk_main_iteration();
+  }
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
+    gtk_widget_hide(dwb.gui.bottombox);
+  gtk_key_snooper_remove(id);
+  dwb_focus_scroll(dwb.state.fview);
+  CLEAR_COMMAND_TEXT();
+  
+  gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
+  return state == 0 ? GET_TEXT() : NULL;
+}
 
 /* dwb_save_quickmark(const char *key) {{{*/
 void 
@@ -2503,9 +2553,12 @@ dwb_get_scripts() {
   GList *gl = NULL;
   Navigation *n;
   GError *error = NULL;
+  FILE *f;
 
   if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
+      gboolean javascript = false;
+      char buf[11] = {0};
       char *path = g_build_filename(dwb.files.userscripts, filename, NULL);
       char *realpath;
       /* ignore subdirectories */
@@ -2520,7 +2573,21 @@ dwb_get_scripts() {
         g_free(path);
         path = realpath;
       }
-      if (!g_file_test(path, G_FILE_TEST_IS_EXECUTABLE)) {
+      if ( (f = fopen(path, "r")) != NULL) {
+        if (fgetc(f) == '#' && fgetc(f) == '!')  {
+          fgets(buf, 11, f);
+          if (!g_strcmp0(buf, "javascript")) {
+            int next = fgetc(f);
+            if (g_ascii_isspace(next)) {
+              javascript = true;
+            }
+          }
+        }
+        fclose(f);
+
+      }
+
+      if (!javascript && !g_file_test(path, G_FILE_TEST_IS_EXECUTABLE)) {
         fprintf(stderr, "Warning: userscript %s isn't executable and will be ignored.\n", path);
         continue;
       }
@@ -2528,8 +2595,17 @@ dwb_get_scripts() {
       g_file_get_contents(path, &content, NULL, NULL);
       if (content == NULL) 
         continue;
+      if (javascript) {
+        char *script = strchr(content, '\n');
+        if (script && *(script+1)) {
+          scripts_init_script(script+1);
+          g_free(content);
+          continue;
+        }
+      }
 
       char **lines = g_strsplit(content, "\n", -1);
+
 
       g_free(content);
       content = NULL;
@@ -2683,6 +2759,7 @@ dwb_clean_up() {
 
   util_rmdir(dwb.files.cachedir, true, true);
   gtk_widget_destroy(dwb.gui.window);
+  scripts_end();
   return true;
 }/*}}}*/
 
@@ -3056,35 +3133,9 @@ dwb_init_settings() {
     g_strfreev(keys);
 }/*}}}*/
 
-/* dwb_init_scripts{{{*/
-void 
-dwb_init_scripts() {
-  g_free(dwb.misc.scripts);
-  GString *normalbuffer = g_string_new(NULL);
-  GString *allbuffer    = g_string_new(NULL);
-
-  setlocale(LC_NUMERIC, "C");
-  /* user scripts */
-  util_get_directory_content(&allbuffer, dwb.files.scriptdir, "onload.all.js");
-  dwb.misc.allscripts_onload = g_strdup(allbuffer->str);
-  util_get_directory_content(&allbuffer, dwb.files.scriptdir, "onload.js");
-  dwb.misc.scripts_onload    = g_strdup(allbuffer->str);
-  g_string_erase(allbuffer, 0, -1);
-
-  util_get_directory_content(&normalbuffer, dwb.files.scriptdir, "js");
-  util_get_directory_content(&allbuffer, dwb.files.scriptdir, "all.js");
-
-  /* systemscripts */
-  g_string_append(normalbuffer, allbuffer->str);
-  dwb.misc.scripts = normalbuffer->str;
-  dwb.misc.allscripts = allbuffer->str;
-  g_string_free(normalbuffer, false);
-  g_string_free(allbuffer, false);
-  dwb_init_hints(NULL, NULL);
-}/*}}}*/
-
 static DwbStatus 
 dwb_init_hints(GList *gl, WebSettings *s) {
+  setlocale(LC_NUMERIC, "C");
   g_free(dwb.misc.hints);
   char *scriptpath = util_get_data_file(HINT_SCRIPT, "scripts");
   dwb.misc.hints = util_get_file_content(scriptpath);
@@ -3193,13 +3244,13 @@ dwb_pack(const char *layout, gboolean rebuild) {
   }
   while (g_ascii_isspace(*layout))
     layout++;
-  if (strlen(layout) != 4) {
+  if (strlen(layout) != WIDGET_PACK_LENGTH) {
     layout = default_layout;
     ret = STATUS_ERROR;
   }
 
   const char *valid_chars = default_layout;
-  char *buf = g_ascii_strdown(layout, 4);
+  char *buf = g_ascii_strdown(layout, WIDGET_PACK_LENGTH);
   char *matched;
   while (*valid_chars) {
     if ((matched = strchr(buf, *valid_chars)) == NULL) {
@@ -3450,7 +3501,7 @@ void
 dwb_init_files() {
   char *path           = util_build_path();
   char *profile_path   = util_check_directory(g_build_filename(path, dwb.misc.profile, NULL));
-  char *userscripts, *scripts, *cachedir;
+  char *userscripts, *cachedir;
 
   dwb.fc.bookmarks = NULL;
   dwb.fc.history = NULL;
@@ -3496,8 +3547,6 @@ dwb_init_files() {
   dwb.files.custom_keys     = g_build_filename(profile_path, "custom_keys",      NULL);
   dwb_check_create(dwb.files.custom_keys);
 
-  scripts                   = g_build_filename(path, "scripts",      NULL);
-  dwb.files.scriptdir       = util_check_directory(scripts);
   userscripts               = g_build_filename(path, "userscripts",   NULL);
   dwb.files.userscripts     = util_check_directory(userscripts);
 
@@ -3666,10 +3715,10 @@ dwb_init() {
   dwb_init_key_map();
   dwb_init_style();
   dwb_init_gui();
-  dwb_init_scripts();
   dwb_init_custom_keys(false);
   domain_init();
   adblock_init();
+  dwb_init_hints(NULL, NULL);
 
   dwb_soup_init();
 } /*}}}*/ /*}}}*/

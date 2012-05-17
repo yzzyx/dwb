@@ -20,8 +20,17 @@
 #include "dwb.h"
 #include "util.h"
 #include "js.h"
-#define JS_STRING_MAX 1024
 
+void
+js_make_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, ...) {
+  va_list arg_list; 
+  
+  va_start(arg_list, format);
+  gchar message[STRING_LENGTH];
+  vsnprintf(message, STRING_LENGTH, format, arg_list);
+  va_end(arg_list);
+  *exception = js_char_to_value(ctx, message);
+}
 /* js_get_object_property {{{*/
 JSObjectRef 
 js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
@@ -40,6 +49,13 @@ js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
 
 }/*}}}*/
 
+JSValueRef 
+js_char_to_value(JSContextRef ctx, const char *text) {
+  JSStringRef string = JSStringCreateWithUTF8CString(text);
+  JSValueRef ret = JSValueMakeString(ctx, string);
+  JSStringRelease(string);
+  return ret;
+}
 /* js_get_string_property {{{*/
 char * 
 js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
@@ -49,7 +65,7 @@ js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
   JSStringRelease(buffer);
   if (exc != NULL || !JSValueIsString(ctx, val) )
     return NULL;
-  return js_value_to_char(ctx, val);
+  return js_value_to_char(ctx, val, JS_STRING_MAX, NULL);
 }/*}}}*/
 
 /* js_get_double_property {{{*/
@@ -72,14 +88,15 @@ js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
  * Converts a JSStringRef, return a newly allocated char.
  * {{{*/
 char *
-js_string_to_char(JSContextRef ctx, JSStringRef jsstring) {
-  size_t length = MIN(JSStringGetLength(jsstring), JS_STRING_MAX) + 1;
+js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t size) {
+  size_t length;
+  if (size > 0) 
+    length = MIN(JSStringGetMaximumUTF8CStringSize(jsstring), size);
+  else 
+    length = JSStringGetMaximumUTF8CStringSize(jsstring);
 
-  char *ret = g_new(char, length);
-  size_t written = JSStringGetUTF8CString(jsstring, ret, length);
-    /* TODO: handle length error */
-  if (written != length)
-    return NULL;
+  char *ret = g_malloc(sizeof(gchar) * length);
+  JSStringGetUTF8CString(jsstring, ret, length);
   return ret;
 }/*}}}*/
 
@@ -145,7 +162,7 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, const char *string, 
     js_ret = JSObjectCallAsFunction(ctx, function_object, NULL, 0, NULL, NULL);
   }
   if (char_ret != NULL) {
-    ret = js_value_to_char(ctx, js_ret);
+    ret = js_value_to_char(ctx, js_ret, JS_STRING_MAX, NULL);
   }
 error_out: 
   if (js_name)
@@ -157,17 +174,29 @@ error_out:
 
 /*{{{*/
 char *
-js_value_to_char(JSContextRef ctx, JSValueRef value) {
-  JSValueRef exc = NULL;
+js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *exc) {
   if (value == NULL)
     return NULL;
   if (! JSValueIsString(ctx, value)) 
     return NULL;
-  JSStringRef jsstring = JSValueToStringCopy(ctx, value, &exc);
-  if (exc != NULL) 
+  JSStringRef jsstring = JSValueToStringCopy(ctx, value, exc);
+  if (jsstring == NULL) 
     return NULL;
 
-  char *ret = js_string_to_char(ctx, jsstring);
+  char *ret = js_string_to_char(ctx, jsstring, limit);
   JSStringRelease(jsstring);
   return ret;
 }/*}}}*/
+
+char *
+js_value_to_json(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *exc) {
+  if (value == NULL)
+    return NULL;
+  JSStringRef js_json = JSValueCreateJSONString(ctx, value, 2, exc);
+  if (js_json == NULL)
+    return NULL;
+  char *json = js_string_to_char(ctx, js_json, limit);
+  JSStringRelease(js_json);
+  return json;
+}
+

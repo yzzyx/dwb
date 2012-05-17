@@ -24,6 +24,7 @@
 #include "view.h"
 #include "session.h"
 #include "util.h"
+#include "scripts.h"
 
 static gboolean application_parse_option(const gchar *, const gchar *, gpointer , GError **);
 static void application_execute_args(char **);
@@ -304,6 +305,7 @@ application_start(GApplication *app, char **argv) {
   dwb_init();
 
   dwb_pack(GET_CHAR("widget-packing"), false);
+  scripts_init();
 
   if (opt_force) 
     session_flags |= SESSION_FORCE;
