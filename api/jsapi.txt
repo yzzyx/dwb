@@ -80,6 +80,19 @@ from commandline
 _returns_;; +true+ if execution was successful
 ****
 
+****
+[[exit]]
+[float]
+==== *exit()* ==== 
+
+[source,javascript]
+----
+Boolean exit()
+----
+
+Exit dwb, must be called when the script is running from commandline. 
+****
+
 
 ****
 [[include]]

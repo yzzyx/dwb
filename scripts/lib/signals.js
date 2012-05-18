@@ -80,7 +80,6 @@
     }, 
     "disconnectByName" : {
       value : function (name) {
-        io.print(name);
         if (signals[name] !== null && signals[name] !== undefined) {
           signals[name] = null;
           return true;

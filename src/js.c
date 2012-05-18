@@ -188,6 +188,42 @@ js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *e
   return ret;
 }/*}}}*/
 
+/* print_exception {{{*/
+gboolean
+js_print_exception(JSContextRef ctx, JSValueRef exception) {
+  if (exception == NULL) 
+    return false;
+  if (!JSValueIsObject(ctx, exception))
+    return false;
+  JSObjectRef o = JSValueToObject(ctx, exception, NULL);
+  if (o == NULL) 
+    return false;
+
+  gint line = (int)js_get_double_property(ctx, o, "line");
+  gchar *message = js_get_string_property(ctx, o, "message");
+  fprintf(stderr, "DWB SCRIPT EXCEPTION: in line %d: %s\n", line, message == NULL ? "unknown" : message);
+  g_free(message);
+  return true;
+}
+/*}}}*/
+
+
+JSObjectRef  
+js_make_function(JSContextRef ctx, const char *script) {
+  JSValueRef exc;
+  JSObjectRef ret = NULL;
+  JSStringRef body = JSStringCreateWithUTF8CString(script);
+  JSObjectRef function = JSObjectMakeFunction(ctx, NULL, 0, NULL, body, NULL, 0, &exc);
+  if (function != NULL) {
+    ret = function;
+  }
+  else {
+    js_print_exception(ctx, exc);
+  }
+  JSStringRelease(body);
+  return ret;
+}
+
 char *
 js_value_to_json(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *exc) {
   if (value == NULL)
@@ -198,5 +234,13 @@ js_value_to_json(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *e
   char *json = js_string_to_char(ctx, js_json, limit);
   JSStringRelease(js_json);
   return json;
+}
+JSValueRef
+js_execute(JSContextRef ctx, const char *script, JSValueRef *exc) {
+  JSObjectRef function = js_make_function(ctx, script);
+  if (function != NULL) {
+    return JSObjectCallAsFunction(ctx, function, NULL, 0, NULL, exc); 
+  }
+  return NULL;
 }
 
