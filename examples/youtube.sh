@@ -1,4 +1,4 @@
 #!/bin/bash
 # dwb: Control y
 
-youtube-dl -o "/tmp/%(title)s.flv" $1 
+youtube-dl -o "/tmp/%(title)s.flv" "$DWB_URI"
