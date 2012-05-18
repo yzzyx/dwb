@@ -28,6 +28,7 @@
 #include "js.h" 
 #include "soup.h" 
 #include "domain.h" 
+#include "application.h" 
 //#define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete )
 #define kJSDefaultProperty  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
 #define kJSDefaultAttributes  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
@@ -142,6 +143,7 @@ static JSObjectRef _sigObjects[SCRIPTS_SIG_LAST];
 static JSGlobalContextRef _global_context;
 static GSList *_script_list;
 static JSClassRef _webview_class, _frame_class, _download_class, _default_class, _download_class;
+static gboolean _commandline = false;
 
 /* MISC {{{*/
 /* uncamelize {{{*/
@@ -167,25 +169,6 @@ uncamelize(char *uncamel, const char *camel, char rep, size_t length) {
   while (!(*uncamel = 0) && written++<length-1);
   return ret;
 }/*}}}*/
-
-/* print_exception {{{*/
-static gboolean
-print_exception(JSContextRef ctx, JSValueRef exception) {
-  if (exception == NULL) 
-    return false;
-  if (!JSValueIsObject(ctx, exception))
-    return false;
-  JSObjectRef o = JSValueToObject(ctx, exception, NULL);
-  if (o == NULL) 
-    return false;
-
-  gint line = (int)js_get_double_property(ctx, o, "line");
-  gchar *message = js_get_string_property(ctx, o, "message");
-  fprintf(stderr, "DWB SCRIPT EXCEPTION: in line %d: %s\n", line, message == NULL ? "unknown" : message);
-  g_free(message);
-  return true;
-}
-/*}}}*/
 
 /* inject {{{*/
 static JSValueRef
@@ -540,6 +523,14 @@ global_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, s
   }
   return JSValueMakeBoolean(ctx, status == STATUS_OK);
 }/*}}}*/
+static JSValueRef 
+global_exit(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (_commandline)
+    application_stop();
+  else 
+    dwb_end();
+  return JSValueMakeUndefined(ctx);
+}
 
 /* global_include {{{*/
 static JSValueRef 
@@ -1281,6 +1272,7 @@ static void
 create_global_object() {
   JSStaticFunction global_functions[] = { 
     { "execute",          global_execute,         kJSDefaultAttributes },
+    { "exit",             global_exit,         kJSDefaultAttributes },
     { "bind",             global_bind,         kJSDefaultAttributes },
     { "checksum",         global_checksum,         kJSDefaultAttributes },
     { "include",          global_include,         kJSDefaultAttributes },
@@ -1464,17 +1456,18 @@ void
 scripts_init_script(const char *script) {
   if (_global_context == NULL) 
     create_global_object();
-  JSStringRef body = JSStringCreateWithUTF8CString(script);
-  JSValueRef exc = NULL;
-  JSObjectRef function = JSObjectMakeFunction(_global_context, NULL, 0, NULL, body, NULL, 0, &exc);
+  JSObjectRef function = js_make_function(_global_context, script);
   if (function != NULL) {
     _script_list = g_slist_prepend(_script_list, function);
   }
-  else {
-    print_exception(_global_context, exc);
-  }
-  JSStringRelease(body);
 }/*}}}*/
+
+void
+evaluate(const char *script) {
+    JSStringRef js_script = JSStringCreateWithUTF8CString(script);
+    JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
+    JSStringRelease(js_script);
+}
 
 /* scripts_init {{{*/
 void 
@@ -1496,6 +1489,28 @@ scripts_init() {
     g_free(dir);
   }
 }/*}}}*/
+
+void
+scripts_execute_scripts(char **scripts) {
+  g_return_if_fail(scripts != NULL);
+  _commandline = true;
+
+  create_global_object();
+  scripts_init();
+  char *content;
+  for (int i=0; scripts[i] != NULL; i++) {
+    content = util_get_file_content(scripts[i]); 
+    if (content != NULL) {
+      scripts_init_script(content);
+      g_free(content);
+    }
+  }
+  apply_scripts();
+}
+gboolean 
+scripts_execute_one(const char *script) {
+  return js_execute(_global_context, script, NULL) != NULL;
+}
 
 /* scripts_end {{{*/
 void

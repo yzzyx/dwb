@@ -30,6 +30,9 @@ JSObjectRef js_create_object(WebKitWebFrame *, const char *);
 char * js_call_as_function(WebKitWebFrame *, JSObjectRef, const char *string, const char *args, char **char_ret);
 JSValueRef js_char_to_value(JSContextRef ctx, const char *text);
 char * js_value_to_json(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *exc);
+JSValueRef js_execute(JSContextRef ctx, const char *, JSValueRef *exc);
+gboolean js_print_exception(JSContextRef ctx, JSValueRef exception);
+JSObjectRef js_make_function(JSContextRef ctx, const char *script);
 #define  JS_STRING_MAX 1024
 
 #endif

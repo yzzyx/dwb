@@ -60,7 +60,9 @@ void scripts_remove_tab(JSObjectRef );
 void scripts_end(void);
 void scripts_init_script(const char *);
 void scripts_init(void);
+void scripts_execute_scripts(char **scripts);
 DwbStatus scripts_eval_key(KeyMap *m, Arg *arg);
+gboolean scripts_execute_one(const char *script);
 
 #define EMIT_SCRIPT(sig)  ((dwb.misc.script_signals & (1<<SCRIPTS_SIG_##sig)))
 #define SCRIPTS_EMIT_RETURN(signal, json) G_STMT_START  \

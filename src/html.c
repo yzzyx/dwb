@@ -20,6 +20,7 @@
 #include "dwb.h"
 #include "html.h"
 #include "util.h"
+#include "scripts.h"
 
 #define HTML_REMOVE_BUTTON "<div style='float:right;cursor:pointer;' navigation='%s %s' onclick='location.reload();'>&times</div>"
 typedef struct _HtmlTable HtmlTable;
@@ -42,6 +43,7 @@ DwbStatus html_quickmarks(GList *, HtmlTable *);
 DwbStatus html_downloads(GList *, HtmlTable *);
 DwbStatus html_settings(GList *, HtmlTable *);
 DwbStatus html_startpage(GList *, HtmlTable *);
+DwbStatus html_scripts(GList *, HtmlTable *);
 DwbStatus html_keys(GList *, HtmlTable *);
 
 
@@ -53,6 +55,7 @@ static HtmlTable table[] = {
   { "dwb:downloads",        "Downloads",      INFO_FILE,      0, html_downloads, },
   { "dwb:keys",             "Keys",           INFO_FILE,      0, html_keys },
   { "dwb:settings",         "Settings",       INFO_FILE,      0, html_settings },
+  { "dwb:script",          "Scripts",        NULL,           0, html_scripts },
   { "dwb:startpage",         NULL,            NULL,           0, html_startpage },
 };
 
@@ -454,6 +457,44 @@ html_downloads(GList *gl, HtmlTable *table) {
 DwbStatus
 html_startpage(GList *gl, HtmlTable *table) {
   return dwb_open_startpage(gl);
+}
+gboolean
+html_scripts_confirm(WebKitDOMElement *el, WebKitDOMEvent *ev, GList *gl) {
+  glong val = webkit_dom_ui_event_get_key_code(WEBKIT_DOM_UI_EVENT(ev));
+  if (val == 13 && webkit_dom_mouse_event_get_ctrl_key((void*)ev)) {
+    char *html = webkit_dom_html_element_get_inner_text(WEBKIT_DOM_HTML_ELEMENT(el));
+    if (!scripts_execute_one(html)) {
+      dwb_set_error_message(dwb.state.fview, "An error occured");
+    }
+    else {
+      dwb_set_normal_message(dwb.state.fview, true, "Execution successfull");
+      dwb_change_mode(NORMAL_MODE, false);
+    }
+    webkit_dom_event_prevent_default(ev);
+    return true;
+  }
+  return false;
+}
+void
+html_scripts_load_status_cb(WebKitWebView *web, GParamSpec *p, GList *gl) {
+  WebKitLoadStatus s = webkit_web_view_get_load_status(web);
+  if (s == WEBKIT_LOAD_FINISHED) {
+    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
+    WebKitDOMHTMLElement *body = webkit_dom_document_get_body(doc);
+    webkit_dom_element_focus(WEBKIT_DOM_ELEMENT(body));
+    dwb_change_mode(INSERT_MODE);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(body), "keypress", G_CALLBACK(html_scripts_confirm), true, gl);
+    g_signal_handlers_disconnect_by_func(web, html_scripts_load_status_cb, gl);
+  }
+  else if (s == WEBKIT_LOAD_FAILED) {
+    g_signal_handlers_disconnect_by_func(web, html_scripts_load_status_cb, gl);
+  }
+}
+DwbStatus
+html_scripts(GList *gl, HtmlTable *table) {
+  g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(html_scripts_load_status_cb), gl); 
+  webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(WEBVIEW(gl)), "<body contentEditable='true'></body>", table->uri, table->uri);
+  return STATUS_OK;
 }
 
 gboolean 

@@ -39,6 +39,7 @@ static gboolean opt_version = false;
 static gboolean opt_force = false;
 static gchar *opt_restore = NULL;
 static gchar **opt_exe = NULL;
+static gchar **scripts = NULL;
 static GIOChannel *_fallback_channel;
 static GOptionEntry options[] = {
   { "embed", 'e', 0, G_OPTION_ARG_INT64, &dwb.gui.wid, "Embed into window with window id wid", "wid"},
@@ -50,6 +51,7 @@ static GOptionEntry options[] = {
   { "profile", 'p', 0, G_OPTION_ARG_STRING, &dwb.misc.profile, "Load configuration for 'profile'", "profile" },
   { "execute", 'x', 0, G_OPTION_ARG_STRING_ARRAY, &opt_exe, "Execute commands", NULL},
   { "version", 'v', 0, G_OPTION_ARG_NONE, &opt_version, "Show version information and exit", NULL},
+  { "scripts", 's', 0, G_OPTION_ARG_FILENAME_ARRAY, &scripts, "Execute a script", NULL},
   { NULL }
 };
 static GOptionContext *option_context;
@@ -147,6 +149,11 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
   if (!g_option_context_parse(c, &argc, argv, &error)) {
     fprintf(stderr, "Error parsing command line options: %s\n", error->message);
     *exit_status = 1;
+    return true;
+  }
+  if (scripts != NULL) {
+    scripts_execute_scripts(scripts);
+    g_application_hold(app);
     return true;
   }
 
