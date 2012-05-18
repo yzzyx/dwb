@@ -1967,6 +1967,21 @@ dwb_new_window(const char  *uri) {
   g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
 }/*}}}*/
 
+/* dwb_test_userscript (const char *)         return: char* (alloc) or NULL {{{*/
+static char * 
+dwb_test_userscript(const char *filename) {
+  char *path = g_build_filename(dwb.files.userscripts, filename, NULL); 
+
+  if (g_file_test(path, G_FILE_TEST_IS_REGULAR) || 
+      (g_str_has_prefix(filename, dwb.files.userscripts) && g_file_test(filename, G_FILE_TEST_IS_REGULAR) && (path = g_strdup(filename))) ) {
+    return path;
+  }
+  else {
+    g_free(path);
+  }
+  return NULL;
+}/*}}}*/
+
 /* dwb_load_uri(const char *uri) {{{*/
 void 
 dwb_load_uri(GList *gl, const char *arg) {
@@ -1974,6 +1989,7 @@ dwb_load_uri(GList *gl, const char *arg) {
   if (arg == NULL)
     return;
   const char *tmpuri;
+  char *script;
   char *uri = NULL; 
   char *argback = g_strdup(arg);
   char *backuri = argback;
@@ -2025,6 +2041,12 @@ dwb_load_uri(GList *gl, const char *arg) {
   }
   /* Check if uri is a directory */
   if ( (local_check_directory(gl, tmpuri, true, NULL)) ) {
+    goto clean;
+  }
+  if ( (script = dwb_test_userscript(tmpuri)) ) {
+    Arg a = { .arg = script };
+    dwb_execute_user_script(NULL, &a);
+    g_free(script);
     goto clean;
   }
   /* Check if uri is a regular file */
