@@ -297,6 +297,13 @@ tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
 /*}}}*/
 
 /* WEBVIEW {{{*/
+
+GList *
+find_webview(JSObjectRef o) {
+  GList *r;
+  for (r = dwb.state.views; r && VIEW(r)->script_wv != o; r=r->next);
+  return r;
+}
 /* wv_status_cb {{{*/
 static gboolean 
 wv_status_cb(CallbackData *c) {
@@ -378,8 +385,7 @@ wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, 
 /* wv_get_all_frames {{{*/
 static JSValueRef 
 wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  GList *gl = NULL;
-  for (gl = dwb.state.views; gl && VIEW(gl)->script_wv != object; gl=gl->next);
+  GList *gl = find_webview(object);
   if (gl == NULL)
     return JSValueMakeNull(ctx);
   int argc = g_slist_length(VIEW(gl)->status->frames);
@@ -394,14 +400,14 @@ wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSV
 /* wv_get_number {{{*/
 static JSValueRef 
 wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  WebKitWebView *wv = JSObjectGetPrivate(object);
   GList *gl = dwb.state.views;
   for (int i=0; gl; i++, gl=gl->next) {
-    if (wv == WEBVIEW(gl)) 
+    if (object == VIEW(gl)->script_wv) 
       return JSValueMakeNumber(ctx, i); 
   }
   return JSValueMakeNumber(ctx, -1); 
 }/*}}}*/
+
 /*}}}*/
 
 /* FRAMES {{{*/
