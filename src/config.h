@@ -203,9 +203,6 @@ static FunctionMap FMAP [] = {
 
   { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_set,            "Invalid value",                            POST_SM,     
-    { .p = NULL },                          EP_NONE,    { NULL }, },
-  { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 
-    (Func)commands_set,            "Invalid value",                            POST_SM,     
     { .p = NULL, .n = SET_GLOBAL },                          EP_NONE,    { NULL }, },
 
   { { "local_set",                "Set a setting",                    }, CP_COMMANDLINE, 
