@@ -1113,6 +1113,19 @@ _json_;; Same as <<buttonPress>> but without _json.type_
 ****
 
 ****
+[[close]]
+[float]
+==== *close* ==== 
+
+[source,javascript]
+----
+Boolean callback() 
+----
+
+Emitted when dwb is closed
+****
+
+****
 [[createTab]]
 [float]
 ==== *createTab* ==== 

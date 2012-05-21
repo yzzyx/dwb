@@ -2928,6 +2928,10 @@ dwb_end() {
       return false;
     }
   }
+  if (EMIT_SCRIPT(CLOSE)) {
+    ScriptSignal s = { .jsobj = NULL, SCRIPTS_SIG_META(NULL, CLOSE, 0) };
+    scripts_emit(&s);
+  }
 
   if (dwb_save_files(true)) {
     if (dwb_clean_up()) {

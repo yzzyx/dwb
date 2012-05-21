@@ -72,6 +72,7 @@ static Sigmap _sigmap[] = {
   { SCRIPTS_SIG_CLOSE_TAB, "closeTab" },
   { SCRIPTS_SIG_CREATE_TAB, "createTab" },
   { SCRIPTS_SIG_FRAME_CREATED, "frameCreated" },
+  { SCRIPTS_SIG_CLOSE, "close" },
 };
 
 
