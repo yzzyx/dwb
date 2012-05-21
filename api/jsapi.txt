@@ -116,6 +116,27 @@ _returns_;; The return value of the included file
 ****
 
 ****
+[[sendRequest]]
+[float]
+==== *sendRequest()* ==== 
+
+[source,javascript]
+----
+void sendRequest(String uri, Function callback, [String method])
+----
+
+Sends a http-request. 
+
+ ::
+
+_uri_;; The uri the request will be sent to.
+_callback_;; A callback that will be called when the request is finished, the
+callback has 2 parameters, the first will be the response body, the second the
+associated +SoupMessage+.
+_method_;; The http request method, default +GET+, optional.
+****
+
+****
 [[timerStart]]
 [float]
 ==== *timerStart()* ==== 

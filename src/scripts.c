@@ -529,6 +529,8 @@ global_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, s
   }
   return JSValueMakeBoolean(ctx, status == STATUS_OK);
 }/*}}}*/
+
+/* global_exit {{{*/
 static JSValueRef 
 global_exit(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (_commandline)
@@ -536,7 +538,7 @@ global_exit(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
   else 
     dwb_end();
   return JSValueMakeUndefined(ctx);
-}
+}/*}}}*/
 
 /* global_include {{{*/
 static JSValueRef 
@@ -592,6 +594,39 @@ global_domain_from_host(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject,
   JSValueRef ret = js_char_to_value(ctx, domain);
   g_free(host);
   return ret;
+}/*}}}*/
+
+/* global_send_request {{{*/
+void
+request_callback(SoupSession *session, SoupMessage *message, JSObjectRef function) {
+  JSValueRef vals[] = { js_char_to_value(_global_context, message->response_body->data), make_object(_global_context, G_OBJECT(message))  };
+  JSObjectCallAsFunction(_global_context, function, NULL, 1, vals, NULL);
+}
+static JSValueRef 
+global_send_request(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  gint ret = -1;
+  char *method = NULL;
+  if (argc < 2) {
+    js_make_exception(ctx, exc, EXCEPTION("sendRequest: missing argument."));
+    return JSValueMakeNumber(ctx, -1);
+  }
+  char *uri = js_value_to_char(ctx, argv[0], -1, exc);
+  if (uri == NULL) 
+    return JSValueMakeNumber(ctx, -1);
+  JSObjectRef function = JSValueToObject(ctx, argv[1], exc);
+  if (function == NULL || !JSObjectIsFunction(ctx, function)) 
+    goto error_out;
+  if (argc > 2) 
+    method = js_value_to_char(ctx, argv[2], -1, exc);
+  SoupMessage *msg = soup_message_new(method == NULL ? "GET" : method, uri);
+  if (msg == NULL)
+    goto error_out;
+  soup_session_queue_message(webkit_get_default_session(), msg, (SoupSessionCallback)request_callback, function);
+  ret = 0;
+error_out: 
+  g_free(uri);
+  g_free(method);
+  return JSValueMakeNumber(ctx, ret);
 }/*}}}*/
 
 /* timeout_callback {{{*/
@@ -1285,6 +1320,7 @@ create_global_object() {
     { "timerStart",       global_timer_start,         kJSDefaultAttributes },
     { "timerStop",        global_timer_stop,         kJSDefaultAttributes },
     { "domainFromHost",   global_domain_from_host,         kJSDefaultAttributes },
+    { "sendRequest",      global_send_request,         kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
 
