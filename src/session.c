@@ -207,9 +207,6 @@ session_restore(char *name, int flags) {
     char **line = g_strsplit(lines[i], " ", 4);
     if (line[0] && line[1] && line[2]) {
       int current = strtol(line[0], &end, 10);
-      if (current == 0 && *end == '|') {
-        locked_state = strtol(end+1, NULL, 10);
-      }
 
       if (current <= last) {
         currentview = view_add(NULL, false);
@@ -219,6 +216,9 @@ session_restore(char *name, int flags) {
           locked_state = 0;
         }
         lastview = currentview;
+      }
+      if (current == 0 && *end == '|') {
+        locked_state = strtol(end+1, NULL, 10);
       }
       if (bf_list != NULL) {
         WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(line[1], line[2]);
