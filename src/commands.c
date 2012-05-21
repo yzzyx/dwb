@@ -157,7 +157,7 @@ commands_normal_mode(KeyMap *km, Arg *a) {
 DwbStatus
 commands_toggle_proxy(KeyMap *km, Arg *a) {
   WebSettings *s = g_hash_table_lookup(dwb.settings, "proxy");
-  s->arg.b = !s->arg.b;
+  s->arg_local.b = !s->arg_local.b;
 
   dwb_set_proxy(NULL, s);
 
