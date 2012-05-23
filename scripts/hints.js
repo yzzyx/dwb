@@ -14,7 +14,7 @@ Object.freeze((function () {
     lastPosition : 0,
     newTab : false,
     hintTypes :  [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, [onclick], [onmousedown]," + 
-        "[onmouseover], [role=link], [role=option], [role=button], [role=option]",  // HINT_T_ALL
+        "[onmouseover], [role=link], [role=option], [role=button], [role=option], img",  // HINT_T_ALL
                    //[ "iframe", 
                    "a",  // HINT_T_LINKS
                    "img",  // HINT_T_IMAGES
@@ -79,6 +79,8 @@ Object.freeze((function () {
 
     hint.className =  "dwb_hint";
     this.createOverlay = function() {
+      if (this.element instanceof HTMLAreaElement) 
+        return;
       var comptop = toppos;
       var compleft = leftpos;
       var height = rect.height;
@@ -284,6 +286,42 @@ Object.freeze((function () {
     }
     return oe;
   };
+  var __appendHint = function (hints, varructor, e, win, r, oe) {
+    var element = new varructor(e, win, r, oe);
+    globals.elements.push(element);
+    hints.appendChild(element.hint);
+    if (globals.markHints) {
+      element.createOverlay();
+      hints.appendChild(element.overlay);
+    }
+  };
+  var __createMap = function (hints, varructor, e, win, r, oe) {
+    var map = null, a, i, coords, offsets;
+    var mapid = e.getAttribute("usemap");
+    var maps = win.document.getElementsByName(mapid.substring(1));
+    for (i = 0; i<maps.length; i++) {
+      if (maps[i] instanceof HTMLMapElement)  {
+        map = maps[i]; 
+        break;
+      }
+    }
+    if (map === null)
+      return;
+    var areas = map.querySelectorAll("area");
+    for (i=0; i<areas.length; i++) {
+      a = areas[i];
+      if (!a.hasAttribute("href"))
+        continue;
+      coords = a.coords.split(",", 2);
+      offsets = { 
+        offX : oe.offX + parseInt(coords[0], 10), 
+        offY : oe.offY + parseInt(coords[1], 10), 
+        marginTop : oe.marginTop, 
+        marginLeft : oe.marginLeft
+      };
+      __appendHint(hints, varructor, a, win, r, offsets);
+    }
+  };
   var __createHints = function(win, varructor, type) {
     var i;
     try {
@@ -302,14 +340,11 @@ Object.freeze((function () {
           __createHints(e.contentWindow, varructor, type);
           continue;
         }
+        else if (e instanceof HTMLImageElement && e.hasAttribute("usemap")) {
+          __createMap(hints, varructor, e, win, r, oe);
+        }
         else {
-          var element = new varructor(e, win, r, oe);
-          globals.elements.push(element);
-          hints.appendChild(element.hint);
-          if (globals.markHints) {
-            element.createOverlay();
-            hints.appendChild(element.overlay);
-          }
+          __appendHint(hints, varructor, e, win, r, oe);
         }
       }
       doc.body.appendChild(hints);
@@ -549,9 +584,7 @@ Object.freeze((function () {
   };
   var __submitSearchEngine = function (string) {
     var e = __getActive().element;
-    console.log(e.value);
     e.value = string;
-    console.log(e.name);
     e.form.submit();
     e.value = "";
     __clear();
