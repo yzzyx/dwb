@@ -610,7 +610,9 @@ struct _ViewStatus {
   SslState ssl;
   ScriptState scripts;
   char *hover_uri;
+#ifdef WITH_LIBSOUP_2_38
   char *request_uri;
+#endif
   GSList *allowed_plugins;
   unsigned int lockprotect;
   WebKitDOMElement *style;
@@ -703,7 +705,9 @@ struct _Misc {
   gint find_delay;
   SoupSession *soupsession;
   char *proxyuri;
+#ifdef WITH_LIBSOUP_2_38
   gboolean dns_lookup;
+#endif
 
   GIOChannel *si_channel;
   GList *userscripts;

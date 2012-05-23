@@ -70,7 +70,9 @@ static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
 static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_find_delay(GList *gl, WebSettings *s);
+#ifdef WITH_LIBSOUP_2_38
 static DwbStatus dwb_set_dns_lookup(GList *gl, WebSettings *s);
+#endif
 static DwbStatus dwb_init_hints(GList *gl, WebSettings *s);
 
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
@@ -179,11 +181,13 @@ dwb_set_find_delay(GList *gl, WebSettings *s) {
   dwb.misc.find_delay = s->arg_local.i;
   return STATUS_OK;
 }
+#ifdef WITH_LIBSOUP_2_38
 static DwbStatus 
 dwb_set_dns_lookup(GList *gl, WebSettings *s) {
   dwb.misc.dns_lookup = s->arg_local.b;
   return STATUS_OK;
 }
+#endif
 
 /* dwb_set_cookies {{{  */
 static DwbStatus
@@ -2096,11 +2100,13 @@ dwb_load_uri(GList *gl, const char *arg) {
     else if (strchr(tmpuri, ' ')) {
       uri = dwb_get_searchengine(tmpuri);
     }
+#ifdef WITH_LIBSOUP_2_38
     else if (dwb.misc.dns_lookup) {
       VIEW(gl)->status->request_uri = g_strdup(tmpuri);
       soup_session_prefetch_dns(dwb.misc.soupsession, tmpuri, NULL, (SoupAddressCallback)callback_dns_resolve, gl);
       goto clean;
     }
+#endif
     else if (!(uri = dwb_check_searchengine(tmpuri, false))) {
       uri = g_strdup_printf("http://%s", tmpuri);
     }

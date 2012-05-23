@@ -841,7 +841,9 @@ view_create_web_view() {
   status->search_string = NULL;
   status->downloads = NULL;
   status->hover_uri = NULL;
+#ifdef WITH_LIBSOUP_2_38
   status->request_uri = NULL;
+#endif
   status->progress = 0;
   status->allowed_plugins = NULL;
   status->style = NULL;
@@ -1035,6 +1037,9 @@ view_remove(GList *gl) {
   gtk_widget_destroy(v->scroll);
 
   FREE0(v->status->hover_uri);
+#ifdef WITH_LIBSOUP_2_38
+  FREE0(v->status->request_uri);
+#endif
   FREE0(v->status);
 
   FREE0(v);

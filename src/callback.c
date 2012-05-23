@@ -212,6 +212,7 @@ callback_key_release(GtkWidget *w, GdkEventKey *e) {
   return false;
 }/*}}}*/
 
+#ifdef WITH_LIBSOUP_2_38
 void 
 callback_dns_resolve(SoupAddress *address, guint status, GList *gl) {
   char *uri = NULL;
@@ -225,3 +226,4 @@ callback_dns_resolve(SoupAddress *address, guint status, GList *gl) {
   g_free(v->status->request_uri);
   v->status->request_uri = NULL;
 }
+#endif

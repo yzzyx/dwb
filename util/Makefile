@@ -17,7 +17,7 @@ $(SETTINGS): settings.in
 settings.in: settings.pre
 	@$(shell if pkg-config --exists 'libsoup-2.4 >= 2.38'; then \
 		sed 's/^SSL_CERTIFICATION/ssl-use-system-ca-file checkbox Whether to use the system certification file/' $< > $@;\
-		else  sed 's/^SSL_CERTIFICATION/ssl-ca-file text Path to ssl-certificate/' $< > $@; fi)
+		else  sed 's/^SSL_CERTIFICATION/ssl-ca-file text Path to ssl-certificate/;/^addressbar-dns-lookup/d' $< > $@; fi)
 
 clean: 
 	$(RM) $(OUTFILES)
