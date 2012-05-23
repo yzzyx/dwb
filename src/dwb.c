@@ -70,6 +70,7 @@ static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
 static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_find_delay(GList *gl, WebSettings *s);
+static DwbStatus dwb_set_dns_lookup(GList *gl, WebSettings *s);
 static DwbStatus dwb_init_hints(GList *gl, WebSettings *s);
 
 static Navigation * dwb_get_search_completion_from_navigation(Navigation *);
@@ -176,6 +177,11 @@ dwb_set_ntlm(GList *gl, WebSettings *s) {
 static DwbStatus 
 dwb_set_find_delay(GList *gl, WebSettings *s) {
   dwb.misc.find_delay = s->arg_local.i;
+  return STATUS_OK;
+}
+static DwbStatus 
+dwb_set_dns_lookup(GList *gl, WebSettings *s) {
+  dwb.misc.dns_lookup = s->arg_local.b;
   return STATUS_OK;
 }
 
@@ -1418,25 +1424,33 @@ dwb_get_search_engine_uri(const char *uri, const char *text) {
   return ret;
 }/* }}} */
 
+char *
+dwb_get_searchengine(const char *uri) {
+  char *ret = NULL;
+  char **token = g_strsplit(uri, " ", 2);
+  for (GList *l = dwb.fc.searchengines; l; l=l->next) {
+    Navigation *n = l->data;
+    if (!g_strcmp0(token[0], n->first)) {
+      ret = dwb_get_search_engine_uri(n->second, token[1]);
+      break;
+    }
+  }
+  if (!ret) {
+    ret = dwb_get_search_engine_uri(dwb.misc.default_search, uri);
+  }
+  g_strfreev(token);
+  return ret;
+
+}
+
 /* dwb_get_search_engine(const char *uri) {{{*/
 char *
-dwb_get_search_engine(const char *uri, gboolean force) {
+dwb_check_searchengine(const char *uri, gboolean force) {
   char *ret = NULL;
   if (!strncmp(uri, "localhost", 9) && (uri[9] == ':' || uri[9] == '\0')) 
     return NULL;
-  if ( force || !strchr(uri, '.') || strchr(uri, ' ')  ) {
-    char **token = g_strsplit(uri, " ", 2);
-    for (GList *l = dwb.fc.searchengines; l; l=l->next) {
-      Navigation *n = l->data;
-      if (!g_strcmp0(token[0], n->first)) {
-        ret = dwb_get_search_engine_uri(n->second, token[1]);
-        break;
-      }
-    }
-    if (!ret) {
-      ret = dwb_get_search_engine_uri(dwb.misc.default_search, uri);
-    }
-    g_strfreev(token);
+  if ( force || !strchr(uri, '.') ) {
+    ret = dwb_get_searchengine(uri);
   }
   return ret;
 }/*}}}*/
@@ -2079,7 +2093,15 @@ dwb_load_uri(GList *gl, const char *arg) {
     if ( g_str_has_prefix(tmpuri, "http://") || g_str_has_prefix(tmpuri, "https://")) {
       uri = g_strdup(tmpuri);
     }
-    else if (!(uri = dwb_get_search_engine(tmpuri, false))) {
+    else if (strchr(tmpuri, ' ')) {
+      uri = dwb_get_searchengine(tmpuri);
+    }
+    else if (dwb.misc.dns_lookup) {
+      VIEW(gl)->status->request_uri = g_strdup(tmpuri);
+      soup_session_prefetch_dns(dwb.misc.soupsession, tmpuri, NULL, (SoupAddressCallback)callback_dns_resolve, gl);
+      goto clean;
+    }
+    else if (!(uri = dwb_check_searchengine(tmpuri, false))) {
       uri = g_strdup_printf("http://%s", tmpuri);
     }
   }

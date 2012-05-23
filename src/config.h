@@ -1100,6 +1100,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  BOOLEAN, { .b = false }, (S_Func)dwb_set_adblock,   }, 
   { { "adblocker-filterlist",                    "Path to a filterlist", },                   
     SETTING_GLOBAL,  CHAR, { .p = NULL }, NULL,   }, 
+  { { "addressbar-dns-lookup",                               "Whether to perform a dns check for text typed into the address bar", },                   
+    SETTING_GLOBAL | SETTING_ONINIT,  BOOLEAN, { .b = false }, (S_Func)dwb_set_dns_lookup,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   
     SETTING_PER_VIEW,  BOOLEAN, { .b = true }, (S_Func)dwb_set_plugin_blocker,   }, 
   { { "plugin-blocker",                         "Whether to block flash plugins and replace them with a clickable element", },                   

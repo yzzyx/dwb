@@ -25,4 +25,5 @@ gboolean callback_entry_insert_text(GtkWidget *, GdkEventKey *);
 gboolean callback_delete_event(GtkWidget *w);
 gboolean callback_key_press(GtkWidget *w, GdkEventKey *e);
 gboolean callback_key_release(GtkWidget *w, GdkEventKey *e);
+void callback_dns_resolve(SoupAddress *address, guint status, GList *gl);
 #endif

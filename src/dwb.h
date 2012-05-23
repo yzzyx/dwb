@@ -610,6 +610,7 @@ struct _ViewStatus {
   SslState ssl;
   ScriptState scripts;
   char *hover_uri;
+  char *request_uri;
   GSList *allowed_plugins;
   unsigned int lockprotect;
   WebKitDOMElement *style;
@@ -702,6 +703,7 @@ struct _Misc {
   gint find_delay;
   SoupSession *soupsession;
   char *proxyuri;
+  gboolean dns_lookup;
 
   GIOChannel *si_channel;
   GList *userscripts;
@@ -871,7 +873,7 @@ DwbStatus dwb_toggle_setting(const char *, int );
 DwbStatus dwb_open_startpage(GList *);
 void dwb_init_scripts(void);
 void dwb_reload_userscripts(void);
-char * dwb_get_search_engine(const char *uri, gboolean);
+char * dwb_get_searchengine(const char *uri);
 char * dwb_get_stock_item_base64_encoded(const char *);
 void dwb_remove_bookmark(const char *);
 void dwb_remove_download(const char *);

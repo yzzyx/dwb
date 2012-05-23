@@ -2,12 +2,12 @@
 .\"     Title: dwb
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 05/18/2012
+.\"      Date: 05/23/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB" "1" "05/18/2012" "\ \&" "\ \&"
+.TH "DWB" "1" "05/23/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -66,7 +66,7 @@ Load configuration for profile
 \fIprofilename\fR\&.
 .RE
 .PP
-\fB\-r, \-\-profile\fR=\fIsessionname\fR
+\fB\-r, \-\-restore\fR=\fIsessionname\fR
 .RS 4
 Restore session with name
 \fIsessionname\fR
@@ -2946,6 +2946,11 @@ Block advertisements using a filterlist, see also \&.IR adblocker\-filterlist \&
 .RS 4
 A path to a adblock plus compatible filterlist for the adblocker\&. Default value:
 \fINULL\fR\&.
+.RE
+.PP
+\fBaddressbar\-dns\-lookup\fR
+.RS 4
+Whether to perform an dns lookup for text typed into the address bar\&. If set to true dwb performs a dns lookup for all text that does not have a valid scheme and does not contain whitespaces\&. Default value: false\&.
 .RE
 .PP
 \fBbackground\-color\fR

@@ -211,3 +211,17 @@ callback_key_release(GtkWidget *w, GdkEventKey *e) {
   }
   return false;
 }/*}}}*/
+
+void 
+callback_dns_resolve(SoupAddress *address, guint status, GList *gl) {
+  char *uri = NULL;
+  View *v = VIEW(gl);
+  if (status == SOUP_STATUS_OK) 
+    uri = g_strconcat("http://", v->status->request_uri, NULL);
+  else 
+    uri = dwb_get_searchengine(v->status->request_uri);
+  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(v->web), uri);
+  g_free(uri);
+  g_free(v->status->request_uri);
+  v->status->request_uri = NULL;
+}

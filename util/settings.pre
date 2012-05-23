@@ -14,6 +14,7 @@ zoom-level text The default zoom level
 zoom-step text The zoom step
 
 # session Network &amp Session
+addressbar-dns-lookup checkbox Whether to first perform a dns lookup for text typed in the addressbar before loading the site 
 cookies-accept-policy select @always @never @nothirdparty The cookies to accept, affects also session cookies
 cookies-store-policy select @session @persistent @never The storage policy for cookies
 enable-dns-prefetching checkbox Whether webkit prefetches domain names

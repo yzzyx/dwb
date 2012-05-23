@@ -680,7 +680,6 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
       || weberror->code == WEBKIT_POLICY_ERROR_FRAME_LOAD_INTERRUPTED_BY_POLICY_CHANGE) 
     return false;
 
-
   char *errorfile = util_get_data_file(ERROR_FILE, "lib");
   if (errorfile == NULL) 
     return false;
@@ -698,7 +697,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
     tmp[strlen(tmp)-1] = '\0';
   
   char *icon = dwb_get_stock_item_base64_encoded(GTK_STOCK_DIALOG_ERROR);
-  if ((search = dwb_get_search_engine(tmp, true)) != NULL) 
+  if ((search = dwb_get_searchengine(tmp)) != NULL)  
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "visible", search);
   else 
     site = g_strdup_printf(content, icon != NULL ? icon : "", uri, weberror->message, "hidden", "");
@@ -842,6 +841,7 @@ view_create_web_view() {
   status->search_string = NULL;
   status->downloads = NULL;
   status->hover_uri = NULL;
+  status->request_uri = NULL;
   status->progress = 0;
   status->allowed_plugins = NULL;
   status->style = NULL;
