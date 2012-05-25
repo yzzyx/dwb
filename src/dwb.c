@@ -3828,6 +3828,8 @@ dwb_parse_command_line(const char *line) {
     }
   }
   g_strfreev(token);
+  if (ret == STATUS_END)
+    return ret;
   dwb_glist_prepend_unique(&dwb.fc.commands, g_strdup(line));
   dwb.state.nummod = -1;
   /* Check for dwb.keymap is necessary for commands that quit dwb. */
