@@ -63,7 +63,6 @@ commands_simple_command(KeyMap *km) {
       dwb_set_error_message(dwb.state.fview, arg->e ? arg->e : km->map->error);
       break;
     case STATUS_END: 
-      dwb_clean_key_buffer();
       return ret;
     default: break;
   }
