@@ -1175,7 +1175,7 @@ Default Value: 'webbrowser'.
 
 *close-last-tab*::
 Whether to close the last tab if 'close_tab' is called, if set to true the last
-tabs history is cleared and the window is closed; default value: 'right'. 
+tab's history is cleared and the window is closed; default value: 'false'. 
 
 *close-tab-focus-policy*::
 Controls the focus when the focused tab is closed, possible values are 'right',
