@@ -1095,6 +1095,7 @@ dwb_apply_settings(WebSettings *s, const char *key, const char *value, int scope
   return ret;
 }/*}}}*/
 
+/* dwb_toggle_setting {{{*/
 DwbStatus
 dwb_toggle_setting(const char *key, int scope) {
   WebSettings *s;
@@ -1119,7 +1120,7 @@ dwb_toggle_setting(const char *key, int scope) {
     s->arg = oldarg;
   }
   return ret;
-}/*}}}*/
+}/*}}}*//*}}}*/
 
 /* dwb_set_setting(const char *){{{*/
 DwbStatus
@@ -1428,6 +1429,7 @@ dwb_get_search_engine_uri(const char *uri, const char *text) {
   return ret;
 }/* }}} */
 
+/* dwb_get_search_engine_uri {{{*/
 char *
 dwb_get_searchengine(const char *uri) {
   char *ret = NULL;
@@ -1444,8 +1446,7 @@ dwb_get_searchengine(const char *uri) {
   }
   g_strfreev(token);
   return ret;
-
-}
+}/*}}}*/
 
 /* dwb_get_search_engine(const char *uri) {{{*/
 char *
@@ -1739,6 +1740,8 @@ dwb_confirm_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
   dwb.state.mode &= ~CONFIRM;
   return true;
 }/*}}}*/
+
+/* dwb_prompt_snooper_cb {{{*/
 static gboolean
 dwb_prompt_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
   gboolean ret = false;
@@ -1751,7 +1754,7 @@ dwb_prompt_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
   }
   dwb.state.mode &= ~CONFIRM;
   return ret;
-}
+}/*}}}*/
 
 /* dwb_confirm()  return confirmed (gboolean) {{{
  * yes / no confirmation
@@ -1783,6 +1786,7 @@ dwb_confirm(GList *gl, char *prompt, ...) {
   return state > 0;
 }/*}}}*/
 
+/* dwb_prompt {{{*/
 const char *
 dwb_prompt(gboolean visibility, char *prompt, ...) {
   dwb.state.mode |= CONFIRM;
@@ -1810,7 +1814,7 @@ dwb_prompt(gboolean visibility, char *prompt, ...) {
   
   gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
   return state == 0 ? GET_TEXT() : NULL;
-}
+}/*}}}*/
 
 /* dwb_save_quickmark(const char *key) {{{*/
 void 
@@ -2343,6 +2347,8 @@ dwb_eval_key(GdkEventKey *e) {
   g_free(key);
   return ret;
 }/*}}}*/
+
+/* dwb_eval_override_key {{{*/
 gboolean 
 dwb_eval_override_key(GdkEventKey *e, CommandProperty prop) {
   if (DIGIT(e))
@@ -2363,8 +2369,7 @@ dwb_eval_override_key(GdkEventKey *e, CommandProperty prop) {
   }
   g_free(key);
   return ret;
-}
-
+}/*}}}*/
 
 /* dwb_insert_mode(Arg *arg) {{{*/
 static DwbStatus
@@ -2519,6 +2524,8 @@ dwb_setup_environment(GSList *list) {
   g_slist_free(list);
 
 }/*}}}*/
+
+/* dwb_watch_userscript {{{*/
 void 
 dwb_watch_userscript(GPid pid, int status, UserScripEnv *env) {
   unlink(env->fifo);
@@ -2526,7 +2533,7 @@ dwb_watch_userscript(GPid pid, int status, UserScripEnv *env) {
   g_io_channel_shutdown(env->channel, true, NULL);
   g_io_channel_unref(env->channel);
   g_free(env);
-}
+}/*}}}*/
 
 /* dwb_execute_user_script(Arg *a) {{{*/
 void

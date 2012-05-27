@@ -1116,4 +1116,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL | SETTING_ONINIT,  CHAR, { .p = "right", .n = CLOSE_TAB_POSITION_MASK, .i = 0 }, (S_Func)dwb_set_new_tab_position_policy,   }, 
   { { "close-tab-focus-policy",                         "Number of seconds the tabbar is shown when switching tabs", },                   
     SETTING_GLOBAL | SETTING_ONINIT,  CHAR, { .p = "left" }, (S_Func)dwb_set_close_tab_position_policy,   }, 
+  { { "close-last-tab",                         "Whether close_tab closes the last tab", },                   
+    SETTING_GLOBAL,  BOOLEAN, { .b = false }, NULL,   },
 };/*}}}*/

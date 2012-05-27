@@ -339,8 +339,7 @@ commands_open_startpage(KeyMap *km, Arg *arg) {
 /* commands_remove_view(KeyMap *km, Arg *arg) {{{*/
 DwbStatus 
 commands_remove_view(KeyMap *km, Arg *arg) {
-  view_remove(NULL);
-  return STATUS_OK;
+  return view_remove(NULL);
 }/*}}}*/
 
 static gboolean
@@ -813,9 +812,7 @@ commands_tab_move(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_clear_tab(KeyMap *km, Arg *arg) {
   GList *gl = commands_get_view_with_nummod();
-  dwb_load_uri(gl, "about:blank");
-  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(gl));
-  webkit_web_back_forward_list_clear(bf_list);
+  view_clear_tab(gl);
   return STATUS_OK;
 }
 DwbStatus 

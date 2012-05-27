@@ -940,16 +940,30 @@ view_create_web_view() {
   return v;
 } /*}}}*/
 
+/* view_clear_tab {{{*/
+void 
+view_clear_tab(GList *gl) {
+  dwb_load_uri(gl, "about:blank");
+  WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(gl));
+  webkit_web_back_forward_list_clear(bf_list);
+}/*}}}*/
+
 /* view_remove (void) {{{*/
-void
+DwbStatus 
 view_remove(GList *gl) {
   if (!dwb.state.views->next) {
-    return;
+    if (GET_BOOL("close-last-tab")) {
+      view_clear_tab(dwb.state.fview);
+      dwb_end();
+      return STATUS_END;
+    }
+    else 
+      return STATUS_OK;
   }
   if (dwb.state.nummod >= 0) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod - 1);
     if (gl == NULL)
-      return;
+      return STATUS_OK;
   }
   else if (gl == NULL) 
     gl = dwb.state.fview;
@@ -957,7 +971,7 @@ view_remove(GList *gl) {
   /* Check for protected tab */
   if (LP_PROTECTED(v) && !dwb_confirm(dwb.state.fview, "Really close tab %d [y/n]?", g_list_position(dwb.state.views, gl) + 1) ) {
     CLEAR_COMMAND_TEXT();
-    return;
+    return STATUS_OK;
   }
   /* Get new focused tab */
   GList *new_fview = dwb.state.fview;
@@ -1049,6 +1063,7 @@ view_remove(GList *gl) {
   gtk_widget_show(CURRENT_VIEW()->scroll);
   dwb_update_layout();
   CLEAR_COMMAND_TEXT();
+  return STATUS_OK;
 }/*}}}*/
 
 /* view_ssl_state (GList *gl) {{{*/

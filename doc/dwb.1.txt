@@ -1,0 +1,1584 @@
+// vim: set ft=asciidoc:
+DWB(1)
+======
+:doctype: manpage
+
+
+NAME
+----
+dwb - dynamic web browser
+
+SYNOPSIS
+--------
+*dwb* ['OPTIONS'] [ 'URLS' ]
+
+
+DESCRIPTION
+-----------
+dwb(1) is a small webbrowser based on WebKit and GTK which aims to be mostly
+keyboard-driven.
+
+
+OPTIONS
+-------
+*-e, --embed*='wid'::
+  Embed dwb into <wid>.
+
+*-f, --force*::
+  Force restoring a previously saved session, even if it seems that another
+  process has opened a session with the same name.
+
+*-l,  --list-sessions*::
+  List previously saved sessions. A '*' indicates that another instance has
+  currently opened the session.
+
+*-n,  --new-instance*::
+  New instance, overrides setting
+  'single-instance'.
+
+*-p,  --profile*='profilename'::
+  Load configuration for profile 'profilename'.
+
+*-r,  --restore*='sessionname'::
+  Restore session with name 'sessionname'
+  or the default session, if 'sessionname' is omitted.
+
+*-R, --override-restore*::
+  Open a new session, even if 'save-session' is enabled.
+
+*-x, --execute*='commands'::
+  Execute a list of dwb commands seperated by ';;', see
+  <<CUSTOM_COMMANDS,'CUSTOM COMMANDS'>>
+  and <<COMMAND_OVERVIEW,'COMMAND OVERVIEW'>> for details.
+  If 'single instance' is enabled all commands will be executed in the primary
+  instance.
+
+*-v, --version*::
+  Show version information and exit.
+
+[[MODES]]
+MODES
+-----
+dwb has different modes:
+
+*Normal mode*::
+The default mode. Pressing 'Escape' always enter
+normal mode, all keyboard inputs will be interpreted as shortcuts, keypresses
+are not sent to the webview.
+
+*Insert mode*::
+Used for editing text elements in a webpage.
+
+*Hint mode*::
+Follow links via hints.
+
+*Command mode*::
+Execute dwb commands from the builtin commandline.
+
+
+[[SHORTCUTS]]
+SHORTCUTS
+---------
+
+Normal mode shortcuts
+~~~~~~~~~~~~~~~~~~~~~
+
+*[n]j*::
+Scroll [n times] down (command: 'scroll_down', aliases: 'down').
+
+*[n]k*::
+Scroll [n times] up (command: 'scroll_up', aliases: 'up').
+
+*[n]h*::
+Scroll [n times] left (command: 'scroll_left', aliases: 'left').
+
+*[n]l*::
+Scroll [n times] right (command: 'scroll_right', aliases: 'right').
+
+*[n]gg*::
+Scroll to the top or to n% of the page (command: 'scroll_top', aliases: 'top').
+
+*[n]G*::
+Scroll to the bottom or to n% of the page (command: 'scroll_bottom', aliases: 'bottom').
+
+*[n]C-f*::
+Scroll [n] pages down (command: 'scroll_page_down', aliases: 'pagedown').
+
+*[n]C-b*::
+Scroll [n] pages up (command: 'scroll_page_up', aliases: 'pageup').
+
+*[n]C-d*::
+Scroll [n] half pages down (command: 'scroll_halfpage_down', aliases: 'halfdown').
+
+*[n]C-u*::
+Scroll [n] half pages up (command: 'scroll_halfpage_up', aliases: 'halfup').
+
+*:*::
+Enter Command mode.
+
+*o*::
+Open new url in the focused tab, the argument $URI will be replaced by the
+current uri (command: 'open', aliases: 'o').
+
+*go*::
+Open url in the focused tab, set current url in the navigation bar (command:
+'open_url').
+
+*O*::
+Open url in a new tab, the argument $URI will be replaced by the current uri
+(command: 'tabopen', aliases: 'topen', 't').
+
+*gO*::
+Open url in a new tab, set current url in the navigation bar (command
+'tabopen_url').
+
+*xo*::
+Open url in a new tab in background, the argument $URI will be repaced with the
+current uri (command: 'backopen', aliases: 'bopen' ).
+
+*xO*::
+Open url in a new tab in background, set current url in the navigation bar (command:
+'backopen_url').
+
+*wo*::
+Open url in a new instance (command: 'winopen', aliases: 'wopen', 'w').
+
+*i*::
+Enter insert mode (command: 'insert_mode', aliases: 'i', 'insert').
+
+*C-n*::
+Enter normal mode.
+
+*ga*::
+Add a new blank tab (command: 'tab_new').
+
+*d*::
+Close current tab (command: 'close_tab', aliases: 'close').
+
+*[n]gc*::
+Clear tab n or of current tab, clears the history of the tab and loads
+'about:blank'.  (command 'clear_tab', aliases: 'clear').
+
+*co*::
+Close all tabs except for the current one (command 'only').
+
+*C-q*::
+Quit (command 'quit', aliases: 'q').
+
+
+*u*::
+Undo closing last tab (command 'undo', aliases: 'u').
+
+
+*C-h*::
+Open the default startpage (command 'start_page', aliases: 'home').
+
+*H*::
+Go back (command
+'history_back', aliases: 'back', 'ba').
+
+*L*::
+Go forward (command
+'history_forward', aliases: 'forward', 'fo').
+
+
+*th*::
+Go back in a new tab (command
+'tab_hist_back', aliases: 'tabback', 'tba').
+
+
+*tl*::
+Go forward in a new tab (command
+'tab_hist_forward', aliases: 'tabforward', 'tfo').
+
+
+*wh*::
+Go back in a new window (command
+'win_hist_back', aliases: 'winback', 'wba').
+
+
+*wl*::
+Go forward in a new window (command 'win_hist_forward', aliases: 'winforward',
+'wfo').
+
+*/*::
+Find forward (command 'find_forward', alias: 'ffind').
+
+*?*::
+Find backward (command 'find_backward', alias 'bfind').
+
+*c/*::
+Find forward, ignore case (command 'find_forward_ic', alias: 'iffind').
+
+*c?*::
+Find backward, ignore case (command 'find_backward_ic', alias 'ibfind').
+
+*M*::
+Add a bookmark (command 'bookmark', aliases: 'bmark', 'bma').
+
+*gb*::
+Show Bookmarks (command 'bookmarks', aliases: 'bmarks', 'bmas').
+
+*gB*::
+Show Bookmarks, open bookmark in a new tab (command 'tab_bookmarks', aliases:
+'tabmarks').
+
+*wB*::
+Show Bookmarks, open bookmark in a new window (command 'win_bookmarks', aliases:
+'winmarks').
+
+*m*::
+Add a quickmark (command 'save_quickmark', aliases: 'quickmark', 'qmark').
+
+*b*::
+Open quickmark (command 'quickmark', aliases: 'qmarks').
+
+*B*::
+Open quickmark in a new tab (command 'tab_quickmark', aliases: 'tabqmarks').
+
+*wb[:graph:]*::
+Open quickmark in a new window (command 'win_quickmark', aliases: 'winqmarks').
+
+*[n]r*::
+Reload tab n or current tab if n is omitted (command 'reload', aliases: 're').
+
+*[n]R*::
+Reload tab n or current tab if n is omitted without using any cached data
+(command 'reload_bypass_cache', aliases: 'refull').
+
+*[n]C-s*::
+Stop loading of tab n or of current tab is [n] is omitted (command
+'stop_loading',
+aliases:
+'stop',
+'st').
+
+*[n]+*::
+Zoom in [n times] (command 'zoom_in', aliases: 'zi').
+
+*[n]-*::
+Zoom out [n times] (command 'zoom_out', aliases: 'zo').
+
+*[n]=*::
+Zoom to n percent or to 100% if n is omitted(command
+'zoom', aliases: 'z').
+
+*sf*::
+Save all configuration files (command
+'save').
+
+*ZZ*::
+Save current session and exit (command
+'save_session', aliases: 'wq').
+
+*gZZ *::
+Save current session with name and exit (command
+'save_named_session', aliases: 'wqn').
+
+*[n]J*::
+Cycle focus [n tab] forwards. (command
+'focus_next', aliases: 'tabnext').
+
+*[n]K*::
+Cycle focus [n tab] backwards. (command
+'focus_prev', aliases: 'tabprev').
+
+*[n]T*::
+Focus nth tab or first, if n is omitted.
+(command 'focus_tab', aliases: 'tab').
+
+*[n]gm*::
+Move current tab to position [n] or to first position if n is omitted.
+(command 'tab_move', aliases: 'tabm').
+
+*[n]gl*::
+Move current tab [n] positions left.
+(command 'tab_move_left', aliases: 'tabl').
+
+*[n]gr*::
+Move current tab [n] positions right.
+(command 'tab_move_right', aliases: 'tabr').
+
+*gt*::
+Show all open tabs. (command
+'buffers', aliases: 'bu').
+
+*[n]C-P*::
+Protect tab [n]. Closing this tab must be confirmed (command
+'protect', aliases: 'prot').
+
+*[n]xd*::
+Lock tab [n]. Locking a tab will lock this tab to the current domain, it's not
+possible to navigate to another domain until unlocked.
+'lock_domain', aliases: 'dlock').
+
+*[n]xu*::
+Lock tab [n]. Locking a tab will lock this tab to the current uri, it's not
+possible to navigate to another uri until unlocked.
+'lock_uri', aliases: 'ulock').
+
+*f*::
+Show hints (command
+'hints', aliases: 'hints', 'hi').
+
+*F*::
+Show hints, open link in a new foreground tab. (command
+'hints_tab', aliases: 'tabhints', 'thi').
+
+*;b*::
+Show hints, open link in a new background tab. (command
+'hints_background', aliases: 'backhints', 'bhi').
+
+*wf*::
+Show hints, open link in a new tab. (command
+'hints_win', aliases: 'winhints', 'whi').
+
+*;i*::
+Follow image (command
+'hints_images', aliases: 'ihints', 'ihi').
+
+*;I*::
+Follow image in a new tab (command
+'hints_images_tab', aliases: 'itabhints', 'ithi').
+
+*.i*::
+Follow image in a background tab (command
+'hints_images_background', aliases: 'ibackhints').
+
+*;e*::
+Focus editable elements via hints (command
+'hints_editable', aliases: 'ehints', 'ehi').
+
+*;o*::
+Set hint\'s url in commandline (command
+'hints_url', aliases: 'uhints', 'uhi').
+
+*;O*::
+Set hint's url in commandline, open in a new tab (command
+'hints_url_tab', aliases: 'utabhints', 'uthi').
+
+*.o*::
+Set hint\'s url in commandline, open in a background tab (command
+'hints_url_background', aliases: 'ubackhints').
+
+*;d*::
+Download via hints (command
+'hints_download', aliases: 'dhints').
+
+*;y*::
+Save link location to clipboard (command
+'hints_clipboard', aliases: 'chints', 'chi').
+
+*;Y*::
+Save link location to primary selection (command
+'hints_primary', aliases: 'phints', 'phi').
+
+*;r*::
+Rapid hint mode, each matching hint opens a new tab in background. (command
+'hints_rapid', aliases: 'rhints', 'rhi').
+
+*;R*::
+Rapid hint mode, each matching hint opens a new window. (command
+'hints_rapid_win', aliases: 'wrhints', 'wrhi').
+
+*gf*::
+Toggle "view source" (command
+'view_source', aliases: 'source', 'so').
+
+*CC*::
+Allow persistent cookie for the current website. The domain will be saved in
+'cookies.allow'.
+Cookies that are allowed by the cookies.allow whitelist are stored in
+$XDG_CONFIG_HOME/dwb/$profilename/cookies.  (command
+'allow_cookie', aliases: 'cookie').
+
+*CS*::
+Allow session cookie for the current website. The domain will be saved in
+'cookies_session.allow'.
+This is only useful if 'cookies-store-policy' is set to 'never', see
+cookies-store-policy for details. (command
+'allow_session_cookie', aliases: 'scookie').
+
+*CT*::
+Allow session cookies for the current website temporarily. Only first party
+cookies are allowed. The domain is not saved to a whitelist and the cookies will
+not be saved persitently. (command
+'allow_session_cookie_tmp',
+aliases:
+'tcookie').
+
+*[n]yy*::
+Yank the url of tab n or of current tab if n is omitted to clipboard
+(command
+'yank').
+
+*yY*::
+Yank the url of tab n or of current tab if n is omitted to primary
+selection (command 'yank_primary', aliases: 'pyank').
+
+*yt*::
+Yank the title of tab n or of current tab if n is omitted to clipboard
+(command 'yank_title', aliases: 'tyank').
+
+*yT*::
+Yank the title of tab n or of current tab if n is omitted to primary
+selection (command 'yank_title_primary', aliases: 'tpyank').
+
+*pp*::
+Paste from clipboard (command 'paste').
+
+*pP*::
+Paste from primary selection (command 'paste_primary', aliases: 'ppaste').
+
+*Pp*::
+Paste from clipboard and load in a new tab (command 'tab_paste', aliases: 'tpaste').
+
+*PP*::
+Paste from primary selection and load in a new tab (command 'tab_paste_primary',
+aliases: 'tppaste').
+
+*wp*::
+Paste from clipboard and load in a new window (command 'paste_nw', aliases:
+'winpaste').
+
+*wP*::
+Paste from primary selection and load in a new window (command
+'paste_primary_nw', aliases: 'winppaste').
+
+*[n]ad*::
+Cancel the download with number n or the first download in the lists of running
+downloads if n is omitted. (command 'cancel_download').
+
+*gs*::
+Add a searchengine. Textfields can be chosen with tab and a keyword must be
+specified. The first defined searchengine will be the default searchengine. The
+keyword can be used in all open commands, e.g.
+.I :open <keyword> <searchterm> (command 'save_search_field', aliases: 'search').
+
+*Sb*::
+Show bookmarks (command 'show_bookmarks', aliases: 'sbookmarks').
+
+*Sq*::
+Show quickmarks (command 'show_quickmarks', aliases: 'squickmarks').
+
+*Sh*::
+Show history (command 'show_history', aliases: 'shistory').
+
+*Sd*::
+Show download (command 'show_downloads', aliases: 'sdownloads').
+
+*Sk*::
+Show keys (command 'show_keys', aliases: 'skeys').
+
+*Ss*::
+Show settings (command 'show_settings', aliases: 'ssettings').
+
+*ss*::
+Set setting, the interactive version of the command set, for changing settings
+in scripts use set instead (command 'set_setting').
+
+*sl*::
+Set local setting, changes a setting but doesn't save the setting to
+configuration file. The interactive version of the command local_set, for
+changing settings locally in scripts use local_set instead
+(command 'set_local_setting').
+
+*sk*::
+Set keyboard shortcut (command 'set_key', aliases: 'keys').
+
+*C-p*::
+Toggle proxy (command 'proxy').
+
+*tsh*::
+Toggle scripts for current host permanently (command 'toggle_scripts_host',
+aliases: 'hscript').
+
+*tsu*::
+Toggle scripts for current url permanently (command 'toggle_scripts_uri',
+aliases: 'uscript').
+
+*tth*::
+Toggle scripts for current host temporarily (command 'toggle_scripts_host_tmp',
+aliases: 'thscript').
+
+*ttu*::
+Toggle scripts for current url temporarily (command 'toggle_scripts_uri_tmp',
+aliases: 'tuscript').
+
+*ph*::
+Toggle plugins for current host permanently (command 'toggle_plugins_host',
+aliases: 'hplugin').
+
+*pu*::
+Toggle plugins for current url permanently (command 'toggle_plugins_uri',
+aliases: 'uplugin').
+
+*pth*::
+Toggle plugins for current host temporarily (command 'toggle_plugins_host_tmp',
+aliases: 'thplugin').
+
+*ptu*::
+Toggle plugins for current url temporarily (command 'toggle_plugins_uri_tmp',
+aliases: 'tuplugin').
+
+*V*::
+Next navigation action will be opened in a new tab (command 'new_tab').
+
+*W*::
+Next navigation action will be opened in a new window (command 'new_win').
+.TP
+.BR eu
+Show and execute userscripts (command 'execute_userscript').
+
+*[n]wi*::
+Show the webinspector of tab n or of current tab if n is omitted. Note that 'enable-developer-extras' has to be set.
+(commmand 'web_inspector', aliases: 'inspect', 'insp').
+
+*C-e*::
+Open external editor for current input/textarea (command
+'open_editor', aliases: 'editor').
+
+*g.*::
+Toggle hidden files when browsing local filesystem.
+(command 'open_editor', aliases: 'editor').
+
+*F11*::
+Toggle fullscreen (command 'fullscreen', aliases: 'fs').
+
+*F12*::
+Toggle presentation mode.
+(command 'presentation_mode', aliases: 'present').
+
+*xx*::
+Toggle visibility of tabbar and statusbar.  (command 'toggle_bars', aliases: 'bars').
+
+*xt*::
+Toggle visibility of tabbar.  (command 'toggle_tabbar', aliases: 'tbar').
+
+*xb*::
+Toggle visibility of statusbar.
+(command 'toggle_statusbar', aliases: 'sbar').
+
+*xv*::
+Toggle visibility of a tab.
+(command 'visible', aliases: 'vis').
+
+*[n]C-M-p*::
+Print focused frame of tab n or of current tab if n is omitted.
+(command 'print', aliases: 'ha').
+
+*unbound*::
+Execute a javascript snippet (command
+'execute_javascript', aliases: 'exja', 'js').
+
+*unbound*::
+Set a setting from commandline (command 'set').
+
+*unbound*::
+Toggle a boolean setting from commandline (command 'toggle_setting', aliases:
+'toggle', 'tog').
+
+*unbound*::
+Load a html string. This command is mainly intended for use in userscripts (command
+'load_html').
+
+*unbound*::
+Load a html string in a new tab. This command is mainly intended for use in userscripts (command
+'load_html_tab').
+
+*Tab (S-Tab)*::
+In normal mode Tab shows the next (previous) shortcut, that matches the
+currently entered keysequence.
+When opening a url, the next (previous) item in command
+history, bookmarks or history will be completed. In hint mode the next (previous)
+hint will get focus. Tab also completes settings and shortcut-settings.
+When initiating a download, full paths (downloads and spawning programs) and
+binaries (spawning programs) in PATH will be completed.
+In command mode tab will complete builtin commands and urls if the command
+accepts an url.
+
+Textentry shortcuts
+~~~~~~~~~~~~~~~~~~~
+
+*C-h*::
+Delete a single letter.
+
+*C-w*::
+Delete word back.
+
+*C-e*::
+Delete word forward.
+
+*C-u*::
+Delete to the beginning of the entry.
+
+*C-i*::
+Delete to the end of the entry.
+
+*C-f*::
+Move cursor one word forward.
+
+*C-b*::
+Move cursor one word back.
+
+*C-j*::
+Show next item in command history.
+
+*C-k*::
+Show previous item in command history.
+
+*C-x*::
+When initalizing a download, C-x toggles between choosing a file path and
+choosing a spawning application.
+
+*C-g*::
+Alternative shortcut for activate.
+
+*C-c*::
+Alternative shortcut for escape, the corresponding setting is
+.IR entry_escape .
+
+*C-p*::
+Init local path completion.
+
+*C-H*::
+Init history completion.
+
+*C-B*::
+Init bookmark completion.
+
+*C-I*::
+Init input history completion.
+
+*C-S*::
+Init searchengine completion.
+
+*C-U*::
+Init userscript completion.
+
+*C-p*::
+Complete local path.
+
+Shortcut syntax
+~~~~~~~~~~~~~~~
+
+All printable shortcuts are case sensitive, i.e. aH means press a then press
+shift, then press h. Shortcuts can be combined with a modifier, valid modifiers
+are 'Control', 'Mod1', 'Mod4', 'Button1', 'Button2', 'Button3', 'Button4', 'Button5' and 'Shift'
+where Shift can only be used with non printable keys such as F1, space, Tab, ... .
+Non printable keys must be surrounded by @, e.g. "Control @F1@", Shift @space@.
+\ and @ itself must be escaped with \.
+
+[[CUSTOM_COMMANDS]]
+CUSTOM COMMANDS
+---------------
+
+Custom commands are a sequence of dwb commands that can be bound to a shortcut.
+The syntax is
+
+-------------
+<shortcut>:<command>;;<command>;;...
+-------------
+
+where shortcut is the shortcut for the commandsequence, *:* may be escaped with *\:*
+and command is of the form
+
+------------
+[numerical modifier]<command or alias> [argument for the command]
+------------
+
+for example
+
+------------
+Control W:tabopen http://example.com;; 150zoom
+------------
+
+opens http://example.com in a new tab and zooms to 150%.
+
+[[COMMAND_OVERVIEW]]
+COMMAND OVERVIEW
+---------------
+
+[options="header"]
+|================
+|Command                 |Alias           |Description
+|allow_cookie            |cookie          |Allow persistent cookies for site
+|allow_session_cookie    |scookie         |Allow session cookies for site
+|allow_session_cookie_tmp|tcookie         |Allow session cookies for site
+                                           temporarily
+|bookmark                |bma, bmark      |Bookmark current page
+|bookmarks               |bmas, bmarks    |Show bookmarks
+|buffers                 |bu              |Show all open tabs
+|cancel_download         |                |Cancel a download
+|clear_tab               |clear           |Clear tab
+|close_tab               |close           |Close tab
+|dump                    |                |Write html of current website to a
+                                           file or stdout if no argument is given
+|execute_javascript      |exja, js        |Execute a javascript snippet
+|execute_userscript      |                |Execute userscript
+|find_backward           |bfind           |Find backward
+|find_backward_ic        |ibfind          |Find backward case sensitive
+|find_forward            |ffind           |Find forward
+|find_forward_ic         |iffind          |Find forward case sensitive
+|find_next               |fnext           |Find next
+|find_previous           |fprev           |Find previous
+|focus_input             |                |Focus next input
+|focus_next              |tabnext         |Focus next tab
+|focus_prev              |tabprev         |Focus previous tab
+|focus_tab               |tab             |Focus nth tab
+|fullscreen              |fs              |Toggle fullscreen
+|hints                   |hi              |Follow hints
+|hints_background        |backhints, bhi  |Follow hints in a background tab
+|hints_clipboard         |chints, chi     |Save link location to clipboard
+|hints_download          |dhints, dhi     |Download via hints
+|hints_editable          |ehints, ehi     |Focus editable elements
+|hints_images            |ihints, ihi     |Follow images
+|hints_images_tab        |itabhints, ithi |Follow images in a new tab
+|hints_images_background |ibackhints      |Follow images in a background tab
+|hints_links             |lhints, lhi     |Follow links
+|hints_primary           |phints, phi     |Save link location to primary
+                                           selection
+|hints_rapid             |rhints, rhi     |Open new tabs in background
+                                           rapidly
+|hints_rapid_win         |wrhints, wrhi   |Open new windows rapidly
+|hints_tab               |tabhints, thi   |Follow hints in a new tab
+|hints_url               |uhints, uhi     |Set hints url in commandline
+|hints_url_tab           |utabhints, uthi |Set hints url in commandline,
+                                           open in a new tab
+|hints_url_background    |ubackhints      |Set hints url in commandline,
+                                           open in a background tab
+|hints_win               |winhints, whi   |Follow hints in a new window
+|history_back            |ba, back        |Go back
+|history_forward         |fo, forward     |Go forward
+|insert_mode             |i, insert       |Insert mode
+ local_set                                 Set a setting only for the running
+                                           instance, don't save it to the
+                                           configuration file
+|lock_domain             |dlock           |Lock tab to current domain
+|lock_uri                |ulock           |Lock tab to current uri
+|new_tab                 |                |Open next navigation action in
+                                           new tab
+|new_win                 |                |Open next navigation action in
+                                           new window
+|only                    |                |Close all tabs except for the
+                                           current one
+|open                    |o               |Open url
+|open_editor             |editor          |Open external editor for
+                                           input/textarea.
+|open_url                |                |Open, edit current url
+|paste                   |                |Open from clipboard
+|paste_primary           |ppaste          |Open from primary selection
+|presentation_mode       |present         |Toggle presentation mode
+|print                   |ha              |Print page
+|protect                 |prot            |Protect/unprotect tab
+|proxy                   |                |Toggle proxy
+|quickmark               |qmarks          |Open quickmark
+|quit                    |q               |Quit
+|reload                  |re              |Reload current page
+|reload_bypass_cache     |refull          |Reload without using cached data
+|reload_userscripts      |                |Reload userscripts
+|save                    |                |Save all configuration files
+|save_named_session      |wqn             |Save current session with name
+|save_quickmark          |qmark, quickmark|Save a quickmark
+|save_search_field       |search          |Add a new searchengine
+|save_session            |wq              |Save current session
+|scroll_bottom           |bottom          |Scroll to bottom of the page
+|scroll_down             |down            |Scroll down
+|scroll_halfpage_down    |halfdown        |Scroll one-half page down
+|scroll_halfpage_up      |halfup          |Scroll one-half page up
+|scroll_left             |left            |Scroll left
+|scroll_page_down        |pagedown        |Scroll one page down
+|scroll_page_up          |pageup          |Scroll one page up
+|scroll_right            |right           |Scroll right
+|scroll_top              |top             |Scroll to the top of the page
+|scroll_up               |up              |Scroll up
+|set                     |                |Set a setting
+|set_key                 |keys            |Set keybinding
+|set_local_setting       |                |Set a setting for the running instance
+                                           interactively
+|set_setting             |                |Set a setting interactive
+|show_keys               |skeys           |Show and modify keyboard
+                                           configuration
+|show_settings           |ssettings       |Show and modify global properties
+|start_page              |home            |Open the default homepage
+|stop_loading            |st, stop        |Stop loading current page
+|tab_bookmarks           |tabmarks        |Show bookmarks, open in new tab
+|tab_hist_back           |tba, tabback    |Go back in a new tab
+|tab_hist_forward        |tfo, tabforward |Go forward in a new tab
+|tab_move                |tabm            |Move tab
+|tab_move_left           |tabl            |Move tab left
+|tab_move_right          |tabr            |Move tab right
+|tab_new                 |                |Open a new blank tab
+|tab_paste               |tpaste          |Open from clipboard in a new tab
+|tab_paste_primary       |tppaste         |Open from primary selection in a
+                                           new tab
+|tab_quickmark           |tabqmarks       |Open quickmark in a new tab
+|tabopen                 |t, topen        |Open in a new tab
+|tabopen_url             |                |Open in a new tab, edit current
+                                           url
+|toggle_bars             |bars            |Toggle tabbar and statusbar
+|toggle_hidden_files     |hidden          |Toggle hidden files in directory
+                                           listings
+|toggle_plugins_host     |hplugin         |Toggle plugin blocker for host
+|toggle_plugins_host_tmp |tuplugin        |Toggle plugin blocker for domain
+                                           for this session
+|toggle_plugins_uri      |uplugin         |Toggle plugin blocker for uri
+|toggle_plugins_uri_tmp  |tuplugin        |Toggle plugin blocker for uri for
+                                           this session
+|toggle_scripts_host     |hscript         |Toggle scripts for current domain
+|toggle_scripts_host_tmp |thscript        |Toggle scripts for current host
+                                           for this session
+|toggle_scripts_uri      |uscript         |Toggle scripts for current uri
+|toggle_scripts_uri_tmp  |tuscript        |Toggle scripts for current uri
+                                           for this session
+|toggle_setting          |tog, toggle     |Toggle a setting
+|toggle_local_setting    |loctog          |Toggle a setting for the current
+                                           session
+|toggle_statusbar        |sbar            |Toggle statusbar
+|toggle_tabbar           |tbar            |Toggle tabbar
+|undo                    |u               |Undo closing last tab
+|view_source             |so, source      |View page source
+|visible                 |vis             |Toggle visibility of a tab
+|web_inspector           |insp, inspect   |Open the webinspector
+|win_bookmarks           |winmarks        |Show bookmarks, open in new
+                                           window
+|win_hist_back           |wba, winback    |Go back in a new window
+|win_hist_forward        |wfo, winforward |Go forward in a new window
+|win_paste               |wpaste          |Open from clipboard in a new
+                                           window
+|win_paste_primary       |wppaste         |Open primary selection in a new
+                                           window
+|win_quickmark           |winqmarks       |Open quickmark in a new window
+|winopen                 |w, wopen        |Open in a new window
+|winopen_url             |                |Open in a new window, edit
+                                           current url
+|yank                    |                |Yank url to clipboard
+|yank_primary            |pyank           |Yank url to primary selection
+|yank_title              |tyank           |Yank title to clipboard
+|yank_title_primary      |tpyank          |Yank title to primary selection
+|zoom                    |z               |Zoom
+|zoom_in                 |zi              |Zoom in
+|zoom_out                |zo              |Zoom out
+|================
+
+
+//[[CUSTOMIZATION]]
+//CUSTOMIZATION
+//-------------
+
+dwb can be  customized in a web interface (command 'show_settings') or via command line (command
+'set_setting').  Modified settings will be saved in Modified settings will be
+saved in '~/.config/dwb/settings' when closing dwb.  Shorcuts can also be
+modified in a web interface (command 'show_keys') or via command line (command
+'set_key').  Shortcuts will be saved in '$HOME/.config/dwb/keys'.
+
+If a string value is set to 'NULL' the default value will be used.
+
+
+
+WebKit builtin settings
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+*auto-load-images*::
+Load images automatically. Possible values: true/false,
+default value: 'true'.
+
+*auto-resize-window*::
+Resize window through DOM-methods. Possible values: true/false,
+default value: 'false'.
+
+*auto-shrink-images*::
+Automatically shrink standalone images to fit. Possible values: true/false,
+default value: 'true'.
+
+*cursive-font-family*::
+Default cursive font family used to display text. Possible values: a font
+description or NULL, default value: 'NULL'.
+
+*custom-encoding*::
+A custom encoding used for the webview. Possible values: encoding string or
+NULL, default value: 'NULL'.
+
+*default-encoding*::
+The default encoding used to display text. Possible values: encoding string or
+NULL, default value: 'NULL'.
+
+*default-font-family*::
+The default font family used to display text. Possible values: a font
+description or NULL, default value:
+'sans-serif'.
+
+*default-font-size*::
+The default font size used to display text. Possible values: a font size
+(integer), default value:
+'12'.
+
+*default-monospace-font-size*::
+The default font size used to display monospace text. Possible values: a font size
+(integer), default value: '10'.
+
+*editable*::
+Whether the content of a webpage should be editable. Possible values:
+true/false, default value: 'false'.
+
+*enable-caret-browsing*::
+Whether to enable caret browsing. Possible values: true/false,
+default value: 'false'.
+
+*enable-default-context-menu*::
+Whether right-clicks open a context menu. Possible values: true/false,
+default value: 'false'.
+
+*enable-dns-prefetching*::
+Whether webkit prefetches domain names.
+default value: 'true'.
+
+*enable-developer-extras*::
+Whether the web-inspector should be enabled. Possible values: true/false,
+default value: 'false'.
+
+*enable-dom-paste*::
+Whether enable DOM-paste. Possible values: true/false,
+default value: 'false'.
+
+*enable-frame-flattening*::
+Whether to enable the Frame Flattening. With this setting each subframe is expanded
+to its contents, which will flatten all the frames to become one scrollable page.
+Whether file uris can be accessed. Possible values: true/false,
+default value: 'false'.
+
+*enable-file-access-from-file-uris*::
+Whether file uris can be accessed. Possible values: true/false,
+default value: 'true'.
+
+*enable-html5-database*::
+Whether to enable HTML5 client-side SQL database support.
+Possible values: true/false,
+default value: 'true'.
+
+*enable-html5-local-storage*::
+Whether to enable HTML5 localStorage support.
+Possible values: true/false,
+default value: 'true'.
+
+*enable-java-applet*::
+Whether to enable Java <applet>-tag.
+Possible values: true/false,
+default value: 'true'.
+
+*enable-offline-web-application-cache*::
+Enable or disable HTML5 offline web application cache support.
+Possible values: true/false,
+default value: 'true'.
+
+*enable-page-cache*::
+Enable or disable page cache.
+Possible values: true/false,
+default value: 'false'.
+
+*enable-plugins*::
+Enable or disable embedded plugins.
+Possible values: true/false,
+default value: 'true'.
+
+*enable-private-browsing*::
+Enable or disable private browsing.
+Possible values: true/false,
+default value: 'false'.
+
+*enable-scripts*::
+Enable or disable embedded scripting-languages.
+Possible values: true/false,
+default value: 'true'.
+
+*enable-site-specific-quirks*::
+Enables the site-specific compatibility workarounds.
+Possible values: true/false,
+default value: 'false'.
+
+*enable-spatial-navigation*::
+Whether to enable the Spatial Navigation. This feature consists in the ability
+to navigate between focusable elements in a Web page, such as hyperlinks and
+form controls, by using Left, Right, Up and Down arrow keys.
+Possible values: true/false,
+default value: 'false'.
+
+*enable-spell-checking*::
+Whether to enable spell checking.
+Possible values: true/false,
+default value: 'false'.
+
+*enable-universal-access-from-file-uris*::
+Whether to allow files loaded through file:// URIs universal access to all pages.
+Possible values: true/false,
+default value: 'true'.
+
+*enable-xss-auditor*::
+Whether to enable the XSS Auditor. This feature filters some kinds of reflective
+XSS attacks on vulnerable web sites.
+Possible values: true/false,
+default value: 'true'.
+
+*enforce-96-dpi*::
+Enforce a resolution of 96 DPI.
+Possible values: true/false,
+default value: 'false'.
+
+*fantasy-font-family*::
+Default fantasy font family used to display text. Possible values: a font description or
+NULL, default value: 'serif'.
+
+*javascript-can-access-clipboard*::
+Whether javascript can access Clipboard.
+Possible values: true/false,
+default value: 'false'.
+
+*full-content-zoom*::
+Whether the full content is scaled when zooming.
+Possible values: true/false,
+default value: 'false'.
+
+*javascript-can-open-windows-automatically*::
+Whether JavaScript can open popup windows automatically without user intervention.
+Possible values: true/false,
+default value: 'false'.
+
+*minimum-font-size*::
+The minimum font size used to display text. Possible values: a font size
+(integer), default value: '5'.
+
+*minimum-logical-font-size*::
+The minimum logical font size used to display text. Possible values: a font size
+(integer), default value: '5'.
+
+*monospace-font-family*::
+Default font family used to display monospace text. Possible values: a font description or
+NULL, default value: 'monospace'.
+
+*print-backgrounds*::
+Whether background images should be printed.
+Possible values: true/false,
+default value: 'true'.
+
+*resizable-text-areas*::
+Whether text areas are resizable.
+Possible values: true/false,
+default value: 'true'.
+
+*sans-serif-font-family*::
+Default sans-serif font family used to display text. Possible values: a font description or
+NULL, default value:
+'sans-serif'.
+
+*serif-font-family*::
+Default serif font family used to display text. Possible values: a font description or
+NULL, default value: 'serif'.
+
+*spell-checking-language*::
+The languages to be used for spell checking, separated by commas. Possible
+values: a string or NULL, default value: 'NULL'.
+
+*tab-cycles-through-elements*::
+Whether the tab key cycles through elements on the page.
+Possible values: true/false,
+default value: 'true'.
+
+*user-agent*::
+The user-agent-string. Possible values: a user-agent or
+NULL, default value: 'NULL'.
+
+*user-stylesheet-uri*::
+The URI of a stylesheet that is applied to every page. If a local file is used,
+must start with file://. Possible values: an
+uri-string or NULL, default value: 'NULL'.
+
+*zoom-level*::
+The zoom level of the content. Possible values: a decimal,
+default value:
+'1.0'.
+
+*zoom-step*::
+The value by which the zoom level is changed when zooming in or out. Possible
+values: a decimal,
+default value:
+'0.1'.
+
+
+
+Other settings
+~~~~~~~~~~~~~~
+
+
+*active-completion-bg-color*::
+The background color for an active element in tab-completion. Possible values:
+an rgb color-string,
+default value:
+'#000000'.
+
+*active-completion-fg-color*::
+The foreground color for an active element in tab-completion. Possible values:
+an rgb color-string.
+default value:
+'#53868b'.
+
+*adblocker*::
+Block advertisements using a filterlist, see also
+.IR adblocker-filterlist .
+Default value:
+'false'.
+
+*adblocker-filterlist*::
+A path to a adblock plus compatible filterlist for the adblocker.
+Default value:
+'NULL'.
+
+*addressbar-dns-lookup*::
+Whether to perform a dns lookup for text typed into the address bar. If set to
+true dwb performs a dns lookup for all text that does not have a valid scheme
+and does not contain whitespaces. Default value: false.
+
+*background-color*::
+The background color of the statusbar. Possible values: an rgb color-string,
+default value:
+'#000000'.
+
+*foreground-color*::
+The foreground color of statusbar. Possible values: an rgb color-string.
+default value:
+'#ffffff'.
+
+*auto-completion*::
+Whether possible keystrokes should be shown. (Shift-) Tab cycles through keystrokes.
+Possible values: true/false,
+default value:
+'true'.
+
+*auto-insert-mode*::
+Whether to go automatically in insert mode if an editable element has focus
+after loading a site.
+Possible values: true/false,
+default value:
+'false'.
+
+*background-tabs*::
+Open new tabs in background.
+Possible values: true/false,
+default value:
+'false'.
+
+*cache-model*::
+The cache model used by webkit, possible values are 'webbrowser' and
+'documentviewer'.  Webbrowser increases loading speed but increases memory
+usage, documentviewer reduces memory usage but also decreases browsing speed.
+Default Value: 'webbrowser'.
+
+*close-last-tab*::
+Whether to close the last tab if 'close_tab' is called, if set to true the last
+tabs history is cleared and the window is closed; default value: 'right'. 
+
+*close-tab-focus-policy*::
+Controls the focus when the focused tab is closed, possible values are 'right',
+'left', 'rightmost', and 'leftmost'; default value: 'right'.
+
+*complete-bookmarks*::
+Whether to complete bookmarks with tab-completion. Possible values: true/false,
+default value: 'true'.
+
+*complete-history*::
+Whether to complete browsing history with tab-completion. Possible values:
+true/false, default value: 'true'.
+
+*complete-searchengines*::
+Whether to complete searchengines with tab-completion. Possible values:
+true/false, default value: 'false'.
+
+*complete-userscripts*::
+Whether to complete userscripts with tab-completion. Possible values:
+true/false, default value: 'false'.
+
+*cookies-store-policy*::
+The storage policy for cookies, possible values are 'session', 'persistent', and
+'never'.  If set to session all session cookies are accepted, only cookies with
+a matching domain in cookies.allow will be stored persistently.  If set to
+'persistent' all cookies are stored persistently.  If set to 'never' the cookies
+allowed by cookies_session.allow are allowed for the current session and cookies
+allowed by cookies.allow are save persistently, all other cookies are rejected.
+Default value: 'session'.
+
+*cookies-accept-policy*::
+The accept policy for cookies.  'always' will accept all cookies, 'nothirdparty'
+will accept all cookies except for third party cookies, 'never' will reject all
+cookies. This setting also affects session cookies.  default value: 'always'.
+
+*default-width*::
+The default width of dwb's window. Possible values: width in pixel,
+default value: '800'.
+
+*default-height*::
+The default height of dwb's window. Possible values: height in pixel,
+default value: '600'.
+
+*download-fg-color*::
+The foreground color of the download bar, default value: '#ffffff'.
+
+*download-bg-color*::
+The background color of the download bar, default value:
+'#000000'.
+
+*download-gradient-start*::
+The start color for the download progress gradient color, default value
+'#0000aa'.
+
+*download-gradient-stop*::
+The end color for the download progress gradient color, default value
+'#00aa00'.
+
+*download-external-command*::
+A command that will be invoked if 'download-use-external-program' is set. There
+are four variables that can be used in the command: 'dwb_uri' will be replaced
+with the download-uri, 'dwb_output' will be replaced with the fullpath of the
+destination, 'dwb_cookies' will be replaced with the path to the cookie-file,
+'dwb_referer' will be replaced with the uri of the site the download started.
+Additionally the environment-variables 'DWB_URI', 'DWB_FILENAME', 'DWB_COOKIES',
+'DWB_REFERER', 'DWB_MIME_TYPE' and 'DWB_USER_AGENT' are set.  Default value:
+'xterm -e wget dwb_uri -O dwb_output --load-cookies dwb_cookies'.
+
+*download-directory*::
+The default download directory, if empty, the current working directory is used
+or the last download path is used.  default value: 'NULL'.
+
+*download-no-confirm*::
+Whether to start downloads immediately without asking for a path,
+'download-directory' needs to be set to an existing path.  default value:
+'false'.
+
+*download-use-external-program*::
+Whether to use an external download program specified in
+\'download-external-programm\' or the builtin download helper.  Possible values:
+true/false, default value: 'true'.
+
+
+*editor*::
+External editor used for inputs/textareas.
+default value:
+'xterm -e vim dwb_uri'.
+
+*enable-favicon*::
+Whether to show a favicon in the tab.
+default value: 'true'.
+
+*error-color*::
+The color for error-messages. Possible values: an rgb color-string,
+default value: '#ff0000'.
+
+*error-color*::
+The color for prompt-messages. Possible values: an rgb color-string,
+default value: '#00ff00'.
+
+*font*::
+The font used for the ui. Possible values: a font description
+string, default value:
+'monospace 8'.
+
+*font-completion*::
+The font used for tabcompletion. Possible values: a font description
+string.
+
+*font-entry*::
+The font used for the address bar. Possible values: a font description
+string.
+
+*font-hidden-statusbar*::
+The font used for status elements if the statusbar is hidden. Possible values: a
+css font description.  Default value: 'normal'10px helvetica .
+
+*font-nofocus*::
+The font used for tablabels without focus and completion items without focus. Possible values: a font description
+string.
+
+*hint-active-color*::
+The background color for active link, i.e. the link followed when Return is
+pressed. Possible values: a rgb color string, default value: '#00ff00'.
+
+*hint-autofollow*::
+Whether to follow hints automatically if only one hint matches the typed
+letters. Default value: 'true'.
+
+*hint-bg-color*::
+The background color used for hints. Possible values: a rgb color string,
+default value: '#000088'.
+
+*hint-border*::
+The boreder used for hints. Possible values: a css border description,
+default value:
+'2px dashed #000000'.
+
+*hint-fg-color*::
+The foreground color used for hints. Possible values: a rgb color string,
+default value: '#ffffff'.
+
+*hint-font*::
+The font used for hints. Possible values: css font description,
+default value:
+'bold 10px monospace'.
+
+*hint-highlight-links*::
+Whether to highlight all links in hint-mode,
+default value: 'false'.
+
+*hint-letter-seq*::
+A letter sequence used for letter hints. Possible values: a letter sequence,
+every letter should appear only once.  Default value: 'FDSARTGBVECWXQYIOPMNHZULKJ'.
+
+*hint-normal-color*::
+The background color for a normal link. Possible values: a rgb color string,
+default value: '#ffff99'.
+
+*hint-opacity*::
+The opacity of a hint. Possible values: a decimal from 0.0 to 1.0,
+default value: '0.75'.
+
+*hint-style*::
+The type of hints, that are used. When set to "number", letters will match the
+links text. Possible values: letter/number, default value: 'letter'.
+
+*history-length*::
+The urls that are saved in the browsing history. Specifying a too large value
+can make tab-completion slow. Possible values: number of urls,
+default value: '500'.
+
+*javascript-schemes*::
+Whether to allow loading javascript snippets with scheme 'javascript',
+default value: 'true'.
+
+*message-delay*::
+The duration messages are shown. Possible values: duration in seconds (integer),
+default value: '2'.
+
+*navigation-history-max*::
+Maximum length of navigation history. 'enable-private-browsing' must be disabled to
+save command history at all.  default value: '500'.
+
+*new-tab-position-policy*::
+Controls the position of a newly created tab, possible values are 'right',
+a new tab is created right of the current tab, 'left', a new tab is created left
+of the current tab, 'rightmost', a new tab is created left of the last tab and
+'leftmost', a new tab is created left of the first tab.  Default value: 'right'.
+
+*normal-completion-bg-color*::
+The background color of inactive element in tab-completion. Possible values: an
+rgb color-string, default value: '#151515'.
+
+*normal-completion-fg-color*::
+The foreground color of inactive element in tab-completion. Possible values: an rgb color-string.
+color-string, default value: '#eeeeee'.
+
+*proxy*::
+Whether to use a HTTP-proxy. Possible values: true/false,
+default value: 'false'.
+
+*proxy-url*::
+The proxy-url, can also be set via the http_proxy environment variable. Possible
+values: an url string, default value: 'NULL'.
+
+*save-session*::
+Save the session when dwb is closed and restore the last saved session when
+invoking dwb. Possible values: true/false, default value: 'false'.
+
+*scheme-handler*::
+A script or application that handles uris that cannot be loaded by dwb. dwb only
+loads uris with scheme 'http', 'https', 'file', 'about' and 'dwb'; support for
+e.g. ftp is provided through a scheme handler. The scheme handler can either be
+an application or a script. The first command line argument will be the uri for
+your application, so you can simply set this to 'xdg-open'.  There are also the
+environment variables 'DWB_URI', 'DWB_SCHEME', 'DWB_COOKIES', 'DWB_USER_AGENT',
+and 'DWB_REFERER' available which can be used in a script, for example:
+
+--------
+#!/bin/sh
+
+case ${DWB_SCHEME} in
+  mailto) xterm -\(hye "mutt ${DWB_URI}";;
+  ftp) xterm \(hye "ncftp ${DWB_URI}";;
+  *) xdg-open ${DWB_URI}
+esac
+--------
+
+
+*scroll-step*::
+The step-increment in pixels for scrolling. If set to a value lower or equal 0,
+the default step-increment will be used.  default value: '0.0'.
+
+*scrollbars*::
+Whether scrollbars should be enabled.  default value: 'false'.
+
+*single-instance*::
+Only one instance of dwb per user. This option will be overridden by the
+commandlineoption \(hyn. Possible values: true/false,
+default value: 'true'.
+
+*ssl-strict*::
+Whether to allow only save ssl-certificates.  default value: 'true'.
+
+*ssl-ca-cert*::
+Path to ssl-certificate, only with libsoup < 2.38.
+
+*ssl-use-system-ca-cert*::
+Path to ssl-certificate, only with libsoup >= 2.38.
+
+*ssl-trusted-color*::
+Color of the url in the statusbar for ssl-encrypted sites and trusted
+certificate.  default value: '#00ff00'.
+
+*ssl-untrusted-color*::
+Color of the url in the statusbar for ssl-encrypted sites and untrusted
+certificate.  default value: '#ff0000'.
+
+*startpage*::
+The default startpage. Possible values: an url or "about:blank" for an empty
+startpage, default value: 'about:blank'.
+
+*sync-files*::
+Interval in seconds to save history and cookies to hdd or 0 to immediately save
+to hdd, default value: 0.
+
+*tabbar-visible*::
+When the tabbar is hidden specifies the number of seconds the tabbar is visible
+when switching between tabs, default value: '2'.
+
+*tab-active-bg-color*::
+The background color the tab of the focused tab. Possible values: an rgb
+color-string, default value: '#000000'.
+
+*tab-active-fg-color*::
+The foreground color of the tab of the focused tab. Possible values: an rgb
+color-string, default value: '#ffffff'.
+
+*tab-normal-bg-color*::
+The background color the tab of a not focused tab. Possible values: an rgb
+color-string, default value: '#505050'.
+
+*tab-normal-fg-color*::
+The foreground color of the tab of a not focused tab. Possible values: an rgb
+color-string, default value: '#cccccc'.
+
+*tab-normal-fg-color*::
+The foreground color of the tab of a not focused tab. Possible values: an rgb
+color-string, default value: '#cccccc'.
+
+*tab-protected-color*::
+The color of the tabnumber of protected tabs. Possible values: an rgb color-string,
+default value: '#ff0000'.
+
+*tab-number-color*::
+The color of the tabnumber. Possible values: an rgb color-string,
+default value: '#ff0000'.
+
+*tabbed-browsing*::
+Enable tabbed-browsing. If disabled, all new window/new tab requests will be
+opened in a new window,
+default value:
+'true'.
+
+*update-search-delay*::
+Delay in milliseconds before updating search results. If set to 0 search results
+will be updated after every keypress. If set to a value greater than 0 search
+results will be updated after that delay but only if the search-term has not
+changed since the timeout started. It is recommended to set this value greater
+than 0, default value: '200'.
+
+*use-ntlm*::
+Whether to use NTLM-authentication,
+default value:
+'false'.
+
+*widget-packing*::
+A string consisting of 4 characters, where possible characters are: 'd', 'w',
+'T', 't', 'S' and 's'.  The order of the widgets correspond the the order of
+characters in the string where 'd' corresponds to the download bar, 't' and 'T'
+to the tab bar where 'T' means that the tabbar will not be visible, 'w' to the
+webview and 's' and 'S' to the statusbar where 'S' means that the statusbar
+won't be visible.  Default value: 'dtws'.
+
+
+[[FILES]]
+FILES
+-----
+
+Userscripts
+~~~~~~~~~~~
+
+Userscripts can be stored in 
+'~/.config/dwb/userscripts'.
+The first argument of the script will be the current url, the second argument is
+the title, the third argument will be the profile name, the fourth argument is
+the numerical modifier and the fifth argument is a commandline argument. Also
+the variables 
+'DWB_URI',
+'DWB_TITLE',
+'DWB_PROFILE',
+'DWB_NUMMOD',
+'DWB_ARGUMENT',
+'DWB_REFERER',
+and
+'DWB_USER_AGENT'
+are set.
+The keybinding for
+the script must be defined in the script itself in a commented line of the form
+*<comment symbols> dwb: <keybinding>*.
+Commands can be executed by sending the command to ${DWB_FIFO}.
+
+dwb also provides a small javascript api, scripts that use the api must have the
+special shebang *#!javascript*, for details see
+http://portix.bitbucket.org/dwb/resources/jsapi.html.
+
+Examples
+^^^^^^^^
+
+The following script will download the current webpage:
+
+------
+#!/bin/bash
+# dwb: Control w
+
+wget $DWB_URI
+------
+
+Popup an alert dialog:
+
+------
+#!/bin/bash
+# dwb: Control h
+
+echo "js window.alert('Hello world');" > ${DWB_FIFO}
+------
+
+Block requests from specific sites:
+
+------
+#!javascript
+
+var block = [ new RegExp("https://example.org.*"), new RegExp("https://example.co.uk.*") ];
+
+signals.connect("resource", function(wv, frame, request) {
+  var i, r;
+  for (i=0; i<block.length; i++) 
+  {
+    if (block[i].test(request.uri)) 
+    {
+      request.uri = "about:blank";
+      return true;
+    }
+  }
+});
+------
+
+
+RESOURCES
+---------
+
+bitbucket: http://bitbucket.org/portix/dwb
+
+homepage:  http://portix.bitbucket.org/dwb/
+
