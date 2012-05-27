@@ -23,7 +23,7 @@ void js_make_exception(JSContextRef ctx, JSValueRef *exception, const gchar *for
 char * js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t );
 char * js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *);
 JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
-JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
+void js_set_object_property(JSContextRef ctx, JSObjectRef arg, const char *name, const char *value, JSValueRef *);
 char * js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 double  js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 JSObjectRef js_create_object(WebKitWebFrame *, const char *);
@@ -33,6 +33,7 @@ char * js_value_to_json(JSContextRef ctx, JSValueRef value, size_t limit, JSValu
 JSValueRef js_execute(JSContextRef ctx, const char *, JSValueRef *exc);
 gboolean js_print_exception(JSContextRef ctx, JSValueRef exception);
 JSObjectRef js_make_function(JSContextRef ctx, const char *script);
+JSValueRef js_json_to_value(JSContextRef ctx, const char *text);
 #define  JS_STRING_MAX 1024
 
 #endif

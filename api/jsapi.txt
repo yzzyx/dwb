@@ -137,6 +137,26 @@ _method_;; The http request method, default +GET+, optional.
 ****
 
 ****
+[[sendRequestSync]]
+[float]
+==== *sendRequestSync()* ==== 
+
+[source,javascript]
+----
+Object sendRequest(String uri, [String method])
+----
+
+Sends a http-request synchronously. 
+
+ ::
+
+_uri_;; The uri the request will be sent to.
+_method_;; The http request method, default +GET+, optional.
+_returns_;; Object that contains the response body and the http status code of
+the request. 
+****
+
+****
 [[timerStart]]
 [float]
 ==== *timerStart()* ==== 

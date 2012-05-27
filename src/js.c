@@ -31,6 +31,14 @@ js_make_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, 
   va_end(arg_list);
   *exception = js_char_to_value(ctx, message);
 }
+
+void 
+js_set_object_property(JSContextRef ctx, JSObjectRef arg, const char *name, const char *value, JSValueRef *exc) {
+  JSStringRef js_key = JSStringCreateWithUTF8CString(name);
+  JSValueRef js_value = js_char_to_value(ctx, value);
+  JSObjectSetProperty(ctx, arg, js_key, js_value, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, exc);
+  JSStringRelease(js_key);
+}
 /* js_get_object_property {{{*/
 JSObjectRef 
 js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
@@ -234,6 +242,13 @@ js_value_to_json(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *e
   char *json = js_string_to_char(ctx, js_json, limit);
   JSStringRelease(js_json);
   return json;
+}
+JSValueRef 
+js_json_to_value(JSContextRef ctx, const char *text) {
+  JSStringRef json = JSStringCreateWithUTF8CString(text == NULL || *text == 0 ? "{}" : text);
+  JSValueRef ret = JSValueMakeFromJSONString(ctx, json);
+  JSStringRelease(json);
+  return ret;
 }
 JSValueRef
 js_execute(JSContextRef ctx, const char *script, JSValueRef *exc) {

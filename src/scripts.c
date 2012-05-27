@@ -630,6 +630,29 @@ error_out:
   return JSValueMakeNumber(ctx, ret);
 }/*}}}*/
 
+static JSValueRef 
+global_send_request_sync(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  char *method = NULL;
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("sendRequestSync: missing argument."));
+    return JSValueMakeNull(ctx);
+  }
+  char *uri = js_value_to_char(ctx, argv[0], -1, exc);
+  if (uri == NULL) 
+    return JSValueMakeNull(ctx);
+  if (argc > 1) 
+    method = js_value_to_char(ctx, argv[2], -1, exc);
+  SoupMessage *msg = soup_message_new(method == NULL ? "GET" : method, uri);
+  guint status = soup_session_send_message(webkit_get_default_session(), msg);
+  JSObjectRef o = JSObjectMake(ctx, NULL, NULL);
+  js_set_object_property(ctx, o, "body", msg->response_body->data, exc);
+  JSStringRef js_key = JSStringCreateWithUTF8CString("status");
+  JSValueRef js_value = JSValueMakeNumber(ctx, status);
+  JSObjectSetProperty(ctx, o, js_key, js_value, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, exc);
+  JSStringRelease(js_key);
+  return o;
+}
+
 /* timeout_callback {{{*/
 static gboolean
 timeout_callback(JSObjectRef obj) {
@@ -1121,10 +1144,7 @@ scripts_emit(ScriptSignal *sig) {
   for (int j=0; j<sig->numobj; j++) {
     val[i++] = make_object(_global_context, G_OBJECT(sig->objects[j]));
   }
-  JSValueRef vson = NULL;
-  JSStringRef js_json = JSStringCreateWithUTF8CString(sig->json == NULL ? "{}" : sig->json);
-  vson = JSValueMakeFromJSONString(_global_context, js_json);
-  JSStringRelease(js_json);
+  JSValueRef vson = js_json_to_value(_global_context, sig->json);
   val[i++] = vson == NULL ? JSValueMakeNull(_global_context) : vson;
   JSValueRef js_ret = JSObjectCallAsFunction(_global_context, function, NULL, numargs, val, NULL);
   if (JSValueIsBoolean(_global_context, js_ret)) {
@@ -1322,6 +1342,7 @@ create_global_object() {
     { "timerStop",        global_timer_stop,         kJSDefaultAttributes },
     { "domainFromHost",   global_domain_from_host,         kJSDefaultAttributes },
     { "sendRequest",      global_send_request,         kJSDefaultAttributes },
+    { "sendRequestSync",  global_send_request_sync,         kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
 
