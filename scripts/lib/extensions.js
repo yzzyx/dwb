@@ -80,7 +80,7 @@
           extConfig = c;
         }
         else {
-          if (_config === undefined) {
+          if (_config === undefined && system.fileTest(data.configDir + "/extensionrc", FileTest.regular)) {
             try {
               config = include(data.configDir + "/extensionrc");
             }
