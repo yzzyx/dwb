@@ -10,6 +10,7 @@ Object.freeze((function () {
     activeArr : [],
     activeInput : null,
     elements : [],
+    positions : [],
     lastInput : null,
     lastPosition : 0,
     newTab : false,
@@ -72,10 +73,18 @@ Object.freeze((function () {
     var leftpos = rect.left + oe.offX;
     var t = Math.max(toppos, 0);
     var l = Math.max(leftpos, 0);
+    for (var i=0; i<globals.positions.length; i++) {
+      var p = globals.positions[i];
+      if ((p.top -globals.fontSize <= t) && ( t <= p.top + globals.fontSize) && (l<=p.left + globals.fontSize) && (p.left-globals.fontSize <= l) ) {
+        l+=Math.ceil(globals.fontSize*2.5);
+        break;
+      }
+    }
     hint.style.top = t + "px";
     hint.style.marginTop = oe.marginTop;
     hint.style.left = l + "px";
     hint.style.marginLeft = oe.marginLeft;
+    globals.positions.push({top : t, left : l});
 
     hint.className =  "dwb_hint";
     this.createOverlay = function() {
@@ -196,12 +205,28 @@ Object.freeze((function () {
     e.dispatchEvent(mouseEvent);
   };
   var __clickElement = function (element, ev) {
-    if (ev) {
+    var clicked = false;
+    if (arguments.length == 2) {
       __mouseEvent(element, ev, !globals.newTab);
     }
-    else { // both events, if no event is given
-      __mouseEvent(element, "click", !globals.newTab);
-      __mouseEvent(element, "mousedown", !globals.newTab);
+    else {
+      if (e.hasAttribute("onclick")) {
+        __mouseEvent(element, ev, !globals.newTab);
+        clicked = true;
+      }
+      if (e.hasAttribute("onmousedown")) {
+        __mouseEvent(element, "mousedown", !globals.newTab);
+        clicked = true;
+      }
+      if (e.hasAttribute("onmouseover")) {
+        __mouseEvent(element, "mousedown", !globals.newTab);
+        clicked = true;
+      }
+      if (!clicked) {
+        __mouseEvent(element, "click", !globals.newTab);
+        __mouseEvent(element, "mousedown", !globals.newTab);
+        __mouseEvent(element, "mouseover", !globals.newTab);
+      }
     }
   };
   var __getActive = function () {
@@ -476,6 +501,7 @@ Object.freeze((function () {
     globals.active = null;
     globals.lastPosition = 0;
     globals.lastInput = null;
+    globals.positions = [];
   };
   var __evaluate = function (e, type) {
     var ret = null;
@@ -519,6 +545,9 @@ Object.freeze((function () {
       }
       else if (e.hasAttribute("onmousedown")) {
         __clickElement(e, "mousedown");
+      }
+      else if (e.hasAttribute("onmouseover")) {
+        __clickElement(e, "mouseover");
       }
       else {
         __clickElement(e);
@@ -629,6 +658,7 @@ Object.freeze((function () {
         globals.markHints = markHints;
         globals.autoFollow = autoFollow;
         globals.bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
+        globals.fontSize = Math.ceil(font.replace(/\D/g, ""))/2;
   };
 
 
