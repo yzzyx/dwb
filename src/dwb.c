@@ -2632,8 +2632,7 @@ dwb_get_scripts() {
       }
       if ( (f = fopen(path, "r")) != NULL) {
         if (fgetc(f) == '#' && fgetc(f) == '!')  {
-          fgets(buf, 11, f);
-          if (!g_strcmp0(buf, "javascript")) {
+          if (fgets(buf, 11, f) != NULL && !g_strcmp0(buf, "javascript")) {
             int next = fgetc(f);
             if (g_ascii_isspace(next)) {
               javascript = true;
