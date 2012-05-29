@@ -3275,7 +3275,6 @@ dwb_init_style() {
   SET_FONT(dwb.font.fd_entry, "font-entry");
   SET_FONT(dwb.font.fd_completion, "font-completion");
 #undef SET_FONT
-
 } /*}}}*/
 
 static void
