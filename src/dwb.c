@@ -1163,7 +1163,7 @@ dwb_set_key(const char *prop, char *val) {
   if (val)
     value.key = dwb_str_to_key(val); 
   else {
-    Key key = { NULL, 0 };
+    Key key = { NULL, 0, 0 };
     value.key = key;
   }
 
@@ -2288,7 +2288,7 @@ dwb_eval_key(GdkEventKey *e) {
   }
 
   const char *buf = dwb.state.buffer->str;
-  int longest = 0;
+  guint longest = 0;
   KeyMap *tmp = NULL;
   GList *coms = NULL;
   for (GSList *l = dwb.custom_commands; l; l=l->next) {
@@ -2695,7 +2695,7 @@ dwb_get_scripts() {
         map->key = "";
         map->mod = 0;
       }
-      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE | CP_USERSCRIPT, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path } };
+      FunctionMap fm = { { n->first, n->first }, CP_DONT_SAVE | CP_COMMANDLINE | CP_USERSCRIPT, (Func)dwb_execute_user_script, NULL, POST_SM, { .arg = path }, EP_NONE, {NULL} };
       *fmap = fm;
       map->map = fmap;
       dwb.misc.userscripts = g_list_prepend(dwb.misc.userscripts, n);
@@ -2994,7 +2994,7 @@ dwb_str_to_key(char *str) {
 
   char **string = g_strsplit(str, " ", -1);
 
-  for (int i=0; i<g_strv_length(string); i++)  {
+  for (guint i=0; i<g_strv_length(string); i++)  {
     if (!g_ascii_strcasecmp(string[i], "Control")) {
       key.mod |= GDK_CONTROL_MASK;
     }
@@ -3070,7 +3070,7 @@ dwb_keymap_delete(GList *gl, KeyValue key) {
 GList *
 dwb_keymap_add(GList *gl, KeyValue key) {
   gl = dwb_keymap_delete(gl, key);
-  for (int i=0; i<LENGTH(FMAP); i++) {
+  for (guint i=0; i<LENGTH(FMAP); i++) {
     if (!g_strcmp0(FMAP[i].n.first, key.id)) {
       KeyMap *keymap = dwb_malloc(sizeof(KeyMap));
       FunctionMap *fmap = &FMAP[i];
@@ -3103,7 +3103,7 @@ dwb_init_key_map() {
     fprintf(stderr, "No keyfile found: %s\nUsing default values.\n", error->message);
     g_clear_error(&error);
   }
-  for (int i=0; i<LENGTH(KEYS); i++) {
+  for (guint i=0; i<LENGTH(KEYS); i++) {
     KeyValue kv;
     char *string = g_key_file_get_value(keyfile, dwb.misc.profile, KEYS[i].id, NULL);
     if (string) {
@@ -3164,11 +3164,11 @@ dwb_init_settings() {
     }
   }
   g_free(content);
-  for (int j=0; j<LENGTH(DWB_SETTINGS); j++) {
+  for (guint j=0; j<LENGTH(DWB_SETTINGS); j++) {
     s = NULL;
     value = NULL;
     key = g_strdup(DWB_SETTINGS[j].n.first);
-    for (int i=0; i<numkeys; i++) {
+    for (guint i=0; i<numkeys; i++) {
       value = g_key_file_get_string(keyfile, dwb.misc.profile, keys[i], NULL);
       if (!g_strcmp0(keys[i], DWB_SETTINGS[j].n.first)) {
         s = dwb_malloc(sizeof(WebSettings));
@@ -3658,7 +3658,7 @@ dwb_handle_signal(int s) {
 
 void 
 dwb_init_signals() {
-  for (int i=0; i<LENGTH(signals); i++) {
+  for (guint i=0; i<LENGTH(signals); i++) {
     struct sigaction act, oact;
     act.sa_handler = dwb_handle_signal;
 

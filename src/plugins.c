@@ -181,7 +181,7 @@ plugins_frame_load_status_cb(WebKitWebFrame *frame, GList *gl) {
     /* We have to find the correct frame, but there is no access from the web_frame
      * to the Htmlelement */
     WebKitDOMNodeList *frames = webkit_dom_document_query_selector_all(doc, "iframe, frame", NULL);
-    for (int i=0; i<webkit_dom_node_list_get_length(frames); i++) {
+    for (guint i=0; i<webkit_dom_node_list_get_length(frames); i++) {
       WebKitDOMHTMLIFrameElement *iframe = (void*)webkit_dom_node_list_item(frames, i);
       char *iframesrc = webkit_dom_html_iframe_element_get_src(iframe);
       if (!g_strcmp0(src, iframesrc)) {
@@ -209,7 +209,7 @@ plugins_find_in_frames(WebKitDOMDocument *doc, char *selector) {
 
   /* TODO nodes with duplicate src/data-property */
   list = webkit_dom_document_get_elements_by_tag_name(doc, "object");
-  for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
+  for (guint i=0; i<webkit_dom_node_list_get_length(list); i++) {
     element = (void*)webkit_dom_node_list_item(list, i);
     source = webkit_dom_html_object_element_get_data(WEBKIT_DOM_HTML_OBJECT_ELEMENT(element));
     if (!g_strcmp0(selector, source)) {
@@ -220,7 +220,7 @@ plugins_find_in_frames(WebKitDOMDocument *doc, char *selector) {
     g_free(source);
   }
   list = webkit_dom_document_get_elements_by_tag_name(doc, "embed");
-  for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
+  for (guint i=0; i<webkit_dom_node_list_get_length(list); i++) {
     element = (void*)webkit_dom_node_list_item(list, i);
     source = webkit_dom_html_embed_element_get_src(WEBKIT_DOM_HTML_EMBED_ELEMENT(element));
     if (!g_strcmp0(selector, source)) {
@@ -232,7 +232,7 @@ plugins_find_in_frames(WebKitDOMDocument *doc, char *selector) {
   }
   list = webkit_dom_document_get_elements_by_tag_name(doc, "iframe");
   if (list != NULL) {
-    for (int i=0; i<webkit_dom_node_list_get_length(list); i++) {
+    for (guint i=0; i<webkit_dom_node_list_get_length(list); i++) {
       iframe = (void*)webkit_dom_node_list_item(list, i);
       document = webkit_dom_html_iframe_element_get_content_document(iframe);
       element = plugins_find_in_frames(document, selector);

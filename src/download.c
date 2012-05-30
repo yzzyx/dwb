@@ -201,7 +201,7 @@ download_do_spawn(const char *command, const char *path, const char *mimetype) {
 
   char **argcom = g_strsplit(command, " ", -1);
 
-  int argc=0;
+  guint argc=0;
   for (; argc<g_strv_length(argcom) && argc<62; argc++) {
     argv[argc] = argcom[argc];
   }
@@ -308,7 +308,7 @@ download_cancel(int number) {
     return STATUS_OK;
   }
   for (GList *l = _downloads; l; l=l->next) {
-    if (DWB_DOWNLOAD(l)->n == number) {
+    if ((gint)DWB_DOWNLOAD(l)->n == number) {
       webkit_download_cancel(DWB_DOWNLOAD(l)->download);
       return STATUS_OK;
     }

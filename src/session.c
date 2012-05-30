@@ -48,7 +48,7 @@ static char *
 session_get_group(const char *name, gboolean *is_marked) {
   char *content = NULL;
   gboolean mark;
-  int l = strlen (name);
+  guint l = strlen (name);
   const char *group;
 
   char **groups = session_get_groups();

@@ -229,6 +229,7 @@ typedef enum  {
 } CompletionType;
 
 typedef enum  {
+  SANITIZE_ERROR  = -1,
   SANITIZE_HISTORY        = 1<<0, 
   SANITIZE_COOKIES        = 1<<1, 
   SANITIZE_CACHE          = 1<<2, 

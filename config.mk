@@ -103,7 +103,7 @@ PLUGIN_FILE=pluginblocker.asc
 
 # CFLAGS
 CFLAGS := $(CFLAGS)
-CFLAGS += -Wall
+CFLAGS += -Wall 
 CFLAGS += -pipe
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
 CFLAGS += --ansi
@@ -154,6 +154,7 @@ DCFLAGS = $(CFLAGS)
 #DCFLAGS += -DDWB_DEBUG
 DCFLAGS += -g 
 DCFLAGS += -O0 
+DCFLAGS += -Wextra -Wno-unused-parameter
 
 # Makeflags
 MFLAGS=--no-print-directory

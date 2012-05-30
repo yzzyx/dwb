@@ -182,7 +182,7 @@ adblock_match(GPtrArray *array, const char *uri, const char *uri_host, const cha
   }
   suburis[uc++] = NULL;
 
-  for (int i=0; i<array->len; i++) {
+  for (guint i=0; i<array->len; i++) {
     rule = g_ptr_array_index(array, i);
     if ( (attributes & AA_DOCUMENT && !(rule->attributes & AA_DOCUMENT)) || (attributes & AA_SUBDOCUMENT && !(rule->attributes & AA_SUBDOCUMENT)) )
       continue;

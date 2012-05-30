@@ -30,10 +30,12 @@
 #include "download.h"
 #include "js.h"
 
-static int inline dwb_floor(double x) { 
+inline static int 
+dwb_floor(double x) { 
   return x >= 0 ? (int) x : (int) x - 1;
 }
-static int inline modulo(int x, int y) {
+inline static int 
+modulo(int x, int y) {
   return x - dwb_floor((double)x/y)  * y;
 }
 /* commands.h {{{*/
@@ -73,14 +75,14 @@ commands_simple_command(KeyMap *km) {
 }/*}}}*/
 static WebKitWebView * 
 commands_get_webview_with_nummod() {
-  if (dwb.state.nummod > 0 && dwb.state.nummod <= g_list_length(dwb.state.views)) 
+  if (dwb.state.nummod > 0 && dwb.state.nummod <= (gint)g_list_length(dwb.state.views)) 
     return WEBVIEW(g_list_nth(dwb.state.views, NUMMOD - 1));
   else 
     return CURRENT_WEBVIEW();
 }
 static GList * 
 commands_get_view_with_nummod() {
-  if (dwb.state.nummod > 0 && dwb.state.nummod <= g_list_length(dwb.state.views)) 
+  if (dwb.state.nummod > 0 && dwb.state.nummod <= (gint)g_list_length(dwb.state.views)) 
     return g_list_nth(dwb.state.views, NUMMOD - 1);
   return dwb.state.fview;
 }
@@ -239,7 +241,7 @@ commands_quickmark(KeyMap *km, Arg *arg) {
 /* commands_reload(KeyMap *km, Arg *){{{*/
 DwbStatus
 commands_reload(KeyMap *km, Arg *arg) {
-  GList *gl = dwb.state.nummod > 0 && dwb.state.nummod <= g_list_length(dwb.state.views)
+  GList *gl = dwb.state.nummod > 0 && dwb.state.nummod <= (gint)g_list_length(dwb.state.views)
     ? g_list_nth(dwb.state.views, dwb.state.nummod-1) 
     : dwb.state.fview;
   dwb_reload(gl);
@@ -836,7 +838,7 @@ commands_dump(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_sanitize(KeyMap *km, Arg *arg) {
   Sanitize s = util_string_to_sanitize(arg->p);
-  if (s == -1) {
+  if (s == SANITIZE_ERROR) {
     return STATUS_ERROR;
   }
   if (s & SANITIZE_HISTORY) {

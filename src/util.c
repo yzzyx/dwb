@@ -809,7 +809,7 @@ util_string_to_sanitize(const char *string) {
     else if (!strcmp(token[i], "allsessions"))
       s |= SANITIZE_ALLSESSIONS;
     else {
-      s = -1;
+      s = SANITIZE_ERROR;
       break;
     }
   }
