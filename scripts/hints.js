@@ -365,8 +365,9 @@ Object.freeze((function () {
           __createHints(e.contentWindow, varructor, type);
           continue;
         }
-        else if (e instanceof HTMLImageElement && e.hasAttribute("usemap")) {
-          __createMap(hints, varructor, e, win, r, oe);
+        else if (e instanceof HTMLImageElement) {
+          if (e.hasAttribute("usemap")) 
+            __createMap(hints, varructor, e, win, r, oe);
         }
         else {
           __appendHint(hints, varructor, e, win, r, oe);
