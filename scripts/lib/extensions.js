@@ -1,7 +1,7 @@
 (function () {
   var _config = undefined;
   var _debug = false;
-  function getPlugin(name, filename) {
+  var getPlugin = function(name, filename) {
     var ret = null;
     try {
       if (system.fileTest(filename, FileTest.exists)) {
@@ -12,8 +12,8 @@
       extensions.error(name, "Error in line " + e.line + " parsing " + filename);
     }
     return ret;
-  }
-  function getStack(offset) {
+  };
+  var getStack = function(offset) {
     if (arguments.length === 0) {
       offset = 0;
     }
@@ -24,7 +24,7 @@
       var stack = e.stack.match(/[^\n]+/g);
       return "STACK: [" + stack.slice(offset+1).join("] [")+"]";
     }
-  }
+  };
   Object.defineProperties(extensions, { 
     "warning" : {
       value : function (name, message) {
