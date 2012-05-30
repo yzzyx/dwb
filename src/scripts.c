@@ -167,7 +167,8 @@ uncamelize(char *uncamel, const char *camel, char rep, size_t length) {
       *uncamel++ = *camel++;
     }
   }
-  while (!(*uncamel = 0) && written++<length-1);
+  while (!(*uncamel = 0) && written++<length-1)
+    uncamel++;
   return ret;
 }/*}}}*/
 
