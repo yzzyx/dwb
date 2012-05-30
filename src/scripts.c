@@ -1427,7 +1427,7 @@ create_global_object() {
     { 0,           0,           0 },
   };
   class = create_class("io", io_functions, NULL);
-  create_object(_global_context, class, global_object, kJSDefaultAttributes, "io", NULL);
+  create_object(_global_context, class, global_object, kJSPropertyAttributeDontDelete, "io", NULL);
   JSClassRelease(class);
 
   JSStaticFunction system_functions[] = { 
@@ -1569,13 +1569,15 @@ scripts_remove_tab(JSObjectRef obj) {
 
 /* scripts_init_script {{{*/
 void
-scripts_init_script(const char *script) {
+scripts_init_script(const char *path, const char *script) {
   if (_global_context == NULL) 
     create_global_object();
-  JSObjectRef function = js_make_function(_global_context, script);
+  char *debug = g_strdup_printf("try { %s } catch(e) { io.debug(\"In file %s\", e); }", script, path);
+  JSObjectRef function = js_make_function(_global_context, debug);
   if (function != NULL) {
     _script_list = g_slist_prepend(_script_list, function);
   }
+  g_free(debug);
 }/*}}}*/
 
 void
@@ -1617,7 +1619,7 @@ scripts_execute_scripts(char **scripts) {
   for (int i=0; scripts[i] != NULL; i++) {
     content = util_get_file_content(scripts[i]); 
     if (content != NULL) {
-      scripts_init_script(content);
+      scripts_init_script(scripts[i], content);
       g_free(content);
     }
   }

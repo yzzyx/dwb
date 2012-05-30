@@ -2623,12 +2623,14 @@ dwb_get_scripts() {
         continue;
       else if (g_file_test(path, G_FILE_TEST_IS_SYMLINK)) {
         realpath = g_file_read_link(path, &error);
-        if (error != NULL) {
+        if (realpath != NULL) {
           fprintf(stderr, "Cannot read %s : %s\n", path, error->message);
-          continue;
+          goto loop_end;
         }
-        g_free(path);
-        path = realpath;
+        else {
+          g_free(path);
+          path = realpath;
+        }
       }
       if ( (f = fopen(path, "r")) != NULL) {
         if (fgetc(f) == '#' && fgetc(f) == '!')  {
@@ -2645,26 +2647,23 @@ dwb_get_scripts() {
 
       if (!javascript && !g_file_test(path, G_FILE_TEST_IS_EXECUTABLE)) {
         fprintf(stderr, "Warning: userscript %s isn't executable and will be ignored.\n", path);
-        continue;
+        goto loop_end;
       }
 
       g_file_get_contents(path, &content, NULL, NULL);
-      if (content == NULL) 
-        continue;
+      if (content == NULL) {
+        goto loop_end;
+      }
       if (javascript) {
         char *script = strchr(content, '\n');
         if (script && *(script+1)) {
-          scripts_init_script(script+1);
-          g_free(content);
-          continue;
+          scripts_init_script(path, script+1);
+          goto loop_end;
         }
       }
 
       char **lines = g_strsplit(content, "\n", -1);
 
-
-      g_free(content);
-      content = NULL;
 
       int i=0;
       n = NULL;
@@ -2702,6 +2701,9 @@ dwb_get_scripts() {
       gl = g_list_prepend(gl, map);
 
       g_strfreev(lines);
+loop_end: 
+      FREE0(path);
+      FREE0(content);
     }
     g_dir_close(dir);
   }

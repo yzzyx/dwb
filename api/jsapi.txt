@@ -295,6 +295,25 @@ var bookmarks = io.read(data.bookmarks);
 The +io+ object implements functions for input and output. 
 
 ****
+[[debug]]
+[float]
+==== *debug()* ==== 
+
+[source,javascript]
+----
+void io.debug(String message | Error error, [Error error])
+----
+
+Prints a debug message and the call stack to stderr. If the first parameter is
+an error object the second parameter is ignored, else the error is optional.
+
+ :: 
+
+_message_;; The message to show
+_error_;; A javascript error object, optional as second parameter
+****
+
+****
 [[error]]
 [float]
 ==== *error()* ==== 
