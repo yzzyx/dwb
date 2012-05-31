@@ -1239,9 +1239,10 @@ A command that will be invoked if 'download-use-external-program' is set. There
 are four variables that can be used in the command: 'dwb_uri' will be replaced
 with the download-uri, 'dwb_output' will be replaced with the fullpath of the
 destination, 'dwb_cookies' will be replaced with the path to the cookie-file,
-'dwb_referer' will be replaced with the uri of the site the download started.
+'dwb_referer' will be replaced with the uri of the site the download started,
+dwb_proxy will be replaced with the proxy url if dwb uses a proxy.
 Additionally the environment-variables 'DWB_URI', 'DWB_FILENAME', 'DWB_COOKIES',
-'DWB_REFERER', 'DWB_MIME_TYPE' and 'DWB_USER_AGENT' are set.  Default value:
+'DWB_REFERER', 'DWB_MIME_TYPE', 'DWB_PROXY' and 'DWB_USER_AGENT' are set.  Default value:
 'xterm -e wget dwb_uri -O dwb_output --load-cookies dwb_cookies'.
 
 *download-directory*::

@@ -79,6 +79,8 @@ download_spawn_external(const char *uri, const char *filename, WebKitDownload *d
   GSList *list = g_slist_prepend(NULL, dwb_navigation_new("DWB_URI", uri));
   list = g_slist_prepend(list, dwb_navigation_new("DWB_FILENAME", filename));
   list = g_slist_prepend(list, dwb_navigation_new("DWB_COOKIES", dwb.files.cookies));
+  char *proxy = GET_CHAR("proxy-url");
+  gboolean has_proxy = GET_BOOL("proxy");
 
   if ( (newcommand = util_string_replace(command, "dwb_uri", uri)) ) {
     g_free(command);
@@ -99,9 +101,16 @@ download_spawn_external(const char *uri, const char *filename, WebKitDownload *d
     g_free(command);
     command = newcommand;
   }
+  if ( (newcommand = util_string_replace(command, "dwb_proxy", proxy == NULL && has_proxy ? "" : proxy)) ) {
+    g_free(command);
+    command = newcommand;
+  }
   if (user_agent != NULL) 
     list = g_slist_prepend(list, dwb_navigation_new("DWB_USER_AGENT", user_agent));
   list = g_slist_prepend(list, dwb_navigation_new("DWB_MIME_TYPE", dwb.state.mimetype_request));
+  if (proxy != NULL && has_proxy) {
+    list = g_slist_prepend(list, dwb_navigation_new("DWB_PROXY", proxy));
+  }
 
   char **argv; 
   int argc;
