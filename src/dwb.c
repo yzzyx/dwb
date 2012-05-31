@@ -21,6 +21,7 @@
 #include <wchar.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <locale.h>
 #include <JavaScriptCore/JavaScript.h>
@@ -103,6 +104,7 @@ typedef struct _UserScriptEnv {
   GIOChannel *channel;
   char *fifo;
   gint fd;
+  guint source;
 } UserScripEnv;
 
 
@@ -2495,6 +2497,19 @@ dwb_search(Arg *arg) {
   return ret;
 }/*}}}*/
 
+static void
+dwb_user_script_watch(GPid pid, gint status, UserScripEnv *env) {
+  if (WIFEXITED(status) || WIFSIGNALED(status)) {
+    g_source_remove(env->source);
+    unlink(env->fifo);
+    g_free(env->fifo);
+    g_io_channel_shutdown(env->channel, true, NULL);
+    g_io_channel_unref(env->channel);
+    env->channel = NULL;
+    g_free(env);
+  }
+}
+
 /* dwb_user_script_cb(GIOChannel *, GIOCondition *)     return: false {{{*/
 static gboolean
 dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, UserScripEnv *env) {
@@ -2509,7 +2524,7 @@ dwb_user_script_cb(GIOChannel *channel, GIOCondition condition, UserScripEnv *en
     fprintf(stderr, "Cannot read from std_out: %s\n", error->message);
   }
   g_clear_error(&error);
-  return false;
+  return true;
 }/*}}}*/
 
 /* dwb_setup_environment(GSList *list) {{{*/
@@ -2523,16 +2538,6 @@ dwb_setup_environment(GSList *list) {
   }
   g_slist_free(list);
 
-}/*}}}*/
-
-/* dwb_watch_userscript {{{*/
-void 
-dwb_watch_userscript(GPid pid, int status, UserScripEnv *env) {
-  unlink(env->fifo);
-  g_free(env->fifo);
-  g_io_channel_shutdown(env->channel, true, NULL);
-  g_io_channel_unref(env->channel);
-  g_free(env);
 }/*}}}*/
 
 /* dwb_execute_user_script(Arg *a) {{{*/
@@ -2579,15 +2584,14 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
     env->channel = g_io_channel_unix_new(env->fd);
     if (env->channel != NULL) {
       dwb_set_normal_message(dwb.state.fview, true, "Executing script %s", a->arg);
-      g_io_add_watch(env->channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, env);
-      g_child_watch_add(pid, (GChildWatchFunc) dwb_watch_userscript, env);
+      env->source = g_io_add_watch(env->channel, G_IO_IN, (GIOFunc)dwb_user_script_cb, env);
+      g_child_watch_add(pid, (GChildWatchFunc)dwb_user_script_watch, env);
     }
     else  {
       close(env->fd);
       unlink(fifo);
       g_free(fifo);
       g_free(env);
-      dwb_set_error_message(dwb.state.fview, "Executing script %s failed", a->arg);
     }
 
   }
@@ -2647,6 +2651,7 @@ dwb_get_scripts() {
 
       if (!javascript && !g_file_test(path, G_FILE_TEST_IS_EXECUTABLE)) {
         fprintf(stderr, "Warning: userscript %s isn't executable and will be ignored.\n", path);
+        FREE0(path);
         goto loop_end;
       }
 
@@ -2702,7 +2707,6 @@ dwb_get_scripts() {
 
       g_strfreev(lines);
 loop_end: 
-      FREE0(path);
       FREE0(content);
     }
     g_dir_close(dir);
