@@ -119,14 +119,14 @@ callback_entry_key_press(GtkWidget* entry, GdkEventKey *e) {
       completion_clean_path_completion();
     }
   }
-  else if (mode & COMPLETION_MODE && !DWB_TAB_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
+  else if (mode & COMPLETION_MODE && !DWB_COMPLETE_KEY(e) && !e->is_modifier && !CLEAN_STATE(e)) {
     completion_clean_completion(set_text);
   }
   else if (mode == FIND_MODE) {
     return false;
   }
-  else if (DWB_TAB_KEY(e)) {
-    completion_complete(dwb_eval_completion_type(), e->state & GDK_SHIFT_MASK);
+  else if (DWB_COMPLETE_KEY(e)) {
+    completion_complete(dwb_eval_completion_type(), e->state & GDK_SHIFT_MASK || e->keyval == GDK_KEY_Up);
     return true;
   }
   if (dwb_eval_override_key(e, CP_OVERRIDE_ENTRY)) {

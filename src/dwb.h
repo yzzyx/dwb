@@ -130,6 +130,7 @@
 #define ALPHA(X)    ((X->keyval >= GDK_KEY_A && X->keyval <= GDK_KEY_Z) ||  (X->keyval >= GDK_KEY_a && X->keyval <= GDK_KEY_z) || X->keyval == GDK_KEY_space)
 #define DIGIT(X)   (X->keyval >= GDK_KEY_0 && X->keyval <= GDK_KEY_9)
 #define DWB_TAB_KEY(e)              (e->keyval == GDK_KEY_Tab || e->keyval == GDK_KEY_ISO_Left_Tab)
+#define DWB_COMPLETE_KEY(e)         (DWB_TAB_KEY(e) || e->keyval == GDK_KEY_Down || e->keyval == GDK_KEY_Up)
 
 // Settings
 #define GET_CHAR(prop)              ((char*)(((WebSettings*)g_hash_table_lookup(dwb.settings, prop))->arg_local.p))
