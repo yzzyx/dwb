@@ -82,7 +82,6 @@ static JSValueRef wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRe
 static JSValueRef wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef wv_inject_with_channel(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction default_functions[] = { 
     { "equals",          equals,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
@@ -92,7 +91,6 @@ static JSStaticFunction wv_functions[] = {
     { "history",         wv_history,             kJSDefaultAttributes },
     { "reload",          wv_reload,             kJSDefaultAttributes },
     { "inject",          wv_inject,             kJSDefaultAttributes },
-    { "injectWithChannel",  wv_inject_with_channel,             kJSDefaultAttributes },
     { "equals",          equals,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
@@ -109,10 +107,8 @@ static JSStaticValue wv_values[] = {
 };
 
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef frame_inject_with_channel(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
   { "inject",          frame_inject,             kJSDefaultAttributes },
-  { "inject",          frame_inject_with_channel,             kJSDefaultAttributes },
   { "equals",          equals,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
 };
@@ -184,36 +180,11 @@ send_message_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisOb
   return JSValueMakeUndefined(ctx);
 }
 
-static JSValueRef
-inject_with_channel(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1) {
-    js_make_exception(ctx, exc, EXCEPTION("webview.injectWithChannel: missing argument"));
-    return JSValueMakeBoolean(ctx, false);
-  }
-  JSStringRef script = JSValueToStringCopy(ctx, argv[0], exc);
-  if (script == NULL)
-    return JSValueMakeNull(ctx);
-  if (!JSCheckScriptSyntax(wctx, script, NULL, 0, NULL)) 
-    return JSValueMakeNull(ctx);
-  JSObjectRef outer = JSObjectMake(wctx, NULL, NULL);
-  JSStringRef name = JSStringCreateWithUTF8CString("DWB_sendMessage");
-  JSObjectRef send = JSObjectMakeFunctionWithCallback(wctx, name, send_message_callback);
-  JSObjectSetProperty(wctx, outer, name, send, kJSDefaultProperty, exc);
-  JSStringRelease(name);
-  name = JSStringCreateWithUTF8CString("DWB_injected");
-  JSObjectRef func = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, NULL);
-  JSObjectSetProperty(wctx, outer, name, func, kJSDefaultProperty, exc);
-  gboolean ret = JSObjectCallAsFunction(wctx, func, outer, 0, NULL, NULL) != NULL;
-  if (function != NULL && JSObjectIsFunction(ctx, func)) {
-    ret = JSObjectCallAsFunction(wctx, outer, NULL, 0, NULL, NULL) != NULL && ret;
-  }
-  return JSValueMakeBoolean(wctx, ret);
-}
-
 /* inject {{{*/
 static JSValueRef
 inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  gboolean ret = false, global = false;
+  JSValueRef ret = NULL;
+  gboolean global = false;
   if (argc < 1) {
     js_make_exception(ctx, exc, EXCEPTION("webview.inject: missing argument"));
     return JSValueMakeBoolean(ctx, false);
@@ -222,23 +193,30 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
     global = JSValueToBoolean(ctx, argv[1]);
     
   JSStringRef script = JSValueToStringCopy(ctx, argv[0], exc);
-  if (script == NULL)
-    return JSValueMakeBoolean(ctx, false);
-  
-  if (!JSCheckScriptSyntax(wctx, script, NULL, 0, NULL)) 
-    return JSValueMakeBoolean(ctx, false);
-
+  if (script == NULL) {
+    return JSValueMakeNull(ctx);
+  }
   if (global) {
-    ret = JSEvaluateScript(wctx, script, NULL, NULL, 0, NULL) != NULL;
+    JSEvaluateScript(wctx, script, NULL, NULL, 0, NULL);
+    ret = JSValueMakeNull(ctx);
   }
   else {
     JSObjectRef func = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, NULL);
     if (func != NULL && JSObjectIsFunction(ctx, func)) {
-      ret = JSObjectCallAsFunction(wctx, func, NULL, 0, NULL, NULL) != NULL;
+      JSValueRef wret = JSObjectCallAsFunction(wctx, func, NULL, 0, NULL, NULL);
+      char *retx = js_value_to_json(wctx, wret, -1, NULL);
+      if (retx) {
+        ret = js_char_to_value(ctx, retx);
+        g_free(retx);
+      }
+      else {
+        ret = JSValueMakeUndefined(ctx);
+      }
+
     }
   }
   JSStringRelease(script);
-  return JSValueMakeBoolean(ctx, ret);
+  return ret;
 }/*}}}*/
 /*}}}*/
 
@@ -406,12 +384,6 @@ wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc,
   JSContextRef wctx = webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(wv));
   return inject(ctx, wctx, function, this, argc, argv, exc);
 }/*}}}*/
-static JSValueRef 
-wv_inject_with_channel(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  WebKitWebView *wv = JSObjectGetPrivate(this);
-  JSContextRef wctx = webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(wv));
-  return inject_with_channel(ctx, wctx, function, this, argc, argv, exc);
-}/*}}}*/
 /* wv_get_main_frame {{{*/
 static JSValueRef 
 wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
@@ -484,13 +456,6 @@ frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t ar
   WebKitWebFrame *frame = JSObjectGetPrivate(this);
   JSContextRef wctx = webkit_web_frame_get_global_context(frame);
   return inject(ctx, wctx, function, this, argc, argv, exc);
-}/*}}}*/
-/* frame_inject {{{*/
-static JSValueRef 
-frame_inject_with_channel(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  WebKitWebFrame *frame = JSObjectGetPrivate(this);
-  JSContextRef wctx = webkit_web_frame_get_global_context(frame);
-  return inject_with_channel(ctx, wctx, function, this, argc, argv, exc);
 }/*}}}*/
 /*}}}*/
 

@@ -724,21 +724,24 @@ The focused frame of the webview
 
 ****
 [float]
+[[inject]]
 ==== *inject()* ==== 
 
 [source,javascript]
 ----
-Boolean wv.inject(String script, [Boolean global]) 
+String wv.inject(String script, [Boolean global]) 
 ----
 
 Injects a script into a webview
 
  ::
 
-_script_;; the script to inject
+_script_;; The script to inject
 _global_;; +true+ to inject it into the global scope, +false+ to encapsulate it
 in a function, optional
-_returns_;; +true+ if the script was injected, +false+ if an error occured
+_returns_;; The return value of the script. If the script is injected globally
+inject always returns +null+. The return value is always converted to a string.
+To return objects call JSON.parse on the return value. 
 ****
 
 ****
@@ -799,8 +802,7 @@ var wv = tabs.current;
 
 wv.loadUri("http://www.example.com", function() {
   if (wv.loadStatus == LoadStatus.finished) {
-    wv.inject("alert('Hello ' + wv.uri + "!!!");
-
+    wv.inject("alert('Hello ' + wv.uri + '!!!');");
     return true;
   }
 });
@@ -876,14 +878,7 @@ can be used.
 Boolean frame.inject(String script, [Boolean global])
 ----
 
-Injects a script into a frame
-
- ::
-
-_script_;; the script to inject
-_global_;; +true+ to inject it into the global scope, +false+ to encapsulate it
-in a function, optional
-_returns_;; +true+ if the script was injected, +false+ if an error occured
+Injects a script into a frame, also see <<inject,webview.inject>> for details.
 ****
 
 
