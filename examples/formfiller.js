@@ -12,7 +12,7 @@
  * forms:     form data that will be filled into the form, the form data entry
  *            follows the following format: 
  *
- * "[url regexp]" : { submit : [whether to autosubmit form], form { [name attribute of input] : [value], .... }, 
+ * "[url regexp]" : { submit : [whether to autosubmit form], form { [name attribute of input] : [value], .... } }, 
  *
  *
  * */ 
