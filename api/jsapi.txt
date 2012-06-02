@@ -607,6 +607,31 @@ tabs.nth(2).loadUri(c.uri);
 ----
 ====
 
+
+[[util]]
+=== util ===
+
+The +util+ object implements helper functions.
+
+****
+[float]
+==== *getBody(Function)* ====
+
+[source,javascript]
+----
+String util.getBody(Function func) 
+----
+
+Gets the body of a function, useful for scripts that will be injected into
+sites. 
+
+ ::
+
+_func_;; A function 
+_returns_;; The body of the function as a string
+****
+
+
 [[Webkitobjects]]
 == Webkit objects ==
 

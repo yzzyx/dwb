@@ -212,7 +212,6 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
       else {
         ret = JSValueMakeUndefined(ctx);
       }
-
     }
   }
   JSStringRelease(script);
@@ -1437,6 +1436,10 @@ create_global_object() {
   class = JSClassCreate(&cd);
   create_object(_global_context, class, global_object, kJSPropertyAttributeDontDelete, "globals", NULL);
   class = JSClassCreate(&cd);
+
+  class = create_class("util", NULL, NULL);
+  create_object(_global_context, class, global_object, kJSDefaultAttributes, "util", NULL);
+  JSClassRelease(class);
 
   /* Default gobject class */
   cd = kJSClassDefinitionEmpty;

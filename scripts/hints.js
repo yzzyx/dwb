@@ -615,7 +615,12 @@ Object.freeze((function () {
   var __submitSearchEngine = function (string) {
     var e = __getActive().element;
     e.value = string;
-    e.form.submit();
+    if (e.form.submit instanceof Function) 
+      e.form.submit();
+    else {
+      var button = e.form.querySelector("input[type='submit'], button[type='submit']");
+      __clickElement(button, "click");
+    }
     e.value = "";
     __clear();
     if (e.form.method.toLowerCase() == 'post') {
