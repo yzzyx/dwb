@@ -281,7 +281,14 @@ view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *
 gboolean 
 view_delete_web_inspector(GtkWidget *widget, GdkEvent *event, WebKitWebInspector *inspector) {
   webkit_web_inspector_close(inspector);
+  for (GList *gl = dwb.state.views; gl; gl=gl->next) {
+    if (VIEW(gl)->inspector_window == widget) {
+      VIEW(gl)->inspector_window = NULL; 
+      break;
+    }
+  }
   gtk_widget_destroy(widget);
+
   return true;
 }
 
@@ -304,6 +311,7 @@ view_inspect_web_view_cb(WebKitWebInspector *inspector, WebKitWebView *wv, GList
   
   gtk_container_add(GTK_CONTAINER(window), webview);
   gtk_widget_show_all(window);
+  VIEW(gl)->inspector_window = window;
 
   g_signal_connect(window, "delete-event", G_CALLBACK(view_delete_web_inspector), inspector);
   return WEBKIT_WEB_VIEW(webview);
@@ -851,6 +859,7 @@ view_create_web_view() {
   status->frames = NULL;
 
   v->hint_object = NULL;
+  v->inspector_window = NULL;
   v->plugins = plugins_new();
   for (int i=0; i<SIG_LAST; i++) 
     status->signals[i] = 0;
@@ -1016,6 +1025,11 @@ view_remove(GList *gl) {
     }
     dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
   }
+  /* Inspector */
+  if (v->inspector_window != NULL) {
+    g_signal_emit_by_name(v->inspector_window, "delete-event", NULL);
+  }
+
 
   /* Favicon */ 
   GdkPixbuf *pb;

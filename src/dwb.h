@@ -627,6 +627,7 @@ struct _View {
   GtkWidget *tabicon;
   GtkWidget *tablabel;
   GtkWidget *scroll; 
+  GtkWidget *inspector_window;
   ViewStatus *status;
   Plugins *plugins;
   struct {
