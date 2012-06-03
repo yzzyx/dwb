@@ -1793,6 +1793,7 @@ const char *
 dwb_prompt(gboolean visibility, char *prompt, ...) {
   dwb.state.mode |= CONFIRM;
 
+  dwb_source_remove();
   va_list arg_list; 
   va_start(arg_list, prompt);
   char message[STRING_LENGTH];
