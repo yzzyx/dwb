@@ -3710,20 +3710,30 @@ dwb_init_custom_keys(gboolean reload) {
   CustomCommand *command;
 
   for (int i=0; lines[i]; i++) {
-    keybuf = g_string_new(NULL);
     if (! *lines[i]) 
       continue;
+    keybuf = g_string_new(NULL);
     
     current_line = lines[i];
     while (*current_line && *current_line != ':') {
-      if (*current_line == '\\') 
+      if (*current_line == '\\') {
         current_line++;
+        if (!*current_line) {
+          continue;
+        }
+      }
       g_string_append_c(keybuf, *current_line);
       current_line++;
     }
-    if (*current_line != ':')
+    if (*current_line != ':') {
+      g_string_free(keybuf, true);
       continue;
+    }
     current_line++;
+    if (!*current_line) {
+      g_string_free(keybuf, true);
+      continue;
+    }
     
     command = dwb_malloc(sizeof(CustomCommand));
     command->key = dwb_malloc(sizeof(Key));
