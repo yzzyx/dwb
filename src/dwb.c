@@ -3725,7 +3725,7 @@ dwb_init_custom_keys(gboolean reload) {
       continue;
     current_line++;
     
-    command = dwb_malloc(sizeof(command));
+    command = dwb_malloc(sizeof(CustomCommand));
     command->key = dwb_malloc(sizeof(Key));
 
     *(command->key) = dwb_str_to_key(keybuf->str);
