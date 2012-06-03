@@ -1242,7 +1242,7 @@ equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, co
 /* set_property_cb {{{*/
 static bool
 set_property_cb(JSContextRef ctx, JSObjectRef object, JSStringRef propertyName, JSValueRef value, JSValueRef* exception) {
-  return false;
+  return true;
   //return true;
 }/*}}}*/
 
