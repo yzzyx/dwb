@@ -952,9 +952,9 @@ view_create_web_view() {
 /* view_clear_tab {{{*/
 void 
 view_clear_tab(GList *gl) {
-  dwb_load_uri(gl, "about:blank");
   WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(WEBVIEW(gl));
   webkit_web_back_forward_list_clear(bf_list);
+  dwb_load_uri(gl, "about:blank");
 }/*}}}*/
 
 /* view_remove (void) {{{*/
