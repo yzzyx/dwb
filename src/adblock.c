@@ -336,9 +336,11 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
         VIEW(gl)->status->style = webkit_dom_document_create_element(doc, "style", NULL);
       }
       WebKitDOMHTMLHeadElement *head = webkit_dom_document_get_head(doc);
-      webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->status->style), css_rule->str, NULL);
-      webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(VIEW(gl)->status->style), NULL);
-      g_object_unref(head);
+      if (G_IS_OBJECT(head)) {
+        webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(VIEW(gl)->status->style), css_rule->str, NULL);
+        webkit_dom_node_append_child(WEBKIT_DOM_NODE(head), WEBKIT_DOM_NODE(VIEW(gl)->status->style), NULL);
+        g_object_unref(head);
+      }
     }
     else {
       const char *css = css_rule->str;

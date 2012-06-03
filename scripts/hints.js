@@ -365,7 +365,7 @@ Object.freeze((function () {
           __createHints(e.contentWindow, varructor, type);
           continue;
         }
-        else if (e instanceof HTMLImageElement) {
+        else if (e instanceof HTMLImageElement && type != HintTypes.HINT_T_IMAGES) {
           if (e.hasAttribute("usemap")) 
             __createMap(hints, varructor, e, win, r, oe);
         }
@@ -516,7 +516,7 @@ Object.freeze((function () {
     }
     if (type > 0) {
       switch (type) {
-        case HintTypes.HINT_T_IMAGES: ret = e.src; break;
+        case HintTypes.HINT_T_IMAGES: ret = e.src; __clear(); return ret;
         case HintTypes.HINT_T_URL   : ret = e.hasAttribute("href") ? e.href : e.src; __clear(); return ret;
         default: break;
       }
