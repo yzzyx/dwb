@@ -805,6 +805,33 @@ spawn_output(GIOChannel *channel, GIOCondition condition, JSObjectRef callback) 
   return false;
 }/*}}}*/
 
+/* {{{*/
+static JSValueRef 
+system_spawn_sync(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc<1) {
+    js_make_exception(ctx, exc, EXCEPTION("system.spawnSync needs an argument."));
+    return JSValueMakeBoolean(ctx, SPAWN_FAILED);
+  }
+  JSObjectRef ret = NULL;
+  int srgc, status;
+  char **srgv = NULL, *command = NULL, *out, *err;
+  command = js_value_to_char(ctx, argv[0], -1, exc);
+  if (command == NULL) 
+    return JSValueMakeNull(ctx);
+  if (g_shell_parse_argv(command, &srgc, &srgv, NULL) && 
+      g_spawn_sync(NULL, srgv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, &out, &err, &status, NULL)) {
+    ret = JSObjectMake(ctx, NULL, NULL);
+    js_set_object_property(ctx, ret, "stdout", out, exc);
+    js_set_object_property(ctx, ret, "stderr", err, exc);
+    js_set_object_number_property(ctx, ret, "status", status, exc);
+  }
+  g_free(command);
+  g_strfreev(srgv);
+  if (ret == NULL)
+    return JSValueMakeNull(ctx);
+  return ret;
+}/*}}}*/
+
 /* system_spawn {{{*/
 static JSValueRef 
 system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -815,7 +842,7 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   GIOChannel *out_channel, *err_channel;
   JSObjectRef oc = NULL, ec = NULL;
   if (argc < 1) {
-    js_make_exception(ctx, exc, EXCEPTION("spawn needs an argument."));
+    js_make_exception(ctx, exc, EXCEPTION("system.spawn needs an argument."));
     return JSValueMakeBoolean(ctx, SPAWN_FAILED);
   }
   if (argc > 1) {
@@ -858,6 +885,7 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   }
 error_out:
   g_free(cmdline);
+  g_strfreev(srgv);
   return JSValueMakeNumber(ctx, ret);
 }/*}}}*/
 
@@ -993,6 +1021,7 @@ io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
   if ( (f = fopen(path, mode)) != NULL) {
     fprintf(f, content);
     fclose(f);
+    ret = true;
   }
   else {
     js_make_exception(ctx, exc, EXCEPTION("io.write: cannot open %s for writing."), path);
@@ -1396,6 +1425,7 @@ create_global_object() {
 
   JSStaticFunction system_functions[] = { 
     { "spawn",           system_spawn,           kJSDefaultAttributes },
+    { "spawnSync",       system_spawn_sync,        kJSDefaultAttributes },
     { "getEnv",          system_get_env,           kJSDefaultAttributes },
     { "fileTest",        system_file_test,            kJSDefaultAttributes },
     { "mkdir",           system_mkdir,            kJSDefaultAttributes },

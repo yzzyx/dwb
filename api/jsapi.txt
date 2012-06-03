@@ -500,6 +500,24 @@ _returns_;; <<SpawnError>> if an error occured, 0 otherwise
 ****
 
 ****
+[[spawnSync]]
+[float]
+==== *spawnSync()* ==== 
+
+[source,javascript]
+----
+Object system.spawn(String command)
+----
+
+Executes a shell command synchronously using the default search path
+
+ ::
+
+_command_;; The command to execute
+_returns_;; An object that contains +stdout+, +stderr+ and +status+.
+****
+
+****
 [[getEnv]]
 [float]
 ==== *getEnv()* ==== 

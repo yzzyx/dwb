@@ -39,6 +39,13 @@ js_set_object_property(JSContextRef ctx, JSObjectRef arg, const char *name, cons
   JSObjectSetProperty(ctx, arg, js_key, js_value, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, exc);
   JSStringRelease(js_key);
 }
+void 
+js_set_object_number_property(JSContextRef ctx, JSObjectRef arg, const char *name, gdouble value, JSValueRef *exc) {
+  JSStringRef js_key = JSStringCreateWithUTF8CString(name);
+  JSValueRef js_value = JSValueMakeNumber(ctx, value);
+  JSObjectSetProperty(ctx, arg, js_key, js_value, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, exc);
+  JSStringRelease(js_key);
+}
 /* js_get_object_property {{{*/
 JSObjectRef 
 js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name) {

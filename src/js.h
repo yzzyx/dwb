@@ -24,6 +24,7 @@ char * js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t );
 char * js_value_to_char(JSContextRef ctx, JSValueRef value, size_t limit, JSValueRef *);
 JSObjectRef js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 void js_set_object_property(JSContextRef ctx, JSObjectRef arg, const char *name, const char *value, JSValueRef *);
+void js_set_object_number_property(JSContextRef ctx, JSObjectRef arg, const char *name, gdouble value, JSValueRef *exc);
 char * js_get_string_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 double  js_get_double_property(JSContextRef ctx, JSObjectRef arg, const char *name);
 JSObjectRef js_create_object(WebKitWebFrame *, const char *);
