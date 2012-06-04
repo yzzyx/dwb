@@ -175,7 +175,9 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
   if (opt_single || !single_instance) {
     g_application_set_flags(app, G_APPLICATION_NON_UNIQUE);
   }
-  if (g_application_register(app, NULL, &error)) { 
+  GDBusConnection *bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+  if (bus != NULL && g_application_register(app, NULL, &error)) { 
+    g_object_unref(bus);
     remote = g_application_get_is_remote(app);
     if (remote) {
       /* Restore executable args */
