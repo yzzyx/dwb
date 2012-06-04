@@ -62,6 +62,27 @@ _callback_;; callback function that will be called when the shortcut is pressed
 ****
 
 ****
+[[domainFromHost]]
+[float]
+==== *domainFromHost()* ==== 
+
+[source,javascript]
+----
+String domainFromHost(String hostname)
+----
+
+Gets the base domain name from a hostname where the base domain name is the
+effective second level domain name, e.g. for www.example.com it will be
+example.com, for www.example.co.uk it will be example.co.uk.
+
+ :: 
+
+_hostname_;; a hostname
+_returns_;; the base domain 
+****
+
+
+****
 [[execute]]
 [float]
 ==== *execute()* ==== 
@@ -90,7 +111,7 @@ _returns_;; +true+ if execution was successful
 Boolean exit()
 ----
 
-Exit dwb, must be called when the script is running from commandline. 
+Exit dwb, must be called if the script is running from commandline. 
 ****
 
 
@@ -101,7 +122,7 @@ Exit dwb, must be called when the script is running from commandline.
 
 [source,javascript]
 ----
-Boolean include(String path, [Boolean global])
+Value include(String path, [Boolean global])
 ----
 
 Includes a file. Note that there is only one context, all scripts are
@@ -192,26 +213,6 @@ Stops a timer started by <<timerStart>>
 
 _id_;; The id returned from <<timerStart>>
 _returns_;; +true+ if the timer was stopped
-****
-
-****
-[[domainFromHost]]
-[float]
-==== *domainFromHost()* ==== 
-
-[source,javascript]
-----
-String domainFromHost(String hostname)
-----
-
-Gets the base domain name from a hostname where the base domain name is the
-effective second level domain name, e.g. for www.example.com it will be
-example.com, for www.example.co.uk it will be example.co.uk.
-
- :: 
-
-_hostname_;; a hostname
-_returns_;; the base domain 
 ****
 
 ======
@@ -387,6 +388,24 @@ _returns_;; The text that was entered or +null+
 
 
 ****
+[[read]]
+[float]
+==== *read()* ==== 
+
+[source,javascript]
+----
+String io.read(String path)
+----
+
+Read from a file.
+
+ ::
+
+_path_;; Path to a file that should be read
+_returns_;; A string with the file content
+****
+
+****
 [[write]]
 [float]
 ==== *write()* ==== 
@@ -405,24 +424,6 @@ _mode_;; Either +"a"+ to append to the file, or +"w"+ to strip the file or
 create a new file.
 _text_;; The text that should be written to the file
 _returns_;; +true+ if writing was successful
-****
-
-****
-[[read]]
-[float]
-==== *read()* ==== 
-
-[source,javascript]
-----
-String io.read(String path)
-----
-
-Read from a file.
-
- ::
-
-_path_;; Path to a file that should be read
-_returns_;; A string with the file content
 ****
 
 
@@ -457,6 +458,24 @@ Checks for <<FileTest>> flags on a file.
 _path_;; Path to a file to check
 _flags_;; The flags to test
 _returns_;; +true+ if any of the test on the flags is true
+****
+
+****
+[[getEnv]]
+[float]
+==== *getEnv()* ==== 
+
+[source,javascript]
+----
+String system.getEnv(String name) 
+----
+
+Get a system environment variable
+
+ :: 
+
+_name_;; Name of the variable
+_returns_;; The variable or +null+ if the variable wasn't found
 ****
 
 ****
@@ -515,24 +534,6 @@ Executes a shell command synchronously using the default search path
 
 _command_;; The command to execute
 _returns_;; An object that contains +stdout+, +stderr+ and +status+.
-****
-
-****
-[[getEnv]]
-[float]
-==== *getEnv()* ==== 
-
-[source,javascript]
-----
-String system.getEnv(String name) 
-----
-
-Get a system environment variable
-
- :: 
-
-_name_;; Name of the variable
-_returns_;; The variable or +null+ if the variable wasn't found
 ****
 
 ====
@@ -729,6 +730,19 @@ All frames of a webview including the mainframe
 
 ****
 [float]
+==== *focusedFrame* ====
+
+[source,javascript]
+----
+wv.focusedFrame        frame     read
+----
+
+The focused frame of the webview
+****
+
+
+****
+[float]
 ==== *mainFrame* ====
 
 [source,javascript]
@@ -749,18 +763,6 @@ wv.number        frame     read
 ----
 
 The number of the webview, starting at 0
-****
-
-****
-[float]
-==== *focusedFrame* ====
-
-[source,javascript]
-----
-wv.focusedFrame        frame     read
-----
-
-The focused frame of the webview
 ****
 
 ==== Functions ====

@@ -82,6 +82,15 @@ view_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitWebReso
     scripts_emit(&signal);
   }
 }
+#if WEBKIT_CHECK_VERSION(1, 8, 0) 
+static void 
+view_document_finished(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
+  if (EMIT_SCRIPT(DOCUMENT_LOADED)) {
+    ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(frame) }, SCRIPTS_SIG_META(NULL, DOCUMENT_LOADED, 1) };
+    scripts_emit(&signal);
+  }
+}
+#endif
 
 /* view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
 static void 
@@ -813,7 +822,10 @@ view_init_signals(GList *gl) {
   v->status->signals[SIG_MIME_TYPE]             = g_signal_connect(v->web, "mime-type-policy-decision-requested",   G_CALLBACK(view_mime_type_policy_cb), gl);
   v->status->signals[SIG_NAVIGATION]            = g_signal_connect(v->web, "navigation-policy-decision-requested",  G_CALLBACK(view_navigation_policy_cb), gl);
   v->status->signals[SIG_NEW_WINDOW]            = g_signal_connect(v->web, "new-window-policy-decision-requested",  G_CALLBACK(view_new_window_policy_cb), gl);
-  v->status->signals[SIG_RESOURCE_REQUEST]    = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+  v->status->signals[SIG_RESOURCE_REQUEST]      = g_signal_connect(v->web, "resource-request-starting",             G_CALLBACK(view_resource_request_cb), gl);
+#if WEBKIT_CHECK_VERSION(1, 8, 0)
+  v->status->signals[SIG_DOCUMENT_FINISHED]     = g_signal_connect(v->web, "document-load-finished",             G_CALLBACK(view_document_finished), gl);
+#endif
   v->status->signals[SIG_CREATE_PLUGIN_WIDGET]  = g_signal_connect(v->web, "create-plugin-widget",                  G_CALLBACK(view_create_plugin_widget_cb), gl);
   v->status->signals[SIG_FRAME_CREATED]         = g_signal_connect(v->web, "frame-created",                         G_CALLBACK(view_frame_created_cb), gl);
 
