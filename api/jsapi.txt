@@ -47,7 +47,7 @@ Functions from the global object.
 
 [source,javascript]
 ----
-void bind(String shortcut, Function callback)
+boolean bind(String shortcut, Function callback, [String name])
 ----
 
 Bind a javascript function to a shortcut. This is the preferred method of
@@ -56,9 +56,11 @@ method, but also the keyPress-signal can be used to bind shortcuts.
 
  ::
 
-_shortcut_;; a shortcut shortcut, will be parsed the same way as if set in
+_shortcut_;; A shortcut shortcut, will be parsed the same way as if set in
 dwb:keys
-_callback_;; callback function that will be called when the shortcut is pressed
+_callback_;; Callback function that will be called when the shortcut is pressed
+_name_;; A name that identifies the function on command line, optional
+_returns_;; +true+ if the function was binded successfully
 ****
 
 ****

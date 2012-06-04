@@ -501,11 +501,13 @@ scripts_eval_key(KeyMap *m, Arg *arg) {
 static JSValueRef 
 global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false;
+  char *name = NULL, *callback = NULL;
+  guint option = CP_DONT_SAVE;
   if (argc < 2) {
     js_make_exception(ctx, exc, EXCEPTION("bind: missing argument."));
     return JSValueMakeBoolean(ctx, false);
   }
-  char *keystr = js_value_to_char(ctx, argv[0], JS_STRING_MAX, exc);
+  gchar *keystr = js_value_to_char(ctx, argv[0], JS_STRING_MAX, exc);
   if (keystr == NULL) 
     goto error_out;
   JSObjectRef func = JSValueToObject(ctx, argv[1], exc);
@@ -515,13 +517,22 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
     js_make_exception(ctx, exc, EXCEPTION("bind: not a function."));
     goto error_out;
   }
+  if (argc > 2) {
+    name = js_value_to_char(ctx, argv[2], JS_STRING_MAX, exc);
+    if (name != NULL) { 
+      option |= CP_COMMANDLINE;
+      char *callback_name = js_get_string_property(ctx, func, "name");
+      callback = g_strdup_printf("JavaScript: %s", callback_name == NULL || *callback_name == 0 ? "[anonymous]" : callback_name);
+      g_free(callback_name);
+    }
+  }
   JSValueProtect(ctx, func);
   KeyMap *map = dwb_malloc(sizeof(KeyMap));
   FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
   Key key = dwb_str_to_key(keystr);
   map->key = key.str;
   map->mod = key.mod;
-  FunctionMap fm = { { NULL, NULL }, CP_DONT_SAVE, (Func)scripts_eval_key, NULL, POST_SM, { .p = func, .ro = true }, EP_NONE,  {NULL} };
+  FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, POST_SM, { .p = func, .ro = true }, EP_NONE,  {NULL} };
   *fmap = fm;
   map->map = fmap;
   dwb.keymap = g_list_prepend(dwb.keymap, map);
