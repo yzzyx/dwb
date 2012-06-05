@@ -257,15 +257,16 @@ download_delay(DwbDownload *download) {
 static void
 download_status_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *dstatus) {
   WebKitDownloadStatus status = webkit_download_get_status(download);
+  gboolean script_handled = false;
   if (EMIT_SCRIPT(DOWNLOAD_STATUS)) {
     ScriptSignal signal = { .jsobj = NULL, { G_OBJECT(download) }, SCRIPTS_SIG_META(NULL, DOWNLOAD_STATUS, 1) };
-    scripts_emit(&signal);
+    script_handled = scripts_emit(&signal);
   }
   if (status == WEBKIT_DOWNLOAD_STATUS_FINISHED || status == WEBKIT_DOWNLOAD_STATUS_CANCELLED || status == WEBKIT_DOWNLOAD_STATUS_ERROR) {
     GList *list = download_get_download_label(download);
     if (list) {
       DwbDownload *label = list->data;
-      if (label->action == DL_ACTION_EXECUTE && status == WEBKIT_DOWNLOAD_STATUS_FINISHED) {
+      if (label->action == DL_ACTION_EXECUTE && status == WEBKIT_DOWNLOAD_STATUS_FINISHED && !script_handled) {
         download_spawn(label);
       }
       /* Setting time to 0 will force recomputing size */

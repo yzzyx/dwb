@@ -2610,8 +2610,8 @@ dwb_execute_user_script(KeyMap *km, Arg *a) {
 static GList * 
 dwb_get_scripts() {
   GDir *dir;
-  char *filename;
-  char *content;
+  char *filename = NULL;
+  char *content = NULL;
   GList *gl = NULL;
   Navigation *n;
   GError *error = NULL;
