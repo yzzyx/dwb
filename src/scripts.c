@@ -628,8 +628,10 @@ global_domain_from_host(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject,
 /* global_send_request {{{*/
 void
 request_callback(SoupSession *session, SoupMessage *message, JSObjectRef function) {
-  JSValueRef vals[] = { js_char_to_value(_global_context, message->response_body->data), make_object(_global_context, G_OBJECT(message))  };
-  JSObjectCallAsFunction(_global_context, function, NULL, 1, vals, NULL);
+  if (message->response_body->data != NULL) {
+    JSValueRef vals[] = { js_char_to_value(_global_context, message->response_body->data), make_object(_global_context, G_OBJECT(message))  };
+    JSObjectCallAsFunction(_global_context, function, NULL, 1, vals, NULL);
+  }
 }
 static JSValueRef 
 global_send_request(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
