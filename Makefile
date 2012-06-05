@@ -9,15 +9,18 @@ options:
 	@echo LDFLAGS 	= $(LDFLAGS)
 	@echo CPPFLAGS 	= $(CPPFLAGS)
 
-$(TARGET): 
-	@for dir in $(SUBDIRS); do $(MAKE) $(MFLAGS) -C $$dir; done
+$(TARGET): $(SUBDIRS:%=%.subdir-make)
+
+%.subdir-make:
+	@$(MAKE) $(MFLAGS) -C $*
 
 #@$(MAKE) -C $(SRCDIR)
 #@$(MAKE) -C $(UTILDIR)
 
-clean: 
-	@echo Cleaning 
-	@for dir in $(SUBDIRS); do $(MAKE) clean -C $$dir; done
+clean:  $(SUBDIRS:%=%.subdir-clean)
+
+%.subdir-clean:
+	@$(MAKE) $(MFLAGS) clean -C $*
 
 install: $(TARGET) install-man install-data
 	install -d $(DESTDIR)$(BINDIR)
