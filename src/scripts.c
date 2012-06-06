@@ -1291,8 +1291,14 @@ set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueR
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
-  GObject *o = JSObjectGetPrivate(object);
+  io.pr
+  void *p = JSObjectGetPrivate(object);
+  if (p == NULL)
+    return false;
+  GObject *o = G_OBJECT(p);
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
+  if (class == NULL || !G_IS_OBJECT_CLASS(class))
+    return NULL;
   GParamSpec *pspec = g_object_class_find_property(class, buf);
 
   if (pspec == NULL)
@@ -1339,8 +1345,13 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
-  GObject *o = JSObjectGetPrivate(jsobj);
+  void *p = JSObjectGetPrivate(jsobj);
+  if (p == NULL)
+    return NULL;
+  GObject *o = G_OBJECT(p);
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
+  if (class == NULL || !G_IS_OBJECT_CLASS(class))
+    return NULL;
   GParamSpec *pspec = g_object_class_find_property(class, buf);
   if (pspec == NULL)
     return NULL;
