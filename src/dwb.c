@@ -503,13 +503,15 @@ dwb_update_uri(GList *gl) {
   View *v = VIEW(gl);
 
   const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
+  char *decoded = g_uri_unescape_string(uri, NULL);
   DwbColor *uricolor;
   switch(v->status->ssl) {
     case SSL_TRUSTED:   uricolor = &dwb.color.ssl_trusted; break;
     case SSL_UNTRUSTED: uricolor = &dwb.color.ssl_untrusted; break;
     default:            uricolor = &dwb.color.active_fg; break;
   }
-  dwb_set_status_bar_text(dwb.gui.urilabel, uri, uricolor, NULL, false);
+  dwb_set_status_bar_text(dwb.gui.urilabel, decoded ? decoded : uri, uricolor, NULL, false);
+  g_free(decoded);
 }
 
 /* dwb_update_status_text(GList *gl) {{{*/
