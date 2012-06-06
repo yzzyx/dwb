@@ -1291,7 +1291,6 @@ set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueR
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
-  io.pr
   void *p = JSObjectGetPrivate(object);
   if (p == NULL)
     return false;
