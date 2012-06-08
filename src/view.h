@@ -21,6 +21,7 @@
 
 GList * view_add(const char *uri, gboolean background);
 DwbStatus view_remove(GList *gl);
+void view_clean(GList *gl);
 DwbStatus view_push_master(Arg *);
 void view_set_active_style(GList *);
 void view_set_normal_style(GList *);

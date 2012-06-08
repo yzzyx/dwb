@@ -477,6 +477,7 @@ typedef enum {
   CP_OVERRIDE_ENTRY       = 1<<6,
   CP_OVERRIDE_ALL         = 1<<7,
   CP_NEEDS_ARG            = 1<<8,
+  CP_SCRIPT               = 1<<9,
 } CommandProperty;
 #define CP_OVERRIDE  (CP_OVERRIDE_INSERT | CP_OVERRIDE_ENTRY | CP_OVERRIDE_ALL)
 

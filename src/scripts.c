@@ -502,7 +502,7 @@ static JSValueRef
 global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   gboolean ret = false;
   char *name = NULL, *callback = NULL;
-  guint option = CP_DONT_SAVE;
+  guint option = CP_DONT_SAVE | CP_SCRIPT;
   if (argc < 2) {
     js_make_exception(ctx, exc, EXCEPTION("bind: missing argument."));
     return JSValueMakeBoolean(ctx, false);
@@ -1650,6 +1650,13 @@ scripts_execute_scripts(char **scripts) {
 gboolean 
 scripts_execute_one(const char *script) {
   return js_execute(_global_context, script, NULL) != NULL;
+}
+void
+scripts_unbind(JSObjectRef obj) {
+  if (obj != NULL) {
+    JSValueUnprotect(_global_context, obj);
+  }
+
 }
 
 /* scripts_end {{{*/

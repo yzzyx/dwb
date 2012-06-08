@@ -62,6 +62,7 @@ void scripts_remove_tab(JSObjectRef );
 void scripts_end(void);
 void scripts_init_script(const char *, const char *);
 void scripts_init(void);
+void scripts_unbind(JSObjectRef);
 void scripts_execute_scripts(char **scripts);
 DwbStatus scripts_eval_key(KeyMap *m, Arg *arg);
 gboolean scripts_execute_one(const char *script);

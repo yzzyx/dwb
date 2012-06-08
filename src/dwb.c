@@ -2788,6 +2788,8 @@ gboolean
 dwb_clean_up() {
   for (GList *l = dwb.keymap; l; l=l->next) {
     KeyMap *m = l->data;
+    if (m->map->prop & CP_SCRIPT) 
+      scripts_unbind(m->map->arg.p);
     if (m->map->prop & CP_USERSCRIPT)
       g_free(m->map);
     g_free(m);
@@ -2817,6 +2819,10 @@ dwb_clean_up() {
   dwb_free_list(dwb.fc.pers_plugins, (void_func)g_free);
   dwb_free_list(dwb.fc.pers_scripts, (void_func)g_free);
   dwb_free_custom_keys();
+
+  for (GList *gl = dwb.state.views; gl; gl=gl->next) {
+    view_clean(gl);
+  }
 
   dwb_soup_end();
   adblock_end();

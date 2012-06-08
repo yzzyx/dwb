@@ -969,6 +969,49 @@ view_clear_tab(GList *gl) {
   dwb_load_uri(gl, "about:blank");
 }/*}}}*/
 
+void
+view_clean(GList *gl) {
+  View *v = VIEW(gl);
+  /* Inspector */
+  if (v->inspector_window != NULL) {
+    g_signal_emit_by_name(v->inspector_window, "delete-event", NULL);
+  }
+
+  /* Favicon */ 
+  GdkPixbuf *pb;
+  if ( (pb = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
+    g_object_unref(pb);
+
+  gtk_widget_destroy(v->tabicon);
+  gtk_widget_destroy(v->tablabel);
+  gtk_widget_destroy(v->tabbox);
+  gtk_widget_destroy(v->tabevent);
+
+  plugins_free(v->plugins);
+
+  scripts_remove_tab(v->script_wv);
+
+  if (v->status->style) {
+    g_object_unref(v->status->style);
+  }
+
+  g_object_unref(v->hover.anchor);
+  g_object_unref(v->hover.element);
+  g_object_unref(v->status_element);
+
+
+  /* Destroy widget */
+  gtk_widget_destroy(v->web);
+  gtk_widget_destroy(v->scroll);
+
+  FREE0(v->status->hover_uri);
+#ifdef WITH_LIBSOUP_2_38
+  FREE0(v->status->request_uri);
+#endif
+  FREE0(v->status);
+
+  FREE0(v);
+}
 /* view_remove (void) {{{*/
 DwbStatus 
 view_remove(GList *gl) {
@@ -1037,52 +1080,11 @@ view_remove(GList *gl) {
     }
     dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
   }
-  /* Inspector */
-  if (v->inspector_window != NULL) {
-    g_signal_emit_by_name(v->inspector_window, "delete-event", NULL);
-  }
-
-
-  /* Favicon */ 
-  GdkPixbuf *pb;
-  if ( (pb = gtk_image_get_pixbuf(GTK_IMAGE(v->tabicon))) ) 
-    g_object_unref(pb);
-
 
   dwb_focus(new_fview);
+  view_clean(gl);
 
-  gtk_widget_destroy(v->tabicon);
-  gtk_widget_destroy(v->tablabel);
-  gtk_widget_destroy(v->tabbox);
-  gtk_widget_destroy(v->tabevent);
-
-
-  /*  clean up */ 
   dwb_source_remove();
-  plugins_free(v->plugins);
-
-  scripts_remove_tab(v->script_wv);
-
-  if (v->status->style) {
-    g_object_unref(v->status->style);
-  }
-
-  g_object_unref(v->hover.anchor);
-  g_object_unref(v->hover.element);
-  g_object_unref(v->status_element);
-
-
-  /* Destroy widget */
-  gtk_widget_destroy(v->web);
-  gtk_widget_destroy(v->scroll);
-
-  FREE0(v->status->hover_uri);
-#ifdef WITH_LIBSOUP_2_38
-  FREE0(v->status->request_uri);
-#endif
-  FREE0(v->status);
-
-  FREE0(v);
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
 
