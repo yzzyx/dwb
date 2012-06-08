@@ -371,19 +371,43 @@ void
 download_start(const char *path) {
   if (path == NULL) 
     path = GET_TEXT();
+  char *json = NULL;
+  gboolean clean = true;
   char *fullpath = NULL;
   const char *filename = webkit_download_get_suggested_filename(dwb.state.download);
   const char *uri = webkit_download_get_uri(dwb.state.download);
   /* FIXME seems to be a bug in webkit ? */
   WebKitNetworkRequest *request = webkit_download_get_network_request(dwb.state.download);
   dwb.state.download = webkit_download_new(request);
+
+  if (EMIT_SCRIPT(DOWNLOAD_START)) {
+    if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
+      json = util_create_json(4, 
+          CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(dwb.state.download), "Referer"), 
+          CHAR, "mimeType", dwb.state.mimetype_request, 
+          CHAR, "application", path, 
+          CHAR, "destinationUri", NULL);
+    }
+    else {
+      char *p = g_build_filename(path, filename, NULL);
+      json = util_create_json(4, 
+          CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(dwb.state.download), "Referer"), 
+          CHAR, "mimeType", dwb.state.mimetype_request, 
+          CHAR, "destinationUri", p,
+          CHAR, "application", NULL);
+      g_free(p);
+    }
+    ScriptSignal signal = { .jsobj = NULL, .objects = { G_OBJECT(dwb.state.download) }, SCRIPTS_SIG_META(json, DOWNLOAD_START, 1) };
+    if (scripts_emit(&signal)) {
+      goto error_out;
+    }
+  }
   
   //char *command = NULL;
   char *tmppath = NULL;
   const char *last_slash;
   char path_buffer[PATH_MAX+1];
   gboolean external = GET_BOOL("download-use-external-program");
-  gboolean clean = true;
 
   char buffer[PATH_MAX];
   path = util_expand_home(buffer, path, PATH_MAX);
@@ -478,6 +502,7 @@ download_start(const char *path) {
 error_out:
   dwb_change_mode(NORMAL_MODE, clean);
   dwb.state.download = NULL;
+  g_free(json);
   g_free(fullpath);
 }/*}}}*/
 

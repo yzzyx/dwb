@@ -1250,7 +1250,8 @@ _webview_;; The <<webview>> that corresponds to the tab
 Boolean callback(webview, download, json) 
 ----
 
-Emitted before a download starts, return +true+ if the signal was handled. 
+Emitted before a download starts, before a file or action has been chosen,
+return +true+ if the signal was handled. 
 
  ::
 
@@ -1259,6 +1260,30 @@ _download_;; The <<Download>>
 _json.referer_;; The referer
 _json.mimeType_;; The mimetype of the file
 ****
+
+****
+[[downloadStart]]
+[float]
+==== *downloadStart* ==== 
+
+[source,javascript]
+----
+Boolean callback(download, json) 
+----
+
+Emitted before a download starts after a path or application has been chosen, 
+return +true+ if the signal was handled. Note that destinationUri has not been
+set on the download.
+
+ ::
+
+_download_;; The <<Download>> 
+_json.referer_;; The referer
+_json.mimeType_;; The mimetype of the file
+_json.destinationUri_;; The chosen destination path or +null+ if an application was chosen.
+_json.application_;; The chosen application or +null+ if a path was chosen.
+****
+
 
 ****
 [[downloadStatus]]
