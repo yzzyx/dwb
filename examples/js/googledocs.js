@@ -44,7 +44,9 @@ var id = signals.connect("download", downloadCheck);
 var reg = new RegExp(".*\.(" + supported.join("|") + ")$", "i");
 
 function downloadCheck(w, d) {
-  if (reg.test(d.networkRequest.uri)) {
+  if (w.mainFrame.host === "docs.google.com")
+    return false;
+  else if (reg.test(d.networkRequest.uri)) {
     w.loadUri("http://docs.google.com/viewer?url=" + d.networkRequest.uri);
     return true;
   }
