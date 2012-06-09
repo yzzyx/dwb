@@ -107,7 +107,7 @@ enable-plugins checkbox Whether to enable plugins
 enable-scripts checkbox Enable embedded scripting languages
 javascript-can-access-clipboard checkbox Whether javascript can access the clipboard
 javascript-can-open-windows-automatically checkbox Whether javascript can open windows
-javascript-schemes Whether to allow loading url with scheme 'javascript'
+javascript-schemes checkbox Whether to allow loading url with scheme 'javascript'
 plugin-blocker checkbox Whether to block plugins and replace them with a clickable element
 
 # completion Completion
