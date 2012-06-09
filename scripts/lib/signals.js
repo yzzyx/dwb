@@ -1,5 +1,9 @@
 (function ()  {
   var _registered = {};
+  function _disconnect(sig) {
+    signals[sig] = null;
+    _registered[sig] = null;
+  }
   Object.defineProperties(signals, {
     "emit" : {
       value : function(sig, args) {
@@ -16,7 +20,7 @@
           }
         } while (i<sigs.length);
         if (_registered[sig].length === 0) {
-          signals[sig] = null;
+          _disconnect(sig);
         }
         return ret;
       }
@@ -46,7 +50,7 @@
           for (i = 0; i<sigs.length; i++) {
             if (sigs[i].id == id) {
               if (_registered[sig].length === 1) {
-                signals[sig] = null;
+                _disconnect(sig);
               }
               else {
                 sigs[i].connected = false;
@@ -66,7 +70,7 @@
           for (i = 0; i<sigs.length; i++) {
             if (sigs[i].callback == func) {
               if (_registered[sig].length === 1) {
-                signals[sig] = null;
+                _disconnect(sig);
               }
               else {
                 sigs[i].connected = false;
@@ -81,7 +85,7 @@
     "disconnectByName" : {
       value : function (name) {
         if (signals[name] !== null && signals[name] !== undefined) {
-          signals[name] = null;
+          _disconnect(name);
           return true;
         }
         return false;
