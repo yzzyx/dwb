@@ -81,9 +81,7 @@ Object.freeze((function () {
       }
     }
     hint.style.top = t + "px";
-    hint.style.marginTop = oe.marginTop;
     hint.style.left = l + "px";
-    hint.style.marginLeft = oe.marginLeft;
     globals.positions.push({top : t, left : l});
 
     hint.className =  "dwb_hint";
@@ -100,9 +98,7 @@ Object.freeze((function () {
       overlay.style.width = (compleft > 0 ? width : width + compleft) + "px";
       overlay.style.height = (comptop > 0 ? height : height + comptop) + "px";
       overlay.style.top = t + "px";
-      overlay.style.marginTop = oe.marginTop;
       overlay.style.left = l + "px";
-      overlay.style.marginLeft = oe.marginLeft;
       overlay.style.display = "block";
       overlay.style.cursor = "pointer";
       this.overlay = overlay;
@@ -300,14 +296,10 @@ Object.freeze((function () {
     if (bs && br && (/^(relative|fixed|absolute)$/.test(bs.position)) ) {
       oe.offX = -br.left; 
       oe.offY = -br.top;
-      oe.marginTop = bs.marginTop;
-      oe.marginLeft = bs.marginLeft;
     }
     else {
       oe.offX = win.pageXOffset;
       oe.offY = win.pageYOffset;
-      oe.marginTop = 0 + "px";
-      oe.marginLeft = 0 + "px";
     }
     return oe;
   };
@@ -341,8 +333,6 @@ Object.freeze((function () {
       offsets = { 
         offX : oe.offX + parseInt(coords[0], 10), 
         offY : oe.offY + parseInt(coords[1], 10), 
-        marginTop : oe.marginTop, 
-        marginLeft : oe.marginLeft
       };
       __appendHint(hints, varructor, a, win, r, offsets);
     }
@@ -467,7 +457,7 @@ Object.freeze((function () {
     if ((style.getPropertyValue("visibility") == "hidden" || style.getPropertyValue("display") == "none" ) ) {
       return null;
     }
-    var r = e.getBoundingClientRect();
+    var r = e.getClientRects()[0] || e.getBoundingClientRect();
 
     var height = win.innerHeight || document.body.offsetHeight;
     var width = win.innerWidth || document.body.offsetWidth;
