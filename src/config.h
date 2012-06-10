@@ -181,6 +181,7 @@ static KeyValue KEYS[] = {
   { "local_set",                {   NULL,         0,                0 }, }, 
   { "dump",                     {   NULL,         0,                0 }, }, 
   { "sanitize",                 {   NULL,         0,                0 }, }, 
+  { "eval",                     {   NULL,         0,                0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -200,6 +201,10 @@ static FunctionMap FMAP [] = {
   { { "execute_javascript",              "Execute a javascript snippet",                    }, CP_COMMANDLINE, 
     (Func)commands_execute_javascript,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { "js", "exja", NULL }, },
+
+  { { "eval",              "Execute a javascript snippet that uses the internal jsapi",                    }, CP_COMMANDLINE, 
+    (Func)commands_eval,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
 
   { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 
     (Func)commands_set,            "Invalid value",                            POST_SM,     

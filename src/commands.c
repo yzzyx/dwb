@@ -29,6 +29,7 @@
 #include "adblock.h"
 #include "download.h"
 #include "js.h"
+#include "scripts.h"
 
 inline static int 
 dwb_floor(double x) { 
@@ -867,4 +868,12 @@ commands_sanitize(KeyMap *km, Arg *arg) {
   dwb_set_normal_message(dwb.state.fview, true, "Sanitized %s", arg->p ? arg->p : "all");
   return STATUS_OK;
 }/*}}}*/
+DwbStatus 
+commands_eval(KeyMap *km, Arg *arg) {
+  if (arg->p != NULL) {
+    if (scripts_execute_one(arg->p)) 
+      return STATUS_OK;
+  }
+  return STATUS_ERROR;
+}
 /*}}}*/

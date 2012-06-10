@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: dwb
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 05/31/2012
+.\" Generator: DocBook XSL Stylesheets v1.77.0 <http://docbook.sf.net/>
+.\"      Date: 06/11/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB" "1" "05/31/2012" "\ \&" "\ \&"
+.TH "DWB" "1" "06/11/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1062,6 +1062,12 @@ Load a html string in a new tab\&. This command is mainly intended for use in us
 \fIload_html_tab\fR)\&.
 .RE
 .PP
+\fBunbound\fR
+.RS 4
+Execute a javascript snippet that uses the the internal jsapi (command
+\fIeval\fR)\&.
+.RE
+.PP
 \fBTab (S\-Tab)\fR
 .RS 4
 In normal mode Tab shows the next (previous) shortcut, that matches the currently entered keysequence\&. When opening a url, the next (previous) item in command history, bookmarks or history will be completed\&. In hint mode the next (previous) hint will get focus\&. Tab also completes settings and shortcut\-settings\&. When initiating a download, full paths (downloads and spawning programs) and binaries (spawning programs) in PATH will be completed\&. In command mode tab will complete builtin commands and urls if the command accepts an url\&.
@@ -1345,6 +1351,7 @@ lt lt lt
 lt lt lt
 lt lt lt
 lt lt lt
+lt lt lt
 lt lt lt.
 T{
 .sp
@@ -1443,6 +1450,15 @@ T}:T{
 T}:T{
 .sp
 Write html of current website to a file or stdout if no argument is given
+T}
+T{
+.sp
+eval
+T}:T{
+.sp
+T}:T{
+.sp
+Execute a javascript snippet that uses the internal javascript api
 T}
 T{
 .sp

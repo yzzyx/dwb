@@ -586,6 +586,10 @@ Load a html string. This command is mainly intended for use in userscripts (comm
 Load a html string in a new tab. This command is mainly intended for use in userscripts (command
 'load_html_tab').
 
+*unbound*::
+Execute a javascript snippet that uses the the internal jsapi (command
+'eval').
+
 *Tab (S-Tab)*::
 In normal mode Tab shows the next (previous) shortcut, that matches the
 currently entered keysequence.
@@ -714,6 +718,8 @@ COMMAND OVERVIEW
 |close_tab               |close           |Close tab
 |dump                    |                |Write html of current website to a
                                            file or stdout if no argument is given
+|eval                    |                |Execute a javascript snippet that
+                                           uses the internal javascript api
 |execute_javascript      |exja, js        |Execute a javascript snippet
 |execute_userscript      |                |Execute userscript
 |find_backward           |bfind           |Find backward

@@ -2,7 +2,7 @@
   var _registered = {};
   function _disconnect(sig) {
     signals[sig] = null;
-    _registered[sig] = null;
+    delete _registered[sig];
   }
   Object.defineProperties(signals, {
     "emit" : {

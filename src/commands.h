@@ -92,5 +92,6 @@ DwbStatus commands_cancel_download(KeyMap *, Arg *);
 DwbStatus commands_normal_mode(KeyMap *, Arg *);
 DwbStatus commands_dump(KeyMap *, Arg *);
 DwbStatus commands_sanitize(KeyMap *, Arg *);
+DwbStatus commands_eval(KeyMap *, Arg *);
 
 #endif
