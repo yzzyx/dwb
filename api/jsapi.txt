@@ -1883,6 +1883,42 @@ _returns_;;  True if the extension was loaded
 ****
 
 ****
+[[extensionload,reload]]
+[float]
+==== *reload()* ====
+
+[source,javascript]
+----
+Boolean extensions.reload(String name, [Object config]) 
+----
+Reloads an extension
+
+ ::
+
+_name_;; Name of the extension
+_config_;; The new config for the script, if omitted the old config is used,
+optional
+_returns_;;  True if the extension was successfully reloaded
+****
+
+****
+[[extensionload,unload]]
+[float]
+==== *unload()* ====
+
+[source,javascript]
+----
+Boolean extensions.unload(String name) 
+----
+Unloads an extension
+
+ ::
+
+_name_;; Name of the extension
+_returns_;;  True if the extension was unloaded
+****
+
+****
 [[error]]
 [float]
 ==== *error()* ====
@@ -1953,7 +1989,8 @@ extensions.load("foobar");
 
 The default searchpath for extensions isn +$XDG_DATA_HOME/dwb/extensions+ and
 +SHARE_DIR/dwb/extensions+ where the 
-+SHARE_DIR+ with sharedirectory being the share-dir of the installation.
++SHARE_DIR+ with sharedirectory being the share directory of the installation,
+most likely /usr/share.
 
 The configuration for extensions is in +$XDG_CONFIG_HOME/dwb/extensionsrc+ and should
 return a javascript object. 
@@ -1961,7 +1998,11 @@ return a javascript object.
 Every extension must implement one function named +init+ that takes one
 argument, the config for the extension. The function should return +true+ if the
 extension was successfully loaded, +false+ otherwise.
-+init+ should be returned from the extension.
+Every extension also may implement a function +end+ that will be called when an
+extension is unloaded. If an extension registers to signals and binds shortcuts
+the extension should unregister all signals and unbind all shortcuts in this
+function.
++init+ and +end+ should be returned from the extension.
 
 .Example
 
@@ -1975,14 +2016,25 @@ function foo(val) {
 function bar(val) {
   ....
 }
+function loadStatusCallback(w) {
+  ...
+}
 return {
   init : function (config) {
     if (config.foo > 36) {
       bar(config.foo);
       foo(config.bar);
+      bind("XX", bar, "dobar");
+      signals.connect("loadStatus", loadStatusCallback);
       return true;
     }
+
     return false;
+  },
+  end : function () {
+    unbind(bar);
+    signals.disconnectByFunction(loadStatusCallback);
+    return true;
   }
 };
 --------

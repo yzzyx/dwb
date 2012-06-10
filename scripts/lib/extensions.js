@@ -1,6 +1,7 @@
 (function () {
   var _config = undefined;
   var _debug = false;
+  var _registered = {};
   var getPlugin = function(name, filename) {
     var ret = null;
     try {
@@ -24,6 +25,19 @@
       var stack = e.stack.match(/[^\n]+/g);
       return "STACK: [" + stack.slice(offset+1).join("] [")+"]";
     }
+  };
+  var _unload = function (name, removeConfig) {
+    if (_registered[name] !== undefined) {
+      if (_registered[name].end instanceof Function) {
+        _registered[name].end();
+        extensions.message(name, "Extension unloaded.");
+      }
+      if (removeConfig)
+        delete _config[name];
+      delete _registered[name];
+      return true;
+    }
+    return false;
   };
   Object.defineProperties(extensions, { 
     "warning" : {
@@ -70,6 +84,9 @@
     },
     "load" : {
       value : function(name, c) {
+        if (_registered[name] !== undefined) {
+            extensions.error(name, "Already loaded.");
+        }
         var boldname = "\033[1m" + name + "\033[0m";
 
         var config, dataBase, pluginPath, plugin = null;
@@ -99,6 +116,7 @@
           }
         }
 
+
         /* Load extension */
         var filename = data.userDataDir + "/extensions/" + name;
         plugin = getPlugin(name, data.userDataDir + "/extensions/" + name);
@@ -111,6 +129,10 @@
         }
         try {
           if (plugin.init(extConfig)) {
+            _registered[name] = plugin;
+            if (_config === undefined)
+              _config = new Object();
+            _config[name] = extConfig;
             extensions.message(name, "Successfully loaded and initialized.");
             return true;
           }
@@ -123,6 +145,17 @@
           extensions.error(name, "Initialization failed: " + e);
           return false;
         }
+      }
+    },
+    "unload" : { 
+      value : function(name) {
+        return _unload(name, true);
+      }
+    }, 
+    "reload" : {
+      value : function () {
+        _unload(arguments[0], false);
+        return extensions.load.apply(this, arguments);
       }
     }
   });
