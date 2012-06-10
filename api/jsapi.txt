@@ -217,6 +217,24 @@ _id_;; The id returned from <<timerStart>>
 _returns_;; +true+ if the timer was stopped
 ****
 
+****
+[[unbind]]
+[float]
+==== *unbind()* ==== 
+
+[source,javascript]
+----
+Number unbind(Function func|String name)
+----
+
+Unbind a shortcut that was previously binded with <<bind>>
+
+ ::
+
+_func_ or _name_;; Either the function or the optional name passed to <<bind>>.
+_returns_;; +true+ if the function is unbinded
+****
+
 ======
 .Example
 [source,javascript]

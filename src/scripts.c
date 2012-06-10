@@ -498,6 +498,35 @@ scripts_eval_key(KeyMap *m, Arg *arg) {
   return STATUS_OK;
 }/*}}}*/
 
+/* global_unbind{{{*/
+static JSValueRef 
+global_unbind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("unbind: missing argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  GList *l = NULL;
+  KeyMap *m;
+  if (JSValueIsString(ctx, argv[0])) {
+    char *name = js_value_to_char(ctx, argv[0], JS_STRING_MAX, exc);
+    for (l = dwb.keymap; l && g_strcmp0(((KeyMap*)l->data)->map->n.first, name); l=l->next);
+    g_free(name);
+  }
+  else if (JSValueIsObject(ctx, argv[0])) {
+    for (l = dwb.keymap; l && argv[0] != ((KeyMap*)l->data)->map->arg.p; l=l->next);
+  }
+  if (l != NULL) {
+    m = l->data;
+    JSValueUnprotect(ctx, m->map->arg.p);
+    g_free(m->map->n.first);
+    g_free(m->map->n.second);
+    g_free(m->map);
+    g_free(m);
+    dwb.keymap = g_list_delete_link(dwb.keymap, l);
+    return JSValueMakeBoolean(ctx, true);
+  }
+  return JSValueMakeBoolean(ctx, false);
+}/*}}}*/
 /* global_bind {{{*/
 static JSValueRef 
 global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -1406,6 +1435,7 @@ create_global_object() {
     { "execute",          global_execute,         kJSDefaultAttributes },
     { "exit",             global_exit,         kJSDefaultAttributes },
     { "bind",             global_bind,         kJSDefaultAttributes },
+    { "unbind",           global_unbind,         kJSDefaultAttributes },
     { "checksum",         global_checksum,         kJSDefaultAttributes },
     { "include",          global_include,         kJSDefaultAttributes },
     { "timerStart",       global_timer_start,         kJSDefaultAttributes },
