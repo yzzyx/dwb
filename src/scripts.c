@@ -174,14 +174,6 @@ uncamelize(char *uncamel, const char *camel, char rep, size_t length) {
   return ret;
 }/*}}}*/
 
-JSValueRef 
-send_message_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
-  char *value = js_value_to_char(ctx, argv[0], -1, NULL);
-  if (value)
-    puts(value);
-  return JSValueMakeUndefined(ctx);
-}
-
 /* inject {{{*/
 static JSValueRef
 inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -656,10 +648,27 @@ global_domain_from_host(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject,
 }/*}}}*/
 
 /* global_send_request {{{*/
+JSObjectRef 
+get_message_data(SoupMessage *msg) {
+  JSObjectRef o = JSObjectMake(_global_context, NULL, NULL);
+  js_set_object_property(_global_context, o, "body", msg->response_body->data, NULL);
+  JSObjectRef ho = JSObjectMake(_global_context, NULL, NULL);
+  const char *name, *value;
+  SoupMessageHeadersIter iter;
+  soup_message_headers_iter_init(&iter, msg->response_headers);
+  while (soup_message_headers_iter_next(&iter, &name, &value)) {
+    js_set_object_property(_global_context, ho, name, value, NULL);
+  }
+  JSStringRef s = JSStringCreateWithUTF8CString("headers");
+  JSObjectSetProperty(_global_context, o, s, ho, kJSDefaultProperty, NULL);
+  JSStringRelease(s);
+  return o;
+}
 void
 request_callback(SoupSession *session, SoupMessage *message, JSObjectRef function) {
   if (message->response_body->data != NULL) {
-    JSValueRef vals[] = { js_char_to_value(_global_context, message->response_body->data), make_object(_global_context, G_OBJECT(message))  };
+    JSObjectRef o = get_message_data(message);
+    JSValueRef vals[] = { o, make_object(_global_context, G_OBJECT(message))  };
     JSObjectCallAsFunction(_global_context, function, NULL, 1, vals, NULL);
   }
 }
@@ -701,11 +710,10 @@ global_send_request_sync(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject
   if (uri == NULL) 
     return JSValueMakeNull(ctx);
   if (argc > 1) 
-    method = js_value_to_char(ctx, argv[2], -1, exc);
+    method = js_value_to_char(ctx, argv[1], -1, exc);
   SoupMessage *msg = soup_message_new(method == NULL ? "GET" : method, uri);
   guint status = soup_session_send_message(webkit_get_default_session(), msg);
-  JSObjectRef o = JSObjectMake(ctx, NULL, NULL);
-  js_set_object_property(ctx, o, "body", msg->response_body->data, exc);
+  JSObjectRef o = get_message_data(msg);
   JSStringRef js_key = JSStringCreateWithUTF8CString("status");
   JSValueRef js_value = JSValueMakeNumber(ctx, status);
   JSObjectSetProperty(ctx, o, js_key, js_value, kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, exc);
