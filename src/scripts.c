@@ -1071,7 +1071,8 @@ io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
   if ( (content = js_value_to_char(ctx, argv[2], -1, exc)) == NULL ) 
     goto error_out;
   if ( (f = fopen(path, mode)) != NULL) {
-    fprintf(f, content);
+    fputs(content, f);
+    putc(0, f);
     fclose(f);
     ret = true;
   }
