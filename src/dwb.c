@@ -1468,11 +1468,17 @@ dwb_get_searchengine(const char *uri) {
   return ret;
 }/*}}}*/
 
+static gboolean
+dwb_check_localhost(const char *uri) {
+  if ((!strncmp("localhost", uri, 9) || !strncmp("127.0.0.1", uri, 9)) && (uri[9] == ':' || uri[9] == '\0')) 
+    return true;
+  return false;
+}
 /* dwb_get_search_engine(const char *uri) {{{*/
 char *
 dwb_check_searchengine(const char *uri, gboolean force) {
   char *ret = NULL;
-  if (!strncmp(uri, "localhost", 9) && (uri[9] == ':' || uri[9] == '\0')) 
+  if (dwb_check_localhost(uri))
     return NULL;
   if ( force || !strchr(uri, '.') ) {
     ret = dwb_get_searchengine(uri);
@@ -2127,9 +2133,13 @@ dwb_load_uri(GList *gl, const char *arg) {
     }
 #ifdef WITH_LIBSOUP_2_38
     else if (dwb.misc.dns_lookup) {
-      VIEW(gl)->status->request_uri = g_strdup(tmpuri);
-      soup_session_prefetch_dns(dwb.misc.soupsession, tmpuri, NULL, (SoupAddressCallback)callback_dns_resolve, gl);
-      goto clean;
+      if (dwb_check_localhost(tmpuri)) 
+        uri = g_strdup_printf("http://%s", tmpuri);
+      else {
+        VIEW(gl)->status->request_uri = g_strdup(tmpuri);
+        soup_session_prefetch_dns(dwb.misc.soupsession, tmpuri, NULL, (SoupAddressCallback)callback_dns_resolve, gl);
+        goto clean;
+      }
     }
 #endif
     else if (!(uri = dwb_check_searchengine(tmpuri, false))) {
