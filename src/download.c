@@ -41,6 +41,8 @@ typedef struct _DwbDownloadStatus {
   guint blue, red, green;
 #endif
   gint64 time;
+  gint64 speedtime;
+  gdouble  progress;
   DwbDownload *download;
 } DwbDownloadStatus;
 
@@ -140,19 +142,27 @@ download_get_download_label(WebKitDownload *download) {
 static void
 download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus *status) {
   /* Update at most four times a second */
-  gint64 time = g_get_monotonic_time()/250000;
-  if (time != status->time) {
+  gint64 time = g_get_monotonic_time();
+  static double speed = 0;
+  static guint remaining = 0;
+  if (time - status->time > 250000) {
     GList *l = download_get_download_label(download); 
     DwbDownload *label = l->data;
     double elapsed = webkit_download_get_elapsed_time(download);
     double progress = webkit_download_get_progress(download);
     double total_size = (double)webkit_download_get_total_size(download) / 0x100000;
 
+    if (time - status->speedtime > 1000000) {
+      speed = ((progress - status->progress)*total_size) * 1000000 / (time - status->speedtime);
+      status->speedtime = time;
+      status->progress = progress;
+      remaining = (guint)(elapsed / progress - elapsed);
+    }
 
     double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
-    guint remaining = (guint)(elapsed / progress - elapsed);
     char buffer[128] = {0};
-    snprintf(buffer, 128, "[%d:%02d|%2d%%|%.3f/%.3f]", remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
+    const char *format = speed > 1 ? "[%.1fM/s|%d:%02d|%2d%%|%.3f/%.3f]" : "[%.3fK/s|%d:%02d|%2d%%|%.3f/%.3f]";
+    snprintf(buffer, 128, format, speed, remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
     gtk_label_set_text(GTK_LABEL(label->rlabel), buffer);
 
 #if _HAS_GTK3
@@ -186,8 +196,8 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
 #if _HAS_GTK3 
     status->alpha = alpha;
 #endif
+    status->time = time;
   }
-  status->time = time;
 }/*}}}*/
 
 static void 
@@ -487,6 +497,8 @@ download_start(const char *path) {
       DwbDownloadStatus *s = dwb_malloc(sizeof(DwbDownloadStatus));
       s->blue = s->time = 0;
       s->download = active;
+      s->progress = 0;
+      s->speedtime = g_get_monotonic_time();
       active->sig_button = g_signal_connect(active->event, "button-press-event", G_CALLBACK(download_button_press_cb), _downloads);
       g_signal_connect(dwb.state.download, "notify::current-size", G_CALLBACK(download_progress_cb), s);
       g_signal_connect(dwb.state.download, "notify::status", G_CALLBACK(download_status_cb), s);
