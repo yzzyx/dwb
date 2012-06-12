@@ -345,30 +345,13 @@ commands_remove_view(KeyMap *km, Arg *arg) {
   return view_remove(NULL);
 }/*}}}*/
 
-static gboolean
-commands_hide_tabbar(int *running) {
-  if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
-    gtk_widget_hide(dwb.gui.topbox);
-  }
-  *running = 0;
-  return false;
-}
-
 /* commands_focus(KeyMap *km, Arg *arg) {{{*/
 DwbStatus 
 commands_focus(KeyMap *km, Arg *arg) {
-  static int running;
   if (dwb.state.views->next) {
     int pos = modulo(g_list_position(dwb.state.views, dwb.state.fview) + NUMMOD * arg->n, g_list_length(dwb.state.views));
     GList *g = g_list_nth(dwb.state.views, pos);
-    if (dwb_focus_view(g)) 
-      return STATUS_OK;
-    if (! (dwb.state.bar_visible & BAR_VIS_TOP) && dwb.misc.tabbar_delay > 0) {
-      gtk_widget_show(dwb.gui.topbox);
-      if (running != 0) 
-        g_source_remove(running);
-      running = g_timeout_add(dwb.misc.tabbar_delay * 1000, (GSourceFunc)commands_hide_tabbar, &running);
-    }
+    dwb_focus_view(g);
     return STATUS_OK;
   }
   return STATUS_ERROR;
@@ -377,20 +360,19 @@ commands_focus(KeyMap *km, Arg *arg) {
 /* commands_focus_view{{{*/
 DwbStatus
 commands_focus_nth_view(KeyMap *km, Arg *arg) {
-  static int running;
+  GList *l = NULL;
   if (!dwb.state.views->next) 
-    return STATUS_ERROR;
-  GList *l = g_list_nth(dwb.state.views, dwb.state.nummod - 1);
-  if (!l) 
-    return STATUS_ERROR;
-  if (dwb_focus_view(l))
     return STATUS_OK;
-  if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
-    gtk_widget_show(dwb.gui.topbox);
-    if (running != 0) 
-      g_source_remove(running);
-    running = g_timeout_add(2000, (GSourceFunc)commands_hide_tabbar, &running);
+
+  switch (dwb.state.nummod) {
+    case 0  : l = g_list_last(dwb.state.views); break;
+    case -1 : l = g_list_first(dwb.state.views); break;
+    default : l = g_list_nth(dwb.state.views, dwb.state.nummod - 1); 
   }
+  if (l == NULL) 
+    return STATUS_ERROR;
+
+  dwb_focus_view(l);
   return STATUS_OK;
 }/*}}}*/
 

@@ -1190,9 +1190,19 @@ dwb_get_host(WebKitWebView *web) {
   return host;
 }/*}}}*/
 
+static gboolean
+dwb_hide_tabbar(int *running) {
+  if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
+    gtk_widget_hide(dwb.gui.topbox);
+  }
+  *running = 0;
+  return false;
+}
+
 /* dwb_focus_view(GList *gl){{{*/
 gboolean
 dwb_focus_view(GList *gl) {
+  static int running;
   if (gl != dwb.state.fview) {
     if (EMIT_SCRIPT(TAB_FOCUS)) {
       //ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { SCRIPTS_WV(dwb.state.fview) }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
@@ -1207,6 +1217,12 @@ dwb_focus_view(GList *gl) {
     dwb_change_mode(NORMAL_MODE, true);
     dwb_unfocus();
     dwb_focus(gl);
+    if (! (dwb.state.bar_visible & BAR_VIS_TOP) && dwb.misc.tabbar_delay > 0) {
+      gtk_widget_show(dwb.gui.topbox);
+      if (running != 0) 
+        g_source_remove(running);
+      running = g_timeout_add(dwb.misc.tabbar_delay * 1000, (GSourceFunc)dwb_hide_tabbar, &running);
+    }
     return false;
   }
   return true;

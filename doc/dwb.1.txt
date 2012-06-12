@@ -271,7 +271,7 @@ Save all configuration files (command
 Save current session and exit (command
 'save_session', aliases: 'wq').
 
-*gZZ *::
+*gZZ*::
 Save current session with name and exit (command
 'save_named_session', aliases: 'wqn').
 
@@ -284,7 +284,7 @@ Cycle focus [n tab] backwards. (command
 'focus_prev', aliases: 'tabprev').
 
 *[n]T*::
-Focus nth tab or first, if n is omitted.
+Focus nth tab, first tab if n is omitted or last tab if n is 0.
 (command 'focus_tab', aliases: 'tab').
 
 *[n]gm*::
