@@ -203,7 +203,7 @@ static FunctionMap FMAP [] = {
     { .p = NULL },                          EP_NONE,    { "js", "exja", NULL }, },
 
   { { "eval",              "Execute a javascript snippet that uses the internal jsapi",                    }, CP_COMMANDLINE, 
-    (Func)commands_eval,            NULL,                            ALWAYS_SM,     
+    (Func)commands_eval,            NULL,                            POST_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
   { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 

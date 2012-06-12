@@ -46,6 +46,11 @@ OPTIONS
 *-R, --override-restore*::
   Open a new session, even if 'save-session' is enabled.
 
+*-S, --enable-scripts*::
+  Enables the javascript interface, if there are scripts in
+  $XDG_CONFIG_HOME/dwb/userscripts that use the javascript api this option is
+  not needed. 
+
 *-x, --execute*='commands'::
   Execute a list of dwb commands seperated by ';;', see
   <<CUSTOM_COMMANDS,'CUSTOM COMMANDS'>>
@@ -587,7 +592,10 @@ Load a html string in a new tab. This command is mainly intended for use in user
 'load_html_tab').
 
 *unbound*::
-Execute a javascript snippet that uses the the internal jsapi (command
+Execute a javascript snippet that uses the the internal javascript api. This
+command only works if the javascript interface is enabled, i.e. if there are
+scripts in $XDG_CONFIG_HOME/dwb/userscripts that use the api or if dwb is
+started with -S/--enable-scripts (command
 'eval').
 
 *Tab (S-Tab)*::

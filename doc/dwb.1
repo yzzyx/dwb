@@ -82,6 +82,11 @@ Open a new session, even if
 is enabled\&.
 .RE
 .PP
+\fB\-S, \-\-enable\-scripts\fR
+.RS 4
+Enables the javascript interface, if there are scripts in $XDG_CONFIG_HOME/dwb/userscripts that use the javascript api this option is not needed\&.
+.RE
+.PP
 \fB\-x, \-\-execute\fR=\fIcommands\fR
 .RS 4
 Execute a list of dwb commands seperated by
@@ -1064,7 +1069,7 @@ Load a html string in a new tab\&. This command is mainly intended for use in us
 .PP
 \fBunbound\fR
 .RS 4
-Execute a javascript snippet that uses the the internal jsapi (command
+Execute a javascript snippet that uses the the internal javascript api\&. This command only works if the javascript interface is enabled, i\&.e\&. if there are scripts in $XDG_CONFIG_HOME/dwb/userscripts that use the api or if dwb is started with \-S/\-\-enable\-scripts (command
 \fIeval\fR)\&.
 .RE
 .PP

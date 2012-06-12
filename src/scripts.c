@@ -1643,17 +1643,21 @@ scripts_init_script(const char *path, const char *script) {
 
 void
 evaluate(const char *script) {
-    JSStringRef js_script = JSStringCreateWithUTF8CString(script);
-    JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
-    JSStringRelease(js_script);
+  JSStringRef js_script = JSStringCreateWithUTF8CString(script);
+  JSEvaluateScript(_global_context, js_script, NULL, NULL, 0, NULL);
+  JSStringRelease(js_script);
 }
 
 /* scripts_init {{{*/
 void 
-scripts_init() {
+scripts_init(gboolean force) {
   dwb.misc.script_signals = 0;
-  if (_global_context == NULL)
-    return;
+  if (_global_context == NULL) {
+    if (force) 
+      create_global_object();
+    else 
+      return;
+  }
 
   char *dir = util_get_data_dir(LIBJS_DIR);
   if (dir != NULL) {
@@ -1674,8 +1678,7 @@ scripts_execute_scripts(char **scripts) {
   g_return_if_fail(scripts != NULL);
   _commandline = true;
 
-  create_global_object();
-  scripts_init();
+  scripts_init(true);
   char *content;
   for (int i=0; scripts[i] != NULL; i++) {
     content = util_get_file_content(scripts[i]); 
@@ -1688,7 +1691,9 @@ scripts_execute_scripts(char **scripts) {
 }
 gboolean 
 scripts_execute_one(const char *script) {
-  return js_execute(_global_context, script, NULL) != NULL;
+  if (_global_context != NULL)
+    return js_execute(_global_context, script, NULL) != NULL;
+  return false;
 }
 void
 scripts_unbind(JSObjectRef obj) {

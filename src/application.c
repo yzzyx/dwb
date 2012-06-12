@@ -37,6 +37,7 @@ static gboolean opt_single = false;
 static gboolean opt_override_restore = false;
 static gboolean opt_version = false;
 static gboolean opt_force = false;
+static gboolean opt_enable_scripts = false;
 static gchar *opt_restore = NULL;
 static gchar **opt_exe = NULL;
 static gchar **scripts = NULL;
@@ -52,6 +53,7 @@ static GOptionEntry options[] = {
   { "execute", 'x', 0, G_OPTION_ARG_STRING_ARRAY, &opt_exe, "Execute commands", NULL},
   { "version", 'v', 0, G_OPTION_ARG_NONE, &opt_version, "Show version information and exit", NULL},
   { "scripts", 's', 0, G_OPTION_ARG_FILENAME_ARRAY, &scripts, "Execute a script", NULL},
+  { "enable-scripts", 'S', 0, G_OPTION_ARG_NONE, &opt_enable_scripts, "Enable javascript api", NULL},
   { NULL }
 };
 static GOptionContext *option_context;
@@ -314,7 +316,7 @@ application_start(GApplication *app, char **argv) {
   dwb_init();
 
   dwb_pack(GET_CHAR("widget-packing"), false);
-  scripts_init();
+  scripts_init(opt_enable_scripts);
 
   if (opt_force) 
     session_flags |= SESSION_FORCE;
