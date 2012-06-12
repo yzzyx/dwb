@@ -206,15 +206,15 @@ Object.freeze((function () {
       __mouseEvent(element, ev, !globals.newTab);
     }
     else {
-      if (e.hasAttribute("onclick")) {
+      if (element.hasAttribute("onclick")) {
         __mouseEvent(element, ev, !globals.newTab);
         clicked = true;
       }
-      if (e.hasAttribute("onmousedown")) {
+      if (element.hasAttribute("onmousedown")) {
         __mouseEvent(element, "mousedown", !globals.newTab);
         clicked = true;
       }
-      if (e.hasAttribute("onmouseover")) {
+      if (element.hasAttribute("onmouseover")) {
         __mouseEvent(element, "mousedown", !globals.newTab);
         clicked = true;
       }
