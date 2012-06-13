@@ -265,4 +265,17 @@ js_execute(JSContextRef ctx, const char *script, JSValueRef *exc) {
   }
   return NULL;
 }
+void 
+js_array_iterator_init(JSContextRef ctx, js_array_iterator *iter, JSObjectRef object) {
+  iter->ctx = ctx;
+  iter->array = object;
+  iter->current_index = 0;
+  iter->length = js_get_double_property(ctx, object, "length");
+}
+JSValueRef 
+js_array_iterator_next(js_array_iterator *iter, JSValueRef *exc) {
+  if (iter->current_index == iter->length)
+    return NULL;
+  return JSObjectGetPropertyAtIndex(iter->ctx, iter->array, iter->current_index++, exc);
+}
 

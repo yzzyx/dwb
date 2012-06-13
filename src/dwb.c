@@ -2215,6 +2215,8 @@ dwb_entry_activate(GdkEventKey *e) {
                               return true;
     case COMPLETE_PATH:       completion_clean_path_completion();
                               break;
+    case COMPLETE_SCRIPTS:    scripts_completion_activate();
+                              return true;
     default : break;
   }
   CLEAR_COMMAND_TEXT();

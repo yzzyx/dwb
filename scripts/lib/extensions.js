@@ -1,7 +1,8 @@
 (function () {
-  var _config = undefined;
+  var _config = {};
   var _debug = false;
   var _registered = {};
+  var _configLoaded = false;
   var getPlugin = function(name, filename) {
     var ret = null;
     try {
@@ -89,15 +90,16 @@
         }
         var boldname = "\033[1m" + name + "\033[0m";
 
-        var config, dataBase, pluginPath, plugin = null;
+        var config, dataBase, pluginPath, plugin = null, key;
         var extConfig = null;
 
         /* Get default config if the config hasn't been read yet */
         if (arguments.length == 2) {
           extConfig = c;
+          _config[name] = c;
         }
-        else {
-          if (_config === undefined && system.fileTest(data.configDir + "/extensionrc", FileTest.regular)) {
+        if (!_configLoaded) {
+          if (system.fileTest(data.configDir + "/extensionrc", FileTest.regular)) {
             try {
               config = include(data.configDir + "/extensionrc");
             }
@@ -108,14 +110,15 @@
               extensions.warning(name, "Could not load config.");
             }
             else {
-              _config = config;
+              for (key in config) {
+                _config[key] = config[key];
+              }
             }
-          }
-          if (_config) {
-            extConfig = _config[name] || null;
+            _configLoaded = true;
           }
         }
-
+        if (extConfig === null) 
+          extConfig = _config[name] || null;
 
         /* Load extension */
         var filename = data.userDataDir + "/extensions/" + name;
@@ -130,9 +133,6 @@
         try {
           if (plugin.init(extConfig)) {
             _registered[name] = plugin;
-            if (_config === undefined)
-              _config = new Object();
-            _config[name] = extConfig;
             extensions.message(name, "Successfully loaded and initialized.");
             return true;
           }

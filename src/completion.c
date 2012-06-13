@@ -349,6 +349,17 @@ completion_create_key_completion(GList *l, const char *first, KeyMap *m) {
   return l;
 }/*}}}*/
 
+static GList *
+completion_complete_scripts() {
+  GList *list = NULL;
+  for (GList *l = dwb.state.script_completion; l; l=l->next) {
+    Completion *c = completion_get_completion_item(((Navigation*)l->data)->first, ((Navigation*)l->data)->second, NULL, NULL);
+    gtk_box_pack_start(GTK_BOX(dwb.gui.compbox), c->event, false, false, 0);
+    list = g_list_append(list, c);
+  }
+  dwb.state.mode = COMPLETE_SCRIPTS;
+  return list;
+}
 /*dwb_completion_get_keys()         return  GList *Completions{{{*/
 static GList * 
 completion_get_key_completion(gboolean entry) {
@@ -563,6 +574,7 @@ completion_complete(CompletionType type, int back) {
       case COMP_QUICKMARK:   dwb.comps.completions = completion_get_quickmarks(back); break;
       case COMP_PATH:        completion_path(); return STATUS_OK;
       case COMP_BUFFER:      dwb.comps.completions = completion_complete_buffer(); break;
+      case COMP_SCRIPT:      dwb.comps.completions = completion_complete_scripts(); break;
       default:               dwb.comps.completions = completion_get_normal_completion(); break;
     }
     if (!dwb.comps.completions) {

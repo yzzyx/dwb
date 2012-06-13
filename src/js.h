@@ -35,6 +35,16 @@ JSValueRef js_execute(JSContextRef ctx, const char *, JSValueRef *exc);
 gboolean js_print_exception(JSContextRef ctx, JSValueRef exception);
 JSObjectRef js_make_function(JSContextRef ctx, const char *script);
 JSValueRef js_json_to_value(JSContextRef ctx, const char *text);
+
+typedef struct _js_array_iterator {
+  JSContextRef ctx;
+  JSObjectRef array;
+  int current_index;
+  int length;
+} js_array_iterator;
+void js_array_iterator_init(JSContextRef ctx, js_array_iterator *iter, JSObjectRef object);
+JSValueRef js_array_iterator_next(js_array_iterator *iter, JSValueRef *exc);
+
 #define  JS_STRING_MAX 1024
 
 #endif

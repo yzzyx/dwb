@@ -227,6 +227,7 @@ typedef enum  {
   COMP_CUR_HISTORY,
   COMP_BUFFER,
   COMP_QUICKMARK,
+  COMP_SCRIPT,
 } CompletionType;
 
 typedef enum  {
@@ -334,6 +335,7 @@ typedef enum {
   COMPLETE_COMMAND_MODE = 1<<19,
   CONFIRM               = 1<<21,
   SETTINGS_MODE_LOCAL   = 1<<22,
+  COMPLETE_SCRIPTS      = 1<<23,
 } Mode;
 
 
@@ -583,6 +585,7 @@ struct _State {
   gboolean fullscreen;
   unsigned int bar_visible;
   gboolean auto_insert_mode;
+  GList *script_completion;
 };
 
 typedef enum _SettingsApply {
@@ -742,6 +745,7 @@ struct _Misc {
   TabPosition tab_position;
   char *hint_style;
   int script_signals;
+
 };
 struct _Files {
   const char *bookmarks;

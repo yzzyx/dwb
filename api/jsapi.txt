@@ -181,6 +181,28 @@ the request.
 ****
 
 ****
+[[tabComplete]]
+[float]
+==== *tabComplete()* ==== 
+
+[source,javascript]
+----
+void tabComplete(String label, Array items, Function callback)
+----
+
+Initiates tab completion.
+
+ ::
+
+_label_;; The command line label
+_items_;; An array of objects, each object can have 2 properties, +left+ which
+will be the left completion label and +right+ which will be the right completion
+label.
+_callback_;; Callback function, the first argument will be the returned string
+from the url bar.
+****
+
+****
 [[timerStart]]
 [float]
 ==== *timerStart()* ==== 

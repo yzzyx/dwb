@@ -29,6 +29,8 @@
 #include "soup.h" 
 #include "domain.h" 
 #include "application.h" 
+#include "completion.h" 
+#include "entry.h" 
 //#define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete )
 #define kJSDefaultProperty  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
 #define kJSDefaultAttributes  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
@@ -147,6 +149,8 @@ static JSGlobalContextRef _global_context;
 static GSList *_script_list;
 static JSClassRef _webview_class, _frame_class, _download_class, _default_class, _download_class;
 static gboolean _commandline = false;
+static JSObjectRef _arrayConstructor;
+static JSObjectRef _completion_callback;
 
 /* MISC {{{*/
 /* uncamelize {{{*/
@@ -720,7 +724,65 @@ global_send_request_sync(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject
   JSStringRelease(js_key);
   return o;
 }
+void 
+scripts_completion_activate(void) {
+  const char *text = GET_TEXT();
+  JSValueRef val[] = { js_char_to_value(_global_context, text) };
+  JSObjectCallAsFunction(_global_context, _completion_callback, NULL, 1, val, NULL);
+  completion_clean_completion(false);
+  dwb_change_mode(NORMAL_MODE, true);
+}
+static JSValueRef 
+global_tab_complete(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 3 || !JSValueIsInstanceOfConstructor(ctx, argv[1], _arrayConstructor, exc)) {
+    js_make_exception(ctx, exc, EXCEPTION("tabComplete: invalid argument."));
+    return JSValueMakeUndefined(ctx);
+  }
+  _completion_callback = JSValueToObject(ctx, argv[2], exc);
+  if (_completion_callback == NULL)
+    return JSValueMakeUndefined(ctx);
+  if (!JSObjectIsFunction(ctx, _completion_callback)) {
+    js_make_exception(ctx, exc, EXCEPTION("tabComplete: arguments[2] is not a function."));
+    return JSValueMakeUndefined(ctx);
+  }
 
+  char *left, *right, *label;
+  js_array_iterator iter;
+  JSValueRef val;
+  JSObjectRef cur = NULL;
+  Navigation *n;
+
+  label = js_value_to_char(ctx, argv[0], JS_STRING_MAX, exc);
+  JSObjectRef o = JSValueToObject(ctx, argv[1], exc);
+  js_array_iterator_init(ctx, &iter, o);
+  while((val = js_array_iterator_next(&iter, exc))) {
+    cur = JSValueToObject(ctx, val, exc);
+    if (cur == NULL)
+      goto error_out;
+    left = js_get_string_property(ctx, cur, "left");
+    right = js_get_string_property(ctx, cur, "right");
+    n = g_malloc(sizeof(Navigation));
+    n->first = left; 
+    n->second = right;
+    dwb.state.script_completion = g_list_prepend(dwb.state.script_completion, n);
+  }
+  dwb.state.script_completion = g_list_reverse(dwb.state.script_completion);
+  dwb_set_status_bar_text(dwb.gui.lstatus, label, NULL, NULL, true);
+
+  completion_complete(COMP_SCRIPT, false);
+  entry_focus();
+error_out:
+  for (GList *l = dwb.state.script_completion; l; l=l->next) {
+    n = l->data;
+    g_free(n->first); 
+    g_free(n->second);
+    g_free(n);
+  }
+  g_free(label);
+  g_list_free(dwb.state.script_completion);
+  dwb.state.script_completion = NULL;
+  return JSValueMakeUndefined(ctx);
+}
 /* timeout_callback {{{*/
 static gboolean
 timeout_callback(JSObjectRef obj) {
@@ -1452,6 +1514,7 @@ create_global_object() {
     { "domainFromHost",   global_domain_from_host,         kJSDefaultAttributes },
     { "sendRequest",      global_send_request,         kJSDefaultAttributes },
     { "sendRequestSync",  global_send_request_sync,         kJSDefaultAttributes },
+    { "tabComplete",      global_tab_complete,         kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
 
@@ -1659,6 +1722,7 @@ scripts_init(gboolean force) {
     else 
       return;
   }
+  dwb.state.script_completion = NULL;
 
   char *dir = util_get_data_dir(LIBJS_DIR);
   if (dir != NULL) {
@@ -1672,6 +1736,9 @@ scripts_init(gboolean force) {
     g_string_free(content, true);
     g_free(dir);
   }
+  JSObjectRef o = JSObjectMakeArray(_global_context, 0, NULL, NULL);
+  _arrayConstructor = js_get_object_property(_global_context, o, "constructor");
+  JSValueProtect(_global_context, _arrayConstructor);
 }/*}}}*/
 
 void
@@ -1708,6 +1775,7 @@ scripts_unbind(JSObjectRef obj) {
 void
 scripts_end() {
   if (_global_context != NULL) {
+    JSValueUnprotect(_global_context, _arrayConstructor);
     JSClassRelease(_default_class);
     JSClassRelease(_webview_class);
     JSClassRelease(_frame_class);
