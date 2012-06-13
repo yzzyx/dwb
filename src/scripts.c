@@ -769,8 +769,8 @@ global_tab_complete(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, siz
   dwb.state.script_completion = g_list_reverse(dwb.state.script_completion);
   dwb_set_status_bar_text(dwb.gui.lstatus, label, NULL, NULL, true);
 
-  completion_complete(COMP_SCRIPT, false);
   entry_focus();
+  completion_complete(COMP_SCRIPT, false);
 error_out:
   for (GList *l = dwb.state.script_completion; l; l=l->next) {
     n = l->data;
