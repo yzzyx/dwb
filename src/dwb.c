@@ -1018,7 +1018,8 @@ dwb_remove_quickmark(const char *line) {
 static gboolean
 dwb_sync_files(gpointer data) {
   GString *buffer = g_string_new(NULL);
-  for (GList *gl = dwb.fc.history; gl; gl=gl->next) {
+  int i=0;
+  for (GList *gl = dwb.fc.history; gl && (dwb.misc.history_length < 0 || i < dwb.misc.history_length); gl=gl->next, i++) {
     Navigation *n = gl->data;
     g_string_append_printf(buffer, "%s %s\n", n->first, n->second);
   }

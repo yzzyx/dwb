@@ -647,7 +647,7 @@ util_file_add(const char *filename, const char *text, int append, int max) {
 
   gboolean ret = false;
   if ( (file = fopen(filename, "r"))) {
-    for (int i=0; fgets(buffer, sizeof buffer, file) &&  (max < 0 || i < max-1); i++ ) {
+    for (int i=0; fgets(buffer, sizeof buffer, file) &&  (max < 0 || i < max); i++) {
       tmp = buffer;
       while (g_ascii_isspace(*tmp) && *tmp != '\n')
         tmp++;
