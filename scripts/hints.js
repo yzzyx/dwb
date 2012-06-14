@@ -14,8 +14,8 @@ Object.freeze((function () {
     lastInput : null,
     lastPosition : 0,
     newTab : false,
-    hintTypes :  [ "a, map, textarea, select, input:not([type=hidden]), button,  frame, iframe, [onclick], [onmousedown]," + 
-        "[onmouseover], [role=link], [role=option], [role=button], [role=option], img",  // HINT_T_ALL
+    hintTypes :  [ "a, textarea, select, input:not([type=hidden]), button,  frame, iframe, [onclick], [onmousedown]," + 
+        "[role=link], [role=option], [role=button], [role=option], img",  // HINT_T_ALL
                    //[ "iframe", 
                    "a",  // HINT_T_LINKS
                    "img",  // HINT_T_IMAGES
