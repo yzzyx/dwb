@@ -81,6 +81,8 @@ static Sigmap _sigmap[] = {
 
 
 static JSValueRef equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
@@ -88,6 +90,8 @@ static JSValueRef wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef 
 static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction default_functions[] = { 
     { "equals",          equals,             kJSDefaultAttributes },
+    { "connect",         connect_object,             kJSDefaultAttributes },
+    { "disconnect",      disconnect_object,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
 static JSStaticFunction wv_functions[] = { 
@@ -96,6 +100,8 @@ static JSStaticFunction wv_functions[] = {
     { "reload",          wv_reload,             kJSDefaultAttributes },
     { "inject",          wv_inject,             kJSDefaultAttributes },
     { "equals",          equals,             kJSDefaultAttributes },
+    { "connect",         connect_object,             kJSDefaultAttributes },
+    { "disconnect",      disconnect_object,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
 static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
@@ -114,6 +120,8 @@ static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectR
 static JSStaticFunction frame_functions[] = { 
   { "inject",          frame_inject,             kJSDefaultAttributes },
   { "equals",          equals,             kJSDefaultAttributes },
+  { "connect",         connect_object,             kJSDefaultAttributes },
+  { "disconnect",      disconnect_object,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
 };
 static JSValueRef frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
@@ -130,6 +138,8 @@ static JSStaticFunction download_functions[] = {
   { "start",          download_start,        kJSDefaultAttributes },
   { "cancel",         download_cancel,        kJSDefaultAttributes },
   { "equals",          equals,             kJSDefaultAttributes },
+  { "connect",         connect_object,             kJSDefaultAttributes },
+  { "disconnect",      disconnect_object,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
 };
 enum {
@@ -1353,6 +1363,42 @@ equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, co
   GObject *o = JSObjectGetPrivate(this);
   return JSValueMakeBoolean(ctx, o == comp);
 }/*}}}*/
+
+static gboolean 
+connect_callback(JSObjectRef func) {
+  JSValueRef ret = JSObjectCallAsFunction(_global_context, func, NULL, 0, NULL, NULL);
+  if (JSValueIsBoolean(_global_context, ret))
+    return JSValueToBoolean(_global_context, ret);
+  return false;
+}
+static JSValueRef 
+connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  gint id = -1;
+  if (argc < 2) {
+    return JSValueMakeNumber(ctx, -1);
+  }
+  char *name = js_value_to_char(ctx, argv[0], PROP_LENGTH, exc);
+  if (name == NULL) 
+    goto error_out;
+  JSObjectRef func = JSValueToObject(ctx, argv[1], exc);
+  if (func == NULL || !JSObjectIsFunction(ctx, func)) 
+    goto error_out;
+  GObject *o = JSObjectGetPrivate(this);
+  id = g_signal_connect_swapped(o, name, G_CALLBACK(connect_callback), func);
+error_out: 
+  g_free(name);
+  return JSValueMakeNumber(ctx, id);
+}
+static JSValueRef 
+disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  int id;
+  if (argc > 0 && (id = JSValueToNumber(ctx, argv[0], exc)) != NAN) {
+    GObject *o = JSObjectGetPrivate(this);
+    g_signal_handler_disconnect(o, id);
+    return JSValueMakeBoolean(ctx, true);
+  }
+  return JSValueMakeBoolean(ctx, false);
+}
 
 /* set_property_cb {{{*/
 static bool

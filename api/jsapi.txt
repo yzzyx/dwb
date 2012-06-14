@@ -712,7 +712,8 @@ webview.zoomLevel = webview.zoomLevel * 2;
 
 Webkit objects should not be compared using +==+, since it may happen that the
 same gobject is represented by different javascript objects, instead every
-webkit object implements an equals method. 
+webkit object implements an equals method, all Objects derived from GObjets
+implement the following functions. 
 
 ****
 [float]
@@ -731,6 +732,41 @@ _compareObject_;; The object to compare
 _returns_;; +true+ if the the corresponding gobjects are equal
 ****
 
+****
+[float]
+==== *connect()* ==== 
+
+[source,javascript]
+----
+Number object.connect(String name, Function callback) 
+----
+
+Connect to a gobject-signal.
+
+ ::
+
+_name_;; The signal name to connect to.
+_callback_;; Callback function that will be called when the signal is emitted.
+_returns_;; The signal id of the signal.
+****
+
+****
+[float]
+==== *disconnect()* ==== 
+
+[source,javascript]
+----
+Boolean object.disconnect(Number id) 
+----
+
+Disconnect from a gobject-signal.
+
+ ::
+
+_id_;; The signal id obtained from <<connect>>
+_returns_;; The true if the signal was disconnected
+****
+
 
 ====
 [float]
@@ -741,6 +777,9 @@ signals.connect("navigation" function(wv, frame) {
   if (frame.equals(wv.mainFrame) {
     ...
   }
+});
+tabs.current.connect("notify::load-status", function() {
+  io.print("Status changed");
 });
 ------------
 ====
