@@ -764,7 +764,7 @@ Disconnect from a gobject-signal.
  ::
 
 _id_;; The signal id obtained from <<connect>>
-_returns_;; The true if the signal was disconnected
+_returns_;; +true+ if the signal was disconnected
 ****
 
 

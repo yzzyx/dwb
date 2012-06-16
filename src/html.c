@@ -480,10 +480,10 @@ html_scripts_load_status_cb(WebKitWebView *web, GParamSpec *p, GList *gl) {
   WebKitLoadStatus s = webkit_web_view_get_load_status(web);
   if (s == WEBKIT_LOAD_FINISHED) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(web);
-    WebKitDOMHTMLElement *body = webkit_dom_document_get_body(doc);
-    webkit_dom_element_focus(WEBKIT_DOM_ELEMENT(body));
+    WebKitDOMElement *pre = webkit_dom_document_query_selector(doc, "pre", NULL);
+    webkit_dom_element_focus(WEBKIT_DOM_ELEMENT(pre));
     dwb_change_mode(INSERT_MODE);
-    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(body), "keypress", G_CALLBACK(html_scripts_confirm), true, gl);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(pre), "keypress", G_CALLBACK(html_scripts_confirm), true, gl);
     g_signal_handlers_disconnect_by_func(web, html_scripts_load_status_cb, gl);
   }
   else if (s == WEBKIT_LOAD_FAILED) {
@@ -493,7 +493,7 @@ html_scripts_load_status_cb(WebKitWebView *web, GParamSpec *p, GList *gl) {
 DwbStatus
 html_scripts(GList *gl, HtmlTable *table) {
   g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(html_scripts_load_status_cb), gl); 
-  webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(WEBVIEW(gl)), "<body contentEditable='true'></body>", table->uri, table->uri);
+  webkit_web_frame_load_alternate_string(webkit_web_view_get_main_frame(WEBVIEW(gl)), "<pre contentEditable='true'></pre>", table->uri, table->uri);
   return STATUS_OK;
 }
 
