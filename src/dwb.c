@@ -3815,11 +3815,6 @@ dwb_init() {
 
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
 
-  char *path = util_get_data_file(PLUGIN_FILE, "lib");
-  if (path) {
-    dwb.misc.pbbackground = util_get_file_content(path);
-    g_free(path);
-  }
   char *cache_model = GET_CHAR("cache-model");
 
   if (cache_model != NULL && !g_ascii_strcasecmp(cache_model, "documentviewer"))

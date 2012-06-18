@@ -20,7 +20,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "dwb.h"
-#include "init.h"
 #include "view.h"
 #include "session.h"
 #include "util.h"

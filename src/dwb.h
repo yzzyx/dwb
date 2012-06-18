@@ -438,9 +438,10 @@ enum Signal {
   SIG_AD_FRAME_CREATED,
   SIG_AD_RESOURCE_REQUEST,
 
+  SIG_PLUGINS_FIRST,
   SIG_PLUGINS_LOAD,
-  SIG_PLUGINS_FRAME_LOAD,
   SIG_PLUGINS_CREATE_WIDGET,
+  SIG_PLUGINS_WINDOW_OBJECT_CLEARED,
   SIG_PLUGINS_LAST,
 
   SIG_KEY_PRESS,
@@ -738,7 +739,6 @@ struct _Misc {
   char *download_com;
   JSContextRef global_ctx;
 
-  char *pbbackground;
   int synctimer;
   int sync_interval;
   int bar_height;
@@ -932,5 +932,7 @@ gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 char * dwb_get_raw_data(GList *gl);
 
 void dwb_free_list(GList *list, void (*func)(void*));
-
+void dwb_init(void);
+void dwb_init_files(void);
+void dwb_init_settings(void);
 #endif
