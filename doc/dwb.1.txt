@@ -460,6 +460,9 @@ specified. The first defined searchengine will be the default searchengine. The
 keyword can be used in all open commands, e.g.
 .I :open <keyword> <searchterm> (command 'save_search_field', aliases: 'search').
 
+*gd*::
+Download the current site. (command 'download').
+
 *Sb*::
 Show bookmarks (command 'show_bookmarks', aliases: 'sbookmarks').
 
@@ -724,6 +727,7 @@ COMMAND OVERVIEW
 |cancel_download         |                |Cancel a download
 |clear_tab               |clear           |Clear tab
 |close_tab               |close           |Close tab
+|download                |                |Download current site
 |dump                    |                |Write html of current website to a
                                            file or stdout if no argument is given
 |eval                    |                |Execute a javascript snippet that

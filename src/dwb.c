@@ -2202,7 +2202,9 @@ dwb_entry_activate(GdkEventKey *e) {
                               dwb_change_mode(NORMAL_MODE, false);
                               g_strfreev(token);
                               return true;
-    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT());
+    case COMMAND_MODE:        if (dwb.state.mode & COMPLETION_MODE) 
+                                completion_clean_completion(false);
+                              dwb_parse_command_line(GET_TEXT());
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(NULL); 
                               return true;

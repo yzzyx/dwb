@@ -605,8 +605,11 @@ Object.freeze((function () {
   var __submitSearchEngine = function (string) {
     var e = __getActive().element;
     e.value = string;
-    if (e.form.submit instanceof Function) 
+    if (e.form.submit instanceof Function) {
+      if (e.form.getAttribute('action') == '#')
+        e.form.setAttribute('action', '');
       e.form.submit();
+    }
     else {
       var button = e.form.querySelector("input[type='submit'], button[type='submit']");
       __clickElement(button, "click");

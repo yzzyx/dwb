@@ -859,3 +859,14 @@ commands_eval(KeyMap *km, Arg *arg) {
   return STATUS_ERROR;
 }
 /*}}}*/
+
+DwbStatus 
+commands_download(KeyMap *km, Arg *arg) {
+  WebKitNetworkRequest *request = webkit_network_request_new(CURRENT_URL());
+  if (request != NULL) {
+    dwb.state.mimetype_request = NULL;
+    WebKitDownload *download = webkit_download_new(request);
+    download_get_path(dwb.state.fview, download);
+  }
+  return STATUS_OK;
+}
