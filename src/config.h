@@ -182,6 +182,7 @@ static KeyValue KEYS[] = {
   { "dump",                     {   NULL,         0,                0 }, }, 
   { "sanitize",                 {   NULL,         0,                0 }, }, 
   { "eval",                     {   NULL,         0,                0 }, }, 
+  { "download",                 {   "gd",         0,                0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -204,6 +205,10 @@ static FunctionMap FMAP [] = {
 
   { { "eval",              "Execute a javascript snippet that uses the internal jsapi",                    }, CP_COMMANDLINE, 
     (Func)commands_eval,            NULL,                            POST_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "download",              "Download",                    }, CP_COMMANDLINE | CP_DONT_CLEAN, 
+    (Func)commands_download,            NULL,                            NEVER_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
   { { "set",              "Set a setting",                    }, CP_COMMANDLINE, 

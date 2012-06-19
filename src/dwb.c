@@ -1985,7 +1985,8 @@ dwb_update_layout() {
   for (GList *gl = dwb.state.views; gl; gl = gl->next) {
     View *v = gl->data;
     const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-    dwb_tab_label_set_text(gl, title);
+    if (title != NULL) 
+      dwb_tab_label_set_text(gl, title);
   }
   dwb_update_tabs();
 }/*}}}*/
@@ -2201,7 +2202,9 @@ dwb_entry_activate(GdkEventKey *e) {
                               dwb_change_mode(NORMAL_MODE, false);
                               g_strfreev(token);
                               return true;
-    case COMMAND_MODE:        dwb_parse_command_line(GET_TEXT());
+    case COMMAND_MODE:        if (dwb.state.mode & COMPLETION_MODE) 
+                                completion_clean_completion(false);
+                              dwb_parse_command_line(GET_TEXT());
                               return true;
     case DOWNLOAD_GET_PATH:   download_start(NULL); 
                               return true;
@@ -3815,11 +3818,6 @@ dwb_init() {
 
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
 
-  char *path = util_get_data_file(PLUGIN_FILE, "lib");
-  if (path) {
-    dwb.misc.pbbackground = util_get_file_content(path);
-    g_free(path);
-  }
   char *cache_model = GET_CHAR("cache-model");
 
   if (cache_model != NULL && !g_ascii_strcasecmp(cache_model, "documentviewer"))
