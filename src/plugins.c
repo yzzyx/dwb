@@ -102,7 +102,7 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     else 
       div = g_slist_nth_data(v->plugins->clicks, v->plugins->created);
     webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(div), 
-        "<div style='display:table-cell;vertical-align:middle;text-align:center;color:#fff;background-color:#000;font:11px monospace bold'>click to play</div>", NULL);
+        "<div style='display:table-cell;vertical-align:middle;text-align:center;color:#fff;background-color:#000;font:11px monospace bold'>click to enable</div>", NULL);
 
     char *new_style = g_strdup_printf("position:%s;width:%s; height:%s; top: %s; left: %s;display:table;", position, width, height, top, left);
     webkit_dom_element_set_attribute(div, "style", new_style, NULL);
