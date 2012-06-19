@@ -1,8 +1,7 @@
 include ../config.mk
 SETTINGS=../$(LIBDIR)/settings.html
 KEYS=../$(LIBDIR)/keys.html
-TLDS=../$(SRCDIR)/tlds.h
-OUTFILES=$(SETTINGS) $(KEYS) $(TLDS)
+OUTFILES=$(SETTINGS) $(KEYS)
 
 all: $(OUTFILES)
 
