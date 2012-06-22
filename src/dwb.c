@@ -1624,8 +1624,8 @@ dwb_update_hints(GdkEventKey *e) {
     com = "followActive";
     snprintf(json, BUFFER_LENGTH, "{ \"type\" : \"%d\" }", hint_map[dwb.state.hint_type].arg);
   }
-  else if (DWB_TAB_KEY(e)) {
-    if (e->state & GDK_SHIFT_MASK) {
+  else if (DWB_COMPLETE_KEY(e)) {
+    if ((DWB_TAB_KEY(e) && e->state & GDK_SHIFT_MASK) || e->keyval == GDK_KEY_Up) {
       com = "focusPrev";
     }
     else {
