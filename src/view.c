@@ -974,7 +974,8 @@ view_clean(GList *gl) {
   View *v = VIEW(gl);
   /* Inspector */
   if (v->inspector_window != NULL) {
-    g_signal_emit_by_name(v->inspector_window, "delete-event", NULL);
+    gtk_widget_destroy(v->inspector_window);
+    v->inspector_window = NULL;
   }
 
   /* Favicon */ 
