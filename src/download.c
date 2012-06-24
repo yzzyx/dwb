@@ -80,7 +80,7 @@ download_spawn_external(const char *uri, const char *filename, WebKitDownload *d
 
   GSList *list = g_slist_prepend(NULL, dwb_navigation_new("DWB_URI", uri));
   list = g_slist_prepend(list, dwb_navigation_new("DWB_FILENAME", filename));
-  list = g_slist_prepend(list, dwb_navigation_new("DWB_COOKIES", dwb.files.cookies));
+  list = g_slist_prepend(list, dwb_navigation_new("DWB_COOKIES", dwb.files[FILES_COOKIES]));
   char *proxy = GET_CHAR("proxy-url");
   gboolean has_proxy = GET_BOOL("proxy");
 
@@ -88,7 +88,7 @@ download_spawn_external(const char *uri, const char *filename, WebKitDownload *d
     g_free(command);
     command = newcommand;
   }
-  if ( (newcommand = util_string_replace(command, "dwb_cookies", dwb.files.cookies)) ) {
+  if ( (newcommand = util_string_replace(command, "dwb_cookies", dwb.files[FILES_COOKIES])) ) {
     g_free(command);
     command = newcommand;
   }
@@ -241,7 +241,7 @@ download_do_spawn(const char *command, const char *path, const char *mimetype) {
       dwb.fc.mimetypes = g_list_delete_link(dwb.fc.mimetypes, list);
     }
     dwb.fc.mimetypes = g_list_prepend(dwb.fc.mimetypes, n);
-    util_file_add_navigation(dwb.files.mimetypes, n, true, -1);
+    util_file_add_navigation(dwb.files[FILES_MIMETYPES], n, true, -1);
   }
 }/*}}}*/
 /* download_spawn(DwbDownload *) {{{*/
@@ -443,7 +443,7 @@ download_start(const char *path) {
   /* Remote download; */
   else {
     if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
-      char *cache_name = g_build_filename(dwb.files.cachedir, filename, NULL);
+      char *cache_name = g_build_filename(dwb.files[FILES_CACHEDIR], filename, NULL);
       fullpath = g_strconcat("file://", cache_name, NULL);
       g_free(cache_name);
       _lastaction = DL_ACTION_EXECUTE;

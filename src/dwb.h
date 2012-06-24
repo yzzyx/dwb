@@ -191,7 +191,6 @@ typedef struct _Color Color;
 typedef struct _Completions Completions;
 typedef struct _Dwb Dwb;
 typedef struct _FileContent FileContent;
-typedef struct _Files Files;
 typedef struct _Font DwbFont;
 typedef struct _FunctionMap FunctionMap;
 typedef struct _Gui Gui;
@@ -746,26 +745,28 @@ struct _Misc {
   int script_signals;
 
 };
-struct _Files {
-  const char *bookmarks;
-  const char *navigation_history;
-  const char *command_history;
-  const char *cookies;
-  const char *cookies_allow;
-  const char *cookies_session_allow;
-  const char *download_path;
-  const char *history;
-  const char *keys;
-  const char *mimetypes;
-  const char *quickmarks;
-  const char *searchengines;
-  const char *session;
-  const char *settings;
-  const char *userscripts;
-  const char *scripts_allow;
-  const char *plugins_allow;
-  const char *cachedir;
-  const char *custom_keys;
+enum Files {
+  FILES_FIRST = 0,
+  FILES_BOOKMARKS = 0,
+  FILES_NAVIGATION_HISTORY,
+  FILES_COMMAND_HISTORY,
+  FILES_COOKIES,
+  FILES_COOKIES_ALLOW,
+  FILES_COOKIES_SESSION_ALLOW,
+  FILES_DOWNLOAD_PATH,
+  FILES_HISTORY,
+  FILES_KEYS,
+  FILES_MIMETYPES,
+  FILES_QUICKMARKS,
+  FILES_SEARCHENGINES,
+  FILES_SESSION,
+  FILES_SETTINGS,
+  FILES_USERSCRIPTS,
+  FILES_SCRIPTS_ALLOW,
+  FILES_PLUGINS_ALLOW,
+  FILES_CACHEDIR,
+  FILES_CUSTOM_KEYS,
+  FILES_LAST
 };
 // TODO implement plugins blocker, script blocker with File struct
 typedef struct _File {
@@ -805,7 +806,8 @@ struct _Dwb {
   GList *override_keys;
   GSList *custom_commands;
   GHashTable *settings;
-  Files files;
+  //Files files;
+  char *files[FILES_LAST];
   FileContent fc;
   gpointer *instance;
 };

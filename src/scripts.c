@@ -847,7 +847,7 @@ data_get_profile(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVa
 /* data_get_cache_dir {{{*/
 static JSValueRef 
 data_get_cache_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  return js_char_to_value(ctx, dwb.files.cachedir);
+  return js_char_to_value(ctx, dwb.files[FILES_CACHEDIR]);
 }/*}}}*/
 
 /* data_get_config_dir {{{*/

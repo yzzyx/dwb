@@ -175,9 +175,9 @@ dwb_soup_get_host_from_request(WebKitNetworkRequest *request) {
 /* dwb_soup_save_cookies(cookies) {{{*/
 void 
 dwb_soup_save_cookies(GSList *cookies) {
-  int fd = open(dwb.files.cookies, 0);
+  int fd = open(dwb.files[FILES_COOKIES], 0);
   flock(fd, LOCK_EX);
-  SoupCookieJar *jar = soup_cookie_jar_text_new(dwb.files.cookies, false);
+  SoupCookieJar *jar = soup_cookie_jar_text_new(dwb.files[FILES_COOKIES], false);
   for (GSList *l=cookies; l; l=l->next) {
     soup_cookie_jar_add_cookie(jar, soup_cookie_copy(l->data));
   }
@@ -236,7 +236,7 @@ dwb_soup_get_cookie_store_policy(const char *policy) {
 /*dwb_soup_cookie_changed_cb {{{*/
 static void 
 dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new, gpointer *p) {
-  //SoupCookieJar *j = soup_cookie_jar_text_new(dwb.files.cookies, false);
+  //SoupCookieJar *j = soup_cookie_jar_text_new(dwb.files[FILES_COOKIES], false);
   if (old) {
     soup_cookie_jar_delete_cookie(_persJar, old);
   }
@@ -257,10 +257,10 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
 
 void
 dwb_soup_sync_cookies() {
-  int fd = open(dwb.files.cookies, 0);
+  int fd = open(dwb.files[FILES_COOKIES], 0);
   flock(fd, LOCK_EX);
   GSList *all_cookies = soup_cookie_jar_all_cookies(_persJar);
-  SoupCookieJar *j = soup_cookie_jar_text_new(dwb.files.cookies, false);
+  SoupCookieJar *j = soup_cookie_jar_text_new(dwb.files[FILES_COOKIES], false);
   for (GSList *l = all_cookies; l; l=l->next) {
     soup_cookie_jar_add_cookie(j, l->data);
   }
@@ -285,7 +285,7 @@ dwb_soup_init_cookies(SoupSession *s) {
   //_persJar = soup_cookie_jar_new();
   _persJar = soup_cookie_jar_new();
   dwb_soup_set_cookie_accept_policy(GET_CHAR("cookies-accept-policy"));
-  SoupCookieJar *old_cookies = soup_cookie_jar_text_new(dwb.files.cookies, true);
+  SoupCookieJar *old_cookies = soup_cookie_jar_text_new(dwb.files[FILES_COOKIES], true);
   GSList *l = soup_cookie_jar_all_cookies(old_cookies);
   for (; l; l=l->next ) {
     soup_cookie_jar_add_cookie(_jar, soup_cookie_copy(l->data)); 

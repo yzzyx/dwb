@@ -35,7 +35,7 @@ typedef struct _SessionTab {
 static char **
 session_get_groups() {
   char **groups = NULL;
-  char *content = util_get_file_content(dwb.files.session);
+  char *content = util_get_file_content(dwb.files[FILES_SESSION]);
   if (content) {
     groups = g_regex_split_simple("^g:", content, G_REGEX_MULTILINE, G_REGEX_MATCH_NOTEMPTY);
     g_free(content);
@@ -105,7 +105,7 @@ session_save_file(const char *groupname, const char *content, gboolean mark) {
   }
   if (!set) 
     g_string_append_printf(buffer, "g:%s%s\n%s", mark ? "*" : "", groupname, content);
-  util_set_file_content(dwb.files.session, buffer->str);
+  util_set_file_content(dwb.files[FILES_SESSION], buffer->str);
   g_string_free(buffer, true);
   g_free(group);
   g_strfreev(groups);
@@ -150,7 +150,7 @@ session_load_webview(GList *gl, char *uri, int last, int lock_status) {
 void
 session_list() {
   char *path = util_build_path();
-  dwb.files.session = util_check_directory(g_build_filename(path, dwb.misc.profile, "session", NULL));
+  dwb.files[FILES_SESSION] = util_check_directory(g_build_filename(path, dwb.misc.profile, "session", NULL));
   char **content = session_get_groups();
   if (content == NULL) {
     fprintf(stderr, "No sessions found for profile: %s\n", dwb.misc.profile);

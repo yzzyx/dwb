@@ -314,7 +314,7 @@ html_custom_keys_changed_cb(WebKitDOMElement *target, WebKitDOMEvent *e, gpointe
   WebKitDOMDocument *doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(target));
   WebKitDOMElement *text_area = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_area");
   char *value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(text_area));
-  util_set_file_content(dwb.files.custom_keys, value);
+  util_set_file_content(dwb.files[FILES_CUSTOM_KEYS], value);
   g_free(value);
   dwb_init_custom_keys(true);
   dwb_set_normal_message(dwb.state.fview, true, "Custom keys saved");
@@ -369,7 +369,7 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
     WebKitDOMElement *textarea = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_area");
     WebKitDOMElement *button = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_submit");
-    char *content = util_get_file_content(dwb.files.custom_keys);
+    char *content = util_get_file_content(dwb.files[FILES_CUSTOM_KEYS]);
     if (content != NULL && *content != '\0') {
       webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(textarea), content);
     }

@@ -615,7 +615,7 @@ dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request) {
   argv[i++] = (char*)uri;
   argv[i++] = NULL;
   list = g_slist_append(list, dwb_navigation_new("DWB_URI", uri));
-  list = g_slist_prepend(list, dwb_navigation_new("DWB_COOKIES", dwb.files.cookies));
+  list = g_slist_prepend(list, dwb_navigation_new("DWB_COOKIES", dwb.files[FILES_COOKIES]));
 
   char *scheme = g_uri_parse_scheme(uri);
   if (scheme) {
@@ -974,15 +974,15 @@ dwb_remove_navigation_item(GList **content, const char *line, const char *filena
 }
 void
 dwb_remove_bookmark(const char *line) {
-  dwb_remove_navigation_item(&dwb.fc.bookmarks, line, dwb.files.bookmarks);
+  dwb_remove_navigation_item(&dwb.fc.bookmarks, line, dwb.files[FILES_BOOKMARKS]);
 }
 void
 dwb_remove_download(const char *line) {
-  dwb_remove_navigation_item(&dwb.fc.downloads, line, dwb.files.bookmarks);
+  dwb_remove_navigation_item(&dwb.fc.downloads, line, dwb.files[FILES_BOOKMARKS]);
 }
 void
 dwb_remove_history(const char *line) {
-  dwb_remove_navigation_item(&dwb.fc.history, line, dwb.misc.synctimer <= 0 ? dwb.files.history : NULL);
+  dwb_remove_navigation_item(&dwb.fc.history, line, dwb.misc.synctimer <= 0 ? dwb.files[FILES_HISTORY] : NULL);
 }
 void
 dwb_remove_search_engine(const char *line) {
@@ -992,7 +992,7 @@ dwb_remove_search_engine(const char *line) {
   if (item != NULL) {
     if (item == dwb.fc.searchengines) 
       dwb.misc.default_search = dwb.fc.searchengines->next != NULL ? NAVIGATION(dwb.fc.searchengines->next)->second : NULL;
-    util_file_remove_line(dwb.files.searchengines, line);
+    util_file_remove_line(dwb.files[FILES_SEARCHENGINES], line);
     dwb_navigation_free(item->data);
     dwb.fc.searchengines = g_list_delete_link(dwb.fc.searchengines, item);
   }
@@ -1009,7 +1009,7 @@ dwb_remove_quickmark(const char *line) {
   GList *item = g_list_find_custom(dwb.fc.quickmarks, q, (GCompareFunc)util_quickmark_compare);
   dwb_quickmark_free(q);
   if (item) {
-    util_file_remove_line(dwb.files.quickmarks, line);
+    util_file_remove_line(dwb.files[FILES_QUICKMARKS], line);
     dwb.fc.quickmarks = g_list_delete_link(dwb.fc.quickmarks, item);
   }
 }/*}}}*/
@@ -1023,7 +1023,7 @@ dwb_sync_files(gpointer data) {
     Navigation *n = gl->data;
     g_string_append_printf(buffer, "%s %s\n", n->first, n->second);
   }
-  g_file_set_contents(dwb.files.history, buffer->str, -1, NULL);
+  g_file_set_contents(dwb.files[FILES_HISTORY], buffer->str, -1, NULL);
   g_string_free(buffer, true);
   dwb_soup_sync_cookies();
   return true;
@@ -1088,7 +1088,7 @@ dwb_apply_settings(WebSettings *s, const char *key, const char *value, int scope
     if (scope == SET_GLOBAL) {
       s->arg = s->arg_local;
       dwb_set_normal_message(dwb.state.fview, true, "Saved setting %s: %s", s->n.first, value);
-      dwb_save_key_value(dwb.files.settings, key, value);
+      dwb_save_key_value(dwb.files[FILES_SETTINGS], key, value);
     }
     else {
       dwb_set_normal_message(dwb.state.fview, true, "Changed %s: %s", s->n.first, s->type == BOOLEAN ? ( s->arg_local.b ? "true" : "false") : value);
@@ -1176,7 +1176,7 @@ dwb_set_key(const char *prop, char *val) {
 
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
-  dwb_save_key_value(dwb.files.keys, prop, val);
+  dwb_save_key_value(dwb.files[FILES_KEYS], prop, val);
 }/*}}}*/
 
 /* dwb_get_host(WebKitWebView *) {{{*/
@@ -1529,7 +1529,7 @@ dwb_save_searchengine(void) {
     Navigation *cn = dwb_get_search_completion_from_navigation(dwb_navigation_dup(n));
 
     dwb.fc.se_completion = g_list_append(dwb.fc.se_completion, cn);
-    util_file_add_navigation(dwb.files.searchengines, n, true, -1);
+    util_file_add_navigation(dwb.files[FILES_SEARCHENGINES], n, true, -1);
 
     dwb_set_normal_message(dwb.state.fview, true, "Searchengine saved");
     if (dwb.state.search_engine) {
@@ -1869,7 +1869,7 @@ dwb_save_quickmark(const char *key) {
     }
     dwb.fc.quickmarks = g_list_prepend(dwb.fc.quickmarks, dwb_quickmark_new(uri, title, key));
     char *text = g_strdup_printf("%s %s %s", key, uri, title);
-    util_file_add(dwb.files.quickmarks, text, true, -1);
+    util_file_add(dwb.files[FILES_QUICKMARKS], text, true, -1);
     g_free(text);
 
     dwb_set_normal_message(dwb.state.fview, true, "Added quickmark: %s - %s", key, uri);
@@ -2021,10 +2021,10 @@ dwb_new_window(const char  *uri) {
 /* dwb_test_userscript (const char *)         return: char* (alloc) or NULL {{{*/
 static char * 
 dwb_test_userscript(const char *filename) {
-  char *path = g_build_filename(dwb.files.userscripts, filename, NULL); 
+  char *path = g_build_filename(dwb.files[FILES_USERSCRIPTS], filename, NULL); 
 
   if (g_file_test(path, G_FILE_TEST_IS_REGULAR) || 
-      (g_str_has_prefix(filename, dwb.files.userscripts) && g_file_test(filename, G_FILE_TEST_IS_REGULAR) && (path = g_strdup(filename))) ) {
+      (g_str_has_prefix(filename, dwb.files[FILES_USERSCRIPTS]) && g_file_test(filename, G_FILE_TEST_IS_REGULAR) && (path = g_strdup(filename))) ) {
     return path;
   }
   else {
@@ -2651,11 +2651,11 @@ dwb_get_scripts() {
   GError *error = NULL;
   FILE *f;
 
-  if ( (dir = g_dir_open(dwb.files.userscripts, 0, NULL)) ) {
+  if ( (dir = g_dir_open(dwb.files[FILES_USERSCRIPTS], 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
       gboolean javascript = false;
       char buf[11] = {0};
-      char *path = g_build_filename(dwb.files.userscripts, filename, NULL);
+      char *path = g_build_filename(dwb.files[FILES_USERSCRIPTS], filename, NULL);
       char *realpath;
       /* ignore subdirectories */
       if (g_file_test(path, G_FILE_TEST_IS_DIR))
@@ -2855,12 +2855,15 @@ dwb_clean_up() {
   for (GList *gl = dwb.state.views; gl; gl=gl->next) {
     view_clean(gl);
   }
+  for (int i=FILES_FIRST; i<FILES_LAST; i++) {
+    g_free(dwb.files[i]);
+  }
 
   dwb_soup_end();
   adblock_end();
   domain_end();
 
-  util_rmdir(dwb.files.cachedir, true, true);
+  util_rmdir(dwb.files[FILES_CACHEDIR], true, true);
   gtk_widget_destroy(dwb.gui.window);
   scripts_end();
   return true;
@@ -2896,7 +2899,7 @@ dwb_save_keys() {
   char *content;
   gsize size;
 
-  if (!g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error)) {
+  if (!g_key_file_load_from_file(keyfile, dwb.files[FILES_KEYS], G_KEY_FILE_KEEP_COMMENTS, &error)) {
     fprintf(stderr, "No keysfile found, creating a new file.\n");
     g_clear_error(&error);
   }
@@ -2911,7 +2914,7 @@ dwb_save_keys() {
     }
   }
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
-    util_set_file_content(dwb.files.keys, content);
+    util_set_file_content(dwb.files[FILES_KEYS], content);
     g_free(content);
   }
   if (error) {
@@ -2931,7 +2934,7 @@ dwb_save_settings() {
   gsize size;
   setlocale(LC_NUMERIC, "C");
 
-  if (!g_key_file_load_from_file(keyfile, dwb.files.settings, G_KEY_FILE_KEEP_COMMENTS, &error)) {
+  if (!g_key_file_load_from_file(keyfile, dwb.files[FILES_SETTINGS], G_KEY_FILE_KEEP_COMMENTS, &error)) {
     fprintf(stderr, "No settingsfile found, creating a new file.\n");
     g_clear_error(&error);
   }
@@ -2945,7 +2948,7 @@ dwb_save_settings() {
   if (l != NULL)
     g_list_free(l);
   if ( (content = g_key_file_to_data(keyfile, &size, &error)) ) {
-    util_set_file_content(dwb.files.settings, content);
+    util_set_file_content(dwb.files[FILES_SETTINGS], content);
     g_free(content);
   }
   if (error) {
@@ -2978,8 +2981,8 @@ dwb_save_files(gboolean end_session) {
   dwb_sync_files(NULL);
   /* Save command history */
   if (! dwb.misc.private_browsing) {
-    dwb_save_list(dwb.fc.navigations, dwb.files.navigation_history, GET_INT("navigation-history-max"));
-    dwb_save_list(dwb.fc.commands, dwb.files.command_history, GET_INT("navigation-history-max"));
+    dwb_save_list(dwb.fc.navigations, dwb.files[FILES_NAVIGATION_HISTORY], GET_INT("navigation-history-max"));
+    dwb_save_list(dwb.fc.commands, dwb.files[FILES_COMMAND_HISTORY], GET_INT("navigation-history-max"));
   }
   /* save session */
   if (end_session && GET_BOOL("save-session") && dwb.state.mode != SAVE_SESSION) {
@@ -3145,7 +3148,7 @@ dwb_init_key_map() {
   dwb.keymap = NULL;
   dwb.override_keys = NULL;
 
-  g_key_file_load_from_file(keyfile, dwb.files.keys, G_KEY_FILE_KEEP_COMMENTS, &error);
+  g_key_file_load_from_file(keyfile, dwb.files[FILES_KEYS], G_KEY_FILE_KEEP_COMMENTS, &error);
   if (error) {
     fprintf(stderr, "No keyfile found: %s\nUsing default values.\n", error->message);
     g_clear_error(&error);
@@ -3191,7 +3194,7 @@ dwb_init_settings() {
   dwb.state.web_settings = webkit_web_settings_new();
   setlocale(LC_NUMERIC, "C");
 
-  g_file_get_contents(dwb.files.settings, &content, &length, &error);
+  g_file_get_contents(dwb.files[FILES_SETTINGS], &content, &length, &error);
   if (error) {
     fprintf(stderr, "No settingsfile found: %s\nUsing default values.\n", error->message);
     g_clear_error(&error);
@@ -3620,62 +3623,62 @@ dwb_init_files() {
 
 
   cachedir = g_build_filename(g_get_user_cache_dir(), dwb.misc.name, NULL);
-  dwb.files.cachedir = util_check_directory(cachedir);
+  dwb.files[FILES_CACHEDIR] = util_check_directory(cachedir);
 
-  dwb.files.bookmarks       = g_build_filename(profile_path, "bookmarks",     NULL);
-  dwb_check_create(dwb.files.bookmarks);
-  dwb.files.history         = g_build_filename(profile_path, "history",       NULL);
-  dwb_check_create(dwb.files.history);
-  dwb.files.quickmarks      = g_build_filename(profile_path, "quickmarks",    NULL);
-  dwb_check_create(dwb.files.quickmarks);
-  dwb.files.session         = g_build_filename(profile_path, "session",       NULL);
-  dwb_check_create(dwb.files.session);
-  dwb.files.navigation_history = g_build_filename(profile_path, "navigate.history",       NULL);
-  dwb_check_create(dwb.files.navigation_history);
-  dwb.files.command_history = g_build_filename(profile_path, "commands.history",       NULL);
-  dwb_check_create(dwb.files.command_history);
-  dwb.files.searchengines   = g_build_filename(path, "searchengines", NULL);
-  dwb_check_create(dwb.files.searchengines);
-  dwb.files.keys            = g_build_filename(path, "keys",          NULL);
-  dwb.files.settings        = g_build_filename(path, "settings",      NULL);
-  dwb.files.mimetypes       = g_build_filename(path, "mimetypes",      NULL);
-  dwb_check_create(dwb.files.mimetypes);
-  dwb.files.cookies         = g_build_filename(profile_path, "cookies",       NULL);
-  dwb_check_create(dwb.files.cookies);
-  dwb.files.cookies_allow   = g_build_filename(profile_path, "cookies.allow", NULL);
-  dwb_check_create(dwb.files.cookies_allow);
-  dwb.files.cookies_session_allow   = g_build_filename(profile_path, "cookies_session.allow", NULL);
-  dwb_check_create(dwb.files.cookies_session_allow);
-  dwb.files.scripts_allow   = g_build_filename(profile_path, "scripts.allow",      NULL);
-  dwb_check_create(dwb.files.scripts_allow);
-  dwb.files.plugins_allow   = g_build_filename(profile_path, "plugins.allow",      NULL);
-  dwb_check_create(dwb.files.plugins_allow);
-  dwb.files.custom_keys     = g_build_filename(profile_path, "custom_keys",      NULL);
-  dwb_check_create(dwb.files.custom_keys);
+  dwb.files[FILES_BOOKMARKS]       = g_build_filename(profile_path, "bookmarks",     NULL);
+  dwb_check_create(dwb.files[FILES_BOOKMARKS]);
+  dwb.files[FILES_HISTORY]         = g_build_filename(profile_path, "history",       NULL);
+  dwb_check_create(dwb.files[FILES_HISTORY]);
+  dwb.files[FILES_QUICKMARKS]      = g_build_filename(profile_path, "quickmarks",    NULL);
+  dwb_check_create(dwb.files[FILES_QUICKMARKS]);
+  dwb.files[FILES_SESSION]         = g_build_filename(profile_path, "session",       NULL);
+  dwb_check_create(dwb.files[FILES_SESSION]);
+  dwb.files[FILES_NAVIGATION_HISTORY] = g_build_filename(profile_path, "navigate.history",       NULL);
+  dwb_check_create(dwb.files[FILES_NAVIGATION_HISTORY]);
+  dwb.files[FILES_COMMAND_HISTORY] = g_build_filename(profile_path, "commands.history",       NULL);
+  dwb_check_create(dwb.files[FILES_COMMAND_HISTORY]);
+  dwb.files[FILES_SEARCHENGINES]   = g_build_filename(path, "searchengines", NULL);
+  dwb_check_create(dwb.files[FILES_SEARCHENGINES]);
+  dwb.files[FILES_KEYS]            = g_build_filename(path, "keys",          NULL);
+  dwb.files[FILES_SETTINGS]        = g_build_filename(path, "settings",      NULL);
+  dwb.files[FILES_MIMETYPES]       = g_build_filename(path, "mimetypes",      NULL);
+  dwb_check_create(dwb.files[FILES_MIMETYPES]);
+  dwb.files[FILES_COOKIES]         = g_build_filename(profile_path, "cookies",       NULL);
+  dwb_check_create(dwb.files[FILES_COOKIES]);
+  dwb.files[FILES_COOKIES_ALLOW]   = g_build_filename(profile_path, "cookies.allow", NULL);
+  dwb_check_create(dwb.files[FILES_COOKIES_ALLOW]);
+  dwb.files[FILES_COOKIES_SESSION_ALLOW]   = g_build_filename(profile_path, "cookies_session.allow", NULL);
+  dwb_check_create(dwb.files[FILES_COOKIES_SESSION_ALLOW]);
+  dwb.files[FILES_SCRIPTS_ALLOW]   = g_build_filename(profile_path, "scripts.allow",      NULL);
+  dwb_check_create(dwb.files[FILES_SCRIPTS_ALLOW]);
+  dwb.files[FILES_PLUGINS_ALLOW]   = g_build_filename(profile_path, "plugins.allow",      NULL);
+  dwb_check_create(dwb.files[FILES_PLUGINS_ALLOW]);
+  dwb.files[FILES_CUSTOM_KEYS]     = g_build_filename(profile_path, "custom_keys",      NULL);
+  dwb_check_create(dwb.files[FILES_CUSTOM_KEYS]);
 
   userscripts               = g_build_filename(path, "userscripts",   NULL);
-  dwb.files.userscripts     = util_check_directory(userscripts);
+  dwb.files[FILES_USERSCRIPTS]     = util_check_directory(userscripts);
 
-  dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files.bookmarks, (Content_Func)dwb_navigation_new_from_line); 
-  dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files.history, (Content_Func)dwb_navigation_new_from_line); 
-  dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files.quickmarks, (Content_Func)dwb_quickmark_new_from_line); 
-  dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files.searchengines, (Content_Func)dwb_navigation_new_from_line); 
-  dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files.searchengines, (Content_Func)dwb_get_search_completion);
-  dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files.mimetypes, (Content_Func)dwb_navigation_new_from_line);
-  dwb.fc.navigations = dwb_init_file_content(dwb.fc.navigations, dwb.files.navigation_history, (Content_Func)dwb_return);
-  dwb.fc.commands = dwb_init_file_content(dwb.fc.commands, dwb.files.command_history, (Content_Func)dwb_return);
+  dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files[FILES_BOOKMARKS], (Content_Func)dwb_navigation_new_from_line); 
+  dwb.fc.history = dwb_init_file_content(dwb.fc.history, dwb.files[FILES_HISTORY], (Content_Func)dwb_navigation_new_from_line); 
+  dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files[FILES_QUICKMARKS], (Content_Func)dwb_quickmark_new_from_line); 
+  dwb.fc.searchengines = dwb_init_file_content(dwb.fc.searchengines, dwb.files[FILES_SEARCHENGINES], (Content_Func)dwb_navigation_new_from_line); 
+  dwb.fc.se_completion = dwb_init_file_content(dwb.fc.se_completion, dwb.files[FILES_SEARCHENGINES], (Content_Func)dwb_get_search_completion);
+  dwb.fc.mimetypes = dwb_init_file_content(dwb.fc.mimetypes, dwb.files[FILES_MIMETYPES], (Content_Func)dwb_navigation_new_from_line);
+  dwb.fc.navigations = dwb_init_file_content(dwb.fc.navigations, dwb.files[FILES_NAVIGATION_HISTORY], (Content_Func)dwb_return);
+  dwb.fc.commands = dwb_init_file_content(dwb.fc.commands, dwb.files[FILES_COMMAND_HISTORY], (Content_Func)dwb_return);
   dwb.fc.tmp_scripts = NULL;
   dwb.fc.tmp_plugins = NULL;
   dwb.fc.downloads   = NULL;
-  dwb.fc.pers_scripts = dwb_get_simple_list(NULL, dwb.files.scripts_allow);
-  dwb.fc.pers_plugins = dwb_get_simple_list(NULL, dwb.files.plugins_allow);
+  dwb.fc.pers_scripts = dwb_get_simple_list(NULL, dwb.files[FILES_SCRIPTS_ALLOW]);
+  dwb.fc.pers_plugins = dwb_get_simple_list(NULL, dwb.files[FILES_PLUGINS_ALLOW]);
 
   if (g_list_last(dwb.fc.searchengines)) 
     dwb.misc.default_search = ((Navigation*)dwb.fc.searchengines->data)->second;
   else 
     dwb.misc.default_search = NULL;
-  dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files.cookies_allow, (Content_Func)dwb_return);
-  dwb.fc.cookies_session_allow = dwb_init_file_content(dwb.fc.cookies_session_allow, dwb.files.cookies_session_allow, (Content_Func)dwb_return);
+  dwb.fc.cookies_allow = dwb_init_file_content(dwb.fc.cookies_allow, dwb.files[FILES_COOKIES_ALLOW], (Content_Func)dwb_return);
+  dwb.fc.cookies_session_allow = dwb_init_file_content(dwb.fc.cookies_session_allow, dwb.files[FILES_COOKIES_SESSION_ALLOW], (Content_Func)dwb_return);
 
   g_free(path);
   g_free(profile_path);
@@ -3743,7 +3746,7 @@ void
 dwb_init_custom_keys(gboolean reload) {
   if (reload)
     dwb_free_custom_keys();
-  char **lines = util_get_lines(dwb.files.custom_keys);
+  char **lines = util_get_lines(dwb.files[FILES_CUSTOM_KEYS]);
   if (lines == NULL)
     return;
   const char *current_line;

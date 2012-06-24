@@ -668,7 +668,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
           && !g_str_has_prefix(uri, "dwb:") 
           && (dwb_prepend_navigation(gl, &dwb.fc.history) == STATUS_OK)
           && dwb.misc.sync_interval <= 0) {
-        util_file_add_navigation(dwb.files.history, dwb.fc.history->data, false, dwb.misc.history_length);
+        util_file_add_navigation(dwb.files[FILES_HISTORY], dwb.fc.history->data, false, dwb.misc.history_length);
       }
       dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts_onload, false);
       if (dwb.state.auto_insert_mode) 

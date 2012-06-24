@@ -204,9 +204,9 @@ DwbStatus
 commands_allow_cookie(KeyMap *km, Arg *arg) {
   switch (arg->n) {
     case COOKIE_ALLOW_PERSISTENT: 
-      return dwb_soup_allow_cookie(&dwb.fc.cookies_allow, dwb.files.cookies_allow, arg->n);
+      return dwb_soup_allow_cookie(&dwb.fc.cookies_allow, dwb.files[FILES_COOKIES_ALLOW], arg->n);
     case COOKIE_ALLOW_SESSION:
-      return dwb_soup_allow_cookie(&dwb.fc.cookies_session_allow, dwb.files.cookies_session_allow, arg->n);
+      return dwb_soup_allow_cookie(&dwb.fc.cookies_session_allow, dwb.files[FILES_COOKIES_SESSION_ALLOW], arg->n);
     case COOKIE_ALLOW_SESSION_TMP:
       dwb_soup_allow_cookie_tmp();
       break;
@@ -222,7 +222,7 @@ DwbStatus
 commands_bookmark(KeyMap *km, Arg *arg) {
   gboolean noerror = STATUS_ERROR;
   if ( (noerror = dwb_prepend_navigation(dwb.state.fview, &dwb.fc.bookmarks)) == STATUS_OK) {
-    util_file_add_navigation(dwb.files.bookmarks, dwb.fc.bookmarks->data, true, -1);
+    util_file_add_navigation(dwb.files[FILES_BOOKMARKS], dwb.fc.bookmarks->data, true, -1);
     dwb.fc.bookmarks = g_list_sort(dwb.fc.bookmarks, (GCompareFunc)util_navigation_compare_first);
     dwb_set_normal_message(dwb.state.fview, true, "Saved bookmark: %s", webkit_web_view_get_uri(CURRENT_WEBVIEW()));
   }
@@ -525,14 +525,14 @@ commands_toggle(Arg *arg, const char *filename, GList **tmp, GList **pers, const
 
 DwbStatus 
 commands_toggle_plugin_blocker(KeyMap *km, Arg *arg) {
-  commands_toggle(arg, dwb.files.plugins_allow, &dwb.fc.tmp_plugins, &dwb.fc.pers_plugins, "Plugins");
+  commands_toggle(arg, dwb.files[FILES_PLUGINS_ALLOW], &dwb.fc.tmp_plugins, &dwb.fc.pers_plugins, "Plugins");
   return STATUS_OK;
 }
 
 /* commands_toggle_scripts {{{ */
 DwbStatus 
 commands_toggle_scripts(KeyMap *km, Arg *arg) {
-  commands_toggle(arg, dwb.files.scripts_allow, &dwb.fc.tmp_scripts,  &dwb.fc.pers_scripts, "Scripts");
+  commands_toggle(arg, dwb.files[FILES_SCRIPTS_ALLOW], &dwb.fc.tmp_scripts,  &dwb.fc.pers_scripts, "Scripts");
   return STATUS_OK;
 }/*}}}*/
 
@@ -605,7 +605,7 @@ commands_execute_userscript(KeyMap *km, Arg *arg) {
     return STATUS_ERROR;
 
   if (arg->p) {
-    char *path = g_build_filename(dwb.files.userscripts, arg->p, NULL);
+    char *path = g_build_filename(dwb.files[FILES_USERSCRIPTS], arg->p, NULL);
     Arg a = { .arg = path };
     dwb_execute_user_script(km, &a);
     g_free(path);
@@ -827,7 +827,7 @@ commands_sanitize(KeyMap *km, Arg *arg) {
   if (s & SANITIZE_HISTORY) {
     dwb_free_list(dwb.fc.history, (void_func)dwb_navigation_free);
     dwb.fc.history = NULL;
-    remove(dwb.files.history);
+    remove(dwb.files[FILES_HISTORY]);
   }
   if (s & (SANITIZE_HISTORY | SANITIZE_CACHE)) {
     for (GList *gl = dwb.state.views; gl; gl=gl->next) {
@@ -836,7 +836,7 @@ commands_sanitize(KeyMap *km, Arg *arg) {
     }
   }
   if (s & SANITIZE_COOKIES) {
-    remove(dwb.files.cookies);
+    remove(dwb.files[FILES_COOKIES]);
   }
   if (s & (SANITIZE_CACHE | SANITIZE_COOKIES)) {
     dwb_soup_clear_cookies();
@@ -845,7 +845,7 @@ commands_sanitize(KeyMap *km, Arg *arg) {
     session_clear_session();
   }
   if (s & (SANITIZE_ALLSESSIONS)) {
-    remove(dwb.files.session);
+    remove(dwb.files[FILES_SESSION]);
   }
   dwb_set_normal_message(dwb.state.fview, true, "Sanitized %s", arg->p ? arg->p : "all");
   return STATUS_OK;
