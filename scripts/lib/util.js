@@ -11,4 +11,14 @@
     }
   });
   Object.freeze(util);
+  if (Object.prototype.forEach === undefined) {
+    Object.defineProperty(Object.prototype, "forEach", { 
+      value : function (callback) {
+        var key;
+        for (key in this) {
+          callback(key, this[key], this); 
+        }
+      }
+    });
+  }
 })();
