@@ -52,14 +52,11 @@ static void
 plugins_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) {
   WebKitDOMElement *e = g_object_get_data((gpointer)element, "dwb-plugin-element");
   ALLOWED(gl) = g_slist_append(ALLOWED(gl), e);
-  WebKitDOMNode *el = WEBKIT_DOM_NODE(webkit_dom_event_get_target(event));
-  WebKitDOMNode *parent = webkit_dom_node_get_parent_node(el);
+  WebKitDOMNode *parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(element));
   WebKitDOMNode *child = webkit_dom_node_get_first_child(WEBKIT_DOM_NODE(element));
   webkit_dom_node_remove_child(WEBKIT_DOM_NODE(parent), child, NULL);
   webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
   webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(e), NULL);
-  webkit_dom_event_target_remove_event_listener(WEBKIT_DOM_EVENT_TARGET(element), "click", G_CALLBACK(plugins_onclick_cb), true);
-  g_object_unref(el);
   g_object_unref(parent);
 }
 
@@ -96,7 +93,7 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(div), 
         "<div style='display:table-cell;vertical-align:middle;text-align:center;color:#fff;background:#000;border:1px solid #666;font:11px monospace bold'>click to enable flash</div>", NULL);
 
-    char *new_style = g_strdup_printf("position:%s;width:%dpx;height:%dpx;top:%s;left:%s;display:table;", position, w, h, top, left);
+    char *new_style = g_strdup_printf("position:%s;width:%dpx;height:%dpx;top:%s;left:%s;display:table;z-index:1000000;", position, w, h, top, left);
     webkit_dom_element_set_attribute(div, "style", new_style, NULL);
     g_free(new_style);
 
