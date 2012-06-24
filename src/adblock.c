@@ -74,8 +74,6 @@ typedef struct _AdblockElementHider {
 } AdblockElementHider;
 /*}}}*/
 
-static JSValueRef adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception);
-
 /* Static variables {{{*/
 static GPtrArray *_simple_rules;
 static GPtrArray *_simple_exceptions;
@@ -367,112 +365,22 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
 
 
 /* LOAD_CALLBACKS {{{*/
-/* adblock_js_callback {{{*/
-static JSValueRef 
-adblock_js_callback(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
-  if (argc != 1 || ! JSValueIsObject(ctx, argv[0]))
-    return JSValueMakeBoolean(ctx, false);
-  char *tagname = NULL;
-  char *baseuri = NULL;
-  char *tmpuri = NULL;
-  char *rel = NULL; 
-  char *type = NULL;
-  JSValueRef exc = NULL;
-  AdblockAttribute attributes = AA_SUBDOCUMENT;
-
-  JSObjectRef event = JSValueToObject(ctx, argv[0], &exc);
-  if (exc != NULL)
-    return NULL;
-
-  JSObjectRef srcElement = js_get_object_property(ctx, event, "srcElement"); 
-  if (srcElement == NULL)
-    return JSValueMakeBoolean(ctx, false);
-  baseuri = js_get_string_property(ctx, srcElement, "baseURI");
-  if (baseuri == NULL)
-    goto error_out;
-  tmpuri = js_get_string_property(ctx, event, "url");
-  if (tmpuri == NULL)
-    goto error_out;
-
-
-  tagname = js_get_string_property(ctx, srcElement, "tagName");
-  if (!g_strcmp0(tagname, "IMG"))
-    attributes |= AA_IMAGE;
-  else if (!g_strcmp0(tagname, "SCRIPT"))
-    attributes |= AA_SCRIPT;
-  else if (!g_strcmp0(tagname, "LINK")  ) {
-    rel  = js_get_string_property(ctx, srcElement, "rel");
-    type  = js_get_string_property(ctx, srcElement, "type");
-    if (!g_strcmp0(rel, "stylesheet") || !g_strcmp0(type, "text/css")) {
-      attributes |= AA_STYLESHEET;
-    }
-    g_free(rel);
-    g_free(type);
-  }
-  else if (!g_strcmp0(tagname, "OBJECT") || ! g_strcmp0(tagname, "EMBED")) {
-    attributes |= AA_OBJECT;
-  }
-
-  if (adblock_prepare_match(tmpuri, baseuri, attributes)) {
-    JSObjectRef prevent = js_get_object_property(ctx, event, "preventDefault");
-    if (prevent) {
-      JSObjectCallAsFunction(ctx, prevent, event, 0, NULL, NULL);
-    }
-  }
-error_out:
-  if (tagname) g_free(tagname);
-  if (baseuri) g_free(baseuri);
-  if (tmpuri) g_free(tmpuri);
-  return NULL;
-}/*}}}*/
-
-/* js_create_callback {{{*/
-static void
-adblock_create_js_callback(WebKitWebFrame *frame, JSObjectCallAsFunctionCallback function, int attr) {
-  JSContextRef ctx = webkit_web_frame_get_global_context(frame);
-  JSObjectRef globalObject = JSContextGetGlobalObject(ctx);
-  JSObjectRef newcall = JSObjectMakeFunctionWithCallback(ctx, NULL, function);
-  JSValueRef val = js_get_object_property(ctx, globalObject, "addEventListener");
-  if (val) {
-    JSStringRef beforeLoadString = JSStringCreateWithUTF8CString("beforeload");
-    JSValueRef values[3] = { JSValueMakeString(ctx, beforeLoadString), newcall, JSValueMakeBoolean(ctx, true), };
-    JSObjectCallAsFunction(ctx, JSValueToObject(ctx, val, NULL), globalObject, 3,  values, NULL);
-    JSStringRelease(beforeLoadString);
-  }
-}/*}}}*/
-
-/* adblock_frame_load_committed_cb {{{*/
-static void 
-adblock_frame_load_committed_cb(WebKitWebFrame *frame, GList *gl) {
-  adblock_create_js_callback(frame, (JSObjectCallAsFunctionCallback)adblock_js_callback, AA_SUBDOCUMENT);
-}/*}}}*/
-
-static void 
-adblock_frame_load_status_cb(WebKitWebFrame *frame, GParamSpec *p, GList *gl) {
-  WebKitLoadStatus status = webkit_web_frame_get_load_status(frame);
-  if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
-    adblock_apply_element_hider(frame, gl);
-  }
-}
-
-/* adblock_frame_created_cb {{{*/
-void 
-adblock_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  g_signal_connect(frame, "load-committed", G_CALLBACK(adblock_frame_load_committed_cb), gl);
-  g_signal_connect(frame, "notify::load-status", G_CALLBACK(adblock_frame_load_status_cb), gl);
-}/*}}}*/
 
 /* adblock_before_load_cb  (domcallback) {{{*/
 static gboolean
-adblock_before_load_cb(WebKitDOMElement *win, WebKitDOMEvent *event, GList *gl) {
+adblock_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl) {
   WebKitDOMElement *src = (void*)webkit_dom_event_get_src_element(event);
   char *tagname = webkit_dom_element_get_tag_name(src);
   const char *url = NULL;
-  AdblockAttribute attributes = AA_DOCUMENT;
+
   gboolean ret = false;
 
-  WebKitDOMDocument *doc = webkit_dom_dom_window_get_document(WEBKIT_DOM_DOM_WINDOW(win));
+  WebKitDOMDocument *doc = webkit_dom_dom_window_get_document(win);
   char *baseURI = webkit_dom_document_get_document_uri(doc);
+
+  WebKitDOMDocument *main_doc = webkit_web_view_get_dom_document(WEBVIEW(gl));
+  WebKitDOMDOMWindow *main_win = webkit_dom_document_get_default_view(main_doc);
+  AdblockAttribute attributes = win == main_win ? AA_DOCUMENT : AA_SUBDOCUMENT;
 
   if (webkit_dom_element_has_attribute(src, "src")) 
     url = webkit_dom_element_get_attribute(src, "src");
@@ -511,6 +419,22 @@ error_out:
   return ret;
 }/*}}}*/
 
+static void 
+adblock_frame_load_status_cb(WebKitWebFrame *frame, GParamSpec *p, GList *gl) {
+  WebKitLoadStatus status = webkit_web_frame_get_load_status(frame);
+  if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
+    adblock_apply_element_hider(frame, gl);
+  }
+  else if (status == WEBKIT_LOAD_COMMITTED) {
+    dwb_dom_add_frame_listener(frame, "beforeload", G_CALLBACK(adblock_before_load_cb), true, gl);
+  }
+}
+
+/* adblock_frame_created_cb {{{*/
+void 
+adblock_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
+  g_signal_connect(frame, "notify::load-status", G_CALLBACK(adblock_frame_load_status_cb), gl);
+}/*}}}*/
 /* adblock_resource_request_cb {{{*/
 static void 
 adblock_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame,
@@ -564,7 +488,6 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   else if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) {
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
     adblock_apply_element_hider(frame, gl);
-    /* Get hostname and base_domain */
   }
 }/*}}}*//*}}}*/
 

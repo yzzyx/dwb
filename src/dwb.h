@@ -931,6 +931,7 @@ const char * dwb_prompt(gboolean visibility, char *prompt, ...);
 
 gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 char * dwb_get_raw_data(GList *gl);
+gboolean dwb_dom_add_frame_listener(WebKitWebFrame *frame, const char *signal, GCallback callback, gboolean bubble, GList *gl);
 
 void dwb_free_list(GList *list, void (*func)(void*));
 void dwb_init(void);

@@ -21,7 +21,6 @@
 #include "view.h"
 
 #define ALLOWED(g)   (VIEW(g)->status->allowed_plugins)
-#define PLUGIN_IMAGE_SIZE    "48px"
 
 Plugins *
 plugins_new() {
@@ -59,18 +58,12 @@ plugins_onclick_cb(WebKitDOMElement *element, WebKitDOMEvent *event, GList *gl) 
   webkit_dom_node_remove_child(WEBKIT_DOM_NODE(parent), child, NULL);
   webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
   webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(e), NULL);
-  char *display_value = (char*)g_object_get_data(G_OBJECT(e), "dwb-plugin-display");
-  if (display_value != NULL) {
-    char *display = g_strdup_printf("display:%s;", display_value);
-    webkit_dom_element_set_attribute(e, "style", display, NULL);
-    g_free(display);
-    g_free(display_value);
-  }
+  webkit_dom_event_target_remove_event_listener(WEBKIT_DOM_EVENT_TARGET(element), "click", G_CALLBACK(plugins_onclick_cb), true);
   g_object_unref(el);
   g_object_unref(parent);
 }
 
-static char *
+void
 plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
   WebKitDOMNode *parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(element));
   View *v = VIEW(gl);
@@ -86,12 +79,11 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     char *top = webkit_dom_css_style_declaration_get_property_value(style, "top");
     char *left = webkit_dom_css_style_declaration_get_property_value(style, "left");
     char *position = webkit_dom_css_style_declaration_get_property_value(style, "position");
-    char *display = webkit_dom_css_style_declaration_get_property_value(style, "display");
     int w, h;
-    if (sscanf(width, "%dpx", &w) == 1 && w<48) 
-      width = PLUGIN_IMAGE_SIZE;
-    if (sscanf(height, "%dpx", &h) == 1 && h<48) 
-      height = PLUGIN_IMAGE_SIZE;
+    if (sscanf(width, "%dpx", &w) == 1 && w<72) 
+      w = 72;
+    if (sscanf(height, "%dpx", &h) == 1 && h<24) 
+      h = 24;
       
 
     if (v->plugins->max <= v->plugins->created) {
@@ -102,27 +94,25 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     else 
       div = g_slist_nth_data(v->plugins->clicks, v->plugins->created);
     webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(div), 
-        "<div style='display:table-cell;vertical-align:middle;text-align:center;color:#fff;background:#000;border:1px solid #666;font:11px monospace bold'>click to enable</div>", NULL);
+        "<div style='display:table-cell;vertical-align:middle;text-align:center;color:#fff;background:#000;border:1px solid #666;font:11px monospace bold'>click to enable flash</div>", NULL);
 
-    char *new_style = g_strdup_printf("position:%s;width:%s; height:%s; top: %s; left: %s;display:table;", position, width, height, top, left);
+    char *new_style = g_strdup_printf("position:%s;width:%dpx;height:%dpx;top:%s;left:%s;display:table;", position, w, h, top, left);
     webkit_dom_element_set_attribute(div, "style", new_style, NULL);
     g_free(new_style);
 
     webkit_dom_element_set_attribute(div, "onclick", "return", NULL);
 
+    g_object_set_data((gpointer)div, "dwb-plugin-element", element);
+
     webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(element), NULL);
     webkit_dom_node_append_child(parent, WEBKIT_DOM_NODE(div), NULL);
     v->plugins->elements = g_slist_prepend(v->plugins->elements, element);
 
-    //* at least hide element if default behaviour cannot be prevented */
-    g_object_set_data((gpointer)div, "dwb-plugin-element", element);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(div), "click", G_CALLBACK(plugins_onclick_cb), true, gl);
     g_object_unref(style);
     g_object_unref(parent);
     v->plugins->created++;
-    return display;
   }
-  return NULL;
 }
 static gboolean
 plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl) {
@@ -144,7 +134,6 @@ plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl
   g_free(type);
   return true;
 }
-
 static void 
 plugins_remove_all(GList *gl) {
   if (ALLOWED(gl) != NULL) {
@@ -162,16 +151,21 @@ plugins_remove_all(GList *gl) {
   }
 }
 
+static gboolean
+plugins_before_unload_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl) {
+  plugins_remove_all(gl);
+  return true;
+}
+
+
 void
 plugins_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(wv);
-  if (status == WEBKIT_LOAD_PROVISIONAL) {
-    plugins_remove_all(gl);
-  }
-  else if (status == WEBKIT_LOAD_COMMITTED) {
+  if (status == WEBKIT_LOAD_COMMITTED) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
     WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeload", G_CALLBACK(plugins_before_load_cb), true, gl);
+    webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeunload", G_CALLBACK(plugins_before_unload_cb), true, gl);
   }
 }
 
@@ -189,25 +183,7 @@ plugins_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
 
 void 
 plugins_frame_load_cb(WebKitWebFrame *frame, GParamSpec *p, GList *gl) {
-  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(WEBVIEW(gl));
-  const char *src = webkit_web_frame_get_uri(frame);
-  if (g_strcmp0(src, "about:blank")) {
-    /* We have to find the correct frame, but there is no access from the web_frame
-     * to the Htmlelement */
-    WebKitDOMNodeList *frames = webkit_dom_document_query_selector_all(doc, "iframe, frame", NULL);
-    for (guint i=0; i<webkit_dom_node_list_get_length(frames); i++) {
-      WebKitDOMHTMLIFrameElement *iframe = (void*)webkit_dom_node_list_item(frames, i);
-      char *iframesrc = webkit_dom_html_iframe_element_get_src(iframe);
-      if (!g_strcmp0(src, iframesrc)) {
-        WebKitDOMDOMWindow *win = webkit_dom_html_iframe_element_get_content_window(iframe);
-        webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeload", G_CALLBACK(plugins_before_load_cb), true, gl);
-      }
-      g_object_unref(iframe);
-      g_free(iframesrc);
-    }
-    g_object_unref(frames);
-  }
-
+  dwb_dom_add_frame_listener(frame, "beforeload", G_CALLBACK(plugins_before_load_cb), true, gl);
 }
 
 void

@@ -813,6 +813,40 @@ dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error) {
   return false;
 }/*}}}*/
 
+
+gboolean
+dwb_dom_add_frame_listener(WebKitWebFrame *frame, const char *signal, GCallback callback, gboolean bubble, GList *gl) {
+  WebKitWebView *wv = webkit_web_frame_get_web_view(frame);
+  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
+  const char *src = webkit_web_frame_get_uri(frame);
+  char *framesrc;
+  gboolean ret = false;
+  WebKitDOMDOMWindow *win;
+  if (g_strcmp0(src, "about:blank")) {
+    /* We have to find the correct frame, but there is no access from the web_frame
+     * to the Htmlelement */
+    WebKitDOMNodeList *frames = webkit_dom_document_query_selector_all(doc, "iframe, frame", NULL);
+    for (guint i=0; i<webkit_dom_node_list_get_length(frames) && ret == false; i++) {
+      WebKitDOMNode *node = webkit_dom_node_list_item(frames, i);
+      char *tagname = webkit_dom_node_get_node_name(node);
+      if (!g_ascii_strcasecmp(tagname, "iframe")) {
+        framesrc = webkit_dom_html_iframe_element_get_src(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
+        win = webkit_dom_html_iframe_element_get_content_window(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
+      }
+      else {
+        framesrc = webkit_dom_html_frame_element_get_src(WEBKIT_DOM_HTML_FRAME_ELEMENT(node));
+        win = webkit_dom_html_frame_element_get_content_window(WEBKIT_DOM_HTML_FRAME_ELEMENT(node));
+      }
+      if (!g_strcmp0(src, framesrc)) {
+        ret = webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), signal, callback, true, gl);
+      }
+      g_free(framesrc);
+    }
+    g_object_unref(frames);
+  }
+  return ret;
+}
+
 /* dwb_get_editable(WebKitDOMElement *) {{{*/
 static gboolean
 dwb_get_editable(WebKitDOMElement *element) {
