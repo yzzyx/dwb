@@ -1418,8 +1418,8 @@ and 'DWB_REFERER' available which can be used in a script, for example:
 #!/bin/sh
 
 case ${DWB_SCHEME} in
-  mailto) xterm -\(hye "mutt ${DWB_URI}";;
-  ftp) xterm \(hye "ncftp ${DWB_URI}";;
+  mailto) xterm -e "mutt ${DWB_URI}";;
+  ftp) xterm -e "ncftp ${DWB_URI}";;
   *) xdg-open ${DWB_URI}
 esac
 --------
