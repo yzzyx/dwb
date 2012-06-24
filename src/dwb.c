@@ -3467,13 +3467,13 @@ dwb_init_gui() {
 
   /* Main */
 #if _HAS_GTK3 
-  dwb.gui.vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+  dwb.gui.vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   dwb.gui.topbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
   gtk_box_set_homogeneous(GTK_BOX(dwb.gui.topbox), true);
   dwb.gui.mainbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
   gtk_box_set_homogeneous(GTK_BOX(dwb.gui.mainbox), true);
 #else
-  dwb.gui.vbox = gtk_vbox_new(false, 1);
+  dwb.gui.vbox = gtk_vbox_new(false, 0);
   dwb.gui.topbox = gtk_hbox_new(true, 1);
   dwb.gui.mainbox = gtk_hbox_new(true, 1);
 #endif
