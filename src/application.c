@@ -156,6 +156,9 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     g_application_hold(app);
     return true;
   }
+  char *appid = g_strconcat("org.bitbucket.dwb.", dwb.misc.profile, NULL);
+  g_application_set_application_id(app, appid);
+  g_free(appid);
 
   argc_remain = g_strv_length(*argv);
 
@@ -221,7 +224,7 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     }
     else {
       path = util_build_path();
-      unififo = g_build_filename(path, "dwb-uni.fifo", NULL);
+      unififo = g_build_filename(path, dwb.misc.profile, "dwb-uni.fifo", NULL);
       g_free(path);
       if (! g_file_test(unififo, G_FILE_TEST_EXISTS)) {
         mkfifo(unififo, 0600);
