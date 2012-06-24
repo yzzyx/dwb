@@ -247,11 +247,12 @@ util_get_directory_content(GString *buffer, const char *dirname, const char *ext
   GDir *dir;
   char *content;
   GError *error = NULL;
-  char *filename, *filepath;
+  const char *filename;
+  char *filepath;
   char *firstdot;
 
   if ( (dir = g_dir_open(dirname, 0, NULL)) ) {
-    while ( (filename = (char*)g_dir_read_name(dir)) ) {
+    while ( (filename = g_dir_read_name(dir)) ) {
       if (*filename == '.') 
         continue;
       if (extension) {

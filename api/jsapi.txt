@@ -358,6 +358,24 @@ _error_;; A javascript error object, optional as second parameter
 ****
 
 ****
+[[dirNames]]
+[float]
+==== *dirNames()* ==== 
+
+[source,javascript]
+----
+Array io.dirNames(String path)
+----
+
+Get directory entries.
+
+ :: 
+
+_path_;; A path to a directory
+_returns_;; An array with the directory names
+****
+
+****
 [[error]]
 [float]
 ==== *error()* ==== 
@@ -1318,6 +1336,24 @@ Emitted when a tab is closed
  ::
 
 _webview_;; The <<webview>> that corresponds to the tab
+****
+
+****
+[[documentLoaded]]
+[float]
+==== *documentLoaded* ==== 
+
+[source,javascript]
+----
+void callback(webview, frame) 
+----
+
+Emitted when a the dom document of an frame has loaded.
+
+ ::
+
+_webview_;; The <<webview>> that emitted the signal
+_frame_;; The frame that contains the document
 ****
 
 ****

@@ -1122,6 +1122,35 @@ io_error(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
   return JSValueMakeUndefined(ctx);
 }/*}}}*/
 
+static JSValueRef 
+io_dir_names(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  JSValueRef ret;
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("io.dirNames: missing argument."));
+    return JSValueMakeNull(ctx);
+  }
+  GDir *dir;
+  char *dir_name = js_value_to_char(ctx, argv[0], PATH_MAX, exc);
+  const char *name;
+  GSList *list = NULL;
+  if (dir_name == NULL)
+    return JSValueMakeNull(ctx);
+  if ((dir = g_dir_open(dir_name, 0, NULL)) != NULL) {
+    while ((name = g_dir_read_name(dir)) != NULL) {
+      list = g_slist_prepend(list, (gpointer)js_char_to_value(ctx, name));
+    }
+    g_dir_close(dir);
+    JSValueRef args[g_slist_length(list)];
+    int i=0;
+    for (GSList *l = list; l; l=l->next, i++) 
+      args[i] = l->data;
+    ret = JSObjectMakeArray(ctx, i, args, exc);
+  }
+  else 
+    ret = JSValueMakeNull(ctx);
+  g_free(dir_name);
+  return ret;
+}
 /* io_write {{{*/
 static JSValueRef 
 io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -1585,11 +1614,12 @@ create_global_object() {
 
   JSStaticFunction io_functions[] = { 
     { "print",     io_print,            kJSDefaultAttributes },
-    { "prompt",    io_prompt,         kJSDefaultAttributes },
+    { "prompt",    io_prompt,           kJSDefaultAttributes },
     { "read",      io_read,             kJSDefaultAttributes },
     { "write",     io_write,            kJSDefaultAttributes },
+    { "dirNames",  io_dir_names,        kJSDefaultAttributes },
     { "notify",    io_notify,           kJSDefaultAttributes },
-    { "error",     io_error,           kJSDefaultAttributes },
+    { "error",     io_error,            kJSDefaultAttributes },
     { 0,           0,           0 },
   };
   class = create_class("io", io_functions, NULL);
