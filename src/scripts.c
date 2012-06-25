@@ -1132,10 +1132,10 @@ io_dir_names(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
   GDir *dir;
   char *dir_name = js_value_to_char(ctx, argv[0], PATH_MAX, exc);
   const char *name;
-  GSList *list = NULL;
   if (dir_name == NULL)
     return JSValueMakeNull(ctx);
   if ((dir = g_dir_open(dir_name, 0, NULL)) != NULL) {
+    GSList *list = NULL;
     while ((name = g_dir_read_name(dir)) != NULL) {
       list = g_slist_prepend(list, (gpointer)js_char_to_value(ctx, name));
     }
@@ -1145,6 +1145,7 @@ io_dir_names(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
     for (GSList *l = list; l; l=l->next, i++) 
       args[i] = l->data;
     ret = JSObjectMakeArray(ctx, i, args, exc);
+    g_slist_free(list);
   }
   else 
     ret = JSValueMakeNull(ctx);
