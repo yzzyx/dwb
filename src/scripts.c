@@ -500,7 +500,13 @@ error_out:
 /* scripts_eval_key {{{*/
 DwbStatus
 scripts_eval_key(KeyMap *m, Arg *arg) {
-  JSObjectCallAsFunction(_global_context, arg->p, NULL, 0, NULL, NULL);
+  if (arg->p != NULL) {
+    JSValueRef argv[] = { js_char_to_value(_global_context, arg->p)};
+    JSObjectCallAsFunction(_global_context, arg->arg, NULL, 1, argv, NULL);
+  }
+  else {
+    JSObjectCallAsFunction(_global_context, arg->arg, NULL, 0, NULL, NULL);
+  }
   return STATUS_OK;
 }/*}}}*/
 
@@ -568,7 +574,7 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
   Key key = dwb_str_to_key(keystr);
   map->key = key.str;
   map->mod = key.mod;
-  FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, POST_SM, { .p = func, .ro = true }, EP_NONE,  {NULL} };
+  FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, POST_SM, { .arg = func }, EP_NONE,  {NULL} };
   *fmap = fm;
   map->map = fmap;
   dwb.keymap = g_list_prepend(dwb.keymap, map);
