@@ -1174,7 +1174,6 @@ io_write(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
     goto error_out;
   if ( (f = fopen(path, mode)) != NULL) {
     fputs(content, f);
-    putc(0, f);
     fclose(f);
     ret = true;
   }
