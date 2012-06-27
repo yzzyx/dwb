@@ -80,7 +80,6 @@ static Sigmap _sigmap[] = {
 };
 
 
-static JSValueRef equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
@@ -89,7 +88,6 @@ static JSValueRef wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef
 static JSValueRef wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction default_functions[] = { 
-    { "equals",          equals,             kJSDefaultAttributes },
     { "connect",         connect_object,             kJSDefaultAttributes },
     { "disconnect",      disconnect_object,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
@@ -99,7 +97,6 @@ static JSStaticFunction wv_functions[] = {
     { "history",         wv_history,             kJSDefaultAttributes },
     { "reload",          wv_reload,             kJSDefaultAttributes },
     { "inject",          wv_inject,             kJSDefaultAttributes },
-    { "equals",          equals,             kJSDefaultAttributes },
     { "connect",         connect_object,             kJSDefaultAttributes },
     { "disconnect",      disconnect_object,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
@@ -119,7 +116,6 @@ static JSStaticValue wv_values[] = {
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
   { "inject",          frame_inject,             kJSDefaultAttributes },
-  { "equals",          equals,             kJSDefaultAttributes },
   { "connect",         connect_object,             kJSDefaultAttributes },
   { "disconnect",      disconnect_object,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
@@ -137,7 +133,6 @@ static JSValueRef download_cancel(JSContextRef ctx, JSObjectRef function, JSObje
 static JSStaticFunction download_functions[] = { 
   { "start",          download_start,        kJSDefaultAttributes },
   { "cancel",         download_cancel,        kJSDefaultAttributes },
-  { "equals",          equals,             kJSDefaultAttributes },
   { "connect",         connect_object,             kJSDefaultAttributes },
   { "disconnect",      disconnect_object,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
@@ -161,6 +156,7 @@ static JSClassRef _webview_class, _frame_class, _download_class, _default_class,
 static gboolean _commandline = false;
 static JSObjectRef _arrayConstructor;
 static JSObjectRef _completion_callback;
+static GQuark ref_quark;
 
 /* MISC {{{*/
 /* uncamelize {{{*/
@@ -372,7 +368,9 @@ wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc
   }
   double steps = JSValueToNumber(ctx, argv[0], exc);
   if (steps != NAN) {
-    webkit_web_view_go_back_or_forward(JSObjectGetPrivate(this), (int)steps);
+    WebKitWebView *wv = JSObjectGetPrivate(this);
+    if (wv != NULL)
+      webkit_web_view_go_back_or_forward(wv, (int)steps);
   }
   return ret;
 }/*}}}*/
@@ -380,7 +378,9 @@ wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc
 /* wv_reload {{{*/
 static JSValueRef 
 wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  webkit_web_view_reload(JSObjectGetPrivate(this));
+  WebKitWebView *wv = JSObjectGetPrivate(this);
+  if (wv != NULL)
+    webkit_web_view_reload(wv);
   return JSValueMakeUndefined(ctx);
 }/*}}}*/
 
@@ -388,23 +388,32 @@ wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc,
 static JSValueRef 
 wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   WebKitWebView *wv = JSObjectGetPrivate(this);
-  JSContextRef wctx = webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(wv));
-  return inject(ctx, wctx, function, this, argc, argv, exc);
+  if (wv != NULL) {
+    JSContextRef wctx = webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(wv));
+    return inject(ctx, wctx, function, this, argc, argv, exc);
+  }
+  return JSValueMakeNull(ctx);
 }/*}}}*/
 /* wv_get_main_frame {{{*/
 static JSValueRef 
 wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   WebKitWebView *wv = JSObjectGetPrivate(object);
-  WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
-  return make_object(ctx, G_OBJECT(frame));
+  if (wv != NULL) {
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(wv);
+    return make_object(ctx, G_OBJECT(frame));
+  }
+  return JSValueMakeNull(ctx);
 }/*}}}*/
 
 /* wv_get_focused_frame {{{*/
 static JSValueRef 
 wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   WebKitWebView *wv = JSObjectGetPrivate(object);
-  WebKitWebFrame *frame = webkit_web_view_get_focused_frame(wv);
-  return make_object(ctx, G_OBJECT(frame));
+  if (wv != NULL) {
+    WebKitWebFrame *frame = webkit_web_view_get_focused_frame(wv);
+    return make_object(ctx, G_OBJECT(frame));
+  }
+  return JSValueMakeNull(ctx);
 }/*}}}*/
 
 /* wv_get_all_frames {{{*/
@@ -439,7 +448,10 @@ wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValue
 /* frame_get_domain {{{*/
 static JSValueRef 
 frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  SoupMessage *msg = dwb_soup_get_message(JSObjectGetPrivate(object));
+  WebKitWebFrame *frame = JSObjectGetPrivate(object);
+  if (frame == NULL)
+    return JSValueMakeNull(ctx);
+  SoupMessage *msg = dwb_soup_get_message(frame);
   if (msg == NULL)
     return JSValueMakeNull(ctx);
   SoupURI *uri = soup_message_get_uri(msg);
@@ -450,7 +462,10 @@ frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVa
 /* frame_get_host {{{*/
 static JSValueRef 
 frame_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  SoupMessage *msg = dwb_soup_get_message(JSObjectGetPrivate(object));
+  WebKitWebFrame *frame = JSObjectGetPrivate(object);
+  if (frame == NULL)
+    return JSValueMakeNull(ctx);
+  SoupMessage *msg = dwb_soup_get_message(frame);
   if (msg == NULL)
     return JSValueMakeNull(ctx);
   SoupURI *uri = soup_message_get_uri(msg);
@@ -461,8 +476,11 @@ frame_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValu
 static JSValueRef 
 frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   WebKitWebFrame *frame = JSObjectGetPrivate(this);
-  JSContextRef wctx = webkit_web_frame_get_global_context(frame);
-  return inject(ctx, wctx, function, this, argc, argv, exc);
+  if (frame != NULL) {
+    JSContextRef wctx = webkit_web_frame_get_global_context(frame);
+    return inject(ctx, wctx, function, this, argc, argv, exc);
+  }
+  return JSValueMakeNull(ctx);
 }/*}}}*/
 /*}}}*/
 
@@ -1287,6 +1305,8 @@ stop_download_notify(CallbackData *c) {
 static JSValueRef 
 download_start(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   WebKitDownload *download = JSObjectGetPrivate(this);
+  if (download == NULL)
+    return JSValueMakeBoolean(ctx, false);
   if (webkit_download_get_destination_uri(download) == NULL) {
     js_make_exception(ctx, exc, EXCEPTION("Download.start: destination == null"));
     return JSValueMakeBoolean(ctx, false);
@@ -1302,7 +1322,8 @@ download_start(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
 /* download_cancel {{{*/
 static JSValueRef 
 download_cancel(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  webkit_download_cancel(JSObjectGetPrivate(this));
+  WebKitDownload *download = JSObjectGetPrivate(this);
+  webkit_download_cancel(download);
   return JSValueMakeUndefined(ctx);
 }/*}}}*/
 /*}}}*/
@@ -1362,12 +1383,21 @@ scripts_emit(ScriptSignal *sig) {
 /* OBJECTS {{{*/
 // TODO : creating 1000000 objects leaks ~ 4MB  
 /* make_object {{{*/
+void 
+object_destroy_cb(JSObjectRef o) {
+  JSObjectSetPrivate(o, NULL);
+  JSValueUnprotect(_global_context, o);
+}
+
 static JSObjectRef 
 make_object(JSContextRef ctx, GObject *o) {
   if (o == NULL) {
     JSValueRef v = JSValueMakeNull(ctx);
     return JSValueToObject(ctx, v, NULL);
   }
+  JSObjectRef retobj = g_object_get_qdata(o, ref_quark);
+  if (retobj != NULL)
+    return retobj;
   JSClassRef class;
   if (WEBKIT_IS_WEB_VIEW(o)) 
      class = _webview_class;
@@ -1378,25 +1408,10 @@ make_object(JSContextRef ctx, GObject *o) {
   else 
     class = _default_class;
 
-  JSObjectRef retobj = JSObjectMake(ctx, class, o);
+  retobj = JSObjectMake(ctx, class, o);
+  g_object_set_qdata_full(o, ref_quark, retobj, (GDestroyNotify)object_destroy_cb);
+  JSValueProtect(_global_context, retobj);
   return retobj;
-}/*}}}*/
-
-/* equals {{{*/
-static JSValueRef 
-equals(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1) {
-    js_make_exception(ctx, exc, EXCEPTION("object.equals: missing argument."));
-    return JSValueMakeBoolean(ctx, false);
-  }
-  JSObjectRef jscomp = JSValueToObject(ctx, argv[0], exc);
-  if (jscomp == NULL) 
-    return JSValueMakeBoolean(ctx, false);
-  GObject *comp = JSObjectGetPrivate(jscomp);
-  if (comp == NULL)
-    return JSValueMakeBoolean(ctx, false);
-  GObject *o = JSObjectGetPrivate(this);
-  return JSValueMakeBoolean(ctx, o == comp);
 }/*}}}*/
 
 static gboolean 
@@ -1419,6 +1434,8 @@ connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
   if (func == NULL || !JSObjectIsFunction(ctx, func)) 
     goto error_out;
   GObject *o = JSObjectGetPrivate(this);
+  if (o == NULL)
+    return JSValueMakeNumber(ctx, -1);
   id = g_signal_connect_swapped(o, name, G_CALLBACK(connect_callback), func);
 error_out: 
   g_free(name);
@@ -1429,8 +1446,10 @@ disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size
   int id;
   if (argc > 0 && (id = JSValueToNumber(ctx, argv[0], exc)) != NAN) {
     GObject *o = JSObjectGetPrivate(this);
-    g_signal_handler_disconnect(o, id);
-    return JSValueMakeBoolean(ctx, true);
+    if (o != NULL) {
+      g_signal_handler_disconnect(o, id);
+      return JSValueMakeBoolean(ctx, true);
+    }
   }
   return JSValueMakeBoolean(ctx, false);
 }
@@ -1473,10 +1492,9 @@ set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueR
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
-  void *p = JSObjectGetPrivate(object);
-  if (p == NULL)
+  GObject *o = JSObjectGetPrivate(object);
+  if (o == NULL)
     return false;
-  GObject *o = G_OBJECT(p);
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
   if (class == NULL || !G_IS_OBJECT_CLASS(class))
     return NULL;
@@ -1526,10 +1544,9 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
   uncamelize(buf, name, '-', PROP_LENGTH);
   g_free(name);
 
-  void *p = JSObjectGetPrivate(jsobj);
-  if (p == NULL)
+  GObject *o = JSObjectGetPrivate(jsobj);
+  if (o == NULL)
     return NULL;
-  GObject *o = G_OBJECT(p);
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
   if (class == NULL || !G_IS_OBJECT_CLASS(class))
     return NULL;
@@ -1805,6 +1822,8 @@ scripts_init(gboolean force) {
       return;
   }
   dwb.state.script_completion = NULL;
+
+  ref_quark = g_quark_from_static_string("dwb_js_ref");
 
   char *dir = util_get_data_dir(LIBJS_DIR);
   if (dir != NULL) {

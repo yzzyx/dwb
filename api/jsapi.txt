@@ -728,27 +728,29 @@ webview.zoomLevel = webview.zoomLevel * 2;
 ---------------------------------
 ====
 
-Webkit objects should not be compared using +==+, since it may happen that the
-same gobject is represented by different javascript objects, instead every
-webkit object implements an equals method, all Objects derived from GObjets
-implement the following functions. 
+All Objects derived from GObjets implement the following functions. 
 
-****
-[float]
-==== *equals()* ==== 
-
-[source,javascript]
-----
-Boolean object.equals(Object compareObject) 
-----
-
-Compare two webkit objects
-
- ::
-
-_compareObject_;; The object to compare
-_returns_;; +true+ if the the corresponding gobjects are equal
-****
+//Webkit objects should not be compared using +==+, since it may happen that the
+//same gobject is represented by different javascript objects, instead every
+//webkit object implements an equals method, all Objects derived from GObjets
+//implement the following functions. 
+//
+//****
+//[float]
+//==== *equals()* ==== 
+//
+//[source,javascript]
+//----
+//Boolean object.equals(Object compareObject) 
+//----
+//
+//Compare two webkit objects
+//
+// ::
+//
+//_compareObject_;; The object to compare
+//_returns_;; +true+ if the the corresponding gobjects are equal
+//****
 
 ****
 [float]
@@ -791,19 +793,14 @@ _returns_;; +true+ if the signal was disconnected
 ==== *Example* ====
 [source,javascript]
 ------------
-signals.connect("navigation" function(wv, frame) {
-  if (frame.equals(wv.mainFrame) {
-    ...
-  }
-});
 tabs.current.connect("notify::load-status", function() {
   io.print("Status changed");
 });
 ------------
 ====
 
-An exception is the webview object, for webview objects +==+ always gives the
-same result as +equals+.
+//An exception is the webview object, for webview objects +==+ always gives the
+//same result as +equals+.
 
 
 [[webview]]
