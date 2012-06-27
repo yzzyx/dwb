@@ -82,6 +82,8 @@ Object.freeze((function () {
     }
     hint.style.top = t + "px";
     hint.style.left = l + "px";
+    // 37000 is the z-index of the clickble element
+    hint.style.zIndex = 37002;
     globals.positions.push({top : t, left : l});
 
     hint.className =  "dwb_hint";
@@ -101,6 +103,7 @@ Object.freeze((function () {
       overlay.style.left = l + "px";
       overlay.style.display = "block";
       overlay.style.cursor = "pointer";
+      overlay.style.zIndex = 37001;
       this.overlay = overlay;
     };
     this.hint = hint;

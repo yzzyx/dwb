@@ -93,7 +93,7 @@ plugins_create_click_element(WebKitDOMElement *element, GList *gl) {
     webkit_dom_html_element_set_inner_html(WEBKIT_DOM_HTML_ELEMENT(div), 
         "<div style='display:table-cell;vertical-align:middle;text-align:center;color:#fff;background:#000;border:1px solid #666;font:11px monospace bold'>click to enable flash</div>", NULL);
 
-    char *new_style = g_strdup_printf("position:%s;width:%dpx;height:%dpx;top:%s;left:%s;display:table;z-index:1000000;", position, w, h, top, left);
+    char *new_style = g_strdup_printf("position:%s;width:%dpx;height:%dpx;top:%s;left:%s;display:table;z-index:37000;", position, w, h, top, left);
     webkit_dom_element_set_attribute(div, "style", new_style, NULL);
     g_free(new_style);
 
