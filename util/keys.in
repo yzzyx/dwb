@@ -104,6 +104,7 @@ tab_move_left Move tab left
 tab_move_right Move tab right
 toggle_bars Toggle tabbar and statusbar
 toggle_statusbar Toggle statusbar
+toggle_tab Toggle between current and last tab
 toggle_tabbar Toggle tabbar
 protect Protect/unprotect tab 
 presentation_mode Toggle presentation mode

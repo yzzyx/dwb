@@ -870,3 +870,12 @@ commands_download(KeyMap *km, Arg *arg) {
   }
   return STATUS_OK;
 }
+DwbStatus 
+commands_toggle_tab(KeyMap *km, Arg *arg) {
+  GList *last = g_list_nth(dwb.state.views, dwb.state.last_tab);
+  if (last) {
+    dwb_focus_view(last);
+    return STATUS_OK;
+  }
+  return STATUS_ERROR;
+}

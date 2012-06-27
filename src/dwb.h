@@ -585,6 +585,8 @@ struct _State {
   unsigned int bar_visible;
   gboolean auto_insert_mode;
   GList *script_completion;
+
+  gint last_tab;
 };
 
 typedef enum _SettingsApply {

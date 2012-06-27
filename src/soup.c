@@ -360,7 +360,7 @@ dwb_soup_init() {
   dwb_soup_init_cookies(dwb.misc.soupsession);
   dwb_soup_init_session_features();
 #if 0
-  SoupLogger *sl = soup_logger_new(SOUP_LOGGER_LOG_HEADERS, -1);
+  SoupLogger *sl = soup_logger_new(SOUP_LOGGER_LOG_BODY, -1);
   soup_session_add_feature(dwb.misc.soupsession, sl);
 #endif
 }/*}}}*/

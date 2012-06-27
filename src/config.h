@@ -183,6 +183,7 @@ static KeyValue KEYS[] = {
   { "sanitize",                 {   NULL,         0,                0 }, }, 
   { "eval",                     {   NULL,         0,                0 }, }, 
   { "download",                 {   "gd",         0,                0 }, }, 
+  { "toggle_tab",               {   "@Tab@",      GDK_CONTROL_MASK, 0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -190,6 +191,10 @@ static FunctionMap FMAP [] = {
   { { "tab_new",              "Add a new tab",                    }, CP_COMMANDLINE, 
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "toggle_tab",              "Toggle between last and current tab",                    }, CP_COMMANDLINE, 
+    (Func)commands_toggle_tab,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { "ttab" }, },
 
   { { "cancel_download",              "Cancel a download",                    }, CP_COMMANDLINE, 
     (Func)commands_cancel_download,            "No download to stop",                            ALWAYS_SM,     

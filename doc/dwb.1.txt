@@ -292,6 +292,10 @@ Cycle focus [n tab] backwards. (command
 Focus nth tab, first tab if n is omitted or last tab if n is 0.
 (command 'focus_tab', aliases: 'tab').
 
+*C-Tab*::
+Toggle between current and last focused tab 
+(command 'toggle_tab', aliases: 'ttab') 
+
 *[n]gm*::
 Move current tab to position [n] or to first position if n is omitted.
 (command 'tab_move', aliases: 'tabm').
@@ -853,6 +857,7 @@ COMMAND OVERVIEW
 |toggle_local_setting    |loctog          |Toggle a setting for the current
                                            session
 |toggle_statusbar        |sbar            |Toggle statusbar
+|toggle_tab              |ttab            |Toggle between current and last tab
 |toggle_tabbar           |tbar            |Toggle tabbar
 |undo                    |u               |Undo closing last tab
 |view_source             |so, source      |View page source

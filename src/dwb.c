@@ -1411,6 +1411,7 @@ dwb_navigation_from_webkit_history_item(WebKitWebHistoryItem *item) {
 void 
 dwb_unfocus() {
   if (dwb.state.fview) {
+    dwb.state.last_tab = g_list_position(dwb.state.views, dwb.state.fview);
     view_set_normal_style(dwb.state.fview);
     dwb_source_remove();
     CLEAR_COMMAND_TEXT();
@@ -3852,6 +3853,7 @@ dwb_init() {
   dwb.misc.synctimer = 0;
   dwb.misc.bar_height = 0;
   dwb.state.buffer = g_string_new(NULL);
+  dwb.state.last_tab = 0;
 
   dwb.misc.tabbed_browsing = GET_BOOL("tabbed-browsing");
 

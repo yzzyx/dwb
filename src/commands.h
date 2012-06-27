@@ -94,5 +94,6 @@ DwbStatus commands_dump(KeyMap *, Arg *);
 DwbStatus commands_sanitize(KeyMap *, Arg *);
 DwbStatus commands_eval(KeyMap *, Arg *);
 DwbStatus commands_download(KeyMap *, Arg *);
+DwbStatus commands_toggle_tab(KeyMap *, Arg *);
 
 #endif
