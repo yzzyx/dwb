@@ -1033,16 +1033,16 @@ view_remove(GList *gl) {
   else if (gl == NULL) 
     gl = dwb.state.fview;
   View *v = gl->data;
+  int position = g_list_position(dwb.state.views, gl);
   /* Check for protected tab */
-  if (LP_PROTECTED(v) && !dwb_confirm(dwb.state.fview, "Really close tab %d [y/n]?", g_list_position(dwb.state.views, gl) + 1) ) {
+  if (LP_PROTECTED(v) && !dwb_confirm(dwb.state.fview, "Really close tab %d [y/n]?", position + 1) ) {
     CLEAR_COMMAND_TEXT();
     return STATUS_OK;
   }
   /* Get new focused tab */
   GList *new_fview = dwb.state.fview;
   if (gl == dwb.state.fview) {
-    int n = g_list_position(dwb.state.views, dwb.state.fview);
-    if (dwb.state.last_tab > n) 
+    if (dwb.state.last_tab > position) 
       dwb.state.last_tab--;
     if (dwb.misc.tab_position & TAB_CLOSE_POSITION_RIGHTMOST) {
       if (dwb.state.fview->next) {
@@ -1070,6 +1070,9 @@ view_remove(GList *gl) {
     }
     if (dwb.state.bar_visible & BAR_VIS_TOP && !gtk_widget_get_visible(dwb.gui.topbox)) 
       gtk_widget_show_all(dwb.gui.topbox);
+  }
+  else if (dwb.state.nummod - 1 == position) {
+    dwb.state.last_tab = -1;
   }
   /* Get History for the undo list */
   WebKitWebBackForwardList *bflist = webkit_web_view_get_back_forward_list(WEBKIT_WEB_VIEW(v->web));
