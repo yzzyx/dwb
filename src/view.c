@@ -1041,6 +1041,9 @@ view_remove(GList *gl) {
   /* Get new focused tab */
   GList *new_fview = dwb.state.fview;
   if (gl == dwb.state.fview) {
+    int n = g_list_position(dwb.state.views, dwb.state.fview);
+    if (dwb.state.last_tab > n) 
+      dwb.state.last_tab--;
     if (dwb.misc.tab_position & TAB_CLOSE_POSITION_RIGHTMOST) {
       if (dwb.state.fview->next) {
         new_fview = g_list_last(dwb.state.views);
