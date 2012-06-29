@@ -1963,18 +1963,21 @@ dwb_update_find_quickmark(const char *text) {
 void
 dwb_tab_label_set_text(GList *gl, const char *text) {
   View *v = gl->data;
-  const char *uri = text ? text : webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+  const char *title = NULL;
+  if (text == NULL) 
+    title = webkit_web_view_get_title(WEBVIEW(gl));
+  else 
+    title = text;
   char progress[11] = { 0 };
   if (v->status->progress != 0) {
     snprintf(progress, 11, "[%2d%%] ", v->status->progress);
   }
-
   char *escaped = g_markup_printf_escaped("<span foreground='%s'>%d%s</span> %s%s", 
       LP_PROTECTED(v) ? dwb.color.tab_protected_color : dwb.color.tab_number_color,
       g_list_position(dwb.state.views, gl) + 1, 
       LP_VISIBLE(v) ? "*" : "",
       progress,
-      uri ? uri : "about:blank");
+      title ? title : "---");
   gtk_label_set_markup(GTK_LABEL(v->tablabel), escaped);
 
   g_free(escaped);
@@ -1987,16 +1990,8 @@ dwb_update_status(GList *gl) {
   char *filename = NULL;
   WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
   const char *title = webkit_web_view_get_title(w);
-  if (!title) {
-    const char *uri = webkit_web_view_get_uri(w);
-    if (uri) {
-      filename = g_path_get_basename(uri);
-      title = filename;
-    }
-    else {
-      title = dwb.misc.name;
-    }
-  }
+  if (!title) 
+    title = "---";
 
   if (gl == dwb.state.fview) {
     if (v->status->progress != 0) {
@@ -2020,8 +2015,7 @@ dwb_update_layout() {
   for (GList *gl = dwb.state.views; gl; gl = gl->next) {
     View *v = gl->data;
     const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-    if (title != NULL) 
-      dwb_tab_label_set_text(gl, title);
+    dwb_tab_label_set_text(gl, title);
   }
   dwb_update_tabs();
 }/*}}}*/

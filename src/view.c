@@ -503,6 +503,14 @@ view_new_window_policy_cb(WebKitWebView *web, WebKitWebFrame *frame,
 static GtkWidget * 
 view_create_plugin_widget_cb(WebKitWebView *web, char *mime_type, char *uri, GHashTable *param, GList *gl) {
   VIEW(gl)->plugins->status |= PLUGIN_STATUS_HAS_PLUGIN;
+#if 0
+  GHashTableIter iter;
+  g_hash_table_iter_init(&iter, param);
+  char *key, *value;
+  while(g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer*)&value)) {
+    printf("%s %s\n", key, value);
+  }
+#endif
   return NULL;
 }/*}}}*/
 
