@@ -52,7 +52,7 @@ OPTIONS
   not needed. 
 
 *-x, --execute*='commands'::
-  Execute a list of dwb commands seperated by ';;', see
+  Execute a list of dwb commands separated by ';;', see
   <<CUSTOM_COMMANDS,'CUSTOM COMMANDS'>>
   and <<COMMAND_OVERVIEW,'COMMAND OVERVIEW'>> for details.
   If 'single instance' is enabled all commands will be executed in the primary
@@ -721,9 +721,9 @@ COMMAND OVERVIEW
 [options="header"]
 |================
 |Command                 |Alias           |Description
-|allow_cookie            |cookie          |Allow persistent cookies for site
-|allow_session_cookie    |scookie         |Allow session cookies for site
-|allow_session_cookie_tmp|tcookie         |Allow session cookies for site
+|allow_cookie            |cookie          |Allow persistent cookies for current site
+|allow_session_cookie    |scookie         |Allow session cookies for currrent site
+|allow_session_cookie_tmp|tcookie         |Allow session cookies for current site
                                            temporarily
 |bookmark                |bma, bmark      |Bookmark current page
 |bookmarks               |bmas, bmarks    |Show bookmarks
