@@ -503,7 +503,7 @@ dwb_update_uri(GList *gl) {
   View *v = VIEW(gl);
 
   const char *uri = webkit_web_view_get_uri(CURRENT_WEBVIEW());
-  char *decoded = g_uri_unescape_string(uri, NULL);
+  char *decoded = g_uri_unescape_string(uri, "\n\r\f");
   DwbColor *uricolor;
   switch(v->status->ssl) {
     case SSL_TRUSTED:   uricolor = &dwb.color.ssl_trusted; break;
