@@ -2884,15 +2884,17 @@ dwb_clean_up() {
   for (GList *gl = dwb.state.views; gl; gl=gl->next) {
     view_clean(gl);
   }
-  for (int i=FILES_FIRST; i<FILES_LAST; i++) {
-    g_free(dwb.files[i]);
-  }
 
   dwb_soup_end();
   adblock_end();
   domain_end();
 
   util_rmdir(dwb.files[FILES_CACHEDIR], true, true);
+
+  for (int i=FILES_FIRST; i<FILES_LAST; i++) {
+    g_free(dwb.files[i]);
+  }
+
   gtk_widget_destroy(dwb.gui.window);
   scripts_end();
   return true;
