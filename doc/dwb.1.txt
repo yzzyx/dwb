@@ -683,7 +683,7 @@ Shortcut syntax
 
 All printable shortcuts are case sensitive, i.e. aH means press a then press
 shift, then press h. Shortcuts can be combined with a modifier, valid modifiers
-are 'Control', 'Mod1', 'Mod4', 'Button1', 'Button2', 'Button3', 'Button4', 'Button5' and 'Shift'
+are 'Control', 'Mod1', 'Mod4' and 'Shift'
 where Shift can only be used with non printable keys such as F1, space, Tab, ... .
 Non printable keys must be surrounded by @, e.g. "Control @F1@", Shift @space@.
 \ and @ itself must be escaped with \.

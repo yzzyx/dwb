@@ -3083,21 +3083,6 @@ dwb_str_to_key(char *str) {
     else if (!g_ascii_strcasecmp(string[i], "Mod4")) {
       key.mod |= GDK_MOD4_MASK;
     }
-    else if (!g_ascii_strcasecmp(string[i], "Button1")) {
-      key.mod |= GDK_BUTTON1_MASK;
-    }
-    else if (!g_ascii_strcasecmp(string[i], "Button2")) {
-      key.mod |= GDK_BUTTON2_MASK;
-    }
-    else if (!g_ascii_strcasecmp(string[i], "Button3")) {
-      key.mod |= GDK_BUTTON3_MASK;
-    }
-    else if (!g_ascii_strcasecmp(string[i], "Button4")) {
-      key.mod |= GDK_BUTTON4_MASK;
-    }
-    else if (!g_ascii_strcasecmp(string[i], "Button5")) {
-      key.mod |= GDK_BUTTON5_MASK;
-    }
     else if (!g_ascii_strcasecmp(string[i], "Shift")) {
       key.mod |= GDK_SHIFT_MASK;
     }
