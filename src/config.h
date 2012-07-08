@@ -967,7 +967,7 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL | SETTING_ONINIT,      DOUBLE,    { .d = 0         }, (S_Func) dwb_set_scroll_step,  { 0 }, },
 
   { { "do-not-track",			                     "Whether to add do not track flag to request headers", },                                 
-    SETTING_GLOBAL,      BOOLEAN,    { .b = true         }, (S_Func) dwb_set_do_not_track,  { 0 }, },
+    SETTING_GLOBAL | SETTING_ONINIT,      BOOLEAN,    { .b = true         }, (S_Func) dwb_set_do_not_track,  { 0 }, },
 
   { { "foreground-color",                         "Foreground color of the active tab", },                              
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#ffffff"         },    (S_Func) dwb_reload_layout,   { 0 }, },
