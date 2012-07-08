@@ -1242,6 +1242,9 @@ default value: '800'.
 The default height of dwb's window. Possible values: height in pixel,
 default value: '600'.
 
+*do-not-track*::
+Whether to add do-not-track flag on request headers, default value: 'true'.
+
 *download-fg-color*::
 The foreground color of the download bar, default value: '#ffffff'.
 

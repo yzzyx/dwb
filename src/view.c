@@ -81,6 +81,12 @@ view_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitWebReso
       SCRIPTS_WV(gl), .objects = { G_OBJECT(frame), G_OBJECT(request), G_OBJECT(response) }, SCRIPTS_SIG_META(NULL, RESOURCE, 3) };
     scripts_emit(&signal);
   }
+  if (dwb.state.do_not_track) {
+    SoupMessage *msg = webkit_network_request_get_message(request);
+    if (msg != NULL) {
+      soup_message_headers_append(msg->request_headers, "DNT", "1");
+    }
+  }
 }
 #if WEBKIT_CHECK_VERSION(1, 8, 0) 
 static void 

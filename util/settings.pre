@@ -17,6 +17,7 @@ zoom-step text The zoom step
 addressbar-dns-lookup checkbox Whether to first perform a dns lookup for text typed in the addressbar before loading the site 
 cookies-accept-policy select @always @never @nothirdparty The cookies to accept, affects also session cookies
 cookies-store-policy select @session @persistent @never The storage policy for cookies
+do-not-track checkbox Whether to set do not track flag on request headers
 enable-dns-prefetching checkbox Whether webkit prefetches domain names
 proxy checkbox Whether to use a HTTP-proxy
 proxy-url text The HTTP-proxy url

@@ -585,6 +585,7 @@ struct _State {
   GList *script_completion;
 
   gint last_tab;
+  gboolean do_not_track;
 };
 
 typedef enum _SettingsApply {
