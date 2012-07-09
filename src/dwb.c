@@ -2301,7 +2301,7 @@ dwb_eval_key(GdkEventKey *e) {
     return false;
   }
   /* don't show backspace in the buffer */
-  if (keyval == GDK_KEY_BackSpace ) {
+  if (keyval == GDK_KEY_BackSpace && CLEAN_STATE(e) == 0) {
     if (dwb.state.mode & AUTO_COMPLETE) {
       completion_clean_autocompletion();
     }
