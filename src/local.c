@@ -205,7 +205,7 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history) {
     struct passwd *pwd = getpwuid(st.st_uid);
     char *user = pwd && pwd->pw_name ? pwd->pw_name : "";
     struct group *grp = getgrgid(st.st_gid);
-    char *group = pwd && grp->gr_name ? grp->gr_name : "";
+    char *group = grp && grp->gr_name ? grp->gr_name : "";
     if (*class == 0)
       strcpy(class, "dwb_local_regular");
 
