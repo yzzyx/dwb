@@ -82,6 +82,7 @@ factor text Zoom factor of the tiling area
 message-delay text Time messages are shown, in seconds
 new-tab-position-policy select @right @left @rightmost @leftmost Controls the position of newly created tabs
 scrollbars checkbox Whether scrollbars should be enabled
+statusbar-padding text Padding of the statusbar
 tabbar-visible text Number of seconds a hidden tabbar is visible when switching between tabs
 tabbed-browsing checkbox Whether to enable tabbed browsing
 user-stylesheet-uri text The uri of a stylesheet applied to every page

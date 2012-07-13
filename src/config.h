@@ -1136,4 +1136,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL | SETTING_ONINIT,  CHAR, { .p = "left" }, (S_Func)dwb_set_close_tab_position_policy,   { 0 }, }, 
   { { "close-last-tab",                         "Whether close_tab closes the last tab", },                   
     SETTING_GLOBAL,  BOOLEAN, { .b = false }, NULL,   { 0 }, },
+  { { "statusbar-padding",                         "Padding of the statusbar", },                   
+    SETTING_GLOBAL,  INTEGER, { .i = 0 }, NULL,   { 0 }, },
 };/*}}}*/
