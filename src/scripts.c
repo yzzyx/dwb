@@ -113,6 +113,11 @@ static JSStaticValue wv_values[] = {
   { 0, 0, 0, 0 }, 
 };
 
+static JSValueRef message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSStaticValue message_values[] = {
+  { "uri",     message_get_uri, NULL, kJSDefaultAttributes }, 
+};
+
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
   { "inject",          frame_inject,             kJSDefaultAttributes },
@@ -152,7 +157,7 @@ static JSObjectRef make_object(JSContextRef ctx, GObject *o);
 static JSObjectRef _sigObjects[SCRIPTS_SIG_LAST];
 static JSGlobalContextRef _global_context;
 static GSList *_script_list;
-static JSClassRef _webview_class, _frame_class, _download_class, _default_class, _download_class;
+static JSClassRef _webview_class, _frame_class, _download_class, _default_class, _download_class, _message_class;
 static gboolean _commandline = false;
 static JSObjectRef _arrayConstructor;
 static JSObjectRef _completion_callback;
@@ -443,6 +448,27 @@ wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValue
 }/*}}}*/
 
 /*}}}*/
+
+static JSValueRef 
+message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  SoupMessage *msg = JSObjectGetPrivate(object);
+  if (msg == NULL)
+    return JSValueMakeNull(ctx);
+  SoupURI *uri = soup_message_get_uri(msg);
+  if (msg == NULL)
+    return JSValueMakeNull(ctx);
+  JSObjectRef o = JSObjectMake(ctx, NULL, NULL);
+  js_set_object_property(ctx, o, "scheme", uri->scheme, exception);
+  js_set_object_property(ctx, o, "user", uri->user, exception);
+  js_set_object_property(ctx, o, "password", uri->password, exception);
+  js_set_object_property(ctx, o, "host", uri->host, exception);
+  js_set_object_number_property(ctx, o, "port", uri->port, exception);
+  js_set_object_property(ctx, o, "path", uri->path, exception);
+  js_set_object_property(ctx, o, "query", uri->query, exception);
+  js_set_object_property(ctx, o, "fragment", uri->fragment, exception);
+  return o;
+}
+
 
 /* FRAMES {{{*/
 /* frame_get_domain {{{*/
@@ -1405,6 +1431,8 @@ make_object(JSContextRef ctx, GObject *o) {
      class = _frame_class;
   else if (WEBKIT_IS_DOWNLOAD(o)) 
     class = _download_class;
+  else if (SOUP_IS_MESSAGE(o)) 
+    class = _message_class;
   else 
     class = _default_class;
 
@@ -1720,6 +1748,11 @@ create_global_object() {
   cd.staticFunctions = download_functions;
   cd.staticValues = NULL;
   _download_class = JSClassCreate(&cd);
+
+  cd.staticFunctions = NULL;
+  cd.staticValues = message_values;
+  _message_class = JSClassCreate(&cd);
+
   JSObjectRef constructor = JSObjectMakeConstructor(_global_context, _download_class, download_constructor_cb);
   JSStringRef name = JSStringCreateWithUTF8CString("Download");
   JSObjectSetProperty(_global_context, JSContextGetGlobalObject(_global_context), name, constructor, kJSDefaultProperty, NULL);
@@ -1881,6 +1914,7 @@ scripts_end() {
     JSClassRelease(_webview_class);
     JSClassRelease(_frame_class);
     JSClassRelease(_download_class);
+    JSClassRelease(_message_class);
     JSGlobalContextRelease(_global_context);
     _global_context = NULL;
   }
