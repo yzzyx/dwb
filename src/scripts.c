@@ -114,8 +114,10 @@ static JSStaticValue wv_values[] = {
 };
 
 static JSValueRef message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef message_get_first_party(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSStaticValue message_values[] = {
   { "uri",     message_get_uri, NULL, kJSDefaultAttributes }, 
+  { "firstParty",     message_get_first_party, NULL, kJSDefaultAttributes }, 
 };
 
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
@@ -449,14 +451,9 @@ wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValue
 
 /*}}}*/
 
-static JSValueRef 
-message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
-  SoupMessage *msg = JSObjectGetPrivate(object);
-  if (msg == NULL)
-    return JSValueMakeNull(ctx);
-  SoupURI *uri = soup_message_get_uri(msg);
-  if (msg == NULL)
-    return JSValueMakeNull(ctx);
+
+JSObjectRef 
+soup_uri_to_js_object(JSContextRef ctx, SoupURI *uri, JSValueRef *exception) {
   JSObjectRef o = JSObjectMake(ctx, NULL, NULL);
   js_set_object_property(ctx, o, "scheme", uri->scheme, exception);
   js_set_object_property(ctx, o, "user", uri->user, exception);
@@ -467,6 +464,26 @@ message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVal
   js_set_object_property(ctx, o, "query", uri->query, exception);
   js_set_object_property(ctx, o, "fragment", uri->fragment, exception);
   return o;
+}
+static JSValueRef 
+message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  SoupMessage *msg = JSObjectGetPrivate(object);
+  if (msg == NULL)
+    return JSValueMakeNull(ctx);
+  SoupURI *uri = soup_message_get_uri(msg);
+  if (uri == NULL)
+    return JSValueMakeNull(ctx);
+  return soup_uri_to_js_object(ctx, uri, exception);
+}
+static JSValueRef 
+message_get_first_party(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+  SoupMessage *msg = JSObjectGetPrivate(object);
+  if (msg == NULL)
+    return JSValueMakeNull(ctx);
+  SoupURI *uri = soup_message_get_first_party(msg);
+  if (uri == NULL)
+    return JSValueMakeNull(ctx);
+  return soup_uri_to_js_object(ctx, uri, exception);
 }
 
 

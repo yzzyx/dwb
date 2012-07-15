@@ -1103,7 +1103,6 @@ Corresponds to a +WebKitNavigationRequest+.
 
 Corresponds to a +WebKitWebNavigationAction+.
 
-
 == Signals ==
 With the +signals+ object *dwb* communicates with the script on certain events. 
 To connect to a signal one can call the connect function that is implemented by
