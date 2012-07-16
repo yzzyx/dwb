@@ -29,13 +29,13 @@
       value : (function () {
         var id = 0;
         return function(sig, func) {
+          if (func === null || typeof func !== "function") {
+            return -1;
+          }
           ++id;
           if (_registered[sig] === undefined || _registered[sig] === null) {
             _registered[sig] = [];
             signals[sig] = function () { return signals.emit(sig, arguments); };
-          }
-          if (func === null || typeof func !== "function") {
-            return -1;
           }
           _registered[sig].push({callback : func, id : id, connected : true });
           return id;

@@ -822,7 +822,10 @@ global_tab_complete(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, siz
     js_make_exception(ctx, exc, EXCEPTION("tabComplete: arguments[2] is not a function."));
     return JSValueMakeUndefined(ctx);
   }
-
+  dwb.state.script_comp_readonly = false;
+  if (argc > 3 && JSValueIsBoolean(ctx, argv[3])) {
+    dwb.state.script_comp_readonly = JSValueToBoolean(ctx, argv[3]);
+  }
   char *left, *right, *label;
   js_array_iterator iter;
   JSValueRef val;

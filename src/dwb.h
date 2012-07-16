@@ -583,6 +583,7 @@ struct _State {
   unsigned int bar_visible;
   gboolean auto_insert_mode;
   GList *script_completion;
+  gboolean script_comp_readonly;
 
   gint last_tab;
   gboolean do_not_track;
