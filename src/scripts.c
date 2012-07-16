@@ -712,21 +712,6 @@ error_out:
   return ret;
 }/*}}}*/
 
-/* global_domain_from_host {{{*/
-static JSValueRef 
-global_domain_from_host(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  if (argc < 1) {
-    js_make_exception(ctx, exc, EXCEPTION("domainFromHost: missing argument."));
-    return JSValueMakeBoolean(ctx, false);
-  }
-  char *host = js_value_to_char(ctx, argv[0], -1, exc);
-  const char *domain = domain_get_base_for_host(host);
-  if (domain == NULL)
-    return JSValueMakeNull(ctx);
-  JSValueRef ret = js_char_to_value(ctx, domain);
-  g_free(host);
-  return ret;
-}/*}}}*/
 
 /* global_send_request {{{*/
 JSObjectRef 
@@ -906,6 +891,23 @@ global_timer_start(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size
   return JSValueMakeNumber(ctx, ret);
 }/*}}}*/
 /*}}}*/
+
+/* UTIL {{{*/
+/* util_domain_from_host {{{*/
+static JSValueRef 
+util_domain_from_host(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1) {
+    js_make_exception(ctx, exc, EXCEPTION("domainFromHost: missing argument."));
+    return JSValueMakeBoolean(ctx, false);
+  }
+  char *host = js_value_to_char(ctx, argv[0], -1, exc);
+  const char *domain = domain_get_base_for_host(host);
+  if (domain == NULL)
+    return JSValueMakeNull(ctx);
+  JSValueRef ret = js_char_to_value(ctx, domain);
+  g_free(host);
+  return ret;
+}/*}}}*//*}}}*/
 
 /* DATA {{{*/
 /* data_get_profile {{{*/
@@ -1657,7 +1659,6 @@ create_global_object() {
     { "include",          global_include,         kJSDefaultAttributes },
     { "timerStart",       global_timer_start,         kJSDefaultAttributes },
     { "timerStop",        global_timer_stop,         kJSDefaultAttributes },
-    { "domainFromHost",   global_domain_from_host,         kJSDefaultAttributes },
     { "sendRequest",      global_send_request,         kJSDefaultAttributes },
     { "sendRequestSync",  global_send_request_sync,         kJSDefaultAttributes },
     { "tabComplete",      global_tab_complete,         kJSDefaultAttributes },
@@ -1740,8 +1741,13 @@ create_global_object() {
   class = JSClassCreate(&cd);
   create_object(_global_context, class, global_object, kJSPropertyAttributeDontDelete, "globals", NULL);
   class = JSClassCreate(&cd);
+  JSClassRelease(class);
 
-  class = create_class("util", NULL, NULL);
+  JSStaticFunction util_functions[] = { 
+    { "domainFromHost",   util_domain_from_host,         kJSDefaultAttributes },
+    { 0, 0, 0 }, 
+  };
+  class = create_class("util", util_functions, NULL);
   create_object(_global_context, class, global_object, kJSDefaultAttributes, "util", NULL);
   JSClassRelease(class);
 

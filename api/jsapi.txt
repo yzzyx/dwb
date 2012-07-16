@@ -63,26 +63,6 @@ _name_;; A name that identifies the function on command line, optional
 _returns_;; +true+ if the function was binded successfully
 ****
 
-****
-[[domainFromHost]]
-[float]
-==== *domainFromHost()* ==== 
-
-[source,javascript]
-----
-String domainFromHost(String hostname)
-----
-
-Gets the base domain name from a hostname where the base domain name is the
-effective second level domain name, e.g. for www.example.com it will be
-example.com, for www.example.co.uk it will be example.co.uk.
-
- :: 
-
-_hostname_;; a hostname
-_returns_;; the base domain 
-****
-
 
 ****
 [[execute]]
@@ -710,6 +690,27 @@ sites.
 _func_;; A function 
 _returns_;; The body of the function as a string
 ****
+
+****
+[[domainFromHost]]
+[float]
+==== *domainFromHost()* ==== 
+
+[source,javascript]
+----
+String util.domainFromHost(String hostname)
+----
+
+Gets the base domain name from a hostname where the base domain name is the
+effective second level domain name, e.g. for www.example.com it will be
+example.com, for www.example.co.uk it will be example.co.uk.
+
+ :: 
+
+_hostname_;; a hostname
+_returns_;; the base domain 
+****
+
 
 
 [[Webkitobjects]]
