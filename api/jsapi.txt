@@ -675,7 +675,7 @@ The +util+ object implements helper functions.
 
 ****
 [float]
-==== *getBody(Function)* ====
+==== *getBody()* ====
 
 [source,javascript]
 ----
