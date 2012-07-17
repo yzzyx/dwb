@@ -390,6 +390,9 @@ download_start(const char *path) {
   WebKitNetworkRequest *request = webkit_download_get_network_request(dwb.state.download);
   dwb.state.download = webkit_download_new(request);
 
+  char escape_buffer[255];
+  filename = util_normalize_filename(escape_buffer, filename, 255);
+
   if (EMIT_SCRIPT(DOWNLOAD_START)) {
     if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
       json = util_create_json(4, 
