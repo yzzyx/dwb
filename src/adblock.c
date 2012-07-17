@@ -824,10 +824,10 @@ adblock_init() {
   if (!GET_BOOL("adblocker"))
     return false;
   char *filterlist = GET_CHAR("adblocker-filterlist");
-  char buffer[PATH_MAX];
-  filterlist = util_expand_home(buffer, filterlist, PATH_MAX);
   if (filterlist == NULL)
     return false;
+  char buffer[PATH_MAX];
+  filterlist = util_expand_home(buffer, filterlist, PATH_MAX);
   if (!g_file_test(filterlist, G_FILE_TEST_EXISTS)) {
     fprintf(stderr, "Filterlist not found: %s\n", filterlist);
     return false;
