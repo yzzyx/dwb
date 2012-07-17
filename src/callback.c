@@ -160,8 +160,9 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
   }
 
   if (e->keyval == GDK_KEY_Escape) {
-    if (dwb.state.mode & COMPLETION_MODE)
+    if (dwb.state.mode & COMPLETION_MODE) {
       completion_clean_completion(true);
+    }
     else 
       dwb_change_mode(NORMAL_MODE, true);
     ret = false;

@@ -1820,7 +1820,7 @@ dwb_prompt_snooper_cb(GtkWidget *w, GdkEventKey *e, int *state) {
     return false;
   switch (e->keyval) {
     case GDK_KEY_Return:       *state = 0; ret = true; break;
-    case GDK_KEY_Escape:  ret = true; break;
+    case GDK_KEY_Escape:  *state = -1; ret = true; break;
     default:              return false;
   }
   dwb.state.mode &= ~CONFIRM;
