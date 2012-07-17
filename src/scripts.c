@@ -118,6 +118,7 @@ static JSValueRef message_get_first_party(JSContextRef ctx, JSObjectRef object, 
 static JSStaticValue message_values[] = {
   { "uri",     message_get_uri, NULL, kJSDefaultAttributes }, 
   { "firstParty",     message_get_first_party, NULL, kJSDefaultAttributes }, 
+  { 0, 0, 0, 0 }, 
 };
 
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
@@ -1769,15 +1770,18 @@ create_global_object() {
   cd.staticValues = frame_values;
   _frame_class = JSClassCreate(&cd);
 
+  /* SoupMessage */ 
+  cd.staticFunctions = default_functions;
+  cd.staticValues = message_values;
+  _message_class = JSClassCreate(&cd);
+
   /* download */
   cd.className = "Download";
   cd.staticFunctions = download_functions;
   cd.staticValues = NULL;
   _download_class = JSClassCreate(&cd);
 
-  cd.staticFunctions = NULL;
-  cd.staticValues = message_values;
-  _message_class = JSClassCreate(&cd);
+
 
   JSObjectRef constructor = JSObjectMakeConstructor(_global_context, _download_class, download_constructor_cb);
   JSStringRef name = JSStringCreateWithUTF8CString("Download");
