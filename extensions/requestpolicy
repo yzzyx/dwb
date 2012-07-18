@@ -1,0 +1,314 @@
+//
+//  Copyright (c) 2012 Stefan Bolte <portix@gmx.net>
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 3 of the License, or
+//  (at your option) any later version.
+//  
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//  
+//  You should have received a copy of the GNU General Public License along
+//  with this program; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+/*
+ * Block requests from thirdparty domains
+ *
+ * Extension that blocks requests from thirdparty domains with whitelisting
+ * support, either permanently or just for the session.
+ *
+ * To use this extension save this script as $HOME/.local/share/dwb/extensions/requestpolicy
+ * and load it with a userscript in $HOME/.config/dwb/userscripts/, e.g. 
+ *
+ * ------------------------------------------------------------------------------
+ * |#!javascript                                                                | 
+ * |                                                                            | 
+ * |extensions.load("requestpolicy");                                              | 
+ * ------------------------------------------------------------------------------
+ *
+ *
+ * Configuration options:
+ *
+ * shortcut       : Shortcut to block / allow requests, default "erp"
+ *
+ * whitelist      : A path to the whitelisting file, default is
+ *                  $XDG_CONFIG_HOME/dwb/<profile>/requestpolicy.json
+ *
+ * autoreload     : Whether to automatically reload the website after the
+ *                  whitelist has changed, default false
+ *
+ * notify         : Whether to notify about blocked request, default true
+ *
+ *
+ * Example (loading config with extensions.load()) 
+ *
+ * ------------------------------------------------------------------------------
+ * |extensions.load("requestpolicy", {                                          |
+ * |    whitelist     : system.getEnv("HOME") + "/.dwb_request_policy",         |
+ * |    autoreload    : true                                                    |
+ * |});                                                                         |
+ * ------------------------------------------------------------------------------
+ *
+ * Example extensionrc:
+ *
+ * ------------------------------------------------------------------------------
+ * |return {                                                                    |
+ * |   foo : { ... },                                                           |
+ * |                                                                            |
+ * |   requestpolicy : {                                                        |
+ * |      autoreload    : true                                                  |
+ * |      shortcut : "rp",                                                      |
+ * |      notify : false                                                        |
+ * |   },                                                                       |
+ * |   bar : { ... }                                                            |
+ * |}                                                                           |
+ * ------------------------------------------------------------------------------
+ *
+ * */
+
+var me = "requestpolicy";
+var priv = "_requestPolicy" + parseInt(Math.random() * 9999999999, 10);
+
+var defaultConfig = {
+  whitelist : data.configDir + "/" + data.profile + "/requestpolicy.json",
+  shortcut : "erp",
+  autoreload : false, 
+  notify : true
+};
+var config = {};
+
+var sigs = {
+  resource : -1,
+  navigation : -1,
+  loadFinished : -1
+};
+
+var whiteList = null;
+var tmpWhiteList = {};
+
+var regex = {
+  empty : /^\s*$/
+};
+
+function getPrivate(wv) {
+  var o = wv[priv];
+  if (o === undefined) {
+    o = { domains : [], blocked : 0 };
+    Object.defineProperty(wv, priv, {
+        value : o,
+        writable : true
+    });
+  }
+  return o;
+}
+
+// WHITELIST {{{
+function doWhiteList(o, key, value) {
+  if (!o[key])
+    o[key] = [];
+  if (o[key].indexOf(value) == -1) 
+    o[key].push(value);
+}
+function tmpWhiteListAction() {
+  doWhiteList(tmpWhiteList, tabs.current.mainFrame.domain, this.domain);
+}
+function whiteListAction() {
+  doWhiteList(whiteList, tabs.current.mainFrame.domain, this.domain);
+  io.write(config.whitelist, "w", JSON.stringify(whiteList));
+}
+
+function whiteListAllAction() {
+  doWhiteList(whiteList, "_all", tabs.current.mainFrame.domain);
+  io.write(config.whitelist, "w", JSON.stringify(whiteList));
+}
+function tmpWhiteListAllAction() {
+  doWhiteList(tmpWhiteList, "_all", tabs.current.mainFrame.domain);
+}//}}}
+
+// BLACKLIST {{{
+function doBlackList(o, firstParty, domain) {
+  var idx;
+  if (o[firstParty] && (idx = o[firstParty].indexOf(domain)) != -1) {
+    o[firstParty].splice(idx, 1);
+    if (o[firstParty].length === 0) 
+      delete o[firstParty];
+    return true;
+  }
+  return false;
+}
+function blackListAction() {
+  var firstParty = tabs.current.mainFrame.domain;
+  if (doBlackList(whiteList, firstParty, this.domain)) 
+    io.write(config.whitelist, "w", JSON.stringify(whiteList));
+  doBlackList(tmpWhiteList, firstParty, this.domain);
+
+}
+function blackListAll() {
+  var i;
+  var blackListed = false;
+  var firstParty = tabs.current.mainFrame.domain;
+  var domains = getPrivate(tabs.current).domains;
+  for (i=0; i<domains.length; i++) 
+    blackListed = doBlackList(whiteList, firstParty, domains[i]) || blackListed;
+  blackListed = doBlackList(whiteList, "_all", firstParty) || blackListed;
+  if (blackListed) 
+    io.write(config.whitelist, "w", JSON.stringify(whiteList));
+  for (i=0; i<domains.length; i++) 
+    doBlackList(tmpWhiteList, firstParty, priv[i]);
+  doBlackList(tmpWhiteList, "_all", firstParty);
+}//}}}
+
+// MENU {{{
+function showMenu() {
+  var tmpWhiteListed;
+  var whiteListed;
+  var isWhiteListed = false;
+  var domain = tabs.current.mainFrame.domain;
+  var domains = getPrivate(tabs.current).domains;
+  var labels = [];
+  for (var i=0; i<domains.length; i++) {
+    whiteListed = whiteList[domain] && whiteList[domain].indexOf(domains[i]) != -1;
+    tmpWhiteListed = tmpWhiteList[domain] && tmpWhiteList[domain].indexOf(domains[i]) != -1;
+    if (!whiteListed && !tmpWhiteListed) {
+      labels.push({ 
+          left : "Allow " + domains[i], 
+          action : whiteListAction, 
+          domain : domains[i] 
+      });
+      labels.push({ 
+          left : "Temporarily allow " + domains[i], 
+          action : tmpWhiteListAction, 
+          domain : domains[i] 
+      });
+    }
+    else {
+      labels.push({ 
+          left : "Block " + domains[i], 
+          action : blackListAction, 
+          domain : domains[i]
+      });
+    }
+    isWhiteListed = isWhiteListed || whiteListed || tmpWhiteListed;
+  }
+  if (isWhiteListed || 
+    (whiteList._all && whiteList._all.indexOf(domain) != -1 ) ||
+    (tmpWhiteList._all && tmpWhiteList._all.indexOf(domain) != -1 )) {
+    labels.unshift({
+        left : "Block all requests on " + domain, 
+        action : blackListAll
+    });
+  }
+  labels.unshift({
+      left : "Temporarily allow all requests on " + domain, 
+      action : tmpWhiteListAllAction
+  });
+  labels.unshift({
+      left : "Allow all requests on " + domain, 
+      action : whiteListAllAction
+  });
+
+  tabComplete("Requestpolicy: ", labels, function (response) {
+    var l;
+    for (var i=0; i<labels.length; i++) {
+      l = labels[i];
+      if (l.left == response) {
+        l.action();
+        if (config.autoreload) {
+          tabs.current.reload();
+        }
+      }
+    }
+  }, true);
+}//}}}
+// SIGNALS {{{
+function resourceCB(wv, frame, request, response) {
+  var o, message, domain, firstParty;
+  if (regex.empty.test(request.uri))
+    return false;
+  message = request.message;
+  if (!message)
+    return false;
+  firstParty = util.domainFromHost(message.firstParty.host);
+  domain = util.domainFromHost(message.uri.host);
+  if (firstParty == domain)
+    return false;
+  o = getPrivate(wv);
+  if (o.domains.indexOf(domain) == -1) {
+    o.domains.push(domain);
+  }
+  if ((whiteList._all && whiteList._all.indexOf(firstParty) != -1) || 
+      (tmpWhiteList._all && tmpWhiteList._all.indexOf(firstParty) != -1)) 
+    return false; 
+  if (  (!whiteList[firstParty]    || whiteList[firstParty].indexOf(domain) == -1) && 
+        (!tmpWhiteList[firstParty] || tmpWhiteList[firstParty].indexOf(domain) == -1)) {
+    request.uri = 'about:blank';
+    o.blocked++;
+    if (config.notify && wv == tabs.current)
+      io.notify("RP: blocked " + domain);
+    return true;
+  }
+}
+function navigationCB(wv, frame) {
+  if (frame == wv.mainFrame) {
+    var o = getPrivate(wv);
+    o.domains = [];
+    o.blocked = 0;
+  }
+}
+function loadFinishedCB(wv) {
+  if (wv != tabs.current)
+    return;
+
+  var blocked = getPrivate(wv).blocked;
+  if (blocked > 0) 
+    io.notify("RP: blocked " + blocked + " requests");
+}
+
+function connect() {
+  sigs.resource = signals.connect("resource", resourceCB);
+  sigs.navigation = signals.connect("navigation", navigationCB);
+  if (config.notify) 
+    sigs.loadFinished = signals.connect("loadFinished", loadFinishedCB);
+}
+function disconnect() {
+  sigs.forEach(function (key, value) {
+    if (value != -1) {
+      signals.disconnect(value);
+      sigs[key] = -1;
+    }
+  });
+}//}}}
+return {
+  init : function(c) {
+    if (c === null || c === undefined) 
+      config = defaultConfig;
+    else {
+      defaultConfig.forEach(function (key, value, obj) {
+        config[key] = typeof c[key] == typeof defaultConfig[key] ? c[key] : defaultConfig[key];
+      });
+    }
+    if (system.fileTest(config.whitelist, FileTest.regular | FileTest.symlink)) {
+      var rawWhiteList = io.read(config.whitelist);
+      try {
+        whiteList = JSON.parse(rawWhiteList);
+      }
+      catch (e) {
+        extensions.debug(me, e, "Error parsing whitelist");
+      }
+    }
+    whiteList = whiteList || {};
+    connect();
+    bind(config.shortcut, showMenu, "requestpolicy");
+    return true;
+  },
+  end : function () {
+    disconnect();
+    unbind("requestpolicy");
+  }
+}
+// vim: set ft=javascript:

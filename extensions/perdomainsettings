@@ -1,0 +1,202 @@
+//
+//  Copyright (c) 2012 Stefan Bolte <portix@gmx.net>
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 3 of the License, or
+//  (at your option) any later version.
+//  
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//  
+//  You should have received a copy of the GNU General Public License along
+//  with this program; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+
+
+/*
+ * Per domain settings extension
+ *
+ * This extensions can be used for per-domain-settings. Valid settings are
+ * the properties of WebKitWebSettings but in camelcase, see 
+ * http://webkitgtk.org/reference/webkitgtk/unstable/WebKitWebSettings.html
+ * for details. 
+ *
+ * To use this extension save this script as * $HOME/.local/share/dwb/extensions/perdomainsettings 
+ * and load it with a userscript in $HOME/.config/dwb/userscripts/, e.g. 
+ *
+ * ------------------------------------------------------------------------------
+ * |#!javascript                                                                | 
+ * |                                                                            | 
+ * |extensions.load("perdomainsettings");                                       | 
+ * ------------------------------------------------------------------------------
+ *
+ * The config can consist of four objects, 
+ *
+ * domains:   Settings applied based on the second level domain
+ *
+ * hosts:     Settings applied based on the hostname
+ *
+ * uris:      Settings applied based on the uri
+ *
+ * defaults:  Default settings, for each setting in domains, hosts and uris a
+ *              default-value should be specified
+ *
+ * Example extensionrc: 
+ *
+ * ------------------------------------------------------------------------------
+ * |return {                                                                    |
+ * |   foo : { ... },                                                           |
+ * |                                                                            |
+ * |   perdomainsettings : {                                                    |
+ * |     domains : {                                                            |
+ * |        "example.com" : {                                                   |
+ * |             "enablePlugins"  : true                                        |
+ * |        },                                                                  |
+ * |        "example.uk.com" :  {                                               |
+ * |             "enablePlugins"  : true,                                       |
+ * |             "enableScripts"  : false                                       |
+ * |        }                                                                   |
+ * |     },                                                                     |
+ * |     hosts : {                                                              |
+ * |        "www.example1.com" :  {                                             |
+ * |             "autoLoadImages" : true                                        |
+ * |        }                                                                   |
+ * |     },                                                                     |
+ * |     uris : {                                                               |
+ * |        "http://www.example2.com/login.php" :  {                            |
+ * |             "autoLoadImages" : false                                       |
+ * |        }                                                                   |
+ * |     },                                                                     |
+ * |     defaults : {                                                           |
+ * |        "enablePlugins"   : false,                                          |
+ * |        "autoLoadImages"  : false,                                          |
+ * |        "enableScripts"   :  true                                           |
+ * |     }                                                                      |
+ * |   },                                                                       |
+ * |                                                                            |
+ * |   bar : { ... }                                                            |
+ * |}                                                                           |
+ * ------------------------------------------------------------------------------
+ *
+ * Example using extensions.load: 
+ *
+ * ------------------------------------------------------------------------------
+ * |extensions.load("perdomainsettings", {                                      |
+ * |  domains : { "example.com" : { "enablePlugins" : true }  },                |
+ * |  defaults : { "enablePlugins" : false }                                    |
+ * |});                                                                         |
+ * ------------------------------------------------------------------------------
+ *
+ * */ 
+
+var me = "perdomainsettings";
+var domains = null;
+var hosts = null;
+var uris = null;
+var defaults = null;
+var webviews = [];
+var sigNavigation = -1;
+var sigCloseTab = -1;
+
+function apply(o, settings) {
+  var key;
+  var defaults = true;
+  var websettings = o.settings;
+  for (key in settings) {
+    if (!o.set[key]) {
+      websettings[key] = settings[key];
+      o.set[key] = true;
+    }
+    else {
+      defaults = false;
+    }
+  }
+  return defaults;
+}
+
+function onNavigation(wv, frame, request, action) {
+  var length = webviews.length; 
+  var i;
+  var found = false;
+  var o = null;
+  for (i=0; i<length; i++) {
+    if (webviews[i].webview === wv) {
+      o = webviews[i];
+      break;
+    }
+  }
+  if (o === null) {
+    o = { webview : wv, defaults : false, settings : wv.settings };
+    webviews.push(o);
+  }
+  o.set = {};
+  if (frame === wv.mainFrame) {
+    try {
+      var uri = request.uri;
+      var host = uri.split(/:\/\/|:|\//, 2)[1];
+      var domain = util.domainFromHost(host);
+      if (domains[domain]) {
+        apply(o, domains[domain]);
+        o.defaults = false;
+      }
+      if (hosts[host]) {
+        apply(o, hosts[host]);
+        o.defaults = false;
+      }
+      if (uris[uri]) {
+        apply(o, uris[uri]);
+        o.defaults = false;
+      }
+      if (o.defaults === false && apply(o, defaults)) {
+        o.defaults = true;
+      }
+    }
+    catch (e) {
+      extensions.error(me, e);
+    }
+  }
+}
+function onCloseTab(wv) {
+  var i;
+  for (i=0; i<webviews.length; i++) {
+    if (webviews[i].webview === wv) {
+      webviews.splice(i, 1);
+      return;
+    }
+  }
+}
+function initImpl(config) {
+  domains = config.domains || {};
+  hosts = config.hosts || {};
+  uris = config.uris || {};
+  defaults = config.defaults || {};
+  sigNavigation = signals.connect("navigation", onNavigation);
+  sigCloseTab = signals.connect("closeTab", onCloseTab);
+}
+
+return {
+  init : function (config) {
+    if (!config) {
+      extensions.error(me, "Missing config");
+      return false;
+    }
+    initImpl(config);
+    return true;
+  },
+  end : function () {
+    if (sigNavigation >= 0) {
+      signals.disconnect(sigNavigation);
+      sigNavigation = -1;
+    }
+    if (sigCloseTab >= 0) {
+      signals.disconnect(sigCloseTab);
+      sigCloseTab = -1;
+    }
+  }
+};
+
+// vim: set ft=javascript:
