@@ -120,13 +120,12 @@ function apply(o, settings) {
 
 function onNavigation(wv, frame, request, action) {
   var length = webviews.length; 
-  var i;
+  var i, host, domain;
   var found = false;
   var o = null;
-  for (i=0; i<length; i++) {
+  for (i=0; i<length && o === null; i++) {
     if (webviews[i].webview === wv) {
       o = webviews[i];
-      break;
     }
   }
   if (o === null) {
@@ -137,8 +136,8 @@ function onNavigation(wv, frame, request, action) {
   if (frame === wv.mainFrame) {
     try {
       var uri = request.uri;
-      var host = uri.split(/:\/\/|:|\//, 2)[1];
-      var domain = util.domainFromHost(host);
+      host = request.message.uri.host;
+      domain = util.domainFromHost(host);
       if (domains[domain]) {
         apply(o, domains[domain]);
         o.defaults = false;
@@ -169,14 +168,6 @@ function onCloseTab(wv) {
     }
   }
 }
-function initImpl(config) {
-  domains = config.domains || {};
-  hosts = config.hosts || {};
-  uris = config.uris || {};
-  defaults = config.defaults || {};
-  sigNavigation = signals.connect("navigation", onNavigation);
-  sigCloseTab = signals.connect("closeTab", onCloseTab);
-}
 
 return {
   init : function (config) {
@@ -184,7 +175,12 @@ return {
       extensions.error(me, "Missing config");
       return false;
     }
-    initImpl(config);
+    domains = config.domains || {};
+    hosts = config.hosts || {};
+    uris = config.uris || {};
+    defaults = config.defaults || {};
+    sigNavigation = signals.connect("navigation", onNavigation);
+    sigCloseTab = signals.connect("closeTab", onCloseTab);
     return true;
   },
   end : function () {
