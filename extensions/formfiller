@@ -204,9 +204,8 @@ var injectFillForm = function (data) {//{{{
   }
   if (form === null) {
     forms = document.forms;
-    for (i=0; i<forms.length; i++) {
-      if ((form = setValues(forms[i])) !== null) 
-        break;
+    for (i=0; i<forms.length && form === null; i++) {
+      form = setValues(forms[i]);
     }
   }
   if (form !== null && data.autosubmit)
@@ -372,8 +371,8 @@ return {
     return true;
   }, 
   end : function () {
-    unbind(getForm);
-    unbind(fillForm);
+    unbind("formfillerGet");
+    unbind("formfillerFill");
     return true;
   }
 }//}}}
