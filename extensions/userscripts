@@ -204,7 +204,7 @@ function matchMatches(frame, items) //{{{
 
 function doInject(frame, item) {
   if (item.delay > 0) {
-    timerStart(1000, function() {
+    timerStart(item.delay, function() {
       frame.inject(item.script, item.unwrap);
       return false;
     });
@@ -226,10 +226,10 @@ function handle(frame, array, isMainFrame) //{{{
         continue;
 
       if (matchIncludeExclude(frame, item.include)) {
-        doInject(frame, item, isMainFrame);
+        doInject(frame, item);
       }
       else if (matchMatches(frame, item.match)) {
-        doInject(frame, item, isMainFrame);
+        doInject(frame, item);
       }
     }
     catch (e) {
