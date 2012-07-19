@@ -691,6 +691,7 @@ struct _Gui {
   GtkWidget *downloadbar;
   /* Statusbar */
   GtkWidget *statusbox;
+  GtkWidget *status_hbox;
   GtkWidget *urilabel;
   GtkWidget *rstatus;
   GtkWidget *lstatus;
