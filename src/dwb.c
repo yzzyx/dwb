@@ -3521,7 +3521,6 @@ dwb_init_gui() {
   gtk_entry_set_has_frame(GTK_ENTRY(dwb.gui.entry), false);
   gtk_entry_set_inner_border(GTK_ENTRY(dwb.gui.entry), false);
 
-  GtkWidget *status_hbox;
 #if _HAS_GTK3 
   dwb.gui.bottombox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 #else
@@ -3543,19 +3542,19 @@ dwb_init_gui() {
   DWB_WIDGET_OVERRIDE_COLOR(dwb.gui.urilabel, GTK_STATE_NORMAL, &dwb.color.active_fg);
 
 #if _HAS_GTK3
-  status_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+  dwb.gui.status_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 #else 
-  status_hbox = gtk_hbox_new(false, 2);
+  dwb.gui.status_hbox = gtk_hbox_new(false, 2);
 #endif
   GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
   int padding = GET_INT("statusbar-padding");
   gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
-  gtk_container_add(GTK_CONTAINER(alignment), status_hbox);
+  gtk_container_add(GTK_CONTAINER(alignment), dwb.gui.status_hbox);
 
-  gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.lstatus, false, false, 0);
-  gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.entry, true, true, 0);
-  gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.urilabel, true, true, 0);
-  gtk_box_pack_start(GTK_BOX(status_hbox), dwb.gui.rstatus, false, false, 0);
+  gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.lstatus, false, false, 0);
+  gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.entry, true, true, 0);
+  gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.urilabel, true, true, 0);
+  gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.rstatus, false, false, 0);
   gtk_container_add(GTK_CONTAINER(dwb.gui.statusbox), alignment);
 
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);
