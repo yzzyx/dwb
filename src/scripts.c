@@ -688,7 +688,7 @@ global_include(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t a
   char *path = NULL, *content = NULL; 
   if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX, exc)) == NULL) 
     goto error_out;
-  if ( (content = util_get_file_content(path)) == NULL) {
+  if ( (content = util_get_file_content(path, NULL)) == NULL) {
     js_make_exception(ctx, exc, EXCEPTION("include: reading %s failed."), path);
     goto error_out;
   }
@@ -1155,7 +1155,7 @@ io_read(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t a
   }
   if ( (path = js_value_to_char(ctx, argv[0], PATH_MAX, exc) ) == NULL )
     goto error_out;
-  if ( (content = util_get_file_content(path) ) == NULL ) {
+  if ( (content = util_get_file_content(path, NULL) ) == NULL ) {
     goto error_out;
   }
   ret = js_char_to_value(ctx, content);
@@ -1913,7 +1913,7 @@ scripts_execute_scripts(char **scripts) {
   scripts_init(true);
   char *content;
   for (int i=0; scripts[i] != NULL; i++) {
-    content = util_get_file_content(scripts[i]); 
+    content = util_get_file_content(scripts[i], NULL); 
     if (content != NULL) {
       scripts_init_script(scripts[i], content);
       g_free(content);

@@ -349,6 +349,7 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
   Navigation n;
   WebKitDOMElement *input;
   char *mod, *value;
+  gsize length;
 
   if (webkit_web_view_get_load_status(wv) == WEBKIT_LOAD_FINISHED) {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
@@ -369,8 +370,8 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "keydown", G_CALLBACK(html_keydown_cb), true, wv);
     WebKitDOMElement *textarea = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_area");
     WebKitDOMElement *button = webkit_dom_document_get_element_by_id(doc, "dwb_custom_keys_submit");
-    char *content = util_get_file_content(dwb.files[FILES_CUSTOM_KEYS]);
-    if (content != NULL && *content != '\0') {
+    char *content = util_get_file_content(dwb.files[FILES_CUSTOM_KEYS], &length);
+    if (content != NULL && length > 0) {
       webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(textarea), content);
     }
     webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(button), "click", G_CALLBACK(html_custom_keys_changed_cb), false, wv);

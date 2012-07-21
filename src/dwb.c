@@ -776,7 +776,8 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir) {
 /* dwb_editor_watch (GChildWatchFunc) {{{*/
 static void
 dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
-  char *content = util_get_file_content(info->filename);
+  gsize length;
+  char *content = util_get_file_content(info->filename, &length);
   WebKitDOMElement *e = NULL;
   WebKitWebView *wv;
   if (content == NULL) 
@@ -799,6 +800,9 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info) {
   else 
     e = info->element;
 
+  /*  g_file_get_contents adds an additional newline */
+  if (length > 0 && content[length-1] == '\n')
+    content[length-1] = 0;
   if (!g_strcmp0(info->tagname, "INPUT")) 
     webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), content);
   else if (!g_strcmp0(info->tagname, "TEXTAREA")) 
@@ -1277,7 +1281,7 @@ gboolean
 dwb_toggle_allowed(const char *filename, const char *data, GList **pers) {
   if (!data)
     return false;
-  char *content = util_get_file_content(filename);
+  char *content = util_get_file_content(filename, NULL);
   char **lines = NULL;
   gboolean allowed = false;
   if (content != NULL) {
@@ -3273,7 +3277,7 @@ dwb_init_hints(GList *gl, WebSettings *s) {
   setlocale(LC_NUMERIC, "C");
   g_free(dwb.misc.hints);
   char *scriptpath = util_get_data_file(HINT_SCRIPT, "scripts");
-  dwb.misc.hints = util_get_file_content(scriptpath);
+  dwb.misc.hints = util_get_file_content(scriptpath, NULL);
   g_free(scriptpath);
 
   g_free(dwb.misc.hint_style);

@@ -716,7 +716,7 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
     return false;
 
   char *site, *search;
-  char *content = util_get_file_content(errorfile);
+  char *content = util_get_file_content(errorfile, NULL);
   char *tmp = g_strdup(uri);
   char *res = tmp;
   if ( (tmp = strstr(tmp, "://")) != NULL) 

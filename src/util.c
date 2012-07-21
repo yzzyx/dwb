@@ -302,10 +302,10 @@ util_rmdir(const char *path, gboolean only_content, gboolean recursive) {
 }
 /* util_get_file_content(const char *filename)    return: char * (alloc) {{{*/
 char *
-util_get_file_content(const char *filename) {
+util_get_file_content(const char *filename, gsize *length) {
   GError *error = NULL;
   char *content = NULL;
-  if (!(g_file_test(filename, G_FILE_TEST_IS_REGULAR) &&  g_file_get_contents(filename, &content, NULL, &error))) {
+  if (!(g_file_test(filename, G_FILE_TEST_IS_REGULAR) &&  g_file_get_contents(filename, &content, length, &error))) {
     fprintf(stderr, "Cannot open %s: %s\n", filename, error ? error->message : "file not found");
     g_clear_error(&error);
   }
@@ -314,7 +314,7 @@ util_get_file_content(const char *filename) {
 char **
 util_get_lines(const char *filename) {
   char **ret = NULL;
-  char *content = util_get_file_content(filename);
+  char *content = util_get_file_content(filename, NULL);
   if (content) {
     ret = g_strsplit(content, "\n", -1);
     g_free(content);
@@ -476,7 +476,7 @@ clean:
 int
 util_file_remove_line(const char *filename, const char *line) {
   int ret = 1;
-  char *content = util_get_file_content(filename);
+  char *content = util_get_file_content(filename, NULL);
   char **lines = g_strsplit(content, "\n", -1);
   const char *tmp;
   GString *buffer = g_string_new(NULL);

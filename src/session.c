@@ -35,7 +35,7 @@ typedef struct _SessionTab {
 static char **
 session_get_groups() {
   char **groups = NULL;
-  char *content = util_get_file_content(dwb.files[FILES_SESSION]);
+  char *content = util_get_file_content(dwb.files[FILES_SESSION], NULL);
   if (content) {
     groups = g_regex_split_simple("^g:", content, G_REGEX_MULTILINE, G_REGEX_MATCH_NOTEMPTY);
     g_free(content);

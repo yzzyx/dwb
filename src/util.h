@@ -51,7 +51,7 @@ int util_web_settings_sort_first(WebSettings *, WebSettings *);
 char * util_expand_home(char *buffer, const char *filename, size_t length);
 char * util_normalize_filename(char *buffer, const char *filename, size_t length);
 void util_get_directory_content(GString *, const char *, const char *extension);
-char * util_get_file_content(const char *);
+char * util_get_file_content(const char *, gsize *);
 char ** util_get_lines(const char *);
 gboolean util_set_file_content(const char *, const char *);
 char * util_build_path(void);
