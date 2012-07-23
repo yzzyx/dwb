@@ -904,6 +904,8 @@ void dwb_set_open_mode(Open);
 
 DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 char * dwb_clipboard_get_text(GdkAtom atom);
+void dwb_paste_primary(void);
+
 DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
 

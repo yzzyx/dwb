@@ -330,6 +330,14 @@ function getForm() {//{{{
   if (!formFound) 
     io.error("No storable form found");
 }//}}}
+function getHasForms(frames) {//{{{
+  var i;
+  for (i=0; i<frames.length; i++) {
+    if (frames[i].inject("return document.forms.length > 0;") == "true") 
+      return true;
+  }
+  return false;
+}//}}}
 
 function fillForm() {//{{{
   var data, frames, host, i, ret = false;
@@ -337,11 +345,15 @@ function fillForm() {//{{{
     io.error("No formdata found");
     return;
   }
+  frames = tabs.current.allFrames;
+  if (!getHasForms(frames)) {
+    io.error("No form found");
+    return;
+  }
   data = getFormData(); 
   
   if (data === null)
     return;
-  frames = tabs.current.allFrames;
   for (i=0; i<frames.length; i++) {
     host = frames[i].host;
     if (data[host]) {
