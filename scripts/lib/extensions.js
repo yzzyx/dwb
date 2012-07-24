@@ -90,7 +90,7 @@
         }
         var boldname = "\033[1m" + name + "\033[0m";
 
-        var config, dataBase, pluginPath, plugin = null, key;
+        var config, dataBase, pluginPath, plugin = null, key, filename;
         var extConfig = null;
 
         /* Get default config if the config hasn't been read yet */
@@ -121,8 +121,10 @@
           extConfig = _config[name] || null;
 
         /* Load extension */
-        var filename = data.userDataDir + "/extensions/" + name;
-        plugin = getPlugin(name, data.userDataDir + "/extensions/" + name);
+        if (data.userDataDir) {
+          filename = data.userDataDir + "/extensions/" + name;
+          plugin = getPlugin(name, data.userDataDir + "/extensions/" + name);
+        }
         if (plugin === null) {
           plugin = getPlugin(name, data.systemDataDir + "/extensions/" + name);
           if (plugin === null) {

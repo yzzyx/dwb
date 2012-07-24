@@ -928,7 +928,6 @@ static JSValueRef
 data_get_config_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   char *dir = util_build_path();
   if (dir == NULL) {
-    js_make_exception(ctx, exception, EXCEPTION("configDir: cannot get config path."));
     return JSValueMakeNull(ctx);
   }
   JSValueRef ret = js_char_to_value(ctx, dir);
@@ -941,7 +940,6 @@ static JSValueRef
 data_get_system_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   char *dir = util_get_system_data_dir(NULL);
   if (dir == NULL) {
-    js_make_exception(ctx, exception, EXCEPTION("systemDataDir: cannot get system data directory."));
     return JSValueMakeNull(ctx);
   }
   JSValueRef ret = js_char_to_value(ctx, dir);
@@ -954,7 +952,6 @@ static JSValueRef
 data_get_user_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   char *dir = util_get_user_data_dir(NULL);
   if (dir == NULL) {
-    js_make_exception(ctx, exception, EXCEPTION("userDataDir: cannot get user data directory."));
     return JSValueMakeNull(ctx);
   }
   JSValueRef ret = js_char_to_value(ctx, dir);
@@ -968,7 +965,6 @@ data_get_user_data_dir(JSContextRef ctx, JSObjectRef object, JSStringRef js_name
 static JSValueRef 
 system_get_env(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   if (argc < 1) {
-    js_make_exception(ctx, exc, EXCEPTION("system.getEnv: missing argument"));
     return JSValueMakeNull(ctx);
   }
   char *name = js_value_to_char(ctx, argv[0], -1, exc);
