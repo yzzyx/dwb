@@ -354,7 +354,13 @@ download_add_progress_label(GList *gl, const char *filename, gint length) {
 
   gtk_box_pack_start(GTK_BOX(hbox), l->llabel, false, false, 1);
   gtk_box_pack_start(GTK_BOX(hbox), l->rlabel, false, false, 1);
-  gtk_container_add(GTK_CONTAINER(l->event), hbox);
+
+  GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
+  int padding = GET_INT("bars-padding");
+  gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
+  gtk_container_add(GTK_CONTAINER(alignment), hbox);
+  gtk_container_add(GTK_CONTAINER(l->event), alignment);
+
   gtk_box_pack_start(GTK_BOX(dwb.gui.downloadbar), l->event, false, false, 2);
 
   gtk_label_set_use_markup(GTK_LABEL(l->llabel), true);

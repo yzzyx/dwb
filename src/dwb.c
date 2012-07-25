@@ -3579,7 +3579,7 @@ dwb_init_gui() {
   dwb.gui.status_hbox = gtk_hbox_new(false, 2);
 #endif
   GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
-  int padding = GET_INT("statusbar-padding");
+  int padding = GET_INT("bars-padding");
   gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
   gtk_container_add(GTK_CONTAINER(alignment), dwb.gui.status_hbox);
 

@@ -1466,8 +1466,8 @@ certificate.  default value: '#ff0000'.
 The default startpage. Possible values: an url or "about:blank" for an empty
 startpage, default value: 'about:blank'.
 
-*statusbar-padding*::
-Padding of the statusbar, default value: 0.
+*bars-padding*::
+Padding of the status, download, completion and tab bars, default value: 0.
 
 *sync-files*::
 Interval in seconds to save history and cookies to hdd or 0 to immediately save

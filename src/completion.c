@@ -81,7 +81,12 @@ completion_get_completion_item(const char  *left, const char *right, const char 
 
   completion_modify_completion_item(c, &dwb.color.normal_c_fg, &dwb.color.normal_c_bg, dwb.font.fd_inactive);
 
-  gtk_container_add(GTK_CONTAINER(c->event), hbox);
+  GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
+  int padding = GET_INT("bars-padding");
+  gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
+  gtk_container_add(GTK_CONTAINER(alignment), hbox);
+  gtk_container_add(GTK_CONTAINER(c->event), alignment);
+
   return c;
 }/*}}}*/
 

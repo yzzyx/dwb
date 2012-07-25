@@ -927,10 +927,11 @@ view_create_web_view() {
   v->tabicon = gtk_image_new_from_pixbuf(pb);
   gtk_box_pack_end(GTK_BOX(v->tabbox), v->tabicon, false, false, 0);
 
-  gtk_container_add(GTK_CONTAINER(v->tabevent), v->tabbox);
-
-
-  /* gtk_container_add(GTK_CONTAINER(v->tabevent), v->tablabel); */
+  GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
+  int padding = GET_INT("bars-padding");
+  gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
+  gtk_container_add(GTK_CONTAINER(alignment), v->tabbox);
+  gtk_container_add(GTK_CONTAINER(v->tabevent), alignment);
 
   DWB_WIDGET_OVERRIDE_FONT(v->tablabel, dwb.font.fd_inactive);
 
