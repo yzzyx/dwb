@@ -488,10 +488,11 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
           if (hint_search_submit == NULL) {
               hint_search_submit = HINT_SEARCH_SUBMIT;
           }
-          dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, hint_search_submit) 
-            ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, hint_search_submit) 
-            : g_strdup(uri);
-          dwb_save_searchengine();
+          char *tmp_uri = g_uri_unescape_string(uri, NULL);
+          char *search_engine = dwb.state.form_name && !g_strrstr(tmp_uri, hint_search_submit) 
+            ? g_strdup_printf("%s?%s=%s", tmp_uri, dwb.state.form_name, hint_search_submit) 
+            : g_strdup(tmp_uri);
+          dwb_save_searchengine(search_engine);
           webkit_web_policy_decision_ignore(policy);
           return true;
         }

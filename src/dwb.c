@@ -1584,7 +1584,7 @@ dwb_submit_searchengine(void) {
 
 /* dwb_save_searchengine {{{*/
 void
-dwb_save_searchengine(void) {
+dwb_save_searchengine(char *search_engine) {
   char *text = g_strdup(GET_TEXT());
   dwb_change_mode(NORMAL_MODE, false);
   char *uri = NULL;
@@ -1608,7 +1608,7 @@ dwb_save_searchengine(void) {
         return;
       }
     }
-    dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, dwb.state.search_engine);
+    dwb_append_navigation_with_argument(&dwb.fc.searchengines, text, search_engine);
     Navigation *n = g_list_last(dwb.fc.searchengines)->data;
     Navigation *cn = dwb_get_search_completion_from_navigation(dwb_navigation_dup(n));
 
@@ -1616,13 +1616,12 @@ dwb_save_searchengine(void) {
     util_file_add_navigation(dwb.files[FILES_SEARCHENGINES], n, true, -1);
 
     dwb_set_normal_message(dwb.state.fview, true, "Searchengine saved");
-    if (dwb.state.search_engine) {
+    if (search_engine) {
       if (!dwb.misc.default_search) {
-        dwb.misc.default_search = dwb.state.search_engine;
+        dwb.misc.default_search = search_engine;
       }
       else  {
-        g_free(dwb.state.search_engine);
-        dwb.state.search_engine = NULL;
+        g_free(search_engine);
       }
     }
   }

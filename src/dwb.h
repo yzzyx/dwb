@@ -568,7 +568,6 @@ struct _State {
 
   GList *undo_list;
 
-  char *search_engine;
   char *form_name;
 
   WebKitDownload *download;
@@ -848,7 +847,7 @@ gboolean dwb_update_hints(GdkEventKey *);
 DwbStatus dwb_show_hints(Arg *);
 gboolean dwb_search(Arg *);
 void dwb_submit_searchengine(void);
-void dwb_save_searchengine(void);
+void dwb_save_searchengine(char *);
 char * dwb_execute_script(WebKitWebFrame *, const char *, gboolean);
 void dwb_toggle_tabbar(void);
 DwbStatus dwb_history(Arg *a);
