@@ -1422,6 +1422,9 @@ your application, so you can simply set this to 'xdg-open'.  There are also the
 environment variables 'DWB_URI', 'DWB_SCHEME', 'DWB_COOKIES', 'DWB_USER_AGENT',
 and 'DWB_REFERER' available which can be used in a script, for example:
 
+*searchengine-submit-pattern*::
+The pattern which will be replaced with the search terms.
+
 --------
 #!/bin/sh
 

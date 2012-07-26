@@ -1138,4 +1138,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  BOOLEAN, { .b = false }, NULL,   { 0 }, },
   { { "bars-padding",                         "Padding of the status, download, completion and tab bars", },                   
     SETTING_GLOBAL,  INTEGER, { .i = 0 }, NULL,   { 0 }, },
+  { { "searchengine-submit-pattern",                            "The pattern which will be replaced with the search terms", },                                            
+    SETTING_GLOBAL,  CHAR, { .p = NULL }, NULL,   { 0 }, }, 
 };/*}}}*/
