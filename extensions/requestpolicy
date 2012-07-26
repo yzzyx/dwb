@@ -42,7 +42,7 @@
  * autoreload     : Whether to automatically reload the website after the
  *                  whitelist has changed, default false
  *
- * notify         : Whether to notify about blocked request, default true
+ * notify         : Whether to notify about blocked request, default false
  *
  *
  * Example (loading config with extensions.load()) 
@@ -78,7 +78,7 @@ var defaultConfig = {
   whitelist : data.configDir + "/" + data.profile + "/requestpolicy.json",
   shortcut : "erp",
   autoreload : false, 
-  notify : true
+  notify : false
 };
 var config = {};
 
@@ -106,12 +106,11 @@ function getPrivate(wv) {
   }
   return o;
 }
-
 // WHITELIST {{{
 function doWhiteList(o, key, value) {
   if (!o[key])
     o[key] = [];
-  if (o[key].indexOf(value) == -1) 
+  if (strIndexOf(o[key], value) == -1) 
     o[key].push(value);
 }
 function tmpWhiteListAction() {
@@ -126,6 +125,10 @@ function whiteListAllAction() {
   doWhiteList(whiteList, "_all", tabs.current.mainFrame.domain);
   io.write(config.whitelist, "w", JSON.stringify(whiteList));
 }
+function alwaysAllow() {
+  doWhiteList(whiteList, "_always", this.domain);
+  io.write(config.whitelist, "w", JSON.stringify(whiteList));
+}
 function tmpWhiteListAllAction() {
   doWhiteList(tmpWhiteList, "_all", tabs.current.mainFrame.domain);
 }//}}}
@@ -133,7 +136,7 @@ function tmpWhiteListAllAction() {
 // BLACKLIST {{{
 function doBlackList(o, firstParty, domain) {
   var idx;
-  if (o[firstParty] && (idx = o[firstParty].indexOf(domain)) != -1) {
+  if (o[firstParty] && (idx = strIndexOf(o[firstParty], domain)) != -1) {
     o[firstParty].splice(idx, 1);
     if (o[firstParty].length === 0) 
       delete o[firstParty];
@@ -146,7 +149,10 @@ function blackListAction() {
   if (doBlackList(whiteList, firstParty, this.domain)) 
     io.write(config.whitelist, "w", JSON.stringify(whiteList));
   doBlackList(tmpWhiteList, firstParty, this.domain);
-
+}
+function alwaysDeny() {
+  doBlackList(whiteList, "_always", this.domain);
+  io.write(config.whitelist, "w", JSON.stringify(whiteList));
 }
 function blackListAll() {
   var i;
@@ -163,41 +169,71 @@ function blackListAll() {
   doBlackList(tmpWhiteList, "_all", firstParty);
 }//}}}
 
+function strIndexOf(a, s) {
+  for (var i=0, l=a.length; i<l; ++i) {
+    if (a[i] == s)
+      return i;
+  }
+  return -1;
+}
 // MENU {{{
 function showMenu() {
-  var tmpWhiteListed;
-  var whiteListed;
+  var tmpWhiteListed, whiteListed;
   var isWhiteListed = false;
+  var dom, i, domains, labels;
+
   var domain = tabs.current.mainFrame.domain;
-  var domains = getPrivate(tabs.current).domains;
-  var labels = [];
-  for (var i=0; i<domains.length; i++) {
-    whiteListed = whiteList[domain] && whiteList[domain].indexOf(domains[i]) != -1;
-    tmpWhiteListed = tmpWhiteList[domain] && tmpWhiteList[domain].indexOf(domains[i]) != -1;
-    if (!whiteListed && !tmpWhiteListed) {
-      labels.push({ 
-          left : "Allow " + domains[i], 
-          action : whiteListAction, 
-          domain : domains[i] 
-      });
-      labels.push({ 
-          left : "Temporarily allow " + domains[i], 
-          action : tmpWhiteListAction, 
-          domain : domains[i] 
+  if (domain === null)
+    return;
+
+  domains = getPrivate(tabs.current).domains;
+  labels = [];
+
+  for (i=0; i<domains.length; i++) {
+    dom = domains[i];
+    whiteListed = whiteList[domain] && strIndexOf(whiteList[domain], dom) != -1;
+    tmpWhiteListed = tmpWhiteList[domain] && strIndexOf(tmpWhiteList[domain], dom) != -1;
+    if (!whiteList._always || strIndexOf(whiteList._always, dom) == -1) {
+      if (!whiteListed && !tmpWhiteListed) {
+        labels.push({ 
+            left : "[" + dom + "] allow", 
+            action : whiteListAction, 
+            domain : dom 
+        });
+        labels.push({ 
+            left : "[" + dom + "] allow temporarily", 
+            action : tmpWhiteListAction, 
+            domain : dom
+        });
+      }
+
+      else {
+        labels.push({ 
+            left : "[" +  dom + "] block",
+            action : blackListAction, 
+            domain : dom
+        });
+      }
+    }
+    isWhiteListed = isWhiteListed || whiteListed || tmpWhiteListed;
+    if (!whiteList._always || strIndexOf(whiteList._always, dom) == -1) {
+      labels.push({
+          left : "[" +  dom + "] allow on all sites", 
+          action : alwaysAllow,
+          domain : dom
       });
     }
     else {
-      labels.push({ 
-          left : "Block " + domains[i], 
-          action : blackListAction, 
-          domain : domains[i]
+      labels.push({
+          left : "[" + dom + "] don't allow on all sites", 
+          action : alwaysDeny,
+          domain : dom
       });
     }
-    isWhiteListed = isWhiteListed || whiteListed || tmpWhiteListed;
   }
   if (isWhiteListed || 
-    (whiteList._all && whiteList._all.indexOf(domain) != -1 ) ||
-    (tmpWhiteList._all && tmpWhiteList._all.indexOf(domain) != -1 )) {
+    (whiteList._all && strIndexOf(whiteList._all, domain) != -1 ) ||
+    (tmpWhiteList._all && strIndexOf(tmpWhiteList._all, domain) != -1 )) {
     labels.unshift({
         left : "Block all requests on " + domain, 
         action : blackListAll
@@ -238,14 +274,16 @@ function resourceCB(wv, frame, request, response) {
   if (firstParty == domain)
     return false;
   o = getPrivate(wv);
-  if (o.domains.indexOf(domain) == -1) {
+  if (strIndexOf(o.domains, domain) == -1) {
     o.domains.push(domain);
   }
-  if ((whiteList._all && whiteList._all.indexOf(firstParty) != -1) || 
-      (tmpWhiteList._all && tmpWhiteList._all.indexOf(firstParty) != -1)) 
+  if ((whiteList._all && strIndexOf(whiteList._all, firstParty) != -1) || 
+      (tmpWhiteList._all && strIndexOf(tmpWhiteList._all, firstParty) != -1)) 
     return false; 
-  if (  (!whiteList[firstParty]    || whiteList[firstParty].indexOf(domain) == -1) && 
-        (!tmpWhiteList[firstParty] || tmpWhiteList[firstParty].indexOf(domain) == -1)) {
+  if (whiteList._always && strIndexOf(whiteList._always, domain) != -1) 
+      return false;
+  if (  (!whiteList[firstParty]    || strIndexOf(whiteList[firstParty], domain) == -1) && 
+        (!tmpWhiteList[firstParty] || strIndexOf(tmpWhiteList[firstParty], domain) == -1)) {
     request.uri = 'about:blank';
     o.blocked++;
     if (config.notify && wv == tabs.current)
