@@ -1517,7 +1517,11 @@ static char *
 dwb_get_search_engine_uri(const char *uri, const char *text) {
   char *ret = NULL;
   if (uri != NULL && text != NULL) {
-    GRegex *regex = g_regex_new(HINT_SEARCH_SUBMIT, 0, 0, NULL);
+    char *hint_search_submit = GET_CHAR("searchengine-submit-pattern");
+    if (hint_search_submit == NULL) {
+        hint_search_submit = HINT_SEARCH_SUBMIT;
+    }
+    GRegex *regex = g_regex_new(hint_search_submit, 0, 0, NULL);
     char *escaped = g_uri_escape_string(text, NULL, true);
     ret = g_regex_replace(regex, uri, -1, 0, escaped, 0, NULL);
     g_free(escaped);
@@ -1568,7 +1572,11 @@ void
 dwb_submit_searchengine(void) {
   char buffer[64];
   char *value;
-  snprintf(buffer, 64, "{ \"searchString\" : \"%s\" }", HINT_SEARCH_SUBMIT);
+  char *hint_search_submit = GET_CHAR("searchengine-submit-pattern");
+  if (hint_search_submit == NULL) {
+      hint_search_submit = HINT_SEARCH_SUBMIT;
+  }
+  snprintf(buffer, 64, "{ \"searchString\" : \"%s\" }", hint_search_submit);
   if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "submitSearchEngine", buffer, &value)) ) {
     dwb.state.form_name = value;
   }

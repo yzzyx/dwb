@@ -484,8 +484,12 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     case WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED: 
         if (dwb.state.mode == SEARCH_FIELD_MODE) {
           webkit_web_policy_decision_ignore(policy);
-          dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, HINT_SEARCH_SUBMIT) 
-            ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, HINT_SEARCH_SUBMIT) 
+          char *hint_search_submit = GET_CHAR("searchengine-submit-pattern");
+          if (hint_search_submit == NULL) {
+              hint_search_submit = HINT_SEARCH_SUBMIT;
+          }
+          dwb.state.search_engine = dwb.state.form_name && !g_strrstr(uri, hint_search_submit) 
+            ? g_strdup_printf("%s?%s=%s", uri, dwb.state.form_name, hint_search_submit) 
             : g_strdup(uri);
           dwb_save_searchengine();
           webkit_web_policy_decision_ignore(policy);
