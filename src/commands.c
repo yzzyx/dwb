@@ -879,3 +879,16 @@ commands_toggle_tab(KeyMap *km, Arg *arg) {
   }
   return STATUS_ERROR;
 }
+
+DwbStatus 
+commands_group_show(KeyMap *km, Arg *arg) {
+  return STATUS_OK;
+}
+DwbStatus 
+commands_group_toggle(KeyMap *km, Arg *arg) {
+  return STATUS_OK;
+}
+DwbStatus 
+commands_group_tag(KeyMap *km, Arg *arg) {
+  return STATUS_OK;
+}

@@ -888,6 +888,7 @@ view_create_web_view() {
   status->style = NULL;
   status->lockprotect = 0;
   status->frames = NULL;
+  status->group = 0;
 
   v->hint_object = NULL;
   v->inspector_window = NULL;
