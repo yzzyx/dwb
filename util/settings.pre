@@ -122,7 +122,7 @@ complete-userscripts checkbox Whether to enable tabcompletion for userscripts
 # misc Miscellaneous
 auto-insert-mode checkbox Whether to automatically go in insert mode if an editable element has focus after loading
 cache-model select @webbrowser @documentviewer The cache-model used by webkit 
-close-last-tab checkbox Whether to close the window if the last tab is closed
+close-last-tab-policy select @ignore @clear @close Behaviour when the last tab is closed
 custom-encoding text The custom encoding of the view
 download-external-command text External application used for downloads
 download-directory text Default download directory

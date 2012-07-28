@@ -1196,9 +1196,9 @@ The cache model used by webkit, possible values are 'webbrowser' and
 usage, documentviewer reduces memory usage but also decreases browsing speed.
 Default Value: 'webbrowser'.
 
-*close-last-tab*::
-Whether to close the last tab if 'close_tab' is called, if set to true the last
-tab's history is cleared and the window is closed; default value: 'false'. 
+*close-last-tab-policy*::
+Behaviour when the last tab is closed, possible values are 'ignore', 'clear' and
+'close'; default value: 'ignore'.
 
 *close-tab-focus-policy*::
 Controls the focus when the focused tab is closed, possible values are 'right',

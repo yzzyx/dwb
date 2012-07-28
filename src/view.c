@@ -1037,13 +1037,14 @@ view_clean(GList *gl) {
 DwbStatus 
 view_remove(GList *gl) {
   if (!dwb.state.views->next) {
-    if (GET_BOOL("close-last-tab")) {
+    if (dwb.misc.clt_policy == CLT_POLICY_CLOSE) {
       view_clear_tab(dwb.state.fview);
       dwb_end();
       return STATUS_END;
     }
-    else 
-      return STATUS_OK;
+    if (dwb.misc.clt_policy == CLT_POLICY_CLEAR) 
+      view_clear_tab(dwb.state.fview);
+    return STATUS_OK;
   }
   if (dwb.state.nummod >= 0) {
     gl = g_list_nth(dwb.state.views, dwb.state.nummod - 1);

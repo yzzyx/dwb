@@ -2,12 +2,12 @@
 .\"     Title: dwb
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 07/26/2012
+.\"      Date: 07/28/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB" "1" "07/26/2012" "\ \&" "\ \&"
+.TH "DWB" "1" "07/28/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -3047,12 +3047,14 @@ and
 \fIwebbrowser\fR\&.
 .RE
 .PP
-\fBclose\-last\-tab\fR
+\fBclose\-last\-tab\-policy\fR
 .RS 4
-Whether to close the last tab if
-\fIclose_tab\fR
-is called, if set to true the last tab\(cqs history is cleared and the window is closed; default value:
-\fIfalse\fR\&.
+Behaviour when the last tab is closed, possible values are
+\fIignore\fR,
+\fIclear\fR
+and
+\fIclose\fR; default value:
+\fIignore\fR\&.
 .RE
 .PP
 \fBclose\-tab\-focus\-policy\fR

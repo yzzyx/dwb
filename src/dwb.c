@@ -69,6 +69,7 @@ static DwbStatus dwb_set_cookie_accept_policy(GList *, WebSettings *);
 static DwbStatus dwb_set_favicon(GList *, WebSettings *);
 static DwbStatus dwb_set_auto_insert_mode(GList *, WebSettings *);
 static DwbStatus dwb_set_tabbar_delay(GList *, WebSettings *);
+static DwbStatus dwb_set_close_last_tab_policy(GList *, WebSettings *);
 static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_find_delay(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_do_not_track(GList *gl, WebSettings *s);
@@ -179,7 +180,18 @@ dwb_set_do_not_track(GList *gl, WebSettings *s) {
   return STATUS_OK;
 }/*}}}*/
 
-
+static DwbStatus 
+dwb_set_close_last_tab_policy(GList *gl, WebSettings *s) {
+  if (!g_strcmp0("clear", s->arg_local.p)) 
+    dwb.misc.clt_policy = CLT_POLICY_CLEAR;
+  else if (!g_strcmp0("close", s->arg_local.p)) 
+    dwb.misc.clt_policy = CLT_POLICY_CLOSE;
+  else if (!g_strcmp0("ignore", s->arg_local.p)) 
+    dwb.misc.clt_policy = CLT_POLICY_INGORE;
+  else 
+    return STATUS_ERROR;
+  return STATUS_OK;
+}
 
 static DwbStatus 
 dwb_set_ntlm(GList *gl, WebSettings *s) {

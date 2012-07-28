@@ -388,6 +388,12 @@ enum {
 } ClipboardAction;
 
 typedef enum {
+  CLT_POLICY_INGORE,
+  CLT_POLICY_CLEAR,
+  CLT_POLICY_CLOSE,
+} CloseLastTabPolicy;
+
+typedef enum {
   COOKIE_STORE_SESSION,
   COOKIE_STORE_PERSISTENT,
   COOKIE_STORE_NEVER,
@@ -745,7 +751,7 @@ struct _Misc {
   TabPosition tab_position;
   char *hint_style;
   int script_signals;
-
+  CloseLastTabPolicy clt_policy;
 };
 enum Files {
   FILES_FIRST = 0,
