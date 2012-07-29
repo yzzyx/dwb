@@ -36,11 +36,13 @@
  *
  * shortcut       : Shortcut to block / allow requests, default "erp"
  *
- * whitelist      : A path to the whitelisting file, default is
+ * unblock        : Shortcut to unblock always blocked requests, default "erP"
+ *
+ * whiteList      : A path to the whitelisting file, default is
  *                  $XDG_CONFIG_HOME/dwb/<profile>/requestpolicy.json
  *
  * autoreload     : Whether to automatically reload the website after the
- *                  whitelist has changed, default false
+ *                  persistentList has changed, default false
  *
  * notify         : Whether to notify about blocked request, default false
  *
@@ -49,7 +51,7 @@
  *
  * ------------------------------------------------------------------------------
  * |extensions.load("requestpolicy", {                                          |
- * |    whitelist     : system.getEnv("HOME") + "/.dwb_request_policy",         |
+ * |    persistentList     : system.getEnv("HOME") + "/.dwb_request_policy",         |
  * |    autoreload    : true                                                    |
  * |});                                                                         |
  * ------------------------------------------------------------------------------
@@ -75,8 +77,9 @@ var me = "requestpolicy";
 var priv = "_requestPolicy" + parseInt(Math.random() * 9999999999, 10);
 
 var defaultConfig = {
-  whitelist : data.configDir + "/" + data.profile + "/requestpolicy.json",
+  whiteList : data.configDir + "/" + data.profile + "/requestpolicy.json",
   shortcut : "erp",
+  unblock : "erP",
   autoreload : false, 
   notify : false
 };
@@ -88,8 +91,8 @@ var sigs = {
   loadFinished : -1
 };
 
-var whiteList = null;
-var tmpWhiteList = {};
+var persistentList = null;
+var tmpList = {};
 
 var regex = {
   empty : /^\s*$/
@@ -106,68 +109,26 @@ function getPrivate(wv) {
   }
   return o;
 }
-// WHITELIST {{{
-function doWhiteList(o, key, value) {
+function listAdd(o, key, value, doWrite) {
   if (!o[key])
     o[key] = [];
   if (strIndexOf(o[key], value) == -1) 
     o[key].push(value);
+  if (doWrite) 
+    io.write(config.whiteList, "w", JSON.stringify(persistentList));
 }
-function tmpWhiteListAction() {
-  doWhiteList(tmpWhiteList, tabs.current.mainFrame.domain, this.domain);
-}
-function whiteListAction() {
-  doWhiteList(whiteList, tabs.current.mainFrame.domain, this.domain);
-  io.write(config.whitelist, "w", JSON.stringify(whiteList));
-}
-
-function whiteListAllAction() {
-  doWhiteList(whiteList, "_all", tabs.current.mainFrame.domain);
-  io.write(config.whitelist, "w", JSON.stringify(whiteList));
-}
-function alwaysAllow() {
-  doWhiteList(whiteList, "_always", this.domain);
-  io.write(config.whitelist, "w", JSON.stringify(whiteList));
-}
-function tmpWhiteListAllAction() {
-  doWhiteList(tmpWhiteList, "_all", tabs.current.mainFrame.domain);
-}//}}}
-
-// BLACKLIST {{{
-function doBlackList(o, firstParty, domain) {
+function listRemove(o, firstParty, domain, doWrite) {
   var idx;
   if (o[firstParty] && (idx = strIndexOf(o[firstParty], domain)) != -1) {
     o[firstParty].splice(idx, 1);
     if (o[firstParty].length === 0) 
       delete o[firstParty];
+    if (doWrite) 
+      io.write(config.whiteList, "w", JSON.stringify(persistentList));
     return true;
   }
   return false;
 }
-function blackListAction() {
-  var firstParty = tabs.current.mainFrame.domain;
-  if (doBlackList(whiteList, firstParty, this.domain)) 
-    io.write(config.whitelist, "w", JSON.stringify(whiteList));
-  doBlackList(tmpWhiteList, firstParty, this.domain);
-}
-function alwaysDeny() {
-  doBlackList(whiteList, "_always", this.domain);
-  io.write(config.whitelist, "w", JSON.stringify(whiteList));
-}
-function blackListAll() {
-  var i;
-  var blackListed = false;
-  var firstParty = tabs.current.mainFrame.domain;
-  var domains = getPrivate(tabs.current).domains;
-  for (i=0; i<domains.length; i++) 
-    blackListed = doBlackList(whiteList, firstParty, domains[i]) || blackListed;
-  blackListed = doBlackList(whiteList, "_all", firstParty) || blackListed;
-  if (blackListed) 
-    io.write(config.whitelist, "w", JSON.stringify(whiteList));
-  for (i=0; i<domains.length; i++) 
-    doBlackList(tmpWhiteList, firstParty, priv[i]);
-  doBlackList(tmpWhiteList, "_all", firstParty);
-}//}}}
 
 function strIndexOf(a, s) {
   for (var i=0, l=a.length; i<l; ++i) {
@@ -180,7 +141,7 @@ function strIndexOf(a, s) {
 function showMenu() {
   var tmpWhiteListed, whiteListed;
   var isWhiteListed = false;
-  var dom, i, domains, labels;
+  var dom, i, domains, labels, generals, currentDomain;
 
   var domain = tabs.current.mainFrame.domain;
   if (domain === null)
@@ -188,64 +149,91 @@ function showMenu() {
 
   domains = getPrivate(tabs.current).domains;
   labels = [];
+  generals = [];
+  currentDomain = tabs.current.mainFrame.domain;
 
   for (i=0; i<domains.length; i++) {
-    dom = domains[i];
-    whiteListed = whiteList[domain] && strIndexOf(whiteList[domain], dom) != -1;
-    tmpWhiteListed = tmpWhiteList[domain] && strIndexOf(tmpWhiteList[domain], dom) != -1;
-    if (!whiteList._always || strIndexOf(whiteList._always, dom) == -1) {
-      if (!whiteListed && !tmpWhiteListed) {
-        labels.push({ 
-            left : "[" + dom + "] allow", 
-            action : whiteListAction, 
-            domain : dom 
-        });
-        labels.push({ 
-            left : "[" + dom + "] allow temporarily", 
-            action : tmpWhiteListAction, 
-            domain : dom
-        });
-      }
+    (function(dom) {
+        if (persistentList._alwaysBlock && strIndexOf(persistentList._alwaysBlock, dom) != -1) 
+          return;
+        whiteListed = persistentList[domain] && strIndexOf(persistentList[domain], dom) != -1;
+        tmpWhiteListed = tmpList[domain] && strIndexOf(tmpList[domain], dom) != -1;
+        if (!persistentList._always || strIndexOf(persistentList._always, dom) == -1) {
+          if (!whiteListed && !tmpWhiteListed) {
+            labels.push({ 
+                left : "[" + dom + "] allow", 
+                action : function () {
+                  listAdd(persistentList, currentDomain, dom, true);
+                }
+            });
+            labels.push({ 
+                left : "[" + dom + "] allow temporarily", 
+                action : function() {
+                  listAdd(tmpList, currentDomain, dom, false);
+                }
+            });
+          }
 
-      else {
+          else {
+            labels.push({ 
+                left : "[" +  dom + "] block",
+                action : function() {
+                  listRemove(persistentList, currentDomain, dom, true);
+                  listRemove(tmpList, currentDomain, dom, false);
+                }
+            });
+          }
+        }
+        isWhiteListed = isWhiteListed || whiteListed || tmpWhiteListed;
+        if (!persistentList._always || strIndexOf(persistentList._always, dom) == -1) {
+          labels.push({
+              left : "[" +  dom + "] allow on all sites", 
+              action : function() {
+                listAdd(persistentList, "_always", dom, true);
+              }
+          });
+        }
+        else {
+          labels.push({
+              left : "[" + dom + "] don't allow on all sites", 
+              action : function() {
+                listRemove(persistentList, "_always", dom, true);
+              }
+          });
+        }
         labels.push({ 
-            left : "[" +  dom + "] block",
-            action : blackListAction, 
-            domain : dom
+            left : "[" + dom + "] block on all sites", 
+            action : function () {
+              listAdd(persistentList, "_alwaysBlock", dom, true);
+            }
         });
-      }
-    }
-    isWhiteListed = isWhiteListed || whiteListed || tmpWhiteListed;
-    if (!whiteList._always || strIndexOf(whiteList._always, dom) == -1) {
-      labels.push({
-          left : "[" +  dom + "] allow on all sites", 
-          action : alwaysAllow,
-          domain : dom
-      });
-    }
-    else {
-      labels.push({
-          left : "[" + dom + "] don't allow on all sites", 
-          action : alwaysDeny,
-          domain : dom
-      });
-    }
+    })(domains[i]);
   }
   if (isWhiteListed || 
-    (whiteList._all && strIndexOf(whiteList._all, domain) != -1 ) ||
-    (tmpWhiteList._all && strIndexOf(tmpWhiteList._all, domain) != -1 )) {
+      (persistentList._all && strIndexOf(persistentList._all, domain) != -1 ) ||
+      (tmpList._all && strIndexOf(tmpList._all, domain) != -1 )) {
     labels.unshift({
         left : "Block all requests on " + domain, 
-        action : blackListAll
+        action : function () {
+          delete persistentList[currentDomain];
+          listRemove(persistentList, "_all", currentDomain, false);
+          io.write(config.whiteList, "w", JSON.stringify(persistentList));
+          delete tmpList[currentDomain];
+          listRemove(tmpList, "_all", currentDomain, false);
+        }
     });
   }
   labels.unshift({
       left : "Temporarily allow all requests on " + domain, 
-      action : tmpWhiteListAllAction
+      action : function() {
+        listAdd(tmpList, "_all", currentDomain, false);
+      }
   });
   labels.unshift({
       left : "Allow all requests on " + domain, 
-      action : whiteListAllAction
+      action : function() {
+        listAdd(persistentList, "_all", currentDomain, true);
+      }
   });
 
   tabComplete("Requestpolicy: ", labels, function (response) {
@@ -261,6 +249,38 @@ function showMenu() {
     }
   }, true);
 }//}}}
+function unblock() {
+  if (!persistentList._alwaysBlock)
+    return;
+  var domains = getPrivate(tabs.current).domains;
+  //var domains = persistentList._alwaysBlock;
+  var labels = [], i, l;
+  for (i=0, l = domains.length; i<l; i++) {
+    (function(dom) {
+        if (strIndexOf(persistentList._alwaysBlock, dom) != -1) {
+          labels.push({ left : dom });
+        }
+    })(domains[i]);
+  }
+  if (labels.length > 0) {
+    tabComplete("Unblock: ", labels, function(response) {
+      listRemove(persistentList, "_alwaysBlock", response, true);
+      if (config.autoreload) {
+        tabs.current.reload();
+      }
+    }, true);
+  }
+  else {
+    io.notify("No requests to unblock");
+  }
+}
+function blockRequest(wv, request, priv, domain) {
+  request.uri = "about:blank";
+  priv.blocked++;
+  if (config.notify && wv == tabs.current)
+    io.notify("RP: blocked " + domain);
+  return true;
+}
 // SIGNALS {{{
 function resourceCB(wv, frame, request, response) {
   var o, message, domain, firstParty;
@@ -277,18 +297,24 @@ function resourceCB(wv, frame, request, response) {
   if (strIndexOf(o.domains, domain) == -1) {
     o.domains.push(domain);
   }
-  if ((whiteList._all && strIndexOf(whiteList._all, firstParty) != -1) || 
-      (tmpWhiteList._all && strIndexOf(tmpWhiteList._all, firstParty) != -1)) 
+
+  // Check for requests that are always blocked
+  if (persistentList._alwaysBlock && strIndexOf(persistentList._alwaysBlock, domain) != -1) 
+    return blockRequest(wv, request, o, domain);
+
+  // Check if domain is always allowed
+  if ((persistentList._all && strIndexOf(persistentList._all, firstParty) != -1) || 
+      (tmpList._all && strIndexOf(tmpList._all, firstParty) != -1)) 
     return false; 
-  if (whiteList._always && strIndexOf(whiteList._always, domain) != -1) 
+
+  // Check request is always allowed
+  if (persistentList._always && strIndexOf(persistentList._always, domain) != -1) 
       return false;
-  if (  (!whiteList[firstParty]    || strIndexOf(whiteList[firstParty], domain) == -1) && 
-        (!tmpWhiteList[firstParty] || strIndexOf(tmpWhiteList[firstParty], domain) == -1)) {
-    request.uri = 'about:blank';
-    o.blocked++;
-    if (config.notify && wv == tabs.current)
-      io.notify("RP: blocked " + domain);
-    return true;
+
+  // Check if request is whitelisted
+  if (  (!persistentList[firstParty]    || strIndexOf(persistentList[firstParty], domain) == -1) && 
+        (!tmpList[firstParty] || strIndexOf(tmpList[firstParty], domain) == -1)) {
+    return blockRequest(wv, request, o, domain);
   }
 }
 function navigationCB(wv, frame) {
@@ -330,23 +356,25 @@ return {
         config[key] = typeof c[key] == typeof defaultConfig[key] ? c[key] : defaultConfig[key];
       });
     }
-    if (system.fileTest(config.whitelist, FileTest.regular | FileTest.symlink)) {
-      var rawWhiteList = io.read(config.whitelist);
+    if (system.fileTest(config.whiteList, FileTest.regular | FileTest.symlink)) {
+      var rawWhiteList = io.read(config.whiteList);
       try {
-        whiteList = JSON.parse(rawWhiteList);
+        persistentList = JSON.parse(rawWhiteList);
       }
       catch (e) {
-        extensions.debug(me, e, "Error parsing whitelist");
+        extensions.debug(me, e, "Error parsing persistentList");
       }
     }
-    whiteList = whiteList || {};
+    persistentList = persistentList || {};
     connect();
     bind(config.shortcut, showMenu, "requestpolicy");
+    bind(config.unblock, unblock, "requestpolicyUnblock");
     return true;
   },
   end : function () {
     disconnect();
     unbind("requestpolicy");
+    unbind("requestpolicyUnblock");
   }
 }
 // vim: set ft=javascript:
