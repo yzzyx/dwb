@@ -36,7 +36,11 @@
  *
  * shortcut       : Shortcut to block / allow requests, default "erp"
  *
- * unblock        : Shortcut to unblock always blocked requests, default "erP"
+ * unblockCurrent : Shortcut to unblock always blocked requests, shows only
+ *                  domains from the current site, default "erC"
+ *
+ * unblockAll     : Shortcut to unblock always blocked requests, shows all
+ *                  blocked domains, default "erA"
  *
  * whiteList      : A path to the whitelisting file, default is
  *                  $XDG_CONFIG_HOME/dwb/<profile>/requestpolicy.json
@@ -79,7 +83,8 @@ var priv = "_requestPolicy" + parseInt(Math.random() * 9999999999, 10);
 var defaultConfig = {
   whiteList : data.configDir + "/" + data.profile + "/requestpolicy.json",
   shortcut : "erp",
-  unblock : "erP",
+  unblockCurrent : "erC",
+  unblockAll : "erA",
   autoreload : false, 
   notify : false
 };
@@ -236,7 +241,7 @@ function showMenu() {
       }
   });
 
-  tabComplete("Requestpolicy: ", labels, function (response) {
+  tabComplete("Requestpolicy:", labels, function (response) {
     var l;
     for (var i=0; i<labels.length; i++) {
       l = labels[i];
@@ -249,7 +254,7 @@ function showMenu() {
     }
   }, true);
 }//}}}
-function unblock() {
+function unblockCurrent() {
   if (!persistentList._alwaysBlock)
     return;
   var domains = getPrivate(tabs.current).domains;
@@ -263,15 +268,34 @@ function unblock() {
     })(domains[i]);
   }
   if (labels.length > 0) {
-    tabComplete("Unblock: ", labels, function(response) {
+    tabComplete("Unblock:", labels, function(response) {
       listRemove(persistentList, "_alwaysBlock", response, true);
-      if (config.autoreload) {
+      if (config.autoreload) 
         tabs.current.reload();
-      }
     }, true);
   }
   else {
-    io.notify("No requests to unblock");
+    io.notify("No domains to unblock");
+  }
+}
+function unblockAll() {
+  if (!persistentList._alwaysBlock) {
+    io.notify("No domains to unblock");
+    return;
+  }
+  var i, l, labels = [];
+  var domains = persistentList._alwaysBlock;
+  for (i=0, l=domains.length; i<l; ++i) {
+    (function (dom) {
+        labels.push({ left : dom });
+    })(domains[i]);
+  }
+  if (labels.length > 0) {
+    tabComplete("Unblock:", labels, function(response) {
+      listRemove(persistentList, "_alwaysBlock", response, true);
+      if (config.autoreload) 
+        tabs.current.reload();
+    }, true);
   }
 }
 function blockRequest(wv, request, priv, domain) {
@@ -368,13 +392,15 @@ return {
     persistentList = persistentList || {};
     connect();
     bind(config.shortcut, showMenu, "requestpolicy");
-    bind(config.unblock, unblock, "requestpolicyUnblock");
+    bind(config.unblockCurrent, unblockCurrent, "requestpolicyUnblockCurrent");
+    bind(config.unblockAll, unblockAll, "requestpolicyUnblockAll");
     return true;
   },
   end : function () {
     disconnect();
     unbind("requestpolicy");
-    unbind("requestpolicyUnblock");
+    unbind("requestpolicyUnblockCurrent");
+    unbind("requestpolicyUnblockAll");
   }
 }
 // vim: set ft=javascript:
