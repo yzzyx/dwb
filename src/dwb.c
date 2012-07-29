@@ -2234,11 +2234,14 @@ dwb_load_uri(GList *gl, const char *arg) {
     }
 #ifdef WITH_LIBSOUP_2_38
     else if (dwb.misc.dns_lookup) {
-      if (dwb_check_localhost(tmpuri)) 
-        uri = g_strdup_printf("http://%s", tmpuri);
-      else {
+      uri = g_strdup_printf("http://%s", tmpuri);
+      
+      if (!dwb_check_localhost(tmpuri)) {
+        SoupURI *suri = soup_uri_new(uri);
+        const char *host = suri ? soup_uri_get_host(suri) : " ";
         VIEW(gl)->status->request_uri = g_strdup(tmpuri);
-        soup_session_prefetch_dns(dwb.misc.soupsession, tmpuri, NULL, (SoupAddressCallback)callback_dns_resolve, gl);
+        soup_session_prefetch_dns(dwb.misc.soupsession, host, NULL, (SoupAddressCallback)callback_dns_resolve, gl);
+        if (suri != NULL) soup_uri_free(suri); 
         goto clean;
       }
     }
