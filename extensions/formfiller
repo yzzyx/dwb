@@ -22,8 +22,8 @@
  *
  * Extension that saves form data and  fills forms with previously saved data
  *
- * To use this extension save this script as $HOME/.local/share/dwb/extensions/formfiller 
- * and load it with a userscript in $HOME/.config/dwb/userscripts/, e.g. 
+ * To use this extension  load it with a userscript in 
+ * $HOME/.config/dwb/userscripts/, e.g. 
  *
  * ------------------------------------------------------------------------------
  * |#!javascript                                                                | 

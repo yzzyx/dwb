@@ -26,8 +26,8 @@
  * $XDG_CONFIG_HOME/dwb/scripts/. 
  *
  *
- * To use this extension save this script as $HOME/.local/share/dwb/extensions/userscripts 
- * and load it with a userscript in $HOME/.config/dwb/userscripts/, e.g. 
+ * To use this extension load it with a userscript in 
+ * $HOME/.config/dwb/userscripts/, e.g. 
  *
  * ------------------------------------------------------------------------------
  * |#!javascript                                                                | 

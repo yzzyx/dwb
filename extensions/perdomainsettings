@@ -25,8 +25,8 @@
  * http://webkitgtk.org/reference/webkitgtk/unstable/WebKitWebSettings.html
  * for details. 
  *
- * To use this extension save this script as * $HOME/.local/share/dwb/extensions/perdomainsettings 
- * and load it with a userscript in $HOME/.config/dwb/userscripts/, e.g. 
+ * To use this extension load it with a userscript in 
+ * $HOME/.config/dwb/userscripts/, e.g. 
  *
  * ------------------------------------------------------------------------------
  * |#!javascript                                                                | 

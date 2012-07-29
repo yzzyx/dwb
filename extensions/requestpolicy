@@ -21,14 +21,18 @@
  *
  * Extension that blocks requests from thirdparty domains with whitelisting
  * support, either permanently or just for the session.
+ * It is also possible to block requests from certain domains on all sites, they
+ * have highest precedence and will also be blocked on sites where 
+ * thirdparty requests are allowed in general. 
  *
- * To use this extension save this script as $HOME/.local/share/dwb/extensions/requestpolicy
- * and load it with a userscript in $HOME/.config/dwb/userscripts/, e.g. 
+ *
+ * To use this extension load it with a userscript in
+ * $HOME/.config/dwb/userscripts/, e.g. 
  *
  * ------------------------------------------------------------------------------
  * |#!javascript                                                                | 
  * |                                                                            | 
- * |extensions.load("requestpolicy");                                              | 
+ * |extensions.load("requestpolicy");                                           | 
  * ------------------------------------------------------------------------------
  *
  *
@@ -55,7 +59,7 @@
  *
  * ------------------------------------------------------------------------------
  * |extensions.load("requestpolicy", {                                          |
- * |    persistentList     : system.getEnv("HOME") + "/.dwb_request_policy",         |
+ * |    persistentList     : system.getEnv("HOME") + "/.dwb_request_policy",    |
  * |    autoreload    : true                                                    |
  * |});                                                                         |
  * ------------------------------------------------------------------------------
