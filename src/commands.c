@@ -82,7 +82,7 @@ commands_get_webview_with_nummod() {
     return CURRENT_WEBVIEW();
 }
 static GList * 
-commands_get_view_with_nummod() {
+commands_get_view_from_nummod() {
   if (dwb.state.nummod > 0 && dwb.state.nummod <= (gint)g_list_length(dwb.state.views)) 
     return g_list_nth(dwb.state.views, NUMMOD - 1);
   return dwb.state.fview;
@@ -796,7 +796,7 @@ commands_tab_move(KeyMap *km, Arg *arg) {
 }
 DwbStatus 
 commands_clear_tab(KeyMap *km, Arg *arg) {
-  GList *gl = commands_get_view_with_nummod();
+  GList *gl = commands_get_view_from_nummod();
   view_clear_tab(gl);
   return STATUS_OK;
 }
@@ -882,6 +882,15 @@ commands_toggle_tab(KeyMap *km, Arg *arg) {
 
 DwbStatus 
 commands_group_show(KeyMap *km, Arg *arg) {
+  int n = MIN(NUMMOD, 9);
+  for (GList *gl = dwb.state.views; gl != NULL; gl=gl->next) {
+    if (VIEW(gl)->status->group & (1<<n)) {
+      dwb_show_tab(gl);
+    }
+    else {
+      dwb_hide_tab(gl);
+    }
+  }
   return STATUS_OK;
 }
 DwbStatus 
@@ -890,5 +899,16 @@ commands_group_toggle(KeyMap *km, Arg *arg) {
 }
 DwbStatus 
 commands_group_tag(KeyMap *km, Arg *arg) {
+  int n = MIN(NUMMOD, 9);
+  puts("blub");
+  if (CURRENT_VIEW()->status->group & (1<<n)) {
+    CURRENT_VIEW()->status->group &= ~(1<<n);
+    dwb_set_normal_message(dwb.state.fview, true, "Untagged group %d", n);
+  }
+  else {
+    CURRENT_VIEW()->status->group |= 1<<n;
+    dwb_set_normal_message(dwb.state.fview, true, "Tagged group %d", n);
+  }
+
   return STATUS_OK;
 }

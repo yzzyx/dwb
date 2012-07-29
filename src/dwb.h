@@ -586,6 +586,7 @@ struct _State {
 
   gint last_tab;
   gboolean do_not_track;
+  guint currrent_groups;
 };
 
 typedef enum _SettingsApply {
@@ -942,4 +943,6 @@ void dwb_free_list(GList *list, void (*func)(void*));
 void dwb_init(void);
 void dwb_init_files(void);
 void dwb_init_settings(void);
+void dwb_hide_tab(GList *gl);
+void dwb_show_tab(GList *gl);
 #endif
