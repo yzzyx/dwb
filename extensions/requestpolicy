@@ -145,7 +145,7 @@ function strIndexOf(a, s) {
 function showMenu() {
   var tmpWhiteListed, whiteListed;
   var isWhiteListed = false;
-  var dom, i, domains, labels, generals, currentDomain;
+  var dom, i, l, domains, labels, currentDomain;
 
   var domain = tabs.current.mainFrame.domain;
   if (domain === null)
@@ -153,10 +153,9 @@ function showMenu() {
 
   domains = getPrivate(tabs.current).domains;
   labels = [];
-  generals = [];
   currentDomain = tabs.current.mainFrame.domain;
 
-  for (i=0; i<domains.length; i++) {
+  for (i=0, l=domains.length; i<l; ++i){
     (function(dom) {
         if (persistentList._alwaysBlock && strIndexOf(persistentList._alwaysBlock, dom) != -1) 
           return;
@@ -213,9 +212,9 @@ function showMenu() {
         });
     })(domains[i]);
   }
-  if (isWhiteListed || 
-      (persistentList._all && strIndexOf(persistentList._all, domain) != -1 ) ||
-      (tmpList._all && strIndexOf(tmpList._all, domain) != -1 )) {
+  var allAllowed = (persistentList._all && strIndexOf(persistentList._all, domain) != -1) ||
+                   (tmpList._all && strIndexOf(tmpList._all, domain) != -1);
+  if (isWhiteListed || allAllowed) {
     labels.unshift({
         left : "Block all requests on " + domain, 
         action : function () {
@@ -227,18 +226,29 @@ function showMenu() {
         }
     });
   }
-  labels.unshift({
-      left : "Temporarily allow all requests on " + domain, 
-      action : function() {
-        listAdd(tmpList, "_all", currentDomain, false);
-      }
-  });
-  labels.unshift({
-      left : "Allow all requests on " + domain, 
-      action : function() {
-        listAdd(persistentList, "_all", currentDomain, true);
-      }
-  });
+  if (allAllowed) {
+    labels.unshift({
+        left : "Don't allow all requests on " + domain, 
+        action : function() {
+          listRemove(tmpList, "_all", currentDomain, false);
+          listRemove(persistentList, "_all", currentDomain, true);
+        }
+    });
+  }
+  else {
+    labels.unshift({
+        left : "Temporarily allow all requests on " + domain, 
+        action : function() {
+          listAdd(tmpList, "_all", currentDomain, false);
+        }
+    });
+    labels.unshift({
+        left : "Allow all requests on " + domain, 
+        action : function() {
+          listAdd(persistentList, "_all", currentDomain, true);
+        }
+    });
+  }
 
   tabComplete("Requestpolicy:", labels, function (response) {
     var i, l, len;
