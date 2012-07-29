@@ -895,18 +895,27 @@ commands_group_show(KeyMap *km, Arg *arg) {
 }
 DwbStatus 
 commands_group_toggle(KeyMap *km, Arg *arg) {
+  int n = MIN(NUMMOD, 9), i=0;
+  dwb.state.current_groups ^= (1<<n);
+  for (GList *gl = dwb.state.views; gl; gl=gl->next, i++) {
+
+  }
+  printf("%d\n", dwb.state.current_groups);
   return STATUS_OK;
 }
 DwbStatus 
 commands_group_tag(KeyMap *km, Arg *arg) {
   int n = MIN(NUMMOD, 9);
-  puts("blub");
   if (CURRENT_VIEW()->status->group & (1<<n)) {
     CURRENT_VIEW()->status->group &= ~(1<<n);
+    if (!GROUP_VISIBLE(dwb.state.fview))
+      dwb_hide_tab(dwb.state.fview);
     dwb_set_normal_message(dwb.state.fview, true, "Untagged group %d", n);
   }
   else {
     CURRENT_VIEW()->status->group |= 1<<n;
+    if (GROUP_VISIBLE(dwb.state.fview))
+      dwb_show_tab(dwb.state.fview);
     dwb_set_normal_message(dwb.state.fview, true, "Tagged group %d", n);
   }
 

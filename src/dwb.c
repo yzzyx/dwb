@@ -1278,9 +1278,11 @@ dwb_hide_tabbar(int *running) {
 
 void 
 dwb_hide_tab(GList *gl) {
+  puts("hide tab");
 }
 void 
 dwb_show_tab(GList *gl) {
+  puts("show tab");
 }
 
 /* dwb_focus_view(GList *gl){{{*/
