@@ -161,8 +161,8 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
 
     double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
     char buffer[128] = {0};
-    const char *format = speed > 1 ? "[%.1fM/s|%d:%02d|%2d%%|%.3f/%.3f]" : "[%.3fK/s|%d:%02d|%2d%%|%.3f/%.3f]";
-    snprintf(buffer, 128, format, speed, remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
+    const char *format = speed > 1 ? "[%.1fM/s|%d:%02d|%2d%%|%.3f/%.3f]" : "[%3.1fK/s|%d:%02d|%2d%%|%.3f/%.3f]";
+    snprintf(buffer, 128, format, speed > 1 ? speed : speed*1024, remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
     gtk_label_set_text(GTK_LABEL(label->rlabel), buffer);
 
 #if _HAS_GTK3
