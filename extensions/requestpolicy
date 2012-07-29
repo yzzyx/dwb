@@ -78,7 +78,6 @@
  * */
 
 var me = "requestpolicy";
-var priv = "_requestPolicy" + parseInt(Math.random() * 9999999999, 10);
 
 var defaultConfig = {
   whiteList : data.configDir + "/" + data.profile + "/requestpolicy.json",
@@ -99,21 +98,21 @@ var sigs = {
 var persistentList = null;
 var tmpList = {};
 
-var regex = {
-  empty : /^\s*$/
-};
+var getPrivate = (function() {
+  var priv = "_requestPolicy" + parseInt(Math.random() * 9999999999, 10);
+  return function (wv) {
+    var o = wv[priv];
+    if (o === undefined) {
+      o = { domains : [], blocked : 0 };
+      Object.defineProperty(wv, priv, {
+          value : o,
+          writable : true
+      });
+    }
+    return o;
+  };
+})();
 
-function getPrivate(wv) {
-  var o = wv[priv];
-  if (o === undefined) {
-    o = { domains : [], blocked : 0 };
-    Object.defineProperty(wv, priv, {
-        value : o,
-        writable : true
-    });
-  }
-  return o;
-}
 function listAdd(o, key, value, doWrite) {
   if (!o[key])
     o[key] = [];
@@ -242,8 +241,8 @@ function showMenu() {
   });
 
   tabComplete("Requestpolicy:", labels, function (response) {
-    var l;
-    for (var i=0; i<labels.length; i++) {
+    var i, l, len;
+    for (i=0, len = labels.length; i<len; ++i) {
       l = labels[i];
       if (l.left == response) {
         l.action();
@@ -261,11 +260,9 @@ function unblockCurrent() {
   //var domains = persistentList._alwaysBlock;
   var labels = [], i, l;
   for (i=0, l = domains.length; i<l; i++) {
-    (function(dom) {
-        if (strIndexOf(persistentList._alwaysBlock, dom) != -1) {
-          labels.push({ left : dom });
-        }
-    })(domains[i]);
+    if (strIndexOf(persistentList._alwaysBlock, domains[i]) != -1) {
+      labels.push({ left : domains[i] });
+    }
   }
   if (labels.length > 0) {
     tabComplete("Unblock:", labels, function(response) {
@@ -286,9 +283,7 @@ function unblockAll() {
   var i, l, labels = [];
   var domains = persistentList._alwaysBlock;
   for (i=0, l=domains.length; i<l; ++i) {
-    (function (dom) {
-        labels.push({ left : dom });
-    })(domains[i]);
+    labels.push({ left : domains[i] });
   }
   if (labels.length > 0) {
     tabComplete("Unblock:", labels, function(response) {
@@ -306,41 +301,43 @@ function blockRequest(wv, request, priv, domain) {
   return true;
 }
 // SIGNALS {{{
-function resourceCB(wv, frame, request, response) {
-  var o, message, domain, firstParty;
-  if (regex.empty.test(request.uri))
-    return false;
-  message = request.message;
-  if (!message)
-    return false;
-  firstParty = util.domainFromHost(message.firstParty.host);
-  domain = util.domainFromHost(message.uri.host);
-  if (firstParty == domain)
-    return false;
-  o = getPrivate(wv);
-  if (strIndexOf(o.domains, domain) == -1) {
-    o.domains.push(domain);
-  }
-
-  // Check for requests that are always blocked
-  if (persistentList._alwaysBlock && strIndexOf(persistentList._alwaysBlock, domain) != -1) 
-    return blockRequest(wv, request, o, domain);
-
-  // Check if domain is always allowed
-  if ((persistentList._all && strIndexOf(persistentList._all, firstParty) != -1) || 
-      (tmpList._all && strIndexOf(tmpList._all, firstParty) != -1)) 
-    return false; 
-
-  // Check request is always allowed
-  if (persistentList._always && strIndexOf(persistentList._always, domain) != -1) 
+var resourceCB = (function () {
+  var regexEmpty = /^\s*$/;
+  return function resourceCB(wv, frame, request, response) {
+    var o, message, domain, firstParty;
+    if (regexEmpty.test(request.uri))
       return false;
+    message = request.message;
+    if (!message)
+      return false;
+    firstParty = util.domainFromHost(message.firstParty.host);
+    domain = util.domainFromHost(message.uri.host);
+    if (firstParty == domain)
+      return false;
+    o = getPrivate(wv);
+    if (strIndexOf(o.domains, domain) == -1) {
+      o.domains.push(domain);
+    }
 
-  // Check if request is whitelisted
-  if (  (!persistentList[firstParty]    || strIndexOf(persistentList[firstParty], domain) == -1) && 
-        (!tmpList[firstParty] || strIndexOf(tmpList[firstParty], domain) == -1)) {
-    return blockRequest(wv, request, o, domain);
-  }
-}
+    // Check for requests that are always blocked
+    if (persistentList._alwaysBlock && strIndexOf(persistentList._alwaysBlock, domain) != -1) 
+      return blockRequest(wv, request, o, domain);
+
+    // Check if domain is always allowed
+    if ((persistentList._all && strIndexOf(persistentList._all, firstParty) != -1) || 
+        (tmpList._all && strIndexOf(tmpList._all, firstParty) != -1)) 
+      return false; 
+
+    // Check request is always allowed
+    if (persistentList._always && strIndexOf(persistentList._always, domain) != -1) 
+        return false;
+
+    // Check if request is whitelisted
+    if (  (!persistentList[firstParty]    || strIndexOf(persistentList[firstParty], domain) == -1) && 
+          (!tmpList[firstParty] || strIndexOf(tmpList[firstParty], domain) == -1)) 
+      return blockRequest(wv, request, o, domain);
+  };
+})();
 function navigationCB(wv, frame) {
   if (frame == wv.mainFrame) {
     var o = getPrivate(wv);
