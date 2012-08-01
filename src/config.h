@@ -184,12 +184,27 @@ static KeyValue KEYS[] = {
   { "eval",                     {   NULL,         0,                0 }, }, 
   { "download",                 {   "gd",         0,                0 }, }, 
   { "toggle_tab",               {   "@Tab@",      GDK_CONTROL_MASK, 0 }, }, 
+  { "group_tag",                {   "am",         0,                0 }, }, 
+  { "group_show",               {   "as",         0,                0 }, }, 
+  { "group_toggle",             {   "at",         0,                0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
 static FunctionMap FMAP [] = {
   { { "tab_new",              "Add a new tab",                    }, CP_COMMANDLINE, 
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "group_tag",              "Tag current tab to group",                    }, CP_COMMANDLINE, 
+    (Func)commands_group_tag,            NULL,                            POST_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "group_show",              "Show group",                    }, CP_COMMANDLINE, 
+    (Func)commands_group_show,            NULL,                            POST_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+
+  { { "group_toggle",              "Toggle group",                    }, CP_COMMANDLINE, 
+    (Func)commands_group_toggle,            NULL,                            POST_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
   { { "toggle_tab",              "Toggle between last and current tab",                    }, CP_COMMANDLINE, 

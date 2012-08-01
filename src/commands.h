@@ -95,5 +95,8 @@ DwbStatus commands_sanitize(KeyMap *, Arg *);
 DwbStatus commands_eval(KeyMap *, Arg *);
 DwbStatus commands_download(KeyMap *, Arg *);
 DwbStatus commands_toggle_tab(KeyMap *, Arg *);
+DwbStatus commands_group_tag(KeyMap *, Arg *);
+DwbStatus commands_group_toggle(KeyMap *, Arg *);
+DwbStatus commands_group_show(KeyMap *, Arg *);
 
 #endif

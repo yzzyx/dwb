@@ -112,6 +112,7 @@
 #define BOOLEAN(X)                  (!(!(X)))
 #define NAVIGATION(X)               ((Navigation*)((X)->data))
 #define JS_CONTEXT_REF(X)            (webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(WEBVIEW(gl))))
+#define GROUP_VISIBLE(gl)            (dwb.state.current_groups == 0 || (VIEW(gl)->status->group & dwb.state.current_groups))
 
 #define CURRENT_URL()               webkit_web_view_get_uri(CURRENT_WEBVIEW())
 
@@ -592,6 +593,7 @@ struct _State {
 
   gint last_tab;
   gboolean do_not_track;
+  guint current_groups;
 };
 
 typedef enum _SettingsApply {
@@ -632,6 +634,7 @@ struct _ViewStatus {
   unsigned int lockprotect;
   WebKitDOMElement *style;
   GSList *frames;
+  guint group;
 };
 struct _View {
   GtkWidget *web;
@@ -947,4 +950,6 @@ void dwb_free_list(GList *list, void (*func)(void*));
 void dwb_init(void);
 void dwb_init_files(void);
 void dwb_init_settings(void);
+void dwb_hide_tab(GList *gl);
+void dwb_show_tab(GList *gl);
 #endif

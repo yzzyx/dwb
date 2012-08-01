@@ -1278,6 +1278,7 @@ dwb_get_host(WebKitWebView *web) {
   return host;
 }/*}}}*/
 
+/* dwb_hide_tabbar {{{*/
 static gboolean
 dwb_hide_tabbar(int *running) {
   if (! (dwb.state.bar_visible & BAR_VIS_TOP)) {
@@ -1285,6 +1286,15 @@ dwb_hide_tabbar(int *running) {
   }
   *running = 0;
   return false;
+}/*}}}*/
+
+void 
+dwb_hide_tab(GList *gl) {
+  puts("hide tab");
+}
+void 
+dwb_show_tab(GList *gl) {
+  puts("show tab");
 }
 
 /* dwb_focus_view(GList *gl){{{*/
