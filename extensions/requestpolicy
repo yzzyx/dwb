@@ -15,7 +15,6 @@
 //  with this program; if not, write to the Free Software Foundation, Inc.,
 //  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
-//
 /*
  * Block requests from thirdparty domains
  *
@@ -59,8 +58,8 @@
  *
  * ------------------------------------------------------------------------------
  * |extensions.load("requestpolicy", {                                          |
- * |    persistentList     : system.getEnv("HOME") + "/.dwb_request_policy",    |
- * |    autoreload    : true                                                    |
+ * |    whiteList  : system.getEnv("HOME") + "/.dwb_request_policy",            |
+ * |    autoreload      : true                                                  |
  * |});                                                                         |
  * ------------------------------------------------------------------------------
  *
@@ -224,6 +223,7 @@ function showMenu() {
         action : function () {
           delete persistentList[currentDomain];
           listRemove(persistentList, "_all", currentDomain, false);
+          // necessary if persistentList.currentDomain exists
           io.write(config.whiteList, "w", JSON.stringify(persistentList));
           delete tmpList[currentDomain];
           listRemove(tmpList, "_all", currentDomain, false);
@@ -268,8 +268,10 @@ function showMenu() {
   }, true);
 }//}}}
 function unblockCurrent() {
-  if (!persistentList._alwaysBlock)
+  if (!persistentList._alwaysBlock) {
+    io.notify("No domains to unblock");
     return;
+  }
   var domains = getPrivate(tabs.current).domains;
   //var domains = persistentList._alwaysBlock;
   var labels = [], i, l;
