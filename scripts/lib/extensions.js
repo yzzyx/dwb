@@ -83,6 +83,19 @@
         io.print("\033[1mDWB EXTENSION: \033[0mextension \033[1m" + name + "\033[0m: " + message, "stderr");
       }
     },
+    "getConfig" : {
+      value : function(c, dc) {
+        var k, config = {};
+        if (c === null || c === undefined)
+          config =  dc;
+        else {
+          for (k in dc) {
+            config[k] = typeof c[k] === typeof dc[k] ? c[k] : dc[k];
+          }
+        }
+        return config;
+      }
+    }, 
     "load" : {
       value : function(name, c) {
         if (_registered[name] !== undefined) {
