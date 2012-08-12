@@ -369,15 +369,7 @@ function fillForm() {//{{{
 // init {{{
 return {
   init : function (c) {
-    var key;
-    if (c === null || c === undefined) {
-      config = defaultConfig;
-    }
-    else {
-      for (key in defaultConfig) {
-        config[key] = typeof c[key] == typeof defaultConfig[key] ? c[key] : defaultConfig[key];
-      }
-    }
+    config = extensions.getConfig(c, defaultConfig);
     bind(config.scGetForm, getForm, "formfillerGet");
     bind(config.scFillForm, fillForm, "formfillerFill");
     return true;

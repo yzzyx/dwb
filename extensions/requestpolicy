@@ -386,13 +386,7 @@ function disconnect() {
 }//}}}
 return {
   init : function(c) {
-    if (c === null || c === undefined) 
-      config = defaultConfig;
-    else {
-      defaultConfig.forEach(function (key, value, obj) {
-        config[key] = typeof c[key] == typeof defaultConfig[key] ? c[key] : defaultConfig[key];
-      });
-    }
+    config = extensions.getConfig(c, defaultConfig);
     if (system.fileTest(config.whiteList, FileTest.regular | FileTest.symlink)) {
       var rawWhiteList = io.read(config.whiteList);
       try {
