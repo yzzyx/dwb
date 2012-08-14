@@ -2071,11 +2071,12 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
 
 /* dwb_update_status(GList *gl) {{{*/
 void 
-dwb_update_status(GList *gl) {
+dwb_update_status(GList *gl, const char *title) {
   View *v = gl->data;
   char *filename = NULL;
   WebKitWebView *w = WEBKIT_WEB_VIEW(v->web);
-  const char *title = webkit_web_view_get_title(w);
+  if (title == NULL)
+    title = webkit_web_view_get_title(w);
   if (!title) 
     title = "---";
 
@@ -2115,7 +2116,7 @@ dwb_focus(GList *gl) {
   dwb.state.fview = gl;
   view_set_active_style(gl);
   dwb_focus_scroll(gl);
-  dwb_update_status(gl);
+  dwb_update_status(gl, NULL);
 }/*}}}*/
 
 /* dwb_new_window(const char *arg) {{{*/

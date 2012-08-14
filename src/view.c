@@ -553,7 +553,7 @@ view_icon_loaded(WebKitWebView *web, char *icon_uri, GList *gl) {
 /* view_title_cb {{{*/
 static void 
 view_title_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
-  dwb_update_status(gl);
+  dwb_update_status(gl, NULL);
 }/*}}}*/
 
 /* view_title_cb {{{*/
@@ -570,7 +570,7 @@ view_progress_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   if (v->status->progress == 100) {
     v->status->progress = 0;
   }
-  dwb_update_status(gl);
+  dwb_update_status(gl, NULL);
 }/*}}}*/
 
 /* view_popup_activate_cb {{{*/
@@ -680,7 +680,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       g_free(host);
       break;
     case WEBKIT_LOAD_FINISHED:
-      dwb_update_status(gl);
+      dwb_update_status(gl, NULL);
       /* TODO sqlite */
       if (!dwb.misc.private_browsing 
           && g_strcmp0(uri, "about:blank")

@@ -855,7 +855,7 @@ void dwb_set_status_text(GList *, const char *, DwbColor *,  PangoFontDescriptio
 void dwb_tab_label_set_text(GList *, const char *);
 void dwb_set_status_bar_text(GtkWidget *, const char *, DwbColor *,  PangoFontDescription *, gboolean);
 void dwb_update_status_text(GList *gl, GtkAdjustment *);
-void dwb_update_status(GList *gl);
+void dwb_update_status(GList *gl, const char *);
 void dwb_unfocus(void);
 
 DwbStatus dwb_prepend_navigation(GList *, GList **);

@@ -84,6 +84,7 @@ static JSValueRef connect_object(JSContextRef ctx, JSObjectRef function, JSObjec
 static JSValueRef disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef wv_set_title(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
@@ -94,6 +95,7 @@ static JSStaticFunction default_functions[] = {
 };
 static JSStaticFunction wv_functions[] = { 
     { "loadUri",         wv_load_uri,             kJSDefaultAttributes },
+    { "setTitle",        wv_set_title,             kJSDefaultAttributes },
     { "history",         wv_history,             kJSDefaultAttributes },
     { "reload",          wv_reload,             kJSDefaultAttributes },
     { "inject",          wv_inject,             kJSDefaultAttributes },
@@ -329,7 +331,7 @@ tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
 
 GList *
 find_webview(JSObjectRef o) {
-  GList *r;
+  GList *r = NULL;
   for (r = dwb.state.views; r && VIEW(r)->script_wv != o; r=r->next);
   return r;
 }
@@ -449,6 +451,23 @@ wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValue
   }
   return JSValueMakeNumber(ctx, -1); 
 }/*}}}*/
+
+
+static JSValueRef
+wv_set_title(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  JSValueRef ret = JSValueMakeUndefined(ctx);
+  if (argc == 0) 
+    return ret;
+  GList *gl = find_webview(this);
+  if (gl == NULL)
+    return ret;
+  char *title = js_value_to_char(ctx, argv[0], -1, exc);
+  if (title != NULL) {
+    dwb_update_status(gl, title); 
+    g_free(title);
+  }
+  return ret;
+}
 
 /*}}}*/
 
@@ -1544,7 +1563,7 @@ set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueR
     return false;
   GObjectClass *class = G_OBJECT_GET_CLASS(o);
   if (class == NULL || !G_IS_OBJECT_CLASS(class))
-    return NULL;
+    return false;
   GParamSpec *pspec = g_object_class_find_property(class, buf);
 
   if (pspec == NULL)
