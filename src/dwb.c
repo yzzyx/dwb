@@ -62,6 +62,7 @@ static DwbStatus dwb_set_sync_interval(GList *, WebSettings *);
 static DwbStatus dwb_set_scroll_step(GList *, WebSettings *);
 static DwbStatus dwb_set_private_browsing(GList *, WebSettings *);
 static DwbStatus dwb_set_new_tab_position_policy(GList *, WebSettings *);
+static DwbStatus dwb_set_progress_bar_style(GList *, WebSettings *);
 static DwbStatus dwb_set_close_tab_position_policy(GList *, WebSettings *);
 static DwbStatus dwb_set_cookies(GList *, WebSettings *);
 static DwbStatus dwb_set_widget_packing(GList *, WebSettings *);
@@ -188,6 +189,17 @@ dwb_set_close_last_tab_policy(GList *gl, WebSettings *s) {
     dwb.misc.clt_policy = CLT_POLICY_CLOSE;
   else if (!g_strcmp0("ignore", s->arg_local.p)) 
     dwb.misc.clt_policy = CLT_POLICY_INGORE;
+  else 
+    return STATUS_ERROR;
+  return STATUS_OK;
+}
+
+static DwbStatus 
+dwb_set_progress_bar_style(GList *gl, WebSettings *s) {
+  if (!g_strcmp0("default", s->arg_local.p)) 
+    dwb.misc.progress_bar_style = PROGRESS_BAR_DEFAULT;
+  else if (!g_strcmp0("simple", s->arg_local.p)) 
+    dwb.misc.progress_bar_style = PROGRESS_BAR_SIMPLE;
   else 
     return STATUS_ERROR;
   return STATUS_OK;
@@ -584,14 +596,18 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     g_string_append(string, "</span>]");
   }
   if (v->status->progress != 0) {
+    wchar_t *bar_blocks = PROGRESS_DEFAULT;
     wchar_t buffer[PBAR_LENGTH + 1] = { 0 };
     wchar_t cbuffer[PBAR_LENGTH] = { 0 };
     int length = PBAR_LENGTH * v->status->progress / 100;
-    wmemset(buffer, 0x2588, length - 1);
-    buffer[length] = 0x258f - (int)((v->status->progress % 10) / 10.0*8);
-    wmemset(cbuffer, 0x2581, PBAR_LENGTH-length-1);
+    if (dwb.misc.progress_bar_style == PROGRESS_BAR_SIMPLE)
+        bar_blocks = PROGRESS_SIMPLE;
+    wmemset(buffer, bar_blocks[1], length - 1);
+    if (dwb.misc.progress_bar_style == PROGRESS_BAR_DEFAULT)
+        buffer[length] = bar_blocks[3] - (int)((v->status->progress % 10) / 10.0*8);
+    wmemset(cbuffer, bar_blocks[2], PBAR_LENGTH-length-1);
     cbuffer[PBAR_LENGTH - length] = '\0';
-    g_string_append_printf(string, "\u2595%ls%ls\u258f", buffer, cbuffer);
+    g_string_append_printf(string, "%lc<span foreground='%s'>%ls</span><span foreground='%s'>%ls</span>%lc", bar_blocks[0], dwb.color.progress_full, buffer, dwb.color.progress_empty, cbuffer, bar_blocks[3]);
   }
   if (string->len > 0) 
     dwb_set_status_bar_text(dwb.gui.rstatus, string->str, NULL, NULL, true);
@@ -3398,6 +3414,8 @@ dwb_init_style() {
   dwb.color.allow_color = GET_CHAR("status-allowed-color");
   dwb.color.block_color = GET_CHAR("status-blocked-color");
 
+  dwb.color.progress_full = GET_CHAR("progress-bar-full-color");
+  dwb.color.progress_empty = GET_CHAR("progress-bar-empty-color");
 
   char *font = GET_CHAR("font");
   if (font) 

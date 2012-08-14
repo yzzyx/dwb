@@ -69,6 +69,8 @@ download-fg-color text Foreground color of the download bar
 download-bg-color text Background color of the download bar
 download-gradient-start text Start color for download progress gradient color
 download-gradient-end text End color for download progress gradient color
+progress-bar-full-color text Color of the full part of the progress bar
+progress-bar-empty-color text Color of the empty part of the progress bar
 
 # lt Layout
 background-tabs checkbox Whether to open tabs in background
@@ -87,6 +89,7 @@ tabbar-visible text Number of seconds a hidden tabbar is visible when switching 
 tabbed-browsing checkbox Whether to enable tabbed browsing
 user-stylesheet-uri text The uri of a stylesheet applied to every page
 widget-packing text Packing of the main widgets; t (T)=tabbar (hidden), w=webview, s (S)=statusbar (hidden), d=downloadbar
+progress-bar-style select @default @simple The progress bar style
 
 # hints Hints
 hint-active-color text Color of active links in hintmode

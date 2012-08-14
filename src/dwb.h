@@ -47,6 +47,9 @@
 
 #define HINT_SEARCH_SUBMIT "_dwb_search_submit_"
 
+#define PROGRESS_DEFAULT L"▕█▁▏"
+#define PROGRESS_SIMPLE L" ██ "
+
 #if GTK_CHECK_VERSION(3, 0, 0)
 #define _HAS_GTK3 1
 #endif
@@ -395,6 +398,11 @@ typedef enum {
 } CloseLastTabPolicy;
 
 typedef enum {
+  PROGRESS_BAR_DEFAULT,
+  PROGRESS_BAR_SIMPLE,
+} ProgressBarStyle;
+
+typedef enum {
   COOKIE_STORE_SESSION,
   COOKIE_STORE_PERSISTENT,
   COOKIE_STORE_NEVER,
@@ -679,6 +687,8 @@ struct _Color {
   char *tab_protected_color;
   char *allow_color;
   char *block_color;
+  char *progress_full;
+  char *progress_empty;
 };
 struct _Font {
   PangoFontDescription *fd_active;
@@ -755,6 +765,7 @@ struct _Misc {
   char *hint_style;
   int script_signals;
   CloseLastTabPolicy clt_policy;
+  ProgressBarStyle progress_bar_style;
 };
 enum Files {
   FILES_FIRST = 0,
