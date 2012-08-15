@@ -1169,6 +1169,7 @@ view_add(const char *uri, gboolean background) {
     gtk_box_insert(GTK_BOX(dwb.gui.mainbox), v->scroll, true, true, 0, p, GTK_PACK_START);
     dwb.state.views = g_list_insert(dwb.state.views, v, p);
     ret = g_list_nth(dwb.state.views, p);
+    scripts_create_tab(ret);
 
     if (background) {
       view_set_normal_style(ret);
@@ -1185,10 +1186,10 @@ view_add(const char *uri, gboolean background) {
     gtk_box_pack_start(GTK_BOX(dwb.gui.mainbox), v->scroll, true, true, 0);
     dwb.state.views = g_list_prepend(dwb.state.views, v);
     ret = dwb.state.views;
+    scripts_create_tab(ret);
     dwb_focus(ret);
   }
 
-  scripts_create_tab(ret);
   view_init_signals(ret);
   view_init_settings(ret);
   if (GET_BOOL("adblocker"))
