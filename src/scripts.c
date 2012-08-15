@@ -582,6 +582,7 @@ error_out:
 DwbStatus
 scripts_eval_key(KeyMap *m, Arg *arg) {
   char *json = NULL;
+  CLEAR_COMMAND_TEXT();
   if (arg->p == NULL) 
     json = util_create_json(1, INTEGER, "nummod", dwb.state.nummod);
   else 
