@@ -1997,6 +1997,25 @@ _returns_;;  True if the extension was successfully reloaded
 ****
 
 ****
+[[extensiontoggle,toggle]]
+[float]
+==== *toggle()* ====
+
+[source,javascript]
+----
+Boolean extensions.toggle(String name, [Object config]) 
+----
+Toggles an extension
+
+ ::
+
+_name_;; Name of the extension
+_config_;; The config for the extension.
+optional
+_returns_;;  True if the extension was loaded, false if it was unloaded.
+****
+
+****
 [[extensionload,unload]]
 [float]
 ==== *unload()* ====
