@@ -755,7 +755,7 @@ request_callback(SoupSession *session, SoupMessage *message, JSObjectRef functio
   if (message->response_body->data != NULL) {
     JSObjectRef o = get_message_data(message);
     JSValueRef vals[] = { o, make_object(_global_context, G_OBJECT(message))  };
-    JSObjectCallAsFunction(_global_context, function, NULL, 1, vals, NULL);
+    JSObjectCallAsFunction(_global_context, function, NULL, 2, vals, NULL);
   }
 }
 static JSValueRef 
