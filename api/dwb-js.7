@@ -2547,6 +2547,32 @@ If the second parameter is an Error, an optional message can be specified\&.
 .nr an-break-flag 1
 .br
 .ps +1
+\fBObject extensions.getConfig(Object config, Object defaultConfig)\fR
+.RS 4
+.sp
+Parses config with given default config\&. Checks for each property of defaultConfig if the corresponding property of config is valid\&.
+.PP
+\fIconfig\fR
+.RS 4
+The configuration object
+.RE
+.PP
+\fIdefaultConfig\fR
+.RS 4
+The default configuration for the extension
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The parsed config
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
 \fBvoid extensions.message(String name, String message)\fR
 .RS 4
 .sp

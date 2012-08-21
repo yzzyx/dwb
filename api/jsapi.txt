@@ -2045,6 +2045,23 @@ _name_;; Name of the extension
 _message_;; The debug message to print.
 ****
 
+**** 
+[[extensionsGetConfig,getConfig]]
+[float]
+==== *getConfig* ====
+
+[source,javascript]
+----
+Object extensions.getConfig(Object config, Object defaultConfig) 
+----
+Parses config with given default config. Checks for each property of
+defaultConfig if the corresponding property of config is valid.
+
+_config_;; The configuration object
+_defaultConfig_;; The default configuration for the extension
+_returns_;; The parsed config
+****
+
 ****
 [[extensionload,load]]
 [float]

@@ -814,6 +814,9 @@ COMMAND OVERVIEW
 |scroll_right            |right           |Scroll right
 |scroll_top              |top             |Scroll to the top of the page
 |scroll_up               |up              |Scroll up
+|sanitize                |                |Clears history and cookies, 
+                                            'sanitize history' only clears history
+                                            'sanitize cookies' only clears cookies
 |set                     |                |Set a setting
 |set_key                 |keys            |Set keybinding
 |set_local_setting       |                |Set a setting for the running instance
