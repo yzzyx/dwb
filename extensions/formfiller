@@ -208,8 +208,18 @@ var injectFillForm = function (data) {//{{{
       form = setValues(forms[i]);
     }
   }
-  if (form !== null && data.autosubmit)
+  if (form !== null && data.autosubmit) {
+    var buttons = form.querySelectorAll("[type='submit']");
+    for (i=0; i<buttons.length; i++) {
+      var e = buttons[i];
+      var mouseEvent = e.ownerDocument.createEvent("MouseEvent");
+      mouseEvent.initMouseEvent("click", false, true,
+        e.ownerDocument.defaultView, 0, 0, 0, 0, 0, false, false, false, false,
+        0, null);
+      e.dispatchEvent(mouseEvent);
+    }
     form.submit();
+  }
   return form !== null;
 };//}}}
 

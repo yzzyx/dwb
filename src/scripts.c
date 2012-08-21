@@ -581,13 +581,15 @@ error_out:
 /* scripts_eval_key {{{*/
 DwbStatus
 scripts_eval_key(KeyMap *m, Arg *arg) {
-  if (arg->p != NULL) {
-    JSValueRef argv[] = { js_char_to_value(_global_context, arg->p)};
-    JSObjectCallAsFunction(_global_context, arg->arg, NULL, 1, argv, NULL);
-  }
-  else {
-    JSObjectCallAsFunction(_global_context, arg->arg, NULL, 0, NULL, NULL);
-  }
+  char *json = NULL;
+  CLEAR_COMMAND_TEXT();
+  if (arg->p == NULL) 
+    json = util_create_json(1, INTEGER, "nummod", dwb.state.nummod);
+  else 
+    json = util_create_json(2, INTEGER, "nummod", dwb.state.nummod, CHAR, "arg", arg->p);
+  JSValueRef argv[] = { js_json_to_value(_global_context, json) };
+  JSObjectCallAsFunction(_global_context, arg->arg, NULL, 1, argv, NULL);
+  g_free(json);
   return STATUS_OK;
 }/*}}}*/
 

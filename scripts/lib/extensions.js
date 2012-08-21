@@ -172,6 +172,18 @@
         _unload(arguments[0], false);
         return extensions.load.apply(this, arguments);
       }
+    }, 
+    "toggle" : {
+      value : function(name, c) {
+        if (_registered[name] !== undefined) {
+          _unload(name);
+          return false;
+        }
+        else {
+          extensions.load(name, c);
+          return true;
+        }
+      }
     }
   });
 })();

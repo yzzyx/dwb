@@ -1,0 +1,2589 @@
+'\" t
+.\"     Title: dwb-js
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
+.\"      Date: 08/21/2012
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "DWB\-JS" "7" "08/21/2012" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+dwb-js \- dwb\*(Aqs javascript api documentation
+.SH "DESCRIPTION"
+.sp
+dwb provides a javascript api that can be used to write userscripts or extensions for dwb\&.
+.SH "GETTING STARTED"
+.sp
+Scripts that use the javascript api must be located in \fB$XDG_CONFIG_HOME/dwb/userscripts\fR like any other script\&. To include a userscript put a script with shebang
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+in the userscripts directory\&.
+.sp
+All native javascript methods can be used in scripts, however there are limitations:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The execution context of userscripts is completely seperated from the web execution context\&. Due to security concerns it is not possible to communicate with the web execution context, it is only possible to inject scripts into the web context\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+In contrast to the global window object in the web execution context, the global object is a readonly object, i\&.e\&. it is not possible to set properties on the global object, see also
+\fBGlobal data\fR
+for details\&.
+.RE
+.SH "GLOBAL"
+.sp
+Methods from the global object\&.
+.SS "Methods"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean bind(String shortcut, Function callback, [String name])\fR
+.RS 4
+.sp
+Bind a javascript function to a shortcut\&. This is the preferred method of binding keys to shortcuts since the shortcut is evaluated using the native method, but also the keyPress\-signal can be used to bind shortcuts\&.
+.PP
+\fIshortcut\fR
+.RS 4
+A shortcut shortcut, will be parsed the same way as if set in dwb:keys
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+Callback function that will be called when the shortcut is pressed
+.RE
+.PP
+\fIname\fR
+.RS 4
+A name that identifies the function on command line, optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+true if the function was binded successfully
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean execute(String command)\fR
+.RS 4
+.sp
+Executes a dwb command
+.PP
+\fIcommand\fR
+.RS 4
+a dwb command to execute, will be parsed the same way as if executed from commandline
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+true if execution was successful
+.RE
+\fBBoolean exit()\fR
+.sp
+Exit dwb, must be called if the script is running from commandline\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBObject include(String path, [Boolean global])\fR
+.RS 4
+.sp
+Includes a file\&. Note that there is only one context, all scripts are executed in this context\&. Included files are not visible in other scripts unless true is passed as second parameter\&.
+.PP
+\fIpath\fR
+.RS 4
+Path to a file to include
+.RE
+.PP
+\fIglobal\fR
+.RS 4
+Whether to include the script into the global scope, optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The return value of the included file
+.RE
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+Scripts included with include are either visible in the global scope or invisible, even in the including script\&. To use an included script it can return an object with its public objects:
+.sp .5v
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+// included script
+
+var private = 37;
+return {
+  getPrivate : function () {
+    return private;
+  }
+};
+
+// Scripts that includes the above
+var i = include("/path/to/script");
+var p = i\&.getPrivate();               // 37
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid sendRequest(String uri, Function callback, [String method])\fR
+.RS 4
+.sp
+Sends a http\-request\&.
+.PP
+\fIuri\fR
+.RS 4
+The uri the request will be sent to\&.
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+A callback that will be called when the request is finished, the callback has 2 parameters, the first will be an object that contains body and headers, the second the associated SoupMessage\&.
+.RE
+.PP
+\fImethod\fR
+.RS 4
+The http request method, default GET, optional\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBObject sendRequestSync(String uri, [String method])\fR
+.RS 4
+.sp
+Sends a http\-request synchronously\&.
+.PP
+\fIuri\fR
+.RS 4
+The uri the request will be sent to\&.
+.RE
+.PP
+\fImethod\fR
+.RS 4
+The http request method, default GET, optional\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+Object that contains the response body, the response headers and the http status code of the request\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid tabComplete(String label, Array items, Function callback)\fR
+.RS 4
+.sp
+Initiates tab completion\&.
+.PP
+\fIlabel\fR
+.RS 4
+The command line label
+.RE
+.PP
+\fIitems\fR
+.RS 4
+An array of objects, each object can have 2 properties, left which will be the left completion label and right which will be the right completion label\&.
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+Callback function, the first argument will be the returned string from the url bar\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber timerStart(Number interval, Function func)\fR
+.RS 4
+.sp
+Executes a function repeatedly until the function returns false or timerStop is called on the id returned from this function
+.PP
+\fIinterval\fR
+.RS 4
+Interval in milliseconds
+.RE
+.PP
+\fIfunc\fR
+.RS 4
+Function to execute
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+An id that can be passed to timerStop
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber timerStop(Number id)\fR
+.RS 4
+.sp
+Stops a timer started by timerStart
+.PP
+\fIid\fR
+.RS 4
+The id returned from timerStart
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+true if the timer was stopped
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber unbind(Function func|String name)\fR
+.RS 4
+.sp
+Unbind a shortcut that was previously binded with bind
+.PP
+\fIfunc\fR or \fIname\fR
+.RS 4
+Either the function or the optional name passed to bind\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+true if the function is unbinded
+.RE
+.RE
+.SH "GLOBAL OBJECTS"
+.SS "data"
+.sp
+The data object can be used to determine internally used data securely\&. All properties are readonly Strings\&.
+.PP
+\fIdata\&.bookmarks\fR
+.RS 4
+Bookmark file
+.RE
+.PP
+\fIdata\&.cacheDir\fR
+.RS 4
+Cache directory
+.RE
+.PP
+\fIdata\&.configDir\fR
+.RS 4
+Config directory
+.RE
+.PP
+\fIdata\&.cookies\fR
+.RS 4
+Cookie file
+.RE
+.PP
+\fIdata\&.cookiesWhitelist\fR
+.RS 4
+Whitelist for persistent cookies
+.RE
+.PP
+\fIdata\&.customKeys\fR
+.RS 4
+Custom keyboard shortcuts
+.RE
+.PP
+\fIdata\&.history\fR
+.RS 4
+History file
+.RE
+.PP
+\fIdata\&.keys\fR
+.RS 4
+Shortcuts configuration file
+.RE
+.PP
+\fIdata\&.pluginsWhitelist\fR
+.RS 4
+Whitelist for the plugin blocker
+.RE
+.PP
+\fIdata\&.profile\fR
+.RS 4
+Profile which will be
+\fBdefault\fR
+unless another profile is specified on command line
+.RE
+.PP
+\fIdata\&.quickmarks\fR
+.RS 4
+Quickmark file
+.RE
+.PP
+\fIdata\&.scriptWhitelist\fR
+.RS 4
+Whitelist for scripts
+.RE
+.PP
+\fIdata\&.session\fR
+.RS 4
+File with stored sessions for this profile
+.RE
+.PP
+\fIdata\&.sessionCookiesWhitelist\fR
+.RS 4
+Whitelist for session cookies
+.RE
+.PP
+\fIdata\&.settings\fR
+.RS 4
+Settings configuration file
+.RE
+.PP
+\fIdata\&.searchEngines\fR
+.RS 4
+Searchengines
+.RE
+.SS "io"
+.sp
+The io object implements Methods for input and output\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid io.debug(String message | Error error, [Error error])\fR
+.RS 4
+.sp
+Prints a debug message and the call stack to stderr\&. If the first parameter is an error object the second parameter is ignored, else the error is optional\&.
+.PP
+\fImessage\fR
+.RS 4
+The message to show
+.RE
+.PP
+\fIerror\fR
+.RS 4
+A javascript error object, optional as second parameter
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBArray io.dirNames(String path)\fR
+.RS 4
+.sp
+Get directory entries\&.
+.PP
+\fIpath\fR
+.RS 4
+A path to a directory
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+An array with the directory names
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid io.error(String text)\fR
+.RS 4
+.sp
+Shows an error message in the browser window\&.
+.PP
+\fItext\fR
+.RS 4
+The message to show
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid io.notify(String text)\fR
+.RS 4
+.sp
+Shows a message in the browser window\&.
+.PP
+\fItext\fR
+.RS 4
+The message to show
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid io.print(String text, [String stream])\fR
+.RS 4
+.sp
+Print text to stdout or stderr
+.PP
+\fItext\fR
+.RS 4
+the text to print
+.RE
+.PP
+\fIstream\fR
+.RS 4
+pass "stderr" to print to stderr, optional
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBString io.prompt(String text, [Boolean visible])\fR
+.RS 4
+.sp
+Gets user input synchronously\&.
+.PP
+\fItext\fR
+.RS 4
+The message for the prompt
+.RE
+.PP
+\fIvisible\fR
+.RS 4
+Whether the chars should be visible, pass false for a password prompt, default true, optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The text that was entered or null
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBString io.read(String path)\fR
+.RS 4
+.sp
+Read from a file\&.
+.PP
+\fIpath\fR
+.RS 4
+Path to a file that should be read
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+A string with the file content
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean io.write(String path, String mode, String text)\fR
+.RS 4
+.sp
+Write to a file
+.PP
+\fIpath\fR
+.RS 4
+Path to a file to write to
+.RE
+.PP
+\fImode\fR
+.RS 4
+Either "a" to append to the file, or "w" to strip the file or create a new file\&.
+.RE
+.PP
+\fItext\fR
+.RS 4
+The text that should be written to the file
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+true if writing was successful
+.RE
+.RE
+.SS "system"
+.sp
+The system object implements system Methods\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean system.fileTest(String path, FileTest flags)\fR
+.RS 4
+.sp
+Checks for FileTest flags on a file\&.
+.PP
+\fIpath\fR
+.RS 4
+Path to a file to check
+.RE
+.PP
+\fIflags\fR
+.RS 4
+The flags to test
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+true if any of the test on the flags is true
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBString system.getEnv(String name)\fR
+.RS 4
+.sp
+Get a system environment variable
+.PP
+\fIname\fR
+.RS 4
+Name of the variable
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The variable or null if the variable wasn\(cqt found
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean system.mkdir(String path, Number mode)\fR
+.RS 4
+.sp
+Creates a directory and all parent directories\&.
+.PP
+\fIpath\fR
+.RS 4
+Path to create
+.RE
+.PP
+\fImode\fR
+.RS 4
+The permissions the directory will get
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+true if creation was successful or directory already existed
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBSpawnError system.spawn(String command, [Function stdin], [Function stderr])\fR
+.RS 4
+.sp
+Executes a shell command using the default search path
+.PP
+\fIcommand\fR
+.RS 4
+The command to execute
+.RE
+.PP
+\fIstdin(String)\fR
+.RS 4
+Callback function for stdin, pass null if only stderr is needed, optional
+.RE
+.PP
+\fIstderr(String)\fR
+.RS 4
+Callback function for stderr, optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+SpawnError if an error occured, 0 otherwise
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBObject system.spawnSync(String command)\fR
+.RS 4
+.sp
+Executes a shell command synchronously using the default search path
+.PP
+\fIcommand\fR
+.RS 4
+The command to execute
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+An object that contains stdout, stderr and status\&.
+.RE
+.RE
+.SS "tabs"
+.sp
+The tabs object implements Methods and properties to get webview objects\&.
+.PP
+\fItabs\&.current (webview, read)\fR
+.RS 4
+The currently focused webview
+.RE
+.PP
+\fItabs\&.length (Number, read)\fR
+.RS 4
+Total number of tabs
+.RE
+.PP
+\fItabs\&.number (Number, read)\fR
+.RS 4
+Number of the currently focused tab
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBwebview tabs.nth(Number n)\fR
+.RS 4
+.sp
+Gets the webview object of the nth tab
+.PP
+\fIn\fR
+.RS 4
+Number of the tab
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The corresponding webview
+.RE
+.RE
+.SS "util"
+.sp
+The util object implements helper Methods\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBString util.getBody(Function func)\fR
+.RS 4
+.sp
+Gets the body of a function, useful for scripts that will be injected into sites\&.
+.PP
+\fIfunc\fR
+.RS 4
+A function
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The body of the function as a string
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBString util.domainFromHost(String hostname)\fR
+.RS 4
+.sp
+Gets the base domain name from a hostname where the base domain name is the effective second level domain name, e\&.g\&. for www\&.example\&.com it will be example\&.com, for www\&.example\&.co\&.uk it will be example\&.co\&.uk\&.
+.PP
+\fIhostname\fR
+.RS 4
+a hostname
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+the base domain
+.RE
+.sp
+dwb also adds additional methods to builtin objects
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid Object.forEach(Function func(String key, Object value, Object this))\fR
+.RS 4
+.sp
+Executes a function for each enumarable property of this similar to Array\&.forEach\&.
+.PP
+\fIfunc\fR
+.RS 4
+The function to execute
+.RE
+.PP
+\fIkey\fR
+.RS 4
+The property name
+.RE
+.PP
+\fIvalue\fR
+.RS 4
+The property value
+.RE
+.PP
+\fIthis\fR
+.RS 4
+The object the forEach is called on
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber Array.fastIndexOf(Object value))\fR
+.RS 4
+.sp
+This method is basically the same as Array\&.indexOf but without type checking\&.
+.PP
+\fIvalue\fR
+.RS 4
+The value to search for
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The index in the array or \-1 if the Object wasn\(cqt found\&.
+.RE
+.RE
+.SH "WEBKIT OBJECTS"
+.sp
+All webkit objects correspond to gobject objects, i\&.e\&. they have the same properties, but the javascript properties are all camelcase\&. For example, a WebKitWebView has the property \fBzoom\-level\fR, the corresponding javascript property is \fBzoomLevel\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+var webview = tabs\&.current
+webview\&.zoomLevel = webview\&.zoomLevel * 2;
+.fi
+.if n \{\
+.RE
+.\}
+.SS "General methods"
+.sp
+The following methods are implemented by all Objects derived from GObject
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber object.connect(String name, Function callback)\fR
+.RS 4
+.sp
+Connect to a gobject\-signal\&.
+.PP
+\fIname\fR
+.RS 4
+The signal name to connect to\&.
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+Callback function that will be called when the signal is emitted\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The signal id of the signal\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean object.disconnect(Number id)\fR
+.RS 4
+.sp
+Disconnect from a gobject\-signal\&.
+.PP
+\fIid\fR
+.RS 4
+The signal id obtained from connect
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+true if the signal was disconnected
+.RE
+.RE
+.SS "webview"
+.sp
+The webview object represents the widget that actually displays the site content\&.
+.PP
+\fIwv\&.allFrames (Array of frames, read)\fR
+.RS 4
+All frames of a webview including the mainframe
+.RE
+.PP
+\fIwv\&.focusedFrame (Frame, read)\fR
+.RS 4
+The focused frame of the webview
+.RE
+.PP
+\fIwv\&.mainFrame (Frame, read)\fR
+.RS 4
+The main frame of the webview
+.RE
+.PP
+\fIwv\&.number (Number, read)\fR
+.RS 4
+The number of the webview, starting at 0
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBString wv.inject(String script, [Boolean global])\fR
+.RS 4
+.sp
+Injects a script into a webview
+.PP
+\fIscript\fR
+.RS 4
+The script to inject
+.RE
+.PP
+\fIglobal\fR
+.RS 4
+true to inject it into the global scope, false to encapsulate it in a function, optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The return value of the script\&. If the script is injected globally inject always returns null\&. The return value is always converted to a string\&. To return objects call JSON\&.parse on the return value\&.
+.RE
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+If a script is injected from a loadStatus\-callback the script must be injected after LoadStatus\&.committed has been emitted\&. On LoadStatus\&.committed the document hasn\(cqt been created, if the script modifies the DOM it should be injected on LoadStatus\&.finished of using the documentLoaded signal\&. If only LoadStatus\&.committed or loadFinished\&.committed are used it is better to use the corresponding signals instead to reduce overhead\&.
+.sp .5v
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid wv.history(Number steps)\fR
+.RS 4
+.sp
+Loads a history item steps away from the current history item
+.PP
+\fIsteps\fR
+.RS 4
+Number of steps, pass a negative value to go back in history
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean wv.loadUri(String uri, [Function callback])\fR
+.RS 4
+.sp
+Load an uri in a webview\&.
+.PP
+\fIuri\fR
+.RS 4
+The uri to load
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+A callback function that will be called when the load status changes, return
+true
+to stop the emission, optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+
+true
+if the uri is loaded
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid wv.reload(void)\fR
+.RS 4
+.sp
+Reload a webview
+.RE
+.SS "frame"
+.sp
+A frame represents a frame or iframe\&. Due to same origin policy it is not possible to inject scripts from a webview into iframes with a different domain\&. For this purpose the frame object can be used\&.
+.PP
+\fIframe\&.domain (String, read)\fR
+.RS 4
+The domain name of the frame which is the effective second level domain
+.RE
+.PP
+\fIframe\&.host (String, read)\fR
+.RS 4
+The host name of the frame
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean frame.inject(String script, [Boolean global])\fR
+.RS 4
+.sp
+Injects a script into a frame, also see webview\&.inject for details\&.
+.RE
+.SS "download"
+.sp
+Corresponds to a WebKitDownload\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBnew Download(String uri)\fR
+.RS 4
+.sp
+Constructs a new download
+.PP
+\fIuri\fR
+.RS 4
+The uri of the download
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean download.start([Function callback])\fR
+.RS 4
+.sp
+Starts a download
+.PP
+\fIcallback\fR
+.RS 4
+A callback function that will be executed whenever the DownloadStatus changes, return true to stop the emission, optional\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid download.cancel()\fR
+.RS 4
+.sp
+Cancels a download
+.RE
+.SS "request"
+.sp
+Corresponds to a WebKitNavigationRequest\&.
+.SS "navigationAction"
+.sp
+Corresponds to a WebKitWebNavigationAction\&.
+.SH "SIGNALS"
+.sp
+With the signals object \fBdwb\fR communicates with the script on certain events\&. To connect to a signal one can call the connect function that is implemented by the signals object, that takes 2 arguments, the name of the signal and a callback function\&.
+.sp
+The callback function has a varying number of parameters\&. The last paramter is always a json\-object which might be empty or contain additional data relevant to the signal\&. A callback function should either return true or false or nothing which is equivalent to false\&. If multiple callbacks are connected to the same signal and one callback function returns true the overall return value will be true\&.
+.sp
+\fBdwb\fR only emits signals as long as one callback is connected to a signal\&. To reduce overhead one should disconnect from signals when no longer needed\&.
+.sp
+The signals object is not a readonly object, properties can be added to the object which are visible in all scripts but it should be avoided to add properties on the signals object\&. signals should only be used to connect to signals or define custom signals\&.
+.sp
+The signals object implements the following Methods
+.SS "Methods"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber signals.connect(String signal, Function callback)\fR
+.RS 4
+.sp
+Connect to a signal
+.PP
+\fIsignal\fR
+.RS 4
+The signal to connect to
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+The callback function which will be called when the signal is emitted
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+Unique id for this connection, can be passed to disconnect
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean signals.emit(String signal, \&...)\fR
+.RS 4
+.sp
+Emits a signal with a variable number of arguments passed to the callback function
+.PP
+\fIsignal\fR
+.RS 4
+The signal to emit
+.RE
+.PP
+\fI\&...\fR
+.RS 4
+Objects passed to the callback function
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+Overall return value from all connected callback functions
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean signals.disconnect(Number id)\fR
+.RS 4
+.sp
+disconnect from a signal
+.PP
+\fIid\fR
+.RS 4
+The id returned from connect
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+
+true
+if the signal was disconnected,
+false
+if the signal wasn\(cqt found or was already disconnected\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean signals.disconnectByFunction(Function callback)\fR
+.RS 4
+.sp
+disconnect from all signals with matching callback function
+.PP
+\fIcallback\fR
+.RS 4
+The callback function passed to connect
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+
+true
+if signals were disconnected,
+false
+if no signal was disconnected
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean signals.disconnectByName(String signal)\fR
+.RS 4
+.sp
+disconnect from all signals with matching name, It should be avoided to call disconnectByName on signals implemented by dwb since it will completely stop the emission of the signal in all scripts\&.
+.PP
+\fIsignal\fR
+.RS 4
+The callback function passed to connect
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+
+true
+if signals were disconnected,
+false
+if no signal was disconnected
+.RE
+.RE
+.SS "Emitted signals"
+.sp
+Custom signals can be created by simply calling
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("nameOfNewSignal", callbackFunction);
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Signals emitted by dwb are the following:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBbuttonPress\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("buttonPress", function(webview, hittestresult, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when a button is pressed on the webview, return true to prevent the default action
+.PP
+\fIwebview\fR
+.RS 4
+The webview which received the signal
+.RE
+.PP
+\fIhittestresult\fR
+.RS 4
+Hittestresult under the cursor
+.RE
+.PP
+\fIjson\&.button\fR
+.RS 4
+The button that is pressed, usually a value between 1 and 5
+.RE
+.PP
+\fIjson\&.state\fR
+.RS 4
+A bitmap of modifiers pressed, see Modifier
+.RE
+.PP
+\fIjson\&.time\fR
+.RS 4
+The time in milliseconds when the button was pressed
+.RE
+.PP
+\fIjson\&.type\fR
+.RS 4
+A ClickType
+.RE
+.PP
+\fIjson\&.x\fR
+.RS 4
+x\-position relative to the window
+.RE
+.PP
+\fIjson\&.xRoot\fR
+.RS 4
+x\-position relative to the screen
+.RE
+.PP
+\fIjson\&.y\fR
+.RS 4
+y\-position relative to the window
+.RE
+.PP
+\fIjson\&.yRoot\fR
+.RS 4
+y\-position relative to the screen
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBbuttonRelease\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("buttonRelease", function(webview, hittestresult, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when a button is released, return true to prevent the default action
+.PP
+\fIwebview\fR
+.RS 4
+The webview which received the signal
+.RE
+.PP
+\fIhittestresult\fR
+.RS 4
+Hittestresult under the cursor
+.RE
+.PP
+\fIjson\fR
+.RS 4
+Same as buttonPress but without
+\fIjson\&.type\fR
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBclose\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Boolean signals\&.connect("close", function());
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when dwb is closed
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBcreateTab\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("createTab", function(webview));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when a tab is created
+.PP
+\fIwebview\fR
+.RS 4
+The webview that corresponds to the created tab
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBcloseTab\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("closeTab", function(webview));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when a tab is closed
+.PP
+\fIwebview\fR
+.RS 4
+The webview that corresponds to the tab
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBdocumentLoaded\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("documentLoaded",  function(webview, frame));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when a the dom document of an frame has loaded\&.
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.PP
+\fIframe\fR
+.RS 4
+The frame that contains the document
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBdownload\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("download", function(webview, download, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted before a download starts, before a file or action has been chosen, return true if the signal was handled\&.
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.PP
+\fIdownload\fR
+.RS 4
+The Download
+.RE
+.PP
+\fIjson\&.referer\fR
+.RS 4
+The referer
+.RE
+.PP
+\fIjson\&.mimeType\fR
+.RS 4
+The mimetype of the file
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBdownloadStart\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("downloadStart", function(download, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted before a download starts after a path or application has been chosen, return true if the signal was handled\&. Note that destinationUri has not been set on the download\&.
+.PP
+\fIdownload\fR
+.RS 4
+The Download
+.RE
+.PP
+\fIjson\&.referer\fR
+.RS 4
+The referer
+.RE
+.PP
+\fIjson\&.mimeType\fR
+.RS 4
+The mimetype of the file
+.RE
+.PP
+\fIjson\&.destinationUri\fR
+.RS 4
+The chosen destination path or null if an application was chosen\&.
+.RE
+.PP
+\fIjson\&.application\fR
+.RS 4
+The chosen application or null if a path was chosen\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBdownloadStatus\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("downloadStatus", function(download));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the DownloadStatus changes\&.
+.PP
+\fIdownload\fR
+.RS 4
+The Download
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBframeCreated\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("frameCreated", function(webview, frame));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the frame is created
+.PP
+\fIwebview\fR
+.RS 4
+The webview the frame belongs to
+.RE
+.PP
+\fIframe\fR
+.RS 4
+The frame
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBframeStatus\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("frameStatus", function(webview, frame));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the LoadStatus of a frame changes
+.PP
+\fIwebview\fR
+.RS 4
+The webview the frame belongs to
+.RE
+.PP
+\fIframe\fR
+.RS 4
+The frame
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBhoveringOverLink\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("hoveringOverLink", function(webview, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the mouse is over a link
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.PP
+\fIjson\&.uri\fR
+.RS 4
+The uri of the link or
+null
+if there is no link under the pointer, i\&.e\&. the pointer left a link
+.RE
+.PP
+\fIjson\&.title\fR
+.RS 4
+The link\(cqs title or
+null
+if the pointer left a link
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBkeyPress\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("keyPress", function(webview, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when a key is pressed, return true to prevent the default action
+.PP
+\fIwebview\fR
+.RS 4
+The focused webview
+.RE
+.PP
+\fIjson\&.isModifier\fR
+.RS 4
+Whether or not the key is a modifier
+.RE
+.PP
+\fIjson\&.keyCode\fR
+.RS 4
+Hardware keycode
+.RE
+.PP
+\fIjson\&.keyVal\fR
+.RS 4
+Keycode as listed in gdkkeysyms\&.h
+.RE
+.PP
+\fIjson\&.name\fR
+.RS 4
+A string represantation of the key
+.RE
+.PP
+\fIjson\&.state\fR
+.RS 4
+A bitmap of modifiers pressed, see Modifier
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBkeyRelease\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("keyRelease", function(webview, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when a key is released, return true to prevent the default action
+.PP
+\fIwebview\fR
+.RS 4
+The focused webview
+.RE
+.PP
+\fIjson\fR
+.RS 4
+Same as keyPress
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBloadCommitted\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("loadCommitted", function(webview));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the load has just commited, no data has been loaded when this signal is emitted\&. This is the preferred signal for injected scripts that do not manipulate the DOM\&.
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBloadFinished\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("loadFinished", function(webview));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the site has completely loaded\&.
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBloadStatus\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("loadStatus", function(webview));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the load status changes
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBmimeType\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("mimeType", function(webview, frame, request, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Decide whether or not to show a given mimetype\&. Return true to stop the request\&.
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.PP
+\fIframe\fR
+.RS 4
+The frames requires the decision
+.RE
+.PP
+\fIrequest\fR
+.RS 4
+The network request
+.RE
+.PP
+\fIjson\&.mimeType\fR
+.RS 4
+The mimetype
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBnavigation\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("navigation", function(webview, frame, request, action));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted before a new site is loaded, return true to stop the request\&.
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.PP
+\fIframe\fR
+.RS 4
+The frame that requires the navigation
+.RE
+.PP
+\fIrequest\fR
+.RS 4
+The network request
+.RE
+.PP
+\fIaction\fR
+.RS 4
+The navigation action
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBresource\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("resource", function(webview, frame, request, response));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted before a new resource is going to be loaded
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.PP
+\fIframe\fR
+.RS 4
+The frame that dispatched the request
+.RE
+.PP
+\fIrequest\fR
+.RS 4
+The network request
+.RE
+.PP
+\fIresponse\fR
+.RS 4
+The network response
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBtabFocus\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("tabFocus", function(webview, json));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when another tab gets focus, return true to stop the event
+.PP
+\fIwebview\fR
+.RS 4
+The new tab
+.RE
+.PP
+\fIjson\&.last\fR
+.RS 4
+The number of the previously focused tab
+.RE
+.RE
+.SH "ENUM OBJECTS"
+.sp
+Enum objects are objects that have only readonly properties, mapping gtk/webkit enums to javascript objects\&.
+\fBButtonContext\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const ButtonContext = {
+  document   : 1 << 1,
+  link       : 1 << 2,
+  image      : 1 << 3,
+  media      : 1 << 4,
+  selection  : 1 << 5,
+  editable   : 1 << 6
+};
+.fi
+.if n \{\
+.RE
+.\}
+\fBChecksumType\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const ChecksumType = {
+  md5     : 0,
+  sha1    : 1,
+  sha256  : 2
+};
+.fi
+.if n \{\
+.RE
+.\}
+\fBClickType\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const ClickType = {
+  click       : 4,
+  doubleClick : 5,
+  tripleClick : 6
+};
+.fi
+.if n \{\
+.RE
+.\}
+\fBDownloadStatus\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const DownloadStatus = {
+  error       : \-1,
+  created     : 0,
+  started     : 1,
+  cancelled   : 2,
+  finished    : 3
+};
+.fi
+.if n \{\
+.RE
+.\}
+\fBFileTest\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const FileTest = {
+  regular    : 1 << 0,
+  symlink    : 1 << 1,
+  dir        : 1 << 2,
+  executable : 1 << 3,
+  exists     : 1 << 4
+};
+.fi
+.if n \{\
+.RE
+.\}
+\fBLoadStatus\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const LoadStatus = {
+  provisional       : 0,
+  committed         : 1,
+  finished          : 2,
+  firstVisualLayout : 3,
+  failed            : 4
+};
+.fi
+.if n \{\
+.RE
+.\}
+\fBModifier\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const Modifier = {
+  Shift     : 1 << 0,
+  Lock      : 1 << 1,
+  Control   : 1 << 2,
+  Mod1      : 1 << 3,
+  Mod2      : 1 << 4,
+  Mod3      : 1 << 5,
+  Mod4      : 1 << 6,
+  Mod5      : 1 << 7,
+  Button1   : 1 << 8,
+  Button2   : 1 << 9,
+  Button3   : 1 << 10,
+  Button4   : 1 << 11,
+  Button5   : 1 << 12,
+  Super     : 1 << 26,
+  Hyper     : 1 << 27,
+  Meta      : 1 << 28,
+  Release   : 1 << 30,
+  Modifier  : 0x5c001fff
+};
+.fi
+.if n \{\
+.RE
+.\}
+\fBNavigationReason\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const NavigationReason = {
+  linkClicked     : 0,
+  formSubmitted   : 1,
+  backForward     : 2,
+  reload          : 3,
+  formResubmitted : 4,
+  other           : 5
+};
+.fi
+.if n \{\
+.RE
+.\}
+\fBSpawnError\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const SpawnError = {
+  success       : 0,
+  spawnFailed   : 1<<0,
+  stdoutFailed  : 1<<1,
+  stderrFailed  : 1<<2
+};
+.fi
+.if n \{\
+.RE
+.\}
+.SH "GLOBAL DATA"
+.sp
+Since all scripts share the same execution context, they are encapsulated in a function\&. To avoid conflicts with other scripts it is not allowed to set properties on the global object, i\&.e\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+// not allowed, the global object is readonly
+number = 0;
+io\&.print(number);     // undefined
+
+// always use var instead
+var number = 0;
+io\&.print(number2);    // 0
+
+// won\*(Aqt work either
+function foo() {
+  bar = 1;
+}
+foo();
+io\&.print(bar);        // undefined
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+For sharing data between scripts either signals can be created or the globals\-object can be used\&. To share data with the globals object securely when the scripts are loaded the script can return an init function that will be called after all scripts have been initialized:
+.PP
+\fBScript 1\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+// set when the script is initialized\&.
+globals\&.foo = "bar";
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBScript 2\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+//  The behaviour is undefined, depending on if Script 1 was initialized before
+//  Script 2 or the other way round\&.
+io\&.print(globals\&.foo)       // undefined or "bar"
+
+// Will be called after all scripts have been initialized
+return  {
+  init : function () {
+    // globals\&.foo has been initialized
+    io\&.print(globals\&.foo); // "bar"
+  }
+};
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+One exception is include, scripts that are explicitly included into the global scope setting the second parameter to true are visible in every script\&.
+.PP
+\fBfoo\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+var foo = "bar";
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBScript 1\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+include("/path/to/foo", true); // visible in every script
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBScript 2\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+// Make sure Script 1 has been initialized
+return {
+  init : function() {
+    io\&.print(foo);                // "bar";
+  }
+};
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.SH "EXTENSIONS"
+.sp
+\fBdwb\fR provides the possibility to load extensions\&. It is recommended to implement javascript\-userscripts as an extension to have consistent configuration locations for scripts\&. One advantage of extension also is that they can be loaded/unloaded on the fly\&.
+.SS "Properties"
+.PP
+\fIextensions\&.enableDebugging (Boolean, read, write)\fR
+.RS 4
+Whether to enable debugging messages\&.
+.RE
+.SS "Methods"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid extensions.debug(String name, String message)\fR
+.RS 4
+.sp
+Prints a debug message and the call stack to stdout, enableDebugging must be set to true in order to print debug messages\&.
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fImessage\fR
+.RS 4
+The debug message to print\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean extensions.load(String name, [Object config])\fR
+.RS 4
+.sp
+Loads an extension
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fIconfig\fR
+.RS 4
+The config for the script, if omitted the config is read from $XDG_CONFIG_HOME/dwb/extensionrc, optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+True if the extension was loaded
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean extensions.reload(String name, [Object config])\fR
+.RS 4
+.sp
+Reloads an extension
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fIconfig\fR
+.RS 4
+The new config for the script, if omitted the old config is used, optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+True if the extension was successfully reloaded
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean extensions.toggle(String name, [Object config])\fR
+.RS 4
+.sp
+Toggles an extension
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fIconfig\fR
+.RS 4
+The config for the extension\&. optional
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+True if the extension was loaded, false if it was unloaded\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBBoolean extensions.unload(String name)\fR
+.RS 4
+.sp
+Unloads an extension
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+True if the extension was unloaded
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid extensions.error(String name, String message|Error e, [String message])\fR
+.RS 4
+.sp
+Print an error message and call stack to stderr\&.
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fImessage|e\fR
+.RS 4
+The error message or an Error
+.RE
+.PP
+\fImessage\fR
+.RS 4
+If the second parameter is an Error, an optional message can be specified\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid extensions.message(String name, String message)\fR
+.RS 4
+.sp
+Print a consistent message to stderr
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fImessage\fR
+.RS 4
+The message
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid extensions.warning(String name, String message)\fR
+.RS 4
+.sp
+Print a consistent warning to stderr
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fImessage\fR
+.RS 4
+The warning message
+.RE
+.RE
+.SS "Writing extensions"
+.sp
+The default searchpath for extensions is \fB$XDG_DATA_HOME/dwb/extensions\fR and \fBSHARE_DIR/dwb/extensions\fR where SHARE_DIR being the share directory of the installation, most likely /usr/share\&.
+.sp
+The configuration for extensions is in $$XDG_CONFIG_HOME/dwb/extensionsrc$ and should return a javascript object\&.
+.sp
+Every extension must implement one function named init that takes one argument, the config for the extension\&. The function should return true if the extension was successfully loaded, false otherwise\&. Every extension also may implement a function end that will be called when an extension is unloaded\&. If an extension registers to signals and binds shortcuts the extension should unregister all signals and unbind all shortcuts in this function\&. init and end should be returned from the extension\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBExample\fR
+.RS 4
+.sp
+A extension called \fBfoobar\fR in \fB$HOME/\&.local/share/dwb/extensions/foobar\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+function foo(val) {
+  \&.\&.\&.\&.
+}
+function bar(val) {
+  \&.\&.\&.\&.
+}
+function loadStatusCallback(w) {
+  \&.\&.\&.
+}
+return {
+  init : function (config) {
+    if (config\&.foo > 36) {
+      bar(config\&.foo);
+      foo(config\&.bar);
+      bind("XX", bar, "dobar");
+      signals\&.connect("loadStatus", loadStatusCallback);
+      return true;
+    }
+
+    return false;
+  },
+  end : function () {
+    unbind("dobar");
+    signals\&.disconnectByFunction(loadStatusCallback);
+    return true;
+  }
+};
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBExample extensionrc\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+return {
+  foobar : { bar : "X", foo : 37 }, // config for extension foobar
+  barfoo : {  }                     // config for extension barfoo
+
+};
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SH "SEE ALSO"
+.sp
+\fBdwb\fR(1)

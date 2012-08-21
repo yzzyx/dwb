@@ -1,0 +1,1333 @@
+// vim: set ft=asciidoc:
+
+= dwb-js(7) =
+:doctype: manpage
+
+
+== NAME ==
+dwb-js - dwb's javascript api documentation
+
+
+== DESCRIPTION ==
+dwb provides a javascript api that can be used to write userscripts or
+extensions for dwb. 
+
+== Getting Started == 
+Scripts that use the javascript api must be located in
+*$XDG_CONFIG_HOME/dwb/userscripts* like any other script. 
+To include a userscript put a script with
+shebang
+
+-------
+#!javascript
+-------
+
+in the userscripts directory. 
+
+All native javascript methods can be used in scripts, however there are
+limitations:  
+
+* The execution context of userscripts is completely seperated from the web
+execution context. Due to security concerns it is not possible to communicate
+with the web execution context, it is only possible to inject scripts into the
+web context.
+* In contrast to the global window object in the web execution context, 
+the global object is a readonly object, i.e. it is not possible to set
+properties on the global object, see also *Global data* for details.
+
+== Global ==
+
+Methods from the global object.
+
+=== Methods ===
+
+
+==== Boolean bind(String shortcut, Function callback, [String name])
+
+****
+
+Bind a javascript function to a shortcut. This is the preferred method of
+binding keys to shortcuts since the shortcut is evaluated using the native
+method, but also the keyPress-signal can be used to bind shortcuts. 
+
+_shortcut_;; A shortcut shortcut, will be parsed the same way as if set in
+dwb:keys
+_callback_;; Callback function that will be called when the shortcut is pressed
+_name_;; A name that identifies the function on command line, optional
+_returns_;; true if the function was binded successfully
+****
+
+==== Boolean execute(String command)
+****
+
+Executes a dwb command
+
+_command_;; a dwb command to execute, will be parsed the same way as if executed
+from commandline
+_returns_;; true if execution was successful
+**** 
+
+.Boolean exit()
+****
+
+Exit dwb, must be called if the script is running from commandline. 
+****
+
+
+==== Object include(String path, [Boolean global])
+****
+
+Includes a file. Note that there is only one context, all scripts are
+executed in this context. Included files are not visible in other scripts unless
+true is passed as second parameter. 
+
+_path_;; Path to a file to include
+_global_;; Whether to include the script into the global scope, optional
+_returns_;; The return value of the included file
+****
+
+NOTE: Scripts included with include are either visible in the global scope or
+invisible, even in the including script. To use an included script it can return
+an object with its public objects: 
+
+======
+[source,javascript]
+---------------------------------
+// included script 
+
+var private = 37;
+return {
+  getPrivate : function () {
+    return private;
+  }
+};
+
+// Scripts that includes the above
+var i = include("/path/to/script");
+var p = i.getPrivate();               // 37
+---------------------------------
+======
+
+
+==== void sendRequest(String uri, Function callback, [String method])
+****
+
+Sends a http-request. 
+
+_uri_;; The uri the request will be sent to.
+_callback_;; A callback that will be called when the request is finished, the
+callback has 2 parameters, the first will be an object that contains body and
+headers, the second the associated SoupMessage.
+_method_;; The http request method, default GET, optional.
+****
+
+==== Object sendRequestSync(String uri, [String method])
+****
+
+Sends a http-request synchronously. 
+
+_uri_;; The uri the request will be sent to.
+_method_;; The http request method, default GET, optional.
+_returns_;; Object that contains the response body, the response headers and
+the http status code of
+the request. 
+****
+
+==== void tabComplete(String label, Array items, Function callback)
+****
+
+Initiates tab completion.
+
+_label_;; The command line label
+_items_;; An array of objects, each object can have 2 properties, left which
+will be the left completion label and right which will be the right completion
+label.
+_callback_;; Callback function, the first argument will be the returned string
+from the url bar.
+****
+
+==== Number timerStart(Number interval, Function func)
+****
+
+Executes a function repeatedly until the function returns false or
+timerStop is called on the id returned from this function
+
+_interval_;; Interval in milliseconds
+_func_;; Function to execute
+_returns_;; An id that can be passed to timerStop
+****
+
+==== Number timerStop(Number id)
+****
+
+Stops a timer started by timerStart
+
+_id_;; The id returned from timerStart
+_returns_;; true if the timer was stopped
+****
+
+==== Number unbind(Function func|String name)
+****
+
+Unbind a shortcut that was previously binded with bind
+
+_func_ or _name_;; Either the function or the optional name passed to bind.
+_returns_;; true if the function is unbinded
+****
+
+
+
+== Global Objects ==
+
+=== data ===
+The data object can be used to determine internally used data securely. All
+properties are readonly Strings.
+
+****
+_data.bookmarks_;; Bookmark file 
+_data.cacheDir_;; Cache directory 
+_data.configDir_;; Config directory 
+_data.cookies_;; Cookie file 
+_data.cookiesWhitelist_;; Whitelist for persistent cookies 
+_data.customKeys_;; Custom keyboard shortcuts 
+_data.history_;; History file 
+_data.keys_;; Shortcuts configuration file 
+_data.pluginsWhitelist_;; Whitelist for the plugin blocker
+_data.profile_;; Profile which will be *default* unless another profile is specified on command line
+_data.quickmarks_;; Quickmark file 
+_data.scriptWhitelist_;; Whitelist for scripts
+_data.session_;; File with stored sessions for this profile
+_data.sessionCookiesWhitelist_;; Whitelist for session cookies
+_data.settings_;; Settings configuration file
+_data.searchEngines_;; Searchengines 
+****
+
+
+=== io ===
+The io object implements Methods for input and output. 
+
+==== void io.debug(String message | Error error, [Error error])
+****
+
+Prints a debug message and the call stack to stderr. If the first parameter is
+an error object the second parameter is ignored, else the error is optional.
+
+_message_;; The message to show
+_error_;; A javascript error object, optional as second parameter
+****
+
+==== Array io.dirNames(String path)
+****
+
+Get directory entries.
+
+_path_;; A path to a directory
+_returns_;; An array with the directory names
+****
+
+==== void io.error(String text)
+****
+
+Shows an error message in the browser window.
+
+_text_;; The message to show
+****
+
+==== void io.notify(String text)
+****
+
+Shows a message in the browser window.
+
+_text_;; The message to show
+****
+
+==== void io.print(String text, [String stream])
+****
+
+Print text to stdout or stderr 
+
+_text_;; the text to print
+_stream_;; pass "stderr" to print to stderr, optional
+****
+
+==== String io.prompt(String text, [Boolean visible])
+****
+
+Gets user input synchronously.
+
+_text_;; The message for the prompt
+_visible_;; Whether the chars should be visible, pass false for a password
+prompt, default true, optional
+_returns_;; The text that was entered or null
+****
+
+
+==== String io.read(String path)
+****
+
+Read from a file.
+
+_path_;; Path to a file that should be read
+_returns_;; A string with the file content
+****
+
+==== Boolean io.write(String path, String mode, String text)
+****
+
+Write to a file
+
+_path_;; Path to a file to write to
+_mode_;; Either "a" to append to the file, or "w" to strip the file or
+create a new file.
+_text_;; The text that should be written to the file
+_returns_;; true if writing was successful
+****
+
+=== system ===
+
+The system object implements system Methods.
+
+==== Boolean system.fileTest(String path, FileTest flags)
+****
+
+Checks for FileTest flags on a file.
+
+_path_;; Path to a file to check
+_flags_;; The flags to test
+_returns_;; true if any of the test on the flags is true
+****
+
+==== String system.getEnv(String name) 
+****
+
+Get a system environment variable
+
+_name_;; Name of the variable
+_returns_;; The variable or null if the variable wasn't found
+****
+
+==== Boolean system.mkdir(String path, Number mode)
+****
+
+Creates a directory and all parent directories.
+
+_path_;; Path to create
+_mode_;; The permissions the directory will get
+_returns_;; true if creation was successful or directory already existed 
+****
+
+==== SpawnError system.spawn(String command, [Function stdin], [Function stderr])
+****
+
+Executes a shell command using the default search path
+
+_command_;; The command to execute
+_stdin(String)_;; Callback function for stdin, pass null if only stderr is
+needed, optional
+_stderr(String)_;; Callback function for stderr, optional
+_returns_;; SpawnError if an error occured, 0 otherwise
+****
+
+==== Object system.spawnSync(String command)
+****
+
+Executes a shell command synchronously using the default search path
+
+_command_;; The command to execute
+_returns_;; An object that contains stdout, stderr and status.
+****
+
+=== tabs ===
+The tabs object implements Methods and properties to get webview objects. 
+
+
+_tabs.current (webview, read)_;; The currently focused webview
+_tabs.length (Number, read)_;; Total number of tabs
+_tabs.number (Number, read)_;; Number of the currently focused tab
+
+
+==== webview tabs.nth(Number n) 
+****
+
+Gets the webview object of the nth tab
+
+_n_;; Number of the tab
+_returns_;; The corresponding webview
+****
+
+
+=== util ===
+
+The util object implements helper Methods.
+
+==== String util.getBody(Function func) 
+****
+
+Gets the body of a function, useful for scripts that will be injected into
+sites. 
+
+_func_;; A function 
+_returns_;; The body of the function as a string
+****
+
+==== String util.domainFromHost(String hostname)
+****
+
+Gets the base domain name from a hostname where the base domain name is the
+effective second level domain name, e.g. for www.example.com it will be
+example.com, for www.example.co.uk it will be example.co.uk.
+
+_hostname_;; a hostname
+_returns_;; the base domain 
+****
+
+dwb also adds additional methods to builtin objects 
+
+==== void Object.forEach(Function func(String key, Object value, Object this))
+****
+
+Executes a function for each enumarable property of this similar to
+Array.forEach.
+
+_func_;; The function to execute
+_key_;; The property name
+_value_;; The property value
+_this_;; The object the forEach is called on
+****
+
+==== Number Array.fastIndexOf(Object value))
+****
+
+This method is basically the same as Array.indexOf but without type checking.
+
+_value_;; The value to search for
+_returns_;; The index in the array or -1 if the Object wasn't found.
+****
+
+
+
+== Webkit objects ==
+
+All webkit objects correspond to gobject objects, i.e. they have the same
+properties, but the javascript properties are all camelcase. 
+For example, a WebKitWebView has the property *zoom-level*, the corresponding
+javascript property is *zoomLevel*:
+
+====
+[source,javascript]
+---------------------------------
+var webview = tabs.current
+webview.zoomLevel = webview.zoomLevel * 2;
+---------------------------------
+====
+
+=== General methods
+
+The following methods are implemented by all Objects derived from GObject
+
+==== Number object.connect(String name, Function callback) 
+****
+
+Connect to a gobject-signal.
+
+_name_;; The signal name to connect to.
+_callback_;; Callback function that will be called when the signal is emitted.
+_returns_;; The signal id of the signal.
+****
+
+==== Boolean object.disconnect(Number id) 
+****
+
+Disconnect from a gobject-signal.
+
+_id_;; The signal id obtained from connect
+_returns_;; true if the signal was disconnected
+****
+
+=== webview ===
+The +webview+ object represents the widget that actually displays the site
+content. 
+
+_wv.allFrames (Array of frames, read)_;; All frames of a webview including the mainframe
+_wv.focusedFrame (Frame, read)_;; The focused frame of the webview
+_wv.mainFrame (Frame, read)_;; The main frame of the webview
+_wv.number (Number, read)_;; The number of the webview, starting at 0
+
+==== String wv.inject(String script, [Boolean global]) 
+****
+
+Injects a script into a webview
+
+_script_;; The script to inject
+_global_;; true to inject it into the global scope, false to encapsulate it
+in a function, optional
+_returns_;; The return value of the script. If the script is injected globally
+inject always returns null. The return value is always converted to a string.
+To return objects call JSON.parse on the return value. 
+
+
+NOTE: If a script is injected from a loadStatus-callback the script must be
+injected after LoadStatus.committed has been emitted.
+On LoadStatus.committed the document 
+hasn't been created, if the script modifies the DOM it should be injected on
+LoadStatus.finished of using the documentLoaded signal. 
+If only LoadStatus.committed or loadFinished.committed are used it is better
+to use the corresponding signals instead to reduce overhead. 
+****
+
+==== void wv.history(Number steps) 
+****
+
+Loads a history item steps away from the current history item
+
+_steps_;; Number of steps, pass a negative value to go back in history
+****
+
+==== Boolean wv.loadUri(String uri, [Function callback]) 
+****
+
+Load an uri in a webview. 
+
+_uri_;; The uri to load
+_callback_;; A callback function that will be called when the load status
+changes, return +true+ to stop the emission, optional
+_returns_;; +true+ if the uri is loaded
+****
+
+
+==== void wv.reload(void) 
+****
+
+Reload a webview 
+****
+
+=== frame ===
+
+A frame represents a +frame+ or +iframe+. Due to same origin policy it
+is not possible to inject scripts from a webview into iframes with a
+different domain. For this purpose the +frame+ object can be used. 
+
+_frame.domain (String, read)_;; The domain name of the frame which is the
+effective second level domain
+_frame.host (String, read)_;; The host name of the frame
+
+==== Boolean frame.inject(String script, [Boolean global])
+****
+
+Injects a script into a frame, also see webview.inject for details.
+****
+
+
+=== download ===
+
+Corresponds to a +WebKitDownload+. 
+
+
+==== new Download(String uri)
+****
+
+Constructs a new download
+
+_uri_;; The uri of the download
+****
+
+==== Boolean download.start([Function callback])
+****
+
+Starts a download
+
+_callback_;; A callback function that will be executed whenever the
+DownloadStatus changes, return true to stop the emission, optional.
+****
+
+
+==== void download.cancel()
+****
+
+Cancels a download
+****
+
+=== request ===
+
+Corresponds to a WebKitNavigationRequest.
+
+=== navigationAction ===
+
+Corresponds to a WebKitWebNavigationAction.
+
+== Signals ==
+With the signals object *dwb* communicates with the script on certain events. 
+To connect to a signal one can call the connect function that is implemented by
+the signals object, that takes 2 arguments, the name of the signal and a
+callback function. 
+
+The callback function has a varying number of parameters.
+The last paramter is always a json-object which might be empty or contain
+additional data relevant to the signal. 
+A callback function should either return true or false or nothing which is
+equivalent to false.
+If multiple callbacks are connected to the same signal and one callback
+function returns true the overall return value will be true.
+
+*dwb* only emits signals as long as one callback is connected to a signal. To
+reduce overhead one should disconnect from signals when no longer
+needed. 
+
+The signals object is not a readonly object, properties can be added to the
+object which are visible in all scripts but it should be avoided to add
+properties on the signals object. signals should only be used to connect to
+signals or define custom signals. 
+
+The signals object implements the following Methods
+
+=== Methods ===
+
+==== Number signals.connect(String signal, Function callback) 
+****
+Connect to a signal
+
+_signal_;; The signal to connect to 
+_callback_;; The callback function which will be called when the signal is emitted
+_returns_;;  Unique id for this connection, can be passed to disconnect
+****
+
+==== Boolean signals.emit(String signal,  ...)
+****
+
+Emits a signal with a variable number of arguments passed to the callback
+function
+
+_signal_;; The signal to emit
+_..._;; Objects passed to the callback function
+_returns_;; Overall return value from all connected callback functions
+****
+
+==== Boolean signals.disconnect(Number id) 
+****
+disconnect from a signal 
+
+_id_;; The id returned from connect
+_returns_;; +true+ if the signal was disconnected, +false+ if the signal
+wasn't found or was already disconnected. 
+****
+
+
+==== Boolean signals.disconnectByFunction(Function callback) 
+****
+disconnect from all signals with matching callback function
+
+_callback_;; The callback function passed to connect
+_returns_;; +true+ if signals were disconnected, +false+ if no signal
+was disconnected
+****
+
+==== Boolean signals.disconnectByName(String signal) 
+****
+
+disconnect from all signals with matching name,
+It should be avoided to call +disconnectByName+
+on signals implemented by dwb since it will completely stop the emission of the
+signal in all scripts. 
+
+_signal_;; The callback function passed to connect
+_returns_;; +true+ if signals were disconnected, +false+ if no signal
+was disconnected
+****
+
+=== Emitted signals ===
+
+Custom signals can be created by simply calling 
+
+-----
+signals.connect("nameOfNewSignal", callbackFunction);
+-----
+
+
+Signals emitted by dwb are the following:
+
+
+==== buttonPress 
+
+
+****
+----
+signals.connect("buttonPress", function(webview, hittestresult, json));
+----
+
+Emitted when a button is pressed on the webview, return +true+ to prevent
+the default action
+
+_webview_;; The webview which received the signal
+_hittestresult_;; Hittestresult under the cursor
+_json.button_;; The button that is pressed, usually a value between 1 and 5
+_json.state_;; A bitmap of modifiers pressed, see Modifier
+_json.time_;; The time in milliseconds when the button was pressed 
+_json.type_;; A ClickType
+_json.x_;; x-position relative to the window
+_json.xRoot_;; x-position relative to the screen
+_json.y_;; y-position relative to the window
+_json.yRoot_;; y-position relative to the screen
+****
+  
+==== buttonRelease 
+
+****
+----
+signals.connect("buttonRelease", function(webview, hittestresult, json));
+----
+
+Emitted when a button is released, return +true+ to prevent the default action
+
+_webview_;; The webview which received the signal
+_hittestresult_;; Hittestresult under the cursor
+_json_;; Same as buttonPress but without _json.type_
+****
+
+==== close
+
+****
+----
+Boolean signals.connect("close", function());
+----
+
+Emitted when dwb is closed
+****
+
+==== createTab
+****
+----
+signals.connect("createTab", function(webview));
+----
+
+Emitted when a tab is created
+
+_webview_;; The webview that corresponds to the created tab
+****
+
+==== closeTab
+****
+
+----
+signals.connect("closeTab", function(webview));
+----
+
+Emitted when a tab is closed
+
+_webview_;; The webview that corresponds to the tab
+****
+
+==== documentLoaded
+****
+----
+signals.connect("documentLoaded",  function(webview, frame));
+----
+
+Emitted when a the dom document of an frame has loaded.
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frame that contains the document
+****
+
+==== download
+****
+----
+signals.connect("download", function(webview, download, json));
+----
+
+Emitted before a download starts, before a file or action has been chosen,
+return true if the signal was handled. 
+
+_webview_;; The webview that emitted the signal
+_download_;; The Download 
+_json.referer_;; The referer
+_json.mimeType_;; The mimetype of the file
+****
+
+==== downloadStart
+****
+----
+signals.connect("downloadStart", function(download, json));
+----
+
+Emitted before a download starts after a path or application has been chosen, 
+return true if the signal was handled. Note that destinationUri has not been
+set on the download.
+
+_download_;; The Download 
+_json.referer_;; The referer
+_json.mimeType_;; The mimetype of the file
+_json.destinationUri_;; The chosen destination path or null if an application was chosen.
+_json.application_;; The chosen application or null if a path was chosen.
+****
+
+
+==== downloadStatus
+****
+----
+signals.connect("downloadStatus", function(download));
+----
+
+Emitted when the DownloadStatus changes. 
+
+_download_;; The Download 
+****
+
+
+==== frameCreated
+****
+----
+signals.connect("frameCreated", function(webview, frame));
+----
+
+Emitted when the frame is created
+
+_webview_;; The webview the frame belongs to
+_frame_;; The frame 
+****
+
+==== frameStatus
+****
+----
+signals.connect("frameStatus", function(webview, frame));
+----
+
+Emitted when the LoadStatus of a frame changes
+
+_webview_;; The webview the frame belongs to
+_frame_;; The frame 
+****
+
+==== hoveringOverLink
+****
+
+----
+signals.connect("hoveringOverLink", function(webview, json));
+----
+
+Emitted when the mouse is over a link
+
+_webview_;; The webview that emitted the signal
+_json.uri_;; The uri of the link or +null+ if there is no link under the pointer, i.e. the pointer left a link
+_json.title_;; The link's title or +null+ if the pointer left a link
+****
+
+==== keyPress
+****
+----
+signals.connect("keyPress", function(webview, json));
+----
+
+Emitted when a key is pressed, return +true+ to prevent the default action
+
+_webview_;; The focused webview
+_json.isModifier_;; Whether or not the key is a modifier
+_json.keyCode_;; Hardware keycode
+_json.keyVal_;; Keycode as listed in gdkkeysyms.h 
+_json.name_;; A string represantation of the key
+_json.state_;; A bitmap of modifiers pressed, see Modifier
+****
+
+==== keyRelease
+****
+----
+signals.connect("keyRelease", function(webview, json));
+----
+
+Emitted when a key is released, return +true+ to prevent the default action
+
+_webview_;; The focused webview
+_json_;; Same as keyPress
+****
+
+
+==== loadCommitted
+****
+----
+signals.connect("loadCommitted", function(webview));
+----
+
+Emitted when the load has just commited, no data has been loaded when this
+signal is emitted. This is the preferred signal for injected scripts that do not
+manipulate the DOM.
+
+_webview_;; The webview that emitted the signal
+****
+
+==== loadFinished
+****
+----
+signals.connect("loadFinished", function(webview));
+----
+
+Emitted when the site has completely loaded. 
+
+_webview_;; The webview that emitted the signal
+****
+
+==== loadStatus
+****
+----
+signals.connect("loadStatus", function(webview));
+----
+
+Emitted when the load status changes
+
+_webview_;; The webview that emitted the signal
+****
+
+==== mimeType
+****
+----
+signals.connect("mimeType", function(webview, frame, request, json));
+----
+
+Decide whether or not to show a given mimetype. Return +true+ to stop the request.
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frames requires the decision 
+_request_;; The network request
+_json.mimeType_;; The mimetype
+****
+
+==== navigation
+****
+----
+signals.connect("navigation", function(webview, frame, request, action));
+----
+
+Emitted before a new site is loaded, return true to stop the request.
+
+_webview_;; The webview that emitted the signal
+_frame_;; The frame that requires the navigation 
+_request_;; The network request
+_action_;; The navigation action
+****
+
+==== resource
+****
+----
+signals.connect("resource", function(webview, frame, request, response));
+----
+
+Emitted before a new resource is going to be loaded
+
+_webview_;; The webview that emitted the signal
+_frame_;;   The frame that dispatched the request
+_request_;; The network request
+_response_;; The network response
+****
+
+==== tabFocus
+****
+----
+signals.connect("tabFocus", function(webview, json));
+----
+
+Emitted when another tab gets focus, return +true+ to stop the event
+
+_webview_;; The new tab
+_json.last_;; The number of the previously focused tab
+****
+
+
+== Enum objects ==
+Enum objects are objects that have only readonly properties, mapping
+gtk/webkit enums to javascript objects. 
+
+****
+[float]
+==== *ButtonContext* ====
+
+[source,javascript]
+--------
+const ButtonContext = {
+  document   : 1 << 1,
+  link       : 1 << 2,
+  image      : 1 << 3,
+  media      : 1 << 4,
+  selection  : 1 << 5,
+  editable   : 1 << 6
+};
+--------
+****
+
+****
+[float]
+==== *ChecksumType* ====
+
+[source,javascript]
+--------
+const ChecksumType = {
+  md5     : 0, 
+  sha1    : 1, 
+  sha256  : 2 
+};
+--------
+****
+
+****
+[float]
+==== *ClickType* ====
+
+[source,javascript]
+--------
+const ClickType = {
+  click       : 4,
+  doubleClick : 5,
+  tripleClick : 6
+};
+--------
+****
+
+****
+[float]
+==== *DownloadStatus* ====
+
+[source,javascript]
+-------
+const DownloadStatus = {
+  error       : -1,
+  created     : 0,
+  started     : 1, 
+  cancelled   : 2,
+  finished    : 3
+};
+-------
+****
+
+****
+[float]
+==== *FileTest* ====
+
+[source,javascript]
+-------
+const FileTest = {
+  regular    : 1 << 0,
+  symlink    : 1 << 1,
+  dir        : 1 << 2,
+  executable : 1 << 3,
+  exists     : 1 << 4
+};
+-------
+****
+
+****
+[float]
+==== *LoadStatus* ====
+
+[source,javascript]
+---------
+const LoadStatus = { 
+  provisional       : 0, 
+  committed         : 1,
+  finished          : 2,
+  firstVisualLayout : 3,
+  failed            : 4
+};
+---------
+****
+
+****
+[float]
+==== *Modifier* ====
+
+[source,javascript]
+--------
+const Modifier = {
+  Shift     : 1 << 0,
+  Lock	    : 1 << 1,
+  Control   : 1 << 2,
+  Mod1	    : 1 << 3,
+  Mod2	    : 1 << 4,
+  Mod3	    : 1 << 5,
+  Mod4	    : 1 << 6,
+  Mod5	    : 1 << 7,
+  Button1   : 1 << 8,
+  Button2   : 1 << 9,
+  Button3   : 1 << 10,
+  Button4   : 1 << 11,
+  Button5   : 1 << 12,
+  Super     : 1 << 26,
+  Hyper     : 1 << 27,
+  Meta      : 1 << 28,
+  Release   : 1 << 30,
+  Modifier  : 0x5c001fff
+};
+--------
+****
+
+****
+[float]
+==== *NavigationReason* ====
+
+[source,javascript]
+--------
+const NavigationReason = {
+  linkClicked     : 0,
+  formSubmitted   : 1,
+  backForward     : 2,
+  reload          : 3,
+  formResubmitted : 4,
+  other           : 5
+};
+--------
+****
+
+****
+[float]
+==== *SpawnError* ====
+[source,javascript]
+--------
+const SpawnError = {
+  success       : 0, 
+  spawnFailed   : 1<<0, 
+  stdoutFailed  : 1<<1, 
+  stderrFailed  : 1<<2
+};
+--------
+****
+
+== Global data == 
+Since all scripts share the same execution context, they are encapsulated in a
+function. To avoid conflicts with other scripts it is not allowed to set properties
+on the global object, i.e. 
+
+[source,javascript]
+-------
+#!javascript
+
+// not allowed, the global object is readonly
+number = 0;
+io.print(number);     // undefined
+
+// always use var instead
+var number = 0;
+io.print(number2);    // 0
+
+// won't work either
+function foo() {
+  bar = 1;
+}
+foo();
+io.print(bar);        // undefined
+-------
+
+For sharing data between scripts either signals can be created or the
++globals+-object can be used. To share data with the globals object securely when the
+scripts are loaded the script can return an +init+ function that will be called
+after all scripts have been initialized:
+
+
+.Script 1
+[source,javascript]
+-------
+#!javascript 
+
+// set when the script is initialized. 
+globals.foo = "bar";
+-------
+
+.Script 2
+[source,javascript]
+-------
+#!javascript 
+
+//  The behaviour is undefined, depending on if Script 1 was initialized before
+//  Script 2 or the other way round.
+io.print(globals.foo)       // undefined or "bar"
+
+// Will be called after all scripts have been initialized
+return  {
+  init : function () {
+    // globals.foo has been initialized
+    io.print(globals.foo); // "bar"
+  }
+};
+-------
+
+One exception is include, scripts that are explicitly included into the
+global scope setting the second parameter to true are visible in every script.
+
+.foo 
+[source,javascript]
+-------
+var foo = "bar";
+-------
+
+.Script 1
+
+[source,javascript]
+-------
+#!javascript 
+
+include("/path/to/foo", true); // visible in every script
+-------
+.Script 2
+
+[source,javascript]
+-------
+#!javascript 
+
+// Make sure Script 1 has been initialized
+return {
+  init : function() {
+    io.print(foo);                // "bar";
+  }
+};
+-------
+
+== Extensions ==
+*dwb* provides the possibility to load extensions.
+It is recommended to implement javascript-userscripts as an extension to have 
+consistent configuration locations for scripts. One advantage of extension also
+is that they can be loaded/unloaded on the fly.
+
+=== Properties
+
+_extensions.enableDebugging (Boolean, read, write)_;; Whether to enable debugging messages.
+
+=== Methods
+
+==== void extensions.debug(String name, String message) 
+****
+Prints a debug message and the call stack to stdout, enableDebugging must be
+set to true in order to print debug messages. 
+
+_name_;; Name of the extension
+_message_;; The debug message to print.
+****
+
+==== Boolean extensions.load(String name, [Object config]) 
+****
+Loads an extension
+
+_name_;; Name of the extension
+_config_;; The config for the script, if omitted the config is read from
+$XDG_CONFIG_HOME/dwb/extensionrc, optional
+_returns_;;  True if the extension was loaded
+****
+
+==== Boolean extensions.reload(String name, [Object config]) 
+****
+Reloads an extension
+
+_name_;; Name of the extension
+_config_;; The new config for the script, if omitted the old config is used,
+optional
+_returns_;;  True if the extension was successfully reloaded
+****
+
+==== Boolean extensions.toggle(String name, [Object config]) 
+****
+Toggles an extension
+
+_name_;; Name of the extension
+_config_;; The config for the extension.
+optional
+_returns_;;  True if the extension was loaded, false if it was unloaded.
+****
+
+==== Boolean extensions.unload(String name) 
+****
+Unloads an extension
+
+_name_;; Name of the extension
+_returns_;;  True if the extension was unloaded
+****
+
+==== void extensions.error(String name, String message|Error e, [String message]) 
+****
+
+Print an error message and call stack to stderr.
+
+_name_;; Name of the extension
+_message|e_;; The error message or an Error
+_message_;; If the second parameter is an Error, an optional message can be
+specified.
+****
+
+==== void extensions.message(String name, String message) 
+****
+
+Print a consistent message to stderr
+
+_name_;; Name of the extension
+_message_;; The message
+****
+
+
+==== void extensions.warning(String name, String message) 
+****
+
+Print a consistent warning to stderr
+
+_name_;; Name of the extension
+_message_;; The warning message
+****
+
+
+=== Writing extensions
+
+The default searchpath for extensions is *$XDG_DATA_HOME/dwb/extensions* and
+*SHARE_DIR/dwb/extensions* where  
+SHARE_DIR being the share directory of the installation, most likely /usr/share.
+
+The configuration for extensions is in $$XDG_CONFIG_HOME/dwb/extensionsrc$ and should
+return a javascript object. 
+
+Every extension must implement one function named init that takes one
+argument, the config for the extension. The function should return true if the
+extension was successfully loaded, false otherwise.
+Every extension also may implement a function end that will be called when an
+extension is unloaded. If an extension registers to signals and binds shortcuts
+the extension should unregister all signals and unbind all shortcuts in this
+function.
+init and end should be returned from the extension.
+
+==== Example
+
+A extension called *foobar* in *$HOME/.local/share/dwb/extensions/foobar*.
+
+[source,javascript]
+--------
+function foo(val) {
+  ....
+}
+function bar(val) {
+  ....
+}
+function loadStatusCallback(w) {
+  ...
+}
+return {
+  init : function (config) {
+    if (config.foo > 36) {
+      bar(config.foo);
+      foo(config.bar);
+      bind("XX", bar, "dobar");
+      signals.connect("loadStatus", loadStatusCallback);
+      return true;
+    }
+
+    return false;
+  },
+  end : function () {
+    unbind("dobar");
+    signals.disconnectByFunction(loadStatusCallback);
+    return true;
+  }
+};
+--------
+
+==== Example extensionrc
+
+--------
+return {
+  foobar : { bar : "X", foo : 37 }, // config for extension foobar
+  barfoo : {  }                     // config for extension barfoo
+  
+};
+--------
+
+== SEE ALSO
+*dwb*(1)
