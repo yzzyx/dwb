@@ -21,4 +21,15 @@
       }
     });
   }
+  if (Array.prototype.fastIndexOf === undefined) {
+    Object.defineProperty(Array.prototype, "fastIndexOf", {
+        value : function (v) {
+          for (var i=0, l=this.length; i<l; ++i) {
+            if (this[i] == v)
+              return i;
+          }
+          return -1;
+        }
+    });
+  }
 })();

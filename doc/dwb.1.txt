@@ -1595,8 +1595,7 @@ Block requests from specific sites:
 var block = [ new RegExp("https://example.org.*"), new RegExp("https://example.co.uk.*") ];
 
 signals.connect("resource", function(wv, frame, request) {
-  var i, r;
-  for (i=0; i<block.length; i++) 
+  for (var i=0, l=block.length; i<l; ++i) 
   {
     if (block[i].test(request.uri)) 
     {
@@ -1604,6 +1603,7 @@ signals.connect("resource", function(wv, frame, request) {
       return true;
     }
   }
+  return false;
 });
 ------
 
@@ -1614,4 +1614,9 @@ RESOURCES
 bitbucket: http://bitbucket.org/portix/dwb
 
 homepage:  http://portix.bitbucket.org/dwb/
+
+
+SEE ALSO
+--------
+*dwb-js*(7)
 

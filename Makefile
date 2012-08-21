@@ -29,6 +29,8 @@ install: $(TARGET) install-man install-data
 install-man: all
 	install -d $(DESTDIR)$(MAN1DIR)
 	install -m 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
+	install -d $(DESTDIR)$(MAN7DIR)
+	install -m 644 $(APIDIR)/$(MANAPI) $(DESTDIR)$(MAN7DIR)/$(MANAPI)
 
 install-data: all
 	@# Lib
@@ -61,6 +63,7 @@ uninstall: uninstall-man uninstall-data
 
 uninstall-man: 
 	$(RM) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
+	$(RM) $(DESTDIR)$(MAN7DIR)/$(MANAPI)
 
 uninstall-data: 
 	$(RM) -r $(DESTDIR)$(DATADIR)/$(REAL_NAME)

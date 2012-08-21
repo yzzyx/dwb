@@ -566,7 +566,7 @@ _returns_;; <<SpawnError>> if an error occured, 0 otherwise
 
 [source,javascript]
 ----
-Object system.spawn(String command)
+Object system.spawnSync(String command)
 ----
 
 Executes a shell command synchronously using the default search path
@@ -711,6 +711,44 @@ _hostname_;; a hostname
 _returns_;; the base domain 
 ****
 
+dwb also adds additional methods to builtin objects 
+
+****
+[[forEach]]
+[float]
+==== *Object.forEach()* ==== 
+[source,javascript]
+----
+void Object.forEach(Function func(String key, Object value, Object this))
+----
+
+Executes a function for each enumarable property of +this+ similar to
+Array.forEach.
+
+ :: 
+
+_func_;; The function to execute
+_key_;; The property name
+_value_;; The property value
+_this_;; The object the forEach is called on
+****
+
+****
+[[fastIndexOf]]
+[float]
+==== *Array.fastIndexOf()* ==== 
+[source,javascript]
+----
+Number Array.fastIndexOf(Object value))
+----
+
+This method is basically the same as +Array.indexOf+ but without type checking.
+
+ :: 
+
+_value_;; The value to search for
+_returns_;; The index in the array or +-1+ if the Object wasn't found.
+****
 
 
 [[Webkitobjects]]
@@ -980,7 +1018,7 @@ Additional properties are
 
 [source,javascript]
 ----
-frame.domain        frame     read
+frame.domain        String     read
 ----
 
 The domain name of the frame which is the effective second level domain
@@ -992,7 +1030,7 @@ The domain name of the frame which is the effective second level domain
 
 [source,javascript]
 ----
-frame.host        frame     read
+frame.host          String     read
 ----
 
 The host name of the frame
