@@ -1,3 +1,42 @@
+Changes since 2012-05-11 
+
+New features: 
+ * A javascript api
+ * Extensions: 'formfiller', 'requestpolicy', 'perdomainsettings', 'userscripts'
+ * Token matching for tab completion
+ * New command 'sanitize'
+ * New option 'addressbar-dns-lookup'
+ * New option 'close-last-tab-policy'
+ * Create hints for image maps
+ * Added DWB_PROXY environment variable to external download command
+ * Use up/down key for tab completion
+ * Adding download-speed to the download label
+ * Focus hints with up/down-keys
+ * New command 'toggle_tab'
+ * New setting 'do-not-track'
+ * Tilde-expansion for paths
+ * New option 'bars-padding'
+ * New option 'searchengine-submit-pattern'
+ * New options 'progressbar-empty-color', 'progressbar-full-color',
+   'progressbar-style'
+ 
+Removed: 
+ * $XDG_CONFIG_HOME/dwb/scripts/ is no longer supported, scripts from that
+   directory are only injected with the 'userscripts' extension.
+ * Removed command 'reload_scripts'.
+
+Bug fixes:
+ * Fixing wrong tab marked as protected when session is restored
+ * Try to avoid overlapping hints
+ * Fixing a bug when a new searchengine is added on certain sites.
+ * Fixing segfault when web-inspector is closed
+ * Fixing several memory leaks.
+ * Fixing a use-after-free and a too small malloc
+ * Don't unescape uri in the statusbar if it contains \n, \r or \f
+ * Fixing issues with onscreen keyboards
+ * Fixing issues with autocompletion
+
+
 Changes since 2012-02-01 
 
 New features:
@@ -34,8 +73,6 @@ Changed:
 
 Removed: 
   * Removed settings 'mail-handler', 'ftp-handler'
-
-
 
 Bug fixes: 
   * Fixing broken downloads with libwebkit > 1.8.0
