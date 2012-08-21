@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 08/21/2012
+.\"      Date: 08/22/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "08/21/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "08/22/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -2299,6 +2299,226 @@ return {
 .SH "EXTENSIONS"
 .sp
 \fBdwb\fR provides the possibility to load extensions\&. It is recommended to implement javascript\-userscripts as an extension to have consistent configuration locations for scripts\&. One advantage of extension also is that they can be loaded/unloaded on the fly\&.
+.SS "Prepackaged extensions"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBformfiller\fR
+.RS 4
+.sp
+An extension that gets form data and fills forms with previously saved data\&.
+.PP
+\fBConfiguration options\fR
+.RS 4
+.PP
+\fIformData\fR
+.RS 4
+A path to a file where formdata will be saved, the default path is
+\fB$XDG_CONFIG_HOME/dwb/forms\fR
+.RE
+.PP
+\fIscGetForm\fR
+.RS 4
+Shortcut that gets and saves form data, the default value is
+\fBefg\fR
+.RE
+.PP
+\fIscFillForm\fR
+.RS 4
+Shortcut that fills a form, the default value is
+\fBeff\fR
+.RE
+.PP
+\fIuseGPG\fR
+.RS 4
+Whether to use gpg2 to encrypt the formData file with a password\&.
+.RE
+.PP
+\fIGPGOptEncrypt\fR
+.RS 4
+Additional options that will be passed to gpg2 for encryption, the default gpg2 options are: \-\-passphrase <password> \-\-batch \-\-no\-tty \-\-yes \-c \-\-output <formData> default value:
+\fB""\fR
+.RE
+.PP
+\fIGPGOptDecrypt\fR
+.RS 4
+Additional options that will be passed to gpg2 for decryption, the default gpg2 options are \-\-passphrase <password> \-\-batch \-\-no\-tty \-\-yes \-d <formData> default value:
+\fB""\fR
+.RE
+.PP
+\fIkeepPassword\fR
+.RS 4
+Whether to save the gpg password in memory, if set to false the user will be prompted for the password every time a form is filled or new data is saved, default value:
+\fBtrue\fR
+.RE
+.PP
+\fIkeepFormdata\fR
+.RS 4
+If useGPG is enabled and this value is set to true the complete formdata will be kept in memory, if set to false gpg2 will be called every time a form is filled, default value:
+\fBfalse\fR
+.RE
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBperdomainsettings\fR
+.RS 4
+.sp
+An extension that can be used for per\-domain\-settings\&. Valid settings are the properties of WebKitWebSettings but in camelcase, see http://webkitgtk\&.org/reference/webkitgtk/unstable/WebKitWebSettings\&.html for details\&.
+.PP
+\fBConfiguration options\fR
+.RS 4
+.PP
+\fIdomains\fR
+.RS 4
+Settings applied based on the effective second level domain
+.RE
+.PP
+\fIhosts\fR
+.RS 4
+Settings applied based on host name, this option is an object of the format
+.RE
+.PP
+\fIuris\fR
+.RS 4
+Settings applied based on the uri, this option is an object of the format
+.RE
+.PP
+\fIdefaults\fR
+.RS 4
+Default settings, for each setting in domains, hosts and uris a default\-value should be specified
+.RE
+.RE
+.PP
+\fBExample configuration\fR
+.RS 4
+Example using extensions\&.load:
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+extensions\&.load("perdomainsettings", {
+  domains : {
+     "example\&.com" : {
+          "enablePlugins"  : true
+     },
+     "example\&.uk\&.com" :  {
+          "enablePlugins"  : true,
+          "enableScripts"  : false
+     }
+  },
+  hosts : {
+     "www\&.example1\&.com" :  {
+          "autoLoadImages" : true
+     }
+  },
+  uris : {
+     "http://www\&.example2\&.com/login\&.php" :  {
+          "autoLoadImages" : false
+     }
+  },
+  defaults : {
+     "enablePlugins"   : false,
+     "autoLoadImages"  : false,
+     "enableScripts"   :  true
+  }
+});
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBrequestpolicy\fR
+.RS 4
+.sp
+Extension that blocks requests from thirdparty domains with whitelisting support, either permanently or just for the session\&. It is also possible to block requests from certain domains on all sites, they have highest precedence and will also be blocked on sites where thirdparty requests are allowed in general\&.
+.PP
+\fBConfiguration options\fR
+.RS 4
+.PP
+\fIshortcut\fR
+.RS 4
+Shortcut to block / allow requests, default
+\fB"erp"\fR
+.RE
+.PP
+\fIunblockCurrent\fR
+.RS 4
+Shortcut to unblock always blocked requests, shows only domains from the current site, default
+\fB"erC"\fR
+.RE
+.PP
+\fIunblockAll\fR
+.RS 4
+Shortcut to unblock always blocked requests, shows all blocked domains, default
+\fB"erA"\fR
+.RE
+.PP
+\fIwhiteList\fR
+.RS 4
+A path to the whitelisting file, default is
+\fB$XDG_CONFIG_HOME/dwb/<profile>/requestpolicy\&.json\fR
+.RE
+.PP
+\fIautoreload\fR
+.RS 4
+Whether to automatically reload the website after the persistentList has changed, default
+\fBfalse\fR
+.RE
+.PP
+\fInotify\fR
+.RS 4
+Whether to notify about blocked request, default
+\fBfalse\fR
+.RE
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBuserscripts\fR
+.RS 4
+.sp
+Extension that loads userscripts and injects them into websites, this extension is mostly greasemonkey compatible\&. Scripts can be loaded by either passing an array of paths to extensions\&.load or by putting scripts into $XDG_CONFIG_HOME/dwb/scripts/\&.
+.PP
+\fBConfiguration options\fR
+.RS 4
+The only configuration option is an array of paths to scripts
+.RE
+.PP
+\fBExample configuration\fR
+.RS 4
+Example using extensions\&.load:
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+extensions\&.load("userscripts", [ "/path/to/script1", "/path/to/script2" ]);
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .SS "Using extensions"
 .sp
 Extensions can be loaded by an userscript

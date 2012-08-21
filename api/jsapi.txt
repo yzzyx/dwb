@@ -1951,6 +1951,140 @@ return {
 It is recommended to implement javascript-userscripts as an extension to have 
 consistent configuration locations for scripts. 
 
+=== Prepackaged extensions
+
+==== formfiller
+
+An extension that gets form data and fills forms with previously saved data.
+
+_Configuration options_::
+ 
+_formData_;; A path to a file where formdata will be saved, the default
+                 path is *$XDG_CONFIG_HOME/dwb/forms*
+_scGetForm_;; Shortcut that gets and saves form data, the default value is *efg*
+_scFillForm_;; Shortcut that fills a form, the default value is *eff*
+_useGPG_;; Whether to use gpg2 to encrypt the formData file with a password.
+_GPGOptEncrypt_;; Additional options that will be passed to gpg2 for
+                encryption, the default gpg2 options are:
+                --passphrase <password> --batch --no-tty --yes -c --output <formData>
+                default value: *""*
+_GPGOptDecrypt_;; Additional options that will be passed to gpg2 for
+                decryption, the default gpg2 options are 
+                --passphrase <password> --batch --no-tty --yes -d <formData>
+                default value: *""*
+
+_keepPassword_;;  Whether to save the gpg password in memory, if set to false the
+                user will be prompted for the password every time a form
+                is filled or new data is saved, default value: *true*
+
+_keepFormdata_;;  If useGPG is enabled and this value is set to true the
+                  complete formdata will be kept in memory, if set to false
+                  gpg2 will be called every time a form is filled, default
+                  value: *false*
+
+==== perdomainsettings
+
+An extension that can be used for per-domain-settings. Valid settings are
+the properties of WebKitWebSettings but in camelcase, see 
+http://webkitgtk.org/reference/webkitgtk/unstable/WebKitWebSettings.html
+for details. 
+
+_Configuration options_::
+
+_domains_;;   Settings applied based on the effective second level domain
+
+_hosts_;;   Settings applied based on host name, this option is
+an object of the format
+
+_uris_;;   Settings applied based on the uri, this option is
+an object of the format
+
+_defaults_;;  Default settings, for each setting in domains, hosts and uris a
+             default-value should be specified
+
+_Example configuration_::
+
+Example using extensions.load
+
+[source,javascript]
+----
+extensions.load("perdomainsettings", { 
+  domains : {                                                            
+     "example.com" : {                                                   
+          "enablePlugins"  : true                                        
+     },                                                                  
+     "example.uk.com" :  {                                               
+          "enablePlugins"  : true,                                       
+          "enableScripts"  : false                                       
+     }                                                                   
+  },                                                                     
+  hosts : {                                                              
+     "www.example1.com" :  {                                             
+          "autoLoadImages" : true                                        
+     }                                                                   
+  },                                                                     
+  uris : {                                                               
+     "http://www.example2.com/login.php" :  {                            
+          "autoLoadImages" : false                                       
+     }                                                                   
+  },                                                                     
+  defaults : {                                                           
+     "enablePlugins"   : false,                                          
+     "autoLoadImages"  : false,                                          
+     "enableScripts"   :  true                                           
+  }                                                                      
+});
+----
+
+
+==== requestpolicy
+
+Extension that blocks requests from thirdparty domains with whitelisting
+support, either permanently or just for the session.
+It is also possible to block requests from certain domains on all sites, they
+have highest precedence and will also be blocked on sites where 
+thirdparty requests are allowed in general. 
+
+_Configuration options_::
+
+_shortcut_;; Shortcut to block / allow requests, default *"erp"*
+
+_unblockCurrent_;; Shortcut to unblock always blocked requests, shows only
+                 domains from the current site, default *"erC"*
+
+_unblockAll_;;  Shortcut to unblock always blocked requests, shows all
+                 blocked domains, default *"erA"*
+
+_whiteList_;; A path to the whitelisting file, default is
+                 *$XDG_CONFIG_HOME/dwb/<profile>/requestpolicy.json*
+
+_autoreload_;; Whether to automatically reload the website after the
+                 persistentList has changed, default *false*
+
+_notify_;; Whether to notify about blocked request, default *false*
+
+
+==== userscripts
+
+Extension that loads userscripts and injects them into websites, this
+extension is mostly greasemonkey compatible. Scripts can be loaded by either
+passing an array of paths to extensions.load or by putting scripts into
+$XDG_CONFIG_HOME/dwb/scripts/. 
+
+_Configuration options_::
+
+The only configuration option is an array of paths to scripts
+
+_Example configuration_::
+
+Example using extensions.load 
+
+[source,javascript]
+----
+extensions.load("userscripts", [ "/path/to/script1", "/path/to/script2" ]);
+----
+
+
 === Using extensions
 
 Extensions can be loaded by an userscript 
