@@ -184,6 +184,20 @@
           return true;
         }
       }
+    },
+    "bind" : {
+      value : function(name, shortcut, options) {
+        if (!name || !shortcut)
+          return;
+        if (options.load === undefined || options.load) 
+          extensions.load(name, options.config);
+        bind(shortcut, function () { 
+          if (extensions.toggle(name, options.config)) 
+            io.notify("Extension " + name + " enabled");
+          else 
+            io.notify("Extension " + name + " disabled");
+        }, options.command);
+      }
     }
   });
 })();

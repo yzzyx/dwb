@@ -128,7 +128,15 @@ a dwb command to execute, will be parsed the same way as if executed from comman
 .RS 4
 true if execution was successful
 .RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
 \fBBoolean exit()\fR
+.RS 4
 .sp
 Exit dwb, must be called if the script is running from commandline\&.
 .RE
@@ -253,7 +261,7 @@ Object that contains the response body, the response headers and the http status
 .nr an-break-flag 1
 .br
 .ps +1
-\fBvoid tabComplete(String label, Array items, Function callback)\fR
+\fBvoid tabComplete(String label, Array items, Function callback, [Boolean readonly])\fR
 .RS 4
 .sp
 Initiates tab completion\&.
@@ -271,6 +279,11 @@ An array of objects, each object can have 2 properties, left which will be the l
 \fIcallback\fR
 .RS 4
 Callback function, the first argument will be the returned string from the url bar\&.
+.RE
+.PP
+\fIreadonly\fR
+.RS 4
+Whether the items are readonly, default false, optional\&.
 .RE
 .RE
 .sp
@@ -429,7 +442,7 @@ Searchengines
 .RE
 .SS "io"
 .sp
-The io object implements Methods for input and output\&.
+The io object implements methods for input and output\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -605,7 +618,7 @@ true if writing was successful
 .RE
 .SS "system"
 .sp
-The system object implements system Methods\&.
+The system object implements system methods\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -733,7 +746,7 @@ An object that contains stdout, stderr and status\&.
 .RE
 .SS "tabs"
 .sp
-The tabs object implements Methods and properties to get webview objects\&.
+The tabs object implements methods and properties to get webview objects\&.
 .PP
 \fItabs\&.current (webview, read)\fR
 .RS 4
@@ -772,7 +785,7 @@ The corresponding webview
 .RE
 .SS "util"
 .sp
-The util object implements helper Methods\&.
+The util object implements helper methods\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -845,7 +858,7 @@ The property value
 .PP
 \fIthis\fR
 .RS 4
-The object the forEach is called on
+The object forEach is called on
 .RE
 .RE
 .sp
@@ -854,14 +867,14 @@ The object the forEach is called on
 .nr an-break-flag 1
 .br
 .ps +1
-\fBNumber Array.fastIndexOf(Object value))\fR
+\fBNumber Array.fastIndexOf(Object object)\fR
 .RS 4
 .sp
 This method is basically the same as Array\&.indexOf but without type checking\&.
 .PP
-\fIvalue\fR
+\fIobject\fR
 .RS 4
-The value to search for
+The object to search for
 .RE
 .PP
 \fIreturns\fR
@@ -994,7 +1007,7 @@ The return value of the script\&. If the script is injected globally inject alwa
 .ps -1
 .br
 .sp
-If a script is injected from a loadStatus\-callback the script must be injected after LoadStatus\&.committed has been emitted\&. On LoadStatus\&.committed the document hasn\(cqt been created, if the script modifies the DOM it should be injected on LoadStatus\&.finished of using the documentLoaded signal\&. If only LoadStatus\&.committed or loadFinished\&.committed are used it is better to use the corresponding signals instead to reduce overhead\&.
+If a script is injected from a loadStatus\-callback the script must be injected after LoadStatus\&.committed has been emitted\&. On LoadStatus\&.committed the document hasn\(cqt been created, if the script modifies the DOM it should be injected when LoadStatus\&.finished or documentLoaded is emitted\&. If only LoadStatus\&.committed or loadFinished\&.committed are used it is better to use the corresponding signals instead to reduce overhead\&.
 .sp .5v
 .RE
 .RE
@@ -1032,16 +1045,12 @@ The uri to load
 .PP
 \fIcallback\fR
 .RS 4
-A callback function that will be called when the load status changes, return
-true
-to stop the emission, optional
+A callback function that will be called when the load status changes, return true to stop the emission, optional
 .RE
 .PP
 \fIreturns\fR
 .RS 4
-
-true
-if the uri is loaded
+true if the uri is loaded
 .RE
 .RE
 .sp
@@ -1077,7 +1086,7 @@ The host name of the frame
 \fBBoolean frame.inject(String script, [Boolean global])\fR
 .RS 4
 .sp
-Injects a script into a frame, also see webview\&.inject for details\&.
+Injects a script into a frame, see also webview\&.inject for details\&.
 .RE
 .SS "download"
 .sp
@@ -1125,12 +1134,6 @@ A callback function that will be executed whenever the DownloadStatus changes, r
 .sp
 Cancels a download
 .RE
-.SS "request"
-.sp
-Corresponds to a WebKitNavigationRequest\&.
-.SS "navigationAction"
-.sp
-Corresponds to a WebKitWebNavigationAction\&.
 .SH "SIGNALS"
 .sp
 With the signals object \fBdwb\fR communicates with the script on certain events\&. To connect to a signal one can call the connect function that is implemented by the signals object, that takes 2 arguments, the name of the signal and a callback function\&.
@@ -1141,7 +1144,7 @@ The callback function has a varying number of parameters\&. The last paramter is
 .sp
 The signals object is not a readonly object, properties can be added to the object which are visible in all scripts but it should be avoided to add properties on the signals object\&. signals should only be used to connect to signals or define custom signals\&.
 .sp
-The signals object implements the following Methods
+The signals object implements the following methods
 .SS "Methods"
 .sp
 .it 1 an-trap
@@ -1213,11 +1216,7 @@ The id returned from connect
 .PP
 \fIreturns\fR
 .RS 4
-
-true
-if the signal was disconnected,
-false
-if the signal wasn\(cqt found or was already disconnected\&.
+true if the signal was disconnected, false if the signal wasn\(cqt found or was already disconnected\&.
 .RE
 .RE
 .sp
@@ -1238,11 +1237,7 @@ The callback function passed to connect
 .PP
 \fIreturns\fR
 .RS 4
-
-true
-if signals were disconnected,
-false
-if no signal was disconnected
+true if signals were disconnected, false if no signal was disconnected
 .RE
 .RE
 .sp
@@ -1263,11 +1258,7 @@ The callback function passed to connect
 .PP
 \fIreturns\fR
 .RS 4
-
-true
-if signals were disconnected,
-false
-if no signal was disconnected
+true if signals were disconnected, false if no signal was disconnected
 .RE
 .RE
 .SS "Emitted signals"
@@ -1406,7 +1397,7 @@ Same as buttonPress but without
 .RS 4
 .\}
 .nf
-Boolean signals\&.connect("close", function());
+signals\&.connect("close", function());
 .fi
 .if n \{\
 .RE
@@ -1485,7 +1476,7 @@ signals\&.connect("documentLoaded",  function(webview, frame));
 .RE
 .\}
 .sp
-Emitted when a the dom document of an frame has loaded\&.
+Emitted when a the DOM document of a frame has been loaded\&.
 .PP
 \fIwebview\fR
 .RS 4
@@ -1629,7 +1620,7 @@ signals\&.connect("frameCreated", function(webview, frame));
 .RE
 .\}
 .sp
-Emitted when the frame is created
+Emitted when a frame is created
 .PP
 \fIwebview\fR
 .RS 4
@@ -1700,16 +1691,12 @@ The webview that emitted the signal
 .PP
 \fIjson\&.uri\fR
 .RS 4
-The uri of the link or
-null
-if there is no link under the pointer, i\&.e\&. the pointer left a link
+The uri of the link or null if there is no link under the pointer, i\&.e\&. the pointer left a link
 .RE
 .PP
 \fIjson\&.title\fR
 .RS 4
-The link\(cqs title or
-null
-if the pointer left a link
+The link\(cqs title or null if the pointer left a link
 .RE
 .RE
 .sp
@@ -2029,7 +2016,7 @@ The number of the previously focused tab
 .SH "ENUM OBJECTS"
 .sp
 Enum objects are objects that have only readonly properties, mapping gtk/webkit enums to javascript objects\&.
-\fBButtonContext\fR
+.SS "ButtonContext"
 .sp
 .if n \{\
 .RS 4
@@ -2047,7 +2034,7 @@ const ButtonContext = {
 .if n \{\
 .RE
 .\}
-\fBChecksumType\fR
+.SS "ChecksumType"
 .sp
 .if n \{\
 .RS 4
@@ -2062,7 +2049,7 @@ const ChecksumType = {
 .if n \{\
 .RE
 .\}
-\fBClickType\fR
+.SS "ClickType"
 .sp
 .if n \{\
 .RS 4
@@ -2077,7 +2064,7 @@ const ClickType = {
 .if n \{\
 .RE
 .\}
-\fBDownloadStatus\fR
+.SS "DownloadStatus"
 .sp
 .if n \{\
 .RS 4
@@ -2094,7 +2081,7 @@ const DownloadStatus = {
 .if n \{\
 .RE
 .\}
-\fBFileTest\fR
+.SS "FileTest"
 .sp
 .if n \{\
 .RS 4
@@ -2111,7 +2098,7 @@ const FileTest = {
 .if n \{\
 .RE
 .\}
-\fBLoadStatus\fR
+.SS "LoadStatus"
 .sp
 .if n \{\
 .RS 4
@@ -2128,7 +2115,7 @@ const LoadStatus = {
 .if n \{\
 .RE
 .\}
-\fBModifier\fR
+.SS "Modifier"
 .sp
 .if n \{\
 .RS 4
@@ -2158,7 +2145,7 @@ const Modifier = {
 .if n \{\
 .RE
 .\}
-\fBNavigationReason\fR
+.SS "NavigationReason"
 .sp
 .if n \{\
 .RS 4
@@ -2176,7 +2163,7 @@ const NavigationReason = {
 .if n \{\
 .RE
 .\}
-\fBSpawnError\fR
+.SS "SpawnError"
 .sp
 .if n \{\
 .RS 4
@@ -2264,7 +2251,7 @@ return  {
 .sp
 One exception is include, scripts that are explicitly included into the global scope setting the second parameter to true are visible in every script\&.
 .PP
-\fBfoo\fR. 
+\fBScript foo\fR. 
 .sp
 .if n \{\
 .RS 4
@@ -2312,6 +2299,54 @@ return {
 .SH "EXTENSIONS"
 .sp
 \fBdwb\fR provides the possibility to load extensions\&. It is recommended to implement javascript\-userscripts as an extension to have consistent configuration locations for scripts\&. One advantage of extension also is that they can be loaded/unloaded on the fly\&.
+.SS "Using extensions"
+.sp
+Extensions can be loaded by an userscript
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+extensions\&.load("extension_1");
+extensions\&.load("extension_2", {
+  configProp_1 : 22,
+  configProp_2 : "val2"
+});
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+To load/unload extensions on the fly \fBextensions\&.bind\fR can be used:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+var myConfig = {
+  prop_1 : 37,
+  prop_2 : true,
+  prop_3 : "foo"
+};
+
+
+extensions\&.bind("myExtension", "Control m", {
+  command : "toggleMyExtension",
+  config : myConfig,
+  load : false
+});
+
+extensions\&.bind("mySecondExtension", "Control M");
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The default searchpaths for extensions are $XDG_DATA_HOME/dwb/extensions/ and /usr/share/dwb/extensions/\&.
 .SS "Properties"
 .PP
 \fIextensions\&.enableDebugging (Boolean, read, write)\fR
@@ -2319,6 +2354,47 @@ return {
 Whether to enable debugging messages\&.
 .RE
 .SS "Methods"
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid extensions.bind(String name, String shortcut, [Object options])\fR
+.RS 4
+.sp
+Bind an extension to a shortcut, the shortcut enables/disables the extension\&.
+.PP
+\fIname\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fIshortcut\fR
+.RS 4
+Name of the extension
+.RE
+.PP
+\fIoptions\fR
+.RS 4
+An optional object with options where possible options are
+.PP
+options\&.load
+.RS 4
+Whether to load the extension on startup, default true
+.RE
+.PP
+options\&.config
+.RS 4
+Config passed to extensions\&.load
+.RE
+.PP
+options\&.command
+.RS 4
+Command that can be used on command line
+.RE
+.RE
+.RE
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -2511,7 +2587,7 @@ The warning message
 .sp
 The default searchpath for extensions is \fB$XDG_DATA_HOME/dwb/extensions\fR and \fBSHARE_DIR/dwb/extensions\fR where SHARE_DIR being the share directory of the installation, most likely /usr/share\&.
 .sp
-The configuration for extensions is in $$XDG_CONFIG_HOME/dwb/extensionsrc$ and should return a javascript object\&.
+The configuration for extensions is in \fB$XDG_CONFIG_HOME/dwb/extensionrc\fR and should return a javascript object\&.
 .sp
 Every extension must implement one function named init that takes one argument, the config for the extension\&. The function should return true if the extension was successfully loaded, false otherwise\&. Every extension also may implement a function end that will be called when an extension is unloaded\&. If an extension registers to signals and binds shortcuts the extension should unregister all signals and unbind all shortcuts in this function\&. init and end should be returned from the extension\&.
 .sp
@@ -2523,7 +2599,7 @@ Every extension must implement one function named init that takes one argument, 
 \fBExample\fR
 .RS 4
 .sp
-A extension called \fBfoobar\fR in \fB$HOME/\&.local/share/dwb/extensions/foobar\fR\&.
+A extension called \fBfoobar\fR in \fB$HOME/\&.local/share/dwb/extensions/foobar\fR:
 .sp
 .if n \{\
 .RS 4

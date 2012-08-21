@@ -35,9 +35,9 @@ properties on the global object, see also <<Globaldata,global data>> for details
 
 == Global ==
 
-Functions from the global object.
+methods from the global object.
 
-=== Functions ===
+=== Methods ===
 
 
 ****
@@ -167,7 +167,7 @@ the request.
 
 [source,javascript]
 ----
-void tabComplete(String label, Array items, Function callback)
+void tabComplete(String label, Array items, Function callback, [Boolean readonly])
 ----
 
 Initiates tab completion.
@@ -180,6 +180,7 @@ will be the left completion label and +right+ which will be the right completion
 label.
 _callback_;; Callback function, the first argument will be the returned string
 from the url bar.
+_readonly_;; Whether the items are readonly, default +false+, optional.
 ****
 
 ****
@@ -316,7 +317,7 @@ var bookmarks = io.read(data.bookmarks);
 
 [[io]]
 === io ===
-The +io+ object implements functions for input and output. 
+The +io+ object implements methods for input and output. 
 
 ****
 [[debug]]
@@ -480,7 +481,7 @@ io.print(text);
 [[system]]
 === system ===
 
-The +system+ object implements system functions.
+The +system+ object implements system methods.
 
 ****
 [[fileTest]]
@@ -595,7 +596,7 @@ asyncread(home + "/.bashrc");
 
 [[tabs]]
 === tabs ===
-The +tabs+ object implements functions and properties to get +webview+ objects. 
+The +tabs+ object implements methods and properties to get +webview+ objects. 
 
 ==== Properties ====
 
@@ -638,7 +639,7 @@ Number of the currently focused tab
 
 
 
-==== Functions ====
+==== Methods ====
 
 ****
 [float]
@@ -671,7 +672,7 @@ tabs.nth(2).loadUri(c.uri);
 [[util]]
 === util ===
 
-The +util+ object implements helper functions.
+The +util+ object implements helper methods.
 
 ****
 [float]
@@ -730,7 +731,7 @@ Array.forEach.
 _func_;; The function to execute
 _key_;; The property name
 _value_;; The property value
-_this_;; The object the forEach is called on
+_this_;; The object forEach is called on
 ****
 
 ****
@@ -739,14 +740,14 @@ _this_;; The object the forEach is called on
 ==== *Array.fastIndexOf()* ==== 
 [source,javascript]
 ----
-Number Array.fastIndexOf(Object value))
+Number Array.fastIndexOf(Object object)
 ----
 
 This method is basically the same as +Array.indexOf+ but without type checking.
 
  :: 
 
-_value_;; The value to search for
+_object_;; The object to search for
 _returns_;; The index in the array or +-1+ if the Object wasn't found.
 ****
 
@@ -754,7 +755,7 @@ _returns_;; The index in the array or +-1+ if the Object wasn't found.
 [[Webkitobjects]]
 == Webkit objects ==
 
-All webkit objects correspond to gobject objects, i.e. they have the same
+All webkit objects correspond to GObject objects, i.e. they have the same
 properties, but the javascript properties are all camelcase. 
 For example, a +WebKitWebView+ has the property +zoom-level+, the corresponding
 javascript property is +zoomLevel+:
@@ -767,7 +768,7 @@ webview.zoomLevel = webview.zoomLevel * 2;
 ---------------------------------
 ====
 
-All Objects derived from GObjets implement the following functions. 
+All Objects derived from GObjets implement the following methods. 
 
 //Webkit objects should not be compared using +==+, since it may happen that the
 //same gobject is represented by different javascript objects, instead every
@@ -901,7 +902,7 @@ wv.number        frame     read
 The number of the webview, starting at 0
 ****
 
-==== Functions ====
+==== Methods ====
 
 ****
 [float]
@@ -994,8 +995,8 @@ wv.loadUri("http://www.example.com", function() {
 NOTE: If a script is injected from a <<loadStatus>>-callback the script must be
 injected after +LoadStatus.committed+ has been emitted.
 On +LoadStatus.committed+ the document 
-hasn't been created, if the script modifies the DOM it should be injected on
-+LoadStatus.finished+. 
+hasn't been created, if the script modifies the DOM it should be injected when
++LoadStatus.finished+ or +documentLoaded+ is emitted. 
 If only +LoadStatus.committed+ or +loadFinished.committed+ are used it is better
 to use the corresponding signals instead to reduce overhead. 
 
@@ -1048,7 +1049,7 @@ can be used.
 
 
 
-==== Functions ====
+==== Methods ====
 
 ****
 [float]
@@ -1059,7 +1060,7 @@ can be used.
 Boolean frame.inject(String script, [Boolean global])
 ----
 
-Injects a script into a frame, also see <<inject,webview.inject>> for details.
+Injects a script into a frame, see also <<inject,webview.inject>> for details.
 ****
 
 
@@ -1084,7 +1085,7 @@ Constructs a new download
 _uri_;; The uri of the download
 ****
 
-==== Functions ====
+==== Methods ====
 
 ****
 [float]
@@ -1132,19 +1133,9 @@ download.start(function () {
 ====
 
 
-[[request]]
-=== request ===
-
-Corresponds to a +WebKitNavigationRequest+.
-
-[[navigationAction]]
-=== navigationAction ===
-
-Corresponds to a +WebKitWebNavigationAction+.
-
 == Signals ==
 With the +signals+ object *dwb* communicates with the script on certain events. 
-To connect to a signal one can call the connect function that is implemented by
+To connect to a signal one can call the connect method that is implemented by
 the signals object, that takes 2 arguments, the name of the signal and a
 callback function. 
 
@@ -1165,9 +1156,9 @@ object which are visible in all scripts but it should be avoided to add
 properties on the +signals+ object. +signals+ should only be used to connect to
 signals or define custom signals. 
 
-The +signals+ object implements the following functions
+The +signals+ object implements the following methods
 
-=== Functions ===
+=== Methods ===
 
 [[connect]]
 [float]
@@ -1960,6 +1951,44 @@ return {
 It is recommended to implement javascript-userscripts as an extension to have 
 consistent configuration locations for scripts. 
 
+=== Using extensions
+
+Extensions can be loaded by an userscript 
+
+[source,javascript]
+------
+#!javascript 
+
+extensions.load("extension_1");
+extensions.load("extension_2", { 
+  configProp_1 : 37, 
+  configProp_2 : "val2" 
+});
+------
+
+To load/unload extensions on the fly *extensions.bind* can be used:
+
+[source,javascript]
+------
+#!javascript 
+
+var myConfig = { 
+  prop_1 : 37, 
+  prop_2 : true, 
+  prop_3 : "foo"
+};
+
+extensions.bind("myExtension", "Control m", {
+  command : "toggleMyExtension", 
+  config : myConfig, 
+  load : false
+});
+extensions.bind("mySecondExtension", "Control M");
+------
+
+The default searchpaths for extensions are +$XDG_DATA_HOME/dwb/extensions/+ and
++/usr/share/dwb/extensions/+.
+
 The +extensions+ object has the following properties and functions
 
 === Properties === 
@@ -1976,7 +2005,27 @@ extensions.enableDebugging         Boolean      read
 Whether to enable debugging messages.
 ****
 
-=== Functions ===
+=== Methods ===
+
+****
+[[extensionsbind,bind]]
+[float]
+==== *bind()* ==== 
+
+[source,javascript]
+----
+void extensions.bind(String name, String shortcut, [Object options]) 
+----
+
+Bind an extension to a shortcut, the shortcut enables/disables the extension.
+
+_name_;; Name of the extension
+_shortcut_;; Name of the extension
+_options_;; An optional object with options where possible options are 
+options.load::: Whether to load the extension on startup, default true
+options.config::: Config passed to extensions.load
+options.command::: Command that can be used on commandline
+****
 
 ****
 [[extensiondebug,debug]]
@@ -2137,14 +2186,14 @@ _message_;; The warning message
 extensions.load("foobar");
 --------
 
-.Writing extensions
+=== Writing extensions
 
 The default searchpath for extensions isn +$XDG_DATA_HOME/dwb/extensions+ and
 +SHARE_DIR/dwb/extensions+ where the 
 +SHARE_DIR+ with sharedirectory being the share directory of the installation,
 most likely /usr/share.
 
-The configuration for extensions is in +$XDG_CONFIG_HOME/dwb/extensionsrc+ and should
+The configuration for extensions is in +$XDG_CONFIG_HOME/dwb/extensionrc+ and should
 return a javascript object. 
 
 Every extension must implement one function named +init+ that takes one

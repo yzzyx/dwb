@@ -58,8 +58,8 @@ _returns_;; true if the function was binded successfully
 ****
 
 ==== Boolean execute(String command)
-****
 
+****
 Executes a dwb command
 
 _command_;; a dwb command to execute, will be parsed the same way as if executed
@@ -67,7 +67,7 @@ from commandline
 _returns_;; true if execution was successful
 **** 
 
-.Boolean exit()
+==== Boolean exit()
 ****
 
 Exit dwb, must be called if the script is running from commandline. 
@@ -91,7 +91,6 @@ invisible, even in the including script. To use an included script it can return
 an object with its public objects: 
 
 ======
-[source,javascript]
 ---------------------------------
 // included script 
 
@@ -133,7 +132,7 @@ the http status code of
 the request. 
 ****
 
-==== void tabComplete(String label, Array items, Function callback)
+==== void tabComplete(String label, Array items, Function callback, [Boolean readonly])
 ****
 
 Initiates tab completion.
@@ -144,6 +143,7 @@ will be the left completion label and right which will be the right completion
 label.
 _callback_;; Callback function, the first argument will be the returned string
 from the url bar.
+_readonly_;; Whether the items are readonly, default false, optional.
 ****
 
 ==== Number timerStart(Number interval, Function func)
@@ -176,7 +176,6 @@ _returns_;; true if the function is unbinded
 ****
 
 
-
 == Global Objects ==
 
 === data ===
@@ -204,7 +203,7 @@ _data.searchEngines_;; Searchengines
 
 
 === io ===
-The io object implements Methods for input and output. 
+The io object implements methods for input and output. 
 
 ==== void io.debug(String message | Error error, [Error error])
 ****
@@ -285,7 +284,7 @@ _returns_;; true if writing was successful
 
 === system ===
 
-The system object implements system Methods.
+The system object implements system methods.
 
 ==== Boolean system.fileTest(String path, FileTest flags)
 ****
@@ -338,7 +337,7 @@ _returns_;; An object that contains stdout, stderr and status.
 ****
 
 === tabs ===
-The tabs object implements Methods and properties to get webview objects. 
+The tabs object implements methods and properties to get webview objects. 
 
 
 _tabs.current (webview, read)_;; The currently focused webview
@@ -358,7 +357,7 @@ _returns_;; The corresponding webview
 
 === util ===
 
-The util object implements helper Methods.
+The util object implements helper methods.
 
 ==== String util.getBody(Function func) 
 ****
@@ -392,15 +391,15 @@ Array.forEach.
 _func_;; The function to execute
 _key_;; The property name
 _value_;; The property value
-_this_;; The object the forEach is called on
+_this_;; The object forEach is called on
 ****
 
-==== Number Array.fastIndexOf(Object value))
+==== Number Array.fastIndexOf(Object object)
 ****
 
 This method is basically the same as Array.indexOf but without type checking.
 
-_value_;; The value to search for
+_object_;; The object to search for
 _returns_;; The index in the array or -1 if the Object wasn't found.
 ****
 
@@ -445,7 +444,7 @@ _returns_;; true if the signal was disconnected
 ****
 
 === webview ===
-The +webview+ object represents the widget that actually displays the site
+The webview object represents the widget that actually displays the site
 content. 
 
 _wv.allFrames (Array of frames, read)_;; All frames of a webview including the mainframe
@@ -469,8 +468,8 @@ To return objects call JSON.parse on the return value.
 NOTE: If a script is injected from a loadStatus-callback the script must be
 injected after LoadStatus.committed has been emitted.
 On LoadStatus.committed the document 
-hasn't been created, if the script modifies the DOM it should be injected on
-LoadStatus.finished of using the documentLoaded signal. 
+hasn't been created, if the script modifies the DOM it should be injected when
+LoadStatus.finished or documentLoaded is emitted.
 If only LoadStatus.committed or loadFinished.committed are used it is better
 to use the corresponding signals instead to reduce overhead. 
 ****
@@ -490,8 +489,8 @@ Load an uri in a webview.
 
 _uri_;; The uri to load
 _callback_;; A callback function that will be called when the load status
-changes, return +true+ to stop the emission, optional
-_returns_;; +true+ if the uri is loaded
+changes, return true to stop the emission, optional
+_returns_;; true if the uri is loaded
 ****
 
 
@@ -503,9 +502,9 @@ Reload a webview
 
 === frame ===
 
-A frame represents a +frame+ or +iframe+. Due to same origin policy it
+A frame represents a frame or iframe. Due to same origin policy it
 is not possible to inject scripts from a webview into iframes with a
-different domain. For this purpose the +frame+ object can be used. 
+different domain. For this purpose the frame object can be used. 
 
 _frame.domain (String, read)_;; The domain name of the frame which is the
 effective second level domain
@@ -514,13 +513,13 @@ _frame.host (String, read)_;; The host name of the frame
 ==== Boolean frame.inject(String script, [Boolean global])
 ****
 
-Injects a script into a frame, also see webview.inject for details.
+Injects a script into a frame, see also webview.inject for details.
 ****
 
 
 === download ===
 
-Corresponds to a +WebKitDownload+. 
+Corresponds to a WebKitDownload. 
 
 
 ==== new Download(String uri)
@@ -547,14 +546,6 @@ DownloadStatus changes, return true to stop the emission, optional.
 Cancels a download
 ****
 
-=== request ===
-
-Corresponds to a WebKitNavigationRequest.
-
-=== navigationAction ===
-
-Corresponds to a WebKitWebNavigationAction.
-
 == Signals ==
 With the signals object *dwb* communicates with the script on certain events. 
 To connect to a signal one can call the connect function that is implemented by
@@ -578,7 +569,7 @@ object which are visible in all scripts but it should be avoided to add
 properties on the signals object. signals should only be used to connect to
 signals or define custom signals. 
 
-The signals object implements the following Methods
+The signals object implements the following methods
 
 === Methods ===
 
@@ -607,7 +598,7 @@ _returns_;; Overall return value from all connected callback functions
 disconnect from a signal 
 
 _id_;; The id returned from connect
-_returns_;; +true+ if the signal was disconnected, +false+ if the signal
+_returns_;; true if the signal was disconnected, false if the signal
 wasn't found or was already disconnected. 
 ****
 
@@ -617,7 +608,7 @@ wasn't found or was already disconnected.
 disconnect from all signals with matching callback function
 
 _callback_;; The callback function passed to connect
-_returns_;; +true+ if signals were disconnected, +false+ if no signal
+_returns_;; true if signals were disconnected, false if no signal
 was disconnected
 ****
 
@@ -625,12 +616,12 @@ was disconnected
 ****
 
 disconnect from all signals with matching name,
-It should be avoided to call +disconnectByName+
+It should be avoided to call disconnectByName
 on signals implemented by dwb since it will completely stop the emission of the
 signal in all scripts. 
 
 _signal_;; The callback function passed to connect
-_returns_;; +true+ if signals were disconnected, +false+ if no signal
+_returns_;; true if signals were disconnected, false if no signal
 was disconnected
 ****
 
@@ -654,7 +645,7 @@ Signals emitted by dwb are the following:
 signals.connect("buttonPress", function(webview, hittestresult, json));
 ----
 
-Emitted when a button is pressed on the webview, return +true+ to prevent
+Emitted when a button is pressed on the webview, return true to prevent
 the default action
 
 _webview_;; The webview which received the signal
@@ -676,7 +667,7 @@ _json.yRoot_;; y-position relative to the screen
 signals.connect("buttonRelease", function(webview, hittestresult, json));
 ----
 
-Emitted when a button is released, return +true+ to prevent the default action
+Emitted when a button is released, return true to prevent the default action
 
 _webview_;; The webview which received the signal
 _hittestresult_;; Hittestresult under the cursor
@@ -687,7 +678,7 @@ _json_;; Same as buttonPress but without _json.type_
 
 ****
 ----
-Boolean signals.connect("close", function());
+signals.connect("close", function());
 ----
 
 Emitted when dwb is closed
@@ -722,7 +713,7 @@ _webview_;; The webview that corresponds to the tab
 signals.connect("documentLoaded",  function(webview, frame));
 ----
 
-Emitted when a the dom document of an frame has loaded.
+Emitted when a the DOM document of a frame has been loaded.
 
 _webview_;; The webview that emitted the signal
 _frame_;; The frame that contains the document
@@ -779,7 +770,7 @@ _download_;; The Download
 signals.connect("frameCreated", function(webview, frame));
 ----
 
-Emitted when the frame is created
+Emitted when a frame is created
 
 _webview_;; The webview the frame belongs to
 _frame_;; The frame 
@@ -807,8 +798,8 @@ signals.connect("hoveringOverLink", function(webview, json));
 Emitted when the mouse is over a link
 
 _webview_;; The webview that emitted the signal
-_json.uri_;; The uri of the link or +null+ if there is no link under the pointer, i.e. the pointer left a link
-_json.title_;; The link's title or +null+ if the pointer left a link
+_json.uri_;; The uri of the link or null if there is no link under the pointer, i.e. the pointer left a link
+_json.title_;; The link's title or null if the pointer left a link
 ****
 
 ==== keyPress
@@ -817,7 +808,7 @@ _json.title_;; The link's title or +null+ if the pointer left a link
 signals.connect("keyPress", function(webview, json));
 ----
 
-Emitted when a key is pressed, return +true+ to prevent the default action
+Emitted when a key is pressed, return true to prevent the default action
 
 _webview_;; The focused webview
 _json.isModifier_;; Whether or not the key is a modifier
@@ -833,7 +824,7 @@ _json.state_;; A bitmap of modifiers pressed, see Modifier
 signals.connect("keyRelease", function(webview, json));
 ----
 
-Emitted when a key is released, return +true+ to prevent the default action
+Emitted when a key is released, return true to prevent the default action
 
 _webview_;; The focused webview
 _json_;; Same as keyPress
@@ -881,7 +872,7 @@ _webview_;; The webview that emitted the signal
 signals.connect("mimeType", function(webview, frame, request, json));
 ----
 
-Decide whether or not to show a given mimetype. Return +true+ to stop the request.
+Decide whether or not to show a given mimetype. Return true to stop the request.
 
 _webview_;; The webview that emitted the signal
 _frame_;; The frames requires the decision 
@@ -923,7 +914,7 @@ _response_;; The network response
 signals.connect("tabFocus", function(webview, json));
 ----
 
-Emitted when another tab gets focus, return +true+ to stop the event
+Emitted when another tab gets focus, return true to stop the event
 
 _webview_;; The new tab
 _json.last_;; The number of the previously focused tab
@@ -934,11 +925,8 @@ _json.last_;; The number of the previously focused tab
 Enum objects are objects that have only readonly properties, mapping
 gtk/webkit enums to javascript objects. 
 
+=== ButtonContext
 ****
-[float]
-==== *ButtonContext* ====
-
-[source,javascript]
 --------
 const ButtonContext = {
   document   : 1 << 1,
@@ -951,11 +939,9 @@ const ButtonContext = {
 --------
 ****
 
-****
-[float]
-==== *ChecksumType* ====
+=== ChecksumType
 
-[source,javascript]
+****
 --------
 const ChecksumType = {
   md5     : 0, 
@@ -965,11 +951,9 @@ const ChecksumType = {
 --------
 ****
 
+=== ClickType
 ****
-[float]
-==== *ClickType* ====
 
-[source,javascript]
 --------
 const ClickType = {
   click       : 4,
@@ -979,9 +963,8 @@ const ClickType = {
 --------
 ****
 
+=== DownloadStatus
 ****
-[float]
-==== *DownloadStatus* ====
 
 [source,javascript]
 -------
@@ -995,9 +978,8 @@ const DownloadStatus = {
 -------
 ****
 
+=== FileTest
 ****
-[float]
-==== *FileTest* ====
 
 [source,javascript]
 -------
@@ -1011,11 +993,9 @@ const FileTest = {
 -------
 ****
 
-****
-[float]
-==== *LoadStatus* ====
+=== LoadStatus
 
-[source,javascript]
+****
 ---------
 const LoadStatus = { 
   provisional       : 0, 
@@ -1027,11 +1007,9 @@ const LoadStatus = {
 ---------
 ****
 
-****
-[float]
-==== *Modifier* ====
+=== Modifier
 
-[source,javascript]
+****
 --------
 const Modifier = {
   Shift     : 1 << 0,
@@ -1056,11 +1034,9 @@ const Modifier = {
 --------
 ****
 
-****
-[float]
-==== *NavigationReason* ====
+=== NavigationReason
 
-[source,javascript]
+****
 --------
 const NavigationReason = {
   linkClicked     : 0,
@@ -1073,10 +1049,9 @@ const NavigationReason = {
 --------
 ****
 
+=== SpawnError
+
 ****
-[float]
-==== *SpawnError* ====
-[source,javascript]
 --------
 const SpawnError = {
   success       : 0, 
@@ -1113,13 +1088,12 @@ io.print(bar);        // undefined
 -------
 
 For sharing data between scripts either signals can be created or the
-+globals+-object can be used. To share data with the globals object securely when the
-scripts are loaded the script can return an +init+ function that will be called
+globals-object can be used. To share data with the globals object securely when the
+scripts are loaded the script can return an init function that will be called
 after all scripts have been initialized:
 
 
 .Script 1
-[source,javascript]
 -------
 #!javascript 
 
@@ -1128,7 +1102,6 @@ globals.foo = "bar";
 -------
 
 .Script 2
-[source,javascript]
 -------
 #!javascript 
 
@@ -1148,15 +1121,13 @@ return  {
 One exception is include, scripts that are explicitly included into the
 global scope setting the second parameter to true are visible in every script.
 
-.foo 
-[source,javascript]
+.Script foo 
 -------
 var foo = "bar";
 -------
 
 .Script 1
 
-[source,javascript]
 -------
 #!javascript 
 
@@ -1164,7 +1135,6 @@ include("/path/to/foo", true); // visible in every script
 -------
 .Script 2
 
-[source,javascript]
 -------
 #!javascript 
 
@@ -1182,11 +1152,62 @@ It is recommended to implement javascript-userscripts as an extension to have
 consistent configuration locations for scripts. One advantage of extension also
 is that they can be loaded/unloaded on the fly.
 
+=== Using extensions
+
+Extensions can be loaded by an userscript 
+
+------
+#!javascript 
+
+extensions.load("extension_1");
+extensions.load("extension_2", { 
+  configProp_1 : 22, 
+  configProp_2 : "val2" 
+});
+------
+
+To load/unload extensions on the fly *extensions.bind* can be used:
+
+------
+#!javascript 
+
+var myConfig = { 
+  prop_1 : 37, 
+  prop_2 : true, 
+  prop_3 : "foo"
+};
+
+
+extensions.bind("myExtension", "Control m", {
+  command : "toggleMyExtension", 
+  config : myConfig, 
+  load : false
+});
+
+extensions.bind("mySecondExtension", "Control M");
+------
+
+The default searchpaths for extensions are $XDG_DATA_HOME/dwb/extensions/ and
+/usr/share/dwb/extensions/.
+
 === Properties
 
 _extensions.enableDebugging (Boolean, read, write)_;; Whether to enable debugging messages.
 
 === Methods
+
+==== void extensions.bind(String name, String shortcut, [Object options]) 
+****
+Bind an extension to a shortcut, the shortcut enables/disables the extension.
+
+_name_;; Name of the extension
+_shortcut_;; Name of the extension
+_options_;; An optional object with options where possible options are 
+options.load::: Whether to load the extension on startup, default true
+options.config::: Config passed to extensions.load
+options.command::: Command that can be used on command line
+****
+
 
 ==== void extensions.debug(String name, String message) 
 ****
@@ -1272,7 +1293,7 @@ The default searchpath for extensions is *$XDG_DATA_HOME/dwb/extensions* and
 *SHARE_DIR/dwb/extensions* where  
 SHARE_DIR being the share directory of the installation, most likely /usr/share.
 
-The configuration for extensions is in $$XDG_CONFIG_HOME/dwb/extensionsrc$ and should
+The configuration for extensions is in *$XDG_CONFIG_HOME/dwb/extensionrc* and should
 return a javascript object. 
 
 Every extension must implement one function named init that takes one
@@ -1286,7 +1307,7 @@ init and end should be returned from the extension.
 
 ==== Example
 
-A extension called *foobar* in *$HOME/.local/share/dwb/extensions/foobar*.
+A extension called *foobar* in *$HOME/.local/share/dwb/extensions/foobar*:
 
 [source,javascript]
 --------

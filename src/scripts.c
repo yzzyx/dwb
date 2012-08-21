@@ -608,7 +608,7 @@ global_unbind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, si
     g_free(name);
   }
   else if (JSValueIsObject(ctx, argv[0])) {
-    for (l = dwb.keymap; l && argv[0] != ((KeyMap*)l->data)->map->arg.p; l=l->next);
+    for (l = dwb.keymap; l && !JSValueIsEqual(ctx, argv[0], ((KeyMap*)l->data)->map->arg.arg, exc); l=l->next);
   }
   if (l != NULL) {
     m = l->data;
