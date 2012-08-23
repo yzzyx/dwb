@@ -75,17 +75,17 @@ typedef struct _AdblockElementHider {
 /*}}}*/
 
 /* Static variables {{{*/
-static GPtrArray *_simple_rules;
-static GPtrArray *_simple_exceptions;
-static GPtrArray *_rules;
-static GPtrArray *_exceptions;
-static GHashTable *_hider_rules;
-gboolean _has_hider_rules;
+static GPtrArray *m_simple_rules;
+static GPtrArray *m_simple_exceptions;
+static GPtrArray *m_rules;
+static GPtrArray *m_exceptions;
+static GHashTable *m_hider_rules;
+gboolean m_has_hider_rules;
 /*  only used to freeing elementhider */
-static GSList *_hider_list;
-static GString *_css_rules;
-static GString *_css_exceptions;
-static gboolean _init = false;
+static GSList *m_hider_list;
+static GString *m_css_rules;
+static GString *m_css_exceptions;
+static gboolean m_init = false;
 /*}}}*//*}}}*/
 
 
@@ -249,8 +249,8 @@ adblock_prepare_match(const char *uri, const char *baseURI, AdblockAttribute att
   const char *basedomain = domain_get_base_for_host(basehost);
   gboolean thirdparty = g_strcmp0(domain, basedomain);
 
-  if (!adblock_match(_exceptions, realuri, host, domain, basehost, basedomain, attributes, thirdparty)) {
-    if (adblock_match(_rules, realuri, host, domain, basehost, basedomain, attributes, thirdparty)) {
+  if (!adblock_match(m_exceptions, realuri, host, domain, basehost, basedomain, attributes, thirdparty)) {
+    if (adblock_match(m_rules, realuri, host, domain, basehost, basedomain, attributes, thirdparty)) {
       ret = true;
     }
   }
@@ -302,7 +302,7 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
 
   gboolean has_exception = false;
   for (int i=0; subdomains[i]; i++) {
-    list = g_hash_table_lookup(_hider_rules, subdomains[i]);
+    list = g_hash_table_lookup(m_hider_rules, subdomains[i]);
     if (list) {
       for (GSList *l = list; l; l=l->next) {
         hider = l->data;
@@ -318,10 +318,10 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
   }
   /* Adding replaced exceptions */
   if (! has_exception) {
-    g_string_append(css_rule, _css_exceptions->str);
+    g_string_append(css_rule, m_css_exceptions->str);
   }
-  if (_css_rules != NULL && _css_rules->len > 1) {
-    g_string_append(css_rule, _css_rules->str);
+  if (m_css_rules != NULL && m_css_rules->len > 1) {
+    g_string_append(css_rule, m_css_rules->str);
   }
   if (css_rule != NULL && css_rule->len > 0) {
     if (css_rule->str[css_rule->len-1] == ',') 
@@ -469,8 +469,8 @@ adblock_resource_request_cb(WebKitWebView *wv, WebKitWebFrame *frame,
     return;
   gboolean thirdparty = g_strcmp0(domain, firstdomain);
 
-  if (!adblock_match(_simple_exceptions, uri, host, domain, firsthost, firstdomain, attribute, thirdparty)) {
-    if (adblock_match(_simple_rules, uri, host, domain, firsthost, firstdomain, attribute, thirdparty)) {
+  if (!adblock_match(m_simple_exceptions, uri, host, domain, firsthost, firstdomain, attribute, thirdparty)) {
+    if (adblock_match(m_simple_rules, uri, host, domain, firsthost, firstdomain, attribute, thirdparty)) {
       webkit_network_request_set_uri(request, "about:blank");
     }
   }
@@ -496,7 +496,7 @@ adblock_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl) {
 
 gboolean
 adblock_running() {
-  return _init && GET_BOOL("adblocker");
+  return m_init && GET_BOOL("adblocker");
 }
 
 /* adblock_disconnect(GList *) {{{*/
@@ -524,13 +524,13 @@ adblock_disconnect(GList *gl) {
 /* adblock_connect() {{{*/
 void 
 adblock_connect(GList *gl) {
-  if (!_init && !adblock_init()) 
+  if (!m_init && !adblock_init()) 
       return;
-  if (_rules->len > 0 || _css_rules->len > 0 || _has_hider_rules) {
+  if (m_rules->len > 0 || m_css_rules->len > 0 || m_has_hider_rules) {
     VIEW(gl)->status->signals[SIG_AD_LOAD_STATUS] = g_signal_connect(WEBVIEW(gl), "notify::load-status", G_CALLBACK(adblock_load_status_cb), gl);
     VIEW(gl)->status->signals[SIG_AD_FRAME_CREATED] = g_signal_connect(WEBVIEW(gl), "frame-created", G_CALLBACK(adblock_frame_created_cb), gl);
   }
-  if (_simple_rules->len > 0) {
+  if (m_simple_rules->len > 0) {
     VIEW(gl)->status->signals[SIG_AD_RESOURCE_REQUEST] = g_signal_connect(WEBVIEW(gl), "resource-request-starting", G_CALLBACK(adblock_resource_request_cb), gl);
   }
 }/*}}}*/
@@ -592,29 +592,29 @@ adblock_rule_parse(char *filterlist) {
             domain++;
           else 
             hider_exc = false;
-          list = g_hash_table_lookup(_hider_rules, domain);
+          list = g_hash_table_lookup(m_hider_rules, domain);
           if (list == NULL) {
             list = g_slist_append(list, hider);
-            g_hash_table_insert(_hider_rules, g_strdup(domain), list);
+            g_hash_table_insert(m_hider_rules, g_strdup(domain), list);
           }
           else {
             list = g_slist_append(list, hider);
             (void) list;
           }
-          _has_hider_rules = true;
+          m_has_hider_rules = true;
         }
         hider->exception = hider_exc;
         if (hider_exc) {
-          g_string_append(_css_exceptions, tmp + 2);
-          g_string_append_c(_css_exceptions, ',');
+          g_string_append(m_css_exceptions, tmp + 2);
+          g_string_append_c(m_css_exceptions, ',');
         }
-        _hider_list = g_slist_append(_hider_list, hider);
+        m_hider_list = g_slist_append(m_hider_list, hider);
         g_free(domains);
       }
       /* general rules */
       else {
-        g_string_append(_css_rules, tmp + 2);
-        g_string_append_c(_css_rules, ',');
+        g_string_append(m_css_rules, tmp + 2);
+        g_string_append_c(m_css_rules, ',');
       }
     }
     /*  Request patterns */
@@ -774,15 +774,15 @@ adblock_rule_parse(char *filterlist) {
 
       if (!(attributes & ~(AA_SUBDOCUMENT | AA_DOCUMENT))) {
         if (exception) 
-          g_ptr_array_add(_simple_exceptions, adrule);
+          g_ptr_array_add(m_simple_exceptions, adrule);
         else 
-          g_ptr_array_add(_simple_rules, adrule);
+          g_ptr_array_add(m_simple_rules, adrule);
       }
       else {
         if (exception) 
-          g_ptr_array_add(_exceptions, adrule);
+          g_ptr_array_add(m_exceptions, adrule);
         else 
-          g_ptr_array_add(_rules, adrule);
+          g_ptr_array_add(m_rules, adrule);
       }
     }
 error_out:
@@ -795,31 +795,31 @@ error_out:
 /* adblock_end() {{{*/
 void 
 adblock_end() {
-  if (_css_rules != NULL) 
-    g_string_free(_css_rules, true);
-  if (_css_exceptions != NULL) 
-    g_string_free(_css_exceptions, true);
-  if (_rules != NULL) 
-    g_ptr_array_free(_rules, true);
-  if (_simple_rules != NULL) 
-    g_ptr_array_free(_simple_rules, true);
-  if (_simple_exceptions != NULL) 
-    g_ptr_array_free(_simple_exceptions, true);
-  if(_exceptions != NULL) 
-    g_ptr_array_free(_exceptions, true);
-  if (_hider_rules != NULL) 
-    g_hash_table_remove_all(_hider_rules);
-  if (_hider_list != NULL) {
-    for (GSList *l = _hider_list; l; l=l->next) 
+  if (m_css_rules != NULL) 
+    g_string_free(m_css_rules, true);
+  if (m_css_exceptions != NULL) 
+    g_string_free(m_css_exceptions, true);
+  if (m_rules != NULL) 
+    g_ptr_array_free(m_rules, true);
+  if (m_simple_rules != NULL) 
+    g_ptr_array_free(m_simple_rules, true);
+  if (m_simple_exceptions != NULL) 
+    g_ptr_array_free(m_simple_exceptions, true);
+  if(m_exceptions != NULL) 
+    g_ptr_array_free(m_exceptions, true);
+  if (m_hider_rules != NULL) 
+    g_hash_table_remove_all(m_hider_rules);
+  if (m_hider_list != NULL) {
+    for (GSList *l = m_hider_list; l; l=l->next) 
       adblock_element_hider_free((AdblockElementHider*)l->data);
-    g_slist_free(_hider_list);
+    g_slist_free(m_hider_list);
   }
 }/*}}}*/
 
 /* adblock_init() {{{*/
 gboolean
 adblock_init() {
-  if (_init)
+  if (m_init)
     return true;
   if (!GET_BOOL("adblocker"))
     return false;
@@ -832,14 +832,14 @@ adblock_init() {
     fprintf(stderr, "Filterlist not found: %s\n", filterlist);
     return false;
   }
-  _rules              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
-  _exceptions         = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
-  _simple_rules       = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
-  _simple_exceptions  = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
-  _hider_rules        = g_hash_table_new_full((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal, (GDestroyNotify)g_free, NULL);
-  _css_exceptions     = g_string_new(NULL);
-  _css_rules          = g_string_new(NULL);
+  m_rules              = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
+  m_exceptions         = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
+  m_simple_rules       = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
+  m_simple_exceptions  = g_ptr_array_new_with_free_func((GDestroyNotify)adblock_rule_free);
+  m_hider_rules        = g_hash_table_new_full((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal, (GDestroyNotify)g_free, NULL);
+  m_css_exceptions     = g_string_new(NULL);
+  m_css_rules          = g_string_new(NULL);
   adblock_rule_parse(filterlist);
-  _init = true;
+  m_init = true;
   return true;
 }/*}}}*//*}}}*/

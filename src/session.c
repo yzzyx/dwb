@@ -23,8 +23,8 @@
 #include "view.h"
 #include "session.h"
 
-static char *_session_name;
-static gboolean _has_marked = true;
+static char *m_session_name;
+static gboolean m_has_marked = true;
 
 typedef struct _SessionTab {
   GList *gl;
@@ -125,7 +125,7 @@ session_load_status_callback(WebKitWebView *wv, GParamSpec *p, SessionTab *tab) 
 }
 void
 session_clear_session() {
-  session_save_file(_session_name ? _session_name : "default", "", true);
+  session_save_file(m_session_name ? m_session_name : "default", "", true);
 }
 
 /* session_load_webview(WebKitWebView *, char *, int *){{{*/
@@ -180,24 +180,24 @@ session_restore(char *name, int flags) {
   gboolean ret = false;
   int locked_state = 0;
   if (name == NULL) {
-    _session_name = g_strdup("default");
+    m_session_name = g_strdup("default");
   }
   else 
-    _session_name = name;
+    m_session_name = name;
 
-  char *group = session_get_group(_session_name, &is_marked);
+  char *group = session_get_group(m_session_name, &is_marked);
   if (is_marked && (flags & SESSION_FORCE) == 0) {
-    fprintf(stderr, "Warning: Session '%s' will not be restored.\n", _session_name);
-    fprintf(stderr, "There is already a restored session open with name '%s'.\n", _session_name);
+    fprintf(stderr, "Warning: Session '%s' will not be restored.\n", m_session_name);
+    fprintf(stderr, "There is already a restored session open with name '%s'.\n", m_session_name);
     fputs("To force opening a saved session use -f or --force.\n", stderr);
-    _has_marked = false;
+    m_has_marked = false;
     goto clean;
   }
   if (group == NULL) {
     return false;
   }
   char *group_begin = strchr(group, '\n');
-  session_save_file(_session_name, group_begin+1, true);
+  session_save_file(m_session_name, group_begin+1, true);
   if (flags & SESSION_ONLY_MARK) 
     goto clean;
   char  **lines = g_strsplit(group, "\n", -1);
@@ -251,12 +251,12 @@ clean:
 gboolean  
 session_save(const char *name, int flags) {
   if (!name) {
-    if (_session_name) 
-      name = _session_name;
+    if (m_session_name) 
+      name = m_session_name;
     else if (flags & SESSION_FORCE) 
       name = "default";
   }
-  if (!_has_marked && (flags & SESSION_FORCE) == 0) 
+  if (!m_has_marked && (flags & SESSION_FORCE) == 0) 
     return false;
   GString *buffer = g_string_new(NULL);
 
@@ -275,7 +275,7 @@ session_save(const char *name, int flags) {
     }
   }
   session_save_file(name, buffer->str, false);
-  g_free(_session_name);
+  g_free(m_session_name);
   g_string_free(buffer, true);
   return true;
 }/*}}}*/

@@ -18,7 +18,7 @@
 
 #include "dwb.h"
 #include "entry.h"
-static char *_store;
+static char *m_store;
 /* dwb_entry_history_forward {{{*/
 DwbStatus
 entry_history_forward(GList **last) {
@@ -26,7 +26,7 @@ entry_history_forward(GList **last) {
   GList *prev = NULL;
   if (*last != NULL) {
     if ((*last)->prev == NULL) {
-      text = _store;
+      text = m_store;
     }
     else {
       prev = (*last)->prev;
@@ -50,8 +50,8 @@ entry_history_back(GList **list, GList **last) {
   GList *next;
   if (*last == NULL) {
     next = *list;
-    g_free(_store);
-    _store = g_strdup(GET_TEXT());
+    g_free(m_store);
+    m_store = g_strdup(GET_TEXT());
   }
   else if ((*last)->next != NULL)
     next = (*last)->next;

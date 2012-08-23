@@ -29,11 +29,11 @@ static GList * completion_update_completion(GtkWidget *box, GList *comps, GList 
 static GList * completion_get_simple_completion(GList *gl);
 
 typedef gboolean (*Match_Func)(char*, const char*);
-static char *_typed;
-static int _last_buf;
-static gboolean _leading0 = false;
-static char *_current_command;
-static int _command_len;
+static char *m_typed;
+static int m_last_buf;
+static gboolean m_leading0 = false;
+static char *m_current_command;
+static int m_command_len;
 
 /* GUI_FUNCTIONS {{{*/
 /* completion_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
@@ -97,7 +97,7 @@ completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, vo
   const char *input = GET_TEXT();
   gboolean match;
   char **token = NULL;
-  _typed = g_strdup(input);
+  m_typed = g_strdup(input);
   if (dwb.state.mode & COMMAND_MODE) 
     input = strchr(input, ' ');
   if (input == NULL) 
@@ -147,9 +147,9 @@ completion_set_entry_text(Completion *c) {
              break;
   }
   
-  if (dwb.state.mode & COMMAND_MODE && _current_command) {
-    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), _current_command);
-    l = strlen(_current_command);
+  if (dwb.state.mode & COMMAND_MODE && m_current_command) {
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), m_current_command);
+    l = strlen(m_current_command);
     gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), " ", -1, &l);
     gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &l);
   }
@@ -249,17 +249,17 @@ completion_clean_completion(gboolean set_text) {
   dwb.comps.view = NULL;
   dwb.comps.completions = NULL;
   dwb.comps.active_comp = NULL;
-  if (set_text && _typed != NULL)
-    entry_set_text(_typed);
+  if (set_text && m_typed != NULL)
+    entry_set_text(m_typed);
 
-  FREE0(_current_command);
-  _command_len = 0;
+  FREE0(m_current_command);
+  m_command_len = 0;
 
-  FREE0(_typed);
+  FREE0(m_typed);
 
   if (dwb.state.mode & COMPLETE_BUFFER) {
-    _last_buf = 0;
-    _leading0 = false;
+    m_last_buf = 0;
+    m_leading0 = false;
     dwb.state.mode &= ~COMPLETE_BUFFER;
     dwb_change_mode(NORMAL_MODE, true);
   }
@@ -419,7 +419,7 @@ completion_get_quickmarks(int back) {
   Quickmark *q;
   char *escaped = NULL;
   const char *input = GET_TEXT();
-  _typed = g_strdup(input);
+  m_typed = g_strdup(input);
   for (GList *l = dwb.fc.quickmarks; l; l=l->next) {
     q = l->data;
     if (g_str_has_prefix(q->key, input)) {
@@ -459,18 +459,18 @@ completion_buffer_key_press(GdkEventKey *e) {
         completion_buffer_exec(g_list_nth(dwb.state.views, value-1));
     }
     else {
-      _last_buf = 10*_last_buf + value;
-      if (_last_buf > length) {
+      m_last_buf = 10*m_last_buf + value;
+      if (m_last_buf > length) {
         completion_clean_completion(false);
         dwb_change_mode(NORMAL_MODE, true);
         return;
       }
-      if (_last_buf != 0) {
-        if ((_last_buf < 10 && _leading0 == true) || _last_buf >= 10) 
-          completion_buffer_exec(g_list_nth(dwb.state.views, _last_buf-1));
+      if (m_last_buf != 0) {
+        if ((m_last_buf < 10 && m_leading0 == true) || m_last_buf >= 10) 
+          completion_buffer_exec(g_list_nth(dwb.state.views, m_last_buf-1));
       }
       else 
-        _leading0 = true;
+        m_leading0 = true;
     }
   }
 }
@@ -537,12 +537,12 @@ completion_command_line() {
     }
   }
   if (ret) {
-    _command_len = util_strlen_trailing_space(text);
-    if ((_command_len > 0 && g_ascii_isspace(text[_command_len-1])) || token[1] != NULL)  {
-      FREE0(_current_command);
-      _current_command = g_strdup(token[0]);
+    m_command_len = util_strlen_trailing_space(text);
+    if ((m_command_len > 0 && g_ascii_isspace(text[m_command_len-1])) || token[1] != NULL)  {
+      FREE0(m_current_command);
+      m_current_command = g_strdup(token[0]);
       dwb.state.mode |= COMPLETE_COMMAND_MODE;
-      _command_len++;
+      m_command_len++;
     }
     else 
       ret = false;

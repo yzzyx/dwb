@@ -61,7 +61,6 @@ js_get_object_property(JSContextRef ctx, JSObjectRef arg, const char *name) {
   if (exc != NULL)
     return NULL;
   return ret;
-
 }/*}}}*/
 
 JSValueRef 

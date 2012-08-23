@@ -34,9 +34,9 @@
 #include "scripts.h"
 
 static void view_ssl_state(GList *);
-static unsigned long _click_time;
-static guint _sig_caret_button_release;
-static guint _sig_caret_motion;
+static unsigned long m_click_time;
+static guint m_sig_caret_button_release;
+static guint m_sig_caret_motion;
 static const char const* dummy_icon[] = { "1 1 1 1 ", "- c NONE", "", };
 
 
@@ -101,13 +101,13 @@ view_document_finished(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
 /* view_button_press_cb(WebKitWebView *web, GdkEventButton *button, GList *gl) {{{*/
 static void 
 view_disconnect_caret(WebKitWebView *web) {
-  if (_sig_caret_button_release > 0) {
-    g_signal_handler_disconnect(web, _sig_caret_button_release);
-    _sig_caret_button_release = 0;
+  if (m_sig_caret_button_release > 0) {
+    g_signal_handler_disconnect(web, m_sig_caret_button_release);
+    m_sig_caret_button_release = 0;
   }
-  if (_sig_caret_motion > 0) {
-    g_signal_handler_disconnect(web, _sig_caret_motion);
-    _sig_caret_motion = 0;
+  if (m_sig_caret_motion > 0) {
+    g_signal_handler_disconnect(web, m_sig_caret_motion);
+    m_sig_caret_motion = 0;
   }
 }
 void 
@@ -143,7 +143,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   WebKitHitTestResultContext context;
   g_object_get(result, "context", &context, NULL);
   gboolean ret = false;
-  _click_time = e->time;
+  m_click_time = e->time;
   if (EMIT_SCRIPT(BUTTON_PRESS)) {
     char *json = util_create_json(8, 
       UINTEGER, "time", e->time, UINTEGER,    "type", e->type, 
@@ -168,8 +168,8 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     WebKitDOMDOMSelection *selection = webkit_dom_dom_window_get_selection(webkit_dom_document_get_default_view(doc));
     webkit_dom_dom_selection_remove_all_ranges(selection);
     webkit_dom_dom_selection_add_range(selection, range);
-    _sig_caret_button_release = g_signal_connect(web, "button-release-event", G_CALLBACK(view_caret_release_cb), range);
-    _sig_caret_motion = g_signal_connect(web, "motion-notify-event", G_CALLBACK(view_caret_motion_cb), range);
+    m_sig_caret_button_release = g_signal_connect(web, "button-release-event", G_CALLBACK(view_caret_release_cb), range);
+    m_sig_caret_motion = g_signal_connect(web, "motion-notify-event", G_CALLBACK(view_caret_motion_cb), range);
     ret = true; 
   }
   else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
@@ -222,7 +222,7 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
-    if (e->button == 2 || (e->time - _click_time < 200 && (e->button == 1 && e->state & GDK_CONTROL_MASK))) {
+    if (e->button == 2 || (e->time - m_click_time < 200 && (e->button == 1 && e->state & GDK_CONTROL_MASK))) {
       g_object_get(result, "link-uri", &uri, NULL);
       view_add(uri, dwb.state.background_tabs);
       view_disconnect_caret(web);
