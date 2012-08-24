@@ -905,7 +905,7 @@ gboolean dwb_toggle_allowed(const char *, const char *, GList **);
 char * dwb_get_host(WebKitWebView *);
 gboolean dwb_focus_view(GList *);
 void dwb_clean_key_buffer(void);
-void dwb_set_key(const char *, char *);
+DwbStatus dwb_set_key(const char *, char *);
 DwbStatus dwb_set_setting(const char *, char *value, int);
 DwbStatus dwb_toggle_setting(const char *, int );
 DwbStatus dwb_open_startpage(GList *);

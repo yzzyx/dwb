@@ -1263,9 +1263,11 @@ dwb_set_setting(const char *key, char *value, int scope) {
 }/*}}}*/
 
 /* dwb_set_key(const char *prop, char *val) {{{*/
-void
+DwbStatus
 dwb_set_key(const char *prop, char *val) {
   KeyValue value;
+  if (prop == NULL || val == NULL)
+    return STATUS_ERROR;
 
   value.id = g_strdup(prop);
   if (val)
@@ -1280,6 +1282,7 @@ dwb_set_key(const char *prop, char *val) {
   dwb.keymap = dwb_keymap_add(dwb.keymap, value);
   dwb.keymap = g_list_sort(dwb.keymap, (GCompareFunc)util_keymap_sort_second);
   dwb_save_key_value(dwb.files[FILES_KEYS], prop, val);
+  return STATUS_OK;
 }/*}}}*/
 
 /* dwb_get_host(WebKitWebView *) {{{*/
@@ -2300,6 +2303,7 @@ dwb_parse_nummod(const char *text) {
 gboolean /* dwb_entry_activate (GdkEventKey *e) {{{*/
 dwb_entry_activate(GdkEventKey *e) {
   char **token = NULL;
+  gboolean status;
   switch (CLEAN_MODE(dwb.state.mode))  {
     case HINT_MODE:           dwb_update_hints(e); return false;
     case FIND_MODE:           dwb_focus_scroll(dwb.state.fview);
@@ -2317,8 +2321,8 @@ dwb_entry_activate(GdkEventKey *e) {
                               g_strfreev(token);
                               return true;
     case KEY_MODE:            token = g_strsplit(GET_TEXT(), " ", 2);
-                              dwb_set_key(token[0], token[1]);
-                              dwb_change_mode(NORMAL_MODE, false);
+                              status = dwb_set_key(token[0], token[1]);
+                              dwb_change_mode(NORMAL_MODE, status == STATUS_ERROR);
                               g_strfreev(token);
                               return true;
     case COMMAND_MODE:        if (dwb.state.mode & COMPLETION_MODE) 
