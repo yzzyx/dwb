@@ -32,4 +32,15 @@
         }
     });
   }
+  if (Array.prototype.fastLastIndexOf === undefined) {
+    Object.defineProperty(Array.prototype, "fastLastIndexOf", {
+        value : function (v) {
+          for (var i=this.length-1; i>=0; --i) {
+            if (this[i] == v)
+              return i;
+          }
+          return -1;
+        }
+    });
+  }
 })();

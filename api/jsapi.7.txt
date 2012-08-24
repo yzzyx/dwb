@@ -403,6 +403,15 @@ _object_;; The object to search for
 _returns_;; The index in the array or -1 if the Object wasn't found.
 ****
 
+==== Number Array.fastLastIndexOf(Object object)
+****
+
+This method is basically the same as Array.lastIndexOf but without type checking.
+
+_object_;; The object to search for
+_returns_;; The index in the array or -1 if the Object wasn't found.
+****
+
 
 
 == WEBKIT OBJECTS ==

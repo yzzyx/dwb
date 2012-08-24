@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 08/22/2012
+.\"      Date: 08/24/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "08/22/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "08/24/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -871,6 +871,27 @@ The object forEach is called on
 .RS 4
 .sp
 This method is basically the same as Array\&.indexOf but without type checking\&.
+.PP
+\fIobject\fR
+.RS 4
+The object to search for
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The index in the array or \-1 if the Object wasn\(cqt found\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber Array.fastLastIndexOf(Object object)\fR
+.RS 4
+.sp
+This method is basically the same as Array\&.lastIndexOf but without type checking\&.
 .PP
 \fIobject\fR
 .RS 4
