@@ -63,6 +63,13 @@ var onStart = [];
 var onEnd = []; 
 var sigDocument = -1;
 var sigCommitted = -1;
+/*
+//<DEFAULT_CONFIG
+  // paths to userscripts
+  []
+//>DEFAULT_CONFIG
+*/
+
 
 var metaData = {};
 

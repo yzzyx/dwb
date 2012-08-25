@@ -94,15 +94,32 @@
 
 var me = "formfiller";
 var defaultConfig = {
+//<DEFAULT_CONFIG
+  // shortcut that gets and saves formdata
   scGetForm : "efg",
+
+  // shortcut that fills a form
   scFillForm : "eff",
+
+  // path to the formdata file
   formData : data.configDir + "/forms",
+
+  // whether to use a gpg-encrypted file
   useGPG : false,
+
+  // additional arguments passed to gpg2 when encrypting the formdata
   GPGOptEncrypt : "",
+
+  // additional arguments passed to gpg2 when decrypting the formdata
   GPGOptDecrypt : "",
+
+  // whether to save the password in memory when gpg is used
   keepPassword : true,
+  
+  // whether to save the whole formdata in memory when gpg is used
   keepFormdata : false
-    
+
+//>DEFAULT_CONFIG
 };
 var config = {};
 var passWord = null;

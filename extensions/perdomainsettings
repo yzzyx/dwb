@@ -102,6 +102,28 @@ var webviews = [];
 var sigNavigation = -1;
 var sigCloseTab = -1;
 
+var defaultConfig = {
+//<DEFAULT_CONFIG
+  // Settings applied based on the second level domain, e.g.
+  // domains : { "example.com" : { autoLoadImages : true } }, 
+  domains : {},
+
+  //Settings applied based on the hostname
+  // hosts : { "www.example.com" : { autoLoadImages : true } }, 
+  hosts : {},
+
+  // Settings applied based on the uri
+  // uris : { "http://www.example.com/foo/" : { autoLoadImages : true } }, 
+  uris : {},
+
+  // Default settings, for each setting in domains, hosts and uris a
+  // default-value should be specified, e.g.
+  // uris : { autoLoadImages : false }, 
+  defaults : {}
+
+//>DEFAULT_CONFIG
+};
+
 function apply(o, settings) {
   var key;
   var defaults = true;
@@ -175,10 +197,10 @@ return {
       extensions.error(me, "Missing config");
       return false;
     }
-    domains = config.domains || {};
-    hosts = config.hosts || {};
-    uris = config.uris || {};
-    defaults = config.defaults || {};
+    domains = config.domains || defaultConfig.domains;
+    hosts = config.hosts || defaultConfig.hosts;
+    uris = config.uris || defaultConfig.uris;
+    defaults = config.defaults || defaultConfig.defaults;
     sigNavigation = signals.connect("navigation", onNavigation);
     sigCloseTab = signals.connect("closeTab", onCloseTab);
     return true;

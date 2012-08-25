@@ -151,7 +151,7 @@ endif
 CFLAGS +=-I/usr/lib/dwb/ 
 
 # LDFLAGS
-LDFLAGS = $(shell pkg-config --libs $(LIBS))
+LDFLAGS += $(shell pkg-config --libs $(LIBS))
 
 # Debug flags
 DCFLAGS = $(CFLAGS)

@@ -83,12 +83,27 @@
 var me = "requestpolicy";
 
 var defaultConfig = {
+//<DEFAULT_CONFIG
+  // path to a whitelist 
   whiteList : data.configDir + "/" + data.profile + "/requestpolicy.json",
+
+  // shortcut to block/allow requests
   shortcut : "erp",
+
+  // shortcut to unblock requests from current site that are blocked on all
+  // sites
   unblockCurrent : "erC",
+
+  // shortcut to unblock requests that are blocked on all sites
   unblockAll : "erA",
+
+  // reload current site after blocking / unblocking a request
   autoreload : false, 
+
+  // notify about blocked requests
   notify : false
+
+//>DEFAULT_CONFIG
 };
 var config = {};
 
