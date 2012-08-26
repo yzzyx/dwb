@@ -151,7 +151,7 @@ history-length text Length of the browsing history
 navigation-history-max Length of the navigation history
 print-backgrounds checkbox Whether background images should be printed
 scheme-handler Application or script that handles uris with schemes that cannot be handled by dwb 
-sync-files select @all @cookies @history @session @cookies_&amp;_history @cookies_&amp;_session @history_&amp;_session Files to sync, see also file-sync-interval
+sync-files select @all @cookies @history @session @cookies_history @cookies_session @history_session Files to sync, see also file-sync-interval
 tab-key-cycles-through-elements checkbox Tab cycles through elements in insert mode
 update-search-delay text Delay before updating search results in milliseconds
 searchengine-submit-pattern text The pattern which will be replaced with the search terms
