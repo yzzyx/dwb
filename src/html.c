@@ -357,6 +357,8 @@ html_keys_load_cb(WebKitWebView *wv, GParamSpec *p, HtmlTable *table) {
     for (GList *l = dwb.keymap; l; l=l->next) {
       km = l->data; 
       n = km->map->n;
+      if (n.first == NULL)
+        continue;
       input = webkit_dom_document_get_element_by_id(doc, n.first);
       if (input != NULL) {
         mod = dwb_modmask_to_string(km->mod);
