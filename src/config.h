@@ -282,15 +282,15 @@ static FunctionMap FMAP [] = {
   { { "visible",    "Toggle visibility for this tab" },                 1, 
     (Func) commands_toggle_lock_protect,                                   NULL,     ALWAYS_SM,    
     { .n = LP_VISIBLE  }, EP_NONE,  { "vis", NULL }, },
-  { { "allow_cookie",          "Cookie allowed",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "allow_cookie",          "Allow persistent cookies",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, 
     { .n = COOKIE_ALLOW_PERSISTENT }, EP_NONE,  { "cookie", NULL }, },
 
-  { { "allow_session_cookie",          "Cookie allowed",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "allow_session_cookie",          "Allow session cookies",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_allow_cookie,        "No new domain in current context",    POST_SM, 
     { .n = COOKIE_ALLOW_SESSION }, EP_NONE, { "scookie", NULL }, },
   
-  { { "allow_session_cookie_tmp",          "Cookie allowed",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
+  { { "allow_session_cookie_tmp",          "Allow cookies temporarly",                    }, CP_COMMANDLINE | CP_HAS_MODE, 
     (Func)commands_allow_cookie,        "No new domain in current context",   ALWAYS_SM, 
     { .n = COOKIE_ALLOW_SESSION_TMP }, EP_NONE, { "tcookie", NULL }, },
   
