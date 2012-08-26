@@ -165,6 +165,7 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
   if (m_opt_exe != NULL)
     argc_exe = g_strv_length(m_opt_exe);
 
+  dwb_init_vars();
   dwb_init_files();
   dwb_init_settings();
   if (m_opt_list_sessions) {

@@ -1169,10 +1169,8 @@ The background color of the statusbar. Possible values: an rgb color-string,
 default value:
 '#000000'.
 
-*foreground-color*::
-The foreground color of statusbar. Possible values: an rgb color-string.
-default value:
-'#ffffff'.
+*bars-padding*::
+Padding of the status, download, completion and tab bars, default value: 0.
 
 *auto-completion*::
 Whether possible keystrokes should be shown. (Shift-) Tab cycles through keystrokes.
@@ -1306,6 +1304,11 @@ default value: '#ff0000'.
 The color for prompt-messages. Possible values: an rgb color-string,
 default value: '#00ff00'.
 
+*file-sync-interval*::
+Interval in seconds to save history, cookies or session to hdd or 0 to
+immediately save, see also *sync-files*,
+default value: 120.
+
 *font*::
 The font used for the ui. Possible values: a font description
 string, default value:
@@ -1326,6 +1329,11 @@ css font description.  Default value: 'normal'10px helvetica .
 *font-nofocus*::
 The font used for tablabels without focus and completion items without focus. Possible values: a font description
 string.
+
+*foreground-color*::
+The foreground color of statusbar. Possible values: an rgb color-string.
+default value:
+'#ffffff'.
 
 *hint-active-color*::
 The background color for active link, i.e. the link followed when Return is
@@ -1472,12 +1480,10 @@ certificate.  default value: '#ff0000'.
 The default startpage. Possible values: an url or "about:blank" for an empty
 startpage, default value: 'about:blank'.
 
-*bars-padding*::
-Padding of the status, download, completion and tab bars, default value: 0.
-
 *sync-files*::
-Interval in seconds to save history and cookies to hdd or 0 to immediately save
-to hdd, default value: 0.
+Type of files to sync, see also *file-sync-interval*.
+Possible values are 'all', 'cookies', 'history', 'session' or a combination,
+default value: 'all'.
 
 *tabbar-visible*::
 When the tabbar is hidden specifies the number of seconds the tabbar is visible

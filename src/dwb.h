@@ -296,6 +296,13 @@ typedef enum {
 #define LP_VISIBLE(v) ((v)->status->lockprotect & LP_VISIBLE)
 #define LP_STATUS(v)   ((v)->status->lockprotect & (LP_LOCK_DOMAIN | LP_LOCK_URI))
 
+enum {
+  SYNC_HISTORY = 1<<0, 
+  SYNC_COOKIES = 1<<1,
+  SYNC_SESSION = 1<<2
+};
+#define SYNC_ALL (SYNC_HISTORY | SYNC_COOKIES | SYNC_SESSION)
+
 typedef enum {
   HINT_T_ALL        = 0,
   HINT_T_LINKS      = 1,
@@ -760,6 +767,7 @@ struct _Misc {
 
   int synctimer;
   int sync_interval;
+  int sync_files;
   int bar_height;
   TabPosition tab_position;
   char *hint_style;
@@ -948,6 +956,7 @@ void dwb_check_auto_insert(GList *);
 void dwb_version();
 DwbStatus dwb_pack(const char *layout, gboolean rebuild);
 void dwb_init_signals(void);
+void dwb_init_vars(void);
 void dwb_parse_commands(const char *line);
 DwbStatus dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request);
 GList *dwb_get_simple_list(GList *, const char *filename);
@@ -961,6 +970,8 @@ void dwb_free_list(GList *list, void (*func)(void*));
 void dwb_init(void);
 void dwb_init_files(void);
 void dwb_init_settings(void);
+#if 0
 void dwb_hide_tab(GList *gl);
 void dwb_show_tab(GList *gl);
+#endif
 #endif

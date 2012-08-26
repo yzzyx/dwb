@@ -22,7 +22,9 @@
 enum SessionFlags {
   SESSION_FORCE = 1<<0,
   SESSION_ONLY_MARK = 1<<1,
+  SESSION_SYNC = 1<<2
 };
+
 gboolean session_save(const char *, int);
 gboolean session_restore(char *, int);
 void session_list(void);

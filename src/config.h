@@ -184,9 +184,11 @@ static KeyValue KEYS[] = {
   { "eval",                     {   NULL,         0,                0 }, }, 
   { "download",                 {   "gd",         0,                0 }, }, 
   { "toggle_tab",               {   "@Tab@",      GDK_CONTROL_MASK, 0 }, }, 
+#if 0
   { "group_tag",                {   "am",         0,                0 }, }, 
   { "group_show",               {   "as",         0,                0 }, }, 
   { "group_toggle",             {   "at",         0,                0 }, }, 
+#endif
 };
 
 /* FUNCTION_MAP{{{*/
@@ -194,7 +196,7 @@ static FunctionMap FMAP [] = {
   { { "tab_new",              "Add a new tab",                    }, CP_COMMANDLINE, 
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
-
+#if 0
   { { "group_tag",              "Tag current tab to group",                    }, CP_COMMANDLINE, 
     (Func)commands_group_tag,            NULL,                            POST_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
@@ -206,11 +208,11 @@ static FunctionMap FMAP [] = {
   { { "group_toggle",              "Toggle group",                    }, CP_COMMANDLINE, 
     (Func)commands_group_toggle,            NULL,                            POST_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
+#endif
 
   { { "toggle_tab",              "Toggle between last and current tab",                    }, CP_COMMANDLINE, 
     (Func)commands_toggle_tab,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { "ttab" }, },
-
   { { "cancel_download",              "Cancel a download",                    }, CP_COMMANDLINE, 
     (Func)commands_cancel_download,            "No download to stop",                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
@@ -1009,8 +1011,10 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  BOOLEAN,      { .b = true         },      NULL,  { 0 }, },
   { { "enable-favicon",                         "Whether to show favicons", },                                  
     SETTING_GLOBAL,  BOOLEAN,      { .b = true         },      (S_Func)dwb_set_favicon,  { 0 }, },
-  { { "sync-files",                            "Interval to save history and cookies to hdd or 0 to directly write to hdd", },                                  
+  { { "file-sync-interval",                            "Interval to save files to hdd or 0 to directly write to hdd", },                                  
     SETTING_GLOBAL|SETTING_ONINIT,  INTEGER,      { .i = 120         },      (S_Func) dwb_set_sync_interval,  { 0 }, },
+  { { "sync-files",                            "Files to sync", },                                  
+    SETTING_GLOBAL|SETTING_ONINIT,  CHAR,      { .p = "all"         },      (S_Func) dwb_set_sync_files,  { 0 }, },
 
   { { "active-completion-fg-color",                    "Foreground color of the active tabcompletion item", },                        
     SETTING_GLOBAL,  COLOR_CHAR, { .p = "#53868b"         }, (S_Func) dwb_init_style,  { 0 }, },

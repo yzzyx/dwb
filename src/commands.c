@@ -880,6 +880,7 @@ commands_toggle_tab(KeyMap *km, Arg *arg) {
   return STATUS_ERROR;
 }
 
+#if 0
 DwbStatus 
 commands_group_show(KeyMap *km, Arg *arg) {
   int n = MIN(NUMMOD, 9);
@@ -921,3 +922,4 @@ commands_group_tag(KeyMap *km, Arg *arg) {
 
   return STATUS_OK;
 }
+#endif

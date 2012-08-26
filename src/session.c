@@ -274,8 +274,9 @@ session_save(const char *name, int flags) {
       }
     }
   }
-  session_save_file(name, buffer->str, false);
-  g_free(m_session_name);
+  session_save_file(name, buffer->str, (flags & SESSION_SYNC) != 0);
+  if (! (flags & SESSION_SYNC))
+    g_free(m_session_name);
   g_string_free(buffer, true);
   return true;
 }/*}}}*/
