@@ -165,9 +165,6 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
   if (m_opt_exe != NULL)
     argc_exe = g_strv_length(m_opt_exe);
 
-  dwb_init_vars();
-  dwb_init_files();
-  dwb_init_settings();
   if (m_opt_list_sessions) {
     session_list();
     return true;
@@ -176,6 +173,10 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
     dwb_version();
     return true;
   }
+  dwb_init_vars();
+  dwb_init_files();
+  dwb_init_settings();
+
   single_instance = GET_BOOL("single-instance");
   if (m_opt_single || !single_instance) {
     g_application_set_flags(app, G_APPLICATION_NON_UNIQUE);

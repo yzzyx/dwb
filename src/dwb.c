@@ -4081,7 +4081,11 @@ dwb_parse_commands(const char *line) {
 
 void
 dwb_version() {
-  printf("%s %s, %s\n", NAME, VERSION, COPYRIGHT);
+  fprintf(stderr, "    This is : "NAME"\n"
+                  "    Version : "VERSION"\n"
+                  "      Built : "__DATE__" "__TIME__"\n"
+                  "  Copyright : "COPYRIGHT"\n"
+                  "    License : "LICENSE"\n");
 }
 /* MAIN {{{*/
 int 
