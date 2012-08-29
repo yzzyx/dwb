@@ -262,9 +262,9 @@ add_to_loader()
   local tmp_file=$(mktemp)
   local extension="$1"
   if [ "$2" ]; then 
-    l_config="//<${extension}\n\n$2\n\n//>${extension}"
+    l_config="//<${extension}\n$2\n\n//>${extension}"
   elif [ "$BIND" -eq 1 ]; then 
-    l_config="//<${extension}\n\n$(extensions_bind $extension)\n\n//>${extension}"
+    l_config="//<${extension}\n$(extensions_bind $extension)\n\n//>${extension}"
   else
     l_config="//<${extension}\n\n$(extensions_load $extension)\n\n//>${extension}"
   fi
