@@ -331,17 +331,19 @@ var resourceCB = (function () {
     var o, message, domain, firstParty;
     if (regexEmpty.test(request.uri))
       return false;
+
     message = request.message;
     if (!message)
       return false;
+
     firstParty = util.domainFromHost(message.firstParty.host);
     domain = util.domainFromHost(message.uri.host);
     if (firstParty == domain)
       return false;
+
     o = getPrivate(wv);
-    if (o.domains.fastIndexOf(domain) == -1) {
+    if (o.domains.fastIndexOf(domain) == -1) 
       o.domains.push(domain);
-    }
 
     // Check for requests that are always blocked
     if (persistentList._alwaysBlock && persistentList._alwaysBlock.fastIndexOf(domain) != -1) 
@@ -354,7 +356,7 @@ var resourceCB = (function () {
 
     // Check request is always allowed
     if (persistentList._always && persistentList._always.fastIndexOf(domain) != -1) 
-        return false;
+      return false;
 
     // Check if request is whitelisted
     if (  (!persistentList[firstParty]    || persistentList[firstParty].fastIndexOf(domain) == -1) && 

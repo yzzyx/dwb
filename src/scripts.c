@@ -471,7 +471,8 @@ wv_set_title(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t ar
 
 /*}}}*/
 
-
+/* SOUP_MESSAGE {{{*/
+/* soup_uri_to_js_object {{{*/
 JSObjectRef 
 soup_uri_to_js_object(JSContextRef ctx, SoupURI *uri, JSValueRef *exception) {
   JSObjectRef o = JSObjectMake(ctx, NULL, NULL);
@@ -484,7 +485,9 @@ soup_uri_to_js_object(JSContextRef ctx, SoupURI *uri, JSValueRef *exception) {
   js_set_object_property(ctx, o, "query", uri->query, exception);
   js_set_object_property(ctx, o, "fragment", uri->fragment, exception);
   return o;
-}
+}/*}}}*/
+
+/* message_get_uri {{{*/
 static JSValueRef 
 message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   SoupMessage *msg = JSObjectGetPrivate(object);
@@ -494,7 +497,9 @@ message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVal
   if (uri == NULL)
     return JSValueMakeNull(ctx);
   return soup_uri_to_js_object(ctx, uri, exception);
-}
+}/*}}}*/
+
+/* message_get_first_party {{{*/
 static JSValueRef 
 message_get_first_party(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
   SoupMessage *msg = JSObjectGetPrivate(object);
@@ -504,8 +509,8 @@ message_get_first_party(JSContextRef ctx, JSObjectRef object, JSStringRef js_nam
   if (uri == NULL)
     return JSValueMakeNull(ctx);
   return soup_uri_to_js_object(ctx, uri, exception);
-}
-
+}/*}}}*/
+/*}}}*/
 
 /* FRAMES {{{*/
 /* frame_get_domain {{{*/
@@ -1949,7 +1954,6 @@ scripts_unbind(JSObjectRef obj) {
   if (obj != NULL) {
     JSValueUnprotect(m_global_context, obj);
   }
-
 }
 
 /* scripts_end {{{*/

@@ -4094,7 +4094,6 @@ main(int argc, char *argv[]) {
   dwb.misc.profile = "default";
   dwb.misc.prog_path = argv[0];
   dwb.gui.wid = 0;
-
   gint ret = application_run(argc, argv); 
   return ret;
 }/*}}}*/

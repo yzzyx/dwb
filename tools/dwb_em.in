@@ -1,0 +1,352 @@
+#!/bin/bash
+
+API_BASE="https://api.bitbucket.org/1.0/repositories/portix/dwb_extensions/src/tip/src/"
+DWB_API_BASE="https://api.bitbucket.org/1.0/repositories/portix/dwb/src/tip/extensions/"
+REPO_BASE="https://bitbucket.org/portix/dwb_extensions/raw/tip/src" 
+DATA_FORMAT="?format=yaml"
+
+SCRIPT_DIR="${XDG_CONFIG_HOME-${HOME}/.config}/dwb/userscripts"
+LOADER="${SCRIPT_DIR}/extension_loader.js"
+INST_DIR="${XDG_DATA_HOME-$HOME/.local/share}/dwb/extensions"
+SYSTEM_DIR="@SYSTEM_DIR@"
+
+DIFF_VIEWER=${DIFF_VIEWER-vimdiff}
+EDITOR=${EDITOR-vim}
+
+META_INFO="$INST_DIR/.metainfo"
+
+WGET_FLAGS=-q
+CURL_FLAGS=-s
+
+QUIET=0
+BIND=0
+
+GREEN="\033[32m"
+RED="\033[31m"
+BOLD="\033[1m"
+NC="\033[0m"
+
+error() {
+  if [ ${QUIET} -eq 0 ]; then 
+    printf "${RED}==>${NC} %s\n" "$@"
+  fi
+}
+
+die() {
+  error "$@"
+  exit 1
+}
+
+notify() {
+  if [ ${QUIET} -eq 0 ]; then 
+    printf "${GREEN}==>${NC} %s\n" "$@"
+  fi
+}
+
+check_dir() {
+  if [ ! -d "$1" ]; then 
+    notify "creating $1"
+    mkdir -p "$1"
+  fi
+}
+
+update_metainfo () {
+  notify "retrieving data"
+  curl "${CURL_FLAGS}" "${API_BASE}${DATA_FORMAT}" | \
+    awk '/^\s*-\s*{path:/ { p=substr($3, index($3, "/") + 1); 
+      print substr(p, 0, length(p)-1)" "substr($5, 0, length($5)-1) }' \
+    > "${META_INFO}"
+  curl "${CURL_FLAGS}" "${DWB_API_BASE}${DATA_FORMAT}" | 
+    awk '/^\s*-\s*{path:/ { p=substr($3, index($3, "/") + 1); 
+      print substr(p, 0, length(p)-1)" "substr($5, 0, length($5)-1)  }'  \
+    >> "${META_INFO}"
+}
+
+list() {
+  local ext exts
+  if [ ! -f "${META_INFO}" ]; then 
+    update_metainfo
+  fi
+  notify "available extensions:"
+  awk '{ print "  * "$1 }' ${META_INFO}
+}
+
+get_default_config() {
+  local l_file
+  if [ -f ${INST_DIR}/$1 ]; then
+    l_file=${INST_DIR}/$1
+  elif [ -f ${SYSTEM_DIR}/$1 ]; then 
+    l_file=${SYSTEM_DIR}/$1
+  fi
+  if [ "${l_file}" ]; then 
+    awk "/\/\/>DEFAULT_CONFIG/ { f=0 } f;
+        /\/\/<DEFAULT_CONFIG/ { f=1; next }" "${l_file}"
+  fi
+}
+
+yes_no() {
+  local question="${GREEN}==>${NC} $1 (Y/n)?"
+  printf "${question}"
+  while read -p " "; do 
+    case ${REPLY} in 
+      ""|Y|y) return 0;;
+      n|N) return 1;;
+      *) error "try again"
+        printf "${question}";;
+    esac
+  done
+}
+
+install_extension() {
+  local ret;
+  local output="${INST_DIR}/$1"
+  check_dir "${INST_DIR}"
+  if [ "$1" ]; then 
+    if [ -f ${SYSTEM_DIR}/$1 ]; then 
+      notify "using ${SYSTEM_DIR}/$1"
+      return 0;
+    else 
+      notify "downloading $1"
+      wget "${WGET_FLAGS}" "${REPO_BASE}/$1" -O "${output}"
+      case $? in 
+        7) die "wget error: network failure";;
+        8) die "wget error: server responded an error";;
+        0) return 0;;
+      esac
+    fi
+  else 
+    show_help
+  fi
+  if [ -f ${output} ]; then 
+    rm ${output}
+  fi
+  return 1
+}
+
+heredoc() {
+  read -r -d '' $1 
+}
+
+edit_config() {
+  local extension="$1"
+  if grep -q "^//<$1" "${LOADER}"; then 
+    local tmpfile=$(mktemp /tmp/${1}_XXXX.js) 
+    awk -v extb="//<$extension" -v exte="//>$extension" '
+      $0~extb { f=1; } f; 
+      $0~exte { f=0 }' ${LOADER} > "${tmpfile}"
+    $EDITOR ${tmpfile}
+    add_to_loader ${extension} "$(< "${tmpfile}")"
+    rm ${tmpfile}
+  else
+    error "no config for $1"
+  fi
+}
+
+do_update() {
+  local tmploader="$(mktemp)"
+  local conf_orig="$(mktemp /tmp/XXXXX.orig.js)"
+  local conf_new="$(mktemp /tmp/XXXXX.new.js)"
+  while [ "$1" ]; do 
+    extension="$1"
+    notify "updating ${extension}"
+    cp "${LOADER}" "${tmploader}"
+    do_install ${extension}
+    awk -v extb="//<$1" -v exte="//>$1" '
+      $0~extb { f=1; } f; 
+      $0~exte { f=0 }' ${tmploader} > "${conf_orig}"
+    awk -v extb="//<$1" -v exte="//>$1" '
+      $0~extb { f=1; print "// THIS CONFIG WILL BE DISCARDED"; next } f; 
+      $0~exte { f=0 }' "${LOADER}" > "${conf_new}"
+    ${DIFF_VIEWER} "$conf_orig" "$conf_new"
+    add_to_loader "${extension}" "$(< ${conf_orig})"
+    shift
+  done
+  rm "${tmploader}" "${conf_orig}" "${conf_new}"
+}
+
+update() {
+  local tmpfile=$(mktemp)
+  if [ -f "${META_INFO}" ]; then 
+    mv "${META_INFO}" "${tmpfile}"
+  fi
+  update_metainfo
+  local -a exts=()
+  for ext in $(awk 'NR==FNR{a[$0]=$1; next} !a[$0] { print $1 }' "${META_INFO}" "${tmpfile}"); do 
+    if [ -f "${INST_DIR}/$ext" ]; then
+      exts[${#exts[@]}]=${ext}
+    elif grep -q "//<${ext}" ${LOADER} 2>/dev/null; then
+      exts[${#exts[@]}]=${ext}
+    fi
+  done
+  if [ ${#exts[@]} -eq 0 ]; then 
+    notify "Up to date"
+  else
+    if yes_no "Update ${BOLD}${exts[*]}${NC}"; then
+      do_update ${exts[@]}
+    fi
+  fi
+  rm ${tmpfile}
+}
+
+extensions_load() {
+  local l_text
+  heredoc l_text <<!
+
+//<$1  
+
+extensions.load("$1", {
+$(get_default_config "$1")
+});
+
+//>$1  
+
+!
+  echo "$l_text"
+}
+extensions_bind() {
+  local l_text
+  heredoc l_text <<!
+//<$1  
+
+var config_$1 = {
+$(get_default_config "$1")
+};
+
+extensions.bind("$1", "t${1:0:3}", {
+  load : true, 
+  command : "toggle$1",
+  config : config_$1
+});
+
+//>$1  
+
+!
+  echo "${l_text}"
+
+}
+
+add_to_loader() 
+{
+  check_dir "$SCRIPT_DIR"
+  local l_config
+  local tmp_file=$(mktemp)
+  if [ "$2" ]; then 
+    l_config="$2"
+  elif [ "$BIND" -eq 1 ]; then 
+    l_config="$(extensions_bind $1)"
+  else
+    l_config="$(extensions_load $1)"
+  fi
+  if [ ! -f "${LOADER}" ]; then 
+    printf "#!javascript\n\n" > "${tmp_file}"
+    printf "\n$l_config\n" >> "${tmp_file}"
+  else 
+    awk -v extb="//<$1" -v exte="//>$1" -v config="$l_config" '
+      BEGIN { f=0 }
+      $0~extb { f=2; print config; } 
+      $0~exte { f=1; next }  
+      f!=2 { print } 
+      END { if (f==0) { print config } }' ${LOADER} > ${tmp_file}
+  fi
+  mv ${tmp_file} ${LOADER}
+}
+
+do_install() {
+  install_extension "$1"
+  add_to_loader "$1"
+}
+
+cl_uninstall() {
+  local file="${INST_DIR}/$1"
+  local tmp_file=$(mktemp)
+  notify "uninstalling $1"
+  if [ -f "${file}" ]; then 
+    notify "removing ${file}"
+    rm ${file}
+  fi
+  notify "updating ${LOADER}"
+  awk -v extb="//<$1" -v exte="//>$1" '
+    BEGIN { f=1 }
+    $0~extb { f=0 }
+    $0~exte { f=1; next }  
+    f==1 { print } ' "$LOADER" > "${tmp_file}"
+  mv "${tmp_file}" "${LOADER}"
+  
+}
+
+cl_install() {
+  update_metainfo
+  do_install "$1"
+  edit_config "$1"
+}
+
+cl_update() {
+  if grep -q "^//<$1" "${LOADER}"; then 
+    update_metainfo
+    do_update "$1"
+  elif yes_no "${BOLD}$1${NC} is not installed, install it"; then 
+    cl_install $1
+  fi
+}
+
+cl_bind() {
+  add_to_loader "$1" "$(extensions_bind $1)"
+  edit_config "$1"
+}
+cl_load() {
+  add_to_loader "$1" "$(extensions_load $1)"
+  edit_config "$1"
+}
+
+show_installed() {
+  notify "installed extensions:"
+  awk '/\/\/<\w+/ { print "  * "substr($0, 4) }' "${LOADER}"
+}
+
+show_help() 
+{
+  cat <<!
+usage: $0 [option] [argument]
+
+Options:
+  -b <extension>  load extension with extensions.bind
+  -e <extension>  edit configuration for <extension>
+  -i <extension>  install <extension>, installing an already installed extension
+                  will also overwrite the config for that extension
+  -I <extension>  install <extension>, installing an already installed extension
+                  will also overwrite the config for that extension, uses
+                  extensions.bind instead of extensions.load
+  -h              show this help and exit
+  -q              quiet
+  -l              list extensions
+  -l <extension>  load extension with extensions.load
+  -r <extension>  uninstall <extension>
+  -s              show installed extensions
+  -u              update all extensions
+  -U <extension>  update <extension>, this will also redownload the extension
+                  even if it doesn't need to be updated
+!
+}
+
+if [ ! "$1" ]; then 
+  error "missing argument"
+  show_help 
+  exit 1
+fi
+while getopts "L:b:i:I:r:e:uU:qlhs" opt; do 
+  case $opt in 
+    i)  cl_install ${OPTARG};;
+    I)  BIND=1; cl_install ${OPTARG};;
+    b)  cl_bind ${OPTARG};;
+    L)  cl_load ${OPTARG};;
+    r)  cl_uninstall ${OPTARG};;
+    q)  QUIET=1;;
+    u)  update;;
+    U)  cl_update ${OPTARG};;
+    l)  list;;
+    e)  edit_config ${OPTARG};;
+    s)  show_installed ${OPTARG};;
+    h)  show_help;;
+    ?)  show_help;;
+  esac
+done
