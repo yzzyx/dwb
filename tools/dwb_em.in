@@ -51,7 +51,7 @@ check_dir() {
 }
 
 update_metainfo () {
-  notify "retrieving data"
+  notify "downloading metadata"
   curl "${CURL_FLAGS}" "${API_BASE}${DATA_FORMAT}" | \
     awk '/^\s*-\s*{path:/ { p=substr($3, index($3, "/") + 1); 
       print substr(p, 0, length(p)-1)" "substr($5, 0, length($5)-1) }' \

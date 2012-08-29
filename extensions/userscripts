@@ -65,8 +65,9 @@ var sigDocument = -1;
 var sigCommitted = -1;
 /*
 //<DEFAULT_CONFIG
-  // paths to userscripts
-  []
+  // paths to userscripts, this extension will also load all scripts in from 
+  // $XDG_CONFIG_HOME/.config/dwb/scripts
+  scripts : []
 //>DEFAULT_CONFIG
 */
 
