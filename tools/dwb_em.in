@@ -10,25 +10,43 @@ LOADER="${SCRIPT_DIR}/extension_loader.js"
 INST_DIR="${XDG_DATA_HOME-$HOME/.local/share}/dwb/extensions"
 SYSTEM_DIR="@SYSTEM_DIR@"
 
-DIFF_VIEWER=${DIFF_VIEWER-vimdiff}
-EDITOR=${EDITOR-vim}
+M_DIFF_VIEWER=${DIFF_VIEWER-vimdiff}
+M_EDITOR=${EDITOR-vim}
 
 META_INFO="$INST_DIR/.metainfo"
+META_INSTALLED="${INST_DIR}/.installed"
 
 WGET_FLAGS=-q
 CURL_FLAGS=-s
 
 QUIET=0
 BIND=0
+UPDATED_METAINFO=0
 
 GREEN="\033[32m"
 RED="\033[31m"
 BOLD="\033[1m"
 NC="\033[0m"
 
+normalize() {
+  local prefix="$1" current="$2" tmp
+  local COLUMNS=$(tput cols)
+  local maxl=$(expr $COLUMNS - 4)
+  while :; do 
+    if [ "${#current}" -ge "${maxl}" ]; then
+      tmp=${current:0:maxl}
+      tmp=${tmp% *}
+      printf "%b %b\n" "$prefix" "$tmp"
+      current="${current:$((${#tmp}+1))}"
+    else
+      printf "%b %b\n" "$prefix" "$current"
+      break;
+    fi
+  done
+}
 error() {
   if [ ${QUIET} -eq 0 ]; then 
-    printf "${RED}==>${NC} %b\n" "$@"
+    normalize "${RED}==>${NC}" "$1"
   fi
 }
 
@@ -39,7 +57,13 @@ die() {
 
 notify() {
   if [ ${QUIET} -eq 0 ]; then 
-    printf "${GREEN}==>${NC} %b\n" "$@"
+    normalize "${GREEN}==>${NC}" "$1"
+    #while [ "$current" ]; do 
+    #  tmp=${current:0:76}
+    #  tmp=${tmp% *}
+    #  printf "${GREEN}==>${NC} %b\n" "$tmp"
+    #  current="${current:$((${#tmp}+1))}"
+    #done
   fi
 }
 
@@ -51,15 +75,18 @@ check_dir() {
 }
 
 update_metainfo () {
-  notify "downloading metadata"
-  curl "${CURL_FLAGS}" "${API_BASE}${DATA_FORMAT}" | \
-    awk '/^\s*-\s*{path:/ { p=substr($3, index($3, "/") + 1); 
-      print substr(p, 0, length(p)-1)" "substr($5, 0, length($5)-1) }' \
-    > "${META_INFO}"
-  curl "${CURL_FLAGS}" "${DWB_API_BASE}${DATA_FORMAT}" | 
-    awk '/^\s*-\s*{path:/ { p=substr($3, index($3, "/") + 1); 
-      print substr(p, 0, length(p)-1)" "substr($5, 0, length($5)-1)  }'  \
-    >> "${META_INFO}"
+  if [ "$UPDATED_METAINFO" -eq 0 ]; then 
+    notify "syncing metadata"
+    curl "${CURL_FLAGS}" "${API_BASE}${DATA_FORMAT}" | \
+      awk '/^\s*-\s*{path:/ { p=substr($3, index($3, "/") + 1); 
+        print substr(p, 0, length(p)-1)" "substr($5, 0, length($5)-1) }' \
+      > "${META_INFO}"
+    curl "${CURL_FLAGS}" "${DWB_API_BASE}${DATA_FORMAT}" | 
+        awk '/^\s*-\s*{path:/ { p=substr($3, index($3, "/") + 1); 
+          print substr(p, 0, length(p)-1)" "substr($5, 0, length($5)-1)  }'  \
+        >> "${META_INFO}"
+    UPDATED_METAINFO=1
+  fi
 }
 
 list() {
@@ -97,6 +124,21 @@ yes_no() {
   done
 }
 
+update_installed() {
+  notify "updating metadata"
+  if [ ! -f ${META_INSTALLED} ]; then
+    grep "^$1" "${META_INFO}" > "${META_INSTALLED}"
+  else 
+    local tmpfile=$(mktemp)
+    mv "${META_INSTALLED}" "${tmpfile}"
+    awk -v ext="^$1" '
+      NR==FNR { if ($0~ext) { meta=$0 } next } 
+      $0!~ext;  END { print meta }
+      ' ${META_INFO} ${tmpfile} > "${META_INSTALLED}"
+    rm "$tmpfile"
+  fi
+}
+
 install_extension() {
   local ret;
   local extension="$1"
@@ -104,18 +146,20 @@ install_extension() {
   check_dir "${INST_DIR}"
   if [ "$1" ]; then 
     if [ -f ${SYSTEM_DIR}/$extension ]; then 
-      notify "using ${BOLD}${SYSTEM_DIR}/$extension${NC}"
+      notify "using ${SYSTEM_DIR}/$extension"
+      update_installed ${extension}
       return 0;
     elif grep -q "^$1" "${META_INFO}"; then 
-      notify "downloading ${BOLD}$extension${NC}"
+      notify "downloading $extension"
       wget "${WGET_FLAGS}" "${REPO_BASE}/$extension" -O "${output}"
       case $? in 
         7) die "wget error: network failure";;
         8) die "wget error: server responded an error";;
-        0) return 0;;
+        0) update_installed "${extension}"
+           return 0;;
       esac
     else 
-      die "extension ${BOLD}$extension${NC} not found"
+      die "extension $extension not found"
     fi
   else 
     show_help
@@ -137,11 +181,11 @@ edit_config() {
     awk -v extb="^//<$extension" -v exte="^//>$extension" '
       $0~exte { f=0; next }
       $0~extb { f=1; next } f;' ${LOADER} > "${tmpfile}"
-    $EDITOR ${tmpfile}
+    $M_EDITOR ${tmpfile}
     add_to_loader ${extension} "$(< "${tmpfile}")"
     rm ${tmpfile}
   else
-    error "${BOLD}$extension${NC} is not installed"
+    error "$extension is not installed"
   fi
 }
 
@@ -151,7 +195,7 @@ do_update() {
   local conf_new="$(mktemp /tmp/XXXXX.new.js)"
   while [ "$1" ]; do 
     extension="$1"
-    notify "updating ${BOLD}${extension}${NC}"
+    notify "updating ${extension}"
     cp "${LOADER}" "${tmploader}"
     do_install ${extension}
     awk -v extb="^//<$1" -v exte="^//>$1" '
@@ -162,7 +206,7 @@ do_update() {
       $0~exte { f=0; next }
       $0~extb { f=1; print "// THIS CONFIGURATION WILL BE DISCARDED"; next } f; 
       ' "${LOADER}" > "${conf_new}"
-    ${DIFF_VIEWER} "$conf_orig" "$conf_new"
+    ${M_DIFF_VIEWER} "$conf_orig" "$conf_new"
     add_to_loader "${extension}" "$(awk 'NR!=1' ${conf_orig})"
     shift
   done
@@ -170,49 +214,33 @@ do_update() {
 }
 
 update() {
-  local tmpfile=$(mktemp)
-  if [ -f "${META_INFO}" ]; then 
-    mv "${META_INFO}" "${tmpfile}"
-  fi
   update_metainfo
-  local -a exts=()
-  for ext in $(awk 'NR==FNR{a[$0]=$1; next} !a[$0] { print $1 }' "${META_INFO}" "${tmpfile}"); do 
-    if [ -f "${INST_DIR}/$ext" ]; then
-      exts[${#exts[@]}]=${ext}
-    elif grep -q "//<${ext}" ${LOADER} 2>/dev/null; then
-      exts[${#exts[@]}]=${ext}
+  local uptodate=1
+  for ext in $(awk 'NR==FNR{a[$0]=$1; next} !a[$0] { print $1 }' "${META_INFO}" "${META_INSTALLED}"); do 
+    if yes_no "Update ${ext}"; then
+      do_update ${ext}
     fi
+    uptodate=0
   done
-  if [ ${#exts[@]} -eq 0 ]; then 
-    notify "Up to date"
+  if [ "$uptodate" -eq 0 ]; then 
+    notify "done"
   else
-    if yes_no "Update ${BOLD}${exts[*]}${NC}"; then
-      do_update ${exts[@]}
-    fi
+    notify "Up to date"
   fi
-  rm ${tmpfile}
 }
 
 extensions_load() {
   local l_text
   heredoc l_text <<!
-
-//<$1  
-
 extensions.load("$1", {
 $(get_default_config "$1")
 });
-
-//>$1  
-
 !
   echo "$l_text"
 }
 extensions_bind() {
   local l_text
   heredoc l_text <<!
-//<$1  
-
 var config_$1 = {
 $(get_default_config "$1")
 };
@@ -222,9 +250,6 @@ extensions.bind("$1", "t${1:0:3}", {
   command : "toggle$1",
   config : config_$1
 });
-
-//>$1  
-
 !
   echo "${l_text}"
 
@@ -237,11 +262,11 @@ add_to_loader()
   local tmp_file=$(mktemp)
   local extension="$1"
   if [ "$2" ]; then 
-    l_config="//<${extension}\n$2\n\n//>${extension}"
+    l_config="//<${extension}\n\n$2\n\n//>${extension}"
   elif [ "$BIND" -eq 1 ]; then 
-    l_config="$(extensions_bind $extension)"
+    l_config="//<${extension}\n\n$(extensions_bind $extension)\n\n//>${extension}"
   else
-    l_config="$(extensions_load $extension)"
+    l_config="//<${extension}\n\n$(extensions_load $extension)\n\n//>${extension}"
   fi
   if [ ! -f "${LOADER}" ]; then 
     printf "#!javascript\n\n" > "${tmp_file}"
@@ -269,31 +294,38 @@ cl_uninstall() {
   fi
   local file="${INST_DIR}/$1"
   local tmp_file=$(mktemp)
-  notify "uninstalling ${BOLD}$extension${NC}"
+  notify "uninstalling $extension"
   if [ -f "${file}" ]; then 
-    notify "removing ${BOLD}${file}${NC}"
+    notify "removing ${file}"
     rm ${file}
   fi
-  notify "updating ${BOLD}${LOADER}${NC}"
+  notify "updating ${LOADER}"
   awk -v extb="^//<$extension" -v exte="^//>$extension" '
     $0~exte { f=0; next }  
     $0~extb { f=1 }
     !f; ' "$LOADER" > "${tmp_file}"
   mv "${tmp_file}" "${LOADER}"
+  notify "updating metadata"
+  local l_minstall="$(mktemp)"
+  cp "${META_INSTALLED}" "${l_minstall}"
+  awk -v ext="^${extension}" '$0!~ext' "${l_minstall}" > "${META_INSTALLED}"
+  rm "${l_minstall}"
   
 }
 
 cl_install() {
   update_metainfo
   do_install "$1"
-  edit_config "$1"
+  if yes_no "Edit config with ${EDITOR}"; then
+    edit_config "$1"
+  fi
 }
 
 cl_update() {
   if grep -q "^//<$1" "${LOADER}"; then 
     update_metainfo
     do_update "$1"
-  elif yes_no "${BOLD}$1${NC} is not installed, install it"; then 
+  elif yes_no "$1 is not installed, install it"; then 
     cl_install $1
   fi
 }
@@ -308,8 +340,12 @@ cl_load() {
 }
 
 show_installed() {
-  notify "installed extensions:"
-  awk '/\/\/<\w+/ { print "  * "substr($0, 4) }' "${LOADER}"
+  if  [ -f "${META_INSTALLED}" ] && [ "$(awk 'END { print NR }' "${META_INSTALLED}")" -ge 0 ]; then
+    notify "installed extensions:"
+    awk '{ print "  * "$1 }' "${META_INSTALLED}"
+  else
+    notify "no extensions installed"
+  fi
 }
 
 show_help() 
@@ -326,36 +362,52 @@ Options:
                   will also overwrite the config for that extension, uses
                   extensions.bind instead of extensions.load
   -h              show this help and exit
+  -m              update metadata
   -q              quiet
   -l              list extensions
-  -l <extension>  load extension with extensions.load
+  -L <extension>  load extension with extensions.load
   -r <extension>  uninstall <extension>
   -s              show installed extensions
-  -u              update all extensions
+  -u              update metainfo, passing -u twice will also update extensions
   -U <extension>  update <extension>, this will also redownload the extension
                   even if it doesn't need to be updated
 !
 }
+parse_opts() {
+  local l_update=0;
+  while getopts "mL:b:i:I:r:e:uU:qlhs" opt; do 
+    case $opt in 
+      i)  cl_install ${OPTARG};;
+      I)  BIND=1; cl_install ${OPTARG};;
+      b)  cl_bind ${OPTARG};;
+      L)  cl_load ${OPTARG};;
+      r)  cl_uninstall ${OPTARG};;
+      q)  QUIET=1;;
+      u)  update;;
+      U)  cl_update ${OPTARG};;
+      m)  update_metainfo;;
+      l)  list;;
+      e)  edit_config ${OPTARG};;
+      s)  show_installed ${OPTARG};;
+      h)  show_help;;
+      ?)  show_help;;
+    esac
+  done
+}
 
+check_requirements() 
+{
+  if ! type -p "${M_EDITOR}" > /dev/null; then 
+    die "Editor $EDITOR was not found, please set EDITOR environment variable to a appropriate value"
+  fi
+  if ! type -p "${M_DIFF_VIEWER}" > /dev/null; then 
+    die "Diffviewer $M_DIFF_VIEWER was not found, please set DIFF_VIEWER environment variable to a appropriate value"
+  fi
+}
 if [ ! "$1" ]; then 
   error "missing argument"
   show_help 
   exit 1
 fi
-while getopts "L:b:i:I:r:e:uU:qlhs" opt; do 
-  case $opt in 
-    i)  cl_install ${OPTARG};;
-    I)  BIND=1; cl_install ${OPTARG};;
-    b)  cl_bind ${OPTARG};;
-    L)  cl_load ${OPTARG};;
-    r)  cl_uninstall ${OPTARG};;
-    q)  QUIET=1;;
-    u)  update;;
-    U)  cl_update ${OPTARG};;
-    l)  list;;
-    e)  edit_config ${OPTARG};;
-    s)  show_installed ${OPTARG};;
-    h)  show_help;;
-    ?)  show_help;;
-  esac
-done
+check_requirements
+parse_opts "$@"
