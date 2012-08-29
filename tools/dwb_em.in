@@ -28,7 +28,7 @@ NC="\033[0m"
 
 error() {
   if [ ${QUIET} -eq 0 ]; then 
-    printf "${RED}==>${NC} %s\n" "$@"
+    printf "${RED}==>${NC} %b\n" "$@"
   fi
 }
 
@@ -39,7 +39,7 @@ die() {
 
 notify() {
   if [ ${QUIET} -eq 0 ]; then 
-    printf "${GREEN}==>${NC} %s\n" "$@"
+    printf "${GREEN}==>${NC} %b\n" "$@"
   fi
 }
 
@@ -99,20 +99,23 @@ yes_no() {
 
 install_extension() {
   local ret;
-  local output="${INST_DIR}/$1"
+  local extension="$1"
+  local output="${INST_DIR}/$extension"
   check_dir "${INST_DIR}"
   if [ "$1" ]; then 
-    if [ -f ${SYSTEM_DIR}/$1 ]; then 
-      notify "using ${SYSTEM_DIR}/$1"
+    if [ -f ${SYSTEM_DIR}/$extension ]; then 
+      notify "using ${BOLD}${SYSTEM_DIR}/$extension${NC}"
       return 0;
-    else 
-      notify "downloading $1"
-      wget "${WGET_FLAGS}" "${REPO_BASE}/$1" -O "${output}"
+    elif grep -q "^$1" "${META_INFO}"; then 
+      notify "downloading ${BOLD}$extension${NC}"
+      wget "${WGET_FLAGS}" "${REPO_BASE}/$extension" -O "${output}"
       case $? in 
         7) die "wget error: network failure";;
         8) die "wget error: server responded an error";;
         0) return 0;;
       esac
+    else 
+      die "extension ${BOLD}$extension${NC} not found"
     fi
   else 
     show_help
@@ -138,7 +141,7 @@ edit_config() {
     add_to_loader ${extension} "$(< "${tmpfile}")"
     rm ${tmpfile}
   else
-    error "$extension is not installed"
+    error "${BOLD}$extension${NC} is not installed"
   fi
 }
 
@@ -148,7 +151,7 @@ do_update() {
   local conf_new="$(mktemp /tmp/XXXXX.new.js)"
   while [ "$1" ]; do 
     extension="$1"
-    notify "updating ${extension}"
+    notify "updating ${BOLD}${extension}${NC}"
     cp "${LOADER}" "${tmploader}"
     do_install ${extension}
     awk -v extb="^//<$1" -v exte="^//>$1" '
@@ -266,12 +269,12 @@ cl_uninstall() {
   fi
   local file="${INST_DIR}/$1"
   local tmp_file=$(mktemp)
-  notify "uninstalling $extension"
+  notify "uninstalling ${BOLD}$extension${NC}"
   if [ -f "${file}" ]; then 
-    notify "removing ${file}"
+    notify "removing ${BOLD}${file}${NC}"
     rm ${file}
   fi
-  notify "updating ${LOADER}"
+  notify "updating ${BOLD}${LOADER}${NC}"
   awk -v extb="^//<$extension" -v exte="^//>$extension" '
     $0~exte { f=0; next }  
     $0~extb { f=1 }
