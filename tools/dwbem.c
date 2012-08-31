@@ -116,7 +116,13 @@ regex_replace_file(const char *path, const char *regex, const char *replacement)
       if (g_file_set_contents(path, content, -1, NULL))
         ret = 0;
     }
+    else {
+      g_file_set_contents(path, replacement, -1, NULL);
+    }
     g_strfreev(matches);
+  }
+  else {
+    g_file_set_contents(path, replacement, -1, NULL);
   }
   g_free(content);
   return ret;
@@ -288,7 +294,7 @@ set_loader(const char *name, const char *config, int flags) {
   char *script = NULL;
   char *shortcut = NULL, *command = NULL;
   gboolean load = true;
-  notify("Adding "EXT(%s)" to extension loader", name, m_loader);
+  notify("Updating extension-loader", name, m_loader);
   if (flags & F_BIND) {
     while ((shortcut = get_response("Shortcut for toggling "EXT(%s)"?", name)) == NULL || *shortcut == '\0') 
       g_free(shortcut);
@@ -576,7 +582,7 @@ cl_uninstall(const char *name) {
   g_free(path);
   char *regex = REGEX_REPLACE(SCRIPT, name);
   if (regex_replace_file(m_loader, regex, NULL) != -1) {
-    notify("Updating %s", m_loader);
+    notify("Updating extension-loader");
   }
   g_free(regex);
   regex = g_strdup_printf("(?<=^|\n)%s\\s\\w+\n", name);
