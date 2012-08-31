@@ -81,7 +81,7 @@
  * */
 
 /*<INFO
-Block requests from thirdparty domains with whitelisting support, permanently or just for a session
+Block requests from thirdparty domains permanently or just for a session, whitelisting support
 INFO>*/
 
 var me = "requestpolicy";

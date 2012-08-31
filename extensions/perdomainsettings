@@ -93,7 +93,7 @@
  *
  * */ 
 /*<INFO
-Change webkit-settings on domain or url basis
+Change webkit-settings automatically on domain or url basis
 INFO>*/
 
 var me = "perdomainsettings";

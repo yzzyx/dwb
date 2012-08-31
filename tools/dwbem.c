@@ -22,6 +22,7 @@
 #define REPO_BASE "https://bitbucket.org/portix/dwb_extensions/raw/tip/src" 
 #define SKIP(line, c) do{ \
   while(*line && *line != c)line++; line++; } while(0)
+#define SKIP_SPACE(X) do { while(g_ascii_isspace(*(X))) (X)++; } while(0)
 #define EXTENSION_DIR() (g_build_filename(g_get_user_data_dir(), "dwb", "extensions", NULL))
 #ifndef false
 #define false 0
@@ -41,6 +42,10 @@ enum {
   F_BIND = 1<<1,
   F_FORCE = 1<<2,
   F_UPDATE = 1<<2
+};
+enum {
+  MATCH_MULTILINE = 1<<0,
+  MATCH_CONTENT = 1<<1
 };
 
 static char *m_installed;
@@ -116,18 +121,27 @@ regex_replace_file(const char *path, const char *regex, const char *replacement)
   g_free(content);
   return ret;
 }
+
 static char *
-get_data(const char *name, const char *template, gboolean multiline) {
+get_data(const char *name, const char *data, const char *template, int flags) {
   char *format;
-  if (multiline)
-    format = "(?<=^|\n)/\\*<%s%s|%s%s>\\*/\\s*(?=\n|$|/*)\\s*";
+  if (flags & MATCH_MULTILINE)
+    format = "(?<=^|\n)/\\*<%s%s|%s%s>\\*/\\s*(?=\n|$)";
   else
-    format = "(?<=^|\n)//<%s%s|//>%s%s\\s*(?=\n|$|/*)\\s*";
-  char *regex = g_strdup_printf(format, name, template, name, template);
+    format = "(?<=^|\n)//<%s%s|//>%s%s\\s*(?=\n|$)";
+  const char *nname = name == NULL ? "" : name;
+  char *regex = g_strdup_printf(format, nname, template, nname, template);
   char *ret = NULL;
   char *content = NULL;
-  if (g_file_get_contents(m_loader, &content, NULL, NULL)) {
-    char **matches = g_regex_split_simple(regex, content, G_REGEX_DOTALL, 0);
+  const char *new_data = NULL;
+  if (flags & MATCH_CONTENT) 
+    new_data = data;
+  else {
+    g_file_get_contents(data, &content, NULL, NULL);
+    new_data = content;
+  }
+  if (new_data != NULL) {
+    char **matches = g_regex_split_simple(regex, new_data, G_REGEX_DOTALL, 0);
     if (matches[1] != NULL)
       ret = g_strdup(matches[1]);
     g_strfreev(matches);
@@ -342,7 +356,7 @@ add_to_loader(const char *name, const char *content, int flags) {
     notify("No default configuration found");
   }
   else if (flags & F_UPDATE) {
-    data = get_data(name, TMPL_CONFIG, false);
+    data = get_data(name, m_loader, TMPL_CONFIG, 0);
     if (diff(data, matches[1], &config) == 0) {
       notify("Config is up to date");
     }
@@ -439,8 +453,7 @@ sync_meta(const char *output) {
       }
       const char *response = msg->response_body->data;
       while(*response) {
-        while(isspace((int)*response))
-          response++;
+        SKIP_SPACE(response);
         while (*response && *response != '-') {
           SKIP(response, '\n');
         }
@@ -522,7 +535,7 @@ static void
 change_config(const char *name, int flags) {
   if (!check_installed(name))
     die(1, "Extension "EXT(%s)" is not installed", name);
-  char *config = get_data(name, TMPL_CONFIG, false);
+  char *config = get_data(name, m_loader, TMPL_CONFIG, 0);
   char *new_config = NULL;
   if (config) {
     if (!(flags & F_NO_CONFIG)) {
@@ -578,7 +591,7 @@ cl_disable(const char *name) {
   if (!check_installed(name))
     die(1, "Extension "EXT(%s)" is not installed", name);
   char *regex = g_strdup_printf("(?<=^|\n)/\\*<%s"TMPL_DISABLED".*%s"TMPL_DISABLED">\\*/\\s*(?=$|\n)", name, name);
-  char *data = get_data(name, TMPL_SCRIPT, false);
+  char *data = get_data(name, m_loader, TMPL_SCRIPT, 0);
   if (!g_regex_match_simple(regex, data, G_REGEX_DOTALL, 0)) {
     char *new_data = g_strdup_printf("\n/*<%s"TMPL_DISABLED"%s%s"TMPL_DISABLED">*/\n", name, data ? data : "\n", name);
     if (set_data(name, TMPL_SCRIPT, new_data, false) != -1) 
@@ -594,7 +607,7 @@ cl_disable(const char *name) {
 }
 static void
 cl_enable(const char *name) {
-  char *data = get_data(name, TMPL_DISABLED, true);
+  char *data = get_data(name, m_loader, TMPL_DISABLED, MATCH_MULTILINE);
   if (data != NULL) {
     if (set_data(name, TMPL_SCRIPT, data, false) != -1) 
       notify(EXT(%s)" enabled", name);
@@ -647,6 +660,93 @@ cl_update(int flags) {
   else 
     notify("Done");
 }
+char **
+get_list(char *path) {
+  int installed = 0;
+  char *content = NULL;
+  GSList *list = NULL;
+  char **ret = NULL, **matches = NULL;
+  if (g_file_get_contents(path, &content, NULL, NULL)) {
+    char **matches = g_regex_split_simple("\\s\\w*(\n|$)", content, G_REGEX_DOTALL, 0);
+    for (int i=0; matches[i]; i++) {
+      SKIP_SPACE(matches[i]);
+      if (*(matches[i])) {
+        list = g_slist_prepend(list, matches[i]);
+      }
+    }
+  }
+  if (list != NULL) {
+    list = g_slist_sort(list, (GCompareFunc)g_strcmp0);
+    ret = g_malloc_n(installed + 1, sizeof(char*));
+    int i=0;
+    for (GSList *l = list; l; l=l->next)
+      ret[i++] = l->data;
+    ret[i] = NULL;
+  }
+  g_strfreev(matches);
+  g_free(content);
+  return ret;
+}
+static void 
+cl_list_installed(int flags) {
+  char **list = get_list(m_installed);
+  if (list != NULL) {
+    notify("Installed extensions:");
+    for (int i=0; list[i]; i++) {
+      printf("  * %s\n", list[i]);
+    }
+  }
+  else 
+    notify("No extensions installed");
+}
+static void 
+cl_list_all(int flags) {
+  sync_meta(m_meta_data);
+  char **list = get_list(m_meta_data);
+  if (list != NULL) {
+    notify("Available extensions:");
+    for (int i=0; list[i]; i++) {
+      printf("  * %s\n", list[i]);
+    }
+  }
+  else 
+    notify("No extensions installed");
+}
+static void
+cl_info(const char *name, int flags)  {
+  SoupMessage *msg = NULL;
+  char *path = g_build_filename(m_system_dir, name, NULL);
+  char *data = NULL;
+  if ((data = get_data(NULL, path, "INFO", MATCH_MULTILINE)) != NULL) {
+    goto unwind;
+  }
+  FREE0(data);
+  g_free(path);
+  path = g_build_filename(m_user_dir, name, NULL);
+  if ((data = get_data(NULL, path, "INFO", MATCH_MULTILINE)) != NULL) {
+    goto unwind;
+  }
+  FREE0(data);
+  g_free(path);
+  path = g_strconcat(REPO_BASE, "/", name, NULL);
+  msg = soup_message_new("GET", path);
+  int status = soup_session_send_message(session, msg);
+  if (status == 200) {
+    data = get_data(NULL, msg->response_body->data, "INFO", MATCH_MULTILINE | MATCH_CONTENT);
+  }
+unwind: 
+  if (data != NULL) {
+    const char *tmp = data;
+    SKIP_SPACE(tmp);
+    printf("\033[1m%s\033[0m - %s", name, tmp);
+  }
+  else 
+    print_error("Extension "EXT(%s)" not found", name);
+  g_free(path);
+  g_free(data);
+  if (msg)
+    g_object_unref(msg);
+}
 
 int 
 main(int argc, char **argv) {
@@ -659,18 +759,24 @@ main(int argc, char **argv) {
   char **o_setload = NULL;
   char **o_disable = NULL;
   char **o_enable = NULL;
+  char **o_info = NULL;
   gboolean o_noconfig = false;
   gboolean o_update = false;
+  gboolean o_list_installed = false;
+  gboolean o_list_all = false;
   int flags = 0;
   GOptionEntry options[] = {
-    { "install",  'i', 0, G_OPTION_ARG_STRING_ARRAY, &o_install, "Install extension",  "extension" },
-    { "remove",   'r', 0, G_OPTION_ARG_STRING_ARRAY, &o_remove, "Remove extension", "extension" },
+    { "list-all",  'a', 0, G_OPTION_ARG_NONE, &o_list_all, "List installed extensions",  NULL},
     { "bind",     'b', 0, G_OPTION_ARG_NONE, &o_bind, "When installing an extension use extensions.bind instead of extensions.load", NULL },
     { "setbind",  'B', 0, G_OPTION_ARG_STRING_ARRAY, &o_setbind, "Edit configuration, use extensions.bind", "extension" },
-    { "setload",  'L', 0, G_OPTION_ARG_STRING_ARRAY, &o_setload, "Edit configuration, use exensions.load", "extension" },
-    { "noconfig", 'n', 0, G_OPTION_ARG_NONE, &o_noconfig, "Don't use config in loader script, use extensionrc instead", NULL },
     { "disable",  'd', 0, G_OPTION_ARG_STRING_ARRAY, &o_disable, "Disable extension", "extension" },
     { "enable",   'e', 0, G_OPTION_ARG_STRING_ARRAY, &o_enable,  "Enable extension", "extension" },
+    { "install",  'i', 0, G_OPTION_ARG_STRING_ARRAY, &o_install, "Install extension",  "extension" },
+    { "info",     'I', 0, G_OPTION_ARG_STRING_ARRAY, &o_info, "Install extension",  "extension" },
+    { "remove",   'r', 0, G_OPTION_ARG_STRING_ARRAY, &o_remove, "Remove extension", "extension" },
+    { "list-installed",  'l', 0, G_OPTION_ARG_NONE, &o_list_installed, "List installed extensions",  NULL},
+    { "setload",  'L', 0, G_OPTION_ARG_STRING_ARRAY, &o_setload, "Edit configuration, use exensions.load", "extension" },
+    { "noconfig", 'n', 0, G_OPTION_ARG_NONE, &o_noconfig, "Don't use config in loader script, use extensionrc instead", NULL },
     { "update",   'u', 0, G_OPTION_ARG_NONE, &o_update,  "Update extensions", "extension" },
     { NULL },
   };
@@ -680,6 +786,8 @@ main(int argc, char **argv) {
   if (!g_option_context_parse(ctx, &argc, &argv, &e) || missing) {
     if (missing) 
       fprintf(stderr, "Missing argument\n");
+    else if (argc > 1) 
+      fprintf(stderr, "Unknown option %s\n", argv[1]);
     else 
       fprintf(stderr, "%s\n", missing ? "" : e->message);
     fprintf(stderr, g_option_context_get_help(ctx, false, NULL));
@@ -693,6 +801,8 @@ main(int argc, char **argv) {
   check_dir(config_dir);
   m_loader = g_build_filename(config_dir, "extension_loader.js", NULL);
   g_free(config_dir);
+  char *content = NULL;
+  g_file_get_contents("fooox", &content, NULL, NULL);
 
   m_meta_data = g_build_filename(m_user_dir, ".metadata", NULL);
   m_installed = g_build_filename(m_user_dir, ".installed", NULL);
@@ -712,8 +822,18 @@ main(int argc, char **argv) {
   if (o_noconfig)
     flags |= F_NO_CONFIG;
 
+  if (o_list_all) {
+    cl_list_all(flags);
+  }
+  if (o_list_installed) {
+    cl_list_installed(flags);
+  }
   if (o_update) {
     cl_update(flags);
+  }
+  if (o_info != NULL) {
+    for (int i=0; o_info[i]; i++) 
+      cl_info(o_info[i], flags);
   }
   if (o_setbind != NULL) {
     for (int i=0; o_setbind[i]; i++) 

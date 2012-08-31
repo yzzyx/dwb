@@ -93,7 +93,7 @@
  * */
 
 /*<INFO
-Extension that saves form data and fills forms with previously saved data
+Save form data and fill forms with previously saved data, also with gpg-support
 INFO>*/
 
 var me = "formfiller";
