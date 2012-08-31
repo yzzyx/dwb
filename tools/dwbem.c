@@ -152,7 +152,6 @@ update_installed(const char *name, const char *meta) {
   char *regex = g_strdup_printf("(?<=^|\n)%s\\s\\w+\n", name);
   regex_replace_file(m_installed, regex, buffer);
   g_free(regex);
-
   return 0;
 
 }
@@ -212,7 +211,7 @@ diff(const char *text1, const char *text2, char **ret) {
   char file1[32], file2[32];
   strcpy(file1, "/tmp/tmpXXXXXXorig.js");
   strcpy(file2, "/tmp/tmpXXXXXXnew.js");
-  char *text2_new = g_strdup_printf("// THIS WILL BE DISCARDED\n%s", text2);
+  char *text2_new = g_strdup_printf("// THIS FILE WILL BE DISCARDED\n%s// THIS FILE WILL BE DISCARDED", text2);
   if (g_file_set_contents(file1, text1, -1, &e) && g_file_set_contents(file2, text2_new, -1, &e)) {
     char *args[4];
     args[0] = (char *)m_diff;
@@ -261,6 +260,7 @@ set_loader(const char *name, const char *config, int flags) {
   char *script = NULL;
   char *shortcut = NULL, *command = NULL;
   gboolean load;
+  notify("Adding "EXT(%s)" to extension loader", name, m_loader);
   if (flags & F_BIND) {
     while ((shortcut = get_response("Shortcut for toggling "EXT(%s)"?", name)) == NULL || *shortcut == '\0') 
       g_free(shortcut);
@@ -312,20 +312,23 @@ set_loader(const char *name, const char *config, int flags) {
     regex_replace_file(m_loader, regex, script);
     g_free(regex);
   }
-  notify(EXT(%s)" added to loaderscript", name, m_loader);
+  g_free(shortcut);
+  g_free(command);
+  g_free(script);
 }
 static int 
 add_to_loader(const char *name, const char *content, int flags) {
   g_return_val_if_fail(content != NULL, -1);
   char *config = NULL;
   const char *new_config = NULL;
+  char *data = NULL;
   gchar **matches = g_regex_split_simple("//<DEFAULT_CONFIG|//>DEFAULT_CONFIG", content, G_REGEX_DOTALL, 0);
 
   if (matches[1] == NULL) {
     notify("No default configuration found");
   }
   else if (flags & F_UPDATE) {
-    char *data = get_data(name, TMPL_CONFIG, false);
+    data = get_data(name, TMPL_CONFIG, false);
     if (diff(data, matches[1], &config) == 0) {
       notify("Config is up to date");
     }
@@ -341,6 +344,7 @@ add_to_loader(const char *name, const char *content, int flags) {
   set_loader(name, new_config, flags);
   g_strfreev(matches);
   g_free(config);
+  g_free(data);
   return 0;
 }
 static gboolean 
@@ -542,6 +546,7 @@ cl_uninstall(const char *name) {
     notify("Removing %s", name);
     unlink(path);
   }
+  g_free(path);
   char *regex = REGEX_REPLACE(SCRIPT, name);
   if (regex_replace_file(m_loader, regex, NULL) != -1) {
     notify("Updating %s", m_loader);
@@ -603,12 +608,15 @@ cl_update(int flags) {
   char *meta = NULL;
   char *installed = NULL;
   size_t l_inst = 0, l_meta = 0;
+
   if (!g_file_get_contents(m_installed, &installed, &l_inst, NULL) || l_inst == 0) 
     die(1, "No installed extensions found");
   if (!g_file_get_contents(m_meta_data, &meta, &l_meta, NULL) || l_meta == 0) 
     die(1, "Cannot open metadata");
+
   char **lines_inst = g_strsplit(installed, "\n", -1);
   g_free(installed);
+
   int updates = 0;
   for (int i=0; lines_inst[i]; i++) {
     if (*(lines_inst[i]) == '\0')
@@ -619,6 +627,7 @@ cl_update(int flags) {
       updates++;
     }
   }
+  g_strfreev(lines_inst);
   if (updates == 0)
     notify("Up to date");
   else 
