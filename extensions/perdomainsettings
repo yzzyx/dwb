@@ -118,7 +118,7 @@ var defaultConfig = {
 
   // Default settings, for each setting in domains, hosts and uris a
   // default-value should be specified, e.g.
-  // uris : { autoLoadImages : false }, 
+  // defaults : { autoLoadImages : false }, 
   defaults : {}
 
 //>DEFAULT_CONFIG
