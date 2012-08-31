@@ -92,6 +92,10 @@
  *
  * */
 
+/*<INFO
+Extension that saves form data and fills forms with previously saved data
+INFO>*/
+
 var me = "formfiller";
 var defaultConfig = {
 //<DEFAULT_CONFIG

@@ -92,6 +92,9 @@
  * ------------------------------------------------------------------------------
  *
  * */ 
+/*<INFO
+Change webkit-settings on domain or url basis
+INFO>*/
 
 var me = "perdomainsettings";
 var domains = null;

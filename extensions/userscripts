@@ -58,6 +58,10 @@
  *
  * */
 
+/*<INFO
+Load userscripts and inject them into websites, mostly greasemonkey compatible
+INFO>*/
+
 var me = "userscripts";
 var onStart = []; 
 var onEnd = []; 
