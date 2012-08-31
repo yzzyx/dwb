@@ -1,5 +1,9 @@
+#ifndef _BSD_SOURCE
 #define _BSD_SOURCE 
+#endif
+#ifndef _BSD_SOURCE
 #define _POSIX_SOURCE 
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -39,11 +43,11 @@ enum {
   F_UPDATE = 1<<2
 };
 
-static char *m_meta_data;
 static char *m_installed;
-static char *m_user_dir;
-static char *m_system_dir;
 static char *m_loader;
+static char *m_meta_data;
+static const char *m_system_dir;
+static char *m_user_dir;
 static const char *m_editor;
 static const char *m_diff;
 static SoupSession *session;
@@ -72,11 +76,21 @@ notify(const char *format, ...) {
 }
 
 void 
+clean_up() {
+  g_free(m_installed);
+  g_free(m_loader);
+  g_free(m_meta_data);
+  g_free(m_user_dir);
+  g_object_unref(session);
+}
+
+void 
 die(int status, const char *format, ...) {
   va_list args;
   va_start(args, format);
   vprint_error(format, args);
   va_end(args);
+  clean_up();
   exit(status);
 }
 void 
@@ -259,7 +273,7 @@ static void
 set_loader(const char *name, const char *config, int flags) {
   char *script = NULL;
   char *shortcut = NULL, *command = NULL;
-  gboolean load;
+  gboolean load = true;
   notify("Adding "EXT(%s)" to extension loader", name, m_loader);
   if (flags & F_BIND) {
     while ((shortcut = get_response("Shortcut for toggling "EXT(%s)"?", name)) == NULL || *shortcut == '\0') 
@@ -682,7 +696,10 @@ main(int argc, char **argv) {
 
   m_meta_data = g_build_filename(m_user_dir, ".metadata", NULL);
   m_installed = g_build_filename(m_user_dir, ".installed", NULL);
-  m_system_dir = g_build_filename("/usr", "share", "dwb", "extensions", NULL);
+  m_system_dir = SYSTEM_EXTENSION_DIR;
+  if (!g_file_test(m_system_dir, G_FILE_TEST_EXISTS))
+    die(1, "FATAL: %s not found, check your installation", m_system_dir);
+
   m_editor = g_getenv("EDITOR");
   if (m_editor == NULL)
     m_editor = "vim";
@@ -722,10 +739,5 @@ main(int argc, char **argv) {
     for (int i=0; o_remove[i]; i++) 
       cl_uninstall(o_remove[i]);
   }
-  g_free(m_user_dir);
-  g_free(m_meta_data);
-  g_free(m_system_dir);
-  g_free(m_loader);
-  g_object_unref(session);
   return 0;
 }
