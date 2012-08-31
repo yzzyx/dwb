@@ -1,0 +1,94 @@
+// vim: set ft=asciidoc:
+DWBEM(1)
+========
+:doctype: manpage
+
+
+NAME
+----
+dwbem - dwb extension manager
+
+SYNOPSIS
+--------
+*dwbem* ['OPTIONS'] 
+
+DESCRIPTION
+-----------
+dwbem(1) is a command line tool that handles extensions for dwb.
+
+OPTIONS
+-------
+*-a*::
+*--list-all*:: 
+  List all installed extensions handled by dwbem.
+ 
+*-b*::
+*--bind*::
+  When used together with *-i* the extension will be loaded with 'extensions.bind'
+  instead of extensions.load, i.e. it is possible to bind a shortcut for
+  enabling/disabling the extension on the fly, also see *-L*.
+
+*-B* 'extension':: 
+*--setbind* 'extension'::
+  Edit configuration of 'extension', the extension will be loaded with 'extensions.bind', 
+  i.e. it is possible to bind a shortcut for enabling/disabling
+  the extension on the fly.
+
+*-d* 'extension'::
+*--disable* 'extension'::
+  Disable 'extension', the extension will still be installed and the
+  configuration will be kept.
+
+*-e* 'extension'::
+*--enable* 'extension'::
+  Enable an extension that was previously disabled with *-d*.
+
+*-i* 'extension'::
+*--install* 'extension'::
+  Install 'extension'. If it is a local extension that was installed together
+  with dwb the extension will not be downloaded, only the default configuration
+  will  be set. Note that reinstalling an already installed extension will
+  overwrite the configuration with the default configuration.
+
+*-I* 'extension':: 
+*--info* 'extension'::
+  Show information about 'extension'.
+
+*-r* 'extension':: 
+*--remove* 'extension'::
+  Remove an extension. If it is a remote extension the extension will be
+  deleted. This option also discards the configuration. 
+
+*-l*:: 
+*--list*::
+  List installed extensions.
+
+*-L* 'extension':: 
+*--setload* 'extension'::
+  Edit configuration for 'extension'. The extension will be loaded with
+  'extensions.load', see also *-b*.
+
+*-n*::
+*--noconfig*:: 
+  Don't use a configuration in the loader script, use
+  '$XDG_CONFIG_HOME/dwb/extensionrc' instead. The extension will simply be
+  loaded with 'extensions.load("extension");'. This option can be combined with *-i*,
+  *-B* or *-L*. If combined with *-i* it will be applied to all installed
+  extensions.
+
+*-u*::
+*--update*::
+  Update installed extensions. 
+
+
+ENVIRONMENT VARIABLES
+---------------------
+*dwbem* expects the environment variables 'EDITOR' and 'DIFF_VIEWER' to be set,
+if they are unset 'vim' and 'vimdiff' are used respectively. 'EDITOR' needs to
+be set if the configuration is edited or a new extension is installed,
+'DIFF_VIEWER' needs to be set if extensions are updated. 
+
+
+SEE ALSO
+--------
+*dwb*(1) *dwb-js*(7)

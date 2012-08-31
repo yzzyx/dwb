@@ -772,18 +772,18 @@ main(int argc, char **argv) {
   gboolean o_list_all = false;
   int flags = 0;
   GOptionEntry options[] = {
-    { "list-all",  'a', 0, G_OPTION_ARG_NONE, &o_list_all, "List installed extensions",  NULL},
+    { "list-all",  'a', 0, G_OPTION_ARG_NONE, &o_list_all, "List all installed extensions",  NULL},
     { "bind",     'b', 0, G_OPTION_ARG_NONE, &o_bind, "When installing an extension use extensions.bind instead of extensions.load", NULL },
-    { "setbind",  'B', 0, G_OPTION_ARG_STRING_ARRAY, &o_setbind, "Edit configuration, use extensions.bind", "extension" },
-    { "disable",  'd', 0, G_OPTION_ARG_STRING_ARRAY, &o_disable, "Disable extension", "extension" },
-    { "enable",   'e', 0, G_OPTION_ARG_STRING_ARRAY, &o_enable,  "Enable extension", "extension" },
-    { "install",  'i', 0, G_OPTION_ARG_STRING_ARRAY, &o_install, "Install extension",  "extension" },
-    { "info",     'I', 0, G_OPTION_ARG_STRING_ARRAY, &o_info, "Install extension",  "extension" },
-    { "remove",   'r', 0, G_OPTION_ARG_STRING_ARRAY, &o_remove, "Remove extension", "extension" },
+    { "setbind",  'B', 0, G_OPTION_ARG_STRING_ARRAY, &o_setbind, "Edit configuration, use extensions.bind", "<extension>" },
+    { "disable",  'd', 0, G_OPTION_ARG_STRING_ARRAY, &o_disable, "Disable <extension>", "<extension>" },
+    { "enable",   'e', 0, G_OPTION_ARG_STRING_ARRAY, &o_enable,  "Enable <extension>", "<extension>" },
+    { "install",  'i', 0, G_OPTION_ARG_STRING_ARRAY, &o_install, "Install <extension>",  "<extension>" },
+    { "info",     'I', 0, G_OPTION_ARG_STRING_ARRAY, &o_info, "Show info about <extension>",  "<extension>" },
+    { "remove",   'r', 0, G_OPTION_ARG_STRING_ARRAY, &o_remove, "Remove <extension>", "<extension>" },
     { "list-installed",  'l', 0, G_OPTION_ARG_NONE, &o_list_installed, "List installed extensions",  NULL},
-    { "setload",  'L', 0, G_OPTION_ARG_STRING_ARRAY, &o_setload, "Edit configuration, use exensions.load", "extension" },
+    { "setload",  'L', 0, G_OPTION_ARG_STRING_ARRAY, &o_setload, "Edit configuration for <extension>, use exensions.load", "<extension>" },
     { "noconfig", 'n', 0, G_OPTION_ARG_NONE, &o_noconfig, "Don't use config in loader script, use extensionrc instead", NULL },
-    { "update",   'u', 0, G_OPTION_ARG_NONE, &o_update,  "Update extensions", "extension" },
+    { "update",   'u', 0, G_OPTION_ARG_NONE, &o_update,  "Update extensions", NULL },
     { NULL },
   };
   GError *e = NULL;
