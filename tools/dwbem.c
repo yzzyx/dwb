@@ -432,8 +432,10 @@ add_to_loader(const char *name, const char *content, int flags)
   else if (flags & F_UPDATE) 
   {
     data = get_data(name, m_loader, TMPL_CONFIG, 0);
-    if (diff(data, matches[1], &config) == 0) 
+    if (diff(data, matches[1], &config) == 0) {
       notify("Config is up to date");
+      new_config = matches[1];
+    }
     else 
       new_config = config;
   }
