@@ -83,7 +83,7 @@ notify(const char *format, ...)
   va_list args;
   va_start(args, format);
   fputs("\033[32m==>\033[0m ", stdout);
-  vfprintf(stderr, format, args);
+  vfprintf(stdout, format, args);
   fputc('\n', stdout);
   va_end(args);
 }
