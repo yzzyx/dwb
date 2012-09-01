@@ -400,7 +400,7 @@ set_loader(const char *name, const char *config, int flags)
     if (flags & F_BIND) 
       script = g_strdup_printf("//<%s"TMPL_SCRIPT"\n"
               "var config_%s = {\n"
-              "//<%s"TMPL_CONFIG"%s//<%s"TMPL_CONFIG"\n};\n"
+              "//<%s"TMPL_CONFIG"%s//>%s"TMPL_CONFIG"\n};\n"
               "extensions.bind(\"%s\", \"%s\", {\n"
               "  config : config_%s,\n"
               "  load : %s%s%s%s\n});\n//>%s"TMPL_SCRIPT"\n", 
