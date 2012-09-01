@@ -297,6 +297,13 @@ diff(const char *text1, const char *text2, char **ret)
     return 0;
   }
 
+  notify("The default configuration differs from used configuration");
+  if (! yes_no(1, "Edit configuration")) 
+  {
+    *ret = g_strdup(text1);
+    return 1;
+  }
+
   strcpy(file1, "/tmp/tmpXXXXXXorig.js");
   strcpy(file2, "/tmp/tmpXXXXXXnew.js");
 
