@@ -47,9 +47,8 @@ enum
 {
   F_NO_CONFIG   = 1<<0,
   F_BIND        = 1<<1,
-  F_FORCE       = 1<<2,
-  F_UPDATE      = 1<<3,
-  F_NO_CONFIRM  = 1<<4,
+  F_UPDATE      = 1<<2,
+  F_NO_CONFIRM  = 1<<3,
 };
 enum 
 {
@@ -182,7 +181,7 @@ get_data(const char *name, const char *data, const char *template, int flags)
   return ret;
 }
 
-size_t
+int
 grep(const char *filename, const char *name, char *buffer, size_t length) 
 {
   FILE *f = fopen(filename, "r");
@@ -198,13 +197,14 @@ grep(const char *filename, const char *name, char *buffer, size_t length)
       continue;
     if (!strncmp(name, line, first_space - line)) 
     {
-      i=0;
-      while (line[i] && line[i] != '\n' && i<length-1) 
+      unsigned int count = 0;
+      while (line[count] && line[count] != '\n' && count<length-1) 
       {
-        buffer[i] = line[i];
-        i++;
+        buffer[count] = line[count];
+        count++;
       }
-      buffer[i++] = '\0';
+      buffer[count++] = '\0';
+      i = count;
       break;
     }
   }
@@ -643,8 +643,8 @@ set_data(const char *name, const char *template, const char *data, gboolean mult
   return ret;
 }
 
-static void
-change_config(const char *name, int flags) 
+static int
+cl_change_config(const char *name, int flags) 
 {
   char *config, *new_config = NULL;
 
@@ -671,26 +671,28 @@ change_config(const char *name, int flags)
     notify("No config found, you can use extensionrc instead");
     set_loader(name, NULL, flags);
   }
+  return 0;
 }
 
 static int 
 cl_install(const char *name, int flags) 
 {
-  if (!(flags & F_FORCE) 
+  if ( !(flags & F_UPDATE) 
       && check_installed(name) 
       && !(flags & F_NO_CONFIRM)
       && !yes_no(0, EXT(%s)" is already installed, continue anyway", name))
     return -1;
 
-  notify("Installing "EXT(%s), name);
+  notify("%s "EXT(%s), (flags & F_UPDATE) ? "Updating" : "Installing", name);
   if (sync_meta(m_meta_data) == 0) 
     return install_extension(name, flags);
   return -1;
 }
 
-static void
-cl_uninstall(const char *name) 
+static int
+cl_uninstall(const char *name, int flags) 
 {
+  (void) flags;
   char *path, *regex; 
   if (!check_installed(name)) 
     die(1, "extension %s is not installed", name);
@@ -711,11 +713,13 @@ cl_uninstall(const char *name)
   if (regex_replace_file(m_installed, regex, NULL) != -1) 
     notify("Updating metadata");
   g_free(regex);
+  return 0;
 }
 
-static void
-cl_disable(const char *name) 
+static int
+cl_disable(const char *name, int flags) 
 {
+  (void) flags;
   char *regex, *data, *new_data;
   if (!check_installed(name))
     die(1, "Extension "EXT(%s)" is not installed", name);
@@ -736,11 +740,13 @@ cl_disable(const char *name)
     print_error(EXT(%s)" is already disabled", name);
   g_free(data);
   g_free(regex);
+  return 0;
 }
 
-static void
-cl_enable(const char *name) 
+static int
+cl_enable(const char *name, int flags) 
 {
+  (void)flags;
   char *data = get_data(name, m_loader, TMPL_DISABLED, MATCH_MULTILINE);
   if (data != NULL) 
   {
@@ -752,6 +758,7 @@ cl_enable(const char *name)
   }
   else 
     print_error(EXT(%s)" is already enabled", name);
+  return 0;
 }
 
 static void
@@ -763,12 +770,12 @@ do_upate(const char *meta, int flags)
   {
     snprintf(buffer, MIN(128, space - meta + 1), meta);
     if ((flags & F_NO_CONFIRM) || yes_no(1, "Update "EXT(%s), buffer))
-      if (cl_install(buffer, flags | F_FORCE | F_UPDATE)) 
+      if (cl_install(buffer, flags | F_UPDATE)) 
         notify(EXT(%s)" successfully updated", buffer);
   }
 }
 
-static void
+static int
 cl_update(int flags) {
   sync_meta(m_meta_data);
   char *meta = NULL;
@@ -803,6 +810,7 @@ cl_update(int flags) {
     notify("Done");
 
   g_strfreev(lines_inst);
+  return 0;
 }
 
 char **
@@ -844,7 +852,7 @@ get_list(char *path)
 }
 
 static void 
-cl_list_installed(int flags) 
+cl_list_installed(void) 
 {
   char **list = get_list(m_installed);
   if (list != NULL) 
@@ -860,7 +868,7 @@ cl_list_installed(int flags)
 }
 
 static void 
-cl_list_all(int flags) 
+cl_list_all(void) 
 {
   char **list = get_list(m_meta_data);
   sync_meta(m_meta_data);
@@ -875,9 +883,11 @@ cl_list_all(int flags)
     notify("No extensions installed");
 }
 
-static void
+static int
 cl_info(const char *name, int flags)  
 {
+  (void) flags;
+
   SoupMessage *msg = NULL;
   char *data = NULL, *path;
   const char *tmp;
@@ -913,6 +923,25 @@ unwind:
   g_free(data);
   if (msg)
     g_object_unref(msg);
+  return 0;
+}
+
+static int
+cl_update_ext(const char *name, int flags) 
+{
+  if (cl_install(name, flags | F_UPDATE)) 
+    notify(EXT(%s)" successfully updated", name);
+  return 0;
+}
+
+void
+for_each(char **argv, int flags, int (*func)(const char *, int)) 
+{
+  if (argv != NULL) 
+  {
+    for (int i=0; argv[i]; i++) 
+      func(argv[i], flags);
+  }
 }
 
 int 
@@ -931,6 +960,7 @@ main(int argc, char **argv)
   char **o_disable = NULL;
   char **o_enable = NULL;
   char **o_info = NULL;
+  char **o_update_ext = NULL;
   gboolean o_noconfig = false;
   gboolean o_update = false;
   gboolean o_list_installed = false;
@@ -950,7 +980,8 @@ main(int argc, char **argv)
     { "no-config", 'n', 0, G_OPTION_ARG_NONE, &o_noconfig, "Don't use config in loader script, use extensionrc instead", NULL },
     { "no-confirm",   'N', 0, G_OPTION_ARG_NONE, &o_no_confirm,  "Update extensions", NULL },
     { "remove",   'r', 0, G_OPTION_ARG_STRING_ARRAY, &o_remove, "Remove <extension>", "<extension>" },
-    { "update",   'u', 0, G_OPTION_ARG_NONE, &o_update,  "Update extensions", NULL },
+    { "upgrade",   'u', 0, G_OPTION_ARG_NONE, &o_update,  "Update all extensions", NULL },
+    { "update",   'U', 0, G_OPTION_ARG_STRING_ARRAY, &o_update_ext,  "Update <extension>", "<extension>" },
     { NULL },
   };
 
@@ -1000,32 +1031,20 @@ main(int argc, char **argv)
     flags |= F_NO_CONFIRM;
 
   if (o_list_all) 
-    cl_list_all(flags);
+    cl_list_all();
   if (o_list_installed) 
-    cl_list_installed(flags);
+    cl_list_installed();
   if (o_update) 
     cl_update(flags);
-  if (o_info != NULL) 
-    for (int i=0; o_info[i]; i++) 
-      cl_info(o_info[i], flags);
-  if (o_setbind != NULL) 
-    for (int i=0; o_setbind[i]; i++) 
-      change_config(o_setbind[i], flags | F_BIND);
-  if (o_disable != NULL) 
-    for (int i=0; o_disable[i]; i++) 
-      cl_disable(o_disable[i]);
-  if (o_enable != NULL) 
-    for (int i=0; o_enable[i]; i++) 
-      cl_enable(o_enable[i]);
-  if (o_setload != NULL) 
-    for (int i=0; o_setload[i]; i++) 
-      change_config(o_setload[i], flags & ~F_BIND);
-  if (o_install != NULL) 
-    for (int i=0; o_install[i]; i++) 
-      cl_install(o_install[i], flags);
-  if (o_remove != NULL) 
-    for (int i=0; o_remove[i]; i++) 
-      cl_uninstall(o_remove[i]);
+
+  for_each(o_update_ext, flags, cl_update_ext);
+  for_each(o_info, flags, cl_info);
+  for_each(o_setbind, flags | F_BIND, cl_change_config);
+  for_each(o_disable, flags, cl_disable);
+  for_each(o_enable, flags, cl_enable);
+  for_each(o_setload, flags & ~F_BIND, cl_change_config);
+  for_each(o_remove, flags, cl_uninstall);
+  for_each(o_install, flags, cl_install);
   clean_up();
   return 0;
 }

@@ -73,9 +73,9 @@ OPTIONS
 
 *-N*::
 *--no-confirm*:: 
-  Can be combined with *-i* or *-u*. When set all questions are skipped. When
+  Can be combined with *-i*, *-u* or *-U*. When set all questions are skipped. When
   combined with *-i* an existing configuration will be overwritten with the
-  default configuration. When combined  with *-u* the check for changed
+  default configuration. When combined  with *-u* or *-U* the check for changed
   configurations is skipped. 
 
 *-r* 'extension':: 
@@ -85,8 +85,14 @@ OPTIONS
 
 
 *-u*::
-*--update*::
+*--upgrade*::
   Update installed extensions. 
+
+*-U* 'extension'::
+*--update* 'extension'::
+  Update 'extension', the update will be forced. It is also useful to check if
+  the configuration has been changed after using *--upgrade* in combination
+  with *--no-confirm*.
 
 
 ENVIRONMENT VARIABLES
