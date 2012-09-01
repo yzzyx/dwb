@@ -20,11 +20,6 @@ LDFLAGS += $(shell pkg-config --libs $(LIBS))
 
 all: $(TARGET)
 
-dwb_em: dwb_em.in
-	@echo gen $@
-	$(shell sed 's#@SYSTEM_DIR@#$(DATADIR)/$(REAL_NAME)/$(EXTENSIONDIR)#' $< > $@)
-	@chmod 755 $@
-
 $(TARGET): $(OBJ)
 	@echo $(CC) $@
 	@$(CC) $< -o $@ $(LDFLAGS)
@@ -34,6 +29,6 @@ $(TARGET): $(OBJ)
 	@$(CC) $(CFLAGS) -c $< -o $@ $(CPPFLAGS)
 
 clean: 
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(OBJ)
 
 .PHONY: clean
