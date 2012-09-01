@@ -9,10 +9,7 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
-#include <termios.h>
-#include <ctype.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <stdarg.h>
 #include <readline/readline.h>
 #include <sys/stat.h>
@@ -45,15 +42,13 @@
 
 enum 
 {
-  F_NO_CONFIG   = 1<<0,
-  F_BIND        = 1<<1,
-  F_UPDATE      = 1<<2,
-  F_NO_CONFIRM  = 1<<3,
-};
-enum 
-{
-  MATCH_MULTILINE = 1<<0,
-  MATCH_CONTENT = 1<<1
+  F_NO_CONFIG       = 1<<0,
+  F_BIND            = 1<<1,
+  F_UPDATE          = 1<<2,
+  F_NO_CONFIRM      = 1<<3,
+
+  F_MATCH_MULTILINE = 1<<10,
+  F_MATCH_CONTENT   = 1<<11
 };
 
 static char *m_installed;
@@ -65,7 +60,7 @@ static const char *m_editor;
 static const char *m_diff;
 static SoupSession *session;
 
-void
+static void
 vprint_error(const char *format, va_list args) 
 {
   fputs("\033[31m!!!\033[0m ", stderr);
@@ -73,7 +68,7 @@ vprint_error(const char *format, va_list args)
   fputc('\n', stderr);
 }
 
-void
+static void
 print_error(const char *format, ...) 
 {
   va_list args;
@@ -82,18 +77,18 @@ print_error(const char *format, ...)
   va_end(args);
 }
 
-void
+static void
 notify(const char *format, ...) 
 {
   va_list args;
   va_start(args, format);
-  fputs("\033[32m==>\033[0m ", stderr);
+  fputs("\033[32m==>\033[0m ", stdout);
   vfprintf(stderr, format, args);
-  fputc('\n', stderr);
+  fputc('\n', stdout);
   va_end(args);
 }
 
-void 
+static void 
 clean_up() 
 {
   g_free(m_installed);
@@ -103,18 +98,29 @@ clean_up()
   g_object_unref(session);
 }
 
-void 
+static void 
 die(int status, const char *format, ...) 
 {
   va_list args;
   va_start(args, format);
   vprint_error(format, args);
+  print_error("Aborting");
   va_end(args);
   clean_up();
   exit(status);
 }
 
-void 
+static void
+for_each(char **argv, int flags, int (*func)(const char *, int)) 
+{
+  if (argv != NULL) 
+  {
+    for (int i=0; argv[i]; i++) 
+      func(argv[i], flags);
+  }
+}
+
+static void 
 check_dir(const char *dir) {
   if (!g_file_test(dir, G_FILE_TEST_IS_DIR))
     g_mkdir_with_parents(dir, 0700);
@@ -156,13 +162,13 @@ get_data(const char *name, const char *data, const char *template, int flags)
   const char *format;
   const char *nname = name == NULL ? "" : name;
 
-  if (flags & MATCH_MULTILINE)
+  if (flags & F_MATCH_MULTILINE)
     format = "(?<=^|\n)/\\*<%s%s|%s%s>\\*/\\s*(?=\n|$)";
   else
     format = "(?<=^|\n)//<%s%s|//>%s%s\\s*(?=\n|$)";
 
   regex = g_strdup_printf(format, nname, template, nname, template);
-  if (flags & MATCH_CONTENT) 
+  if (flags & F_MATCH_CONTENT) 
     new_data = data;
   else 
   {
@@ -181,7 +187,7 @@ get_data(const char *name, const char *data, const char *template, int flags)
   return ret;
 }
 
-int
+static int
 grep(const char *filename, const char *name, char *buffer, size_t length) 
 {
   FILE *f = fopen(filename, "r");
@@ -262,7 +268,7 @@ yes_no(int preset, const char *format, ...)
   return ret;
 }
 
-char *
+static char *
 get_response(const char *format, ...) 
 {
   char buffer[512];
@@ -277,7 +283,7 @@ get_response(const char *format, ...)
   return readline(buffer);
 }
 
-int
+static int
 diff(const char *text1, const char *text2, char **ret) 
 {
   gboolean spawn_success = true;
@@ -321,7 +327,7 @@ diff(const char *text1, const char *text2, char **ret)
   return 1;
 }
 
-char *
+static char *
 edit(const char *text) 
 {
   gboolean spawn_success = true;
@@ -499,8 +505,10 @@ install_extension(const char *name, int flags)
   else 
   {
     notify("Downloading "EXT(%s), name);
+
     snprintf(buffer, 512, "%s/%s", REPO_BASE, name);
     SoupMessage *msg = soup_message_new("GET", buffer);
+
     status = soup_session_send_message(session, msg);
     if (status == 200 && msg->response_body->data) 
     {
@@ -523,15 +531,16 @@ install_extension(const char *name, int flags)
   return ret;
 }
 
-int
+static int
 sync_meta(const char *output) 
 {
   int ret = 0, status;
-  static gboolean sync = false;
   FILE *file;
   const char *response, *name;
   struct stat st;
   char buffer[1024];
+
+  static gboolean sync = false;
 
   check_dir(m_user_dir);
 
@@ -747,7 +756,9 @@ static int
 cl_enable(const char *name, int flags) 
 {
   (void)flags;
-  char *data = get_data(name, m_loader, TMPL_DISABLED, MATCH_MULTILINE);
+  if (!check_installed(name))
+    die(1, "Extension "EXT(%s)" is not installed", name);
+  char *data = get_data(name, m_loader, TMPL_DISABLED, F_MATCH_MULTILINE);
   if (data != NULL) 
   {
     if (set_data(name, TMPL_SCRIPT, data, false) != -1) 
@@ -813,7 +824,7 @@ cl_update(int flags) {
   return 0;
 }
 
-char **
+static char **
 get_list(char *path) 
 {
   int installed = 0, i;
@@ -893,13 +904,13 @@ cl_info(const char *name, int flags)
   const char *tmp;
 
   path = g_build_filename(m_system_dir, name, NULL);
-  if ((data = get_data(NULL, path, "INFO", MATCH_MULTILINE)) != NULL) 
+  if ((data = get_data(NULL, path, "INFO", F_MATCH_MULTILINE)) != NULL) 
     goto unwind;
   FREE0(data);
   g_free(path);
 
   path = g_build_filename(m_user_dir, name, NULL);
-  if ((data = get_data(NULL, path, "INFO", MATCH_MULTILINE)) != NULL) 
+  if ((data = get_data(NULL, path, "INFO", F_MATCH_MULTILINE)) != NULL) 
     goto unwind;
   FREE0(data);
   g_free(path);
@@ -908,7 +919,7 @@ cl_info(const char *name, int flags)
   msg = soup_message_new("GET", path);
   int status = soup_session_send_message(session, msg);
   if (status == 200) 
-    data = get_data(NULL, msg->response_body->data, "INFO", MATCH_MULTILINE | MATCH_CONTENT);
+    data = get_data(NULL, msg->response_body->data, "INFO", F_MATCH_MULTILINE | F_MATCH_CONTENT);
 unwind: 
   if (data != NULL) 
   {
@@ -921,7 +932,7 @@ unwind:
 
   g_free(path);
   g_free(data);
-  if (msg)
+  if (msg != NULL)
     g_object_unref(msg);
   return 0;
 }
@@ -932,16 +943,6 @@ cl_update_ext(const char *name, int flags)
   if (cl_install(name, flags | F_UPDATE)) 
     notify(EXT(%s)" successfully updated", name);
   return 0;
-}
-
-void
-for_each(char **argv, int flags, int (*func)(const char *, int)) 
-{
-  if (argv != NULL) 
-  {
-    for (int i=0; argv[i]; i++) 
-      func(argv[i], flags);
-  }
 }
 
 int 
