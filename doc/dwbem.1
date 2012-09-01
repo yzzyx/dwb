@@ -112,12 +112,15 @@ it will be applied to all installed extensions\&.
 \fB\-N\fR, \fB\-\-no\-confirm\fR
 .RS 4
 Can be combined with
-\fB\-i\fR
+\fB\-i\fR,
+\fB\-u\fR
 or
-\fB\-u\fR\&. When set all questions are skipped\&. When combined with
+\fB\-U\fR\&. When set all questions are skipped\&. When combined with
 \fB\-i\fR
 an existing configuration will be overwritten with the default configuration\&. When combined with
 \fB\-u\fR
+or
+\fB\-U\fR
 the check for changed configurations is skipped\&.
 .RE
 .PP
@@ -126,9 +129,18 @@ the check for changed configurations is skipped\&.
 Remove an extension\&. If it is a remote extension the extension will be deleted\&. This option also discards the configuration\&.
 .RE
 .PP
-\fB\-u\fR, \fB\-\-update\fR
+\fB\-u\fR, \fB\-\-upgrade\fR
 .RS 4
 Update installed extensions\&.
+.RE
+.PP
+\fB\-U\fR \fIextension\fR, \fB\-\-update\fR \fIextension\fR
+.RS 4
+Update
+\fIextension\fR, the update will be forced\&. It is also useful to check if the configuration has been changed after using
+\fB\-\-upgrade\fR
+in combination with
+\fB\-\-no\-confirm\fR\&.
 .RE
 .SH "ENVIRONMENT VARIABLES"
 .sp
