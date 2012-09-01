@@ -20,7 +20,7 @@ OPTIONS
 -------
 *-a*::
 *--list-all*:: 
-  List all installed extensions handled by dwbem.
+  List all available extensions that can be handled by dwbem.
  
 *-b*::
 *--bind*::
@@ -56,7 +56,7 @@ OPTIONS
 
 *-l*:: 
 *--list*::
-  List installed extensions.
+  List installed extensions handled by dwbem.
 
 *-L* 'extension':: 
 *--setload* 'extension'::
@@ -82,7 +82,6 @@ OPTIONS
 *--remove* 'extension'::
   Remove an extension. If it is a remote extension the extension will be
   deleted. This option also discards the configuration. 
-
 
 *-u*::
 *--upgrade*::
