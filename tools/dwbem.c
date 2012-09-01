@@ -678,16 +678,18 @@ get_list(char *path) {
       SKIP_SPACE(matches[i]);
       if (*(matches[i])) {
         list = g_slist_prepend(list, matches[i]);
+        installed++;
       }
     }
   }
   if (list != NULL) {
     list = g_slist_sort(list, (GCompareFunc)g_strcmp0);
-    ret = g_malloc_n(installed + 1, sizeof(char*));
+    ret = g_new(char*, installed+1);
     int i=0;
     for (GSList *l = list; l; l=l->next)
-      ret[i++] = l->data;
+      ret[i++] = g_strdup(l->data);
     ret[i] = NULL;
+    g_slist_free(list);
   }
   g_strfreev(matches);
   g_free(content);
@@ -701,6 +703,7 @@ cl_list_installed(int flags) {
     for (int i=0; list[i]; i++) {
       printf("  * %s\n", list[i]);
     }
+    g_strfreev(list);
   }
   else 
     notify("No extensions installed");
@@ -714,6 +717,7 @@ cl_list_all(int flags) {
     for (int i=0; list[i]; i++) {
       printf("  * %s\n", list[i]);
     }
+    g_strfreev(list);
   }
   else 
     notify("No extensions installed");
