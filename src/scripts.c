@@ -638,8 +638,6 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
     return JSValueMakeBoolean(ctx, false);
   }
   gchar *keystr = js_value_to_char(ctx, argv[0], JS_STRING_MAX, exc);
-  if (keystr == NULL) 
-    goto error_out;
   JSObjectRef func = JSValueToObject(ctx, argv[1], exc);
   if (func == NULL)
     goto error_out;
@@ -656,6 +654,8 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
       g_free(callback_name);
     }
   }
+  if (keystr == NULL && name == NULL) 
+    goto error_out;
   JSValueProtect(ctx, func);
   KeyMap *map = dwb_malloc(sizeof(KeyMap));
   FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));

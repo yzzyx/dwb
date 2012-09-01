@@ -16,34 +16,42 @@
 #include <stdarg.h>
 #include <readline/readline.h>
 #include <sys/stat.h>
+
 #include <glib-2.0/glib.h>
 #include <libsoup-2.4/libsoup/soup.h>
+
 #define API_BASE "https://api.bitbucket.org/1.0/repositories/portix/dwb_extensions/src/tip/src/?format=yaml"
 #define REPO_BASE "https://bitbucket.org/portix/dwb_extensions/raw/tip/src" 
+
 #define SKIP(line, c) do{ \
   while(*line && *line != c)line++; line++; } while(0)
+
 #define SKIP_SPACE(X) do { while(g_ascii_isspace(*(X))) (X)++; } while(0)
-#define EXTENSION_DIR() (g_build_filename(g_get_user_data_dir(), "dwb", "extensions", NULL))
+
 #ifndef false
 #define false 0
 #endif
 #ifndef true
 #define true (!false)
 #endif
-#define TMPL_CONFIG "___CONFIG"
-#define TMPL_SCRIPT "___SCRIPT"
-#define TMPL_DISABLED "___DISABLED"
+
+#define TMPL_CONFIG     "___CONFIG"
+#define TMPL_SCRIPT     "___SCRIPT"
+#define TMPL_DISABLED   "___DISABLED"
+
 #define REGEX_REPLACE(X, name) (g_strdup_printf("(?<=^|\n)//<%s"TMPL_##X".*//>%s"TMPL_##X"\\s*(?=\n|$|/*)\\s*", name, name))
-#define REGEX(X, name) (g_strdup_printf("(?<=^|\n)//<%s"TMPL_##X"|//>%s"TMPL_##X"\\s*(?=\n|$|/*)\\s*", name, name))
 #define EXT(name) "\033[1m"#name"\033[0m"
 #define FREE0(X) (X == NULL ? NULL : (X = (g_free(X), NULL)))
-enum {
+
+enum 
+{
   F_NO_CONFIG = 1<<0,
   F_BIND = 1<<1,
   F_FORCE = 1<<2,
   F_UPDATE = 1<<2
 };
-enum {
+enum 
+{
   MATCH_MULTILINE = 1<<0,
   MATCH_CONTENT = 1<<1
 };
@@ -64,6 +72,7 @@ vprint_error(const char *format, va_list args)
   vfprintf(stderr, format, args);
   fputc('\n', stderr);
 }
+
 void
 print_error(const char *format, ...) 
 {
@@ -72,6 +81,7 @@ print_error(const char *format, ...)
   vprint_error(format, args);
   va_end(args);
 }
+
 void
 notify(const char *format, ...) 
 {
@@ -103,6 +113,7 @@ die(int status, const char *format, ...)
   clean_up();
   exit(status);
 }
+
 void 
 check_dir(const char *dir) {
   if (!g_file_test(dir, G_FILE_TEST_IS_DIR))
@@ -170,18 +181,21 @@ get_data(const char *name, const char *data, const char *template, int flags)
   return ret;
 }
 
-
 size_t
-grep(const char *filename, const char *beg, char *buffer, size_t length) 
+grep(const char *filename, const char *name, char *buffer, size_t length) 
 {
   FILE *f = fopen(filename, "r");
   char line[128];
   int i = -1;
+  char *first_space;
   if (f == NULL)
     return -1;
   while(fgets(line, 128, f) != NULL) 
   {
-    if (g_str_has_prefix(line, beg)) 
+    first_space = strchr(line, ' ');
+    if (first_space == NULL)
+      continue;
+    if (!strncmp(name, line, first_space - line)) 
     {
       i=0;
       while (line[i] && line[i] != '\n' && i<length-1) 
@@ -196,6 +210,7 @@ grep(const char *filename, const char *beg, char *buffer, size_t length)
   fclose(f);
   return i;
 }
+
 static int
 update_installed(const char *name, const char *meta) 
 {
@@ -207,6 +222,7 @@ update_installed(const char *name, const char *meta)
   return 0;
 
 }
+
 static int 
 yes_no(int preset, const char *format, ...) 
 {
@@ -244,6 +260,7 @@ yes_no(int preset, const char *format, ...)
   }
   return ret;
 }
+
 char *
 get_response(const char *format, ...) 
 {
@@ -258,6 +275,7 @@ get_response(const char *format, ...)
 
   return readline(buffer);
 }
+
 int
 diff(const char *text1, const char *text2, char **ret) 
 {
@@ -301,6 +319,7 @@ diff(const char *text1, const char *text2, char **ret)
   *ret = new_text;
   return 1;
 }
+
 char *
 edit(const char *text) 
 {
@@ -328,12 +347,14 @@ edit(const char *text)
     die(1, "Cannot spawn "EXT(%s)", please set "EXT(EDITOR)" to an appropriate value", m_editor);
   return new_config;
 }
+
 static void 
 set_loader(const char *name, const char *config, int flags) 
 {
   char *script = NULL;
   char *shortcut = NULL, *command = NULL;
   gboolean load = true;
+  gboolean has_cmd;
 
   notify("Updating extension-loader", name, m_loader);
 
@@ -344,6 +365,7 @@ set_loader(const char *name, const char *config, int flags)
     load = yes_no(1, "Load "EXT(%s)" on startup", name);
     command = get_response("Command for toggling "EXT(%s)"?", name);
   }
+  has_cmd = command != NULL && *command != '\0';
 
   if (config == NULL || flags & F_NO_CONFIG) 
   {
@@ -351,10 +373,10 @@ set_loader(const char *name, const char *config, int flags)
       script = g_strdup_printf("//<%s"TMPL_SCRIPT"\nextensions.bind(\"%s\", \"%s\", {\n"
               "  load : %s%s%s%s\n});\n//>%s"TMPL_SCRIPT"\n", 
           name, name, shortcut,
-          load ? "true" : "false",
-          command != NULL && *command != '\0' ? ",\n  command : \"" : "",
-          command != NULL && *command != '\0' ? command : "",
-          command != NULL && *command != '\0' ? "\"" : "",
+          load    ? "true" : "false",
+          has_cmd ? ",\n  command : \"" : "",
+          has_cmd ? command : "",
+          has_cmd ? "\"" : "",
           name);
     else 
       script = g_strdup_printf("//<%s"TMPL_SCRIPT"\nextensions.load(\"%s\");\n//>%s"TMPL_SCRIPT"\n", name, name, name);
@@ -369,10 +391,10 @@ set_loader(const char *name, const char *config, int flags)
               "  config : config_%s,\n"
               "  load : %s%s%s%s\n});\n//>%s"TMPL_SCRIPT"\n", 
           name, name, name, config, name, name, shortcut, name, 
-          load ? "true" : "false",
-          command != NULL && *command != '\0' ? ",\n  command : \"" : "",
-          command != NULL && *command != '\0' ? command : "",
-          command != NULL && *command != '\0' ? "\"" : "",
+          load    ? "true" : "false",
+          has_cmd ? ",\n  command : \"" : "",
+          has_cmd ? command : "",
+          has_cmd ? "\"" : "",
           name);
     else
       script = g_strdup_printf("//<%s"TMPL_SCRIPT"\nextensions.load(\"%s\", {\n"
@@ -395,6 +417,7 @@ set_loader(const char *name, const char *config, int flags)
   g_free(command);
   g_free(script);
 }
+
 static int 
 add_to_loader(const char *name, const char *content, int flags) 
 {
@@ -426,6 +449,7 @@ add_to_loader(const char *name, const char *content, int flags)
   g_free(data);
   return 0;
 }
+
 static gboolean 
 check_installed(const char *name) 
 {
@@ -434,6 +458,7 @@ check_installed(const char *name)
     return false;
   return true;
 }
+
 static int 
 install_extension(const char *name, int flags) 
 {
@@ -571,7 +596,6 @@ sync_meta(const char *output)
 unwind:
   g_object_unref(msg);
   return ret;
-
 }
 
 static int 
@@ -609,6 +633,7 @@ set_data(const char *name, const char *template, const char *data, gboolean mult
   g_free(content);
   return ret;
 }
+
 static void
 change_config(const char *name, int flags) 
 {
@@ -638,6 +663,7 @@ change_config(const char *name, int flags)
     set_loader(name, NULL, flags);
   }
 }
+
 static int 
 cl_install(const char *name, int flags) 
 {
@@ -651,6 +677,7 @@ cl_install(const char *name, int flags)
     return install_extension(name, flags);
   return -1;
 }
+
 static void
 cl_uninstall(const char *name) 
 {
@@ -716,6 +743,7 @@ cl_enable(const char *name)
   else 
     print_error(EXT(%s)" is already enabled", name);
 }
+
 static void
 do_upate(const char *meta, int flags) 
 {
@@ -729,6 +757,7 @@ do_upate(const char *meta, int flags)
         notify(EXT(%s)" successfully updated", buffer);
   }
 }
+
 static void
 cl_update(int flags) {
   sync_meta(m_meta_data);
@@ -765,6 +794,7 @@ cl_update(int flags) {
 
   g_strfreev(lines_inst);
 }
+
 char **
 get_list(char *path) 
 {
@@ -802,6 +832,7 @@ get_list(char *path)
   g_free(content);
   return ret;
 }
+
 static void 
 cl_list_installed(int flags) 
 {
@@ -817,6 +848,7 @@ cl_list_installed(int flags)
   else 
     notify("No extensions installed");
 }
+
 static void 
 cl_list_all(int flags) 
 {
@@ -832,6 +864,7 @@ cl_list_all(int flags)
   else 
     notify("No extensions installed");
 }
+
 static void
 cl_info(const char *name, int flags)  
 {
