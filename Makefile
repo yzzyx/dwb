@@ -23,12 +23,15 @@ clean:  $(SUBDIRS:%=%.subdir-clean)
 	@$(MAKE) $(MFLAGS) clean -C $*
 
 install: $(TARGET) install-man install-data
+	@# Install binaries
 	install -d $(DESTDIR)$(BINDIR)
 	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
+	install -m 755 $(TOOLDIR)/$(EXTENSION_MANAGER) $(DESTDIR)$(BINDIR)/$(EXTENSION_MANAGER)
 
 install-man: all
 	install -d $(DESTDIR)$(MAN1DIR)
 	install -m 644 $(DOCDIR)/$(MANFILE) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
+	install -m 644 $(DOCDIR)/$(EXTENSION_MANAGER).1 $(DESTDIR)$(MAN1DIR)/$(EXTENSION_MANAGER).1
 	install -d $(DESTDIR)$(MAN7DIR)
 	install -m 644 $(APIDIR)/$(MANAPI) $(DESTDIR)$(MAN7DIR)/$(MANAPI)
 
@@ -60,9 +63,11 @@ install-data: all
 uninstall: uninstall-man uninstall-data
 	@echo "Removing executable from $(subst //,/,$(DESTDIR)$(BINDIR))"
 	@$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
+	@$(RM) $(DESTDIR)$(BINDIR)/$(EXTENSION_MANAGER)
 
 uninstall-man: 
 	$(RM) $(DESTDIR)$(MAN1DIR)/$(MANFILE)
+	$(RM) $(DESTDIR)$(MAN1DIR)/$(EXTENSION_MANAGER).1
 	$(RM) $(DESTDIR)$(MAN7DIR)/$(MANAPI)
 
 uninstall-data: 

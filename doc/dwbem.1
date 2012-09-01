@@ -1,0 +1,126 @@
+'\" t
+.\"     Title: dwbem
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
+.\"      Date: 09/01/2012
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "DWBEM" "1" "09/01/2012" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+dwbem \- dwb extension manager
+.SH "SYNOPSIS"
+.sp
+\fBdwbem\fR [\fIOPTIONS\fR]
+.SH "DESCRIPTION"
+.sp
+dwbem(1) is a command line tool that handles extensions for dwb\&.
+.SH "OPTIONS"
+.PP
+\fB\-a\fR, \fB\-\-list\-all\fR
+.RS 4
+List all installed extensions handled by dwbem\&.
+.RE
+.PP
+\fB\-b\fR, \fB\-\-bind\fR
+.RS 4
+When used together with
+\fB\-i\fR
+the extension will be loaded with
+\fIextensions\&.bind\fR
+instead of extensions\&.load, i\&.e\&. it is possible to bind a shortcut for enabling/disabling the extension on the fly\&.
+.RE
+.PP
+\fB\-B\fR \fIextension\fR, \fB\-\-setbind\fR \fIextension\fR
+.RS 4
+Edit configuration of
+\fIextension\fR, the extension will be loaded with
+\fIextensions\&.bind\fR, i\&.e\&. it is possible to bind a shortcut for enabling/disabling the extension on the fly, see also \-B\&.
+.RE
+.PP
+\fB\-d\fR \fIextension\fR, \fB\-\-disable\fR \fIextension\fR
+.RS 4
+Disable
+\fIextension\fR, the extension will still be installed and the configuration will be kept\&.
+.RE
+.PP
+\fB\-e\fR \fIextension\fR, \fB\-\-enable\fR \fIextension\fR
+.RS 4
+Enable an extension that was previously disabled with
+\fB\-d\fR\&.
+.RE
+.PP
+\fB\-i\fR \fIextension\fR, \fB\-\-install\fR \fIextension\fR
+.RS 4
+Install
+\fIextension\fR\&. If it is a local extension that was installed together with dwb the extension will not be downloaded, only the default configuration will be set\&. Note that reinstalling an already installed extension will overwrite the configuration with the default configuration\&.
+.RE
+.PP
+\fB\-I\fR \fIextension\fR, \fB\-\-info\fR \fIextension\fR
+.RS 4
+Show information about
+\fIextension\fR\&.
+.RE
+.PP
+\fB\-r\fR \fIextension\fR, \fB\-\-remove\fR \fIextension\fR
+.RS 4
+Remove an extension\&. If it is a remote extension the extension will be deleted\&. This option also discards the configuration\&.
+.RE
+.PP
+\fB\-l\fR, \fB\-\-list\fR
+.RS 4
+List installed extensions\&.
+.RE
+.PP
+\fB\-L\fR \fIextension\fR, \fB\-\-setload\fR \fIextension\fR
+.RS 4
+Edit configuration for
+\fIextension\fR\&. The extension will be loaded with
+\fIextensions\&.load\fR, see also
+\fB\-B\fR\&.
+.RE
+.PP
+\fB\-n\fR, \fB\-\-noconfig\fR
+.RS 4
+Don\(cqt use a configuration in the loader script, use
+\fI$XDG_CONFIG_HOME/dwb/extensionrc\fR
+instead\&. The extension will simply be loaded with
+\fIextensions\&.load("extension");\fR\&. This option can be combined with
+\fB\-i\fR,
+\fB\-B\fR
+or
+\fB\-L\fR\&. If combined with
+\fB\-i\fR
+it will be applied to all installed extensions\&.
+.RE
+.PP
+\fB\-u\fR, \fB\-\-update\fR
+.RS 4
+Update installed extensions\&.
+.RE
+.SH "ENVIRONMENT VARIABLES"
+.sp
+\fBdwbem\fR expects the environment variables \fIEDITOR\fR and \fIDIFF_VIEWER\fR to be set, if they are unset \fIvim\fR and \fIvimdiff\fR are used respectively\&. \fIEDITOR\fR needs to be set if the configuration is edited or a new extension is installed, \fIDIFF_VIEWER\fR needs to be set if extensions are updated\&.
+.SH "SEE ALSO"
+.sp
+\fBdwb\fR(1) \fBdwb\-js\fR(7)

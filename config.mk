@@ -14,8 +14,10 @@ LIBJSFILES=$(LIBJSDIR)/signals.js $(LIBJSDIR)/enums.js $(LIBJSDIR)/data.js
 SHAREDIR=share
 UTILDIR=util
 TOOLDIR=tools
-SUBDIRS=$(SRCDIR) $(UTILDIR)
+SUBDIRS=$(SRCDIR) $(UTILDIR) $(TOOLDIR)
 EXTENSIONDIR=extensions
+
+EXTENSION_MANAGER=dwbem
 
 # Version info
 HG_VERSION=$(shell hg id -n 2>/dev/null)
