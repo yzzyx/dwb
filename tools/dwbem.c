@@ -45,10 +45,11 @@
 
 enum 
 {
-  F_NO_CONFIG = 1<<0,
-  F_BIND = 1<<1,
-  F_FORCE = 1<<2,
-  F_UPDATE = 1<<2
+  F_NO_CONFIG   = 1<<0,
+  F_BIND        = 1<<1,
+  F_FORCE       = 1<<2,
+  F_UPDATE      = 1<<3,
+  F_NO_CONFIRM  = 1<<4,
 };
 enum 
 {
@@ -429,7 +430,12 @@ add_to_loader(const char *name, const char *content, int flags)
 
   if (matches[1] == NULL) 
     notify("No default configuration found");
-  else if (flags & F_UPDATE) 
+  else if (flags & F_NO_CONFIRM) {
+    notify("Skipping configuration check");
+    if (! (flags & F_UPDATE) ) 
+      new_config = matches[1];
+  }
+  else if ((flags & F_UPDATE)) 
   {
     data = get_data(name, m_loader, TMPL_CONFIG, 0);
     if (diff(data, matches[1], &config) == 0) {
@@ -444,7 +450,8 @@ add_to_loader(const char *name, const char *content, int flags)
   else 
     new_config = matches[1];
 
-  set_loader(name, new_config, flags);
+  if ( (flags & F_NO_CONFIRM) == 0 || (flags & F_UPDATE) == 0 ) 
+    set_loader(name, new_config, flags);
 
   g_strfreev(matches);
   g_free(config);
@@ -671,6 +678,7 @@ cl_install(const char *name, int flags)
 {
   if (!(flags & F_FORCE) 
       && check_installed(name) 
+      && !(flags & F_NO_CONFIRM)
       && !yes_no(0, EXT(%s)" is already installed, continue anyway", name))
     return -1;
 
@@ -754,7 +762,7 @@ do_upate(const char *meta, int flags)
   if (space != NULL) 
   {
     snprintf(buffer, MIN(128, space - meta + 1), meta);
-    if (yes_no(1, "Update "EXT(%s), buffer))
+    if ((flags & F_NO_CONFIRM) || yes_no(1, "Update "EXT(%s), buffer))
       if (cl_install(buffer, flags | F_FORCE | F_UPDATE)) 
         notify(EXT(%s)" successfully updated", buffer);
   }
@@ -927,6 +935,7 @@ main(int argc, char **argv)
   gboolean o_update = false;
   gboolean o_list_installed = false;
   gboolean o_list_all = false;
+  gboolean o_no_confirm = false;
   int flags = 0;
   GOptionEntry options[] = {
     { "list-all",  'a', 0, G_OPTION_ARG_NONE, &o_list_all, "List all installed extensions",  NULL},
@@ -936,10 +945,11 @@ main(int argc, char **argv)
     { "enable",   'e', 0, G_OPTION_ARG_STRING_ARRAY, &o_enable,  "Enable <extension>", "<extension>" },
     { "install",  'i', 0, G_OPTION_ARG_STRING_ARRAY, &o_install, "Install <extension>",  "<extension>" },
     { "info",     'I', 0, G_OPTION_ARG_STRING_ARRAY, &o_info, "Show info about <extension>",  "<extension>" },
-    { "remove",   'r', 0, G_OPTION_ARG_STRING_ARRAY, &o_remove, "Remove <extension>", "<extension>" },
     { "list-installed",  'l', 0, G_OPTION_ARG_NONE, &o_list_installed, "List installed extensions",  NULL},
     { "setload",  'L', 0, G_OPTION_ARG_STRING_ARRAY, &o_setload, "Edit configuration for <extension>, use exensions.load", "<extension>" },
-    { "noconfig", 'n', 0, G_OPTION_ARG_NONE, &o_noconfig, "Don't use config in loader script, use extensionrc instead", NULL },
+    { "no-config", 'n', 0, G_OPTION_ARG_NONE, &o_noconfig, "Don't use config in loader script, use extensionrc instead", NULL },
+    { "no-confirm",   'N', 0, G_OPTION_ARG_NONE, &o_no_confirm,  "Update extensions", NULL },
+    { "remove",   'r', 0, G_OPTION_ARG_STRING_ARRAY, &o_remove, "Remove <extension>", "<extension>" },
     { "update",   'u', 0, G_OPTION_ARG_NONE, &o_update,  "Update extensions", NULL },
     { NULL },
   };
@@ -986,6 +996,8 @@ main(int argc, char **argv)
     flags |= F_BIND;
   if (o_noconfig)
     flags |= F_NO_CONFIG;
+  if (o_no_confirm)
+    flags |= F_NO_CONFIRM;
 
   if (o_list_all) 
     cl_list_all(flags);

@@ -54,11 +54,6 @@ OPTIONS
 *--info* 'extension'::
   Show information about 'extension'.
 
-*-r* 'extension':: 
-*--remove* 'extension'::
-  Remove an extension. If it is a remote extension the extension will be
-  deleted. This option also discards the configuration. 
-
 *-l*:: 
 *--list*::
   List installed extensions.
@@ -69,12 +64,25 @@ OPTIONS
   'extensions.load', see also *-B*.
 
 *-n*::
-*--noconfig*:: 
+*--no-config*:: 
   Don't use a configuration in the loader script, use
   '$XDG_CONFIG_HOME/dwb/extensionrc' instead. The extension will simply be
   loaded with 'extensions.load("extension");'. This option can be combined with *-i*,
   *-B* or *-L*. If combined with *-i* it will be applied to all installed
   extensions.
+
+*-N*::
+*--no-confirm*:: 
+  Can be combined with *-i* or *-u*. When set all questions are skipped. When
+  combined with *-i* an existing configuration will be overwritten with the
+  default configuration. When combined  with *-u* the check for changed
+  configurations is skipped. 
+
+*-r* 'extension':: 
+*--remove* 'extension'::
+  Remove an extension. If it is a remote extension the extension will be
+  deleted. This option also discards the configuration. 
+
 
 *-u*::
 *--update*::

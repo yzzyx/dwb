@@ -82,11 +82,6 @@ Show information about
 \fIextension\fR\&.
 .RE
 .PP
-\fB\-r\fR \fIextension\fR, \fB\-\-remove\fR \fIextension\fR
-.RS 4
-Remove an extension\&. If it is a remote extension the extension will be deleted\&. This option also discards the configuration\&.
-.RE
-.PP
 \fB\-l\fR, \fB\-\-list\fR
 .RS 4
 List installed extensions\&.
@@ -100,7 +95,7 @@ Edit configuration for
 \fB\-B\fR\&.
 .RE
 .PP
-\fB\-n\fR, \fB\-\-noconfig\fR
+\fB\-n\fR, \fB\-\-no\-config\fR
 .RS 4
 Don\(cqt use a configuration in the loader script, use
 \fI$XDG_CONFIG_HOME/dwb/extensionrc\fR
@@ -112,6 +107,23 @@ or
 \fB\-L\fR\&. If combined with
 \fB\-i\fR
 it will be applied to all installed extensions\&.
+.RE
+.PP
+\fB\-N\fR, \fB\-\-no\-confirm\fR
+.RS 4
+Can be combined with
+\fB\-i\fR
+or
+\fB\-u\fR\&. When set all questions are skipped\&. When combined with
+\fB\-i\fR
+an existing configuration will be overwritten with the default configuration\&. When combined with
+\fB\-u\fR
+the check for changed configurations is skipped\&.
+.RE
+.PP
+\fB\-r\fR \fIextension\fR, \fB\-\-remove\fR \fIextension\fR
+.RS 4
+Remove an extension\&. If it is a remote extension the extension will be deleted\&. This option also discards the configuration\&.
 .RE
 .PP
 \fB\-u\fR, \fB\-\-update\fR
