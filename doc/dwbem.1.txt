@@ -34,6 +34,10 @@ OPTIONS
   i.e. it is possible to bind a shortcut for enabling/disabling
   the extension on the fly, see also -L.
 
+*-c* 'extension'::
+*--config* 'extension':: 
+  Show configuration for extension 'extension'.
+
 *-d* 'extension'::
 *--disable* 'extension'::
   Disable 'extension', the extension will still be installed and the

@@ -172,9 +172,11 @@ set_data(const char *name, const char *template, const char *data, gboolean mult
     GString *buffer = g_string_new(matches[0]);
 
     if (multiline) 
-      g_string_append_printf(buffer, "/*<%s%s%s%s%s>*/\n", name, template, data ? data : "\n", name, template);
+      g_string_append_printf(buffer, "/*<%s%s%s%s%s>*/\n", 
+          name, template, data ? data : "\n", name, template);
     else 
-      g_string_append_printf(buffer, "//<%s%s%s//>%s%s\n", name, template, data ? data : "\n", name, template);
+      g_string_append_printf(buffer, "//<%s%s%s//>%s%s\n", 
+          name, template, data ? data : "\n", name, template);
     
     if (matches[1]) 
       g_string_append(buffer, matches[1]);
@@ -969,6 +971,21 @@ cl_update_ext(const char *name, int flags)
   return 0;
 }
 
+static int 
+cl_show_config(const char *name, int flags) {
+  (void) flags;
+  if (!check_installed(name)) 
+    print_error(EXT(%s)" is not installed", name);
+  char *config = get_data(name, m_loader, TMPL_CONFIG, 0);
+  if (config != NULL) {
+    notify("Configuration for "EXT(%s)"\n%s", name, config);
+    g_free(config);
+  }
+  else 
+    print_error("No configuration found for "EXT(%s), name);
+  return 0;
+}
+
 int 
 main(int argc, char **argv) 
 {
@@ -986,6 +1003,7 @@ main(int argc, char **argv)
   char **o_enable = NULL;
   char **o_info = NULL;
   char **o_update_ext = NULL;
+  char **o_show_config = NULL;
   gboolean o_noconfig = false;
   gboolean o_update = false;
   gboolean o_list_installed = false;
@@ -996,6 +1014,7 @@ main(int argc, char **argv)
     { "list-all",  'a', 0, G_OPTION_ARG_NONE, &o_list_all, "List all installed extensions",  NULL},
     { "bind",     'b', 0, G_OPTION_ARG_NONE, &o_bind, "When installing an extension use extensions.bind instead of extensions.load", NULL },
     { "setbind",  'B', 0, G_OPTION_ARG_STRING_ARRAY, &o_setbind, "Edit configuration, use extensions.bind", "<extension>" },
+    { "config",   'c', 0, G_OPTION_ARG_STRING_ARRAY, &o_show_config, "Show configuration for <extension>", "<extension>" },
     { "disable",  'd', 0, G_OPTION_ARG_STRING_ARRAY, &o_disable, "Disable <extension>", "<extension>" },
     { "enable",   'e', 0, G_OPTION_ARG_STRING_ARRAY, &o_enable,  "Enable <extension>", "<extension>" },
     { "install",  'i', 0, G_OPTION_ARG_STRING_ARRAY, &o_install, "Install <extension>",  "<extension>" },
@@ -1041,11 +1060,9 @@ main(int argc, char **argv)
   if (!g_file_test(m_system_dir, G_FILE_TEST_EXISTS))
     die(1, "FATAL: %s not found, check your installation", m_system_dir);
 
-  m_editor = g_getenv("EDITOR");
-  if (m_editor == NULL)
+  if ((m_editor = g_getenv("EDITOR")) == NULL)
     m_editor = "vim";
-  m_diff = g_getenv("DIFF_VIEWER");
-  if (m_diff == NULL)
+  if ((m_diff = g_getenv("DIFF_VIEWER"))== NULL)
     m_diff = "vimdiff";
 
   if (o_bind)
@@ -1070,6 +1087,7 @@ main(int argc, char **argv)
   for_each(o_setload, flags & ~F_BIND, cl_change_config);
   for_each(o_remove, flags, cl_uninstall);
   for_each(o_install, flags, cl_install);
+  for_each(o_show_config, flags, cl_show_config);
   clean_up();
   return 0;
 }
