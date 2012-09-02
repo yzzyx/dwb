@@ -153,6 +153,43 @@ regex_replace_file(const char *path, const char *regex, const char *replacement)
   return ret;
 }
 
+static int 
+set_data(const char *name, const char *template, const char *data, gboolean multiline) 
+{
+  char *regex, *content = NULL;
+  char *format;
+  int ret = -1;
+  char **matches = NULL;
+  if (multiline) 
+    format = "(?<=^|\n)/\\*<%s%s.*%s%s>\\*/\\s*(?=\n|$)";
+  else 
+    format = "(?<=^|\n)//<%s%s.*//>%s%s\\s*(?=\n|$)";
+
+  regex = g_strdup_printf(format, name, template, name, template);
+  if (g_file_get_contents(m_loader, &content, NULL, NULL)) 
+  {
+    matches = g_regex_split_simple(regex, content, G_REGEX_DOTALL, 0);
+    GString *buffer = g_string_new(matches[0]);
+
+    if (multiline) 
+      g_string_append_printf(buffer, "/*<%s%s%s%s%s>*/\n", name, template, data ? data : "\n", name, template);
+    else 
+      g_string_append_printf(buffer, "//<%s%s%s//>%s%s\n", name, template, data ? data : "\n", name, template);
+    
+    if (matches[1]) 
+      g_string_append(buffer, matches[1]);
+
+    if (g_file_set_contents(m_loader, buffer->str, -1, NULL))
+     ret = 0;
+
+    g_string_free(buffer, true);
+  }
+  g_free(regex);
+  g_free(content);
+  return ret;
+}
+
+
 static char *
 get_data(const char *name, const char *data, const char *template, int flags) 
 {
@@ -451,10 +488,8 @@ add_to_loader(const char *name, const char *content, int flags)
   else if ((flags & F_UPDATE)) 
   {
     data = get_data(name, m_loader, TMPL_CONFIG, 0);
-    if (diff(data, matches[1], &config) == 0) {
+    if (diff(data, matches[1], &config) == 0)
       notify("Config is up to date");
-      new_config = matches[1];
-    }
     else 
       new_config = config;
   }
@@ -463,7 +498,11 @@ add_to_loader(const char *name, const char *content, int flags)
   else 
     new_config = matches[1];
 
-  if ( (flags & F_NO_CONFIRM) == 0 || (flags & F_UPDATE) == 0 ) 
+  if ( (flags & F_UPDATE) != 0 && new_config != NULL ) {
+    notify("Updating extension-loader");
+    set_data(name, TMPL_CONFIG, new_config, false);
+  }
+  else if ( (flags & F_NO_CONFIRM) == 0 ) 
     set_loader(name, new_config, flags);
 
   g_strfreev(matches);
@@ -620,42 +659,6 @@ sync_meta(const char *output)
   }
 unwind:
   g_object_unref(msg);
-  return ret;
-}
-
-static int 
-set_data(const char *name, const char *template, const char *data, gboolean multiline) 
-{
-  char *regex, *content = NULL;
-  char *format;
-  int ret = -1;
-  char **matches = NULL;
-  if (multiline) 
-    format = "(?<=^|\n)/\\*<%s%s.*%s%s>\\*/\\s*(?=\n|$)";
-  else 
-    format = "(?<=^|\n)//<%s%s.*//>%s%s\\s*(?=\n|$)";
-
-  regex = g_strdup_printf(format, name, template, name, template);
-  if (g_file_get_contents(m_loader, &content, NULL, NULL)) 
-  {
-    matches = g_regex_split_simple(regex, content, G_REGEX_DOTALL, 0);
-    GString *buffer = g_string_new(matches[0]);
-
-    if (multiline) 
-      g_string_append_printf(buffer, "/*<%s%s%s%s%s>*/\n", name, template, data ? data : "\n", name, template);
-    else 
-      g_string_append_printf(buffer, "//<%s%s%s//>%s%s\n", name, template, data ? data : "\n", name, template);
-    
-    if (matches[1]) 
-      g_string_append(buffer, matches[1]);
-
-    if (g_file_set_contents(m_loader, buffer->str, -1, NULL))
-     ret = 0;
-
-    g_string_free(buffer, true);
-  }
-  g_free(regex);
-  g_free(content);
   return ret;
 }
 
