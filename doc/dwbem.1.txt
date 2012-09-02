@@ -73,10 +73,11 @@ OPTIONS
 
 *-N*::
 *--no-confirm*:: 
-  Can be combined with *-i*, *-u* or *-U*. When set all questions are skipped. When
+  Can be combined with *-i*, *-u*, *-U*, *-L* or *-B*. When set most questions are skipped. When
   combined with *-i* an existing configuration will be overwritten with the
   default configuration. When combined  with *-u* or *-U* the check for changed
-  configurations is skipped. 
+  configurations is skipped, when combined with *-L* or *-B* editing
+  configuration is skipped. 
 
 *-r* 'extension':: 
 *--remove* 'extension'::

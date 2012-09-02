@@ -688,13 +688,13 @@ cl_change_config(const char *name, int flags)
 
   if (config) 
   {
-    if (!(flags & F_NO_CONFIG)) 
+    if (flags & (F_NO_CONFIG | F_NO_CONFIRM) ) 
+      new_config = config;
+    else 
     {
       new_config = edit(config);
       g_free(config);
     }
-    else 
-      new_config = config;
 
     set_loader(name, new_config, flags);
     g_free(new_config);
