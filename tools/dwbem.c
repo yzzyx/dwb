@@ -499,8 +499,10 @@ add_to_loader(const char *name, const char *content, int flags)
   else if ((flags & F_UPDATE)) 
   {
     data = get_data(name, m_loader, TMPL_CONFIG, 0);
-    if (diff(data, matches[1], &config) == 0)
+    if (diff(data, matches[1], &config) == 0) {
       notify("Config is up to date");
+      goto unwind;
+    }
     else 
       new_config = config;
   }
@@ -509,13 +511,14 @@ add_to_loader(const char *name, const char *content, int flags)
   else 
     new_config = matches[1];
 
-  if ( (flags & F_UPDATE) != 0 && new_config != NULL ) {
+  if ( (flags & F_UPDATE) != 0 ) {
     notify("Updating extension-loader");
     set_data(name, TMPL_CONFIG, new_config, false);
   }
-  else if ( (flags & F_NO_CONFIRM) == 0 ) 
+  else if ( (flags & F_NO_CONFIRM) == 0 && new_config != NULL ) 
     set_loader(name, new_config, flags);
 
+unwind:
   g_strfreev(matches);
   g_free(config);
   g_free(data);
