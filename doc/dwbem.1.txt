@@ -14,7 +14,7 @@ SYNOPSIS
 
 DESCRIPTION
 -----------
-dwbem(1) is a command line tool that handles extensions for dwb.
+*dwbem* is a command line tool that handles extensions for dwb.
 
 OPTIONS
 -------
@@ -32,7 +32,7 @@ OPTIONS
 *--setbind* 'extension'::
   Edit configuration of 'extension', the extension will be loaded with 'extensions.bind', 
   i.e. it is possible to bind a shortcut for enabling/disabling
-  the extension on the fly, see also -B.
+  the extension on the fly, see also -L.
 
 *-d* 'extension'::
 *--disable* 'extension'::

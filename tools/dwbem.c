@@ -54,8 +54,8 @@ enum
 static char *m_installed;
 static char *m_loader;
 static char *m_meta_data;
-static const char *m_system_dir;
 static char *m_user_dir;
+static const char *m_system_dir;
 static const char *m_editor;
 static const char *m_diff;
 static SoupSession *session;
