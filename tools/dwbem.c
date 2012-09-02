@@ -320,6 +320,15 @@ get_response(const char *format, ...)
   return readline(buffer);
 }
 
+int 
+create_tmp(char *buffer, int size, char *template, int suffix_length) {
+  snprintf(buffer, size, template);
+  int fd = mkstemps(buffer, suffix_length);
+  if (fd == -1) 
+    die(1, "Cannot create temporary file");
+  return fd;
+}
+
 static int
 diff(const char *text1, const char *text2, char **ret) 
 {
@@ -341,8 +350,8 @@ diff(const char *text1, const char *text2, char **ret)
     return 1;
   }
 
-  strcpy(file1, "/tmp/tmpXXXXXXorig.js");
-  strcpy(file2, "/tmp/tmpXXXXXXnew.js");
+  int fd1 = create_tmp(file1, 32, "/tmp/tmpXXXXXXorig.js", 7);
+  int fd2 = create_tmp(file2, 32, "/tmp/tmpXXXXXXnew.js", 6);
 
   char *text2_new = g_strdup_printf("// THIS FILE WILL BE DISCARDED\n%s// THIS FILE WILL BE DISCARDED", text2);
   if (g_file_set_contents(file1, text1, -1, &e) && g_file_set_contents(file2, text2_new, -1, &e)) 
@@ -364,6 +373,8 @@ diff(const char *text1, const char *text2, char **ret)
     print_error("Cannot diff : %s", e->message);
 
   g_free(text2_new);
+  close(fd1);
+  close(fd2);
 
   if (!spawn_success)
     die(1, "Cannot spawn "EXT(%s)", please set "EXT(EDITOR)" to an appropriate value", m_editor);
@@ -378,8 +389,7 @@ edit(const char *text)
   char *new_config = NULL;
   char file[32];
 
-  strcpy(file, "/tmp/tmpXXXXXX.js");
-  mkstemps(file, 3);
+  int fd = create_tmp(file, 32, "/tmp/tmpXXXXXX.js", 3);
 
   if (g_file_set_contents(file, text, -1, NULL)) 
   {
@@ -394,6 +404,7 @@ edit(const char *text)
 
     unlink(file);
   }
+  close(fd);
   if (!spawn_success)
     die(1, "Cannot spawn "EXT(%s)", please set "EXT(EDITOR)" to an appropriate value", m_editor);
   return new_config;
