@@ -121,6 +121,26 @@ CFLAGS += -O2
 CFLAGS += -g
 CFLAGS += -D_BSD_SOURCE
 CFLAGS += -D_NETBSD_SOURCE
+
+ifeq ($(shell pkg-config --exists '$(LIBSOUP) >= 2.38' && echo 1), 1)
+CFLAGS += -DWITH_LIBSOUP_2_38=1
+endif
+
+# If execinfo.h is not available, e.g. freebsd
+ifneq (${WITHOUT_EXECINFO}, 1)
+CFLAGS += -DHAS_EXECINFO
+endif
+CFLAGS_OPTIONS := $(CFLAGS)
+
+ifeq (USEGTK3, 1) 
+CPPFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
+CPPFLAGS+=-DGTK_DISABLE_DEPRECATED
+CPPFLAGS+=-DGDK_DISABLE_DEPRECATED
+CPPFLAGS+=-DGSEAL_ENABLE
+endif
+
+
+
 #defines
 CFLAGS += -DNAME=\"$(NAME)\" 
 CFLAGS += -DVERSION=\"$(VERSION)\" 
@@ -137,23 +157,6 @@ CFLAGS += -DLOCAL_FILE=\"$(LOCAL_FILE)\"
 CFLAGS += -DHINT_SCRIPT=\"$(HINT_SCRIPT)\"
 CFLAGS += -DSYSTEM_DATA_DIR=\"$(DATADIR)\"
 CFLAGS += -DLIBJS_DIR=\"$(LIBJSDIR)\"
-
-ifeq ($(shell pkg-config --exists '$(LIBSOUP) >= 2.38' && echo 1), 1)
-CFLAGS += -DWITH_LIBSOUP_2_38=1
-endif
-
-# If execinfo.h is not available, e.g. freebsd
-ifneq (${WITHOUT_EXECINFO}, 1)
-CFLAGS += -DHAS_EXECINFO
-endif
-
-ifeq (USEGTK3, 1) 
-CPPFLAGS+=-DGTK_DISABLE_SINGLE_INCLUDES
-CPPFLAGS+=-DGTK_DISABLE_DEPRECATED
-CPPFLAGS+=-DGDK_DISABLE_DEPRECATED
-CPPFLAGS+=-DGSEAL_ENABLE
-endif
-CFLAGS +=-I/usr/lib/dwb/ 
 
 # LDFLAGS
 LDFLAGS += $(shell pkg-config --libs $(LIBS))

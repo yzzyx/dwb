@@ -5,7 +5,7 @@ all: options $(TARGET)
 options: 
 	@echo Build options:
 	@echo CC 				= $(CC)
-	@echo CFLAGS 		= $(CFLAGS)
+	@echo CFLAGS 		= $(CFLAGS_OPTIONS)
 	@echo LDFLAGS 	= $(LDFLAGS)
 	@echo CPPFLAGS 	= $(CPPFLAGS)
 
