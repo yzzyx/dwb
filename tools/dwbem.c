@@ -154,13 +154,13 @@ regex_replace_file(const char *path, const char *regex, const char *replacement)
 }
 
 static int 
-set_data(const char *name, const char *template, const char *data, gboolean multiline) 
+set_data(const char *name, const char *data, const char *template, int flags) 
 {
   char *regex, *content = NULL;
   char *format;
   int ret = -1;
   char **matches = NULL;
-  if (multiline) 
+  if (flags & F_MATCH_MULTILINE) 
     format = "(?<=^|\n)/\\*<%s%s.*%s%s>\\*/\\s*(?=\n|$)";
   else 
     format = "(?<=^|\n)//<%s%s.*//>%s%s\\s*(?=\n|$)";
@@ -171,7 +171,7 @@ set_data(const char *name, const char *template, const char *data, gboolean mult
     matches = g_regex_split_simple(regex, content, G_REGEX_DOTALL, 0);
     GString *buffer = g_string_new(matches[0]);
 
-    if (multiline) 
+    if (flags & F_MATCH_MULTILINE) 
       g_string_append_printf(buffer, "/*<%s%s%s%s%s>*/\n", 
           name, template, data ? data : "\n", name, template);
     else 
@@ -515,7 +515,7 @@ add_to_loader(const char *name, const char *content, int flags)
 
   if ( (flags & F_UPDATE) != 0 ) {
     notify("Updating extension-loader");
-    set_data(name, TMPL_CONFIG, new_config, false);
+    set_data(name, new_config, TMPL_CONFIG, 0);
   }
   else if ( (flags & F_NO_CONFIRM) == 0 && new_config != NULL ) 
     set_loader(name, new_config, flags);
@@ -765,7 +765,7 @@ cl_disable(const char *name, int flags)
   if (!g_regex_match_simple(regex, data, G_REGEX_DOTALL, 0)) 
   {
     new_data = g_strdup_printf("\n/*<%s"TMPL_DISABLED"%s%s"TMPL_DISABLED">*/\n", name, data ? data : "\n", name);
-    if (set_data(name, TMPL_SCRIPT, new_data, false) != -1) 
+    if (set_data(name, new_data, TMPL_SCRIPT, 0) != -1) 
       notify(EXT(%s)" disabled", name);
     else
       print_error("Unable to disable "EXT(%s), name);
@@ -787,7 +787,7 @@ cl_enable(const char *name, int flags)
   char *data = get_data(name, m_loader, TMPL_DISABLED, F_MATCH_MULTILINE);
   if (data != NULL) 
   {
-    if (set_data(name, TMPL_SCRIPT, data, false) != -1) 
+    if (set_data(name, data, TMPL_SCRIPT, 0) != -1) 
       notify(EXT(%s)" enabled", name);
     else
       print_error("Unable to enable "EXT(%s), name);
@@ -971,19 +971,44 @@ cl_update_ext(const char *name, int flags)
   return 0;
 }
 
+char *
+get_config(const char *name) {
+  if (!check_installed(name)) {
+    print_error(EXT(%s)" is not installed", name);
+    return NULL;
+  }
+  char *config = get_data(name, m_loader, TMPL_CONFIG, 0);
+  if (config == NULL) 
+    print_error("No configuration found for "EXT(%s), name);
+  return config;
+}
+
 static int 
 cl_show_config(const char *name, int flags) {
   (void) flags;
-  if (!check_installed(name)) 
-    print_error(EXT(%s)" is not installed", name);
-  char *config = get_data(name, m_loader, TMPL_CONFIG, 0);
-  if (config != NULL) {
+  char *config = get_config(name);
+  if (config) {
     notify("Configuration for "EXT(%s)"\n%s", name, config);
     g_free(config);
+    return 0;
   }
-  else 
-    print_error("No configuration found for "EXT(%s), name);
-  return 0;
+  return -1;
+}
+
+static int 
+cl_edit(const char *name, int flags) {
+  (void) flags;
+  char *config = get_config(name);
+  if (config != NULL) {
+    char *new_config = edit(config);
+    if (new_config != NULL) {
+      set_data(name, new_config, TMPL_CONFIG, 0);
+      g_free(new_config);
+    }
+    g_free(config);
+    return 0;
+  }
+  return -1;
 }
 
 int 
@@ -1004,6 +1029,7 @@ main(int argc, char **argv)
   char **o_info = NULL;
   char **o_update_ext = NULL;
   char **o_show_config = NULL;
+  char **o_edit = NULL;
   gboolean o_noconfig = false;
   gboolean o_update = false;
   gboolean o_list_installed = false;
@@ -1017,6 +1043,7 @@ main(int argc, char **argv)
     { "config",   'c', 0, G_OPTION_ARG_STRING_ARRAY, &o_show_config, "Show configuration for <extension>", "<extension>" },
     { "disable",  'd', 0, G_OPTION_ARG_STRING_ARRAY, &o_disable, "Disable <extension>", "<extension>" },
     { "enable",   'e', 0, G_OPTION_ARG_STRING_ARRAY, &o_enable,  "Enable <extension>", "<extension>" },
+    { "edit",     'E', 0, G_OPTION_ARG_STRING_ARRAY, &o_edit,  "Edit configuration with EDITOR", "<extension>" },
     { "install",  'i', 0, G_OPTION_ARG_STRING_ARRAY, &o_install, "Install <extension>",  "<extension>" },
     { "info",     'I', 0, G_OPTION_ARG_STRING_ARRAY, &o_info, "Show info about <extension>",  "<extension>" },
     { "list-installed",  'l', 0, G_OPTION_ARG_NONE, &o_list_installed, "List installed extensions",  NULL},
@@ -1088,6 +1115,7 @@ main(int argc, char **argv)
   for_each(o_remove, flags, cl_uninstall);
   for_each(o_install, flags, cl_install);
   for_each(o_show_config, flags, cl_show_config);
+  for_each(o_edit, flags, cl_edit);
   clean_up();
   return 0;
 }

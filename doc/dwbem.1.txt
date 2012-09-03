@@ -47,6 +47,11 @@ OPTIONS
 *--enable* 'extension'::
   Enable an extension that was previously disabled with *-d*.
 
+*-E* 'extension'::
+*--edit* 'extension'::
+  Edit configuration of 'extension' with an editor, the 'EDITOR' environment
+  variable needs to be set for this option. 
+
 *-i* 'extension'::
 *--install* 'extension'::
   Install 'extension'. If it is a local extension that was installed together
