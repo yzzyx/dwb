@@ -120,18 +120,15 @@ var sigs = {
 var persistentList = null;
 var tmpList = {};
 
-var getPrivate = (function() {
-  var priv = "_requestPolicy" + parseInt(Math.random() * 9999999999, 10);
+var getPrivate = (function ()  {
+  var identifier = {};
   return function (wv) {
-    var o = wv[priv];
-    if (o === undefined) {
-      o = { domains : [], blocked : 0 };
-      Object.defineProperty(wv, priv, {
-          value : o,
-          writable : true
-      });
+    var p = wv.getPrivate("foo", identifier);
+    if (p === null) {
+      p = { domains : [], blocked : 0 };
+      wv.setPrivate("foo", p, identifier);
     }
-    return o;
+    return p;
   };
 })();
 
