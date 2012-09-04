@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 09/01/2012
+.\"      Date: 09/04/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "09/01/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "09/04/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -859,6 +859,58 @@ The property value
 \fIthis\fR
 .RS 4
 The object forEach is called on
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid Object.setPrivate(String key, String value, Object identifier)\fR
+.RS 4
+.sp
+Associates a private value with that object that can only be retrieved in the calling script, this function is only useful for objects derived from GObjects, e\&.g\&. to associate a value with a webview and keep it invisible in other scripts\&.
+.PP
+\fIkey\fR
+.RS 4
+The property name
+.RE
+.PP
+\fIvalue\fR
+.RS 4
+The property value
+.RE
+.PP
+\fIidentifier\fR
+.RS 4
+A local object to identify the calling script, the identifier must either be of type Object or of type Function\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBObject Object.getPrivate(String key, Object identifier)\fR
+.RS 4
+.sp
+Gets a value previously set with Object\&.setPrivate\&.
+.PP
+\fIkey\fR
+.RS 4
+The property name
+.RE
+.PP
+\fIidentifier\fR
+.RS 4
+The identifier passed to setPrivate
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The object set with setPrivate or null\&.
 .RE
 .RE
 .sp
