@@ -26,7 +26,7 @@
         "setPrivate" : { 
           value : function(key, value, identifier) {
             if (!(identifier instanceof Object) && !(identifier instanceof Function)) {
-              throw new Error("[setPrivate] identifier is no Object or Function");
+              throw new Error("[setPrivate] identifier is not an Object or Function");
             }
             var i = getPrivateIdx(this, key, identifier);
             if (i === -1) {
