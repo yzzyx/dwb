@@ -538,8 +538,8 @@ Next navigation action will be opened in a new tab (command 'new_tab').
 
 *W*::
 Next navigation action will be opened in a new window (command 'new_win').
-.TP
-.BR eu
+
+*eu*::
 Show and execute userscripts (command 'execute_userscript').
 
 *[n]wi*::
