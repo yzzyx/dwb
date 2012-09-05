@@ -1,3 +1,5 @@
+# See COPYING for copyright and license details
+
 all: man web
 
 man: dwb.1 dwbem.1

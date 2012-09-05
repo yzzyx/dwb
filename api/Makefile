@@ -1,3 +1,5 @@
+# See COPYING for copyright and license details
+
 all: web man webman
 
 web: jsapi.html

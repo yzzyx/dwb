@@ -1,3 +1,5 @@
+# See COPYING for copyright and license details
+
 REAL_NAME=dwb
 COPYRIGHT="© 2010-2012 Stefan Bolte"
 LICENSE="GNU General Public License, version 3 or later"

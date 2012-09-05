@@ -1,3 +1,5 @@
+# See COPYING for copyright and license details
+
 include config.mk
 
 all: options $(TARGET)

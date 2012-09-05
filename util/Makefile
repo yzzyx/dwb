@@ -1,3 +1,5 @@
+# See COPYING for copyright and license details
+
 include ../config.mk
 SETTINGS=../$(LIBDIR)/settings.html
 KEYS=../$(LIBDIR)/keys.html

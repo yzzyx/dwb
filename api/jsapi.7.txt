@@ -1,3 +1,5 @@
+// See COPYING for copyright and license details
+
 // vim: set ft=asciidoc:
 
 = dwb-js(7) =
