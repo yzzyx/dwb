@@ -345,7 +345,7 @@ diff(const char *text1, const char *text2, char **ret)
     return 0;
   }
 
-  notify("The default configuration differs from used configuration");
+  notify("The default configuration differs from configuration in use");
   if (! yes_no(1, "Edit configuration")) 
   {
     *ret = g_strdup(text1);
@@ -408,7 +408,7 @@ edit(const char *text)
   }
   close(fd);
   if (!spawn_success)
-    die(1, "Cannot spawn "EXT(%s)", please set "EXT(EDITOR)" to an appropriate value", m_editor);
+    die(1, "Cannot spawn "EXT(%s)", please set "EXT(DIFF_VIEWER)" to an appropriate value", m_editor);
   return new_config;
 }
 
@@ -426,8 +426,8 @@ set_loader(const char *name, const char *config, int flags)
   {
     while ((shortcut = get_response("Shortcut for toggling "EXT(%s)"?", name)) == NULL || *shortcut == '\0') 
       g_free(shortcut);
-    load = yes_no(1, "Load "EXT(%s)" on startup", name);
     command = get_response("Command for toggling "EXT(%s)"?", name);
+    load = yes_no(1, "Load "EXT(%s)" on startup", name);
   }
   has_cmd = command != NULL && *command != '\0';
 
@@ -610,7 +610,7 @@ sync_meta(const char *output)
     return ret;
   sync = true;
 
-  notify("Syncing metadata");
+  notify("Syncing");
   SoupMessage *msg = soup_message_new("GET", API_BASE);
   status = soup_session_send_message(session, msg);
 
@@ -741,7 +741,7 @@ cl_uninstall(const char *name, int flags)
 
   regex = REGEX_REPLACE(SCRIPT, name);
   if (regex_replace_file(m_loader, regex, NULL) != -1) 
-    notify("Updating extension-loader");
+    notify("Updating extension loader");
   g_free(regex);
 
   regex = g_strdup_printf("(?<=^|\n)%s\\s\\w+\n", name);
@@ -851,7 +851,7 @@ cl_update(int flags) {
 }
 
 static char **
-get_list(char *path) 
+get_list(const char *path) 
 {
   int installed = 0, i;
   char *content = NULL;
@@ -889,12 +889,13 @@ get_list(char *path)
 }
 
 static void 
-cl_list_installed(void) 
-{
-  char **list = get_list(m_installed);
+list(const char *file, const char *message, gboolean sync) {
+  if (sync)
+    sync_meta(file);
+  char **list = get_list(file);
   if (list != NULL) 
   {
-    notify("Installed extensions:");
+    notify("%s:", message);
     for (int i=0; list[i]; i++) 
       printf("  * %s\n", list[i]);
 
@@ -902,22 +903,7 @@ cl_list_installed(void)
   }
   else 
     notify("No extensions installed");
-}
 
-static void 
-cl_list_all(void) 
-{
-  char **list = get_list(m_meta_data);
-  sync_meta(m_meta_data);
-  if (list != NULL) 
-  {
-    notify("Available extensions:");
-    for (int i=0; list[i]; i++) 
-      printf("  * %s\n", list[i]);
-    g_strfreev(list);
-  }
-  else 
-    notify("No extensions installed");
 }
 
 static int
@@ -1100,9 +1086,9 @@ main(int argc, char **argv)
     flags |= F_NO_CONFIRM;
 
   if (o_list_all) 
-    cl_list_all();
+    list(m_meta_data, "Available extensions", true);
   if (o_list_installed) 
-    cl_list_installed();
+    list(m_installed, "Installed extensions", false);
   if (o_update) 
     cl_update(flags);
 
