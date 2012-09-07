@@ -1157,7 +1157,8 @@ Default value:
 'false'.
 
 *adblocker-filterlist*::
-A path to a adblock plus compatible filterlist for the adblocker.
+A path to a adblock plus compatible filterlist for the adblocker or a path to a
+directory with filterlists.
 Default value:
 'NULL'.
 

@@ -545,7 +545,16 @@ adblock_warn_ignored(const char *message, const char *rule) {
 /* adblock_rule_parse(char *filterlist)  {{{*/
 static void
 adblock_rule_parse(char *filterlist) {
-  char **lines = util_get_lines(filterlist);
+  char **lines = NULL;
+  if  (g_file_test(filterlist, G_FILE_TEST_IS_DIR)) {
+    GString *string = g_string_new(NULL);
+    util_get_directory_content(string, filterlist, NULL);
+    if (string->str) 
+      lines = g_strsplit(string->str, "\n", -1);
+    g_string_free(string, true);
+  }
+  else 
+    lines = util_get_lines(filterlist);
   if (lines == NULL)
     return;
   char *pattern;
