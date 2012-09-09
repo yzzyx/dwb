@@ -36,7 +36,8 @@
 #include <libsoup-2.4/libsoup/soup.h>
 
 #define API_BASE "https://api.bitbucket.org/1.0/repositories/portix/dwb_extensions/src/tip/src/?format=yaml"
-#define REPO_BASE "https://bitbucket.org/portix/dwb_extensions/raw/tip/src" 
+#define REPO_BASE "https://bitbucket.org/portix/dwb_extensions" 
+#define REPO_TREE "/raw/tip/src" 
 
 #define SKIP(line, c) do{ \
   while(*line && *line != c)line++; line++; } while(0)
@@ -584,9 +585,8 @@ install_extension(const char *name, int flags)
   }
   else 
   {
-    notify("Downloading "EXT(%s), name);
-
-    snprintf(buffer, 512, "%s/%s", REPO_BASE, name);
+    snprintf(buffer, 512, "%s/%s", REPO_BASE REPO_TREE, name);
+    notify("Downloading %s", buffer);
     SoupMessage *msg = soup_message_new("GET", buffer);
 
     status = soup_session_send_message(session, msg);
@@ -628,7 +628,7 @@ sync_meta(const char *output)
     return ret;
   sync = true;
 
-  notify("Syncing");
+  notify("Syncing with " REPO_BASE);
   SoupMessage *msg = soup_message_new("GET", API_BASE);
   status = soup_session_send_message(session, msg);
 
@@ -689,7 +689,7 @@ sync_meta(const char *output)
   else 
   {
     ret = -1;
-    print_error("Syncing failed, request returned with status %s\n", status);
+    print_error("Syncing failed, request returned with status %d\n", status);
   }
 unwind:
   g_object_unref(msg);
@@ -945,7 +945,7 @@ cl_info(const char *name, int flags)
   FREE0(data);
   g_free(path);
 
-  path = g_strconcat(REPO_BASE, "/", name, NULL);
+  path = g_strconcat(REPO_BASE REPO_TREE, "/", name, NULL);
   msg = soup_message_new("GET", path);
   int status = soup_session_send_message(session, msg);
   if (status == 200) 
