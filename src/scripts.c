@@ -99,8 +99,6 @@ static JSStaticFunction wv_functions[] = {
     { "history",         wv_history,             kJSDefaultAttributes },
     { "reload",          wv_reload,             kJSDefaultAttributes },
     { "inject",          wv_inject,             kJSDefaultAttributes },
-    { "connect",         connect_object,             kJSDefaultAttributes },
-    { "disconnect",      disconnect_object,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
 static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
@@ -126,8 +124,6 @@ static JSStaticValue message_values[] = {
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
   { "inject",          frame_inject,             kJSDefaultAttributes },
-  { "connect",         connect_object,             kJSDefaultAttributes },
-  { "disconnect",      disconnect_object,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
 };
 static JSValueRef frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
@@ -143,8 +139,6 @@ static JSValueRef download_cancel(JSContextRef ctx, JSObjectRef function, JSObje
 static JSStaticFunction download_functions[] = { 
   { "start",          download_start,        kJSDefaultAttributes },
   { "cancel",         download_cancel,        kJSDefaultAttributes },
-  { "connect",         connect_object,             kJSDefaultAttributes },
-  { "disconnect",      disconnect_object,             kJSDefaultAttributes },
   { 0, 0, 0 }, 
 };
 enum {
@@ -295,7 +289,10 @@ callback(CallbackData *c) {
 /* tabs_current {{{*/
 static JSValueRef 
 tabs_current(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* exc) {
-  return CURRENT_VIEW()->script_wv;
+  if (dwb.state.fview && CURRENT_VIEW()->script_wv) 
+    return CURRENT_VIEW()->script_wv;
+  else 
+    return JSValueMakeNull(ctx);
 }/*}}}*/
 
 /* tabs_number {{{*/
@@ -1785,22 +1782,26 @@ create_global_object() {
   /* Webview */
   cd.staticFunctions = wv_functions;
   cd.staticValues = wv_values;
+  cd.parentClass = m_default_class;
   m_webview_class = JSClassCreate(&cd);
 
   /* Frame */
   cd.staticFunctions = frame_functions;
   cd.staticValues = frame_values;
+  cd.parentClass = m_default_class;
   m_frame_class = JSClassCreate(&cd);
 
   /* SoupMessage */ 
   cd.staticFunctions = default_functions;
   cd.staticValues = message_values;
+  cd.parentClass = m_default_class;
   m_message_class = JSClassCreate(&cd);
 
   /* download */
   cd.className = "Download";
   cd.staticFunctions = download_functions;
   cd.staticValues = NULL;
+  cd.parentClass = m_default_class;
   m_download_class = JSClassCreate(&cd);
 
 
@@ -1849,7 +1850,12 @@ scripts_create_tab(GList *gl) {
     VIEW(gl)->script_wv = NULL;
     return;
   }
+  if (!applied) {
+    apply_scripts();
+    applied = true;
+  }
   JSObjectRef o = make_object(m_global_context, G_OBJECT(VIEW(gl)->web));
+
 
   if (EMIT_SCRIPT(CREATE_TAB)) {
     ScriptSignal signal = { o, SCRIPTS_SIG_META(NULL, CREATE_TAB, 0) };
@@ -1858,10 +1864,6 @@ scripts_create_tab(GList *gl) {
 
   JSValueProtect(m_global_context, o);
   VIEW(gl)->script_wv = o;
-  if (!applied) {
-    apply_scripts();
-    applied = true;
-  }
 }/*}}}*/
 
 /* scripts_remove_tab {{{*/
