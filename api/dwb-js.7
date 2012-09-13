@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 09/04/2012
+.\"      Date: 09/13/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "09/04/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "09/13/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1362,7 +1362,7 @@ Signals emitted by dwb are the following:
 .RS 4
 .\}
 .nf
-signals\&.connect("buttonPress", function(webview, hittestresult, json));
+signals\&.connect("buttonPress", function(webview, hittestresult, event));
 .fi
 .if n \{\
 .RE
@@ -1380,42 +1380,42 @@ The webview which received the signal
 Hittestresult under the cursor
 .RE
 .PP
-\fIjson\&.button\fR
+\fIevent\&.button\fR
 .RS 4
 The button that is pressed, usually a value between 1 and 5
 .RE
 .PP
-\fIjson\&.state\fR
+\fIevent\&.state\fR
 .RS 4
 A bitmap of modifiers pressed, see Modifier
 .RE
 .PP
-\fIjson\&.time\fR
+\fIevent\&.time\fR
 .RS 4
 The time in milliseconds when the button was pressed
 .RE
 .PP
-\fIjson\&.type\fR
+\fIevent\&.type\fR
 .RS 4
 A ClickType
 .RE
 .PP
-\fIjson\&.x\fR
+\fIevent\&.x\fR
 .RS 4
 x\-position relative to the window
 .RE
 .PP
-\fIjson\&.xRoot\fR
+\fIevent\&.xRoot\fR
 .RS 4
 x\-position relative to the screen
 .RE
 .PP
-\fIjson\&.y\fR
+\fIevent\&.y\fR
 .RS 4
 y\-position relative to the window
 .RE
 .PP
-\fIjson\&.yRoot\fR
+\fIevent\&.yRoot\fR
 .RS 4
 y\-position relative to the screen
 .RE
@@ -1433,7 +1433,7 @@ y\-position relative to the screen
 .RS 4
 .\}
 .nf
-signals\&.connect("buttonRelease", function(webview, hittestresult, json));
+signals\&.connect("buttonRelease", function(webview, hittestresult, event));
 .fi
 .if n \{\
 .RE
@@ -1451,10 +1451,10 @@ The webview which received the signal
 Hittestresult under the cursor
 .RE
 .PP
-\fIjson\fR
+\fIevent\fR
 .RS 4
 Same as buttonPress but without
-\fIjson\&.type\fR
+\fIevent\&.type\fR
 .RE
 .RE
 .sp
@@ -1971,6 +1971,37 @@ The network request
 \fIjson\&.mimeType\fR
 .RS 4
 The mimetype
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBmouseMove\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("mouseMove", function(webview, event));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the pointer is moved\&.
+.PP
+\fIwebview\fR
+.RS 4
+The webview that emitted the signal
+.RE
+.PP
+\fIevent\fR
+.RS 4
+Same as buttonRelease
 .RE
 .RE
 .sp

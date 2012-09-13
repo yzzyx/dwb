@@ -748,6 +748,20 @@ view_load_error_cb(WebKitWebView *web, WebKitWebFrame *frame, char *uri, GError 
   return true;
 }/*}}}*/
 
+static gboolean 
+view_motion_notify_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
+  if (EMIT_SCRIPT(MOUSE_MOVE)) {
+    char *json = util_create_json(7, 
+      UINTEGER, "time", e->time, 
+      DOUBLE,   "x", e->x, DOUBLE,            "y", e->y, 
+      UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
+      DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
+    ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(json, MOUSE_MOVE, 0) };
+    SCRIPTS_EMIT_RETURN(signal, json);
+  }
+  return false;
+}
+
 /* Entry */
 
 /* dwb_entry_activate_cb (GtkWidget *entry) {{{*/
@@ -862,6 +876,7 @@ view_init_signals(GList *gl) {
 
   /* v->status->signals[SIG_ENTRY_ACTIVATE]        = g_signal_connect(v->entry, "activate",                            G_CALLBACK(view_entry_activate_cb), gl); */
 
+  v->status->signals[SIG_MOTION_NOTIFY] = g_signal_connect(v->web, "motion-notify-event", G_CALLBACK(view_motion_notify_cb), gl);
   v->status->signals[SIG_TAB_BUTTON_PRESS]      = g_signal_connect(v->tabevent, "button-press-event",               G_CALLBACK(view_tab_button_press_cb), gl);
   //WebKitWebFrame *frame = webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(v->web));
   //v->status->signals[SIG_MAIN_FRAME_COMMITTED]  = g_signal_connect(frame, "load-committed", G_CALLBACK(view_main_frame_committed_cb), gl);

@@ -1333,7 +1333,7 @@ Signals emitted by dwb are the following:
 
 [source,javascript]
 ----
-Boolean callback(webview, hittestresult, json) 
+Boolean callback(webview, hittestresult, event) 
 ----
 
 Emitted when a button is pressed on the <<webview>>, return +true+ to prevent
@@ -1343,14 +1343,14 @@ the default action
 
 _webview_;; The <<webview>> which received the signal
 _hittestresult_;; Hittestresult under the cursor
-_json.button_;; The button that is pressed, usually a value between 1 and 5
-_json.state_;; A bitmap of modifiers pressed, see <<Modifier>>
-_json.time_;; The time in milliseconds when the button was pressed 
-_json.type_;; A <<ClickType>>
-_json.x_;; x-position relative to the window
-_json.xRoot_;; x-position relative to the screen
-_json.y_;; y-position relative to the window
-_json.yRoot_;; y-position relative to the screen
+_event.button_;; The button that is pressed, usually a value between 1 and 5
+_event.state_;; A bitmap of modifiers pressed, see <<Modifier>>
+_event.time_;; The time in milliseconds when the button was pressed 
+_event.type_;; A <<ClickType>>
+_event.x_;; x-position relative to the window
+_event.xRoot_;; x-position relative to the screen
+_event.y_;; y-position relative to the window
+_event.yRoot_;; y-position relative to the screen
 ****
   
 ****
@@ -1360,7 +1360,7 @@ _json.yRoot_;; y-position relative to the screen
 
 [source,javascript]
 ----
-Boolean callback(webview, hittestresult, json) 
+Boolean callback(webview, hittestresult, event) 
 ----
 
 Emitted when a button is released, return +true+ to prevent the default action
@@ -1369,7 +1369,7 @@ Emitted when a button is released, return +true+ to prevent the default action
 
 _webview_;; The <<webview>> which received the signal
 _hittestresult_;; Hittestresult under the cursor
-_json_;; Same as <<buttonPress>> but without _json.type_
+_event_;; Same as <<buttonPress>> but without _event.type_
 ****
 
 ****
@@ -1667,6 +1667,24 @@ _webview_;; The webview that emitted the signal
 _frame_;; The frames requires the decision 
 _request_;; The network request
 _json.mimeType_;; The mimetype
+****
+
+****
+[[mouseMove]]
+[float]
+==== *mouseMove* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, event) 
+----
+
+Emitted when the pointer is moved.
+
+ ::
+
+_webview_;; The webview that emitted the signal
+_event_;; Same as <<buttonRelease>>
 ****
 
 ****

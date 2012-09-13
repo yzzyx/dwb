@@ -77,6 +77,7 @@ static Sigmap m_sigmap[] = {
   { SCRIPTS_SIG_FRAME_CREATED, "frameCreated" },
   { SCRIPTS_SIG_CLOSE, "close" },
   { SCRIPTS_SIG_DOCUMENT_LOADED, "documentLoaded" },
+  { SCRIPTS_SIG_MOUSE_MOVE, "mouseMove" },
 };
 
 
