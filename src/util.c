@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
+#include <locale.h>
 #include <sys/time.h>
 #include "dwb.h"
 #include "util.h"
@@ -740,6 +741,7 @@ util_create_json(int n, ...) {
   gchar *ret;
 
   gint type;
+  setlocale(LC_NUMERIC, "C");
 
   GString *string = g_string_new("{");
 
