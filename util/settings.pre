@@ -45,13 +45,19 @@ sans-serif-font-family text Sans serif font family used to display text
 serif-font-family text Serif font family used to display text
 
 # colors Colors
-foreground-color text Foreground color of the statusbar
-background-color text Background color of the statusbar
 active-completion-bg-color text Background color of the active completion item
 active-completion-fg-color text Foreground color of the active completion item
+background-color text Background color of the statusbar
+download-bg-color text Background color of the download bar
+download-fg-color text Foreground color of the download bar
+download-gradient-end text End color for download progress gradient color
+download-gradient-start text Start color for download progress gradient color
 error-color text Color for error messages
+foreground-color text Foreground color of the statusbar
 normal-completion-bg-color text Background color of normal completion items
 normal-completion-fg-color text Foreground color of normal completion items
+progress-bar-empty-color text Color of the empty part of the progress bar
+progress-bar-full-color text Color of the full part of the progress bar
 prompt-color text Color for prompt messages
 ssl-trusted-color text Color for encrypted sites, trusted certificate
 ssl-untrusted-color text Color for encrypted sites, untrusted certificate
@@ -60,36 +66,31 @@ status-blocked-color text Color for script blocker, status blocked
 tab-active-bg-color text Background color of the active tab
 tab-active-fg-color text Foreground color of the active tab
 tab-normal-bg-color-1 text Background color 1 of the normal tab
-tab-normal-fg-color-1 text Foreground color 1 of the normal tab
 tab-normal-bg-color-2 text Background color 2 of the normal tab
+tab-normal-fg-color-1 text Foreground color 1 of the normal tab
 tab-normal-fg-color-2 text Foreground color 2 of the normal tab
 tab-number-color text Color of the tabnumber
 tab-protected-color text Color of the tabnumber for protected tabs
-download-fg-color text Foreground color of the download bar
-download-bg-color text Background color of the download bar
-download-gradient-start text Start color for download progress gradient color
-download-gradient-end text End color for download progress gradient color
-progress-bar-full-color text Color of the full part of the progress bar
-progress-bar-empty-color text Color of the empty part of the progress bar
 
 # lt Layout
 background-tabs checkbox Whether to open tabs in background
+bars-padding text Padding of the status, download, completion and tab bars
 close-tab-focus-policy select @right @left @rightmost @leftmost Controls the focused tab when a tab is closed
 default-height text Default height of the window
 default-width text Default width of the window
-enable-frame-flattening checkbox Whether to enable frame flattening
 enable-favicon checkbox Whether to enable favicons in the tabbar
+enable-frame-flattening checkbox Whether to enable frame flattening
 enforce-96-dpi checkbox Enforce a resolution of 96 dpi
 factor text Zoom factor of the tiling area
 message-delay text Time messages are shown, in seconds
 new-tab-position-policy select @right @left @rightmost @leftmost Controls the position of newly created tabs
+progress-bar-style select @default @simple The progress bar style
+show-single-tab checkbox Whether to show the tabbar if only one tab is open
 scrollbars checkbox Whether scrollbars should be enabled
-bars-padding text Padding of the status, download, completion and tab bars
 tabbar-visible text Number of seconds a hidden tabbar is visible when switching between tabs
 tabbed-browsing checkbox Whether to enable tabbed browsing
 user-stylesheet-uri text The uri of a stylesheet applied to every page
 widget-packing text Packing of the main widgets; t (T)=tabbar (hidden), w=webview, s (S)=statusbar (hidden), d=downloadbar
-progress-bar-style select @default @simple The progress bar style
 
 # hints Hints
 hint-active-color text Color of active links in hintmode
@@ -127,12 +128,12 @@ auto-insert-mode checkbox Whether to automatically go in insert mode if an edita
 cache-model select @webbrowser @documentviewer The cache-model used by webkit 
 close-last-tab-policy select @ignore @clear @close Behaviour when the last tab is closed
 custom-encoding text The custom encoding of the view
-download-external-command text External application used for downloads
 download-directory text Default download directory
+download-external-command text External application used for downloads
 download-no-confirm checkbox Whether to immediately start a download if download-directory is set
 download-use-external-program checkbox Whether to use an external download helper
-editor text External editor used for inputs/textareas
 editable checkbox Whether content can be modified
+editor text External editor used for inputs/textareas
 enable-caret-browsing checkbox Whether to enable caret browsing
 enable-default-context-menu checkbox Whether to enable the right click context menu
 enable-developer-extras checkbox Whether developer extensions should be enabled
@@ -151,7 +152,7 @@ history-length text Length of the browsing history
 navigation-history-max Length of the navigation history
 print-backgrounds checkbox Whether background images should be printed
 scheme-handler Application or script that handles uris with schemes that cannot be handled by dwb 
+searchengine-submit-pattern text The pattern which will be replaced with the search terms
 sync-files select @all @cookies @history @session @cookies_history @cookies_session @history_session Files to sync, see also file-sync-interval
 tab-key-cycles-through-elements checkbox Tab cycles through elements in insert mode
 update-search-delay text Delay before updating search results in milliseconds
-searchengine-submit-pattern text The pattern which will be replaced with the search terms

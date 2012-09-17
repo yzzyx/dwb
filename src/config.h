@@ -1165,4 +1165,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  INTEGER, { .i = 0 }, NULL,   { 0 }, },
   { { "searchengine-submit-pattern",                            "The pattern which will be replaced with the search terms", },                                            
     SETTING_GLOBAL,  CHAR, { .p = NULL }, NULL,   { 0 }, }, 
+  { { "show-single-tab",                            "Whether to show tabbar if only on tab is opened", },                                            
+    SETTING_GLOBAL | SETTING_ONINIT,  BOOLEAN, { .b = true }, (S_Func)dwb_set_show_single_tab,   { 0 }, }, 
 };/*}}}*/

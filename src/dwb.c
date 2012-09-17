@@ -75,6 +75,7 @@ static DwbStatus dwb_set_close_last_tab_policy(GList *, WebSettings *);
 static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_find_delay(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_do_not_track(GList *gl, WebSettings *s);
+static DwbStatus dwb_set_show_single_tab(GList *gl, WebSettings *s);
 #ifdef WITH_LIBSOUP_2_38
 static DwbStatus dwb_set_dns_lookup(GList *gl, WebSettings *s);
 #endif
@@ -179,6 +180,21 @@ dwb_set_cookies(GList *gl, WebSettings *s) {
 static DwbStatus
 dwb_set_do_not_track(GList *gl, WebSettings *s) {
   dwb.state.do_not_track = s->arg_local.b;
+  return STATUS_OK;
+}/*}}}*/
+
+/* dwb_set_cookies {{{ */
+static DwbStatus
+dwb_set_show_single_tab(GList *gl, WebSettings *s) {
+  dwb.misc.show_single_tab = s->arg_local.b;
+  if (dwb.state.views) {
+    if (!dwb.state.views->next) {
+      if (!dwb.misc.show_single_tab)
+        gtk_widget_hide(dwb.gui.topbox);
+      else if (dwb.state.bar_visible & BAR_VIS_TOP)
+        gtk_widget_show(dwb.gui.topbox);
+    }
+  }
   return STATUS_OK;
 }/*}}}*/
 

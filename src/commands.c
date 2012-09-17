@@ -679,7 +679,7 @@ commands_only(KeyMap *km, Arg *arg) {
 }/*}}}*/
 static void 
 commands_set_bars(int status) {
-  gtk_widget_set_visible(dwb.gui.topbox, status & BAR_VIS_TOP);
+  gtk_widget_set_visible(dwb.gui.topbox, (status & BAR_VIS_TOP) && (GET_BOOL("show-single-tab") || dwb.state.views->next));
   gtk_widget_set_visible(dwb.gui.bottombox, status & BAR_VIS_STATUS);
   if ((status & BAR_VIS_STATUS) ) {
     dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->hover.element), NULL);

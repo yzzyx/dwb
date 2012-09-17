@@ -759,6 +759,7 @@ struct _Misc {
 
   gboolean tabbed_browsing;
   gboolean private_browsing;
+  gboolean show_single_tab;
 
   double scroll_step;
 

@@ -1436,6 +1436,9 @@ your application, so you can simply set this to 'xdg-open'.  There are also the
 environment variables 'DWB_URI', 'DWB_SCHEME', 'DWB_COOKIES', 'DWB_USER_AGENT',
 and 'DWB_REFERER' available which can be used in a script, for example:
 
+*show-single-tab*::
+Whether to show the tabbar if only one tab is open, default value: 'true'.
+
 *searchengine-submit-pattern*::
 The pattern which will be replaced with the search terms.
 

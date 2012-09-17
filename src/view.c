@@ -1131,6 +1131,8 @@ view_remove(GList *gl) {
   dwb_source_remove();
 
   dwb.state.views = g_list_delete_link(dwb.state.views, gl);
+  if (!dwb.state.views->next && !dwb.misc.show_single_tab)
+    gtk_widget_hide(dwb.gui.topbox);
 
   gtk_widget_show(CURRENT_VIEW()->scroll);
   dwb_update_layout();
@@ -1169,10 +1171,11 @@ view_add(const char *uri, gboolean background) {
   }
   View *v = view_create_web_view();
   gtk_box_pack_end(GTK_BOX(dwb.gui.topbox), v->tabevent, true, true, 0);
+  int length = g_list_length(dwb.state.views);
   if (dwb.state.fview) {
     int p;
     if (dwb.misc.tab_position & TAB_POSITION_RIGHTMOST) 
-      p = g_list_length(dwb.state.views);
+      p = length;
     else if (dwb.misc.tab_position & TAB_POSITION_LEFT) 
       p = g_list_position(dwb.state.views, dwb.state.fview);
     else if (dwb.misc.tab_position & TAB_POSITION_LEFTMOST) 
@@ -1180,7 +1183,7 @@ view_add(const char *uri, gboolean background) {
     else 
       p = g_list_position(dwb.state.views, dwb.state.fview) + 1;
 
-    gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, g_list_length(dwb.state.views) - p);
+    gtk_box_reorder_child(GTK_BOX(dwb.gui.topbox), v->tabevent, length - p);
     gtk_box_insert(GTK_BOX(dwb.gui.mainbox), v->scroll, true, true, 0, p, GTK_PACK_START);
     dwb.state.views = g_list_insert(dwb.state.views, v, p);
     ret = g_list_nth(dwb.state.views, p);
@@ -1203,6 +1206,13 @@ view_add(const char *uri, gboolean background) {
     ret = dwb.state.views;
     scripts_create_tab(ret);
     dwb_focus(ret);
+  }
+  if (!dwb.misc.show_single_tab) {
+    if (length == 0) {
+      gtk_widget_hide(dwb.gui.topbox);
+    }
+    else if (length == 1 && (dwb.state.bar_visible & BAR_VIS_TOP)) 
+      gtk_widget_show(dwb.gui.topbox);
   }
 
   view_init_signals(ret);
