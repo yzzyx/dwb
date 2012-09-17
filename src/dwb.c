@@ -2592,6 +2592,8 @@ dwb_command_mode(void) {
 static DwbStatus 
 dwb_normal_mode(gboolean clean) {
   Mode mode = dwb.state.mode;
+  if (dwb.state.fview == NULL)
+    return STATUS_OK;
 
   if (mode == HINT_MODE || mode == SEARCH_FIELD_MODE) {
     js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "clear", NULL, NULL);
