@@ -33,6 +33,12 @@ js_make_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, 
 }
 
 void 
+js_set_property(JSContextRef ctx, JSObjectRef arg, const char *name, JSValueRef prop, JSClassAttributes attributes, JSValueRef *exc) {
+  JSStringRef js_key = JSStringCreateWithUTF8CString(name);
+  JSObjectSetProperty(ctx, arg, js_key, prop, attributes, exc);
+  JSStringRelease(js_key);
+}
+void 
 js_set_object_property(JSContextRef ctx, JSObjectRef arg, const char *name, const char *value, JSValueRef *exc) {
   JSStringRef js_key = JSStringCreateWithUTF8CString(name);
   JSValueRef js_value = js_char_to_value(ctx, value);
