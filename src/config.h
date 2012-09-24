@@ -881,6 +881,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_BUILTIN,  INTEGER, { .i = 10                }, (S_Func) dwb_webkit_setting,  { 0 }, },
   { { "enable-caret-browsing",			             "Whether to enable caret browsing", },                                          
     SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  { 0 }, },
+  { { "enable-accelerated-compositing",			       "Whether to enable gpu accelerated compositing", },                             
+    SETTING_BUILTIN,  BOOLEAN, { .b = false              }, (S_Func) dwb_webkit_setting,  { 0 }, },
   { { "enable-default-context-menu",			       "Whether to enable the right click context menu", },                             
     SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  { 0 }, },
   { { "enable-developer-extras",			           "Whether developer extensions should be enabled",    },                              

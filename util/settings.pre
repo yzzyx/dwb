@@ -134,6 +134,7 @@ download-no-confirm checkbox Whether to immediately start a download if download
 download-use-external-program checkbox Whether to use an external download helper
 editable checkbox Whether content can be modified
 editor text External editor used for inputs/textareas
+enable-accelerated-compositing checkbox Whether to enable gpu accelerated compositing
 enable-caret-browsing checkbox Whether to enable caret browsing
 enable-default-context-menu checkbox Whether to enable the right click context menu
 enable-developer-extras checkbox Whether developer extensions should be enabled

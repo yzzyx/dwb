@@ -950,6 +950,10 @@ The default font size used to display monospace text. Possible values: a font si
 Whether the content of a webpage should be editable. Possible values:
 true/false, default value: 'false'.
 
+*enable-accelerated-compositing*::
+Whether to enable gpu accelerated compositing. Possible values: true/false,
+default value: 'false'.
+
 *enable-caret-browsing*::
 Whether to enable caret browsing. Possible values: true/false,
 default value: 'false'.
