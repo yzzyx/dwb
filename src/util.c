@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
@@ -621,7 +622,11 @@ util_domain_from_uri(const char *uri) {
 /* util_compare_path(char *uri)      return: char* {{{*/
 int
 util_compare_path(const char *a, const char *b) {
-  return g_strcmp0(g_strrstr(a, "/"), g_strrstr(b, "/"));
+  if (a == NULL) 
+    return 1;
+  else if (b == NULL)
+    return -1;
+  return strcasecmp(g_strrstr(a, "/"), g_strrstr(b, "/"));
 }/*}}}*/
 
 /* util_basename(const char *path)       return: char * {{{*/
