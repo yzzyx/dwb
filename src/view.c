@@ -266,6 +266,16 @@ view_console_message_cb(WebKitWebView *web, char *message, int line, char *sourc
   return true;
 }/*}}}*/
 
+static gboolean 
+new_window_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, WebKitWebNavigationAction *action,
+    WebKitWebPolicyDecision *policy, GList *gl) {
+  const char *uri = webkit_network_request_get_uri(request);
+  dwb_change_mode(NORMAL_MODE, true);
+  dwb_new_window(uri);
+  gtk_widget_destroy(GTK_WIDGET(web));
+  return true;
+}
+
 /* view_create_web_view_cb(WebKitWebView *, WebKitWebFrame *, GList *) {{{*/
 static WebKitWebView * 
 view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
@@ -274,8 +284,9 @@ view_create_web_view_cb(WebKitWebView *web, WebKitWebFrame *frame, GList *gl) {
     return WEBVIEW(gl);
   }
   else {
-    dwb.state.nv = OPEN_NEW_WINDOW;
-    return web;
+    GtkWidget *wv = webkit_web_view_new();
+    g_signal_connect(wv, "navigation-policy-decision-requested", G_CALLBACK(new_window_cb), gl);
+    return WEBKIT_WEB_VIEW(wv);
   }
 }/*}}}*/
 
