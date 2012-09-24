@@ -124,6 +124,7 @@ static JSStaticValue message_values[] = {
 };
 static JSValueRef sp_show(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef sp_hide(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef sp_load(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
@@ -482,6 +483,17 @@ sp_hide(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, c
   scratchpad_hide();
   return JSValueMakeUndefined(ctx);
 }
+static JSValueRef 
+sp_load(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  char *text;
+  if (argc > 0 && (text = js_value_to_char(ctx, argv[0], -1, exc)) != NULL) {
+    scratchpad_load(text);
+    g_free(text);
+  }
+  return JSValueMakeUndefined(ctx);
+
+}
+
 
 
 /* SOUP_MESSAGE {{{*/
@@ -1840,6 +1852,7 @@ create_global_object() {
   JSStaticFunction scratchpad_functions[] = { 
     { "show",         sp_show,             kJSDefaultAttributes },
     { "hide",         sp_hide,             kJSDefaultAttributes },
+    { "load",         sp_load,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
   cd.className = "Scratchpad";
