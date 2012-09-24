@@ -3986,7 +3986,7 @@ dwb_init_vars(void) {
 
   dwb.misc.sync_interval = 0;
   dwb.misc.synctimer = 0;
-  dwb.misc.sync_files = 0;
+  dwb.misc.sync_files = SYNC_ALL;
 
   dwb.misc.bar_height = 0;
   dwb.state.last_tab = 0;
