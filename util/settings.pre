@@ -147,6 +147,7 @@ enable-page-cache checkbox Enable page cache
 enable-site-specific-quirks checkbox Enable site specific compatibility workarounds
 enable-spatial-navigation checkbox Enable spatial navigation
 enable-universal-access-from-file-uris checkbox Whether to allow files loaded through file: 
+enable-webgl checkbox Enable or disable webgl on pages
 enable-xss-auditor checkbox Whether to enable the xss auditor
 file-sync-interval text Interval to save files to hdd or 0 to directly write to hdd, see also sync-files
 history-length text Length of the browsing history

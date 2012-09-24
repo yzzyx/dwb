@@ -1046,6 +1046,10 @@ Whether to allow files loaded through file:// URIs universal access to all pages
 Possible values: true/false,
 default value: 'true'.
 
+*enable-webgl*::
+Whether to enable the webgl on pages. Possible values: true/false,
+default value: 'false'.
+
 *enable-xss-auditor*::
 Whether to enable the XSS Auditor. This feature filters some kinds of reflective
 XSS attacks on vulnerable web sites.

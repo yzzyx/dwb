@@ -919,6 +919,8 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_BUILTIN,  BOOLEAN, { .b = false             }, (S_Func) dwb_webkit_setting,  { 0 }, },
   { { "enable-universal-access-from-file-uris",	 "Whether to allow files loaded through file:", },                        
     SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  { 0 }, },
+  { { "enable-webgl",			                 "Enable or disable support for webgl on pages", },                                             
+    SETTING_BUILTIN,  BOOLEAN, { .b = false              }, (S_Func) dwb_webkit_setting,  { 0 }, },
   { { "enable-xss-auditor",			                 "Whether to enable the XSS auditor", },                                             
     SETTING_BUILTIN,  BOOLEAN, { .b = true              }, (S_Func) dwb_webkit_setting,  { 0 }, },
   { { "enforce-96-dpi",			                     "Enforce a resolution of 96 dpi", },                                          
