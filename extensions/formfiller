@@ -175,8 +175,9 @@ var injectGetForm = function () {//{{{
   return ret;
 };//}}}
 
-var injectFillForm = function (data) {//{{{
+var injectFillForm = function () {//{{{
   var key, i, forms, form = null, input;
+  var data = arguments[0];
 
   function fillInput(input, key) {
     var value = data.form[key].value;
@@ -216,12 +217,11 @@ var injectFillForm = function (data) {//{{{
       return null;
     return setValues(form);
   }
-
   if (data.hasIds) {
     form = fillElementsById();
   }
-  if (form === null && data.id) {
-    form = fillFormById();
+  if (form === null && data.id !== undefined && data.id !== null) {
+      form = fillFormById();
   }
   if (form === null) {
     forms = document.forms;
@@ -388,7 +388,7 @@ function fillForm() {//{{{
   for (i=0; i<frames.length; i++) {
     host = frames[i].host;
     if (data[host]) {
-      frames[i].inject("(" + String(injectFillForm) + ")(" + JSON.stringify(data[host]) + ")");
+      frames[i].inject(util.getBody(injectFillForm), data[host]);
     }
   }
   if (!config.keepPassword) {

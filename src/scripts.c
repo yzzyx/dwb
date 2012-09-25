@@ -194,12 +194,18 @@ static JSValueRef
 inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
   JSValueRef ret = NULL;
   gboolean global = false;
+  JSValueRef args[1];
+  int count = 0;
   if (argc < 1) {
     js_make_exception(ctx, exc, EXCEPTION("webview.inject: missing argument"));
     return JSValueMakeBoolean(ctx, false);
   }
-  if (argc > 1 && JSValueIsBoolean(ctx, argv[1])) 
-    global = JSValueToBoolean(ctx, argv[1]);
+  if (argc > 1 && !JSValueIsNull(ctx, argv[1])) {
+    args[0] = js_context_change(ctx, wctx, argv[1], exc);
+    count = 1;
+  }
+  if (argc > 2 && JSValueIsBoolean(ctx, argv[2])) 
+    global = JSValueToBoolean(ctx, argv[2]);
     
   JSStringRef script = JSValueToStringCopy(ctx, argv[0], exc);
   if (script == NULL) {
@@ -212,7 +218,7 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
   else {
     JSObjectRef func = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, NULL);
     if (func != NULL && JSObjectIsFunction(ctx, func)) {
-      JSValueRef wret = JSObjectCallAsFunction(wctx, func, NULL, 0, NULL, NULL);
+      JSValueRef wret = JSObjectCallAsFunction(wctx, func, NULL, count, count == 1 ? args : NULL, NULL) ;
       char *retx = js_value_to_json(wctx, wret, -1, NULL);
       if (retx) {
         ret = js_char_to_value(ctx, retx);

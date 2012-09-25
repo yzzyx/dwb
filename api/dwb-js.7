@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 09/13/2012
+.\"      Date: 09/25/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "09/13/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "09/25/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1048,7 +1048,7 @@ The number of the webview, starting at 0
 .nr an-break-flag 1
 .br
 .ps +1
-\fBString wv.inject(String script, [Boolean global])\fR
+\fBString wv.inject(String script, [Object argument], [Boolean global])\fR
 .RS 4
 .sp
 Injects a script into a webview
@@ -1056,6 +1056,13 @@ Injects a script into a webview
 \fIscript\fR
 .RS 4
 The script to inject
+.RE
+.PP
+\fIargument\fR
+.RS 4
+If the script isn\(cqt injected into the global scope the script is wrapped inside a function\&. argument then is accesible via
+\fIarguments\fR
+in the injected script, optional
 .RE
 .PP
 \fIglobal\fR

@@ -114,6 +114,23 @@ js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t size) {
   return ret;
 }/*}}}*/
 
+JSValueRef 
+js_context_change(JSContextRef source_ctx, JSContextRef dest_ctx, JSValueRef val, JSValueRef *exc) {
+  char *c_val = js_value_to_json(source_ctx, val, -1, exc);
+  if (c_val == NULL)
+    return JSValueMakeNull(dest_ctx);
+
+  JSStringRef json = JSStringCreateWithUTF8CString(c_val);
+  JSValueRef ret = JSValueMakeFromJSONString(dest_ctx, json);
+
+  g_free(c_val);
+  JSStringRelease(json);
+
+  if (ret == NULL)
+    return JSValueMakeNull(dest_ctx);
+  return ret;
+}
+
 /* js_create_object(WebKitWebFrame *frame, const char *) 
  *
  * Executes a script in a function scope, should return an object with

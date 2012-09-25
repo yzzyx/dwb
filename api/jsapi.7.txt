@@ -486,12 +486,15 @@ _wv.focusedFrame (Frame, read)_;; The focused frame of the webview
 _wv.mainFrame (Frame, read)_;; The main frame of the webview
 _wv.number (Number, read)_;; The number of the webview, starting at 0
 
-==== String wv.inject(String script, [Boolean global]) 
+==== String wv.inject(String script, [Object argument], [Boolean global]) 
 ****
 
 Injects a script into a webview
 
 _script_;; The script to inject
+_argument_;; If the script isn't injected into the global scope the script is
+wrapped inside a function. argument then is accesible via
+'arguments' in the injected script, optional 
 _global_;; true to inject it into the global scope, false to encapsulate it
 in a function, optional
 _returns_;; The return value of the script. If the script is injected globally

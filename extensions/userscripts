@@ -217,12 +217,12 @@ function matchMatches(frame, items) //{{{
 function doInject(frame, item) {
   if (item.delay > 0) {
     timerStart(item.delay, function() {
-      frame.inject(item.script, item.unwrap);
+      frame.inject(item.script, null, item.unwrap);
       return false;
     });
   }
   else {
-    frame.inject(item.script, item.unwrap);
+    frame.inject(item.script, null, item.unwrap);
   }
 }
 
