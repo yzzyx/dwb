@@ -47,6 +47,7 @@
 #include "domain.h"
 #include "application.h"
 #include "scripts.h"
+#include "scratchpad.h"
 
 /* DECLARATIONS {{{*/
 static DwbStatus dwb_webkit_setting(GList *, WebSettings *);
@@ -3699,11 +3700,11 @@ dwb_init_gui() {
   gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.urilabel, true, true, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.rstatus, false, false, 0);
   gtk_container_add(GTK_CONTAINER(dwb.gui.statusbox), alignment);
+  gtk_box_pack_end(GTK_BOX(dwb.gui.vbox), scratchpad_get(), false, false, 0);
 
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);
 
   gtk_widget_show(dwb.gui.mainbox);
-
   gtk_widget_show(dwb.gui.vbox);
   gtk_widget_show(dwb.gui.window);
 

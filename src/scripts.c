@@ -31,6 +31,7 @@
 #include "application.h" 
 #include "completion.h" 
 #include "entry.h" 
+#include "scratchpad.h" 
 //#define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete )
 #define kJSDefaultProperty  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
 #define kJSDefaultAttributes  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
@@ -121,6 +122,9 @@ static JSStaticValue message_values[] = {
   { "firstParty",     message_get_first_party, NULL, kJSDefaultAttributes }, 
   { 0, 0, 0, 0 }, 
 };
+static JSValueRef sp_show(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef sp_hide(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef sp_load(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
@@ -474,6 +478,29 @@ wv_set_title(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t ar
 }
 
 /*}}}*/
+
+static JSValueRef 
+sp_show(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  scratchpad_show();
+  return JSValueMakeUndefined(ctx);
+}
+static JSValueRef 
+sp_hide(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  scratchpad_hide();
+  return JSValueMakeUndefined(ctx);
+}
+static JSValueRef 
+sp_load(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  char *text;
+  if (argc > 0 && (text = js_value_to_char(ctx, argv[0], -1, exc)) != NULL) {
+    scratchpad_load(text);
+    g_free(text);
+  }
+  return JSValueMakeUndefined(ctx);
+
+}
+
+
 
 /* SOUP_MESSAGE {{{*/
 /* soup_uri_to_js_object {{{*/
@@ -1465,14 +1492,24 @@ object_destroy_cb(JSObjectRef o) {
 }
 
 static JSObjectRef 
+make_object_for_class(JSContextRef ctx, JSClassRef class, GObject *o) {
+  JSObjectRef retobj = g_object_get_qdata(o, ref_quark);
+  if (retobj != NULL)
+    return retobj;
+
+  retobj = JSObjectMake(ctx, class, o);
+  g_object_set_qdata_full(o, ref_quark, retobj, (GDestroyNotify)object_destroy_cb);
+  JSValueProtect(m_global_context, retobj);
+  return retobj;
+}
+
+
+static JSObjectRef 
 make_object(JSContextRef ctx, GObject *o) {
   if (o == NULL) {
     JSValueRef v = JSValueMakeNull(ctx);
     return JSValueToObject(ctx, v, NULL);
   }
-  JSObjectRef retobj = g_object_get_qdata(o, ref_quark);
-  if (retobj != NULL)
-    return retobj;
   JSClassRef class;
   if (WEBKIT_IS_WEB_VIEW(o)) 
      class = m_webview_class;
@@ -1484,11 +1521,8 @@ make_object(JSContextRef ctx, GObject *o) {
     class = m_message_class;
   else 
     class = m_default_class;
+  return make_object_for_class(ctx, class, o);
 
-  retobj = JSObjectMake(ctx, class, o);
-  g_object_set_qdata_full(o, ref_quark, retobj, (GDestroyNotify)object_destroy_cb);
-  JSValueProtect(m_global_context, retobj);
-  return retobj;
 }/*}}}*/
 
 static gboolean 
@@ -1553,9 +1587,7 @@ create_class(const char *name, JSStaticFunction staticFunctions[], JSStaticValue
 static JSObjectRef 
 create_object(JSContextRef ctx, JSClassRef class, JSObjectRef obj, JSClassAttributes attr, const char *name, void *private) {
   JSObjectRef ret = JSObjectMake(ctx, class, private);
-  JSStringRef js_name = JSStringCreateWithUTF8CString(name);
-  JSObjectSetProperty(ctx, obj, js_name, ret, attr, NULL);
-  JSStringRelease(js_name);
+  js_set_property(ctx, obj, name, ret, attr, NULL);
   return ret;
 }/*}}}*/
 
@@ -1590,7 +1622,19 @@ set_property(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueR
       gtype == G_TYPE_UINT64 || gtype == G_TYPE_FLAGS))  {
     double value = JSValueToNumber(ctx, jsvalue, exception);
     if (value != NAN) {
-      g_object_set(o, buf, value, NULL);
+      switch (gtype) {
+        case G_TYPE_ENUM :
+        case G_TYPE_FLAGS :
+        case G_TYPE_INT : g_object_set(o, buf, (gint)value, NULL); break;
+        case G_TYPE_UINT : g_object_set(o, buf, (guint)value, NULL); break;
+        case G_TYPE_LONG : g_object_set(o, buf, (long)value, NULL); break;
+        case G_TYPE_ULONG : g_object_set(o, buf, (gulong)value, NULL); break;
+        case G_TYPE_FLOAT : g_object_set(o, buf, (gfloat)value, NULL); break;
+        case G_TYPE_DOUBLE : g_object_set(o, buf, (gdouble)value, NULL); break;
+        case G_TYPE_INT64 : g_object_set(o, buf, (gint64)value, NULL); break;
+        case G_TYPE_UINT64 : g_object_set(o, buf, (guint64)value, NULL); break;
+
+      }
       return true;
     }
     return false;
@@ -1811,7 +1855,19 @@ create_global_object() {
   cd.parentClass = m_default_class;
   m_download_class = JSClassCreate(&cd);
 
-
+  JSStaticFunction scratchpad_functions[] = { 
+    { "show",         sp_show,             kJSDefaultAttributes },
+    { "hide",         sp_hide,             kJSDefaultAttributes },
+    { "load",         sp_load,             kJSDefaultAttributes },
+    { 0, 0, 0 }, 
+  };
+  cd.className = "Scratchpad";
+  cd.staticFunctions = scratchpad_functions;
+  cd.staticValues = NULL;
+  cd.parentClass = m_default_class;
+  class = JSClassCreate(&cd);
+  JSObjectRef o = make_object_for_class(m_global_context, class, G_OBJECT(scratchpad_get()));
+  js_set_property(m_global_context, global_object, "scratchpad", o, kJSDefaultAttributes, NULL);
 
   JSObjectRef constructor = JSObjectMakeConstructor(m_global_context, m_download_class, download_constructor_cb);
   JSStringRef name = JSStringCreateWithUTF8CString("Download");
