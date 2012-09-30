@@ -688,7 +688,7 @@ adblock_rule_parse(char *filterlist) {
             /*  currently unsupported  xbl, ping, xmlhttprequest, dtd, elemhide,
              *  other, collapse, donottrack, object-subrequest, popup 
              *  */
-            snprintf(warning, 255, "Adblock option '%s' isn't supported", o);
+            snprintf(warning, sizeof(warning), "Adblock option '%s' isn't supported", o);
             adblock_warn_ignored(warning, pattern);
             goto error_out;
           }
@@ -836,7 +836,7 @@ adblock_init() {
   if (filterlist == NULL)
     return false;
   char buffer[PATH_MAX];
-  filterlist = util_expand_home(buffer, filterlist, PATH_MAX);
+  filterlist = util_expand_home(buffer, filterlist, sizeof(buffer));
   if (!g_file_test(filterlist, G_FILE_TEST_EXISTS)) {
     fprintf(stderr, "Filterlist not found: %s\n", filterlist);
     return false;

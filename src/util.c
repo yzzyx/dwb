@@ -354,7 +354,7 @@ util_set_file_content(const char *filename, const char *content) {
   if (content == NULL || filename == NULL)
     return false;
 
-  filename = util_expand_home(buffer, filename, PATH_MAX);
+  filename = util_expand_home(buffer, filename, sizeof(buffer));
   if (g_file_test(filename, G_FILE_TEST_IS_SYMLINK)) {
      link = g_file_read_link(filename, &error);
      if (link == NULL) {
@@ -613,7 +613,7 @@ util_domain_from_uri(const char *uri) {
     uri_p = p + 3;
   }
   if ( (p = strchr(uri_p, '/')) ) {
-    strncpy(domain, uri_p, p - uri_p);
+    strncpy(domain, uri_p, MIN(p - uri_p, sizeof(domain)));
   }
   char *ret = domain[0] ? domain : uri_p;
   return g_strdup(ret);
@@ -663,7 +663,7 @@ util_file_add(const char *filename, const char *text, int append, int max) {
 
   gboolean ret = false;
   if ( (file = fopen(filename, "r"))) {
-    for (int i=0; fgets(buffer, sizeof buffer, file) &&  (max < 0 || i < max); i++) {
+    for (int i=0; fgets(buffer, sizeof(buffer), file) &&  (max < 0 || i < max); i++) {
       tmp = buffer;
       while (g_ascii_isspace(*tmp) && *tmp != '\n')
         tmp++;

@@ -157,7 +157,7 @@ completion_set_entry_text(Completion *c) {
     char buf[7];
     gtk_editable_delete_text(GTK_EDITABLE(dwb.gui.entry), 0, -1);
     if (dwb.state.nummod > -1) {
-      l =  snprintf(buf, 7, "%d", dwb.state.nummod);
+      l =  snprintf(buf, sizeof(buf), "%d", dwb.state.nummod);
       gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), buf, -1, &l);
     }
     gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &l);
@@ -649,7 +649,7 @@ completion_init_autocompletion(GList *gl) {
   for (GList *l=gl; l; l=l->next, i++) {
     KeyMap *m = l->data;
     if (! (m->map->prop & CP_OVERRIDE_ENTRY) ) {
-      snprintf(buffer, 128, "%s  <span style='italic'>%s</span>", m->key, m->map->n.second);
+      snprintf(buffer, sizeof(buffer), "%s  <span style='italic'>%s</span>", m->key, m->map->n.second);
       Completion *c = completion_get_completion_item(NULL, NULL, NULL, m);
       gtk_label_set_use_markup(GTK_LABEL(c->llabel), true);
       gtk_label_set_markup(GTK_LABEL(c->llabel), buffer);
@@ -799,7 +799,7 @@ static void
 completion_init_path_completion(int back) { 
   char *text = gtk_editable_get_chars(GTK_EDITABLE(dwb.gui.entry), 0, -1);
   char expanded[PATH_MAX];
-  text = util_expand_home(expanded, text, PATH_MAX);
+  text = util_expand_home(expanded, text, sizeof(expanded));
 
   dwb.comps.path_completion = dwb.comps.active_path = g_list_append(NULL, g_strdup(text));
   if (dwb.state.dl_action == DL_ACTION_EXECUTE) {

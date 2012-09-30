@@ -162,7 +162,7 @@ download_progress_cb(WebKitDownload *download, GParamSpec *p, DwbDownloadStatus 
     double current_size = (double)webkit_download_get_current_size(download) / 0x100000;
     char buffer[128] = {0};
     const char *format = speed > 1 ? "[%.1fM/s|%d:%02d|%2d%%|%.3f/%.3f]" : "[%3.1fK/s|%d:%02d|%2d%%|%.3f/%.3f]";
-    snprintf(buffer, 128, format, speed > 1 ? speed : speed*1024, remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
+    snprintf(buffer, sizeof(buffer), format, speed > 1 ? speed : speed*1024, remaining/60, remaining%60,  (int)(progress*100), current_size,  total_size);
     gtk_label_set_text(GTK_LABEL(label->rlabel), buffer);
 
 #if _HAS_GTK3
@@ -205,7 +205,7 @@ download_finished(DwbDownload *d) {
   char buffer[64];
   double elapsed = webkit_download_get_elapsed_time(d->download);
   double total_size = (double)webkit_download_get_total_size(d->download);
-  snprintf(buffer, 64, "[%.2f KB/s|%.3f MB]", (total_size / (elapsed*0x400)), total_size / 0x100000);
+  snprintf(buffer, sizeof(buffer), "[%.2f KB/s|%.3f MB]", (total_size / (elapsed*0x400)), total_size / 0x100000);
   gtk_label_set_text(GTK_LABEL(d->rlabel), buffer);
 }
 
@@ -397,7 +397,7 @@ download_start(const char *path) {
   dwb.state.download = webkit_download_new(request);
 
   char escape_buffer[255];
-  filename = util_normalize_filename(escape_buffer, filename, 255);
+  filename = util_normalize_filename(escape_buffer, filename, sizeof(escape_buffer));
 
   if (EMIT_SCRIPT(DOWNLOAD_START)) {
     if (dwb.state.dl_action == DL_ACTION_EXECUTE) {
@@ -425,11 +425,11 @@ download_start(const char *path) {
   //char *command = NULL;
   char *tmppath = NULL;
   const char *last_slash;
-  char path_buffer[PATH_MAX+1];
+  char path_buffer[PATH_MAX];
   gboolean external = GET_BOOL("download-use-external-program");
 
   char buffer[PATH_MAX];
-  path = util_expand_home(buffer, path, PATH_MAX);
+  path = util_expand_home(buffer, path, sizeof(buffer));
   
   if (!filename || !strlen(filename)) {
     filename = "dwb_download";

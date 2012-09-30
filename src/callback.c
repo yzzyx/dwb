@@ -31,7 +31,7 @@ callback_entry_insert_text(GtkWidget* entry, char *new_text, int length, gpointe
   const char *text = GET_TEXT();
   int newlen = strlen(text) + length + 1;
   char buffer[newlen];
-  snprintf(buffer, newlen, "%s%s", text, new_text);
+  snprintf(buffer, sizeof(buffer), "%s%s", text, new_text);
   if (dwb.state.mode == QUICK_MARK_OPEN) {
     return dwb_update_find_quickmark(buffer);
   }

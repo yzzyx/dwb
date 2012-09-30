@@ -505,7 +505,7 @@ html_load(GList *gl, const char *uri) {
   gboolean ret = false;
   for (guint i=0; i<LENGTH(table); i++) {
     if (!strncmp(table[i].uri, uri, strlen(table[i].uri))) {
-      g_strlcpy(current_uri, uri, BUFFER_LENGTH - 1);
+      g_strlcpy(current_uri, uri, sizeof(current_uri) - 1);
       if (table[i].func(gl, &table[i]) == STATUS_OK)  {
         ret = true;
         break;

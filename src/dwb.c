@@ -529,7 +529,7 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...) {
   
   va_start(arg_list, text);
   char message[STRING_LENGTH];
-  vsnprintf(message, STRING_LENGTH, text, arg_list);
+  vsnprintf(message, sizeof(message), text, arg_list);
   va_end(arg_list);
 
   if (gtk_widget_get_visible(dwb.gui.bottombox)) {
@@ -557,7 +557,7 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
 
   va_start(arg_list, error);
   char message[STRING_LENGTH];
-  vsnprintf(message, STRING_LENGTH, error, arg_list);
+  vsnprintf(message, sizeof(message), error, arg_list);
   va_end(arg_list);
 
   dwb_source_remove();
@@ -1672,7 +1672,7 @@ dwb_submit_searchengine(void) {
   if (hint_search_submit == NULL) {
       hint_search_submit = HINT_SEARCH_SUBMIT;
   }
-  snprintf(buffer, 64, "{ \"searchString\" : \"%s\" }", hint_search_submit);
+  snprintf(buffer, sizeof(buffer), "{ \"searchString\" : \"%s\" }", hint_search_submit);
   if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "submitSearchEngine", buffer, &value)) ) {
     dwb.state.form_name = value;
   }
@@ -1801,7 +1801,7 @@ dwb_update_hints(GdkEventKey *e) {
 
   if (e->keyval == GDK_KEY_Return) {
     com = "followActive";
-    snprintf(json, BUFFER_LENGTH, "{ \"type\" : \"%d\" }", hint_map[dwb.state.hint_type].arg);
+    snprintf(json, sizeof(json), "{ \"type\" : \"%d\" }", hint_map[dwb.state.hint_type].arg);
   }
   else if (DWB_COMPLETE_KEY(e)) {
     if ((DWB_TAB_KEY(e) && e->state & GDK_SHIFT_MASK) || e->keyval == GDK_KEY_Up) {
@@ -1817,7 +1817,7 @@ dwb_update_hints(GdkEventKey *e) {
   }
   else {
     val = util_keyval_to_char(e->keyval, true);
-    snprintf(json, BUFFER_LENGTH, "{ \"input\" : \"%s%s\", \"type\" : %d }", GET_TEXT(), val ? val : "", hint_map[dwb.state.hint_type].arg);
+    snprintf(json, sizeof(json), "{ \"input\" : \"%s%s\", \"type\" : %d }", GET_TEXT(), val ? val : "", hint_map[dwb.state.hint_type].arg);
     com = "updateHints";
     g_free(val);
   }
@@ -1842,7 +1842,7 @@ dwb_show_hints(Arg *arg) {
   if (dwb.state.mode != HINT_MODE) {
     gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), "");
     char json[64];
-    snprintf(json, 64, "{ \"newTab\" : \"%d\", \"type\" : \"%d\" }",
+    snprintf(json, sizeof(json), "{ \"newTab\" : \"%d\", \"type\" : \"%d\" }",
         (dwb.state.nv & (OPEN_NEW_WINDOW|OPEN_NEW_VIEW)), 
         hint_map[arg->i].arg);
     char *jsret; 
@@ -1973,7 +1973,7 @@ dwb_confirm(GList *gl, char *prompt, ...) {
 
   va_start(arg_list, prompt);
   char message[STRING_LENGTH];
-  vsnprintf(message, STRING_LENGTH, prompt, arg_list);
+  vsnprintf(message, sizeof(message), prompt, arg_list);
   va_end(arg_list);
   dwb_source_remove();
   dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.prompt, dwb.font.fd_active, false);
@@ -2001,7 +2001,7 @@ dwb_prompt(gboolean visibility, char *prompt, ...) {
   va_list arg_list; 
   va_start(arg_list, prompt);
   char message[STRING_LENGTH];
-  vsnprintf(message, STRING_LENGTH, prompt, arg_list);
+  vsnprintf(message, sizeof(message), prompt, arg_list);
   va_end(arg_list);
   dwb_set_status_bar_text(dwb.gui.lstatus, message, &dwb.color.active_fg, dwb.font.fd_active, false);
   if (! (dwb.state.bar_visible & BAR_VIS_STATUS) ) 
@@ -2114,7 +2114,7 @@ dwb_tab_label_set_text(GList *gl, const char *text) {
     title = text;
   char progress[11] = { 0 };
   if (v->status->progress != 0) {
-    snprintf(progress, 11, "[%2d%%] ", v->status->progress);
+    snprintf(progress, sizeof(progress), "[%2d%%] ", v->status->progress);
   }
   char *escaped = g_markup_printf_escaped("<span foreground='%s'>%d%s</span> %s%s", 
       LP_PROTECTED(v) ? dwb.color.tab_protected_color : dwb.color.tab_number_color,
@@ -2760,7 +2760,7 @@ void
 dwb_execute_user_script(KeyMap *km, Arg *a) {
   GError *error = NULL;
   char nummod[64];
-  snprintf(nummod, 64, "%d", NUMMOD);
+  snprintf(nummod, sizeof(nummod), "%d", NUMMOD);
   char *argv[] = { a->arg, (char*)webkit_web_view_get_uri(CURRENT_WEBVIEW()), (char *)webkit_web_view_get_title(CURRENT_WEBVIEW()), (char *)dwb.misc.profile, nummod, a->p, NULL } ;
   GPid pid;
   GSList *list = NULL;
@@ -2853,7 +2853,7 @@ dwb_get_scripts() {
       }
       if ( (f = fopen(path, "r")) != NULL) {
         if (fgetc(f) == '#' && fgetc(f) == '!')  {
-          if (fgets(buf, 11, f) != NULL && !g_strcmp0(buf, "javascript")) {
+          if (fgets(buf, sizeof(buf), f) != NULL && !g_strcmp0(buf, "javascript")) {
             int next = fgetc(f);
             if (g_ascii_isspace(next)) {
               javascript = true;
