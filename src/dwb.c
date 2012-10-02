@@ -613,13 +613,16 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
     double lower = gtk_adjustment_get_lower(a);
     double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
     double value = gtk_adjustment_get_value(a); 
-    char *position = 
-      upper == lower ? g_strdup("[all]") : 
-      value == lower ? g_strdup("[top]") : 
-      value == upper ? g_strdup("[bot]") : 
-      g_strdup_printf("[%02d%%]", (int)(value * 100/upper + 0.5));
+    char position[7];
+    if (upper == lower) 
+      strcpy(position, "[all]");
+    else if (value == lower)
+      strcpy(position, "[top]");
+    else if (value == upper) 
+      strcpy(position, "[bot]");
+    else 
+      snprintf(position, sizeof(position), "[%02d%%]", (int)(value * 100/upper + 0.5));
     g_string_append(string, position);
-    g_free(position);
   }
   if (v->status->scripts & SCRIPTS_BLOCKED) {
     const char *format = v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY 

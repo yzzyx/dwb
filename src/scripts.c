@@ -1721,6 +1721,8 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
 /* create_global_object {{{*/
 static void 
 create_global_object() {
+  ref_quark = g_quark_from_static_string("dwb_js_ref");
+
   JSStaticFunction global_functions[] = { 
     { "execute",          global_execute,         kJSDefaultAttributes },
     { "exit",             global_exit,         kJSDefaultAttributes },
@@ -1972,8 +1974,6 @@ scripts_init(gboolean force) {
       return;
   }
   dwb.state.script_completion = NULL;
-
-  ref_quark = g_quark_from_static_string("dwb_js_ref");
 
   char *dir = util_get_data_dir(LIBJS_DIR);
   if (dir != NULL) {
