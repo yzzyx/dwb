@@ -976,7 +976,6 @@ util_markup_escape(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size
       escaped = g_markup_escape_text(string, -1);
       g_free(string);
       if (escaped != NULL) {
-        puts(escaped);
         JSValueRef ret = js_char_to_value(ctx, escaped);
         g_free(escaped);
         return ret;
@@ -1804,7 +1803,7 @@ create_global_object() {
     { "dirNames",  io_dir_names,        kJSDefaultAttributes },
     { "notify",    io_notify,           kJSDefaultAttributes },
     { "error",     io_error,            kJSDefaultAttributes },
-    { "statusBar", io_status_bar,       kJSDefaultAttributes },
+    { "statusBar", io_status_bar,      kJSDefaultAttributes },
     { 0,           0,           0 },
   };
   class = create_class("io", io_functions, NULL);
