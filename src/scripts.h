@@ -45,6 +45,7 @@ enum SIGNALS {
   SCRIPTS_SIG_CLOSE,
   SCRIPTS_SIG_DOCUMENT_LOADED,
   SCRIPTS_SIG_MOUSE_MOVE,
+  SCRIPTS_SIG_STATUS_BAR,
   SCRIPTS_SIG_LAST, 
 } ;
 
@@ -75,6 +76,12 @@ void scripts_completion_activate(void);
   if (scripts_emit(&signal)) { \
     g_free(json); \
     return true; \
+  } else g_free(json); \
+G_STMT_END
+#define SCRIPTS_EMIT(signal, json) G_STMT_START  \
+  if (scripts_emit(&signal)) { \
+    g_free(json); \
+    return; \
   } else g_free(json); \
 G_STMT_END
 

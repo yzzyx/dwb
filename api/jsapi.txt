@@ -428,7 +428,6 @@ prompt, default +true+, optional
 _returns_;; The text that was entered or +null+
 ****
 
-
 ****
 [[read]]
 [float]
@@ -445,6 +444,25 @@ Read from a file.
 
 _path_;; Path to a file that should be read
 _returns_;; A string with the file content
+****
+
+****
+[[statusBar]]
+[float]
+==== *statusBar()* ==== 
+
+[source,javascript]
+----
+void io.statusBar(Object text)
+----
+
+Sets the statusbar text. The statusbar consists of two labels, a 'middle' label and
+a 'right' label, on both labels pango markup can be used
+
+ ::
+
+_text.middle_;; Text for the middle label
+_text.right_;; Text for the right label
 ****
 
 ****
@@ -710,6 +728,22 @@ example.com, for www.example.co.uk it will be example.co.uk.
 
 _hostname_;; a hostname
 _returns_;; the base domain 
+****
+
+****
+[[markupEscape]]
+[float]
+==== *markupEscape()* ==== 
+
+[source,javascript]
+----
+String util.markupEscape(String text)
+----
+
+Escapes text for usage with pango markup.
+
+_text_;; A text to escape
+_returns_;; The escaped text or 'null';
 ****
 
 dwb also adds additional methods to builtin objects 
@@ -1728,6 +1762,27 @@ _webview_;; The webview that emitted the signal
 _frame_;;   The frame that dispatched the request
 _request_;; The network request
 _response_;; The network response
+****
+
+****
+[[statusBarChange]]
+[float]
+==== *statusBarChange* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, json) 
+----
+
+Emitted before the status bar is updated, return +false+ if dwb should not update
+the statusbar.
+
+_webview_;; The focused webview
+_data.ssl_;; SSL-State of the page, can either be 'trusted', 'untrusted' or 'none'
+_data.canGoBack_;; Whether it is possible to navigate back in the webview
+_data.canGoForward_;; Whether it is possible to navigate forward in the webview
+_data.scriptsBlocked_;; Whether scripts are blocked
+_data.pluginsBlocked_;; Whether plugins are blocked
 ****
 
 ****

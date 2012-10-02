@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 09/25/2012
+.\"      Date: 10/02/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "09/25/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "10/02/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -591,6 +591,27 @@ A string with the file content
 .nr an-break-flag 1
 .br
 .ps +1
+\fBString io.statusBar(Object text)\fR
+.RS 4
+.sp
+Sets the statusbar text\&. The statusbar consists of two labels, a \fImiddle\fR label and a \fIright\fR label, on both labels pango markup can be used
+.PP
+\fItext\&.middle\fR
+.RS 4
+Text for the middle label
+.RE
+.PP
+\fItext\&.right\fR
+.RS 4
+Text for the right label
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
 \fBBoolean io.write(String path, String mode, String text)\fR
 .RS 4
 .sp
@@ -826,6 +847,28 @@ a hostname
 \fIreturns\fR
 .RS 4
 the base domain
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBString util.markupEscape(String text)\fR
+.RS 4
+.sp
+Escapes text for usage with pango markup\&.
+.PP
+\fItext\fR
+.RS 4
+A text to escape
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The escaped text or
+\fInull\fR;
 .RE
 .sp
 dwb also adds additional methods to builtin objects
@@ -2091,6 +2134,61 @@ The network request
 \fIresponse\fR
 .RS 4
 The network response
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBstatusBarChange\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("statusBarChange", function(webview, data));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted before the status bar is updated, return false if dwb should not update the statusbar\&.
+.PP
+\fIwebview\fR
+.RS 4
+The focused webview
+.RE
+.PP
+\fIdata\&.ssl\fR
+.RS 4
+SSL\-State of the page, can either be
+\fItrusted\fR,
+\fIuntrusted\fR
+or
+\fInone\fR
+.RE
+.PP
+\fIdata\&.canGoBack\fR
+.RS 4
+Whether it is possible to navigate back in the webview
+.RE
+.PP
+\fIdata\&.canGoForward\fR
+.RS 4
+Whether it is possible to navigate forward in the webview
+.RE
+.PP
+\fIdata\&.scriptsBlocked\fR
+.RS 4
+Whether scripts are blocked
+.RE
+.PP
+\fIdata\&.pluginsBlocked\fR
+.RS 4
+Whether plugins are blocked
 .RE
 .RE
 .sp

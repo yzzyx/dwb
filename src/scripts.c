@@ -79,6 +79,7 @@ static Sigmap m_sigmap[] = {
   { SCRIPTS_SIG_CLOSE, "close" },
   { SCRIPTS_SIG_DOCUMENT_LOADED, "documentLoaded" },
   { SCRIPTS_SIG_MOUSE_MOVE, "mouseMove" },
+  { SCRIPTS_SIG_STATUS_BAR, "statusBarChange" },
 };
 
 
@@ -966,6 +967,24 @@ util_domain_from_host(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, s
   g_free(host);
   return ret;
 }/*}}}*//*}}}*/
+static JSValueRef 
+util_markup_escape(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  char *string = NULL, *escaped = NULL;
+  if (argc > 0) {
+    string = js_value_to_char(ctx, argv[0], -1, exc);
+    if (string != NULL) {
+      escaped = g_markup_escape_text(string, -1);
+      g_free(string);
+      if (escaped != NULL) {
+        puts(escaped);
+        JSValueRef ret = js_char_to_value(ctx, escaped);
+        g_free(escaped);
+        return ret;
+      }
+    }
+  }
+  return JSValueMakeNull(ctx);
+}
 
 /* DATA {{{*/
 /* data_get_profile {{{*/
@@ -1247,6 +1266,26 @@ io_error(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
   }
   return JSValueMakeUndefined(ctx);
 }/*}}}*/
+static JSValueRef 
+io_status_bar(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc < 1) 
+    return JSValueMakeUndefined(ctx);
+  JSObjectRef o = JSValueToObject(ctx, argv[0], exc);
+  if (o == NULL) 
+    return JSValueMakeUndefined(ctx);
+  char *middle = js_get_string_property(ctx, o, "middle");
+  char *right = js_get_string_property(ctx, o, "right");
+  if (middle != NULL) {
+    gtk_label_set_markup(GTK_LABEL(dwb.gui.urilabel), middle);
+  }
+  if (right != NULL) {
+    gtk_label_set_markup(GTK_LABEL(dwb.gui.rstatus), right);
+  }
+
+  g_free(middle);
+  g_free(right);
+  return JSValueMakeUndefined(ctx);
+}
 
 static JSValueRef 
 io_dir_names(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
@@ -1765,6 +1804,7 @@ create_global_object() {
     { "dirNames",  io_dir_names,        kJSDefaultAttributes },
     { "notify",    io_notify,           kJSDefaultAttributes },
     { "error",     io_error,            kJSDefaultAttributes },
+    { "statusBar", io_status_bar,       kJSDefaultAttributes },
     { 0,           0,           0 },
   };
   class = create_class("io", io_functions, NULL);
@@ -1818,6 +1858,7 @@ create_global_object() {
 
   JSStaticFunction util_functions[] = { 
     { "domainFromHost",   util_domain_from_host,         kJSDefaultAttributes },
+    { "markupEscape",     util_markup_escape,         kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
   class = create_class("util", util_functions, NULL);

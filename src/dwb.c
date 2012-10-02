@@ -483,9 +483,7 @@ dwb_webview_property(GList *gl, WebSettings *s) {
 void
 dwb_set_status_bar_text(GtkWidget *label, const char *text, DwbColor *fg,  PangoFontDescription *fd, gboolean markup) {
   if (markup) {
-    char *escaped =  g_markup_escape_text(text, -1);
     gtk_label_set_markup(GTK_LABEL(label), text);
-    g_free(escaped);
   }
   else {
     gtk_label_set_text(GTK_LABEL(label), text);
@@ -577,6 +575,8 @@ dwb_set_error_message(GList *gl, const char *error, ...) {
 
 void 
 dwb_update_uri(GList *gl) {
+  if (EMIT_SCRIPT(STATUS_BAR))
+    return;
   if (gl != dwb.state.fview)
     return;
   View *v = VIEW(gl);
@@ -596,7 +596,25 @@ dwb_update_uri(GList *gl) {
 /* dwb_update_status_text(GList *gl) {{{*/
 void 
 dwb_update_status_text(GList *gl, GtkAdjustment *a) {
-  View *v = gl ? gl->data : dwb.state.fview->data;
+  g_return_if_fail(gl == dwb.state.fview);
+  View *v = gl->data;
+
+  gboolean back = webkit_web_view_can_go_back(WEBKIT_WEB_VIEW(v->web));
+  gboolean forward = webkit_web_view_can_go_forward(WEBKIT_WEB_VIEW(v->web));
+
+  if (EMIT_SCRIPT(STATUS_BAR)) {
+    char *json = util_create_json(5, 
+      CHAR, "ssl", v->status->ssl == SSL_TRUSTED 
+            ? "trusted" : v->status->ssl == SSL_UNTRUSTED 
+            ? "untrusted" : "none",
+      BOOLEAN, "canGoBack", back,
+      BOOLEAN, "canGoForward", forward, 
+      BOOLEAN, "scriptsBlocked", (v->status->scripts & SCRIPTS_BLOCKED) != 0, 
+      BOOLEAN, "pluginBlocked", (v->plugins->status & PLUGIN_STATUS_ENABLED) != 0 && 
+          (v->plugins->status & PLUGIN_STATUS_HAS_PLUGIN) != 0);
+    ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(json, STATUS_BAR, 0) };
+    SCRIPTS_EMIT(signal, json);
+  }
     
   if (!a) {
     a = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(v->scroll));
@@ -604,8 +622,6 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
   dwb_update_uri(gl);
   GString *string = g_string_new(NULL);
 
-  gboolean back = webkit_web_view_can_go_back(WEBKIT_WEB_VIEW(v->web));
-  gboolean forward = webkit_web_view_can_go_forward(WEBKIT_WEB_VIEW(v->web));
   const char *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : " ";
   g_string_append(string, bof);
 
