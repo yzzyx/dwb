@@ -1578,4 +1578,4 @@ return {
 --------
 
 == SEE ALSO
-*dwb*(1) *dwbem*(7)
+*dwb*(1) *dwbem*(1)
