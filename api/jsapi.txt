@@ -1774,8 +1774,8 @@ _response_;; The network response
 Boolean callback(webview, json) 
 ----
 
-Emitted before the status bar is updated, return +false+ if dwb should not update
-the statusbar.
+Emitted before the status bar is updated, if the callback returns +true+ dwb will
+not update the statusbar so it is possible to set the statusbar from the script.
 
 _webview_;; The focused webview
 _data.ssl_;; SSL-State of the page, can either be 'trusted', 'untrusted' or 'none'

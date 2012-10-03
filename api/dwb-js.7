@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 10/02/2012
+.\"      Date: 10/03/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "10/02/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "10/03/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -2155,7 +2155,7 @@ signals\&.connect("statusBarChange", function(webview, data));
 .RE
 .\}
 .sp
-Emitted before the status bar is updated, return false if dwb should not update the statusbar\&.
+Emitted before the status bar is updated, if the callback returns true dwb will not update the statusbar so it is possible to set the statusbar from the script\&.
 .PP
 \fIwebview\fR
 .RS 4
