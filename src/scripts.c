@@ -125,6 +125,8 @@ static JSStaticValue message_values[] = {
 static JSValueRef sp_show(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef sp_hide(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef sp_load(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef sp_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef sp_send(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
@@ -165,6 +167,8 @@ static JSClassRef m_webview_class, m_frame_class, m_download_class, m_default_cl
 static gboolean m_commandline = false;
 static JSObjectRef m_array_contructor;
 static JSObjectRef m_completion_callback;
+static JSObjectRef m_sp_scripts_cb;
+static JSObjectRef m_sp_scratchpad_cb;
 static GQuark ref_quark;
 
 /* MISC {{{*/
@@ -491,10 +495,47 @@ sp_load(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, c
     g_free(text);
   }
   return JSValueMakeUndefined(ctx);
-
 }
-
-
+static JSObjectRef 
+sp_callback_create(JSContextRef ctx, size_t argc, const JSValueRef argv[], JSValueRef *exc) {
+  JSObjectRef ret = NULL;
+  if (argc > 0) {
+    ret = JSValueToObject(ctx, argv[0], exc);
+    if (ret == NULL || !JSObjectIsFunction(ctx, ret))
+      ret = NULL;
+  }
+  return ret;
+}
+static JSValueRef 
+sp_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  m_sp_scripts_cb = sp_callback_create(ctx, argc, argv, exc);
+  return JSValueMakeUndefined(ctx);
+}
+void 
+scripts_scratchpad_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  m_sp_scratchpad_cb = sp_callback_create(ctx, argc, argv, exc);
+}
+void
+sp_context_change(JSContextRef src_ctx, JSContextRef dest_ctx, JSObjectRef func, JSValueRef val) {
+  if (func != NULL) {
+    JSValueRef val_changed = js_context_change(src_ctx, dest_ctx, val, NULL);
+    JSValueRef argv[] = { val_changed == 0 ? JSValueMakeNull(dest_ctx) : val_changed };
+    JSObjectCallAsFunction(dest_ctx, func, NULL, 1, argv, NULL);
+  }
+}
+// send from scripts context to scratchpad context
+static JSValueRef 
+sp_send(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  if (argc > 0) {
+    sp_context_change(m_global_context, webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(scratchpad_get()))), m_sp_scratchpad_cb, argv[0]);
+  }
+  return JSValueMakeUndefined(ctx);
+}
+// send from scratchpad context to script context
+void 
+scripts_scratchpad_send(JSContextRef ctx, JSValueRef val) {
+  sp_context_change(ctx, m_global_context, m_sp_scripts_cb, val);
+}
 
 /* SOUP_MESSAGE {{{*/
 /* soup_uri_to_js_object {{{*/
@@ -1853,6 +1894,8 @@ create_global_object() {
     { "show",         sp_show,             kJSDefaultAttributes },
     { "hide",         sp_hide,             kJSDefaultAttributes },
     { "load",         sp_load,             kJSDefaultAttributes },
+    { "get",          sp_get,              kJSDefaultAttributes },
+    { "send",         sp_send,              kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
   cd.className = "Scratchpad";

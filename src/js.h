@@ -18,6 +18,7 @@
 
 #ifndef JS_H
 #define JS_H
+#include <JavaScriptCore/JavaScript.h>
 
 void js_make_exception(JSContextRef ctx, JSValueRef *exception, const gchar *format, ...);
 char * js_string_to_char(JSContextRef ctx, JSStringRef jsstring, size_t );
@@ -36,6 +37,7 @@ JSValueRef js_execute(JSContextRef ctx, const char *, JSValueRef *exc);
 gboolean js_print_exception(JSContextRef ctx, JSValueRef exception);
 JSObjectRef js_make_function(JSContextRef ctx, const char *script);
 JSValueRef js_json_to_value(JSContextRef ctx, const char *text);
+JSValueRef js_context_change(JSContextRef, JSContextRef, JSValueRef, JSValueRef *);
 
 typedef struct _js_array_iterator {
   JSContextRef ctx;

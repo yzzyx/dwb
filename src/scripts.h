@@ -69,6 +69,8 @@ void scripts_execute_scripts(char **scripts);
 DwbStatus scripts_eval_key(KeyMap *m, Arg *arg);
 gboolean scripts_execute_one(const char *script);
 void scripts_completion_activate(void);
+void scripts_scratchpad_send(JSContextRef ctx, JSValueRef val);
+void scripts_scratchpad_get(JSContextRef, JSObjectRef, JSObjectRef, size_t, const JSValueRef[], JSValueRef* );
 
 #define EMIT_SCRIPT(sig)  ((dwb.misc.script_signals & (1<<SCRIPTS_SIG_##sig)))
 #define SCRIPTS_EMIT_RETURN(signal, json) G_STMT_START  \
