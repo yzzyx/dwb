@@ -836,8 +836,8 @@ request_callback(SoupSession *session, SoupMessage *message, JSObjectRef functio
     JSObjectRef o = get_message_data(message);
     JSValueRef vals[] = { o, make_object(m_global_context, G_OBJECT(message))  };
     JSObjectCallAsFunction(m_global_context, function, NULL, 2, vals, NULL);
-    JSValueUnprotect(m_global_context, function);
   }
+  JSValueUnprotect(m_global_context, function);
 }
 static JSValueRef 
 global_send_request(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
