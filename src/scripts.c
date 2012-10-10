@@ -836,6 +836,7 @@ request_callback(SoupSession *session, SoupMessage *message, JSObjectRef functio
     JSObjectRef o = get_message_data(message);
     JSValueRef vals[] = { o, make_object(m_global_context, G_OBJECT(message))  };
     JSObjectCallAsFunction(m_global_context, function, NULL, 2, vals, NULL);
+    JSValueUnprotect(m_global_context, function);
   }
 }
 static JSValueRef 
@@ -857,6 +858,7 @@ global_send_request(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, siz
   SoupMessage *msg = soup_message_new(method == NULL ? "GET" : method, uri);
   if (msg == NULL)
     goto error_out;
+  JSValueProtect(ctx, function);
   soup_session_queue_message(webkit_get_default_session(), msg, (SoupSessionCallback)request_callback, function);
   ret = 0;
 error_out: 
