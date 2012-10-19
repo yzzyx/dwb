@@ -2278,7 +2278,11 @@ dwb_load_uri(GList *gl, const char *arg) {
   /* Check if uri is a javascript snippet */
   if (g_str_has_prefix(tmpuri, "javascript:")) {
     if (GET_BOOL("javascript-schemes"))
-      dwb_execute_script(webkit_web_view_get_main_frame(web), tmpuri, false);
+    {
+      char *unescaped = g_uri_unescape_string(tmpuri, NULL);
+      dwb_execute_script(webkit_web_view_get_main_frame(web), unescaped, false);
+      g_free(unescaped);
+    }
     else 
       dwb_set_error_message(dwb.state.fview, "Loading of javascript schemes permitted");
     goto clean;
