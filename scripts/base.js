@@ -698,7 +698,6 @@ Object.freeze((function () {
         __focusInput();
       },
     insertAdblockRule : function(rule) {
-      console.log(rule);
       var st=document.createElement('style');
       document.head.appendChild(st);
       document.styleSheets[document.styleSheets.length-1].insertRule(rule, 0);

@@ -48,9 +48,9 @@ install-data: all
 	install -m 644 $(SHAREDIR)/dwb.png $(DESTDIR)$(DATADIR)/pixmaps/dwb.png
 	install -d $(DESTDIR)$(DATADIR)/applications
 	install -m 644 $(SHAREDIR)/dwb.desktop $(DESTDIR)$(DATADIR)/applications/dwb.desktop
-	@# Hints
+	@# Base javascript script
 	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)
-	install -m 644 $(JSDIR)/$(HINT_SCRIPT) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)/$(HINT_SCRIPT)
+	install -m 644 $(JSDIR)/$(BASE_SCRIPT) $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(JSDIR)/$(BASE_SCRIPT)
 	@# Libjs
 	install -d $(DESTDIR)$(DATADIR)/$(REAL_NAME)/$(LIBJSDIR)
 	for file in $(LIBJSDIR)/*; do \

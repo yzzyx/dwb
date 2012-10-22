@@ -105,8 +105,8 @@ KEY_FILE=keys.html
 ERROR_FILE=error.html
 LOCAL_FILE=local.html
 
-#hint script
-HINT_SCRIPT=hints.js
+#Base javascript script
+BASE_SCRIPT=base.js
 
 # VARIOUS FILES
 PLUGIN_FILE=pluginblocker.asc
@@ -156,7 +156,7 @@ CFLAGS += -DHEAD_FILE=\"$(HEAD_FILE)\"
 CFLAGS += -DKEY_FILE=\"$(KEY_FILE)\"
 CFLAGS += -DERROR_FILE=\"$(ERROR_FILE)\"
 CFLAGS += -DLOCAL_FILE=\"$(LOCAL_FILE)\"
-CFLAGS += -DHINT_SCRIPT=\"$(HINT_SCRIPT)\"
+CFLAGS += -DBASE_SCRIPT=\"$(BASE_SCRIPT)\"
 CFLAGS += -DSYSTEM_DATA_DIR=\"$(DATADIR)\"
 CFLAGS += -DLIBJS_DIR=\"$(LIBJSDIR)\"
 

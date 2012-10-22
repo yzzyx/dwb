@@ -324,10 +324,10 @@ adblock_apply_element_hider(WebKitWebFrame *frame, GList *gl) {
     if (css_rule->str[css_rule->len-1] == ',') 
       g_string_erase(css_rule, css_rule->len-1, 1);
     g_string_append(css_rule, "{display:none!important;}");
-    js_call_as_function(frame, VIEW(gl)->hint_object, "insertAdblockRule", css_rule->str, kJSTypeString, NULL);
+    js_call_as_function(frame, VIEW(gl)->js_base, "insertAdblockRule", css_rule->str, kJSTypeString, NULL);
   }
   for (GSList *l = m_css_hider_list; l; l=l->next) 
-    js_call_as_function(frame, VIEW(gl)->hint_object, "insertAdblockRule", l->data, kJSTypeString, NULL);
+    js_call_as_function(frame, VIEW(gl)->js_base, "insertAdblockRule", l->data, kJSTypeString, NULL);
   g_string_free(css_rule, true);
 }/*}}}*/
 /*}}}*/

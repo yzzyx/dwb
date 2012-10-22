@@ -1692,7 +1692,7 @@ dwb_submit_searchengine(void) {
       hint_search_submit = HINT_SEARCH_SUBMIT;
   }
   snprintf(buffer, sizeof(buffer), "{ \"searchString\" : \"%s\" }", hint_search_submit);
-  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "submitSearchEngine", buffer, kJSTypeUndefined, &value)) ) {
+  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, "submitSearchEngine", buffer, kJSTypeUndefined, &value)) ) {
     dwb.state.form_name = value;
   }
 }/*}}}*/
@@ -1841,7 +1841,7 @@ dwb_update_hints(GdkEventKey *e) {
     g_free(val);
   }
   if (com) {
-    buffer = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, com, *json ? json : NULL, kJSTypeObject, &buffer);
+    buffer = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, com, *json ? json : NULL, kJSTypeObject, &buffer);
   }
   if (buffer != NULL) { 
     if (dwb_evaluate_hints(buffer) == STATUS_END) 
@@ -1865,7 +1865,7 @@ dwb_show_hints(Arg *arg) {
         (dwb.state.nv & (OPEN_NEW_WINDOW|OPEN_NEW_VIEW)), 
         hint_map[arg->i].arg);
     char *jsret; 
-    js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "showHints", json, kJSTypeObject, &jsret);
+    js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, "showHints", json, kJSTypeObject, &jsret);
     if (jsret != NULL) {
       ret = dwb_evaluate_hints(jsret);
       g_free(jsret);
@@ -2636,7 +2636,7 @@ dwb_normal_mode(gboolean clean) {
     return STATUS_OK;
 
   if (mode == HINT_MODE || mode == SEARCH_FIELD_MODE) {
-    js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "clear", NULL, kJSTypeUndefined, NULL);
+    js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, "clear", NULL, kJSTypeUndefined, NULL);
   }
   else if (mode == DOWNLOAD_GET_PATH) {
     completion_clean_path_completion();
@@ -3437,7 +3437,7 @@ static DwbStatus
 dwb_init_hints(GList *gl, WebSettings *s) {
   setlocale(LC_NUMERIC, "C");
   g_free(dwb.misc.hints);
-  char *scriptpath = util_get_data_file(HINT_SCRIPT, "scripts");
+  char *scriptpath = util_get_data_file(BASE_SCRIPT, "scripts");
   dwb.misc.hints = util_get_file_content(scriptpath, NULL);
   g_free(scriptpath);
 

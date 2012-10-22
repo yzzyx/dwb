@@ -630,12 +630,12 @@ view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
   WebKitLoadStatus status = webkit_web_view_get_load_status(web);
   if (status == WEBKIT_LOAD_COMMITTED) {
     dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
-    if (VIEW(gl)->hint_object != NULL) {
-      JSValueUnprotect(JS_CONTEXT_REF(gl), VIEW(gl)->hint_object);
-      VIEW(gl)->hint_object = NULL;
+    if (VIEW(gl)->js_base != NULL) {
+      JSValueUnprotect(JS_CONTEXT_REF(gl), VIEW(gl)->js_base);
+      VIEW(gl)->js_base = NULL;
     }
-    VIEW(gl)->hint_object = js_create_object(webkit_web_view_get_main_frame(web), dwb.misc.hints);
-    js_call_as_function(webkit_web_view_get_main_frame(web), VIEW(gl)->hint_object, "init", dwb.misc.hint_style, kJSTypeObject, NULL);
+    VIEW(gl)->js_base = js_create_object(webkit_web_view_get_main_frame(web), dwb.misc.hints);
+    js_call_as_function(webkit_web_view_get_main_frame(web), VIEW(gl)->js_base, "init", dwb.misc.hint_style, kJSTypeObject, NULL);
   }
 }/*}}}*/
 /* view_load_status_cb {{{*/
@@ -659,7 +659,7 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl) {
       /* This is more or less a dummy call, to compile the script and speed up
        * execution time 
        * */
-      js_call_as_function(webkit_web_view_get_main_frame(web), v->hint_object, "createStyleSheet", NULL, kJSTypeUndefined, NULL);
+      js_call_as_function(webkit_web_view_get_main_frame(web), v->js_base, "createStyleSheet", NULL, kJSTypeUndefined, NULL);
       break;
     case WEBKIT_LOAD_COMMITTED: 
       if (v->status->scripts & SCRIPTS_ALLOWED_TEMPORARY) {
@@ -916,7 +916,7 @@ view_create_web_view() {
   status->frames = NULL;
   status->group = 0;
 
-  v->hint_object = NULL;
+  v->js_base = NULL;
   v->inspector_window = NULL;
   v->plugins = plugins_new();
   for (int i=0; i<SIG_LAST; i++) 
