@@ -662,51 +662,48 @@ Object.freeze((function () {
         globals.bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
         globals.fontSize = Math.ceil(font.replace(/\D/g, ""))/2;
   };
+  
 
 
   return {
     createStyleSheet : function() {
       __createStyleSheet(document);
     },
-    showHints : 
-      function(obj) {
+    showHints : function(obj) {
         return __showHints(obj.type, obj.newTab);
       },
-    updateHints :
-      function (obj) {
+    updateHints : function (obj) {
         return __updateHints(obj.input, obj.type);
       },
-    clear : 
-      function () {
+    clear : function () {
         __clear();
       },
-    followActive :
-      function (obj) {
+    followActive : function (obj) {
         return __evaluate(__getActive().element, obj.type);
       },
 
-    focusNext :
-      function () {
+    focusNext : function () {
         __focusNext();
       },
-    focusPrev : 
-      function () {
+    focusPrev : function () {
         __focusPrev();
       },
-    addSearchEngine : 
-      function () {
+    addSearchEngine : function () {
         return __addSearchEngine();
       },
-    submitSearchEngine :
-      function (obj) {
+    submitSearchEngine : function (obj) {
         return __submitSearchEngine(obj.searchString);
       },
-    focusInput : 
-      function () {
+    focusInput : function () {
         __focusInput();
       },
-    init : 
-      function (obj) {
+    insertAdblockRule : function(rule) {
+      console.log(rule);
+      var st=document.createElement('style');
+      document.head.appendChild(st);
+      document.styleSheets[document.styleSheets.length-1].insertRule(rule, 0);
+    },
+    init : function (obj) {
         __init(obj.hintLetterSeq, obj.hintFont, obj.hintStyle, obj.hintFgColor,
             obj.hintBgColor, obj.hintActiveColor, obj.hintNormalColor,
             obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks, obj.hintAutoFollow);

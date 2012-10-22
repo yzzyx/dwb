@@ -119,7 +119,7 @@ commands_focus_input(KeyMap *km, Arg *a) {
   char *value;
   DwbStatus ret = STATUS_OK;
 
-  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "focusInput", NULL, &value)) ) {
+  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "focusInput", NULL, kJSTypeUndefined, &value)) ) {
     if (!g_strcmp0(value, "_dwb_no_input_")) 
       ret = STATUS_ERROR;
     g_free(value);
@@ -132,7 +132,7 @@ commands_focus_input(KeyMap *km, Arg *a) {
 DwbStatus
 commands_add_search_field(KeyMap *km, Arg *a) {
   char *value;
-  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "addSearchEngine", NULL, &value)) ) {
+  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->hint_object, "addSearchEngine", NULL, kJSTypeUndefined, &value)) ) {
     if (!g_strcmp0(value, "_dwb_no_hints_")) {
       return STATUS_ERROR;
     }

@@ -612,8 +612,8 @@ util_domain_from_uri(const char *uri) {
   if ( (p = strstr(uri, "://")) ) {
     uri_p = p + 3;
   }
-  if ( (p = strchr(uri_p, '/')) ) {
-    strncpy(domain, uri_p, MIN(p - uri_p, sizeof(domain)));
+  if ( (p = strchr(uri_p, '/')) != NULL ) {
+    strncpy(domain, uri_p, MIN((unsigned int)(p - uri_p), sizeof(domain)));
   }
   char *ret = domain[0] ? domain : uri_p;
   return g_strdup(ret);

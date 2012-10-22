@@ -167,7 +167,7 @@ js_create_object(WebKitWebFrame *frame, const char *script) {
 
 /* js_call_as_function(WebKitWebFrame, JSObjectRef, char *string, char *json, * char **ret) {{{*/
 char *  
-js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, const char *string, const char *json, char **char_ret) {
+js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, const char *string, const char *json, JSType arg_type, char **char_ret) {
   char *ret = NULL;
   JSValueRef js_ret, function, v = NULL;
   JSObjectRef function_object;
@@ -187,9 +187,18 @@ js_call_as_function(WebKitWebFrame *frame, JSObjectRef obj, const char *string, 
   function = JSObjectGetProperty(ctx, obj, js_name, NULL);
   function_object = JSValueToObject(ctx, function, NULL);
   if (json != NULL) {
-    js_json = JSStringCreateWithUTF8CString(json);
-    v = JSValueMakeFromJSONString(ctx, js_json);
-    JSStringRelease(js_json);
+    switch(arg_type) {
+      case kJSTypeObject : 
+        js_json = JSStringCreateWithUTF8CString(json);
+        v = JSValueMakeFromJSONString(ctx, js_json);
+        JSStringRelease(js_json);
+        break;
+      case kJSTypeString : 
+        v = js_char_to_value(ctx, json);
+        break;
+      default : 
+        break;
+    }
   }
   if (v) {
     JSValueRef vals[] = { v };
