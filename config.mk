@@ -58,8 +58,6 @@ ifeq ($(shell pkg-config --exists javascriptcoregtk-1.0 && echo 1), 1)
 GTK2LIBS+=javascriptcoregtk-1.0
 endif
 
-
-
 LIBSOUP=libsoup-2.4
 
 ifeq ($(shell pkg-config --exists $(LIBSOUP) && echo 1), 1)

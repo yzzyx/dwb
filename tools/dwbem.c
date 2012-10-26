@@ -29,7 +29,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <readline/readline.h>
+//#include <readline/readline.h>
+#include <termios.h>
 #include <sys/stat.h>
 
 #include <glib-2.0/glib.h>
@@ -287,6 +288,18 @@ update_installed(const char *name, const char *meta)
   return 0;
 
 }
+char *
+xreadline(char *buffer, size_t length, const char *prompt) {
+  for (;;) {
+    fprintf(stdout, prompt);
+    if (isatty(STDIN_FILENO))
+      tcflush(STDIN_FILENO, TCIFLUSH);
+    if (fgets(buffer, length, stdin)) {
+      if (buffer)
+        return buffer;
+    }
+  }
+}
 
 static int 
 yes_no(int preset, const char *format, ...) 
@@ -294,21 +307,21 @@ yes_no(int preset, const char *format, ...)
   va_list args; 
   char *response;
   int ret = -1;
-  char buffer[512];
+  char prompt[512];
   char cformat[512];
+  char buffer[128];
 
   snprintf(cformat, 512, "\033[34m:::\033[0m %s %s? ", format, preset ? "(Y/n)" : "(y/N)");
 
   va_start(args, format);
-  vsnprintf(buffer, 512, cformat, args);
+  vsnprintf(prompt, 512, cformat, args);
   va_end(args);
 
   while (ret == -1) 
   {
-    response = readline(buffer);
+    response = xreadline(buffer, sizeof(buffer), prompt);
     if (response != NULL) 
     {
-      char *backup = response;
       g_strstrip(response);
       if (*response == '\0')
         ret = preset;
@@ -318,7 +331,6 @@ yes_no(int preset, const char *format, ...)
         ret = 0;
       else 
         print_error("try again");
-      g_free(backup);
     }
     else 
       ret = preset;
@@ -329,16 +341,17 @@ yes_no(int preset, const char *format, ...)
 static char *
 get_response(const char *format, ...) 
 {
-  char buffer[512];
+  char prompt[512];
+  char buffer[128];
   char cformat[512];
   va_list args; 
 
   snprintf(cformat, 512, "\033[34m:::\033[0m %s ", format);
   va_start(args, format);
-  vsnprintf(buffer, 512, cformat, args);
+  vsnprintf(prompt, 512, cformat, args);
   va_end(args);
 
-  return readline(buffer);
+  return xreadline(buffer, sizeof(buffer), prompt);
 }
 
 int 
