@@ -213,6 +213,11 @@ int
 util_navigation_compare_first(Navigation *a, Navigation *b) {
   return (g_strcmp0(a->first, b->first));
 }/*}}}*/
+/* util_navigation_compare_uri {{{*/
+int
+util_navigation_compare_uri(Navigation *a, const char *uri) {
+  return (g_strcmp0(a->first, uri));
+}/*}}}*/
 /* util_navigation_sort_first {{{*/
 int
 util_navigation_compare_second(Navigation *a, Navigation *b) {
@@ -221,6 +226,10 @@ util_navigation_compare_second(Navigation *a, Navigation *b) {
 int 
 util_quickmark_compare(Quickmark *a, Quickmark *b) {
   return g_strcmp0(a->key, b->key);
+}
+int 
+util_quickmark_compare_uri(Quickmark *a, const char *uri) {
+  return g_strcmp0(a->nav->first, uri);
 }
 /* util_keymap_sort_first(KeyMap *, KeyMap *) {{{*/
 int

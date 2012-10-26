@@ -41,6 +41,7 @@ Arg * util_char_to_arg(char *, DwbType );
 // sort 
 int util_navigation_compare_first(Navigation *, Navigation *);
 int util_navigation_compare_second(Navigation *, Navigation *);
+int util_navigation_compare_uri(Navigation *, const char *);
 
 int util_keymap_sort_first(KeyMap *, KeyMap *);
 int util_keymap_sort_second(KeyMap *, KeyMap *);
@@ -73,6 +74,7 @@ void dwb_quickmark_free(Quickmark *);
 Quickmark * dwb_quickmark_new(const char *, const char *, const char *);
 Quickmark * dwb_quickmark_new_from_line(const char *);
 int util_quickmark_compare(Quickmark *a, Quickmark *b);
+int util_quickmark_compare_uri(Quickmark *a, const char *);
 
 // useless
 char * dwb_return(const char *);
@@ -99,5 +101,7 @@ const char * util_str_chug(const char *str);
 Sanitize util_string_to_sanitize(const char *);
 
 char *util_create_json(int, ...);
+char *util_create_json(int, ...);
+
 
 #endif

@@ -660,6 +660,19 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
       g_string_append_c(string, 'u');
     g_string_append(string, "</span>]");
   }
+  if (webkit_web_view_get_load_status(WEBVIEW(gl)) == WEBKIT_LOAD_FINISHED) {
+    const char *uri = webkit_web_view_get_uri(WEBVIEW(gl));
+    gboolean has_quickmark = g_list_find_custom(dwb.fc.quickmarks, uri, (GCompareFunc)util_quickmark_compare_uri) != NULL;
+    gboolean has_bookmark = g_list_find_custom(dwb.fc.bookmarks, uri, (GCompareFunc)util_navigation_compare_uri) != NULL;
+    if (has_quickmark || has_bookmark) {
+      g_string_append_c(string, '[');
+      if (has_quickmark) 
+        g_string_append_c(string, 'Q');
+      if (has_bookmark) 
+        g_string_append_c(string, 'B');
+      g_string_append_c(string, ']');
+    }
+  }
   if (v->status->progress != 0) {
     wchar_t *bar_blocks = PROGRESS_DEFAULT;
     wchar_t buffer[PBAR_LENGTH + 1] = { 0 };
