@@ -339,10 +339,9 @@ yes_no(int preset, const char *format, ...)
 }
 
 static char *
-get_response(const char *format, ...) 
+get_response(char *buffer, size_t length, const char *format, ...) 
 {
   char prompt[512];
-  char buffer[128];
   char cformat[512];
   va_list args; 
 
@@ -351,7 +350,7 @@ get_response(const char *format, ...)
   vsnprintf(prompt, 512, cformat, args);
   va_end(args);
 
-  return xreadline(buffer, sizeof(buffer), prompt);
+  return xreadline(buffer, length, prompt);
 }
 
 int 
@@ -448,17 +447,17 @@ static void
 set_loader(const char *name, const char *config, int flags) 
 {
   char *script = NULL;
-  char *shortcut = NULL, *command = NULL;
+  char shortcut[64], command[128];
   gboolean load = true;
   gboolean has_cmd;
+
 
   notify("Updating extension loader", name, m_loader);
 
   if (flags & F_BIND) 
   {
-    while ((shortcut = get_response("Shortcut for toggling "EXT(%s)"?", name)) == NULL || *shortcut == '\0') 
-      g_free(shortcut);
-    command = get_response("Command for toggling "EXT(%s)"?", name);
+    while (get_response(shortcut, sizeof(shortcut), "Shortcut for toggling "EXT(%s)"?", name) == NULL || *shortcut == '\0');
+    get_response(command, sizeof(command), "Command for toggling "EXT(%s)"?", name);
     load = yes_no(1, "Load "EXT(%s)" on startup", name);
   }
   has_cmd = command != NULL && *command != '\0';
@@ -509,8 +508,6 @@ set_loader(const char *name, const char *config, int flags)
     regex_replace_file(m_loader, regex, script);
     g_free(regex);
   }
-  g_free(shortcut);
-  g_free(command);
   g_free(script);
 }
 
