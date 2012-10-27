@@ -1,3 +1,40 @@
+Changes since 2012-08-22:
+
+New features:
+ * Indicator for quick/bookmarks
+ * Scratchpad for userscripts
+ * Update statusbar from userscripts
+ * New option 'enable-webgl'
+ * New option 'enable-accelerated-compositing'
+ * New option 'show-single-tab'
+ * Implementing 'mouseMove' signal for userscripts
+ * Implementing 'Object.setPrivate', 'Object.getPrivate' for userscripts
+ * Allow usage of directories for 'adblock-filterlist'
+ * Extension manager for javascript extensions
+ * New option 'sync-files', old 'sync-files' is now 'file-sync-interval'
+ * New methods 'Array.fastIndexOf', 'Array.indexOf'
+ * More information in version info
+
+Bug fixes:
+ * Fixing element hider issues with webkit-1.10
+ * Unescape uris with javascript-scheme
+ * Always unprotect callback function in request_callback
+ * Protect callback function in global_send_request
+ * Adding missing download command to keys
+ * Fixing wrong section number in dwb-js-manpage
+ * Create js-quark before creating any objects; don't allocate position string in dwb_update_status_text
+ * Use sizeof for stack-allocated strings; fixing one possible buffer overflow
+ * Set default value for sync_files
+ * Don't ignore case in directory listings
+ * Create a new webview in view_create_web_view_cb if tabs are disabled
+ * Fixing possible segfault in dwb_normal_mode
+ * Let wv, frame and download be derived from gobject; fixing possible segfault in tabs_create; apply scripts before checking signals
+ * Fixing several typos 
+ * Ignore empty key-names in dwb:keys
+ * Descriptions for cookie-functions
+ * Respect evironment LDFLAGS
+ * Check if key or value is NULL in dwb_set_key, fixes a possible segfault
+
 Changes since 2012-05-11 
 
 New features: 
