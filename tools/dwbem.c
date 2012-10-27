@@ -296,9 +296,18 @@ xreadline(char *buffer, size_t length, const char *prompt) {
       tcflush(STDIN_FILENO, TCIFLUSH);
     if (fgets(buffer, length, stdin)) {
       if (buffer)
-        return buffer;
+        break;
     }
   }
+  char *backup = buffer;
+  while(*buffer) {
+    if (*buffer == '\n') {
+      *buffer = '\0';
+      break;
+    }
+    buffer++;
+  }
+  return backup;
 }
 
 static int 
