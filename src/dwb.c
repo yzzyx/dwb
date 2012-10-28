@@ -1705,7 +1705,7 @@ dwb_submit_searchengine(void) {
       hint_search_submit = HINT_SEARCH_SUBMIT;
   }
   snprintf(buffer, sizeof(buffer), "{ \"searchString\" : \"%s\" }", hint_search_submit);
-  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, "submitSearchEngine", buffer, kJSTypeString, &value)) ) {
+  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, "submitSearchEngine", buffer, kJSTypeObject, &value)) ) {
     dwb.state.form_name = value;
   }
 }/*}}}*/
