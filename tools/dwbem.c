@@ -255,7 +255,7 @@ grep(const char *filename, const char *name, char *buffer, size_t length)
   char *first_space;
   if (f == NULL)
     return -1;
-  while(fgets(line, 128, f) != NULL) 
+  while(fgets(line, sizeof(line), f) != NULL) 
   {
     first_space = strchr(line, ' ');
     if (first_space == NULL)
@@ -281,7 +281,7 @@ static int
 update_installed(const char *name, const char *meta) 
 {
   char buffer[128];
-  snprintf(buffer, 128, "%s\n", meta);
+  snprintf(buffer, sizeof(buffer), "%s\n", meta);
   char *regex = g_strdup_printf("(?<=^|\n)%s\\s\\w+\n", name);
   regex_replace_file(m_installed, regex, buffer);
   g_free(regex);
@@ -320,10 +320,10 @@ yes_no(int preset, const char *format, ...)
   char cformat[512];
   char buffer[128];
 
-  snprintf(cformat, 512, "\033[34m:::\033[0m %s %s? ", format, preset ? "(Y/n)" : "(y/N)");
+  snprintf(cformat, sizeof(cformat), "\033[34m:::\033[0m %s %s? ", format, preset ? "(Y/n)" : "(y/N)");
 
   va_start(args, format);
-  vsnprintf(prompt, 512, cformat, args);
+  vsnprintf(prompt, sizeof(prompt), cformat, args);
   va_end(args);
 
   while (ret == -1) 
@@ -354,9 +354,9 @@ get_response(char *buffer, size_t length, const char *format, ...)
   char cformat[512];
   va_list args; 
 
-  snprintf(cformat, 512, "\033[34m:::\033[0m %s ", format);
+  snprintf(cformat, sizeof(cformat), "\033[34m:::\033[0m %s ", format);
   va_start(args, format);
-  vsnprintf(prompt, 512, cformat, args);
+  vsnprintf(prompt, sizeof(prompt), cformat, args);
   va_end(args);
 
   return xreadline(buffer, length, prompt);
@@ -392,8 +392,8 @@ diff(const char *text1, const char *text2, char **ret)
     return 1;
   }
 
-  int fd1 = create_tmp(file1, 32, "/tmp/tmpXXXXXXorig.js", 7);
-  int fd2 = create_tmp(file2, 32, "/tmp/tmpXXXXXXnew.js", 6);
+  int fd1 = create_tmp(file1, sizeof(file1), "/tmp/tmpXXXXXXorig.js", 7);
+  int fd2 = create_tmp(file2, sizeof(file2), "/tmp/tmpXXXXXXnew.js", 6);
 
   char *text2_new = g_strdup_printf("// THIS FILE WILL BE DISCARDED\n%s// THIS FILE WILL BE DISCARDED", text2);
   if (g_file_set_contents(file1, text1, -1, &e) && g_file_set_contents(file2, text2_new, -1, &e)) 
@@ -431,7 +431,7 @@ edit(const char *text)
   char *new_config = NULL;
   char file[32];
 
-  int fd = create_tmp(file, 32, "/tmp/tmpXXXXXX.js", 3);
+  int fd = create_tmp(file, sizeof(file), "/tmp/tmpXXXXXX.js", 3);
 
   if (g_file_set_contents(file, text, -1, NULL)) 
   {
@@ -569,7 +569,7 @@ static gboolean
 check_installed(const char *name) 
 {
   char meta[128];
-  if (grep(m_installed, name, meta, 128) == -1) 
+  if (grep(m_installed, name, meta, sizeof(meta)) == -1) 
     return false;
   return true;
 }
@@ -583,10 +583,10 @@ install_extension(const char *name, int flags)
   char *content = NULL;
   GError *e = NULL;
 
-  if (grep(m_meta_data, name, meta, 128) == -1) 
+  if (grep(m_meta_data, name, meta, sizeof(meta)) == -1) 
     die(1, "extension %s not found", name);
 
-  snprintf(buffer, 512, "%s/%s", m_system_dir, name);
+  snprintf(buffer, sizeof(buffer), "%s/%s", m_system_dir, name);
   if (g_file_test(buffer, G_FILE_TEST_EXISTS)) 
   {
     notify("Using %s", buffer);
@@ -604,14 +604,14 @@ install_extension(const char *name, int flags)
   }
   else 
   {
-    snprintf(buffer, 512, "%s/%s", REPO_BASE REPO_TREE, name);
+    snprintf(buffer, sizeof(buffer), "%s/%s", REPO_BASE REPO_TREE, name);
     notify("Downloading %s", buffer);
     SoupMessage *msg = soup_message_new("GET", buffer);
 
     status = soup_session_send_message(session, msg);
     if (status == 200 && msg->response_body->data) 
     {
-      snprintf(buffer, 512, "%s/%s", m_user_dir, name);
+      snprintf(buffer, sizeof(buffer), "%s/%s", m_user_dir, name);
       if (g_file_set_contents(buffer, msg->response_body->data, -1, &e)) 
       {
         if (add_to_loader(name, msg->response_body->data, flags) == 0) 
@@ -697,7 +697,7 @@ sync_meta(const char *output)
         die(1, "Cannot open %s", m_system_dir);
       while((name = g_dir_read_name(d)) != NULL) 
       {
-        snprintf(buffer, 1024, "%s/%s", m_system_dir, name);
+        snprintf(buffer, sizeof(buffer), "%s/%s", m_system_dir, name);
         if (stat(buffer, &st) != -1) 
           fprintf(file, "%s %lu\n", name, st.st_mtime);
       }
@@ -836,13 +836,13 @@ cl_enable(const char *name, int flags)
 }
 
 static void
-do_upate(const char *meta, int flags) 
+do_update(const char *meta, int flags) 
 {
   char buffer[128];
   char *space = strchr(meta, ' ');
   if (space != NULL) 
   {
-    snprintf(buffer, MIN(128, space - meta + 1), meta);
+    snprintf(buffer, MIN(sizeof(buffer), (unsigned int)(space - meta + 1)), meta);
     if ((flags & F_NO_CONFIRM) || yes_no(1, "Update "EXT(%s), buffer))
       if (cl_install(buffer, flags | F_UPDATE)) 
         notify(EXT(%s)" successfully updated", buffer);
@@ -873,7 +873,7 @@ cl_update(int flags) {
     char *regex = g_strdup_printf("(?<=^|\n)%s(?=$|\n)", lines_inst[i]);
     if (!g_regex_match_simple(regex, meta, G_REGEX_DOTALL, 0)) 
     {
-      do_upate(lines_inst[i], flags);
+      do_update(lines_inst[i], flags);
       updates++;
     }
   }

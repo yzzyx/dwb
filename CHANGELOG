@@ -12,7 +12,7 @@ New features:
  * Allow usage of directories for 'adblock-filterlist'
  * Extension manager for javascript extensions
  * New option 'sync-files', old 'sync-files' is now 'file-sync-interval'
- * New methods 'Array.fastIndexOf', 'Array.indexOf'
+ * New methods 'Array.fastIndexOf', 'Array.fastLastIndexOf'
  * More information in version info
 
 Bug fixes:
