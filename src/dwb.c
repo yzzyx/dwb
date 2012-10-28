@@ -1705,7 +1705,7 @@ dwb_submit_searchengine(void) {
       hint_search_submit = HINT_SEARCH_SUBMIT;
   }
   snprintf(buffer, sizeof(buffer), "{ \"searchString\" : \"%s\" }", hint_search_submit);
-  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, "submitSearchEngine", buffer, kJSTypeUndefined, &value)) ) {
+  if ( (value = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, "submitSearchEngine", buffer, kJSTypeString, &value)) ) {
     dwb.state.form_name = value;
   }
 }/*}}}*/
@@ -1854,7 +1854,7 @@ dwb_update_hints(GdkEventKey *e) {
     g_free(val);
   }
   if (com) {
-    buffer = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, com, *json ? json : NULL, kJSTypeObject, &buffer);
+    buffer = js_call_as_function(MAIN_FRAME(), CURRENT_VIEW()->js_base, com, *json ? json : NULL, *json ? kJSTypeObject : kJSTypeUndefined, &buffer);
   }
   if (buffer != NULL) { 
     if (dwb_evaluate_hints(buffer) == STATUS_END) 
