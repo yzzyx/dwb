@@ -150,10 +150,11 @@ Load modules defined with <<provide>>.
 
  ::
 
-_names_;; An array of module names
+_names_;; An array of module names or null to get all modules.
 _callback_;; A callback function that is called after initialization of all
 scripts and modules. The parameters of the callback function correspond to the
-names array, see <<Modules>> for examples.
+names array. If +names+ is null the function is called with one parameter that
+contains all modules, see also <<Modules>> for examples.
 ****
 
 ****
@@ -2059,7 +2060,7 @@ For sharing data between scripts either signals or modules can be created.
 With modules it is possible to share objects between scripts. Modules are
 defined with +provide+ and loaded with +require+.
 
-.Script 1
+.Defining modules
 [source,javascript]
 -------
 #!javascript 
@@ -2077,7 +2078,7 @@ provide("myOtherModule", {
 });
 -------
 
-.Script 2
+.Getting some modules
 [source,javascript]
 -------
 #!javascript 
@@ -2087,6 +2088,19 @@ require(["myModule", "myOtherModule"], function(myModule, myOtherModule) {
     myModule.doBar();
 
   myOtherModule.act("foo");
+});
+-------
+
+.Getting all modules
+[source,javascript]
+-------
+#!javascript 
+
+require(null, function(modules) {
+  if (modules.myModule.foo == 37) 
+    modules.myModule.doBar();
+
+  modules.myOtherModule.act("foo");
 });
 -------
 

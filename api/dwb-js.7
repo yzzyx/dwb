@@ -242,7 +242,9 @@ An array of module names
 .PP
 \fIcallback\fR
 .RS 4
-A callback function that is called after initialization of all scripts and modules\&. The parameters of the callback function correspond to the names array, see MODULES for examples\&.
+A callback function that is called after initialization of all scripts and modules\&. The parameters of the callback function correspond to the names array\&. If
+names
+is null the function is called with one parameter that contains all modules, see also MODULES for examples\&.
 .RE
 .RE
 .sp
@@ -2464,7 +2466,7 @@ For sharing data between scripts either signals or modules can be created\&.
 .sp
 With modules it is possible to share objects between scripts\&. Modules are defined with provide and loaded with require\&.
 .PP
-\fBScript 1\fR. 
+\fBDefining modules\fR. 
 .sp
 .if n \{\
 .RS 4
@@ -2488,7 +2490,7 @@ provide("myOtherModule", {
 .RE
 .\}
 .PP
-\fBScript 2\fR. 
+\fBGetting some modules\fR. 
 .sp
 .if n \{\
 .RS 4
@@ -2501,6 +2503,25 @@ require(["myModule", "myOtherModule"], function(myModule, myOtherModule) {
     myModule\&.doBar();
 
   myOtherModule\&.act("foo");
+});
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBGetting all modules\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+require(null, function(modules) {
+  if (modules\&.myModule\&.foo == 37)
+    modules\&.myModule\&.doBar();
+
+  modules\&.myOtherModule\&.act("foo");
 });
 .fi
 .if n \{\
