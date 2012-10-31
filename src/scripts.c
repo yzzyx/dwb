@@ -171,6 +171,7 @@ static JSObjectRef m_completion_callback;
 static JSObjectRef m_sp_scripts_cb;
 static JSObjectRef m_sp_scratchpad_cb;
 static GQuark ref_quark;
+static JSObjectRef m_global_init;
 
 /* MISC {{{*/
 /* uncamelize {{{*/
@@ -1891,13 +1892,6 @@ create_global_object() {
   create_object(m_global_context, class, global_object, kJSDefaultAttributes, "extensions", NULL);
   JSClassRelease(class);
 
-  cd = kJSClassDefinitionEmpty;
-  cd.className = "globals";
-  class = JSClassCreate(&cd);
-  create_object(m_global_context, class, global_object, kJSPropertyAttributeDontDelete, "globals", NULL);
-  class = JSClassCreate(&cd);
-  JSClassRelease(class);
-
   JSStaticFunction util_functions[] = { 
     { "domainFromHost",   util_domain_from_host,         kJSDefaultAttributes },
     { "markupEscape",     util_markup_escape,         kJSDefaultAttributes },
@@ -1967,29 +1961,16 @@ create_global_object() {
 /* apply_scripts {{{*/
 static void 
 apply_scripts() {
-  JSStringRef on_init = JSStringCreateWithUTF8CString("init");
-  JSValueRef ret, init;
-  JSObjectRef retobj, initobj;
-  GSList *scripts = NULL;
   for (GSList *l = m_script_list; l; l=l->next) {
     JSObjectRef o = JSObjectMake(m_global_context, NULL, NULL);
-    if ( (ret = JSObjectCallAsFunction(m_global_context, l->data, o, 0, NULL, NULL)) == NULL)
-      continue;
-    if ( (retobj = JSValueToObject(m_global_context, ret, NULL)) == NULL)
-      continue;
-    if ( (init = JSObjectGetProperty(m_global_context, retobj, on_init, NULL)) == NULL)
-      continue;
-    if ((initobj = JSValueToObject(m_global_context, init, NULL)) != NULL && JSObjectIsFunction(m_global_context, initobj)) {
-      scripts = g_slist_prepend(scripts, initobj);
-    }
+    JSObjectCallAsFunction(m_global_context, l->data, o, 0, NULL, NULL);
   }
   g_slist_free(m_script_list);
-  for (GSList *l = scripts; l; l=l->next) {
-    JSObjectCallAsFunction(m_global_context, l->data, NULL, 0, NULL, NULL);
-  }
-  g_slist_free(scripts);
   m_script_list = NULL;
-  JSStringRelease(on_init);
+  if (m_global_init != NULL) {
+    JSObjectCallAsFunction(m_global_context, m_global_init, NULL, 0, NULL, NULL);
+    JSValueUnprotect(m_global_context, m_global_init);
+  }
 }/*}}}*/
 
 /* scripts_create_tab {{{*/
@@ -2072,6 +2053,15 @@ scripts_init(gboolean force) {
     g_string_free(content, true);
     g_free(dir);
   }
+
+  JSStringRef global_init = JSStringCreateWithUTF8CString("_init");
+  JSObjectRef global_object = JSContextGetGlobalObject(m_global_context);
+  m_global_init = js_get_object_property(m_global_context, global_object,
+      "_init");
+  JSValueProtect(m_global_context, m_global_init);
+  JSObjectDeleteProperty(m_global_context, global_object, global_init, NULL);
+  JSStringRelease(global_init);
+
   JSObjectRef o = JSObjectMakeArray(m_global_context, 0, NULL, NULL);
   m_array_contructor = js_get_object_property(m_global_context, o, "constructor");
   JSValueProtect(m_global_context, m_array_contructor);

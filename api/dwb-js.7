@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 10/03/2012
+.\"      Date: 10/31/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "10/03/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "10/31/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -202,6 +202,48 @@ var p = i\&.getPrivate();               // 37
 .if n \{\
 .RE
 .\}
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid provide(String name, Object module)\fR
+.RS 4
+.sp
+Defines a module that can be used in other scripts, see MODULES for details\&.
+.PP
+\fIname\fR
+.RS 4
+Name of the module
+.RE
+.PP
+\fImodule\fR
+.RS 4
+The module
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid require(Array names, Function callback)\fR
+.RS 4
+.sp
+Load modules defined with provide\&.
+.PP
+\fInames\fR
+.RS 4
+An array of module names
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+A callback function that is called after initialization of all scripts and modules\&. The parameters of the callback function correspond to the names array, see MODULES for examples\&.
+.RE
 .RE
 .sp
 .it 1 an-trap
@@ -2417,7 +2459,10 @@ io\&.print(bar);        // undefined
 .RE
 .\}
 .sp
-For sharing data between scripts either signals can be created or the globals\-object can be used\&. To share data with the globals object securely when the scripts are loaded the script can return an init function that will be called after all scripts have been initialized:
+For sharing data between scripts either signals or modules can be created\&.
+.SH "MODULES"
+.sp
+With modules it is possible to share objects between scripts\&. Modules are defined with provide and loaded with require\&.
 .PP
 \fBScript 1\fR. 
 .sp
@@ -2427,8 +2472,17 @@ For sharing data between scripts either signals can be created or the globals\-o
 .nf
 #!javascript
 
-// set when the script is initialized\&.
-globals\&.foo = "bar";
+provide("myModule", {
+  foo : 37,
+  doBar : function() {
+    io\&.print("bar");
+  }
+});
+provide("myOtherModule", {
+  act : function (arg) {
+    io\&.print(arg);
+  }
+});
 .fi
 .if n \{\
 .RE
@@ -2442,64 +2496,12 @@ globals\&.foo = "bar";
 .nf
 #!javascript
 
-//  The behaviour is undefined, depending on if Script 1 was initialized before
-//  Script 2 or the other way round\&.
-io\&.print(globals\&.foo)       // undefined or "bar"
+require(["myModule", "myOtherModule"], function(myModule, myOtherModule) {
+  if (myModule\&.foo == 37)
+    myModule\&.doBar();
 
-// Will be called after all scripts have been initialized
-return  {
-  init : function () {
-    // globals\&.foo has been initialized
-    io\&.print(globals\&.foo); // "bar"
-  }
-};
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-One exception is include, scripts that are explicitly included into the global scope setting the second parameter to true are visible in every script\&.
-.PP
-\fBScript foo\fR. 
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-var foo = "bar";
-.fi
-.if n \{\
-.RE
-.\}
-.PP
-\fBScript 1\fR. 
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-#!javascript
-
-include("/path/to/foo", true); // visible in every script
-.fi
-.if n \{\
-.RE
-.\}
-.PP
-\fBScript 2\fR. 
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-#!javascript
-
-// Make sure Script 1 has been initialized
-return {
-  init : function() {
-    io\&.print(foo);                // "bar";
-  }
-};
+  myOtherModule\&.act("foo");
+});
 .fi
 .if n \{\
 .RE
@@ -3117,4 +3119,4 @@ return {
 .RE
 .SH "SEE ALSO"
 .sp
-\fBdwb\fR(1) \fBdwbem\fR(7)
+\fBdwb\fR(1) \fBdwbem\fR(1)

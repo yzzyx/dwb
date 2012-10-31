@@ -109,6 +109,24 @@ var p = i.getPrivate();               // 37
 ---------------------------------
 ======
 
+==== void provide(String name, Object module)
+****
+Defines a module that can be used in other scripts, see MODULES for details.
+
+_name_;; Name of the module
+_module_;; The module
+****
+
+==== void require(Array names, Function callback)
+****
+Load modules defined with provide.
+
+_names_;; An array of module names
+_callback_;; A callback function that is called after initialization of all
+scripts and modules. The parameters of the callback function correspond to the
+names array, see MODULES for examples.
+****
+
 
 ==== void sendRequest(String uri, Function callback, [String method])
 ****
@@ -1172,63 +1190,42 @@ foo();
 io.print(bar);        // undefined
 -------
 
-For sharing data between scripts either signals can be created or the
-globals-object can be used. To share data with the globals object securely when the
-scripts are loaded the script can return an init function that will be called
-after all scripts have been initialized:
+For sharing data between scripts either signals or modules can be created.
 
+== Modules == 
+
+With modules it is possible to share objects between scripts. Modules are
+defined with +provide+ and loaded with +require+.
 
 .Script 1
+[source,javascript]
 -------
 #!javascript 
 
-// set when the script is initialized. 
-globals.foo = "bar";
+provide("myModule", {
+  foo : 37, 
+  doBar : function() {
+    io.print("bar");
+  }
+});
+provide("myOtherModule", {
+  act : function (arg) {
+    io.print(arg);
+  }
+});
 -------
 
 .Script 2
+[source,javascript]
 -------
 #!javascript 
 
-//  The behaviour is undefined, depending on if Script 1 was initialized before
-//  Script 2 or the other way round.
-io.print(globals.foo)       // undefined or "bar"
+require(["myModule", "myOtherModule"], function(myModule, myOtherModule) {
+  if (myModule.foo == 37) 
+    myModule.doBar();
 
-// Will be called after all scripts have been initialized
-return  {
-  init : function () {
-    // globals.foo has been initialized
-    io.print(globals.foo); // "bar"
-  }
-};
--------
-
-One exception is include, scripts that are explicitly included into the
-global scope setting the second parameter to true are visible in every script.
-
-.Script foo 
--------
-var foo = "bar";
--------
-
-.Script 1
-
--------
-#!javascript 
-
-include("/path/to/foo", true); // visible in every script
--------
-.Script 2
-
--------
-#!javascript 
-
-// Make sure Script 1 has been initialized
-return {
-  init : function() {
-    io.print(foo);                // "bar";
-  }
-};
+  myOtherModule.act("foo");
+});
 -------
 
 == EXTENSIONS ==

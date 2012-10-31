@@ -363,6 +363,7 @@ typedef enum {
   ULONG       = 0x07,
   LONG        = 0x08,
   UINTEGER    = 0x09,
+  OBJECT      = 0x0A,
 } DwbType;
 
 typedef enum { 
