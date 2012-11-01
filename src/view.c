@@ -911,7 +911,8 @@ view_create_web_view() {
 #endif
   status->progress = 0;
   status->allowed_plugins = NULL;
-  status->style = NULL;
+  status->exc_style = NULL;
+  status->styles = NULL;
   status->lockprotect = 0;
   status->frames = NULL;
   status->group = 0;
@@ -1039,8 +1040,13 @@ view_clean(GList *gl) {
 
   scripts_remove_tab(v->script_wv);
 
-  if (v->status->style) {
-    g_object_unref(v->status->style);
+  if (v->status->exc_style) {
+    g_object_unref(v->status->exc_style);
+  }
+  if (v->status->styles) {
+    for (GSList *l = v->status->styles; l; l=l->next) 
+      g_object_unref(l->data);
+    g_slist_free(v->status->styles);
   }
 
   g_object_unref(v->hover.anchor);

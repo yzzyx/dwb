@@ -649,8 +649,9 @@ struct _ViewStatus {
 #endif
   GSList *allowed_plugins;
   unsigned int lockprotect;
-  WebKitDOMElement *style;
+  GSList *styles;
   GSList *frames;
+  WebKitDOMElement *exc_style;
   guint group;
 };
 struct _View {
