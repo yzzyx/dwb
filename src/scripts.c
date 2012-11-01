@@ -2073,22 +2073,6 @@ scripts_init(gboolean force) {
   JSValueProtect(m_global_context, m_array_contructor);
 }/*}}}*/
 
-void
-scripts_execute_scripts(char **scripts) {
-  g_return_if_fail(scripts != NULL);
-  m_commandline = true;
-
-  scripts_init(true);
-  char *content;
-  for (int i=0; scripts[i] != NULL; i++) {
-    content = util_get_file_content(scripts[i], NULL); 
-    if (content != NULL) {
-      scripts_init_script(scripts[i], content);
-      g_free(content);
-    }
-  }
-  apply_scripts();
-}
 gboolean 
 scripts_execute_one(const char *script) {
   if (m_global_context != NULL)

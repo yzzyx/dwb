@@ -39,7 +39,6 @@ static gboolean m_opt_force = false;
 static gboolean m_opt_enable_scripts = false;
 static gchar *m_opt_restore = NULL;
 static gchar **m_opt_exe = NULL;
-static gchar **m_scripts = NULL;
 static GIOChannel *m_fallback_channel;
 static GOptionEntry options[] = {
   { "embed", 'e', 0, G_OPTION_ARG_INT64, &dwb.gui.wid, "Embed into window with window id wid", "wid"},
@@ -51,7 +50,6 @@ static GOptionEntry options[] = {
   { "profile", 'p', 0, G_OPTION_ARG_STRING, &dwb.misc.profile, "Load configuration for 'profile'", "profile" },
   { "execute", 'x', 0, G_OPTION_ARG_STRING_ARRAY, &m_opt_exe, "Execute commands", NULL},
   { "version", 'v', 0, G_OPTION_ARG_NONE, &m_opt_version, "Show version information and exit", NULL},
-  { "scripts", 's', 0, G_OPTION_ARG_FILENAME_ARRAY, &m_scripts, "Execute a script", NULL},
   { "enable-scripts", 'S', 0, G_OPTION_ARG_NONE, &m_opt_enable_scripts, "Enable javascript api", NULL},
   { NULL }
 };
@@ -149,11 +147,6 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
   if (!g_option_context_parse(c, &argc, argv, &error)) {
     fprintf(stderr, "Error parsing command line options: %s\n", error->message);
     *exit_status = 1;
-    return true;
-  }
-  if (m_scripts != NULL) {
-    scripts_execute_scripts(m_scripts);
-    g_application_hold(app);
     return true;
   }
   char *appid = g_strconcat("org.bitbucket.dwb.", dwb.misc.profile, NULL);
