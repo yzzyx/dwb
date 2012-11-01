@@ -345,7 +345,7 @@ typedef enum {
   SETTINGS_MODE_LOCAL   = 1<<22,
   COMPLETE_SCRIPTS      = 1<<23,
 } Mode;
-#define BASIC_MODES(mode) (mode & (NORMAL_MODE | INSERT_MODE | COMMAND_MODE))
+#define BASIC_MODES(mode) ( MAX( ( (mode) & (NORMAL_MODE | INSERT_MODE | COMMAND_MODE) ), NORMAL_MODE) )
 
 
 typedef enum {
