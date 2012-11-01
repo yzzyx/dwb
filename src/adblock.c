@@ -86,7 +86,7 @@ static GSList *m_hider_list;
 static GString *m_css_exceptions;
 static gboolean m_init = false;
 static GSList *m_css_hider_list;
-#define HIDER_LIST_MAX 500
+#define HIDER_LIST_MAX 3000
 /*}}}*//*}}}*/
 
 /* NEW AND FREE {{{*/

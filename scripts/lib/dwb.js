@@ -31,9 +31,10 @@
               _applyRequired(names, callback);
           }
         },
+        // Called after all scripts have been loaded and executed
         // Immediately deleted from the global object, so it is not callable
         // from other scripts
-        _init : { 
+        "_init" : { 
           value : function() {
             _initialized = true;
             var names, callback, modules, name;
