@@ -25,7 +25,6 @@
         },
         "require" : {
           value : function(names, callback) {
-            io.print("apply");
             if (!_initialized) 
               _callbacks.push({callback : callback, names : names});
             else 
