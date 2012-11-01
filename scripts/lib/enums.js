@@ -71,3 +71,8 @@ const FileTest = {
   executable : 1 << 3,
   exists     : 1 << 4
 };
+const Modes = {
+  NormalMode  : 1<<0,
+  InsertMode  : 1<<1,
+  CommandMode : 1<<2
+};

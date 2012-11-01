@@ -80,6 +80,8 @@ static Sigmap m_sigmap[] = {
   { SCRIPTS_SIG_DOCUMENT_LOADED, "documentLoaded" },
   { SCRIPTS_SIG_MOUSE_MOVE, "mouseMove" },
   { SCRIPTS_SIG_STATUS_BAR, "statusBarChange" },
+  { SCRIPTS_SIG_CHANGE_MODE, "changeMode" },
+  { 0, NULL },
 };
 
 
@@ -1028,7 +1030,10 @@ util_markup_escape(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size
   }
   return JSValueMakeNull(ctx);
 }
-
+static JSValueRef 
+util_get_mode(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  return JSValueMakeNumber(ctx, BASIC_MODES(dwb.state.mode));
+}
 /* DATA {{{*/
 /* data_get_profile {{{*/
 static JSValueRef 
@@ -1895,6 +1900,7 @@ create_global_object() {
   JSStaticFunction util_functions[] = { 
     { "domainFromHost",   util_domain_from_host,         kJSDefaultAttributes },
     { "markupEscape",     util_markup_escape,         kJSDefaultAttributes },
+    { "getMode",          util_get_mode,         kJSDefaultAttributes },
     { 0, 0, 0 }, 
   };
   class = create_class("util", util_functions, NULL);

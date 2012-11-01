@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 10/31/2012
+.\"      Date: 11/01/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "10/31/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "11/01/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -878,6 +878,22 @@ The body of the function as a string
 .nr an-break-flag 1
 .br
 .ps +1
+\fBNumber util.getMode()\fR
+.RS 4
+.sp
+Gets the the current mode\&.
+.PP
+\fIreturns\fR
+.RS 4
+The mode, see Modes for possible modes\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
 \fBString util.domainFromHost(String hostname)\fR
 .RS 4
 .sp
@@ -1549,6 +1565,37 @@ Hittestresult under the cursor
 .RS 4
 Same as buttonPress but without
 \fIevent\&.type\fR
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBchangeMode\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("changeMode", function(webview, mode));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when the mode changes, return true to prevent the change\&.
+.PP
+\fIwebview\fR
+.RS 4
+The focused webview
+.RE
+.PP
+\fImode\fR
+.RS 4
+A mode, see also Modes for possible modes
 .RE
 .RE
 .sp
@@ -2427,6 +2474,21 @@ const SpawnError = {
   spawnFailed   : 1<<0,
   stdoutFailed  : 1<<1,
   stderrFailed  : 1<<2
+};
+.fi
+.if n \{\
+.RE
+.\}
+.SS "Modes"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const Modes = {
+  NormalMode  : 1<<0,
+  InsertMode  : 1<<1,
+  CommandMode : 1<<2
 };
 .fi
 .if n \{\

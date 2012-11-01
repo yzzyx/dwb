@@ -46,6 +46,7 @@ enum SIGNALS {
   SCRIPTS_SIG_DOCUMENT_LOADED,
   SCRIPTS_SIG_MOUSE_MOVE,
   SCRIPTS_SIG_STATUS_BAR,
+  SCRIPTS_SIG_CHANGE_MODE,
   SCRIPTS_SIG_LAST, 
 } ;
 
@@ -74,7 +75,7 @@ void scripts_scratchpad_send(JSContextRef ctx, JSValueRef val);
 void scripts_scratchpad_get(JSContextRef, JSObjectRef, JSObjectRef, size_t, const JSValueRef[], JSValueRef* );
 
 #define EMIT_SCRIPT(sig)  ((dwb.misc.script_signals & (1<<SCRIPTS_SIG_##sig)))
-#define SCRIPTS_EMIT_RETURN(signal, json) G_STMT_START  \
+#define SCRIPTS_EMIT_RETURN(signal, json, val) G_STMT_START  \
   if (scripts_emit(&signal)) { \
     g_free(json); \
     return true; \

@@ -1412,7 +1412,7 @@ dwb_focus_view(GList *gl) {
       //ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { SCRIPTS_WV(dwb.state.fview) }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
     ScriptSignal signal = {
       SCRIPTS_WV(gl), .objects = { G_OBJECT(VIEW(dwb.state.fview)->web)  }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
-      SCRIPTS_EMIT_RETURN(signal, NULL);
+      SCRIPTS_EMIT_RETURN(signal, NULL, true);
     }
     gtk_widget_show(VIEW(gl)->scroll);
     dwb_soup_clean();
@@ -2681,6 +2681,12 @@ dwb_change_mode(Mode mode, ...) {
   va_list vl;
   if (dwb.state.mode & AUTO_COMPLETE) 
     completion_clean_autocompletion();
+  if (EMIT_SCRIPT(CHANGE_MODE)) {
+    char buffer[] = { BASIC_MODES(mode) + 48, 0 };
+    ScriptSignal sig = { SCRIPTS_WV(dwb.state.fview), SCRIPTS_SIG_META(buffer, CHANGE_MODE, 0) };
+    if (scripts_emit(&sig))
+      return STATUS_OK;
+  }
   switch(mode) {
     case NORMAL_MODE: 
       va_start(vl, mode);

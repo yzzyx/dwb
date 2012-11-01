@@ -151,7 +151,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
       DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
     ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(result) }, SCRIPTS_SIG_META(json, BUTTON_PRESS, 1) };
-    SCRIPTS_EMIT_RETURN(signal, json);
+    SCRIPTS_EMIT_RETURN(signal, json, true);
   }
 
   if (gtk_widget_has_focus(dwb.gui.entry)) {
@@ -218,7 +218,7 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
       DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
     ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(result) }, SCRIPTS_SIG_META(json, BUTTON_RELEASE, 1) };
-    SCRIPTS_EMIT_RETURN(signal, json);
+    SCRIPTS_EMIT_RETURN(signal, json, true);
   }
 
   if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
@@ -298,7 +298,7 @@ view_download_requested_cb(WebKitWebView *web, WebKitDownload *download, GList *
         CHAR, "referer", soup_get_header_from_request(webkit_download_get_network_request(download), "Referer"), 
         CHAR, "mimeType", dwb.state.mimetype_request);
     ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { G_OBJECT(download) }, SCRIPTS_SIG_META(json, DOWNLOAD, 1) };
-    SCRIPTS_EMIT_RETURN(signal, json);
+    SCRIPTS_EMIT_RETURN(signal, json, true);
   }
   download_get_path(gl, download);
   return true;
@@ -768,7 +768,7 @@ view_motion_notify_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
       DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
     ScriptSignal signal = { SCRIPTS_WV(gl), SCRIPTS_SIG_META(json, MOUSE_MOVE, 0) };
-    SCRIPTS_EMIT_RETURN(signal, json);
+    SCRIPTS_EMIT_RETURN(signal, json, true);
   }
   return false;
 }

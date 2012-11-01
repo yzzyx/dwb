@@ -325,13 +325,13 @@ typedef enum {
 typedef enum {
   NORMAL_MODE           = 1<<0,
   INSERT_MODE           = 1<<1,
+  COMMAND_MODE          = 1<<2,
   QUICK_MARK_SAVE       = 1<<3,
   QUICK_MARK_OPEN       = 1<<4 ,
   HINT_MODE             = 1<<5,
   FIND_MODE             = 1<<6,
   COMPLETION_MODE       = 1<<7,
   AUTO_COMPLETE         = 1<<8,
-  COMMAND_MODE          = 1<<9,
   SEARCH_FIELD_MODE     = 1<<10,
   SETTINGS_MODE         = 1<<12,
   KEY_MODE              = 1<<13,
@@ -345,6 +345,7 @@ typedef enum {
   SETTINGS_MODE_LOCAL   = 1<<22,
   COMPLETE_SCRIPTS      = 1<<23,
 } Mode;
+#define BASIC_MODES(mode) (mode & (NORMAL_MODE | INSERT_MODE | COMMAND_MODE))
 
 
 typedef enum {

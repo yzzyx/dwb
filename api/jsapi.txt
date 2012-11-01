@@ -750,6 +750,22 @@ _returns_;; The body of the function as a string
 ****
 
 ****
+[float]
+==== *getMode()* ====
+
+[source,javascript]
+----
+Number util.getMode() 
+----
+
+Gets the the current mode.
+
+_returns_;; The mode, see <<Modes>> for possible modes.
+****
+
+
+
+****
 [[domainFromHost]]
 [float]
 ==== *domainFromHost()* ==== 
@@ -1449,6 +1465,24 @@ _event_;; Same as <<buttonPress>> but without _event.type_
 ****
 
 ****
+[[changeMode]]
+[float]
+==== *changeMode* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, mode) 
+----
+
+Emitted when the mode changes, return true to prevent the change.
+
+  ::
+
+_webview_;; The focused webview
+_mode_;; A mode, see also <<Modes>> for possible modes
+****
+
+****
 [[close]]
 [float]
 ==== *close* ==== 
@@ -2020,6 +2054,20 @@ const SpawnError = {
   spawnFailed   : 1<<0, 
   stdoutFailed  : 1<<1, 
   stderrFailed  : 1<<2
+};
+--------
+****
+
+****
+[[Modes]]
+[float]
+==== *Modes* ====
+[source,javascript]
+--------
+const Modes = {
+  NormalMode  : 1<<0,
+  InsertMode  : 1<<1,
+  CommandMode : 1<<2
 };
 --------
 ****

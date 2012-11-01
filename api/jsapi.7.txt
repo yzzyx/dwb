@@ -400,6 +400,14 @@ _func_;; A function
 _returns_;; The body of the function as a string
 ****
 
+==== Number util.getMode()
+****
+
+Gets the the current mode.
+
+_returns_;; The mode, see Modes for possible modes.
+****
+
 ==== String util.domainFromHost(String hostname)
 ****
 
@@ -747,6 +755,19 @@ Emitted when a button is released, return true to prevent the default action
 _webview_;; The webview which received the signal
 _hittestresult_;; Hittestresult under the cursor
 _event_;; Same as buttonPress but without _event.type_
+****
+
+==== changeMode 
+
+****
+----
+signals.connect("changeMode", function(webview, mode));
+----
+
+Emitted when the mode changes, return true to prevent the change.
+
+_webview_;; The focused webview
+_mode_;; A mode, see also Modes for possible modes
 ****
 
 ==== close
@@ -1165,6 +1186,19 @@ const SpawnError = {
 };
 --------
 ****
+
+=== Modes
+
+****
+--------
+const Modes = {
+  NormalMode  : 1<<0,
+  InsertMode  : 1<<1,
+  CommandMode : 1<<2
+};
+--------
+****
+
 
 == GLOBAL DATA == 
 Since all scripts share the same execution context, they are encapsulated in a

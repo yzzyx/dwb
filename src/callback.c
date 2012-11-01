@@ -156,7 +156,7 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
         UINTEGER, "keyVal", e->keyval, UINTEGER, "keyCode", e->hardware_keycode,
         BOOLEAN, "isModifier", e->is_modifier, CHAR, "name", gdk_keyval_name(e->keyval));
     ScriptSignal signal = { SCRIPTS_WV(dwb.state.fview), SCRIPTS_SIG_META(json, KEY_PRESS, 0) };
-    SCRIPTS_EMIT_RETURN(signal, json);
+    SCRIPTS_EMIT_RETURN(signal, json, true);
   }
 
   if (e->keyval == GDK_KEY_Escape) {
@@ -211,11 +211,8 @@ callback_key_release(GtkWidget *w, GdkEventKey *e) {
         UINTEGER, "keyVal", e->keyval, UINTEGER, "keyCode", e->hardware_keycode,
         BOOLEAN, "isModifier", e->is_modifier, CHAR, "name", gdk_keyval_name(e->keyval));
     ScriptSignal signal = { SCRIPTS_WV(dwb.state.fview), SCRIPTS_SIG_META(json, KEY_RELEASE, 0) };
-    SCRIPTS_EMIT_RETURN(signal, json);
+    SCRIPTS_EMIT_RETURN(signal, json, true);
   }
-  //SCRIPTS_EMIT_RETURN(SCRIPT(dwb.state.fview), KEY_RELEASE, 5, UINTEGER, "state", e->state, 
-  //      UINTEGER, "keyVal", e->keyval, UINTEGER, "keyCode", e->hardware_keycode,
-  //      BOOLEAN, "isModifier", e->is_modifier, CHAR, "name", gdk_keyval_name(e->keyval));
   if (DWB_TAB_KEY(e)) {
     return true;
   }
