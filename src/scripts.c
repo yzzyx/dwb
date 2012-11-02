@@ -1969,7 +1969,9 @@ static void
 apply_scripts() {
   for (GSList *l = m_script_list; l; l=l->next) {
     JSObjectRef o = JSObjectMake(m_global_context, NULL, NULL);
-    JSObjectCallAsFunction(m_global_context, l->data, o, 0, NULL, NULL);
+    JSObjectRef apply = js_get_object_property(m_global_context, l->data, "apply");
+    JSValueRef argv[] = {o};
+    JSObjectCallAsFunction(m_global_context, apply, l->data, 1, argv, NULL);
   }
   g_slist_free(m_script_list);
   m_script_list = NULL;
