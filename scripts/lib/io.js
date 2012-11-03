@@ -1,35 +1,51 @@
 (function () {
-  var prefixMessage = "\n==> DEBUG [MESSAGE]  : ";
-  var prefixError   = "\n==> DEBUG [ERROR]    : ";
-  var prefixStack   = "\n==> DEBUG [STACK]    : ";
+  var prefixMessage     = "\n==> DEBUG [MESSAGE]    : ";
+  var prefixError       = "\n==> DEBUG [ERROR]      : ";
+  var prefixStack       = "\n==> DEBUG [STACK]      : ";
+  var prefixArguments   = "\n==> DEBUG [ARGUMENTS]  : ";
+  var prefixCaller      = "\n==> DEBUG [CALLER]";
+  var prefixFunction = "\n------>";
+  var regHasDwb = new RegExp("[^]*/\\*<dwb\\*/([^]*)/\\*dwb>\\*/[^]*");
+
   Object.defineProperties(io, {
     "debug" : {
-      value : function () {
-        var message = null;
-        if (arguments.length === 0) {
-          return;
+      value : function (params) {
+        var message = new String();
+        var offset = params.offset || 0;
+        if (params.message) {
+          message += prefixMessage + params.message;
         }
-        else if (arguments.length === 1) {
-          if (arguments[0] instanceof Error) {
-            message = prefixError + "Exception in line " + (arguments[0].line + 1) + ": " + arguments[0].message + 
-                      prefixStack + "[" + arguments[0].stack.match(/[^\n]+/g).slice(0).join("] [")+"]"; 
-          }
-          else {
-            try { 
-              throw new Error(arguments[0]); 
+        if (params.error && params.error instanceof Error) {
+          var line = params.error.line || params.error.line === 0 ? params.error.line : "?";
+          var error = params.error;
+          if (!error.stack) {
+            try {
+              throw new Error(error.message);
             }
-            catch (e) {
-              message = prefixMessage + e.message + 
-                        prefixStack + "[" + e.stack.match(/[^\n]+/g).slice(1).join("] [")+"]"; 
+            catch(e) { 
+              error = e;
             }
+            offset += 1;
           }
+          message += prefixError + "Exception in line " + line + ": " + error.message + 
+            prefixStack + "[" + error.stack.match(/[^\n]+/g).slice(offset).join("] [")+"]"; 
         }
         else {
-          message = prefixMessage + arguments[0];
-          if (arguments[1] instanceof Error) {
-            message += prefixError + "Error in line " + (arguments[1].line + 1) + ": " + arguments[1].message;
-            message += prefixStack + "[" + arguments[1].stack.match(/[^\n]+/g).slice(0).join("] [")+"]"; 
+          try {
+            throw new Error();
           }
+          catch(e) {
+            message += prefixStack + "[" + e.stack.match(/[^\n]+/g).slice(offset + 1).join("] [")+"]"; 
+          }
+        }
+        if (params.arguments) 
+        {
+          message += prefixArguments + JSON.stringify(params.arguments);
+          var caller = String(params.arguments.callee.caller);
+          message += prefixCaller;
+          message += prefixFunction;
+          message += caller.replace(regHasDwb, "$1").replace(/\n/gm, "\n  ");
+          message += prefixFunction;
         }
         io.print(message + "\n", "stderr");
       }

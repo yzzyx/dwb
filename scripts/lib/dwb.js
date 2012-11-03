@@ -25,6 +25,11 @@
         },
         "require" : {
           value : function(names, callback) {
+            if (names !== null && ! (names instanceof Array)) {
+              io.debug({ error : new Error("require : invalid argument (" + JSON.stringify(names) + ")"), offset : 1, arguments : arguments });
+              return; 
+            }
+
             if (!_initialized) 
               _callbacks.push({callback : callback, names : names});
             else 
@@ -37,7 +42,6 @@
         "_init" : { 
           value : function() {
             _initialized = true;
-            var names, callback, modules, name;
             for (var i=0, l=_callbacks.length; i<l; i++) 
               _applyRequired(_callbacks[i].names, _callbacks[i].callback);
 

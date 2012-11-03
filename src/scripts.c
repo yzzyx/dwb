@@ -2023,7 +2023,7 @@ void
 scripts_init_script(const char *path, const char *script) {
   if (m_global_context == NULL) 
     create_global_object();
-  char *debug = g_strdup_printf("try { %s } catch(e) { io.debug(\"In file %s\", e); }", script, path);
+  char *debug = g_strdup_printf("\ntry{/*<dwb*/%s/*dwb>*/}catch(e) { io.debug({message : \"In file %s\", error : e}); }", script, path);
   JSObjectRef function = js_make_function(m_global_context, debug);
   if (function != NULL) {
     m_script_list = g_slist_prepend(m_script_list, function);
