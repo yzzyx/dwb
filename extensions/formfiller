@@ -265,7 +265,7 @@ function getFormData(callback) {//{{{
       return ret;
     }
     catch(e) {
-      io.debug(e);
+      io.debug({error : e, arguments : arguments});
       io.error("Getting form data failed : " + e.message);
     }
   }
@@ -274,7 +274,7 @@ function getFormData(callback) {//{{{
       return JSON.parse(io.read(config.formData));
     }
     catch(e) {
-      io.debug(e);
+      io.debug({error : e, arguments : arguments});
       io.error("Getting form data failed : " + e.message);
     }
   }

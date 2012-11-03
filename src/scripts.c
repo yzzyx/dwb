@@ -1557,7 +1557,10 @@ scripts_emit(ScriptSignal *sig) {
     val[i++] = sig->jsobj;
   }
   for (int j=0; j<sig->numobj; j++) {
-    val[i++] = make_object(m_global_context, G_OBJECT(sig->objects[j]));
+    if (sig->objects[j] != NULL) 
+      val[i++] = make_object(m_global_context, G_OBJECT(sig->objects[j]));
+    else 
+      val[i++] = JSValueMakeNull(m_global_context);
   }
   JSValueRef vson = js_json_to_value(m_global_context, sig->json);
   val[i++] = vson == NULL ? JSValueMakeNull(m_global_context) : vson;
@@ -2022,7 +2025,7 @@ void
 scripts_init_script(const char *path, const char *script) {
   if (m_global_context == NULL) 
     create_global_object();
-  char *debug = g_strdup_printf("try { %s } catch(e) { io.debug(\"In file %s\", e); }", script, path);
+  char *debug = g_strdup_printf("\ntry{/*<dwb*/%s/*dwb>*/}catch(e) { io.debug({message : \"In file %s\", error : e}); }", script, path);
   JSObjectRef function = js_make_function(m_global_context, debug);
   if (function != NULL) {
     m_script_list = g_slist_prepend(m_script_list, function);

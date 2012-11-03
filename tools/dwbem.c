@@ -448,7 +448,7 @@ edit(const char *text)
   }
   close(fd);
   if (!spawn_success)
-    die(1, "Cannot spawn "EXT(%s)", please set "EXT(DIFF_VIEWER)" to an appropriate value", m_editor);
+    die(1, "Cannot spawn "EXT(%s)", please set "EXT(EDITOR)" to an appropriate value", m_editor);
   return new_config;
 }
 
