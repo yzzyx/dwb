@@ -1557,7 +1557,10 @@ scripts_emit(ScriptSignal *sig) {
     val[i++] = sig->jsobj;
   }
   for (int j=0; j<sig->numobj; j++) {
-    val[i++] = make_object(m_global_context, G_OBJECT(sig->objects[j]));
+    if (sig->objects[j] != NULL) 
+      val[i++] = make_object(m_global_context, G_OBJECT(sig->objects[j]));
+    else 
+      val[i++] = JSValueMakeNull(m_global_context);
   }
   JSValueRef vson = js_json_to_value(m_global_context, sig->json);
   val[i++] = vson == NULL ? JSValueMakeNull(m_global_context) : vson;
