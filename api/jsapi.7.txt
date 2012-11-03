@@ -442,29 +442,6 @@ _value_;; The property value
 _this_;; The object forEach is called on
 ****
 
-==== void Object.setPrivate(String key, String value, Object identifier)
-****
-
-Associates a private value with that object that can only be retrieved in the
-calling script, this function is only useful for objects derived from GObjects,
-e.g. to associate a value with a webview and keep it invisible in other scripts.
-
-_key_;; The property name
-_value_;; The property value
-_identifier_;; A local object to identify the calling script, the identifier
-must either be of type Object or of type Function.
-****
-
-==== Object Object.getPrivate(String key, Object identifier)
-****
-
-Gets a value previously set with Object.setPrivate.
-
-_key_;; The property name
-_identifier_;; The identifier passed to setPrivate
-_returns_;; The object set with setPrivate or null.
-****
-
 ==== Number Array.fastIndexOf(Object object)
 ****
 
@@ -482,6 +459,31 @@ This method is basically the same as Array.lastIndexOf but without type checking
 _object_;; The object to search for
 _returns_;; The index in the array or -1 if the Object wasn't found.
 ****
+
+==== Object Object.getPrivate(String key, Object identifier)
+****
+
+Gets a value previously set with Object.setPrivate.
+
+_key_;; The property name
+_identifier_;; The identifier passed to setPrivate
+_returns_;; The object set with setPrivate or null.
+****
+
+
+==== void Object.setPrivate(String key, String value, Object identifier)
+****
+
+Associates a private value with that object that can only be retrieved in the
+calling script, this function is only useful for objects derived from GObjects,
+e.g. to associate a value with a webview and keep it invisible in other scripts.
+
+_key_;; The property name
+_value_;; The property value
+_identifier_;; A local object to identify the calling script, the identifier
+must either be of type Object or of type Function.
+****
+
 
 
 
