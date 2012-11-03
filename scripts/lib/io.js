@@ -11,6 +11,7 @@
     "debug" : {
       value : function (params) {
         var message = new String();
+        params = params || {};
         var offset = params.offset || 0;
         if (params.message) {
           message += prefixMessage + params.message;
