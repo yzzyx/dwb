@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 11/01/2012
+.\"      Date: 11/03/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "11/01/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "11/03/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -493,19 +493,29 @@ The io object implements methods for input and output\&.
 .nr an-break-flag 1
 .br
 .ps +1
-\fBvoid io.debug(String message | Error error, [Error error])\fR
+\fBvoid io.debug([Object detail])\fR
 .RS 4
 .sp
-Prints a debug message and the call stack to stderr\&. If the first parameter is an error object the second parameter is ignored, else the error is optional\&.
+Prints a debug message and the call stack to stderr\&.
 .PP
-\fImessage\fR
+\fIdetail\fR
 .RS 4
-The message to show
+Message details, optional
 .RE
 .PP
-\fIerror\fR
+\fIdetail\&.message\fR
 .RS 4
-A javascript error object, optional as second parameter
+The message to show, optional
+.RE
+.PP
+\fIdetail\&.error\fR
+.RS 4
+An Error object, optional
+.RE
+.PP
+\fIdetail\&.arguments\fR
+.RS 4
+Arguments, optional
 .RE
 .RE
 .sp

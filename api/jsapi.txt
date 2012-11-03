@@ -365,16 +365,17 @@ The +io+ object implements methods for input and output.
 
 [source,javascript]
 ----
-void io.debug(String message | Error error, [Error error])
+void io.debug([Object detail])
 ----
 
-Prints a debug message and the call stack to stderr. If the first parameter is
-an error object the second parameter is ignored, else the error is optional.
+Prints a debug message and the call stack to stderr. 
 
  :: 
 
-_message_;; The message to show
-_error_;; A javascript error object, optional as second parameter
+_detail_;; Message details, optional
+_detail.message_;; The message to show, optional
+_detail.error_;; An Error object, optional 
+_detail.arguments_;; Arguments, optional
 ****
 
 ****
