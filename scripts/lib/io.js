@@ -43,7 +43,7 @@
           message += prefixArguments + JSON.stringify(params.arguments);
           var caller = String(params.arguments.callee.caller);
           message += prefixCaller;
-          message += prefixFunction;
+          message += prefixFunction + "\n";
           message += caller.replace(regHasDwb, "$1").replace(/\n/gm, "\n  ");
           message += prefixFunction;
         }

@@ -4,7 +4,7 @@
     var _callbacks = [];
     var _initialized = false;
     var _applyRequired = function(names, callback) {
-      if (names == null) 
+      if (names === null) 
         callback.call(this, _modules);
       else {
         var modules = [];
@@ -18,7 +18,10 @@
         "provide" : { 
           value : function(name, module) {
             if (_modules[name]) 
-              io.debug("provide: Module " + name + " is already defined!");
+              io.debug({ 
+                  error : new Error("provide: Module " + name + " is already defined!"), 
+                  offset : 1, arguments : arguments 
+              });
             else 
               _modules[name] = module;
           }
