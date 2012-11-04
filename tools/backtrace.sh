@@ -3,7 +3,7 @@
 # Debugging script for dwb, needs mercurial and gdb 
 
 BUILDDIR="/tmp/DWB_DEBUG_$UID"
-LOGFILE="/tmp/dwb_gdb_$UID.log"
+LOGFILE="$BUILDDIR/gdb.log"
 
 
 if [ ! -d ${BUILDDIR} ]; then 
