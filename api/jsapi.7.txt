@@ -1216,16 +1216,15 @@ on the global object, i.e.
 number = 0;
 io.print(number);     // undefined
 
-// always use var instead
-var number = 0;
+var number2 = 0;
 io.print(number2);    // 0
 
-// won't work either
-function foo() {
-  bar = 1;
+// not allowed
+foo = function() 
+{
+  io.print("foo");
 }
-foo();
-io.print(bar);        // undefined
+foo();  // fails
 -------
 
 For sharing data between scripts either signals or modules can be created.

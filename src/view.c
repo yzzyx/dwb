@@ -170,10 +170,11 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
     webkit_dom_dom_selection_add_range(selection, range);
     m_sig_caret_button_release = g_signal_connect(web, "button-release-event", G_CALLBACK(view_caret_release_cb), range);
     m_sig_caret_motion = g_signal_connect(web, "motion-notify-event", G_CALLBACK(view_caret_motion_cb), range);
-    ret = true; 
+    return false;
   }
   else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) {
     char *clipboard = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+    char *backup = clipboard;
     g_strstrip(clipboard);
     if (e->button == 3) {
       dwb_load_uri(NULL, clipboard);
@@ -183,7 +184,8 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
       view_add(clipboard, dwb.state.background_tabs);
       ret = true;
     }
-    g_free(clipboard);
+    g_free(backup);
+    return ret;
   }
   else if (e->button == 1 && e->type == GDK_BUTTON_PRESS && WEBVIEW(gl) != CURRENT_WEBVIEW()) {
     dwb_unfocus();
@@ -191,13 +193,15 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) {
   }
   else if (e->button == 3 && e->state & GDK_BUTTON1_MASK) {
     /* no popup if button 1 is presssed */
-    ret = true;
+    return true;
   }
   else if (e->button == 8) {
     dwb_history_back();
+    return true;
   }
   else if (e->button == 9) {
     dwb_history_forward();
+    return true;
   }
   return ret;
 }/*}}}*/

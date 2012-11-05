@@ -2094,9 +2094,9 @@ const Modes = {
 
 [[Globaldata]]
 == Global data == 
-Since all scripts share the same execution context, they are encapsulated as a
-module function. To avoid conflicts with other scripts it is not allowed to set
-properties on the global object, i.e. 
+Since all scripts share the same execution context, every script is encapsulated
+in a function. To avoid conflicts between scripts, e.g. with duplicate
+variables, it is not allowed to set properties on the global object:
 
 [source,javascript]
 -------
@@ -2106,20 +2106,18 @@ properties on the global object, i.e.
 number = 0;
 io.print(number);     // undefined
 
-// always use var instead
-var number = 0;
+var number2 = 0;
 io.print(number2);    // 0
 
-// won't work either
-function foo() {
-  bar = 1;
+// not allowed
+foo = function() 
+{
+  io.print("foo");
 }
-foo();
-io.print(bar);        // undefined
+foo();  // fails
 -------
 
 For sharing data between scripts either signals or modules can be created.
-
 
 [[Modules]]
 == Modules == 

@@ -146,6 +146,7 @@
           }
         }
         try {
+          plugin._name = name;
           if (plugin.init(extConfig)) {
             _registered[name] = plugin;
             extensions.message(name, "Successfully loaded and initialized.");

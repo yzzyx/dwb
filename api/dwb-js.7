@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 11/03/2012
+.\"      Date: 11/04/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "11/03/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "11/04/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -2518,16 +2518,15 @@ Since all scripts share the same execution context, they are encapsulated in a f
 number = 0;
 io\&.print(number);     // undefined
 
-// always use var instead
-var number = 0;
+var number2 = 0;
 io\&.print(number2);    // 0
 
-// won\*(Aqt work either
-function foo() {
-  bar = 1;
+// not allowed
+foo = function()
+{
+  io\&.print("foo");
 }
-foo();
-io\&.print(bar);        // undefined
+foo();  // fails
 .fi
 .if n \{\
 .RE

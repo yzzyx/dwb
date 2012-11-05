@@ -738,7 +738,7 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
   Key key = dwb_str_to_key(keystr);
   map->key = key.str;
   map->mod = key.mod;
-  FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, POST_SM, { .arg = func }, EP_NONE,  {NULL} };
+  FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, NEVER_SM, { .arg = func }, EP_NONE,  {NULL} };
   *fmap = fm;
   map->map = fmap;
   dwb.keymap = g_list_prepend(dwb.keymap, map);
