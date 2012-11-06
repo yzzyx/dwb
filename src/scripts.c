@@ -956,10 +956,17 @@ error_out:
 /* timeout_callback {{{*/
 static gboolean
 timeout_callback(JSObjectRef obj) {
+  gboolean ret;
   JSValueRef val = JSObjectCallAsFunction(m_global_context, obj, NULL, 0, NULL, NULL);
   if (val == NULL)
-    return false;
-  return !JSValueIsBoolean(m_global_context, val) || JSValueToBoolean(m_global_context, val);
+    ret = false;
+  else {
+    ret = !JSValueIsBoolean(m_global_context, val) || JSValueToBoolean(m_global_context, val);
+  }
+  if (! ret )
+    JSValueUnprotect(m_global_context, obj);
+  return ret;
+  
 }/*}}}*/
 
 /* global_timer_stop {{{*/
@@ -992,6 +999,7 @@ global_timer_start(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size
     js_make_exception(ctx, exc, EXCEPTION("timerStart: argument 2 is not a function."));
     return JSValueMakeNumber(ctx, -1);
   }
+  JSValueProtect(ctx, func);
   int ret = g_timeout_add((int)msec, (GSourceFunc)timeout_callback, func);
   return JSValueMakeNumber(ctx, ret);
 }/*}}}*/
