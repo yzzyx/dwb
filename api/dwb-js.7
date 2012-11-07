@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 11/04/2012
+.\"      Date: 11/07/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "11/04/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "11/07/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -237,13 +237,15 @@ Load modules defined with provide\&.
 .PP
 \fInames\fR
 .RS 4
-An array of module names
+An array of module names or null to get all modules, a module name can also contain a path, the path must be seperated with a
+\fB!\fR
+from the module name, see also MODULES for details\&.
 .RE
 .PP
 \fIcallback\fR
 .RS 4
 A callback function that is called after initialization of all scripts and modules\&. The parameters of the callback function correspond to the names array\&. If
-names
+\fBnames\fR
 is null the function is called with one parameter that contains all modules, see also MODULES for examples\&.
 .RE
 .RE
@@ -2599,6 +2601,71 @@ require(null, function(modules) {
 .RE
 .\}
 .sp
+It is also possible to specify a path in the name array\&. The name then follows the format \fBname!path\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+require(["foo!/path/to/foo"], function(foo) {
+  io\&.print(foo\&.bar); // 37
+});
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fB/path/to/foo\fR. 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+provide("foo", { bar : 37 });
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The resolution chain is as follows, first all modules defined with \fBprovide\fR and module names requested by \fBrequire\fR are stored\&. If all scripts have been loaded the requirements are resolved\&. If a requirement contains a path and the module isn\(cqt defined yet the module will be loaded, if it is already defined the path is ignored and the stored module will be resolved:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+require(["foo!/path/to/foo"], function(foo) {
+  io\&.print(foo\&.bar); // 42
+});
+provide("foo", { bar : 42 });
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#!javascript
+
+require(["foo"], function(foo) {
+  io\&.print(foo); // undefined
+});
+require(["foo!/path/to/foo"]);
+
+require(["foo"], function(foo) {
+  io\&.print(foo); // { bar : 37 }
+});
+.fi
+.if n \{\
+.RE
+.\}
 .SH "EXTENSIONS"
 .sp
 \fBdwb\fR provides the possibility to load extensions\&. It is recommended to implement javascript\-userscripts as an extension to have consistent configuration locations for scripts\&. One advantage of extension also is that they can be loaded/unloaded on the fly\&.

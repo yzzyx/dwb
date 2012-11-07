@@ -150,7 +150,9 @@ Load modules defined with <<provide>>.
 
  ::
 
-_names_;; An array of module names or null to get all modules.
+_names_;; An array of module names or null to get all modules, a module name can
+also contain a path, the path must be seperated with a +!+ from the module name,
+see also <<Modules>> for details.
 _callback_;; A callback function that is called after initialization of all
 scripts and modules. The parameters of the callback function correspond to the
 names array. If +names+ is null the function is called with one parameter that
@@ -2168,6 +2170,57 @@ require(null, function(modules) {
   modules.myOtherModule.act("foo");
 });
 -------
+
+It is also possible to specify a path in the name array. The name then follows
+the format +name!path+:
+
+[source,javascript]
+-------
+#!javascript 
+
+require(["foo!/path/to/foo"], function(foo) {
+  io.print(foo.bar); // 37
+});
+-------
+
+./path/to/foo
+[source,javascript]
+-------
+#!javascript 
+
+provide("foo", { bar : 37 });
+-------
+
+The resolution chain is as follows, first all modules defined with +provide+ and
+module names requested by +require+ are stored. If all scripts have been loaded
+the requirements are resolved. If a requirement contains a path and the module
+isn't defined yet the module will be loaded, if it is already defined the path
+is ignored and the stored module will be resolved:  
+
+[source,javascript]
+-------
+#!javascript 
+
+require(["foo!/path/to/foo"], function(foo) {
+  io.print(foo.bar); // 42
+});
+provide("foo", { bar : 42 });
+-------
+
+[source,javascript]
+-------
+#!javascript 
+
+require(["foo"], function(foo) {
+  io.print(foo); // undefined
+});
+require(["foo!/path/to/foo"]);
+
+require(["foo"], function(foo) {
+  io.print(foo); // { bar : 37 }
+});
+-------
+
 
 [[Extensions]] 
 == Extensions ==

@@ -8,10 +8,19 @@
         callback.call(this, _modules);
       else {
         var modules = [];
+        var name, detail;
         for (var j=0, m=names.length; j<m; j++) {
-          modules.push(_modules[names[j]]);
-        }
-        callback.apply(this, modules);
+          name = names[j];
+          if (/^\w*!/.test(name)) {
+            detail = name.split("!");
+            name = detail[0];
+            if (!_modules[name]) 
+              include(detail.slice(1).join("!"));
+          }
+          modules.push(_modules[name]);
+        } 
+        if (callback)
+          callback.apply(this, modules);
       }
     };
     Object.defineProperties(this, { 
