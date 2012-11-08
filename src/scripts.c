@@ -1632,7 +1632,7 @@ connect_callback(JSObjectRef func) {
 }
 static JSValueRef 
 connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
-  gint id = -1;
+  gulong id = 0;
   if (argc < 2) {
     return JSValueMakeNumber(ctx, -1);
   }
