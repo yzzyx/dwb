@@ -662,50 +662,66 @@ Object.freeze((function () {
         globals.bigFont = Math.ceil(font.replace(/\D/g, "") * 1.25) + "px";
         globals.fontSize = Math.ceil(font.replace(/\D/g, ""))/2;
   };
-  
-
-
+  var __pastePrimary = function(primary) {
+    var a = document.activeElement;
+    if (a instanceof HTMLInputElement || a instanceof HTMLTextAreaElement)  {
+      var start = a.selectionStart;
+      a.value = a.value.substring(0, start) + primary + a.value.substring(a.selectionEnd);
+      a.selectionStart = a.selectionEnd = start + primary.length;
+    }
+    else if (a.isContentEditable) 
+    {
+      var selection = window.getSelection();
+      var range = selection.getRangeAt(0);
+      selection.removeAllRanges();
+      range.insertNode(document.createTextNode(primary));
+      range.collapse(false);
+      selection.addRange(range);
+    }
+  };
   return {
     createStyleSheet : function() {
       __createStyleSheet(document);
     },
     showHints : function(obj) {
-        return __showHints(obj.type, obj.newTab);
-      },
+      return __showHints(obj.type, obj.newTab);
+    },
     updateHints : function (obj) {
-        return __updateHints(obj.input, obj.type);
-      },
+      return __updateHints(obj.input, obj.type);
+    },
     clear : function () {
-        __clear();
-      },
+      __clear();
+    },
     followActive : function (obj) {
-        return __evaluate(__getActive().element, obj.type);
-      },
-
+      return __evaluate(__getActive().element, obj.type);
+    },
     focusNext : function () {
-        __focusNext();
-      },
+      __focusNext();
+    },
     focusPrev : function () {
-        __focusPrev();
-      },
+      __focusPrev();
+    },
     addSearchEngine : function () {
-        return __addSearchEngine();
-      },
+      return __addSearchEngine();
+    },
     submitSearchEngine : function (obj) {
-        return __submitSearchEngine(obj.searchString);
-      },
+      return __submitSearchEngine(obj.searchString);
+    },
     focusInput : function () {
-        __focusInput();
-      },
+      __focusInput();
+    },
+    pastePrimary : function(selection) {
+      __pastePrimary(selection);
+    },
     insertAdblockRule : function(rule) {
       var st=document.createElement('style');
       document.head.appendChild(st);
       document.styleSheets[document.styleSheets.length-1].insertRule(rule, 0);
     },
     init : function (obj) {
-        __init(obj.hintLetterSeq, obj.hintFont, obj.hintStyle, obj.hintFgColor,
-            obj.hintBgColor, obj.hintActiveColor, obj.hintNormalColor,
-            obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks, obj.hintAutoFollow);
-      }
+      __init(obj.hintLetterSeq, obj.hintFont, obj.hintStyle, obj.hintFgColor,
+        obj.hintBgColor, obj.hintActiveColor, obj.hintNormalColor,
+        obj.hintBorder, obj.hintOpacity, obj.hintHighlighLinks, obj.hintAutoFollow);
+    }
   };
 })());

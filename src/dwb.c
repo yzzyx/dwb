@@ -804,33 +804,17 @@ dwb_set_clipboard(const char *text, GdkAtom atom) {
   return ret;
 }/*}}}*/
 
-#if 0
 void
 dwb_paste_primary() {
-  char *c_text = NULL;
   GtkClipboard *p_clip = gtk_widget_get_clipboard(CURRENT_WEBVIEW_WIDGET(), GDK_SELECTION_PRIMARY);
   if (p_clip == NULL)
     return;
   char *p_text = gtk_clipboard_wait_for_text(p_clip);
-  if (p_text == NULL)
-    return;
-  GtkClipboard *c_clip = gtk_widget_get_clipboard(CURRENT_WEBVIEW_WIDGET(), GDK_NONE);
-  if (c_clip == NULL)
-    return;
-  c_text = gtk_clipboard_wait_for_text(c_clip);
-  gtk_clipboard_set_text(c_clip, p_text, -1);
-  webkit_web_view_paste_clipboard(CURRENT_WEBVIEW());
-  if (c_clip != NULL) {
-    if (c_text != NULL) 
-      gtk_clipboard_set_text(c_clip, c_text, -1);
-    else  {
-      // clear clipboard
-    }
+  if (p_text != NULL) {
+    js_call_as_function(FOCUSED_FRAME(), CURRENT_VIEW()->js_base, "pastePrimary", p_text, kJSTypeString, NULL);
   }
   g_free(p_text);
-  g_free(c_text);
 }
-#endif
 
 /* dwb_scroll (Glist *gl, double step, ScrollDirection dir) {{{*/
 void 

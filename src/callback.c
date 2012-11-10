@@ -167,12 +167,10 @@ callback_key_press(GtkWidget *w, GdkEventKey *e) {
       dwb_change_mode(NORMAL_MODE, true);
     ret = false;
   }
-#if 0
   else if(e->state == GDK_SHIFT_MASK && e->keyval == GDK_KEY_Insert) {
     dwb_paste_primary();
     return true;
   }
-#endif
   else if (dwb_eval_override_key(e, CP_OVERRIDE_ALL)) 
     ret = true;
   else if (mode & INSERT_MODE) {
