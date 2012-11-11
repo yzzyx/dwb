@@ -1171,4 +1171,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  CHAR, { .p = NULL }, NULL,   { 0 }, }, 
   { { "show-single-tab",                            "Whether to show tabbar if only on tab is opened", },                                            
     SETTING_GLOBAL | SETTING_ONINIT,  BOOLEAN, { .b = true }, (S_Func)dwb_set_show_single_tab,   { 0 }, }, 
+  { { "hints-key-lock",                            "Timeout keypresses are ignored after following a hint", },                                            
+    SETTING_GLOBAL,  INTEGER, { .i = 250 }, NULL,   { 0 }, }, 
 };/*}}}*/

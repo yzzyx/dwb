@@ -1392,6 +1392,10 @@ default value: '0.75'.
 The type of hints, that are used. When set to "number", letters will match the
 links text. Possible values: letter/number, default value: 'letter'.
 
+*hints-key-lock*::
+Timeout in milliseconds all keypresses are ignored after following a hint,
+default value: 250
+
 *history-length*::
 The urls that are saved in the browsing history. Specifying a too large value
 can make tab-completion slow. Possible values: number of urls,

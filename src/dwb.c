@@ -1743,6 +1743,12 @@ dwb_save_searchengine(char *search_engine) {
   g_free(text);
 }/*}}}*/
 
+gboolean
+dwb_hints_unlock() {
+  dwb.state.scriptlock = 0;
+  return false;
+}
+
 /* dwb_evaluate_hints(const char *buffer)  return DwbStatus {{{*/
 DwbStatus 
 dwb_evaluate_hints(const char *buffer) {
@@ -1757,7 +1763,11 @@ dwb_evaluate_hints(const char *buffer) {
     ret = STATUS_END;
   }
   else if  (!g_strcmp0(buffer, "_dwb_click_") && HINT_NOT_RAPID ) {
-    dwb.state.scriptlock = 1;
+    int timeout = GET_INT("hints-key-lock");
+    if (timeout > 0) {
+      dwb.state.scriptlock = 1;
+      g_timeout_add(timeout, dwb_hints_unlock, NULL);
+    }
     if ( !(dwb.state.nv & OPEN_DOWNLOAD) ) {
       dwb_change_mode(NORMAL_MODE, dwb.state.message_id == 0);
       ret = STATUS_END;
@@ -2992,7 +3002,6 @@ dwb_clean_vars() {
   dwb.state.nummod = -1;
   dwb.state.nv = OPEN_NORMAL;
   dwb.state.type = 0;
-  dwb.state.scriptlock = 0;
   dwb.state.dl_action = DL_ACTION_DOWNLOAD;
   if (dwb.state.mimetype_request) {
     FREE0(dwb.state.mimetype_request);
