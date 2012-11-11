@@ -93,6 +93,7 @@ invisible, even in the including script. To use an included script it can return
 an object with its public objects: 
 
 ======
+[source,javascript]
 ---------------------------------
 // included script 
 
@@ -1057,6 +1058,7 @@ gtk/webkit enums to javascript objects.
 
 === ButtonContext
 ****
+[source,javascript]
 --------
 const ButtonContext = {
   document   : 1 << 1,
@@ -1072,6 +1074,7 @@ const ButtonContext = {
 === ChecksumType
 
 ****
+[source,javascript]
 --------
 const ChecksumType = {
   md5     : 0, 
@@ -1084,6 +1087,7 @@ const ChecksumType = {
 === ClickType
 ****
 
+[source,javascript]
 --------
 const ClickType = {
   click       : 4,
@@ -1126,6 +1130,7 @@ const FileTest = {
 === LoadStatus
 
 ****
+[source,javascript]
 ---------
 const LoadStatus = { 
   provisional       : 0, 
@@ -1140,6 +1145,7 @@ const LoadStatus = {
 === Modifier
 
 ****
+[source,javascript]
 --------
 const Modifier = {
   Shift     : 1 << 0,
@@ -1167,6 +1173,7 @@ const Modifier = {
 === NavigationReason
 
 ****
+[source,javascript]
 --------
 const NavigationReason = {
   linkClicked     : 0,
@@ -1182,6 +1189,7 @@ const NavigationReason = {
 === SpawnError
 
 ****
+[source,javascript]
 --------
 const SpawnError = {
   success       : 0, 
@@ -1195,6 +1203,7 @@ const SpawnError = {
 === Modes
 
 ****
+[source,javascript]
 --------
 const Modes = {
   NormalMode  : 1<<0,
@@ -1238,6 +1247,7 @@ defined with +provide+ and loaded with +require+.
 
 
 .Defining modules
+[source,javascript]
 -------
 #!javascript 
 
@@ -1255,6 +1265,7 @@ provide("myOtherModule", {
 -------
 
 .Getting some modules
+[source,javascript]
 -------
 #!javascript 
 
@@ -1267,6 +1278,7 @@ require(["myModule", "myOtherModule"], function(myModule, myOtherModule) {
 -------
 
 .Getting all modules
+[source,javascript]
 -------
 #!javascript 
 
@@ -1281,6 +1293,7 @@ require(null, function(modules) {
 It is also possible to specify a path in the name array. The name then follows
 the format *name!path*:
 
+[source,javascript]
 -------
 #!javascript 
 
@@ -1290,8 +1303,9 @@ require(["foo!/path/to/foo"], function(foo) {
 -------
 
 ./path/to/foo
+[source,javascript]
 -------
-provide("foo", { bar : 37; });
+provide("foo", { bar : 37 });
 -------
 
 The resolution chain is as follows, first all modules defined with *provide* and
@@ -1307,7 +1321,7 @@ is ignored and the stored module will be resolved:
 require(["foo!/path/to/foo"], function(foo) {
   io.print(foo.bar); // 42
 });
-provide("foo", { bar : 42; });
+provide("foo", { bar : 42 });
 -------
 
 [source,javascript]
@@ -1386,6 +1400,7 @@ _defaults_;;  Default settings, for each setting in domains, hosts and uris a
 
 Example using extensions.load:
 
+[source,javascript]
 ----
 extensions.load("perdomainsettings", { 
   domains : {                                                            
@@ -1467,6 +1482,7 @@ extensions.load("userscripts", [ "/path/to/script1", "/path/to/script2" ]);
 
 Extensions can be loaded by an userscript 
 
+[source,javascript]
 ------
 #!javascript 
 
@@ -1479,6 +1495,7 @@ extensions.load("extension_2", {
 
 To load/unload extensions on the fly *extensions.bind* can be used:
 
+[source,javascript]
 ------
 #!javascript 
 
@@ -1663,6 +1680,7 @@ return {
 
 ==== Example extensionrc
 
+[source,javascript]
 --------
 return {
   foobar : { bar : "X", foo : 37 }, // config for extension foobar

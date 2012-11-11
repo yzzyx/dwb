@@ -2623,7 +2623,7 @@ require(["foo!/path/to/foo"], function(foo) {
 .RS 4
 .\}
 .nf
-provide("foo", { bar : 37; });
+provide("foo", { bar : 37 });
 .fi
 .if n \{\
 .RE
@@ -2640,7 +2640,7 @@ The resolution chain is as follows, first all modules defined with \fBprovide\fR
 require(["foo!/path/to/foo"], function(foo) {
   io\&.print(foo\&.bar); // 42
 });
-provide("foo", { bar : 42; });
+provide("foo", { bar : 42 });
 .fi
 .if n \{\
 .RE

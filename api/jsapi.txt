@@ -2186,7 +2186,7 @@ require(["foo!/path/to/foo"], function(foo) {
 ./path/to/foo
 [source,javascript]
 -------
-provide("foo", { bar : 37; });
+provide("foo", { bar : 37 });
 -------
 
 The resolution chain is as follows, first all modules defined with +provide+ and
@@ -2202,7 +2202,7 @@ is ignored and the stored module will be resolved:
 require(["foo!/path/to/foo"], function(foo) {
   io.print(foo.bar); // 42
 });
-provide("foo", { bar : 42; });
+provide("foo", { bar : 42 });
 -------
 
 [source,javascript]
