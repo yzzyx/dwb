@@ -104,7 +104,7 @@ hint-letter-seq text Letter sequence for letter hints
 hint-normal-color text Color of inactive links in hintmode
 hint-opacity text Opacity used for hints
 hint-style select @letter @number Whether to use 'number' or 'letter' hints
-hints-key-lock Timeout in milliseconds all keypresses are ignored after following a hint
+hints-key-lock text Timeout in milliseconds all keypresses are ignored after following a hint
 
 # plugins Plugins &amp Scripts
 adblocker checkbox Whether to block advertisements via a filterlist
