@@ -914,6 +914,18 @@ signals.connect("loadFinished", function(wv) {
 ------------
 ====
 
+****
+[[curry]]
+[float]
+==== *Function.curry()* ==== 
+[source,javascript]
+----
+Function Function.curry([arg1, ..., argn])
+----
+Returns a copy of function with first n values preassigned.
+
+_arg[n]_;; Arguments that will be preassigned in the new function, optional.
+****
 
 
 
