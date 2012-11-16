@@ -625,6 +625,8 @@ dwb_update_status_text(GList *gl, GtkAdjustment *a) {
   const char *bof = back && forward ? " [+-]" : back ? " [+]" : forward  ? " [-]" : " ";
   g_string_append(string, bof);
 
+  g_string_append_printf(string, "[%d/%d]", g_list_position(dwb.state.views, dwb.state.fview) + 1, g_list_length(dwb.state.views));
+
   if (a) {
     double lower = gtk_adjustment_get_lower(a);
     double upper = gtk_adjustment_get_upper(a) - gtk_adjustment_get_page_size(a) + lower;
