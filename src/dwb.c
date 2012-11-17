@@ -2881,7 +2881,7 @@ dwb_get_scripts() {
         continue;
       else if (g_file_test(path, G_FILE_TEST_IS_SYMLINK)) {
         realpath = g_file_read_link(path, &error);
-        if (realpath != NULL) {
+        if (realpath == NULL) {
           fprintf(stderr, "Cannot read %s : %s\n", path, error->message);
           goto loop_end;
         }
