@@ -2868,6 +2868,7 @@ dwb_get_scripts() {
   Navigation *n;
   GError *error = NULL;
   FILE *f;
+  int l1, l2;
 
   if ( (dir = g_dir_open(dwb.files[FILES_USERSCRIPTS], 0, NULL)) ) {
     while ( (filename = (char*)g_dir_read_name(dir)) ) {
@@ -2889,8 +2890,8 @@ dwb_get_scripts() {
           path = realpath;
         }
       }
-      if ( (f = fopen(path, "r")) != NULL) {
-        if (fgetc(f) == '#' && fgetc(f) == '!')  {
+      if ( (f = fopen(path, "r")) != NULL && (l1 = fgetc(f)) && (l2 = fgetc(f)) ) {
+        if ( (l1 == '#' && l2 == '!') || (l1 == '/' && l2 == '/' && fgetc(f) == '!')  ) {
           if (fgets(buf, sizeof(buf), f) != NULL && !g_strcmp0(buf, "javascript")) {
             int next = fgetc(f);
             if (g_ascii_isspace(next)) {
