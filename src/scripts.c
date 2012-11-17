@@ -738,7 +738,7 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
   Key key = dwb_str_to_key(keystr);
   map->key = key.str;
   map->mod = key.mod;
-  FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, ALWAYS_SM, { .arg = func }, EP_NONE,  {NULL} };
+  FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, POST_SM, { .arg = func }, EP_NONE,  {NULL} };
   *fmap = fm;
   map->map = fmap;
   dwb.keymap = g_list_prepend(dwb.keymap, map);
@@ -941,6 +941,7 @@ global_tab_complete(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, siz
 
   entry_focus();
   completion_complete(COMP_SCRIPT, false);
+
 error_out:
   for (GList *l = dwb.state.script_completion; l; l=l->next) {
     n = l->data;
