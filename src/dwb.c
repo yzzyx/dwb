@@ -3287,7 +3287,10 @@ dwb_str_to_key(char *str) {
   if ((escape = strchr(start, '\\'))) {
     keybuffer = g_string_new(NULL);
     do {
-      g_string_append_len(keybuffer, start, escape - start);
+      if (*(escape + 1) == '\\')
+        g_string_append_c(keybuffer, '\\');
+      else 
+        g_string_append_len(keybuffer, start, escape - start);
       start = escape + 1;
     } while ((escape = strchr(start, '\\')));
     g_string_append_len(keybuffer, start, escape - start);
