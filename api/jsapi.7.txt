@@ -17,14 +17,17 @@ extensions for dwb.
 == GETTING STARTED == 
 Scripts that use the javascript api must be located in
 *$XDG_CONFIG_HOME/dwb/userscripts* like any other script. 
-To include a userscript put a script with
-shebang
+Scripts that use the javascript api must either start with 
 
 -------
 #!javascript
 -------
 
-in the userscripts directory. 
+or with 
+
+-------
+//!javascript
+-------
 
 All native javascript methods can be used in scripts, however there are
 limitations:  

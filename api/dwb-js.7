@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 11/12/2012
+.\"      Date: 11/17/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "11/12/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "11/17/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,7 +34,7 @@ dwb-js \- dwb\*(Aqs javascript api documentation
 dwb provides a javascript api that can be used to write userscripts or extensions for dwb\&.
 .SH "GETTING STARTED"
 .sp
-Scripts that use the javascript api must be located in \fB$XDG_CONFIG_HOME/dwb/userscripts\fR like any other script\&. To include a userscript put a script with shebang
+Scripts that use the javascript api must be located in \fB$XDG_CONFIG_HOME/dwb/userscripts\fR like any other script\&. Scripts that use the javascript api must either start with
 .sp
 .if n \{\
 .RS 4
@@ -46,7 +46,17 @@ Scripts that use the javascript api must be located in \fB$XDG_CONFIG_HOME/dwb/u
 .RE
 .\}
 .sp
-in the userscripts directory\&.
+or with
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+//!javascript
+.fi
+.if n \{\
+.RE
+.\}
 .sp
 All native javascript methods can be used in scripts, however there are limitations:
 .sp
