@@ -18,6 +18,17 @@
             }
             return null;
           }
+        },
+        "getSelection" : {
+          value : function() {
+            var frames = tabs.current.allFrames;
+            for (var i=frames.length-1; i>=0; --i) {
+              var selection = JSON.parse(frames[i].inject("return document.getSelection().toString()"));
+              if (selection.length > 0)
+                return selection;
+            }
+            return null;
+          }
         }
     });
     Object.freeze(util);
