@@ -665,6 +665,7 @@ struct _View {
   GtkWidget *inspector_window;
   ViewStatus *status;
   Plugins *plugins;
+  WebKitWebSettings *settings;
   struct {
     WebKitDOMElement *element;
     WebKitDOMElement *anchor;
