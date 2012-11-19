@@ -426,6 +426,14 @@ _hostname_;; a hostname
 _returns_;; the base domain 
 ****
 
+==== String util.getSelection()
+****
+
+Get selected text from the focused webview.
+
+_returns_;; The selection or null if no text was selected.
+****
+
 ==== String util.markupEscape(String text)
 ****
 

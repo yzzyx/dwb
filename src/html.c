@@ -255,7 +255,7 @@ html_keydown_cb(WebKitDOMElement *el, WebKitDOMEvent *ev, WebKitWebView *wv) {
   glong val = webkit_dom_ui_event_get_key_code(WEBKIT_DOM_UI_EVENT(ev));
   if (val == 13) {
     WebKitDOMEventTarget *target = webkit_dom_event_get_target(ev);
-    if (target != NULL) {
+    if (target != NULL && WEBKIT_DOM_IS_ELEMENT(target)) {
       return html_key_changed(WEBKIT_DOM_ELEMENT(target));
     }
   }
@@ -327,8 +327,10 @@ html_key_changed(WebKitDOMElement *target) {
   char *value;
   if (WEBKIT_DOM_IS_HTML_TEXT_AREA_ELEMENT(target)) 
     value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(target));
-  else 
+  else if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(target))
     value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(target));
+  else 
+    return false;
 
   char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(target));
   if (g_strcmp0(id, "dwb_custom_keys_area")) {

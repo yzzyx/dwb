@@ -843,7 +843,8 @@ view_set_normal_style(GList *gl) {
 static void 
 view_init_settings(GList *gl) {
   View *v = gl->data;
-  webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), webkit_web_settings_copy(dwb.state.web_settings));
+  v->settings = webkit_web_settings_copy(dwb.state.web_settings);
+  webkit_web_view_set_settings(WEBKIT_WEB_VIEW(v->web), v->settings);
   GList *l;
   for (l = g_hash_table_get_values(dwb.settings); l; l=l->next) {
     WebSettings *s = l->data;
@@ -1057,7 +1058,7 @@ view_clean(GList *gl) {
   g_object_unref(v->hover.element);
   g_object_unref(v->status_element);
 
-
+  g_object_unref(v->settings);
   /* Destroy widget */
   gtk_widget_destroy(v->web);
   gtk_widget_destroy(v->scroll);
