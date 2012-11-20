@@ -63,8 +63,11 @@ void
 scratchpad_load(const char *text) {
   if (g_str_has_prefix(text, "file://")) 
     webkit_web_view_load_uri(WEBKIT_WEB_VIEW(g_scratchpad), text);
-  else 
-    webkit_web_view_load_string(WEBKIT_WEB_VIEW(g_scratchpad), text, NULL, NULL, "scratchpad");
+  else {
+    char *basepath = g_strconcat("file://", g_getenv("HOME"), NULL);
+    webkit_web_view_load_string(WEBKIT_WEB_VIEW(g_scratchpad), text, NULL, NULL, basepath);
+    g_free(basepath);
+  }
 }
 
 void 

@@ -93,6 +93,9 @@ static JSValueRef wv_set_title(JSContextRef ctx, JSObjectRef function, JSObjectR
 static JSValueRef wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+#if WEBKIT_CHECK_VERSION(1, 10, 0)
+static JSValueRef wv_to_png(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+#endif
 static JSStaticFunction default_functions[] = { 
     { "connect",         connect_object,             kJSDefaultAttributes },
     { "disconnect",      disconnect_object,             kJSDefaultAttributes },
@@ -104,6 +107,9 @@ static JSStaticFunction wv_functions[] = {
     { "history",         wv_history,             kJSDefaultAttributes },
     { "reload",          wv_reload,             kJSDefaultAttributes },
     { "inject",          wv_inject,             kJSDefaultAttributes },
+#if WEBKIT_CHECK_VERSION(1, 10, 0)
+    { "toPng",           wv_to_png,             kJSDefaultAttributes },
+#endif
     { 0, 0, 0 }, 
 };
 static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
@@ -420,6 +426,86 @@ wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc,
   }
   return JSValueMakeNull(ctx);
 }/*}}}*/
+#if WEBKIT_CHECK_VERSION(1, 10, 0)
+static JSValueRef 
+wv_to_png(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  WebKitWebView *wv;
+  cairo_status_t status = -1;
+  cairo_surface_t *sf;
+  char *filename;
+  if (argc < 1 || (wv = JSObjectGetPrivate(this)) == NULL || (JSValueIsNull(ctx, argv[0])) || (filename = js_value_to_char(ctx, argv[0], -1, NULL)) == NULL) {
+    return JSValueMakeNumber(ctx, status);
+  }
+  if (argc > 2) {
+    gboolean keep_aspect = false;
+    double width = JSValueToNumber(ctx, argv[1], exc);
+    double height = JSValueToNumber(ctx, argv[2], exc);
+    if (width != NAN && height != NAN) {
+      sf = webkit_web_view_get_snapshot(wv);
+
+      if (argc > 3 && JSValueIsBoolean(ctx, argv[3])) 
+        keep_aspect = JSValueToBoolean(ctx, argv[3]);
+      if (keep_aspect && (width <= 0 || height <= 0))
+        return JSValueMakeNumber(ctx, status);
+
+
+      int w = cairo_image_surface_get_width(sf);
+      int h = cairo_image_surface_get_height(sf);
+
+      double aspect = (double)w/h;
+      double new_width = width;
+      double new_height = height;
+
+      if (width <= 0 || keep_aspect)
+        new_width = height * aspect;
+      if ((width > 0 && height <= 0) || keep_aspect)
+        new_height = width / aspect;
+      if (keep_aspect) {
+        if (new_width > width) {
+          new_width = width;
+          new_height = new_width / aspect;
+        }
+        else if (new_height > height) {
+          new_height = height;
+          new_width = new_height * aspect;
+        }
+      }
+
+      double sw, sh;
+      if (width <= 0 || height <= 0)
+        sw = sh = MIN(width / w, height / h);
+      else {
+        sw = width / w;
+        sh = height / h;
+      }
+
+      cairo_surface_t *scaled_surface = cairo_surface_create_similar_image(sf, CAIRO_FORMAT_RGB24, new_width, new_height);
+      cairo_t *cr = cairo_create(scaled_surface);
+
+      cairo_save(cr);
+      cairo_scale(cr, sw, sh);
+
+      cairo_set_source_surface(cr, sf, 0, 0);
+      cairo_paint(cr);
+      cairo_restore(cr);
+
+      cairo_destroy(cr);
+
+      status = cairo_surface_write_to_png(scaled_surface, filename);
+      cairo_surface_destroy(scaled_surface);
+    }
+    else 
+      return JSValueMakeNumber(ctx, status);
+  }
+  else {
+    sf = webkit_web_view_get_snapshot(wv);
+    status = cairo_surface_write_to_png(sf, filename);
+  }
+  cairo_surface_destroy(sf);
+
+  return JSValueMakeNumber(ctx, status);
+}
+#endif
 /* wv_get_main_frame {{{*/
 static JSValueRef 
 wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {

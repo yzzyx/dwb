@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 11/19/2012
+.\"      Date: 11/20/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "11/19/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "11/20/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1288,6 +1288,42 @@ A callback function that will be called when the load status changes, return tru
 \fIreturns\fR
 .RS 4
 true if the uri is loaded
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber wv.toPng(String filename, [Number width, Number height], [Boolean keepAspect])\fR
+.RS 4
+.sp
+Renders a webview to a png file\&.
+.PP
+\fIfilename\fR
+.RS 4
+The filename for the png\&.
+.RE
+.PP
+\fIwidth\fR
+.RS 4
+The width of the png, if width is < 0 and height is > 0 the image has the same aspect ratio as the original webview, optional\&.
+.RE
+.PP
+\fIheight\fR
+.RS 4
+The height of the png, if height is < 0 and width is > 0 the image will have the same aspect ratio as the original webview, optional, mandatory if width is set\&.
+.RE
+.PP
+\fIkeepAspect\fR
+.RS 4
+Whether to keep the aspect ratio, if set to true the new image will have the same aspect ratio as the original webview, width and height are taken as maximum sizes and must both be > 0, optional\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+A cairo_status_t (0 on success) or \-1 if an error occured\&.
 .RE
 .RE
 .sp

@@ -1175,6 +1175,31 @@ void wv.reload(void)
 Reload a webview 
 ****
 
+****
+[float]
+==== *toPng()* ====
+
+[source,javascript]
+----
+Number wv.toPng(String filename, [Number width, Number height], [Boolean keepAspect]) 
+----
+
+Renders a webview to a png file.
+
+_filename_;; The filename for the png.
+_width_;; The width of the png, if width is < 0 and height is > 0 the image has
+the same aspect ratio as the original webview, optional.
+_height_;; The height of the png, if height is < 0 and width is > 0 the image
+will have the same aspect ratio as the original webview, optional, mandatory
+if width is set. 
+_keepAspect_;; Whether to keep the ascpect ratio, if the set to true the new
+image will have the same aspect ratio as the original webview, width and
+height are taken as maximum sizes and must both be > 0, optional.
+_returns_;; A cairo_status_t (0 on success) or -1 if an error occured.
+****
+
+
+
 
 ====
 [float]
