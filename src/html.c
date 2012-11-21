@@ -144,15 +144,17 @@ html_navigation(GList *gl, GList *data, HtmlTable *table) {
         <tr class='dwb_table_row'>\n\
           <td class=dwb_table_cell_left>\n\
             <a href='%s'>\n\
+              <div class='dwb_ellipsize'>\n\
               %s\n\
+              </div>\n\n\
             </a>\n\
           </td>\n\
           <td class='dwb_table_cell_middle'>\n\
-            <div class='dwb_ellipsize'>\n\
-              <a style='color:inherit;font:inherit;' href='%s'>\n\
+            <a style='color:inherit;font:inherit;' href='%s'>\n\
+               <div class='dwb_ellipsize'>\n\
                 %s\n\
+               </div>\n\
               </a>\n\
-            </div>\n\
           </td>\n\
           <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s' onclick='location.reload()'>\n\
             &times\n\
@@ -412,16 +414,18 @@ html_quickmarks(GList *gl, HtmlTable *table) {
             <div>\n\
               <div class='dwb_qm'>%s</div>\n\
               <a href='%s'>\n\
+              <div class='dwb_ellipsize'>\n\
                 %s\n\
+              </div>\n\
               </a>\n\
             </div>\n\
           </td>\n\
           <td class='dwb_table_cell_middle'>\n\
-            <div class='dwb_ellipsize'>\n\
               <a style='color:inherit;font:inherit;' href='%s'>\n\
+              <div class='dwb_ellipsize'>\n\
                 %s\n\
+              </div>\n\
               </a>\n\
-            </div>\n\
           </td>\n\
           <td class='dwb_table_cell_right' style='cursor:pointer;' navigation='%s %s %s' onclick='location.reload()'>&times</td>\n\
         </tr>", q->key, q->nav->first, q->nav->second && g_strcmp0(q->nav->second, "(null)") ? q->nav->second : q->nav->first,
