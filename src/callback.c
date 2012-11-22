@@ -67,28 +67,13 @@ callback_entry_key_press(GtkWidget* entry, GdkEventKey *e) {
   gboolean ret = false;
   gboolean complete = (mode == DOWNLOAD_GET_PATH || (mode & COMPLETE_PATH));
   gboolean set_text = false;
-  char *text = NULL;
-  char *buffer, *back;
+
   if (dwb.state.mode & QUICK_MARK_OPEN) 
     set_text = true;
   /*  Handled by activate-callback */
   if (e->keyval == GDK_KEY_Return)
     return dwb_entry_activate(e);
   /* Insert primary selection on shift-insert */
-  if (e->keyval == GDK_KEY_Insert && e->state == GDK_SHIFT_MASK)  {
-    if ((text = dwb_clipboard_get_text(GDK_SELECTION_PRIMARY))) {
-      buffer = back = g_strdup(text);
-      while (*buffer) {
-        if (*buffer == '\n' || *buffer == '\r') 
-          *buffer = ' ';
-        buffer++;
-      }
-      entry_insert_text(back);
-      g_free(back);
-      FREE0(text);
-    }
-    return true;
-  }
   if (mode == QUICK_MARK_SAVE) 
     return false;
   else if (mode & COMPLETE_BUFFER) {
