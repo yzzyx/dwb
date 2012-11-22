@@ -888,7 +888,9 @@ global_include(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t a
   else {
     JSObjectRef function = JSObjectMakeFunction(ctx, NULL, 0, NULL, script, NULL, 0, exc);
     if (function != NULL) {
-      ret = JSObjectCallAsFunction(ctx, function, thisObject, 0, NULL, exc);
+      JSObjectRef this = JSObjectMake(ctx, NULL, NULL);
+      JSValueProtect(ctx, this);
+      ret = JSObjectCallAsFunction(ctx, function, this, 0, NULL, exc);
     }
   }
   JSStringRelease(script);
