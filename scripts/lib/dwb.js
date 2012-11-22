@@ -35,6 +35,11 @@
               _modules[name] = module;
           }
         },
+        "replace" : {
+          value : function(name, module) {
+            _modules[name] = module;
+          }
+        },
         "require" : {
           value : function(names, callback) {
             if (names !== null && ! (names instanceof Array)) {

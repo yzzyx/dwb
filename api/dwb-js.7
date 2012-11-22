@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 11/20/2012
+.\"      Date: 11/22/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "11/20/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "11/22/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -223,6 +223,27 @@ var p = i\&.getPrivate();               // 37
 .RS 4
 .sp
 Defines a module that can be used in other scripts, see MODULES for details\&.
+.PP
+\fIname\fR
+.RS 4
+Name of the module
+.RE
+.PP
+\fImodule\fR
+.RS 4
+The module
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid replace(String name, Object module)\fR
+.RS 4
+.sp
+Same as provide but replaces the module if it was already defined\&.
 .PP
 \fIname\fR
 .RS 4

@@ -140,6 +140,24 @@ _module_;; The module
 ****
 
 ****
+[[replace]]
+[float]
+==== *replace()* ==== 
+
+[source,javascript]
+----
+void replace(String name, Object module)
+----
+
+Same as <<provide>> but replaces the module if it was already defined.
+
+ ::
+
+_name_;; Name of the module
+_module_;; The module
+****
+
+****
 [[require]]
 [float]
 ==== *require()* ==== 

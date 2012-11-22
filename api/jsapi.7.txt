@@ -121,6 +121,14 @@ _name_;; Name of the module
 _module_;; The module
 ****
 
+==== void replace(String name, Object module)
+****
+Same as provide but replaces the module if it was already defined.
+
+_name_;; Name of the module
+_module_;; The module
+****
+
 ==== void require(Array names, Function callback)
 ****
 Load modules defined with provide.
