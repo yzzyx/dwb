@@ -818,6 +818,9 @@ void
 dwb_paste_into_entry(GtkClipboard *clip, const char *text) {
   char *buffer, *back;
 
+  if (text == NULL || *text == '\0')
+    return;
+
   buffer = back = g_strdup(text);
   while (*buffer) {
     if (*buffer == '\n' || *buffer == '\r') 
