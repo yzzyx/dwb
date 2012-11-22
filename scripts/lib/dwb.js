@@ -37,7 +37,14 @@
         },
         "replace" : {
           value : function(name, module) {
-            _modules[name] = module;
+            if (! module && _modules[name] ) {
+              for (var key in _modules[name]) {
+                delete _modules[name][key];
+              }
+              delete _modules[name];
+            }
+            else 
+              _modules[name] = module;
           }
         },
         "require" : {

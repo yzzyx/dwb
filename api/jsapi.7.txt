@@ -126,7 +126,8 @@ _module_;; The module
 Same as provide but replaces the module if it was already defined.
 
 _name_;; Name of the module
-_module_;; The module
+_module_;; The module, if omitted the module will be deleted, all references to
+that module will reference an empty object afterwards, optional.
 ****
 
 ==== void require(Array names, Function callback)
@@ -141,7 +142,6 @@ scripts and modules. The parameters of the callback function correspond to the
 names array. If *names* is null the function is called with one parameter that
 contains all modules, see also MODULES for examples.
 ****
-
 
 ==== void sendRequest(String uri, Function callback, [String method])
 ****
