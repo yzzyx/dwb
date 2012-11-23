@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 11/22/2012
+.\"      Date: 11/23/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "11/22/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "11/23/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -3304,6 +3304,8 @@ The configuration for extensions is in \fB$XDG_CONFIG_HOME/dwb/extensionrc\fR an
 .sp
 Every extension must implement one function named init that takes one argument, the config for the extension\&. The function should return true if the extension was successfully loaded, false otherwise\&. Every extension also may implement a function end that will be called when an extension is unloaded\&. If an extension registers to signals and binds shortcuts the extension should unregister all signals and unbind all shortcuts in this function\&. init and end should be returned from the extension\&.
 .sp
+Additionally the returned object can also have an defaultConfig\-property, the value will be passed to extensions\&.getConfig before calling the init function\&.
+.sp
 .it 1 an-trap
 .nr an-no-space-flag 1
 .nr an-break-flag 1
@@ -3328,6 +3330,8 @@ function loadStatusCallback(w) {
   \&.\&.\&.
 }
 return {
+  defaultConfig : { foo : 37 },
+
   init : function (config) {
     if (config\&.foo > 36) {
       bar(config\&.foo);
@@ -3339,6 +3343,7 @@ return {
 
     return false;
   },
+
   end : function () {
     unbind("dobar");
     signals\&.disconnectByFunction(loadStatusCallback);
@@ -3367,6 +3372,45 @@ return {
   foobar : { bar : "X", foo : 37 }, // config for extension foobar
   barfoo : {  }                     // config for extension barfoo
 
+};
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBPublic api\fR
+.RS 4
+.sp
+Extensions that provide a public api can use provide or replace using the name of the extension\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+var myPublicFunction = function()
+{
+  \&.\&.\&.
+};
+
+return {
+  init : function(config)
+  {
+    provide("myExtensionName",
+    {
+      config : config,
+      method : myPublicFunction
+    });
+  },
+  end : function()
+  {
+    replace("myExtensionName");
+  }
 };
 .fi
 .if n \{\

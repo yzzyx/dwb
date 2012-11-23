@@ -2709,6 +2709,9 @@ the extension should unregister all signals and unbind all shortcuts in this
 function.
 +init+ and +end+ should be returned from the extension.
 
+Additionally the returned object can also have an +defaultConfig+-property, the
+value will be passed to extensions.getConfig before calling the init function.
+
 .Example
 
 A extension called *foobar* in +$HOME/.local/share/dwb/extensions/foobar+.
@@ -2725,6 +2728,8 @@ function loadStatusCallback(w) {
   ...
 }
 return {
+  defaultConfig : { foo : 37 },
+
   init : function (config) {
     if (config.foo > 36) {
       bar(config.foo);
@@ -2736,6 +2741,7 @@ return {
 
     return false;
   },
+
   end : function () {
     unbind(bar);
     signals.disconnectByFunction(loadStatusCallback);
@@ -2752,6 +2758,33 @@ return {
   foobar : { bar : "X", foo : 37 }, // config for extension foobar
   barfoo : {  }                     // config for extension barfoo
   
+};
+--------
+====
+
+Extensions that provide a public api can use provide or replace using the name of the extension. 
+
+====
+[source,javascript]
+--------
+var myPublicFunction = function() 
+{
+  ...
+};
+
+return {
+  init : function(config) 
+  {
+    provide("myExtensionName", 
+    {
+      config : config, 
+      method : myPublicFunction
+    });
+  },
+  end : function() 
+  {
+    replace("myExtensionName");
+  }
 };
 --------
 ====
