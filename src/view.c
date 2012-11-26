@@ -1157,8 +1157,11 @@ view_remove(GList *gl) {
     gtk_widget_hide(dwb.gui.topbox);
 
   gtk_widget_show(CURRENT_VIEW()->scroll);
+
   dwb_update_layout();
+  dwb_update_status_text(dwb.state.fview, NULL);
   CLEAR_COMMAND_TEXT();
+
   return STATUS_OK;
 }/*}}}*/
 
