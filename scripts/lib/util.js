@@ -1,111 +1,141 @@
 (function () {
     var privProps = [];
-    function getPrivateIdx(object, key, identifier) {
-      var p;
-      for (var i=0, l=privProps.length; i<l; ++i) {
-        p = privProps[i];
-        if (p.object == object && p.key == key && p.identifier === identifier)
-          return i;
-      }
-      return -1;
+    function getPrivateIdx(object, key, identifier) 
+    {
+        var p;
+        for (var i=0, l=privProps.length; i<l; ++i) 
+        {
+            p = privProps[i];
+            if (p.object == object && p.key == key && p.identifier === identifier)
+                return i;
+        }
+        return -1;
     }
-    Object.defineProperties(util, { 
-        "getBody" :  { 
-          value :  function(f) {
-            if (f !== null && f !== undefined && f instanceof Function) {
-              var m = f.toString().match(/\{([\s\S]*)\}/m)[1];
-              return m.replace(/^\s*\/\/.*$/mg,'');
+    Object.defineProperties(util, 
+    { 
+        "getBody" :  
+        { 
+            value :  function(f) 
+            {
+                if (f !== null && f !== undefined && f instanceof Function) 
+                {
+                    var m = f.toString().match(/\{([\s\S]*)\}/m)[1];
+                    return m.replace(/^\s*\/\/.*$/mg,'');
+                }
+                return null;
             }
-            return null;
-          }
         },
-        "getSelection" : {
-          value : function() {
-            var frames = tabs.current.allFrames;
-            for (var i=frames.length-1; i>=0; --i) {
-              var selection = JSON.parse(frames[i].inject("return document.getSelection().toString()"));
-              if (selection.length > 0)
-                return selection;
+        "getSelection" : 
+        {
+            value : function() 
+            {
+                var frames = tabs.current.allFrames;
+                for (var i=frames.length-1; i>=0; --i) 
+                {
+                    var selection = JSON.parse(frames[i].inject("return document.getSelection().toString()"));
+                    if (selection.length > 0)
+                        return selection;
+                }
+                return null;
             }
-            return null;
-          }
         }
     });
     Object.freeze(util);
-    if (Object.prototype.setPrivate === undefined && Object.prototype.getPrivate === undefined) {
-      Object.defineProperties(Object.prototype, {
-        "setPrivate" : { 
-          value : function(key, value, identifier) {
-            if (!(identifier instanceof Object) && !(identifier instanceof Function)) {
-              throw new Error("[setPrivate] identifier is not an Object or Function");
+    
+    if (Object.prototype.setPrivate === undefined && Object.prototype.getPrivate === undefined) 
+    {
+        Object.defineProperties(Object.prototype, 
+        {
+            "setPrivate" : 
+            { 
+                value : function(key, value, identifier) 
+                {
+                    if (!(identifier instanceof Object) && !(identifier instanceof Function)) 
+                        throw new Error("[setPrivate] identifier is not an Object or Function");
+
+                    var i = getPrivateIdx(this, key, identifier);
+                    if (i === -1) 
+                    {
+                        if (value !== undefined && value !== null)
+                            privProps.push({ object : this, key : key, identifier : identifier, value : value });
+                    }
+                    else if (value !== null) 
+                    {
+                        privProps[i].value = value;
+                    }
+                    else 
+                    {
+                        privProps.splice(i);
+                    }
+                }
+            },
+            "getPrivate" : 
+            { 
+                value : function(key, identifier) 
+                {
+                    var i = getPrivateIdx(this, key, identifier);
+                    if (i !== -1) 
+                        return privProps[i].value;
+                    return null;
+                }
             }
-            var i = getPrivateIdx(this, key, identifier);
-            if (i === -1) {
-              if (value !== undefined && value !== null)
-                privProps.push({ object : this, key : key, identifier : identifier, value : value });
-            }
-            else if (value !== null) {
-              privProps[i].value = value;
-            }
-            else {
-              privProps.splice(i);
-            }
-          }
-        },
-        "getPrivate" : { 
-          value : function(key, identifier) {
-            var i = getPrivateIdx(this, key, identifier);
-            if (i !== -1) 
-              return privProps[i].value;
-            return null;
-          }
-        }
-      });
+        });
     }
 
-    if (Object.prototype.forEach === undefined) {
-      Object.defineProperty(Object.prototype, "forEach", { 
-          value : function (callback) {
-            var key;
-            for (key in this) {
-              callback(key, this[key], this); 
+    if (Object.prototype.forEach === undefined) 
+    {
+        Object.defineProperty(Object.prototype, "forEach", 
+        { 
+            value : function (callback) 
+            {
+                var key;
+                for (key in this) 
+                    callback(key, this[key], this); 
             }
-          }
-      });
+        });
     }
-    if (Array.prototype.fastIndexOf === undefined) {
-      Object.defineProperty(Array.prototype, "fastIndexOf", {
-          value : function (v) {
-            for (var i=0, l=this.length; i<l; ++i) {
-              if (this[i] == v)
-                return i;
+    if (Array.prototype.fastIndexOf === undefined) 
+    {
+        Object.defineProperty(Array.prototype, "fastIndexOf", 
+        {
+            value : function (v) 
+            {
+                for (var i=0, l=this.length; i<l; ++i) {
+                    if (this[i] == v)
+                        return i;
+                }
+                return -1;
             }
-            return -1;
-          }
-      });
+        });
     }
-    if (Array.prototype.fastLastIndexOf === undefined) {
-      Object.defineProperty(Array.prototype, "fastLastIndexOf", {
-          value : function (v) {
-            for (var i=this.length-1; i>=0; --i) {
-              if (this[i] == v)
-                return i;
+    if (Array.prototype.fastLastIndexOf === undefined) 
+    {
+        Object.defineProperty(Array.prototype, "fastLastIndexOf", 
+        {
+            value : function (v) 
+            {
+                for (var i=this.length-1; i>=0; --i) {
+                    if (this[i] == v)
+                        return i;
+                }
+                return -1;
             }
-            return -1;
-          }
-      });
+        });
     }
     if (Function.prototype.curry === undefined) 
     {
-      Object.defineProperty(Function.prototype, "curry", {
-          value : function() {
-            var args = Array.prototype.slice.call(arguments);
-            var self = this;
-            return function() { 
-              return self.apply(this, args.concat(Array.prototype.slice.call(arguments))); 
-            };
+        Object.defineProperty(Function.prototype, "curry", 
+        {
+            value : function() 
+            {
+                var args = Array.prototype.slice.call(arguments);
+                var self = this;
+                return function() 
+                { 
+                    return self.apply(this, args.concat(Array.prototype.slice.call(arguments))); 
+                };
 
-          }
-      });
+            }
+        });
     }
 })();

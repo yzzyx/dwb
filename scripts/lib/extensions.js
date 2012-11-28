@@ -191,9 +191,8 @@
                   {
                       _registered[name] = plugin;
 
-                      if (plugin.exports) {
+                      if (plugin.exports) 
                           replace(name, plugin.exports);
-                      }
 
                       extensions.message(name, "Successfully loaded and initialized.");
                       return plugin.exports || null;
