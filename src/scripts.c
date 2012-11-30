@@ -1576,6 +1576,10 @@ download_constructor_cb(JSContextRef ctx, JSObjectRef constructor, size_t argc, 
   WebKitDownload *download = webkit_download_new(request);
   return JSObjectMake(ctx, m_download_class, download);
 }/*}}}*/
+static JSObjectRef 
+webview_constructor_cb(JSContextRef ctx, JSObjectRef constructor, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
+  return JSObjectMake(ctx, m_webview_class, webkit_web_view_new());
+}
 
 /* stop_download_notify {{{*/
 static gboolean 
@@ -1905,6 +1909,14 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
  return ret;
 }/*}}}*/
 
+void
+create_constructor(JSContextRef ctx, char *name, JSClassRef class, JSObjectCallAsConstructorCallback cb, JSValueRef *exc)
+{
+  JSObjectRef constructor = JSObjectMakeConstructor(ctx, class, cb);
+  JSStringRef js_name = JSStringCreateWithUTF8CString(name);
+  JSObjectSetProperty(ctx, JSContextGetGlobalObject(ctx), js_name, constructor, kJSPropertyAttributeDontDelete, exc);
+  JSStringRelease(js_name);
+}
 /* create_global_object {{{*/
 static void 
 create_global_object() {
@@ -2016,12 +2028,14 @@ create_global_object() {
   m_default_class = JSClassCreate(&cd);
 
   /* Webview */
+  cd.className = "WebKitWebView";
   cd.staticFunctions = wv_functions;
   cd.staticValues = wv_values;
   cd.parentClass = m_default_class;
   m_webview_class = JSClassCreate(&cd);
 
   /* Frame */
+  cd.className = NULL;
   cd.staticFunctions = frame_functions;
   cd.staticValues = frame_values;
   cd.parentClass = m_default_class;
@@ -2056,10 +2070,8 @@ create_global_object() {
   JSObjectRef o = make_object_for_class(m_global_context, class, G_OBJECT(scratchpad_get()));
   js_set_property(m_global_context, global_object, "scratchpad", o, kJSDefaultAttributes, NULL);
 
-  JSObjectRef constructor = JSObjectMakeConstructor(m_global_context, m_download_class, download_constructor_cb);
-  JSStringRef name = JSStringCreateWithUTF8CString("Download");
-  JSObjectSetProperty(m_global_context, JSContextGetGlobalObject(m_global_context), name, constructor, kJSDefaultProperty, NULL);
-  JSStringRelease(name);
+  create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
+  create_constructor(m_global_context, "WebKitWebView", m_webview_class, NULL, NULL);
 }/*}}}*/
 /*}}}*/
 

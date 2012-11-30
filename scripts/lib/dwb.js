@@ -90,5 +90,6 @@
                 configurable : true
             }
     });
+    Object.defineProperty(WebKitWebView.prototype, "scrolledWindow", { get : function() { return this.parent; } , enumerable : true });
 })();
 Object.preventExtensions(this);
