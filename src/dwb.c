@@ -1404,17 +1404,6 @@ dwb_hide_tabbar(int *running) {
   return false;
 }/*}}}*/
 
-#if 0
-void 
-dwb_hide_tab(GList *gl) {
-  puts("hide tab");
-}
-void 
-dwb_show_tab(GList *gl) {
-  puts("show tab");
-}
-#endif
-
 /* dwb_focus_view(GList *gl){{{*/
 gboolean
 dwb_focus_view(GList *gl) {

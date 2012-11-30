@@ -184,7 +184,7 @@ static KeyValue KEYS[] = {
   { "eval",                     {   NULL,         0,                0 }, }, 
   { "download",                 {   "gd",         0,                0 }, }, 
   { "toggle_tab",               {   "@Tab@",      GDK_CONTROL_MASK, 0 }, }, 
-#if 0
+#if 1
   { "group_tag",                {   "am",         0,                0 }, }, 
   { "group_show",               {   "as",         0,                0 }, }, 
   { "group_toggle",             {   "at",         0,                0 }, }, 

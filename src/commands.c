@@ -30,6 +30,7 @@
 #include "download.h"
 #include "js.h"
 #include "scripts.h"
+#include "tabs.h"
 
 inline static int 
 dwb_floor(double x) { 
@@ -894,6 +895,7 @@ commands_group_show(KeyMap *km, Arg *arg) {
   }
   return STATUS_OK;
 }
+#endif
 DwbStatus 
 commands_group_toggle(KeyMap *km, Arg *arg) {
   int n = MIN(NUMMOD, 9), i=0;
@@ -907,19 +909,23 @@ commands_group_toggle(KeyMap *km, Arg *arg) {
 DwbStatus 
 commands_group_tag(KeyMap *km, Arg *arg) {
   int n = MIN(NUMMOD, 9);
-  if (CURRENT_VIEW()->status->group & (1<<n)) {
-    CURRENT_VIEW()->status->group &= ~(1<<n);
-    if (!GROUP_VISIBLE(dwb.state.fview))
-      dwb_hide_tab(dwb.state.fview);
-    dwb_set_normal_message(dwb.state.fview, true, "Untagged group %d", n);
-  }
-  else {
-    CURRENT_VIEW()->status->group |= 1<<n;
-    if (GROUP_VISIBLE(dwb.state.fview))
-      dwb_show_tab(dwb.state.fview);
-    dwb_set_normal_message(dwb.state.fview, true, "Tagged group %d", n);
-  }
+  if (dwb.state.nummod > 9 || dwb.state.nummod < 0)
+      return STATUS_ERROR;
+  CURRENT_VIEW()->status->group &= (1<<n);
+  tab_update(dwb.state.fview);
+
+  //if (CURRENT_VIEW()->status->group & (1<<n)) {
+  //  CURRENT_VIEW()->status->group &= ~(1<<n);
+  //  if (!GROUP_VISIBLE(dwb.state.fview))
+  //    dwb_hide_tab(dwb.state.fview);
+  //  dwb_set_normal_message(dwb.state.fview, true, "Untagged group %d", n);
+  //}
+  //else {
+  //  CURRENT_VIEW()->status->group |= 1<<n;
+  //  if (GROUP_VISIBLE(dwb.state.fview))
+  //    dwb_show_tab(dwb.state.fview);
+  //  dwb_set_normal_message(dwb.state.fview, true, "Tagged group %d", n);
+  //}
 
   return STATUS_OK;
 }
-#endif
