@@ -118,11 +118,19 @@ static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStri
 static JSValueRef wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSValueRef wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSValueRef wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef wv_get_tab_widget(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSStaticValue wv_values[] = {
     { "mainFrame", wv_get_main_frame, NULL, kJSDefaultAttributes }, 
     { "focusedFrame", wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
     { "allFrames",  wv_get_all_frames, NULL, kJSDefaultAttributes }, 
     { "number",     wv_get_number, NULL, kJSDefaultAttributes }, 
+    { "tabWidget",     wv_get_tab_widget, NULL, kJSDefaultAttributes }, 
+    { "tabWidget",     wv_get_tab_box, NULL, kJSDefaultAttributes }, 
+    { "tabLabel",     wv_get_tab_label, NULL, kJSDefaultAttributes }, 
+    { "tabIcon",     wv_get_tab_icon, NULL, kJSDefaultAttributes }, 
     { 0, 0, 0, 0 }, 
 };
 
@@ -593,7 +601,8 @@ wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSV
 
 /* wv_get_number {{{*/
 static JSValueRef 
-wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) {
+wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
+{
     GList *gl = dwb.state.views;
     for (int i=0; gl; i++, gl=gl->next) 
     {
@@ -602,6 +611,39 @@ wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValue
     }
     return JSValueMakeNumber(ctx, -1); 
 }/*}}}*/
+
+static JSValueRef 
+wv_get_tab_widget(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
+{
+    GList *gl = find_webview(object);
+    if (gl == NULL)
+        return JSValueMakeUndefined(ctx);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabevent), false);
+}
+static JSValueRef 
+wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
+{
+    GList *gl = find_webview(object);
+    if (gl == NULL)
+        return JSValueMakeUndefined(ctx);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabbox), false);
+}
+static JSValueRef 
+wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
+{
+    GList *gl = find_webview(object);
+    if (gl == NULL)
+        return JSValueMakeUndefined(ctx);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tablabel), false);
+}
+static JSValueRef 
+wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
+{
+    GList *gl = find_webview(object);
+    if (gl == NULL)
+        return JSValueMakeUndefined(ctx);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabicon), false);
+}
 
 
 static JSValueRef
