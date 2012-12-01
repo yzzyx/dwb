@@ -85,6 +85,8 @@ static Sigmap m_sigmap[] = {
 };
 
 
+static JSObjectRef make_object_for_class(JSContextRef ctx, JSClassRef class, GObject *o, gboolean);
+
 static JSValueRef connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
@@ -1576,10 +1578,6 @@ download_constructor_cb(JSContextRef ctx, JSObjectRef constructor, size_t argc, 
   WebKitDownload *download = webkit_download_new(request);
   return JSObjectMake(ctx, m_download_class, download);
 }/*}}}*/
-static JSObjectRef 
-webview_constructor_cb(JSContextRef ctx, JSObjectRef constructor, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
-  return JSObjectMake(ctx, m_webview_class, webkit_web_view_new());
-}
 
 /* stop_download_notify {{{*/
 static gboolean 
@@ -1642,6 +1640,24 @@ signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef
   return false;
 }/*}}}*/
 
+static JSValueRef
+gui_get(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
+{
+  if (JSStringIsEqualToUTF8CString(property, "window"))
+      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.window), false);
+  if (JSStringIsEqualToUTF8CString(property, "statusLabel"))
+      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.rstatus), false);
+  if (JSStringIsEqualToUTF8CString(property, "uriLabel"))
+      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.urilabel), false);
+  if (JSStringIsEqualToUTF8CString(property, "uriLabel"))
+      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.urilabel), false);
+  if (JSStringIsEqualToUTF8CString(property, "entry"))
+      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.entry), false);
+  if (JSStringIsEqualToUTF8CString(property, "messageLabel"))
+      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.lstatus), false);
+  return JSValueMakeUndefined(ctx);
+}
+
 /* scripts_emit {{{*/
 gboolean
 scripts_emit(ScriptSignal *sig) {
@@ -1683,14 +1699,19 @@ object_destroy_cb(JSObjectRef o) {
 }
 
 static JSObjectRef 
-make_object_for_class(JSContextRef ctx, JSClassRef class, GObject *o) {
+make_object_for_class(JSContextRef ctx, JSClassRef class, GObject *o, gboolean protect) {
   JSObjectRef retobj = g_object_get_qdata(o, ref_quark);
   if (retobj != NULL)
     return retobj;
 
   retobj = JSObjectMake(ctx, class, o);
-  g_object_set_qdata_full(o, ref_quark, retobj, (GDestroyNotify)object_destroy_cb);
-  JSValueProtect(m_global_context, retobj);
+  if (protect) {
+    g_object_set_qdata_full(o, ref_quark, retobj, (GDestroyNotify)object_destroy_cb);
+    JSValueProtect(m_global_context, retobj);
+  }
+  else {
+    g_object_set_qdata_full(o, ref_quark, retobj, NULL);
+  }
   return retobj;
 }
 
@@ -1712,19 +1733,22 @@ make_object(JSContextRef ctx, GObject *o) {
     class = m_message_class;
   else 
     class = m_default_class;
-  return make_object_for_class(ctx, class, o);
+  return make_object_for_class(ctx, class, o, true);
 
 }/*}}}*/
 
 static gboolean 
 connect_callback(JSObjectRef func) {
   JSValueRef ret = JSObjectCallAsFunction(m_global_context, func, NULL, 0, NULL, NULL);
-  if (JSValueIsBoolean(m_global_context, ret))
+  if (JSValueIsBoolean(m_global_context, ret)) {
+    printf("%d\n", JSValueToBoolean(m_global_context, ret));
     return JSValueToBoolean(m_global_context, ret);
+  }
   return false;
 }
 static JSValueRef 
 connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) {
+  puts("conn");
   gulong id = 0;
   if (argc < 2) {
     return JSValueMakeNumber(ctx, -1);
@@ -2001,7 +2025,7 @@ create_global_object() {
   cd.className = "signals";
   cd.setProperty = signal_set;
   class = JSClassCreate(&cd);
-  
+
   create_object(m_global_context, class, global_object, kJSDefaultAttributes, "signals", NULL);
   JSClassRelease(class);
 
@@ -2047,6 +2071,13 @@ create_global_object() {
   cd.parentClass = m_default_class;
   m_message_class = JSClassCreate(&cd);
 
+  cd.className = "gui";
+  cd = kJSClassDefinitionEmpty;
+  cd.getProperty = gui_get;
+  class = JSClassCreate(&cd);
+  create_object(m_global_context, class, global_object, kJSDefaultAttributes, "gui", NULL);
+  JSClassRelease(class);
+
   /* download */
   cd.className = "Download";
   cd.staticFunctions = download_functions;
@@ -2067,7 +2098,7 @@ create_global_object() {
   cd.staticValues = NULL;
   cd.parentClass = m_default_class;
   class = JSClassCreate(&cd);
-  JSObjectRef o = make_object_for_class(m_global_context, class, G_OBJECT(scratchpad_get()));
+  JSObjectRef o = make_object_for_class(m_global_context, class, G_OBJECT(scratchpad_get()), true);
   js_set_property(m_global_context, global_object, "scratchpad", o, kJSDefaultAttributes, NULL);
 
   create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
