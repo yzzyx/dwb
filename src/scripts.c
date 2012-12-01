@@ -1641,21 +1641,48 @@ signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef
 }/*}}}*/
 
 static JSValueRef
-gui_get(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
-{
-  if (JSStringIsEqualToUTF8CString(property, "window"))
-      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.window), false);
-  if (JSStringIsEqualToUTF8CString(property, "statusLabel"))
-      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.rstatus), false);
-  if (JSStringIsEqualToUTF8CString(property, "uriLabel"))
-      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.urilabel), false);
-  if (JSStringIsEqualToUTF8CString(property, "uriLabel"))
-      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.urilabel), false);
-  if (JSStringIsEqualToUTF8CString(property, "entry"))
-      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.entry), false);
-  if (JSStringIsEqualToUTF8CString(property, "messageLabel"))
-      return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.lstatus), false);
-  return JSValueMakeUndefined(ctx);
+gui_get_window(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.window), false);
+}
+static JSValueRef
+gui_get_main_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.vbox), false);
+}
+static JSValueRef
+gui_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.topbox), false);
+}
+static JSValueRef
+gui_get_content_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.mainbox), false);
+}
+static JSValueRef
+gui_get_status_widget(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.statusbox), false);
+}
+static JSValueRef
+gui_get_status_alignment(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.alignment), false);
+}
+static JSValueRef
+gui_get_status_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.status_hbox), false);
+}
+static JSValueRef
+gui_get_message_label(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.lstatus), false);
+}
+static JSValueRef
+gui_get_entry(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.entry), false);
+}
+static JSValueRef
+gui_get_uri_label(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.urilabel), false);
+}
+static JSValueRef
+gui_get_status_label(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) {
+  return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.rstatus), false);
 }
 
 /* scripts_emit {{{*/
@@ -2071,9 +2098,23 @@ create_global_object() {
   cd.parentClass = m_default_class;
   m_message_class = JSClassCreate(&cd);
 
+  static JSStaticValue gui_values[] = {
+    { "window",           gui_get_window, NULL, kJSDefaultAttributes }, 
+    { "mainBox",          gui_get_main_box, NULL, kJSDefaultAttributes }, 
+    { "tabBox",           gui_get_tab_box, NULL, kJSDefaultAttributes }, 
+    { "contentBox",       gui_get_content_box, NULL, kJSDefaultAttributes }, 
+    { "statusWidget",     gui_get_status_widget, NULL, kJSDefaultAttributes }, 
+    { "statusAlignment",  gui_get_status_alignment, NULL, kJSDefaultAttributes }, 
+    { "statusBox",        gui_get_status_box, NULL, kJSDefaultAttributes }, 
+    { "messageLabel",     gui_get_message_label, NULL, kJSDefaultAttributes }, 
+    { "entry",            gui_get_entry, NULL, kJSDefaultAttributes }, 
+    { "uriLabel",         gui_get_uri_label, NULL, kJSDefaultAttributes }, 
+    { "statusLabel",      gui_get_status_label, NULL, kJSDefaultAttributes }, 
+    { 0, 0, 0, 0 }, 
+  };
   cd.className = "gui";
   cd = kJSClassDefinitionEmpty;
-  cd.getProperty = gui_get;
+  cd.staticValues = gui_values;
   class = JSClassCreate(&cd);
   create_object(m_global_context, class, global_object, kJSDefaultAttributes, "gui", NULL);
   JSClassRelease(class);
