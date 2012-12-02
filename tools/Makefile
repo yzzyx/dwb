@@ -18,7 +18,6 @@ CFLAGS += -DSYSTEM_EXTENSION_DIR=\"$(SYSTEM_EXTENSION_DIR)\"
 
 
 LDFLAGS := $(LDFLAGS)
-LDFLAGS += -lreadline
 LDFLAGS += $(shell pkg-config --libs $(LIBS))
 
 all: $(TARGET)

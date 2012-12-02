@@ -729,6 +729,7 @@ struct _Gui {
   GtkWidget *autocompletion;
   GtkWidget *compbox;
   GtkWidget *bottombox;
+  GtkWidget *alignment;
 
   int width;
   int height;

@@ -3747,16 +3747,16 @@ dwb_init_gui() {
 #else 
   dwb.gui.status_hbox = gtk_hbox_new(false, 2);
 #endif
-  GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
+  dwb.gui.alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
   int padding = GET_INT("bars-padding");
-  gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
-  gtk_container_add(GTK_CONTAINER(alignment), dwb.gui.status_hbox);
+  gtk_alignment_set_padding(GTK_ALIGNMENT(dwb.gui.alignment), padding, padding, padding, padding);
+  gtk_container_add(GTK_CONTAINER(dwb.gui.alignment), dwb.gui.status_hbox);
 
   gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.lstatus, false, false, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.entry, true, true, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.urilabel, true, true, 0);
   gtk_box_pack_start(GTK_BOX(dwb.gui.status_hbox), dwb.gui.rstatus, false, false, 0);
-  gtk_container_add(GTK_CONTAINER(dwb.gui.statusbox), alignment);
+  gtk_container_add(GTK_CONTAINER(dwb.gui.statusbox), dwb.gui.alignment);
   gtk_box_pack_end(GTK_BOX(dwb.gui.vbox), scratchpad_get(), false, false, 0);
 
   gtk_container_add(GTK_CONTAINER(dwb.gui.window), dwb.gui.vbox);
