@@ -514,6 +514,28 @@ Returns a copy of function with first n values preassigned.
 _arg[n]_;; Arguments that will be preassigned in the new function, optional.
 
 
+=== gui === 
+
+Most gtk-widgets can be accessed from scripts, an overview of the layout can be
+found under link:https://portix.bitbucket.org/dwb/resources/layout.html[]. 
+
+_gui.window (GtkWindow, read)_;; The main window.
+_gui.mainBox (GtkBox, read)_;;   The the main container, child of *gui.window*. 
+_gui.tabBox (GtkBox, read)_;;   The box used for tab labels, child of *gui.mainBox*.
+_gui.contentBox (GtkBox, read)_;;   The box used for the main content, it contains all
+webviews, child of *gui.mainBox*.
+_gui.statusWidget (GtkEventBox, read)_;; The outmost statusbar widget, used for setting
+the statusbars colors, child of *gui.mainBox*. 
+_gui.statusAlignment (GtkAlignment, read)_;; Used for the statusbar alignment, child
+of *gui.statusWidget*. 
+_gui.statusBox (GtkBox, read)_;; The box that contains the statusbar widgets,
+grandchild of *gui.statusAlignment*.
+_gui.messageLabel (GtkLabel, read)_;; Label used for notifications, first child of
+*gui.statusBox*.
+_gui.entry (GtkEntry, read)_;; The entry, second child of *gui.statusBox*.
+_gui.uriLabel (GtkLabel, read)_;; Label used for displaying uris, third child of *gui.statusBox*.
+_gui.statusLabel (GtkLabel, read)_;; Label used for status information, fourth child of *gui.statusBox*.
+
 
 == WEBKIT OBJECTS ==
 
@@ -561,6 +583,15 @@ _wv.allFrames (Array of frames, read)_;; All frames of a webview including the m
 _wv.focusedFrame (Frame, read)_;; The focused frame of the webview
 _wv.mainFrame (Frame, read)_;; The main frame of the webview
 _wv.number (Number, read)_;; The number of the webview, starting at 0
+_wv.scrolledWindow (GtkScrollwindow, read)_;; The parent widget of every webview, it
+is used for scrolling the webview.
+_wv.tabWidget (GtkEventBox, read)_;; The main widget for tab labels, used for coloring
+tabs, child of *gui.tabBox*.
+_wv.tabBox (GtkBox, read)_;; Horizontal box, child of *wv.tabWidget*.
+_wv.tabIcon (GtkImage, read)_;;  Favicon widget, child of *wv.tabBox*.
+_wv.tabLabel (GtkLabel, read)_;; Text label of a tab, child of *wv.tabBox*.
+
+
 
 ==== String wv.inject(String script, [Object argument], [Boolean global]) 
 ****

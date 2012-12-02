@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 11/23/2012
+.\"      Date: 12/02/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "11/23/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "12/02/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1133,6 +1133,74 @@ Returns a copy of function with first n values preassigned\&.
 Arguments that will be preassigned in the new function, optional\&.
 .RE
 .RE
+.SS "gui"
+.sp
+Most gtk\-widgets can be accessed from scripts, an overview of the layout can be found under https://portix\&.bitbucket\&.org/dwb/resources/layout\&.html\&.
+.PP
+\fIgui\&.window (GtkWindow, read)\fR
+.RS 4
+The main window\&.
+.RE
+.PP
+\fIgui\&.mainBox (GtkBox, read)\fR
+.RS 4
+The the main container, child of
+\fBgui\&.window\fR\&.
+.RE
+.PP
+\fIgui\&.tabBox (GtkBox, read)\fR
+.RS 4
+The box used for tab labels, child of
+\fBgui\&.mainBox\fR\&.
+.RE
+.PP
+\fIgui\&.contentBox (GtkBox, read)\fR
+.RS 4
+The box used for the main content, it contains all webviews, child of
+\fBgui\&.mainBox\fR\&.
+.RE
+.PP
+\fIgui\&.statusWidget (GtkEventBox, read)\fR
+.RS 4
+The outmost statusbar widget, used for setting the statusbars colors, child of
+\fBgui\&.mainBox\fR\&.
+.RE
+.PP
+\fIgui\&.statusAlignment (GtkAlignment, read)\fR
+.RS 4
+Used for the statusbar alignment, child of
+\fBgui\&.statusWidget\fR\&.
+.RE
+.PP
+\fIgui\&.statusBox (GtkBox, read)\fR
+.RS 4
+The box that contains the statusbar widgets, grandchild of
+\fBgui\&.statusAlignment\fR\&.
+.RE
+.PP
+\fIgui\&.messageLabel (GtkLabel, read)\fR
+.RS 4
+Label used for notifications, first child of
+\fBgui\&.statusBox\fR\&.
+.RE
+.PP
+\fIgui\&.entry (GtkEntry, read)\fR
+.RS 4
+The entry, second child of
+\fBgui\&.statusBox\fR\&.
+.RE
+.PP
+\fIgui\&.uriLabel (GtkLabel, read)\fR
+.RS 4
+Label used for displaying uris, third child of
+\fBgui\&.statusBox\fR\&.
+.RE
+.PP
+\fIgui\&.statusLabel (GtkLabel, read)\fR
+.RS 4
+Label used for status information, fourth child of
+\fBgui\&.statusBox\fR\&.
+.RE
 .SH "WEBKIT OBJECTS"
 .sp
 All webkit objects correspond to gobject objects, i\&.e\&. they have the same properties, but the javascript properties are all camelcase\&. For example, a WebKitWebView has the property \fBzoom\-level\fR, the corresponding javascript property is \fBzoomLevel\fR:
@@ -1219,6 +1287,35 @@ The main frame of the webview
 \fIwv\&.number (Number, read)\fR
 .RS 4
 The number of the webview, starting at 0
+.RE
+.PP
+\fIwv\&.scrolledWindow (GtkScrollwindow, read)\fR
+.RS 4
+The parent widget of every webview, it is used for scrolling the webview\&.
+.RE
+.PP
+\fIwv\&.tabWidget (GtkEventBox, read)\fR
+.RS 4
+The main widget for tab labels, used for coloring tabs, child of
+\fBgui\&.tabBox\fR\&.
+.RE
+.PP
+\fIwv\&.tabBox (GtkBox, read)\fR
+.RS 4
+Horizontal box, child of
+\fBwv\&.tabWidget\fR\&.
+.RE
+.PP
+\fIwv\&.tabIcon (GtkImage, read)\fR
+.RS 4
+Favicon widget, child of
+\fBwv\&.tabBox\fR\&.
+.RE
+.PP
+\fIwv\&.tabLabel (GtkLabel, read)\fR
+.RS 4
+Text label of a tab, child of
+\fBwv\&.tabBox\fR\&.
 .RE
 .sp
 .it 1 an-trap

@@ -969,6 +969,149 @@ _arg[n]_;; Arguments that will be preassigned in the new function, optional.
 ****
 
 
+[[gui]]
+=== gui ===
+Most gtk-widgets used by dwb can be accessed from scripts, an overview the
+layout can be found under
+link:http://portix.bitbucket.org/dwb/resources/layout.html[].
+
+****
+[float]
+==== *window* ====
+
+[source,javascript]
+----
+gui.window        GtkWindow     read
+----
+
+The main window.
+****
+
+****
+[float]
+==== *mainBox* ====
+
+[source,javascript]
+----
+gui.mainBox        GtkBox     read
+----
+
+The the main container, child of *gui.window*. 
+****
+
+****
+[float]
+==== *tabBox* ====
+
+[source,javascript]
+----
+gui.tabBox        GtkBox     read
+----
+
+The box used for tab labels, child of *gui.mainBox*.
+****
+
+****
+[float]
+==== *contentBox* ====
+
+[source,javascript]
+----
+gui.contentBox        GtkBox     read
+----
+
+The box used for the main content, it contains all
+webviews, child of *gui.mainBox*.
+****
+
+****
+[float]
+==== *statusWidget* ====
+
+[source,javascript]
+----
+gui.statusWidget      GtkEventBox     read
+----
+
+The outmost statusbar widget, used for setting
+the statusbars colors, child of *gui.mainBox*. 
+****
+
+****
+[float]
+==== *statusAlignment* ====
+
+[source,javascript]
+----
+gui.statusAlignment      GtkAlignment     read
+----
+
+Used for the statusbar alignment, child
+of *gui.statusWidget*. 
+****
+
+****
+[float]
+==== *statusBox* ====
+
+[source,javascript]
+----
+gui.statusBox      GtkBox     read
+----
+
+The box that contains the statusbar widgets,
+grandchild of *gui.statusAlignment*.
+****
+
+****
+[float]
+==== *messageLabel* ====
+
+[source,javascript]
+----
+gui.messageLabel      GtkBox     read
+----
+
+Label used for notifications, first child of
+*gui.statusBox*.
+****
+
+****
+[float]
+==== *entry* ====
+
+[source,javascript]
+----
+gui.entry      GtkEntry     read
+----
+
+The entry, second child of *gui.statusBox*.
+****
+
+****
+[float]
+==== *uriLabel* ====
+
+[source,javascript]
+----
+gui.uriLabel      GtkLabel     read
+----
+
+The entry, second child of *gui.statusBox*.
+****
+
+****
+[float]
+==== *statusLabel* ====
+
+[source,javascript]
+----
+gui.statusLabel      GtkLabel     read
+----
+
+Label used for status information, fourth child of *gui.statusBox*.
+****
+
 
 [[Webkitobjects]]
 == Webkit objects ==
@@ -1118,6 +1261,68 @@ wv.number        frame     read
 ----
 
 The number of the webview, starting at 0
+****
+
+****
+[float]
+==== *scrolledWindow* ====
+
+[source,javascript]
+----
+wv.scrolledWindow        frame     read
+----
+
+The parent widget of every webview, it
+is used for scrolling the webview.
+****
+
+****
+[float]
+==== *tabWidget* ====
+
+[source,javascript]
+----
+wv.tabWidget        frame     read
+----
+
+The main widget for tab labels, used for coloring
+tabs, child of *gui.tabBox*.
+****
+
+****
+[float]
+==== *tabBox* ====
+
+[source,javascript]
+----
+wv.tabBox        frame     read
+----
+
+Horizontal box, child of *wv.tabWidget*.
+****
+
+****
+[float]
+==== *tabIcon* ====
+
+[source,javascript]
+----
+wv.tabIcon        frame     read
+----
+
+Favicon widget, child of *wv.tabBox*.
+****
+
+****
+[float]
+==== *tabLabel* ====
+
+[source,javascript]
+----
+wv.tabLabel        frame     read
+----
+
+Text label of a tab, child of *wv.tabBox*.
 ****
 
 ==== Methods ====
