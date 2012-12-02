@@ -47,6 +47,7 @@ typedef struct m_Sigmap {
 } Sigmap;
 
 typedef struct _CallbackData CallbackData;
+typedef struct _SSignal SSignal;
 typedef gboolean (*StopCallbackNotify)(CallbackData *);
 
 struct _CallbackData {
@@ -55,6 +56,16 @@ struct _CallbackData {
     JSObjectRef callback;
     StopCallbackNotify notify;
 };
+struct _SSignal {
+  int id;
+  GSignalQuery *query;
+  GObject *object;
+  JSObjectRef func;
+  JSValueRef jsid;
+};
+static GSList *m_signals;
+#define S_SIGNAL(X) ((SSignal*)X->data)
+
 
 static Sigmap m_sigmap[] = {
     { SCRIPTS_SIG_NAVIGATION, "navigation" },
@@ -307,6 +318,31 @@ callback_data_free(CallbackData *c)
         g_free(c);
     }
 }/*}}}*/
+
+static void 
+ssignal_free(SSignal *sig) 
+{
+    if (sig != NULL) 
+    {
+        JSValueUnprotect(m_global_context, sig->jsid);
+        g_free(sig->query);
+        g_free(sig);
+    }
+}
+
+static SSignal * 
+ssignal_new()
+{
+    SSignal *sig = g_malloc(sizeof(SSignal)); 
+    if (sig != NULL) 
+    {
+        sig->query = g_malloc(sizeof(GSignalQuery));
+        if (sig->query != NULL) 
+            return sig;
+        g_free(sig);
+    }
+    return NULL;
+}
 
 /* make_callback {{{*/
 static void 
@@ -2050,6 +2086,16 @@ scripts_emit(ScriptSignal *sig)
 void 
 object_destroy_cb(JSObjectRef o) 
 {
+    GObject *go = JSObjectGetPrivate(o);
+    for (GSList *l = m_signals; l; l=l->next)
+    {
+        if (S_SIGNAL(l)->object == go) 
+        {
+            ssignal_free(l->data);
+            m_signals = g_slist_delete_link(m_signals, l);
+            break;
+        }
+    }
     JSObjectSetPrivate(o, NULL);
     JSValueUnprotect(m_global_context, o);
 }
@@ -2097,12 +2143,61 @@ make_object(JSContextRef ctx, GObject *o)
 }/*}}}*/
 
 static gboolean 
-connect_callback(JSObjectRef func) 
+connect_callback(SSignal *sig, ...) 
 {
-    JSValueRef ret = JSObjectCallAsFunction(m_global_context, func, NULL, 0, NULL, NULL);
+    va_list args;
+    JSValueRef cur;
+    JSValueRef argv[sig->query->n_params + 1];
+    va_start(args, sig);
+#define CHECK_NUMBER(GTYPE, TYPE) G_STMT_START if (gtype == G_TYPE_##GTYPE) { \
+    TYPE MM_value = va_arg(args, TYPE); \
+    cur = JSValueMakeNumber(m_global_context, MM_value); goto apply;} G_STMT_END
+    for (int i=0; i<sig->query->n_params; i++) 
+    {
+        GType gtype = sig->query->param_types[i], act;
+        while ((act = g_type_parent(gtype))) 
+            gtype = act;
+        CHECK_NUMBER(INT, gint);
+        CHECK_NUMBER(UINT, guint);
+        CHECK_NUMBER(LONG, glong);
+        CHECK_NUMBER(ULONG, gulong);
+        CHECK_NUMBER(FLOAT, gdouble);
+        CHECK_NUMBER(DOUBLE, gdouble);
+        CHECK_NUMBER(ENUM, gint);
+        CHECK_NUMBER(INT64, gint64);
+        CHECK_NUMBER(UINT64, guint64);
+        CHECK_NUMBER(FLAGS, guint);
+        if (sig->query->param_types[i] == G_TYPE_BOOLEAN) 
+        {
+            gboolean value = va_arg(args, gboolean);
+            cur = JSValueMakeBoolean(m_global_context, value);
+        }
+        else if (sig->query->param_types[i] == G_TYPE_STRING) 
+        {
+            char *value = va_arg(args, char *);
+            cur = js_char_to_value(m_global_context, value);
+        }
+        else if (G_TYPE_IS_CLASSED(gtype)) 
+        {
+            GObject *value = va_arg(args, gpointer);
+            if (value != NULL) // avoid conversion to JSObjectRef
+                cur = make_object(m_global_context, value);
+            else 
+                cur = JSValueMakeNull(m_global_context);
+        }
+        else 
+        {
+            cur = JSValueMakeUndefined(m_global_context); 
+        }
+
+apply:
+        argv[i+1] = cur;
+    }
+#undef CHECK_NUMBER
+    argv[0] = make_object(m_global_context, va_arg(args, gpointer));
+    JSValueRef ret = JSObjectCallAsFunction(m_global_context, sig->func, NULL, sig->query->n_params+1, argv, NULL);
     if (JSValueIsBoolean(m_global_context, ret)) 
     {
-        printf("%d\n", JSValueToBoolean(m_global_context, ret));
         return JSValueToBoolean(m_global_context, ret);
     }
     return false;
@@ -2112,7 +2207,7 @@ connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
 {
     gulong id = 0;
     if (argc < 2) 
-        return JSValueMakeNumber(ctx, -1);
+        return JSValueMakeNumber(ctx, 0);
 
     char *name = js_value_to_char(ctx, argv[0], PROP_LENGTH, exc);
     if (name == NULL) 
@@ -2124,9 +2219,34 @@ connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
 
     GObject *o = JSObjectGetPrivate(this);
     if (o == NULL)
-        return JSValueMakeNumber(ctx, -1);
+        goto error_out;
 
-    id = g_signal_connect_swapped(o, name, G_CALLBACK(connect_callback), func);
+    guint signal_id = g_signal_lookup(name, G_TYPE_FROM_INSTANCE(o));
+    if (signal_id == 0)
+        goto error_out;
+
+    SSignal *sig = ssignal_new();
+    if (sig == NULL) 
+        goto error_out;
+
+    g_signal_query(signal_id, sig->query);
+    if (sig->query->signal_id == 0)
+        goto error_out;
+
+    sig->func = func;
+    id = g_signal_connect_swapped(o, name, G_CALLBACK(connect_callback), sig);
+    if (id > 0) 
+    {
+        sig->id = id;
+        sig->object = o;
+        sig->jsid = argv[0];
+        JSValueProtect(m_global_context, sig->jsid);
+
+        m_signals = g_slist_prepend(m_signals, sig);
+    }
+    else 
+        ssignal_free(sig);
+
 error_out: 
     g_free(name);
     return JSValueMakeNumber(ctx, id);
@@ -2135,10 +2255,19 @@ static JSValueRef
 disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
     int id;
-    if (argc > 0 && (id = JSValueToNumber(ctx, argv[0], exc)) != NAN) 
+    if (argc > 0 && JSValueIsNumber(ctx, argv[0]) && (id = JSValueToNumber(ctx, argv[0], exc)) != NAN) 
     {
+        for (GSList *sigs = m_signals; sigs; sigs=sigs->next)
+        {
+            if (id == S_SIGNAL(sigs)->id) 
+            {
+                ssignal_free(sigs->data);
+                m_signals = g_slist_delete_link(m_signals, sigs);
+                break;
+            }
+        }
         GObject *o = JSObjectGetPrivate(this);
-        if (o != NULL) 
+        if (o != NULL && g_signal_handler_is_connected(o, id)) 
         {
             g_signal_handler_disconnect(o, id);
             return JSValueMakeBoolean(ctx, true);
@@ -2668,6 +2797,14 @@ scripts_end()
         JSClassRelease(m_download_class);
         JSClassRelease(m_message_class);
         JSGlobalContextRelease(m_global_context);
+        if (m_signals != NULL) 
+        {
+            for (GSList *l = m_signals; l; l=l->next) 
+            {
+                ssignal_free(l->data);
+            }
+            g_slist_free(m_signals);
+        }
         m_global_context = NULL;
     }
 }/*}}}*//*}}}*/
