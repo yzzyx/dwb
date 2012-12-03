@@ -122,20 +122,4 @@
             }
         });
     }
-    if (Function.prototype.curry === undefined) 
-    {
-        Object.defineProperty(Function.prototype, "curry", 
-        {
-            value : function() 
-            {
-                var args = Array.prototype.slice.call(arguments);
-                var self = this;
-                return function() 
-                { 
-                    return self.apply(this, args.concat(Array.prototype.slice.call(arguments))); 
-                };
-
-            }
-        });
-    }
 })();

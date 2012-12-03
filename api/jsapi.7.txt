@@ -507,13 +507,6 @@ _identifier_;; A local object to identify the calling script, the identifier
 must either be of type Object or of type Function.
 ****
 
-==== Function Function.curry([arg1, ..., argn])
-
-Returns a copy of function with first n values preassigned.
-
-_arg[n]_;; Arguments that will be preassigned in the new function, optional.
-
-
 === gui === 
 
 Most gtk-widgets can be accessed from scripts, an overview of the layout can be
