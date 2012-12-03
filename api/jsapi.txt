@@ -958,7 +958,7 @@ signals.connect("loadFinished", function(wv) {
 
 [[gui]]
 === gui ===
-Most gtk-widgets used by dwb can be accessed from scripts, an overview the
+Most gtk-widgets used by dwb can be accessed from scripts, an overview of the
 layout can be found under
 link:http://portix.bitbucket.org/dwb/resources/layout.html[].
 
