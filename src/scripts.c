@@ -2770,13 +2770,6 @@ scripts_end()
 {
      if (m_global_context != NULL) 
      {
-          JSValueUnprotect(m_global_context, m_array_contructor);
-          JSClassRelease(m_default_class);
-          JSClassRelease(m_webview_class);
-          JSClassRelease(m_frame_class);
-          JSClassRelease(m_download_class);
-          JSClassRelease(m_message_class);
-          JSGlobalContextRelease(m_global_context);
           if (m_signals != NULL) 
           {
                for (GSList *l = m_signals; l; l=l->next) 
@@ -2785,6 +2778,13 @@ scripts_end()
                }
                g_slist_free(m_signals);
           }
+          JSValueUnprotect(m_global_context, m_array_contructor);
+          JSClassRelease(m_default_class);
+          JSClassRelease(m_webview_class);
+          JSClassRelease(m_frame_class);
+          JSClassRelease(m_download_class);
+          JSClassRelease(m_message_class);
+          JSGlobalContextRelease(m_global_context);
           m_global_context = NULL;
      }
 }/*}}}*//*}}}*/
