@@ -1,3 +1,26 @@
+Changes since 2012-10-28: 
+
+New features:
+ * Paste primary selection into webview
+ * New option 'hints-key-lock'
+ * Tab numbers in the status line
+ * Extended javascript api
+
+Bug fixes: 
+ * Fixing :search command
+ * Increasing performance of adblocker after a decrease with webkit-1.10
+ * Fixing 2 segfaults in js-api
+ * Ignore the default action for Mouse Buttons 8 and 9
+ * Fixing a memory leak when closing a tab
+ * Fixing segfault if userscript is a symlink
+ * Ellipsize dwb:-links correctly
+ * Update status bar if a tab is closed
+ * Fixing wrong excaping when backslash is mapped to a shortcut
+
+Removed: 
+ * Command line option -s removed
+
+
 Changes since 2012-08-22:
 
 New features:
