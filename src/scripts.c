@@ -2545,11 +2545,13 @@ create_global_object()
 
     /* Default gobject class */
     cd = kJSClassDefinitionEmpty;
+    cd.className = "GObject";
     cd.staticFunctions = default_functions;
     cd.getProperty = get_property;
     cd.setProperty = set_property;
-
     m_default_class = JSClassCreate(&cd);
+
+    create_constructor(m_global_context, "GObject", m_webview_class, NULL, NULL);
 
     /* Webview */
     cd.className = "WebKitWebView";
@@ -2558,18 +2560,25 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_webview_class = JSClassCreate(&cd);
 
+    create_constructor(m_global_context, "WebKitWebView", m_webview_class, NULL, NULL);
+
     /* Frame */
-    cd.className = NULL;
+    cd.className = "WebKitWebFrame";
     cd.staticFunctions = frame_functions;
     cd.staticValues = frame_values;
     cd.parentClass = m_default_class;
     m_frame_class = JSClassCreate(&cd);
 
+    create_constructor(m_global_context, "WebKitWebFrame", m_frame_class, NULL, NULL);
+
     /* SoupMessage */ 
+    cd.className = "SoupMessage";
     cd.staticFunctions = default_functions;
     cd.staticValues = message_values;
     cd.parentClass = m_default_class;
     m_message_class = JSClassCreate(&cd);
+
+    create_constructor(m_global_context, "SoupMessage", m_frame_class, NULL, NULL);
 
     static JSStaticValue gui_values[] = {
         { "window",           gui_get_window, NULL, kJSDefaultAttributes }, 
@@ -2599,6 +2608,8 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_download_class = JSClassCreate(&cd);
 
+    create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
+
     JSStaticFunction scratchpad_functions[] = { 
         { "show",         sp_show,             kJSDefaultAttributes },
         { "hide",         sp_hide,             kJSDefaultAttributes },
@@ -2615,8 +2626,6 @@ create_global_object()
     JSObjectRef o = make_object_for_class(m_global_context, class, G_OBJECT(scratchpad_get()), true);
     js_set_property(m_global_context, global_object, "scratchpad", o, kJSDefaultAttributes, NULL);
 
-    create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
-    create_constructor(m_global_context, "WebKitWebView", m_webview_class, NULL, NULL);
 }/*}}}*/
 /*}}}*/
 
