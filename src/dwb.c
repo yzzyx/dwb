@@ -3344,7 +3344,6 @@ dwb_get_scripts()
             n = NULL;
             KeyMap *map = dwb_malloc(sizeof(KeyMap));
             FunctionMap *fmap = dwb_malloc(sizeof(FunctionMap));
-            tmp;
             while (lines[i]) 
             {
                 if (g_regex_match_simple(".*dwb:", lines[i], 0, 0)) 
@@ -4065,7 +4064,6 @@ dwb_pack(const char *layout, gboolean rebuild)
     }
 
     buf = g_ascii_strdown(layout, WIDGET_PACK_LENGTH);
-    matched;
     while (*valid_chars) 
     {
         if ((matched = strchr(buf, *valid_chars)) == NULL) 
