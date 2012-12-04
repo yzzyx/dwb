@@ -1116,6 +1116,19 @@ webview.zoomLevel = webview.zoomLevel * 2;
 ---------------------------------
 ====
 
+To check if an object is derived from GObject the instanceof operator can be
+used: 
+
+====
+[source,javascript]
+---------------------------------
+if (myObject instanceof GObject) 
+{
+  ...
+}
+---------------------------------
+====
+
 All Objects derived from GObjets implement the following methods. 
 
 //Webkit objects should not be compared using +==+, since it may happen that the
@@ -1146,15 +1159,22 @@ All Objects derived from GObjets implement the following methods.
 
 [source,javascript]
 ----
-Number object.connect(String name, Function callback) 
+Number object.connect(String name, Function callback, [Boolean after]) 
 ----
 
-Connect to a gobject-signal.
+Connect to a gobject-signal, note that all signals are connected using the 
+_signal::_- or with _notify::_-prefix. If connecting to a signal the 
+_signal::_-prefix must be omitted. The callback function will have the
+same parameters as the GObject signal callback, however some parameters may be
+undefined if they cannot be converted to javascript objects. 
+All signal handlers are executed after dwb's default handler.
 
  ::
 
 _name_;; The signal name to connect to.
 _callback_;; Callback function that will be called when the signal is emitted.
+_after_;; Whether to install the handler after the default handler, default
+false.
 _returns_;; The signal id of the signal.
 ****
 
@@ -1175,6 +1195,25 @@ _id_;; The signal id obtained from <<connect>>
 _returns_;; +true+ if the signal was disconnected
 ****
 
+****
+[float]
+==== *notify()* ==== 
+
+[source,javascript]
+----
+Number object.notify(String name, Function callback, [Boolean after]) 
+----
+
+Wrapper function for property-change notification, the same as 
+_object.connect("notify::" +  name, callback, after);_.
+
+ ::
+
+_name_;; The property name to connect to, can also be in camelcase.
+_callback_;; Callback function that will be called when the property changes.
+_after_;; Whether to install the handler after the default handler.
+_returns_;; The signal id of the signal.
+****
 
 ====
 [float]
@@ -1183,6 +1222,21 @@ _returns_;; +true+ if the signal was disconnected
 ------------
 tabs.current.connect("notify::load-status", function() {
   io.print("Status changed");
+});
+tabs.current.notify("loadStatus", function() {
+  io.print("Status changed");
+});
+tabs.current.notify("load-status", function() {
+  io.print("Status changed");
+});
+
+// Similar to signals.connect("navigation", ...)
+signals.connect("createTab", function(wv) { 
+    wv.connect("navigation-policy-decision-requested", function(wv, frame, request, action, policy) {
+        // block google.com
+        if (/google\.com/.test(request.uri))
+            return true;
+    });
 });
 ------------
 ====

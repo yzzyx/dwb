@@ -545,17 +545,37 @@ webview.zoomLevel = webview.zoomLevel * 2;
 ---------------------------------
 ====
 
+To check if an object is derived from GObject the instanceof operator can be
+used: 
+
+====
+[source,javascript]
+---------------------------------
+if (myObject instanceof GObject) 
+{
+  ...
+}
+---------------------------------
+====
+
 === General methods
 
 The following methods are implemented by all Objects derived from GObject
 
-==== Number object.connect(String name, Function callback) 
+==== Number object.connect(String name, Function callback, [Boolean after]) 
 ****
 
-Connect to a gobject-signal.
+Connect to a gobject-signal, note that all signals are connected using the 
+_signal::_- or with _notify::_-prefix. If connecting to a signal the 
+_signal::_-prefix must be omitted. The callback function will have the
+same parameters as the GObject signal callback, however some parameters may be
+undefined if they cannot be converted to javascript objects. 
+All signal handlers are executed after dwb's default handler.
 
 _name_;; The signal name to connect to.
 _callback_;; Callback function that will be called when the signal is emitted.
+_after_;; Whether to install the handler after the default handler, default
+false.
 _returns_;; The signal id of the signal.
 ****
 
@@ -567,6 +587,20 @@ Disconnect from a gobject-signal.
 _id_;; The signal id obtained from connect
 _returns_;; true if the signal was disconnected
 ****
+
+==== Number object.notify(String name, Function callback, [Boolean after]) 
+****
+
+Wrapper function for property-change notification, the same as 
+_object.connect("notify::" +  name, callback, after);_.
+
+_name_;; The property name to connect to, the name can also be in camelcase.
+_callback_;; Callback function that will be called when the property changes.
+_after_;; Whether to install the handler after the default handler, default
+after.
+_returns_;; The signal id of the signal.
+****
+
 
 === webview ===
 The webview object represents the widget that actually displays the site

@@ -38,6 +38,44 @@
                 }
                 return null;
             }
+        },
+        "uncamelize" : 
+        {
+            value : function(text) 
+            {
+                if (! text || text.length === 0)
+                    return text;
+
+                var c = text.charAt(0);
+                var uncamelized = c == c.toUpperCase() ? c.toLowerCase() : c;
+                for (var i=1, l=text.length; i<l; ++i)
+                {
+                    c = text.charAt(i);
+                    uncamelized += c.toUpperCase() == c ? "-" + c.toLowerCase() : c;
+                }
+                return uncamelized;
+            }
+        },
+        "camelize" : 
+        {
+            value : function(text) 
+            {
+                if (! text || text.length === 0)
+                    return text;
+
+                var camelized = "", c;
+                for (var i=0, l=text.length; i<l; ++i)
+                {
+                    c = text.charAt(i);
+                    if (c == "-" || c == "_") {
+                        i++;
+                        camelized += text.charAt(i).toUpperCase();
+                    }
+                    else 
+                        camelized += c;
+                }
+                return camelized;
+            }
         }
     });
     Object.freeze(util);

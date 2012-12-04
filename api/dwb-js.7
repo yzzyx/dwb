@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 12/03/2012
+.\"      Date: 12/04/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "12/03/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "12/04/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1199,6 +1199,21 @@ webview\&.zoomLevel = webview\&.zoomLevel * 2;
 .if n \{\
 .RE
 .\}
+.sp
+To check if an object is derived from GObject the instanceof operator can be used:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+if (myObject instanceof GObject)
+{
+  \&.\&.\&.
+}
+.fi
+.if n \{\
+.RE
+.\}
 .SS "General methods"
 .sp
 The following methods are implemented by all Objects derived from GObject
@@ -1208,10 +1223,10 @@ The following methods are implemented by all Objects derived from GObject
 .nr an-break-flag 1
 .br
 .ps +1
-\fBNumber object.connect(String name, Function callback)\fR
+\fBNumber object.connect(String name, Function callback, [Boolean after])\fR
 .RS 4
 .sp
-Connect to a gobject\-signal\&.
+Connect to a gobject\-signal, note that all signals are connected using the \fIsignal::\fR\- or with \fInotify::\fR\-prefix\&. If connecting to a signal the \fIsignal::\fR\-prefix must be omitted\&. The callback function will have the same parameters as the GObject signal callback, however some parameters may be undefined if they cannot be converted to javascript objects\&. All signal handlers are executed after dwb\(cqs default handler\&.
 .PP
 \fIname\fR
 .RS 4
@@ -1221,6 +1236,11 @@ The signal name to connect to\&.
 \fIcallback\fR
 .RS 4
 Callback function that will be called when the signal is emitted\&.
+.RE
+.PP
+\fIafter\fR
+.RS 4
+Whether to install the handler after the default handler, default false\&.
 .RE
 .PP
 \fIreturns\fR
@@ -1247,6 +1267,37 @@ The signal id obtained from connect
 \fIreturns\fR
 .RS 4
 true if the signal was disconnected
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber object.notify(String name, Function callback, [Boolean after])\fR
+.RS 4
+.sp
+Wrapper function for property\-change notification, the same as \fIobject\&.connect("notify::" + name, callback, after);\fR\&.
+.PP
+\fIname\fR
+.RS 4
+The property name to connect to, the name can also be in camelcase\&.
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+Callback function that will be called when the property changes\&.
+.RE
+.PP
+\fIafter\fR
+.RS 4
+Whether to install the handler after the default handler, default after\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The signal id of the signal\&.
 .RE
 .RE
 .SS "webview"

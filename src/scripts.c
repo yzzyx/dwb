@@ -63,7 +63,7 @@ struct _SSignal {
     JSObjectRef func;
     JSValueRef jsid;
 };
-static GSList *m_signals;
+//static GSList *m_signals;
 #define S_SIGNAL(X) ((SSignal*)X->data)
 
 
@@ -109,7 +109,7 @@ static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef 
 static JSValueRef wv_to_png(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 #endif
 static JSStaticFunction default_functions[] = { 
-    { "connect",         connect_object,             kJSDefaultAttributes },
+    { "connect",         connect_object,                kJSDefaultAttributes },
     { "disconnect",      disconnect_object,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
@@ -131,6 +131,7 @@ static JSValueRef wv_get_tab_widget(JSContextRef ctx, JSObjectRef object, JSStri
 static JSValueRef wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSValueRef wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSValueRef wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
+static JSValueRef wv_get_scrolled_window(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSStaticValue wv_values[] = {
     { "mainFrame",     wv_get_main_frame, NULL, kJSDefaultAttributes }, 
     { "focusedFrame",  wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
@@ -140,6 +141,7 @@ static JSStaticValue wv_values[] = {
     { "tabBox",        wv_get_tab_box, NULL, kJSDefaultAttributes }, 
     { "tabLabel",      wv_get_tab_label, NULL, kJSDefaultAttributes }, 
     { "tabIcon",       wv_get_tab_icon, NULL, kJSDefaultAttributes }, 
+    { "scrolledWindow",wv_get_scrolled_window, NULL, kJSDefaultAttributes }, 
     { 0, 0, 0, 0 }, 
 };
 
@@ -200,6 +202,7 @@ static JSObjectRef m_sp_scripts_cb;
 static JSObjectRef m_sp_scratchpad_cb;
 static GQuark ref_quark;
 static JSObjectRef m_global_init;
+static JSObjectRef m_constructors[12];
 
 /* MISC {{{*/
 /* uncamelize {{{*/
@@ -323,7 +326,6 @@ ssignal_free(SSignal *sig)
 {
     if (sig != NULL) 
     {
-        JSValueUnprotect(m_global_context, sig->jsid);
         g_free(sig->query);
         g_free(sig);
     }
@@ -655,7 +657,7 @@ wv_get_tab_widget(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSV
     GList *gl = find_webview(object);
     if (gl == NULL)
         return JSValueMakeUndefined(ctx);
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabevent), false);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabevent), true);
 }
 static JSValueRef 
 wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
@@ -663,7 +665,7 @@ wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValu
     GList *gl = find_webview(object);
     if (gl == NULL)
         return JSValueMakeUndefined(ctx);
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabbox), false);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabbox), true);
 }
 static JSValueRef 
 wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
@@ -671,7 +673,7 @@ wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVa
     GList *gl = find_webview(object);
     if (gl == NULL)
         return JSValueMakeUndefined(ctx);
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tablabel), false);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tablabel), true);
 }
 static JSValueRef 
 wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
@@ -679,8 +681,18 @@ wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVal
     GList *gl = find_webview(object);
     if (gl == NULL)
         return JSValueMakeUndefined(ctx);
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabicon), false);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabicon), true);
 }
+
+static JSValueRef 
+wv_get_scrolled_window(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
+{
+    GList *gl = find_webview(object);
+    if (gl == NULL)
+        return JSValueMakeUndefined(ctx);
+    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->scroll), true);
+}
+
 
 /*}}}*/
 
@@ -2068,16 +2080,6 @@ scripts_emit(ScriptSignal *sig)
 static void 
 object_destroy_cb(JSObjectRef o) 
 {
-    GObject *go = JSObjectGetPrivate(o);
-    for (GSList *l = m_signals; l; l=l->next)
-    {
-        if (S_SIGNAL(l)->object == go) 
-        {
-            ssignal_free(l->data);
-            m_signals = g_slist_delete_link(m_signals, l);
-            break;
-        }
-    }
     JSObjectSetPrivate(o, NULL);
     JSValueUnprotect(m_global_context, o);
 }
@@ -2134,7 +2136,7 @@ connect_callback(SSignal *sig, ...)
 #define CHECK_NUMBER(GTYPE, TYPE) G_STMT_START if (gtype == G_TYPE_##GTYPE) { \
     TYPE MM_value = va_arg(args, TYPE); \
     cur = JSValueMakeNumber(m_global_context, MM_value); goto apply;} G_STMT_END
-    for (int i=0; i<sig->query->n_params; i++) 
+    for (guint i=0; i<sig->query->n_params; i++) 
     {
         GType gtype = sig->query->param_types[i], act;
         while ((act = g_type_parent(gtype))) 
@@ -2184,14 +2186,33 @@ apply:
     }
     return false;
 }
-    static JSValueRef 
+static void
+on_disconnect_object(SSignal *sig, GClosure *closure)
+{
+    ssignal_free(sig);
+}
+static void
+notify_callback(GObject *o, GParamSpec *param, JSObjectRef func)
+{
+    JSValueRef argv[] = { make_object(m_global_context, o) };
+    JSObjectCallAsFunction(m_global_context, func, NULL, 1, argv, NULL);
+}
+static JSValueRef 
 connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
+    GConnectFlags flags = 0;
     gulong id = 0;
+    SSignal *sig;
+    char *name = NULL;
+    guint signal_id;
+
     if (argc < 2) 
         return JSValueMakeNumber(ctx, 0);
 
-    char *name = js_value_to_char(ctx, argv[0], PROP_LENGTH, exc);
+    if (argc > 2 && JSValueIsBoolean(ctx, argv[2]))
+        flags |= G_CONNECT_AFTER;
+
+    name = js_value_to_char(ctx, argv[0], PROP_LENGTH, exc);
     if (name == NULL) 
         goto error_out;
 
@@ -2203,31 +2224,40 @@ connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
     if (o == NULL)
         goto error_out;
 
-    guint signal_id = g_signal_lookup(name, G_TYPE_FROM_INSTANCE(o));
-    if (signal_id == 0)
-        goto error_out;
 
-    SSignal *sig = ssignal_new();
-    if (sig == NULL) 
-        goto error_out;
-
-    g_signal_query(signal_id, sig->query);
-    if (sig->query->signal_id == 0)
-        goto error_out;
-
-    sig->func = func;
-    id = g_signal_connect_swapped(o, name, G_CALLBACK(connect_callback), sig);
-    if (id > 0) 
+    if (strncmp(name, "notify::", 8) == 0) 
     {
-        sig->id = id;
-        sig->object = o;
-        sig->jsid = argv[0];
-        JSValueProtect(m_global_context, sig->jsid);
-
-        m_signals = g_slist_prepend(m_signals, sig);
+        g_signal_connect_data(o, name, G_CALLBACK(notify_callback), func, NULL, flags);
     }
-    else 
-        ssignal_free(sig);
+    else
+    {
+        signal_id = g_signal_lookup(name, G_TYPE_FROM_INSTANCE(o));
+
+        flags |= G_CONNECT_SWAPPED;
+
+        if (signal_id == 0)
+            goto error_out;
+
+        sig = ssignal_new();
+        if (sig == NULL) 
+            goto error_out;
+
+        g_signal_query(signal_id, sig->query);
+        if (sig->query->signal_id == 0)
+            goto error_out;
+
+        sig->func = func;
+        id = g_signal_connect_data(o, name, G_CALLBACK(connect_callback), sig, (GClosureNotify)on_disconnect_object, flags);
+        if (id > 0) 
+        {
+            sig->id = id;
+            sig->object = o;
+            sig->jsid = argv[0];
+        }
+        else 
+            ssignal_free(sig);
+    }
+
 
 error_out: 
     g_free(name);
@@ -2239,15 +2269,6 @@ disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size
     int id;
     if (argc > 0 && JSValueIsNumber(ctx, argv[0]) && (id = JSValueToNumber(ctx, argv[0], exc)) != NAN) 
     {
-        for (GSList *sigs = m_signals; sigs; sigs=sigs->next)
-        {
-            if (id == S_SIGNAL(sigs)->id) 
-            {
-                ssignal_free(sigs->data);
-                m_signals = g_slist_delete_link(m_signals, sigs);
-                break;
-            }
-        }
         GObject *o = JSObjectGetPrivate(this);
         if (o != NULL && g_signal_handler_is_connected(o, id)) 
         {
@@ -2432,18 +2453,22 @@ get_property(JSContextRef ctx, JSObjectRef jsobj, JSStringRef js_name, JSValueRe
     return ret;
 }/*}}}*/
 
-static void
+static JSObjectRef
 create_constructor(JSContextRef ctx, char *name, JSClassRef class, JSObjectCallAsConstructorCallback cb, JSValueRef *exc)
 {
     JSObjectRef constructor = JSObjectMakeConstructor(ctx, class, cb);
     JSStringRef js_name = JSStringCreateWithUTF8CString(name);
     JSObjectSetProperty(ctx, JSContextGetGlobalObject(ctx), js_name, constructor, kJSPropertyAttributeDontDelete, exc);
     JSStringRelease(js_name);
+    JSValueProtect(ctx, constructor);
+    return constructor;
+
 }
 /* create_global_object {{{*/
 static void 
 create_global_object() 
 {
+    int n_constr = 0;
     ref_quark = g_quark_from_static_string("dwb_js_ref");
 
     JSStaticFunction global_functions[] = { 
@@ -2551,7 +2576,7 @@ create_global_object()
     cd.setProperty = set_property;
     m_default_class = JSClassCreate(&cd);
 
-    create_constructor(m_global_context, "GObject", m_webview_class, NULL, NULL);
+    m_constructors[n_constr++] = create_constructor(m_global_context, "GObject", m_webview_class, NULL, NULL);
 
     /* Webview */
     cd.className = "WebKitWebView";
@@ -2560,7 +2585,7 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_webview_class = JSClassCreate(&cd);
 
-    create_constructor(m_global_context, "WebKitWebView", m_webview_class, NULL, NULL);
+    m_constructors[n_constr++] = create_constructor(m_global_context, "WebKitWebView", m_webview_class, NULL, NULL);
 
     /* Frame */
     cd.className = "WebKitWebFrame";
@@ -2569,7 +2594,7 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_frame_class = JSClassCreate(&cd);
 
-    create_constructor(m_global_context, "WebKitWebFrame", m_frame_class, NULL, NULL);
+    m_constructors[n_constr++] = create_constructor(m_global_context, "WebKitWebFrame", m_frame_class, NULL, NULL);
 
     /* SoupMessage */ 
     cd.className = "SoupMessage";
@@ -2578,7 +2603,7 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_message_class = JSClassCreate(&cd);
 
-    create_constructor(m_global_context, "SoupMessage", m_frame_class, NULL, NULL);
+    m_constructors[n_constr++] = create_constructor(m_global_context, "SoupMessage", m_frame_class, NULL, NULL);
 
     static JSStaticValue gui_values[] = {
         { "window",           gui_get_window, NULL, kJSDefaultAttributes }, 
@@ -2608,7 +2633,7 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_download_class = JSClassCreate(&cd);
 
-    create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
+    m_constructors[n_constr++] = create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
 
     JSStaticFunction scratchpad_functions[] = { 
         { "show",         sp_show,             kJSDefaultAttributes },
@@ -2623,6 +2648,9 @@ create_global_object()
     cd.staticValues = NULL;
     cd.parentClass = m_default_class;
     class = JSClassCreate(&cd);
+
+    m_constructors[n_constr++] = NULL;
+
     JSObjectRef o = make_object_for_class(m_global_context, class, G_OBJECT(scratchpad_get()), true);
     js_set_property(m_global_context, global_object, "scratchpad", o, kJSDefaultAttributes, NULL);
 
@@ -2775,14 +2803,8 @@ scripts_end()
 {
     if (m_global_context != NULL) 
     {
-        if (m_signals != NULL) 
-        {
-            for (GSList *l = m_signals; l; l=l->next) 
-            {
-                ssignal_free(l->data);
-            }
-            g_slist_free(m_signals);
-        }
+        for (int i=0; m_constructors[i]; i++) 
+            JSValueUnprotect(m_global_context, m_constructors[i]);
         JSValueUnprotect(m_global_context, m_array_contructor);
         JSClassRelease(m_default_class);
         JSClassRelease(m_webview_class);

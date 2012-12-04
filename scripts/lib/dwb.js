@@ -90,6 +90,11 @@
                 configurable : true
             }
     });
-    Object.defineProperty(WebKitWebView.prototype, "scrolledWindow", { get : function() { return this.parent; } , enumerable : true });
+    Object.defineProperty(GObject.prototype, "notify", { 
+            value : function(name, callback, after) 
+            { 
+                return this.connect("notify::" + util.uncamelize(name), callback, after || false);
+            }
+    });
 })();
 Object.preventExtensions(this);
