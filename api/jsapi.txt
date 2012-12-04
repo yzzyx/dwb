@@ -901,61 +901,6 @@ _object_;; The object to search for
 _returns_;; The index in the array or +-1+ if the Object wasn't found.
 ****
 
-****
-[[getPrivate]]
-[float]
-==== *Object.getPrivate()* ==== 
-[source,javascript]
-----
-Object Object.getPrivate(key, identifier)
-----
-
-Gets a value previously set with Object.setPrivate.
-
- :: 
-
-_key_;; The property name
-_identifier_;; The identifier passed to <<setPrivate>>
-_returns_;; The object set with <<setPrivate>> or +null+.
-****
-
-****
-[[setPrivate]]
-[float]
-==== *Object.setPrivate()* ==== 
-[source,javascript]
-----
-void Object.setPrivate(key, value, identifier)
-----
-
-Associates a private value with that object that can only be retrieved in the
-calling script, this function is only useful for objects derived from GObjects,
-e.g. to associate a value with a webview and keep it invisible in other scripts.
-
- :: 
-
-_key_;; The property name
-_value_;; The property value
-_identifier_;; A local object to identify the calling script, the identifier
-must either be of type object or of type function.
-****
-
-====
-[float]
-==== *Example* ====
-[source,javascript]
-------------
-var self = this;
-signals.connect("loadCommitted", function(wv) {
-  wv.setPrivate("foo", "bar", self);
-});
-signals.connect("loadFinished", function(wv) {
-  io.print(wv.getPrivate("foo", self));
-});
-------------
-====
-
-
 [[gui]]
 === gui ===
 Most gtk-widgets used by dwb can be accessed from scripts, an overview of the
@@ -1215,9 +1160,49 @@ _after_;; Whether to install the handler after the default handler.
 _returns_;; The signal id of the signal.
 ****
 
+****
+[[getPrivate]]
+[float]
+==== *getPrivate()* ==== 
+[source,javascript]
+----
+Object GObject.getPrivate(key, identifier)
+----
+
+Gets a value previously set with GObject.setPrivate.
+
+ :: 
+
+_key_;; The property name
+_identifier_;; The identifier passed to <<setPrivate>>
+_returns_;; The object set with <<setPrivate>> or +null+.
+****
+
+****
+[[setPrivate]]
+[float]
+==== *setPrivate()* ==== 
+[source,javascript]
+----
+void GObject.setPrivate(key, value, identifier)
+----
+
+Associates a private value with an object only in the calling script.
+ :: 
+
+_key_;; The property name
+_value_;; The property value
+_identifier_;; A local object to identify the calling script, the identifier
+must either be of type object or of type function.
+****
+
+
 ====
 [float]
-==== *Example* ====
+==== *Examples* ====
+
+Connect to signals:
+
 [source,javascript]
 ------------
 tabs.current.connect("notify::load-status", function() {
@@ -1239,7 +1224,23 @@ signals.connect("createTab", function(wv) {
     });
 });
 ------------
+
+Setting/getting private values:
+
+[source,javascript]
+------------
+var self = this;
+signals.connect("loadCommitted", function(wv) {
+  wv.setPrivate("foo", "bar", self);
+});
+signals.connect("loadFinished", function(wv) {
+  io.print(wv.getPrivate("foo", self));
+});
+------------
 ====
+
+
+
 
 //An exception is the webview object, for webview objects +==+ always gives the
 //same result as +equals+.

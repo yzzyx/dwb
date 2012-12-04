@@ -483,30 +483,6 @@ _object_;; The object to search for
 _returns_;; The index in the array or -1 if the Object wasn't found.
 ****
 
-==== Object Object.getPrivate(String key, Object identifier)
-****
-
-Gets a value previously set with Object.setPrivate.
-
-_key_;; The property name
-_identifier_;; The identifier passed to setPrivate
-_returns_;; The object set with setPrivate or null.
-****
-
-
-==== void Object.setPrivate(String key, String value, Object identifier)
-****
-
-Associates a private value with that object that can only be retrieved in the
-calling script, this function is only useful for objects derived from GObjects,
-e.g. to associate a value with a webview and keep it invisible in other scripts.
-
-_key_;; The property name
-_value_;; The property value
-_identifier_;; A local object to identify the calling script, the identifier
-must either be of type Object or of type Function.
-****
-
 === gui === 
 
 Most gtk-widgets can be accessed from scripts, an overview of the layout can be
@@ -600,6 +576,30 @@ _after_;; Whether to install the handler after the default handler, default
 after.
 _returns_;; The signal id of the signal.
 ****
+
+==== Object GObject.getPrivate(String key, Object identifier)
+****
+
+Gets a value previously set with GObject.setPrivate.
+
+_key_;; The property name
+_identifier_;; The identifier passed to setPrivate
+_returns_;; The object set with setPrivate or null.
+****
+
+
+==== void GObject.setPrivate(String key, String value, Object identifier)
+****
+
+Associates a private value with an object that can only be retrieved in the
+calling script.
+
+_key_;; The property name
+_value_;; The property value
+_identifier_;; A local object to identify the calling script, the identifier
+must either be of type Object or of type Function.
+****
+
 
 
 === webview ===

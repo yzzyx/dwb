@@ -1,16 +1,4 @@
 (function () {
-    var privProps = [];
-    function getPrivateIdx(object, key, identifier) 
-    {
-        var p;
-        for (var i=0, l=privProps.length; i<l; ++i) 
-        {
-            p = privProps[i];
-            if (p.object == object && p.key == key && p.identifier === identifier)
-                return i;
-        }
-        return -1;
-    }
     Object.defineProperties(util, 
     { 
         "getBody" :  
@@ -80,45 +68,6 @@
     });
     Object.freeze(util);
     
-    if (Object.prototype.setPrivate === undefined && Object.prototype.getPrivate === undefined) 
-    {
-        Object.defineProperties(Object.prototype, 
-        {
-            "setPrivate" : 
-            { 
-                value : function(key, value, identifier) 
-                {
-                    if (!(identifier instanceof Object) && !(identifier instanceof Function)) 
-                        throw new Error("[setPrivate] identifier is not an Object or Function");
-
-                    var i = getPrivateIdx(this, key, identifier);
-                    if (i === -1) 
-                    {
-                        if (value !== undefined && value !== null)
-                            privProps.push({ object : this, key : key, identifier : identifier, value : value });
-                    }
-                    else if (value !== null) 
-                    {
-                        privProps[i].value = value;
-                    }
-                    else 
-                    {
-                        privProps.splice(i);
-                    }
-                }
-            },
-            "getPrivate" : 
-            { 
-                value : function(key, identifier) 
-                {
-                    var i = getPrivateIdx(this, key, identifier);
-                    if (i !== -1) 
-                        return privProps[i].value;
-                    return null;
-                }
-            }
-        });
-    }
 
     if (Object.prototype.forEach === undefined) 
     {

@@ -27,6 +27,19 @@
                 callback.apply(this, modules);
         }
     };
+
+    var _privProps = [];
+    function _getPrivateIdx(object, key, identifier) 
+    {
+        var p;
+        for (var i=0, l=_privProps.length; i<l; ++i) 
+        {
+            p = _privProps[i];
+            if (p.object == object && p.key == key && p.identifier === identifier)
+                return i;
+        }
+        return -1;
+    }
     Object.defineProperties(this, { 
             "provide" : 
             { 
@@ -90,10 +103,48 @@
                 configurable : true
             }
     });
-    Object.defineProperty(GObject.prototype, "notify", { 
-            value : function(name, callback, after) 
+    Object.defineProperties(GObject.prototype, 
+        {
+            "setPrivate" : 
             { 
-                return this.connect("notify::" + util.uncamelize(name), callback, after || false);
+                value : function(key, value, identifier) 
+                {
+                    io.print(this instanceof WebKitWebView);
+                    if (!(identifier instanceof Object) && !(identifier instanceof Function)) 
+                        throw new Error("[setPrivate] identifier is not an Object or Function");
+
+                    var i = _getPrivateIdx(this, key, identifier);
+                    if (i === -1) 
+                    {
+                        if (value !== undefined && value !== null)
+                            _privProps.push({ object : this, key : key, identifier : identifier, value : value });
+                    }
+                    else if (value !== null) 
+                    {
+                        _privProps[i].value = value;
+                    }
+                    else 
+                    {
+                        _privProps.splice(i);
+                    }
+                }
+            },
+            "getPrivate" : 
+            { 
+                value : function(key, identifier) 
+                {
+                    var i = _getPrivateIdx(this, key, identifier);
+                    if (i !== -1) 
+                        return _privProps[i].value;
+                    return null;
+                }
+            },
+            "notify" : 
+            { 
+                value : function(name, callback, after) 
+                { 
+                    return this.connect("notify::" + util.uncamelize(name), callback, after || false);
+                }
             }
     });
 })();

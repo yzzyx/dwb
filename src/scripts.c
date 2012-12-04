@@ -185,6 +185,15 @@ enum {
     SPAWN_STDOUT_FAILED = 1<<1, 
     SPAWN_STDERR_FAILED = 1<<2, 
 };
+enum {
+    CONSTRUCTOR_DEFAULT = 0,
+    CONSTRUCTOR_WEBVIEW,
+    CONSTRUCTOR_DOWNLOAD,
+    CONSTRUCTOR_FRAME,
+    CONSTRUCTOR_SOUP_MESSAGE,
+    CONSTRUCTOR_LAST,
+};
+
 
 
 static void callback(CallbackData *c);
@@ -202,7 +211,7 @@ static JSObjectRef m_sp_scripts_cb;
 static JSObjectRef m_sp_scratchpad_cb;
 static GQuark ref_quark;
 static JSObjectRef m_global_init;
-static JSObjectRef m_constructors[12];
+static JSObjectRef m_constructors[CONSTRUCTOR_LAST];
 
 /* MISC {{{*/
 /* uncamelize {{{*/
@@ -2468,7 +2477,6 @@ create_constructor(JSContextRef ctx, char *name, JSClassRef class, JSObjectCallA
 static void 
 create_global_object() 
 {
-    int n_constr = 0;
     ref_quark = g_quark_from_static_string("dwb_js_ref");
 
     JSStaticFunction global_functions[] = { 
@@ -2576,7 +2584,7 @@ create_global_object()
     cd.setProperty = set_property;
     m_default_class = JSClassCreate(&cd);
 
-    m_constructors[n_constr++] = create_constructor(m_global_context, "GObject", m_webview_class, NULL, NULL);
+    m_constructors[CONSTRUCTOR_DEFAULT] = create_constructor(m_global_context, "GObject", m_default_class, NULL, NULL);
 
     /* Webview */
     cd.className = "WebKitWebView";
@@ -2585,7 +2593,7 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_webview_class = JSClassCreate(&cd);
 
-    m_constructors[n_constr++] = create_constructor(m_global_context, "WebKitWebView", m_webview_class, NULL, NULL);
+    m_constructors[CONSTRUCTOR_WEBVIEW] = create_constructor(m_global_context, "WebKitWebView", m_webview_class, NULL, NULL);
 
     /* Frame */
     cd.className = "WebKitWebFrame";
@@ -2594,7 +2602,7 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_frame_class = JSClassCreate(&cd);
 
-    m_constructors[n_constr++] = create_constructor(m_global_context, "WebKitWebFrame", m_frame_class, NULL, NULL);
+    m_constructors[CONSTRUCTOR_FRAME] = create_constructor(m_global_context, "WebKitWebFrame", m_frame_class, NULL, NULL);
 
     /* SoupMessage */ 
     cd.className = "SoupMessage";
@@ -2603,7 +2611,7 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_message_class = JSClassCreate(&cd);
 
-    m_constructors[n_constr++] = create_constructor(m_global_context, "SoupMessage", m_frame_class, NULL, NULL);
+    m_constructors[CONSTRUCTOR_SOUP_MESSAGE] = create_constructor(m_global_context, "SoupMessage", m_frame_class, NULL, NULL);
 
     static JSStaticValue gui_values[] = {
         { "window",           gui_get_window, NULL, kJSDefaultAttributes }, 
@@ -2633,7 +2641,7 @@ create_global_object()
     cd.parentClass = m_default_class;
     m_download_class = JSClassCreate(&cd);
 
-    m_constructors[n_constr++] = create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
+    m_constructors[CONSTRUCTOR_DOWNLOAD] = create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
 
     JSStaticFunction scratchpad_functions[] = { 
         { "show",         sp_show,             kJSDefaultAttributes },
@@ -2649,7 +2657,6 @@ create_global_object()
     cd.parentClass = m_default_class;
     class = JSClassCreate(&cd);
 
-    m_constructors[n_constr++] = NULL;
 
     JSObjectRef o = make_object_for_class(m_global_context, class, G_OBJECT(scratchpad_get()), true);
     js_set_property(m_global_context, global_object, "scratchpad", o, kJSDefaultAttributes, NULL);
@@ -2803,7 +2810,7 @@ scripts_end()
 {
     if (m_global_context != NULL) 
     {
-        for (int i=0; m_constructors[i]; i++) 
+        for (int i=0; i<CONSTRUCTOR_LAST; i++) 
             JSValueUnprotect(m_global_context, m_constructors[i]);
         JSValueUnprotect(m_global_context, m_array_contructor);
         JSClassRelease(m_default_class);
