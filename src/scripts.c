@@ -2669,13 +2669,6 @@ scripts_create_tab(GList *gl)
     }
     JSObjectRef o = make_object(m_global_context, G_OBJECT(VIEW(gl)->web));
 
-
-    if (EMIT_SCRIPT(CREATE_TAB)) 
-    {
-        ScriptSignal signal = { o, SCRIPTS_SIG_META(NULL, CREATE_TAB, 0) };
-        scripts_emit(&signal);
-    }
-
     JSValueProtect(m_global_context, o);
     VIEW(gl)->script_wv = o;
 }/*}}}*/
