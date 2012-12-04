@@ -132,14 +132,14 @@ static JSValueRef wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringR
 static JSValueRef wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSValueRef wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
 static JSStaticValue wv_values[] = {
-     { "mainFrame", wv_get_main_frame, NULL, kJSDefaultAttributes }, 
-     { "focusedFrame", wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
-     { "allFrames",  wv_get_all_frames, NULL, kJSDefaultAttributes }, 
-     { "number",     wv_get_number, NULL, kJSDefaultAttributes }, 
+     { "mainFrame",     wv_get_main_frame, NULL, kJSDefaultAttributes }, 
+     { "focusedFrame",  wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
+     { "allFrames",     wv_get_all_frames, NULL, kJSDefaultAttributes }, 
+     { "number",        wv_get_number, NULL, kJSDefaultAttributes }, 
      { "tabWidget",     wv_get_tab_widget, NULL, kJSDefaultAttributes }, 
-     { "tabWidget",     wv_get_tab_box, NULL, kJSDefaultAttributes }, 
-     { "tabLabel",     wv_get_tab_label, NULL, kJSDefaultAttributes }, 
-     { "tabIcon",     wv_get_tab_icon, NULL, kJSDefaultAttributes }, 
+     { "tabBox",        wv_get_tab_box, NULL, kJSDefaultAttributes }, 
+     { "tabLabel",      wv_get_tab_label, NULL, kJSDefaultAttributes }, 
+     { "tabIcon",       wv_get_tab_icon, NULL, kJSDefaultAttributes }, 
      { 0, 0, 0, 0 }, 
 };
 
