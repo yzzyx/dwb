@@ -1071,9 +1071,9 @@ dwb_editor_watch(GPid pid, int status, EditorInfo *info)
     if (length > 0 && content[length-1] == '\n')
         content[length-1] = 0;
 
-    if (!g_strcmp0(info->tagname, "INPUT")) 
+    if (!strcasecmp(info->tagname, "INPUT")) 
         webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), content);
-    else if (!g_strcmp0(info->tagname, "TEXTAREA")) 
+    else if (!strcasecmp(info->tagname, "TEXTAREA")) 
         webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(e), content);
 
 clean:
@@ -1144,13 +1144,15 @@ dwb_get_editable(WebKitDOMElement *element)
         return false;
 
     char *tagname = webkit_dom_node_get_node_name(WEBKIT_DOM_NODE(element));
-    if (!g_strcmp0(tagname, "INPUT")) 
+    if (tagname == NULL)
+        return false;
+    if (!strcasecmp(tagname, "INPUT")) 
     {
         char *type = webkit_dom_element_get_attribute((void*)element, "type");
         if (!g_strcmp0(type, "text") || !g_strcmp0(type, "search")|| !g_strcmp0(type, "password")) 
             return true;
     }
-    else if (!g_strcmp0(tagname, "TEXTAREA")) 
+    else if (!strcasecmp(tagname, "TEXTAREA")) 
         return true;
 
     return false;
@@ -1204,18 +1206,15 @@ dwb_open_in_editor(void)
     if (active == NULL) 
         return STATUS_ERROR;
 
-    if (!dwb_get_editable(active)) 
-        return STATUS_ERROR;
-
     tagname = webkit_dom_element_get_tag_name(active);
     if (tagname == NULL) 
     {
         ret = STATUS_ERROR;
         goto clean;
     }
-    if (! g_strcmp0(tagname, "INPUT")) 
+    if (! strcasecmp(tagname, "INPUT")) 
         value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(active));
-    else if (! g_strcmp0(tagname, "TEXTAREA"))
+    else if (! strcasecmp(tagname, "TEXTAREA"))
         value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(active));
 
     if (value == NULL) 
