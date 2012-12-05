@@ -38,7 +38,7 @@
             {
                 var sigs = _registered[sig];
                 var ret = false;
-                var i = 0;
+                var i = 0, l=sigs.length;
                 do 
                 {
                     if (sigs[i].connected) 
@@ -50,7 +50,7 @@
                     {
                         sigs.splice(i, 1);
                     }
-                } while (i<sigs.length);
+                } while (i<l);
 
                 if (_registered[sig].length === 0) 
                 {

@@ -29,7 +29,7 @@
     };
 
     var _privProps = [];
-    function _getPrivateIdx(object, key, identifier) 
+    var _getPrivateIdx = function(object, key, identifier) 
     {
         var p;
         for (var i=0, l=_privProps.length; i<l; ++i) 
@@ -39,7 +39,9 @@
                 return i;
         }
         return -1;
-    }
+    };
+    var _contexts;
+
     Object.defineProperties(this, { 
             "provide" : 
             { 
@@ -49,7 +51,8 @@
                     {
                         io.debug({ 
                                 offset : 1, arguments : arguments,
-                                error : new Error("provide: Module " + name + " is already defined!")
+                                error : new Error("provide: Module " + 
+                                                  name + " is already defined!")
                         });
                     }
                     else 
@@ -77,7 +80,12 @@
                 {
                     if (names !== null && ! (names instanceof Array)) 
                     {
-                        io.debug({ error : new Error("require : invalid argument (" + JSON.stringify(names) + ")"), offset : 1, arguments : arguments });
+                        io.debug({ 
+                                error : new Error("require : invalid argument (" + 
+                                                    JSON.stringify(names) + ")"), 
+                                offset : 1, 
+                                arguments : arguments 
+                        });
                         return; 
                     }
 
@@ -90,7 +98,7 @@
             // Called after all scripts have been loaded and executed
             // Immediately deleted from the global object, so it is not callable
             // from other scripts
-            "_init" : 
+            "_initAfter" : 
             { 
                 value : function() 
                 {
@@ -101,15 +109,21 @@
                     Object.freeze(this);
                 },
                 configurable : true
+            },
+            "_initBefore" : 
+            {
+                value : function(contexts) 
+                {
+                    _contexts = contexts;
+                },
+                configurable : true
             }
     });
-    Object.defineProperties(GObject.prototype, 
-        {
+    Object.defineProperties(GObject.prototype, {
             "setPrivate" : 
             { 
                 value : function(key, value, identifier) 
                 {
-                    io.print(this instanceof WebKitWebView);
                     if (!(identifier instanceof Object) && !(identifier instanceof Function)) 
                         throw new Error("[setPrivate] identifier is not an Object or Function");
 
@@ -117,7 +131,12 @@
                     if (i === -1) 
                     {
                         if (value !== undefined && value !== null)
-                            _privProps.push({ object : this, key : key, identifier : identifier, value : value });
+                            _privProps.push({ 
+                                    object : this, 
+                                    key : key, 
+                                    identifier : identifier, 
+                                    value : value 
+                            });
                     }
                     else if (value !== null) 
                     {

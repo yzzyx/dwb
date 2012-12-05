@@ -210,7 +210,7 @@ static JSObjectRef m_completion_callback;
 static JSObjectRef m_sp_scripts_cb;
 static JSObjectRef m_sp_scratchpad_cb;
 static GQuark ref_quark;
-static JSObjectRef m_global_init;
+static JSObjectRef m_init_before, m_init_after;
 static JSObjectRef m_constructors[CONSTRUCTOR_LAST];
 
 /* MISC {{{*/
@@ -2669,22 +2669,44 @@ create_global_object()
     static void 
 apply_scripts() 
 {
-    for (GSList *l = m_script_list; l; l=l->next) 
+    int length = g_slist_length(m_script_list); 
+    int i=0;
+
+    // XXX Not needed?
+    JSValueRef *scripts = g_try_malloc(length * sizeof(JSValueRef));
+    JSObjectRef *objects = g_try_malloc(length * sizeof(JSObjectRef));
+    for (GSList *l=m_script_list; l; l=l->next, i++) 
+    {
+        scripts[i] = JSObjectMake(m_global_context, NULL, NULL);
+        objects[i] = JSObjectMake(m_global_context, NULL, NULL);
+        js_set_property(m_global_context, objects[i], "self", scripts[i], 0, NULL);
+        js_set_property(m_global_context, objects[i], "func", l->data, 0, NULL);
+    }
+    if (m_init_before != NULL) 
+    {
+        JSValueRef argv[] = {  JSObjectMakeArray(m_global_context, length, (JSValueRef*)objects, NULL) };
+        JSObjectCallAsFunction(m_global_context, m_init_before, NULL, 1, argv, NULL);
+        JSValueUnprotect(m_global_context, m_init_before);
+    }
+
+    i=0;
+    for (GSList *l = m_script_list; l; l=l->next, i++) 
     {
 
-        JSObjectRef o = JSObjectMake(m_global_context, NULL, NULL);
         JSObjectRef apply = js_get_object_property(m_global_context, l->data, "apply");
-        JSValueRef argv[] = {o};
+        JSValueRef argv[] = { scripts[i] };
         JSObjectCallAsFunction(m_global_context, apply, l->data, 1, argv, NULL);
     }
     g_slist_free(m_script_list);
-
     m_script_list = NULL;
-    if (m_global_init != NULL) 
+
+    if (m_init_after != NULL) 
     {
-        JSObjectCallAsFunction(m_global_context, m_global_init, NULL, 0, NULL, NULL);
-        JSValueUnprotect(m_global_context, m_global_init);
+        JSObjectCallAsFunction(m_global_context, m_init_after, NULL, 0, NULL, NULL);
+        JSValueUnprotect(m_global_context, m_init_after);
     }
+    g_free(scripts);
+    g_free(objects);
 }/*}}}*/
 
 /* scripts_create_tab {{{*/
@@ -2731,7 +2753,7 @@ scripts_init_script(const char *path, const char *script)
     if (m_global_context == NULL) 
         create_global_object();
 
-    debug = g_strdup_printf("\ntry{/*<dwb*/%s/*dwb>*/}catch(e) { io.debug({message : \"In file %s\", error : e}); }", script, path);
+    debug = g_strdup_printf("\ntry{/*<dwb*/%s/*dwb>*/}catch(e){io.debug({message:\"In file %s\",error:e});};", script, path);
     JSObjectRef function = js_make_function(m_global_context, debug);
 
     if (function != NULL) 
@@ -2746,6 +2768,20 @@ evaluate(const char *script)
     JSStringRef js_script = JSStringCreateWithUTF8CString(script);
     JSEvaluateScript(m_global_context, js_script, NULL, NULL, 0, NULL);
     JSStringRelease(js_script);
+}
+
+JSObjectRef 
+get_private(JSContextRef ctx, char *name) 
+{
+    JSStringRef js_name = JSStringCreateWithUTF8CString(name);
+    JSObjectRef global_object = JSContextGetGlobalObject(m_global_context);
+
+    JSObjectRef ret = js_get_object_property(m_global_context, global_object, name);
+    JSValueProtect(m_global_context, ret);
+    JSObjectDeleteProperty(m_global_context, global_object, js_name, NULL);
+
+    JSStringRelease(js_name);
+    return ret;
 }
 
 /* scripts_init {{{*/
@@ -2777,12 +2813,8 @@ scripts_init(gboolean force)
         g_free(dir);
     }
 
-    JSStringRef global_init = JSStringCreateWithUTF8CString("_init");
-    JSObjectRef global_object = JSContextGetGlobalObject(m_global_context);
-    m_global_init = js_get_object_property(m_global_context, global_object, "_init");
-    JSValueProtect(m_global_context, m_global_init);
-    JSObjectDeleteProperty(m_global_context, global_object, global_init, NULL);
-    JSStringRelease(global_init);
+    m_init_before = get_private(m_global_context, "_initBefore");
+    m_init_after = get_private(m_global_context, "_initAfter");
 
     JSObjectRef o = JSObjectMakeArray(m_global_context, 0, NULL, NULL);
     m_array_contructor = js_get_object_property(m_global_context, o, "constructor");
