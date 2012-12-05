@@ -42,8 +42,6 @@ properties on the global object, see also *Global data* for details.
 
 == Global ==
 
-Methods from the global object.
-
 === Methods ===
 
 
@@ -95,7 +93,6 @@ NOTE: Scripts included with include are either visible in the global scope or
 invisible, even in the including script. To use an included script it can return
 an object with its public objects: 
 
-======
 [source,javascript]
 ---------------------------------
 // included script 
@@ -111,7 +108,27 @@ return {
 var i = include("/path/to/script");
 var p = i.getPrivate();               // 37
 ---------------------------------
-======
+
+or define a module that can be shared: 
+
+[source,javascript]
+---------------------------------
+// included script 
+
+var private = 37;
+provide("foo", {
+    getPrivate : function() {
+        return private;
+    }
+});
+
+// Scripts that includes the above
+var i = include("/path/to/script");
+require(["foo"], function(foo) {
+    var bar = foo.getPrivate();               // 37
+})
+---------------------------------
+
 
 ==== void provide(String name, Object module)
 ****

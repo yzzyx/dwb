@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 12/04/2012
+.\"      Date: 12/05/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "12/04/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "12/05/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -84,8 +84,6 @@ In contrast to the global window object in the web execution context, the global
 for details\&.
 .RE
 .SH "GLOBAL"
-.sp
-Methods from the global object\&.
 .SS "Methods"
 .sp
 .it 1 an-trap
@@ -208,6 +206,31 @@ return {
 // Scripts that includes the above
 var i = include("/path/to/script");
 var p = i\&.getPrivate();               // 37
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+or define a module that can be shared:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+// included script
+
+var private = 37;
+provide("foo", {
+    getPrivate : function() {
+        return private;
+    }
+});
+
+// Scripts that includes the above
+var i = include("/path/to/script");
+require(["foo"], function(foo) {
+    var bar = foo\&.getPrivate();               // 37
+})
 .fi
 .if n \{\
 .RE

@@ -38,8 +38,6 @@ properties on the global object, see also <<Globaldata,global data>> for details
 
 == Global ==
 
-methods from the global object.
-
 === Methods ===
 
 
@@ -336,6 +334,28 @@ return {
 // Scripts that includes the above
 var i = include("/path/to/script");
 var p = i.getPrivate();               // 37
+---------------------------------
+======
+
+or define a module: 
+
+======
+[source,javascript]
+---------------------------------
+// included script 
+
+var private = 37;
+provide("foo", {
+    getPrivate : function() {
+        return private;
+    }
+});
+
+// Scripts that includes the above
+var i = include("/path/to/script");
+require(["foo"], function(foo) {
+    var bar = foo.getPrivate();               // 37
+})
 ---------------------------------
 ======
 
@@ -1299,7 +1319,7 @@ The main frame of the webview
 
 [source,javascript]
 ----
-wv.number        frame     read
+wv.number        Number     read
 ----
 
 The number of the webview, starting at 0
@@ -1311,7 +1331,7 @@ The number of the webview, starting at 0
 
 [source,javascript]
 ----
-wv.scrolledWindow        frame     read
+wv.scrolledWindow        GtkScrolledWindow     read
 ----
 
 The parent widget of every webview, it
@@ -1324,7 +1344,7 @@ is used for scrolling the webview.
 
 [source,javascript]
 ----
-wv.tabWidget        frame     read
+wv.tabWidget        GtkEventBox     read
 ----
 
 The main widget for tab labels, used for coloring
@@ -1337,7 +1357,7 @@ tabs, child of *gui.tabBox*.
 
 [source,javascript]
 ----
-wv.tabBox        frame     read
+wv.tabBox        GtkBox     read
 ----
 
 Horizontal box, child of *wv.tabWidget*.
@@ -1349,7 +1369,7 @@ Horizontal box, child of *wv.tabWidget*.
 
 [source,javascript]
 ----
-wv.tabIcon        frame     read
+wv.tabIcon        GtkImage     read
 ----
 
 Favicon widget, child of *wv.tabBox*.
@@ -1361,7 +1381,7 @@ Favicon widget, child of *wv.tabBox*.
 
 [source,javascript]
 ----
-wv.tabLabel        frame     read
+wv.tabLabel        GtkLabel     read
 ----
 
 Text label of a tab, child of *wv.tabBox*.
