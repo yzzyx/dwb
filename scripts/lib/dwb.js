@@ -106,7 +106,6 @@
                     for (var i=0, l=_callbacks.length; i<l; i++) 
                         _applyRequired(_callbacks[i].names, _callbacks[i].callback);
 
-                    Object.freeze(this);
                 },
                 configurable : true
             },
@@ -115,6 +114,7 @@
                 value : function(contexts) 
                 {
                     _contexts = contexts;
+                    Object.freeze(this);
                 },
                 configurable : true
             }
