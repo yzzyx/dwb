@@ -2243,8 +2243,11 @@ connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
             goto error_out;
 
         g_signal_query(signal_id, sig->query);
-        if (sig->query->signal_id == 0)
+        if (sig->query->signal_id == 0) 
+        {
+            ssignal_free(sig);
             goto error_out;
+        }
 
         sig->func = func;
         id = g_signal_connect_data(o, name, G_CALLBACK(connect_callback), sig, (GClosureNotify)on_disconnect_object, flags);
