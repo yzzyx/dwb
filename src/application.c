@@ -31,26 +31,26 @@ static GOptionContext * application_get_option_context(void);
 static void application_start(GApplication *, char **);
 
 /* Option parsing arguments  {{{ */
-static gboolean m_opt_list_sessions = false;
-static gboolean m_opt_single = false;
-static gboolean m_opt_override_restore = false;
-static gboolean m_opt_version = false;
-static gboolean m_opt_force = false;
-static gboolean m_opt_enable_scripts = false;
-static gchar *m_opt_restore = NULL;
-static gchar **m_opt_exe = NULL;
-static GIOChannel *m_fallback_channel;
+static gboolean s_opt_list_sessions = false;
+static gboolean s_opt_single = false;
+static gboolean s_opt_override_restore = false;
+static gboolean s_opt_version = false;
+static gboolean s_opt_force = false;
+static gboolean s_opt_enable_scripts = false;
+static gchar *s_opt_restore = NULL;
+static gchar **s_opt_exe = NULL;
+static GIOChannel *s_fallback_channel;
 static GOptionEntry options[] = {
   { "embed", 'e', 0, G_OPTION_ARG_INT64, &dwb.gui.wid, "Embed into window with window id wid", "wid"},
-  { "force", 'f', 0, G_OPTION_ARG_NONE, &m_opt_force, "Force restoring a saved session, even if another process has restored the session", NULL },
-  { "list-sessions", 'l', 0, G_OPTION_ARG_NONE, &m_opt_list_sessions, "List saved sessions and exit", NULL },
-  { "new-instance", 'n', 0, G_OPTION_ARG_NONE, &m_opt_single, "Open a new instance, overrides 'single-instance'", NULL},
+  { "force", 'f', 0, G_OPTION_ARG_NONE, &s_opt_force, "Force restoring a saved session, even if another process has restored the session", NULL },
+  { "list-sessions", 'l', 0, G_OPTION_ARG_NONE, &s_opt_list_sessions, "List saved sessions and exit", NULL },
+  { "new-instance", 'n', 0, G_OPTION_ARG_NONE, &s_opt_single, "Open a new instance, overrides 'single-instance'", NULL},
   { "restore", 'r', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, &application_parse_option, "Restore session with name 'sessionname' or default if name is omitted", "sessionname"},
-  { "override-restore", 'R', 0, G_OPTION_ARG_NONE, &m_opt_override_restore, "Don't restore last session even if 'save-session' is set", NULL},
+  { "override-restore", 'R', 0, G_OPTION_ARG_NONE, &s_opt_override_restore, "Don't restore last session even if 'save-session' is set", NULL},
   { "profile", 'p', 0, G_OPTION_ARG_STRING, &dwb.misc.profile, "Load configuration for 'profile'", "profile" },
-  { "execute", 'x', 0, G_OPTION_ARG_STRING_ARRAY, &m_opt_exe, "Execute commands", NULL},
-  { "version", 'v', 0, G_OPTION_ARG_NONE, &m_opt_version, "Show version information and exit", NULL},
-  { "enable-scripts", 'S', 0, G_OPTION_ARG_NONE, &m_opt_enable_scripts, "Enable javascript api", NULL},
+  { "execute", 'x', 0, G_OPTION_ARG_STRING_ARRAY, &s_opt_exe, "Execute commands", NULL},
+  { "version", 'v', 0, G_OPTION_ARG_NONE, &s_opt_version, "Show version information and exit", NULL},
+  { "enable-scripts", 'S', 0, G_OPTION_ARG_NONE, &s_opt_enable_scripts, "Enable javascript api", NULL},
   { NULL }
 };
 static GOptionContext *option_context;
@@ -79,7 +79,7 @@ struct _DwbApplicationClass
 };
 G_DEFINE_TYPE(DwbApplication, dwb_application, G_TYPE_APPLICATION);
 
-static DwbApplication *m_app;
+static DwbApplication *s_app;
 
 static void
 dwb_application_main(GApplication *app) {
@@ -155,14 +155,14 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
 
   argc_remain = g_strv_length(*argv);
 
-  if (m_opt_exe != NULL)
-    argc_exe = g_strv_length(m_opt_exe);
+  if (s_opt_exe != NULL)
+    argc_exe = g_strv_length(s_opt_exe);
 
-  if (m_opt_list_sessions) {
+  if (s_opt_list_sessions) {
     session_list();
     return true;
   }
-  if (m_opt_version) {
+  if (s_opt_version) {
     dwb_version();
     return true;
   }
@@ -171,7 +171,7 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
   dwb_init_settings();
 
   single_instance = GET_BOOL("single-instance");
-  if (m_opt_single || !single_instance) {
+  if (s_opt_single || !single_instance) {
     g_application_set_flags(app, G_APPLICATION_NON_UNIQUE);
   }
   GDBusConnection *bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
@@ -186,10 +186,10 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
           return false;
         count = i = 0;
         restore_args[count++] = g_strdup((*argv)[0]);
-        if (m_opt_exe != NULL) {
-          for (; m_opt_exe[i] != NULL; i++) {
+        if (s_opt_exe != NULL) {
+          for (; s_opt_exe[i] != NULL; i++) {
             restore_args[2*i + count] = g_strdup("-x");
-            restore_args[2*i + 1 + count] = m_opt_exe[i];
+            restore_args[2*i + 1 + count] = s_opt_exe[i];
           }
         }
         for (; (*argv)[count]; count++) {
@@ -228,7 +228,7 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
       if ( (ff = fdopen(fd, "w")) )
           remote = true;
       if ( remote ) {
-        if (argc_remain > 1 || m_opt_exe != NULL) {
+        if (argc_remain > 1 || s_opt_exe != NULL) {
           for (int i=1; (*argv)[i]; i++) {
             if ( (path = application_local_path((*argv)[i])) ) {
               fprintf(ff, "tabopen %s\n", path);
@@ -238,22 +238,22 @@ dwb_application_local_command_line(GApplication *app, gchar ***argv, gint *exit_
               fprintf(ff, "tabopen %s\n", (*argv)[i]);
             }
           }
-          if (m_opt_exe != NULL) {
-            for (int i = 0; m_opt_exe[i]; i++) {
-              fprintf(ff, "%s\n", m_opt_exe[i]);
+          if (s_opt_exe != NULL) {
+            for (int i = 0; s_opt_exe[i]; i++) {
+              fprintf(ff, "%s\n", s_opt_exe[i]);
             }
           }
           goto clean;
         }
       }
       else {
-        GIOChannel *m_fallback_channel = g_io_channel_new_file(unififo, "r+", NULL);
-        g_io_add_watch(m_fallback_channel, G_IO_IN, (GIOFunc)application_handle_channel, NULL);
+        GIOChannel *s_fallback_channel = g_io_channel_new_file(unififo, "r+", NULL);
+        g_io_add_watch(s_fallback_channel, G_IO_IN, (GIOFunc)application_handle_channel, NULL);
       }
     }
   }
-  if (GET_BOOL("save-session") && !remote && !m_opt_single)
-    m_opt_force = true;
+  if (GET_BOOL("save-session") && !remote && !s_opt_single)
+    s_opt_force = true;
   application_start(app, *argv);
 clean:
   if (ff != NULL)
@@ -294,10 +294,10 @@ application_execute_args(char **argv) {
       view_add(argv[i], false);
     }
   }
-  if (m_opt_exe != NULL) {
-    int length = g_strv_length(m_opt_exe);
+  if (s_opt_exe != NULL) {
+    int length = g_strv_length(s_opt_exe);
     for (int i=offset; i<length; i++) {
-      dwb_parse_commands(m_opt_exe[i]);
+      dwb_parse_commands(s_opt_exe[i]);
     }
     offset = length;
   }
@@ -313,18 +313,18 @@ application_start(GApplication *app, char **argv) {
   dwb_init();
 
   dwb_pack(GET_CHAR("widget-packing"), false);
-  scripts_init(m_opt_enable_scripts);
+  scripts_init(s_opt_enable_scripts);
 
-  if (m_opt_force) 
+  if (s_opt_force) 
     session_flags |= SESSION_FORCE;
   /* restore session */ 
-  if (! m_opt_override_restore) {
-    if (GET_BOOL("save-session") || m_opt_restore != NULL) {
-      restored = session_restore(m_opt_restore, session_flags);
+  if (! s_opt_override_restore) {
+    if (GET_BOOL("save-session") || s_opt_restore != NULL) {
+      restored = session_restore(s_opt_restore, session_flags);
     }
   }
   else {
-    session_restore(m_opt_restore, session_flags | SESSION_ONLY_MARK);
+    session_restore(s_opt_restore, session_flags | SESSION_ONLY_MARK);
   }
   if ((! restored && g_strv_length(argv) == 1)) {
     view_add(NULL, false);
@@ -360,9 +360,9 @@ static gboolean /* application_parse_option(const gchar *key, const gchar *value
 application_parse_option(const gchar *key, const gchar *value, gpointer data, GError **error) {
   if (!g_strcmp0(key, "-r") || !g_strcmp0(key, "--restore")) {
     if (value != NULL) 
-      m_opt_restore = g_strdup(value);
+      s_opt_restore = g_strdup(value);
     else 
-      m_opt_restore = g_strdup("default");
+      s_opt_restore = g_strdup("default");
     return true;
   }
   else {
@@ -373,17 +373,17 @@ application_parse_option(const gchar *key, const gchar *value, gpointer data, GE
 
 void /* application_stop() {{{*/
 application_stop(void) {
-  if (m_fallback_channel != NULL) {
-    g_io_channel_shutdown(m_fallback_channel, true, NULL);
-    g_io_channel_unref(m_fallback_channel);
+  if (s_fallback_channel != NULL) {
+    g_io_channel_shutdown(s_fallback_channel, true, NULL);
+    g_io_channel_unref(s_fallback_channel);
   }
-  g_application_release(G_APPLICATION(m_app));
+  g_application_release(G_APPLICATION(s_app));
 }/*}}}*/
 
 gint /* application_run(gint, char **) {{{*/
 application_run(gint argc, gchar **argv) {
-  m_app = dwb_application_new("org.bitbucket.dwb", 0);
-  gint ret = g_application_run(G_APPLICATION(m_app), argc, argv);
-  g_object_unref(m_app);
+  s_app = dwb_application_new("org.bitbucket.dwb", 0);
+  gint ret = g_application_run(G_APPLICATION(s_app), argc, argv);
+  g_object_unref(s_app);
   return ret;
 }/*}}}*/

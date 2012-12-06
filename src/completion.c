@@ -29,11 +29,11 @@ static GList * completion_update_completion(GtkWidget *box, GList *comps, GList 
 static GList * completion_get_simple_completion(GList *gl);
 
 typedef gboolean (*Match_Func)(char*, const char*);
-static char *m_typed;
-static int m_last_buf;
-static gboolean m_leading0 = false;
-static char *m_current_command;
-static int m_command_len;
+static char *s_typed;
+static int s_last_buf;
+static gboolean s_leading0 = false;
+static char *s_current_command;
+static int s_command_len;
 
 /* GUI_FUNCTIONS {{{*/
 /* completion_modify_completion_item(Completion *c, GdkColor *fg, GdkColor *bg, PangoFontDescription  *fd) {{{*/
@@ -101,7 +101,7 @@ completion_init_completion(GList *store, GList *gl, gboolean word_beginnings, vo
     const char *input = GET_TEXT();
     gboolean match;
     char **token = NULL;
-    m_typed = g_strdup(input);
+    s_typed = g_strdup(input);
     if (dwb.state.mode & COMMAND_MODE) 
         input = strchr(input, ' ');
     if (input == NULL) 
@@ -156,10 +156,10 @@ completion_set_entry_text(Completion *c)
                  break;
     }
 
-    if (dwb.state.mode & COMMAND_MODE && m_current_command) 
+    if (dwb.state.mode & COMMAND_MODE && s_current_command) 
     {
-        gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), m_current_command);
-        l = strlen(m_current_command);
+        gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), s_current_command);
+        l = strlen(s_current_command);
         gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), " ", -1, &l);
         gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &l);
     }
@@ -278,18 +278,18 @@ completion_clean_completion(gboolean set_text)
     dwb.comps.view = NULL;
     dwb.comps.completions = NULL;
     dwb.comps.active_comp = NULL;
-    if (set_text && m_typed != NULL)
-        entry_set_text(m_typed);
+    if (set_text && s_typed != NULL)
+        entry_set_text(s_typed);
 
-    FREE0(m_current_command);
-    m_command_len = 0;
+    FREE0(s_current_command);
+    s_command_len = 0;
 
-    FREE0(m_typed);
+    FREE0(s_typed);
 
     if (dwb.state.mode & COMPLETE_BUFFER) 
     {
-        m_last_buf = 0;
-        m_leading0 = false;
+        s_last_buf = 0;
+        s_leading0 = false;
         dwb.state.mode &= ~COMPLETE_BUFFER;
         dwb_change_mode(NORMAL_MODE, true);
     }
@@ -471,7 +471,7 @@ completion_get_quickmarks(int back)
     Quickmark *q;
     char *escaped = NULL;
     const char *input = GET_TEXT();
-    m_typed = g_strdup(input);
+    s_typed = g_strdup(input);
 
     for (GList *l = dwb.fc.quickmarks; l; l=l->next) 
     {
@@ -520,18 +520,18 @@ completion_buffer_key_press(GdkEventKey *e)
         }
         else 
         {
-            m_last_buf = 10*m_last_buf + value;
-            if (m_last_buf > length) {
+            s_last_buf = 10*s_last_buf + value;
+            if (s_last_buf > length) {
                 completion_clean_completion(false);
                 dwb_change_mode(NORMAL_MODE, true);
                 return;
             }
-            if (m_last_buf != 0) {
-                if ((m_last_buf < 10 && m_leading0 == true) || m_last_buf >= 10) 
-                    completion_buffer_exec(g_list_nth(dwb.state.views, m_last_buf-1));
+            if (s_last_buf != 0) {
+                if ((s_last_buf < 10 && s_leading0 == true) || s_last_buf >= 10) 
+                    completion_buffer_exec(g_list_nth(dwb.state.views, s_last_buf-1));
             }
             else 
-                m_leading0 = true;
+                s_leading0 = true;
         }
     }
 }
@@ -620,13 +620,13 @@ completion_command_line()
     }
     if (ret) 
     {
-        m_command_len = util_strlen_trailing_space(text);
-        if ((m_command_len > 0 && g_ascii_isspace(text[m_command_len-1])) || token[1] != NULL)  
+        s_command_len = util_strlen_trailing_space(text);
+        if ((s_command_len > 0 && g_ascii_isspace(text[s_command_len-1])) || token[1] != NULL)  
         {
-            FREE0(m_current_command);
-            m_current_command = g_strdup(token[0]);
+            FREE0(s_current_command);
+            s_current_command = g_strdup(token[0]);
             dwb.state.mode |= COMPLETE_COMMAND_MODE;
-            m_command_len++;
+            s_command_len++;
         }
         else 
             ret = false;

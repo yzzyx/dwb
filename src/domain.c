@@ -21,7 +21,7 @@
 #include "domain.h"
 #include "tlds.h"
 
-static GHashTable *m_tld_table;
+static GHashTable *s_tld_table;
 
 GSList *
 domain_get_cookie_domains(WebKitWebView *wv) 
@@ -129,7 +129,7 @@ domain_get_base_for_host(const char *host)
 {
     if (host == NULL)
         return NULL;
-    g_return_val_if_fail(m_tld_table != NULL, NULL);
+    g_return_val_if_fail(s_tld_table != NULL, NULL);
 
     const char *cur_domain = host;
     const char *prev_domain = host;
@@ -140,7 +140,7 @@ domain_get_base_for_host(const char *host)
 
     while (1) 
     {
-        entry = g_hash_table_lookup(m_tld_table, cur_domain);
+        entry = g_hash_table_lookup(s_tld_table, cur_domain);
         if (entry != NULL) 
         {
             if (*entry == '*') 
@@ -177,10 +177,10 @@ domain_get_base_for_host(const char *host)
 void
 domain_end() 
 {
-    if (m_tld_table) 
+    if (s_tld_table) 
     {
-        g_hash_table_unref(m_tld_table);
-        m_tld_table = NULL;
+        g_hash_table_unref(s_tld_table);
+        s_tld_table = NULL;
     }
 
 }
@@ -188,7 +188,7 @@ domain_end()
 void 
 domain_init() 
 {
-    m_tld_table = g_hash_table_new((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal);
+    s_tld_table = g_hash_table_new((GHashFunc)g_str_hash, (GEqualFunc)g_str_equal);
     char *eff_tld;
     for (int i=0; (eff_tld = TLDS_EFFECTIVE[i]); i++) 
     {
@@ -198,6 +198,6 @@ domain_init()
         if (*eff_tld == '.')
             eff_tld++;
 
-        g_hash_table_insert(m_tld_table, eff_tld, TLDS_EFFECTIVE[i]);
+        g_hash_table_insert(s_tld_table, eff_tld, TLDS_EFFECTIVE[i]);
     }
 }

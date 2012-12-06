@@ -21,7 +21,7 @@
 #include "scripts.h"
 #include <JavaScriptCore/JavaScript.h>
 
-GtkWidget *g_scratchpad;
+GtkWidget *s_scratchpad;
 static gboolean
 navigation_cb(WebKitWebView *wv, WebKitWebFrame *frame, WebKitNetworkRequest *request, 
         WebKitWebNavigationAction *action, WebKitWebPolicyDecision *decision) 
@@ -69,11 +69,11 @@ void
 scratchpad_load(const char *text) 
 {
     if (g_str_has_prefix(text, "file://")) 
-        webkit_web_view_load_uri(WEBKIT_WEB_VIEW(g_scratchpad), text);
+        webkit_web_view_load_uri(WEBKIT_WEB_VIEW(s_scratchpad), text);
     else 
     {
         char *basepath = g_strconcat("file://", g_getenv("HOME"), NULL);
-        webkit_web_view_load_string(WEBKIT_WEB_VIEW(g_scratchpad), text, NULL, NULL, basepath);
+        webkit_web_view_load_string(WEBKIT_WEB_VIEW(s_scratchpad), text, NULL, NULL, basepath);
         g_free(basepath);
     }
 }
@@ -81,30 +81,30 @@ scratchpad_load(const char *text)
 void 
 scratchpad_show(void) 
 {
-    gtk_widget_show(g_scratchpad);
-    gtk_widget_grab_focus(g_scratchpad);
+    gtk_widget_show(s_scratchpad);
+    gtk_widget_grab_focus(s_scratchpad);
 }
 
 void 
 scratchpad_hide(void) 
 {
-    gtk_widget_hide(g_scratchpad);
+    gtk_widget_hide(s_scratchpad);
     dwb_focus_scroll(dwb.state.fview);
 }
 
 static void
 scratchpad_init(void) 
 {
-    g_scratchpad = webkit_web_view_new();
-    g_signal_connect(g_scratchpad, "navigation-policy-decision-requested", G_CALLBACK(navigation_cb), NULL);
-    g_signal_connect(g_scratchpad, "window-object-cleared", G_CALLBACK(window_object_cb), NULL);
-    gtk_widget_set_size_request(g_scratchpad, -1, 200);
+    s_scratchpad = webkit_web_view_new();
+    g_signal_connect(s_scratchpad, "navigation-policy-decision-requested", G_CALLBACK(navigation_cb), NULL);
+    g_signal_connect(s_scratchpad, "window-object-cleared", G_CALLBACK(window_object_cb), NULL);
+    gtk_widget_set_size_request(s_scratchpad, -1, 200);
 }
 
 GtkWidget * 
 scratchpad_get(void) 
 {
-    if (g_scratchpad == NULL)
+    if (s_scratchpad == NULL)
         scratchpad_init();
-    return g_scratchpad;
+    return s_scratchpad;
 }

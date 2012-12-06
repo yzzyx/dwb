@@ -99,11 +99,11 @@ static Navigation * dwb_get_search_completion(const char *text);
 
 static void dwb_clean_vars(void);
 typedef struct _EditorInfo {
-  char *filename;
-  char *id;
-  GList *gl;
-  WebKitDOMElement *element;
-  char *tagname;
+    char *filename;
+    char *id;
+    GList *gl;
+    WebKitDOMElement *element;
+    char *tagname;
 } EditorInfo;
 
 typedef struct _UserScriptEnv {
