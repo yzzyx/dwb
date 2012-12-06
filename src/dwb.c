@@ -943,7 +943,7 @@ dwb_paste_into_entry(GtkClipboard *clip, const char *text)
 void
 dwb_paste_primary() 
 {
-    GtkClipboard *p_clip = gtk_widget_get_clipboard(CURRENT_WEBVIEW_WIDGET(), GDK_SELECTION_PRIMARY);
+    GtkClipboard *p_clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
     if (p_clip == NULL)
         return;
 
@@ -1771,9 +1771,6 @@ dwb_clean_load_begin(GList *gl)
     View *v = gl->data;
     v->status->ssl = SSL_NONE;
     v->plugins->status &= ~PLUGIN_STATUS_HAS_PLUGIN; 
-
-    if (gl == dwb.state.fview && (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE)) 
-        dwb_change_mode(NORMAL_MODE, true);
 
     view_set_favicon(gl, false);
 }/*}}}*/

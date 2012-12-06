@@ -461,7 +461,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
     WebKitWebPolicyDecision *policy, GList *gl) 
 {
 
-    char *uri = (char *) webkit_network_request_get_uri(request);
+    const char *uri = webkit_network_request_get_uri(request);
     gboolean ret = false;
     WebKitWebNavigationReason reason = webkit_web_navigation_action_get_reason(action);
 
@@ -563,6 +563,7 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
                 return true;
             }
             dwb_soup_clean();
+            break;
         case WEBKIT_WEB_NAVIGATION_REASON_FORM_SUBMITTED: 
             if (dwb.state.mode == SEARCH_FIELD_MODE) 
             {
@@ -579,8 +580,13 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
                 webkit_web_policy_decision_ignore(policy);
                 return true;
             }
+            break;
         default: break;
 
+    }
+    if (gl == dwb.state.fview && (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) && frame == webkit_web_view_get_main_frame(web)) 
+    {
+        dwb_change_mode(NORMAL_MODE, true);
     }
     return ret;
 }/*}}}*/
