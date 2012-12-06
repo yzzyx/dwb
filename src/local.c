@@ -258,7 +258,8 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history)
     }
     tmp = orig_path+1;
     GString *path_buffer = g_string_new("/<a class='dwb_local_headline' href='");
-    while ((match = strchr(tmp, '/'))) {
+    while ((match = strchr(tmp, '/'))) 
+    {
         g_string_append_len(path_buffer, orig_path, match-orig_path);
         g_string_append(path_buffer, "'>");
         g_string_append_len(path_buffer, tmp, match-tmp);
@@ -286,10 +287,11 @@ local_show_directory(GList *gl, const char *path, gboolean add_to_history)
     g_string_free(path_buffer, true);
 
     fullpath = g_strdup_printf("file://%s", orig_path);
+
     /* add a history item */
-    /* TODO sqlite */
     WebKitWebView *web = WEBVIEW(gl);
-    if (add_to_history) {
+    if (add_to_history) 
+    {
         WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
         WebKitWebHistoryItem *item = webkit_web_history_item_new_with_data(fullpath, fullpath);
         webkit_web_back_forward_list_add_item(bf_list, item);

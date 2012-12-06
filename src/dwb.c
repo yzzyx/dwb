@@ -3292,8 +3292,8 @@ dwb_get_scripts()
                 realpath = g_file_read_link(path, &error);
                 if (realpath == NULL) 
                 {
-                    g_free(path);
                     fprintf(stderr, "Cannot read %s : %s\n", path, error->message);
+                    g_free(path);
                     goto loop_end;
                 }
                 else 
