@@ -209,7 +209,7 @@ static JSObjectRef s_array_contructor;
 static JSObjectRef s_completion_callback;
 static JSObjectRef s_sp_scripts_cb;
 static JSObjectRef s_sp_scratchpad_cb;
-static GQuark ref_quark;
+static GQuark s_ref_quark;
 static JSObjectRef s_init_before, s_init_after;
 static JSObjectRef s_constructors[CONSTRUCTOR_LAST];
 
@@ -2090,18 +2090,18 @@ object_destroy_cb(JSObjectRef o)
 static JSObjectRef 
 make_object_for_class(JSContextRef ctx, JSClassRef class, GObject *o, gboolean protect) 
 {
-    JSObjectRef retobj = g_object_get_qdata(o, ref_quark);
+    JSObjectRef retobj = g_object_get_qdata(o, s_ref_quark);
     if (retobj != NULL)
         return retobj;
 
     retobj = JSObjectMake(ctx, class, o);
     if (protect) 
     {
-        g_object_set_qdata_full(o, ref_quark, retobj, (GDestroyNotify)object_destroy_cb);
+        g_object_set_qdata_full(o, s_ref_quark, retobj, (GDestroyNotify)object_destroy_cb);
         JSValueProtect(s_global_context, retobj);
     }
     else 
-        g_object_set_qdata_full(o, ref_quark, retobj, NULL);
+        g_object_set_qdata_full(o, s_ref_quark, retobj, NULL);
 
     return retobj;
 }
@@ -2471,7 +2471,7 @@ create_constructor(JSContextRef ctx, char *name, JSClassRef class, JSObjectCallA
 static void 
 create_global_object() 
 {
-    ref_quark = g_quark_from_static_string("dwb_js_ref");
+    s_ref_quark = g_quark_from_static_string("dwb_js_ref");
 
     JSStaticFunction global_functions[] = { 
         { "execute",          global_execute,         kJSDefaultAttributes },
