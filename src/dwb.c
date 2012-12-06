@@ -3476,7 +3476,6 @@ dwb_clean_up()
     g_string_free(dwb.state.buffer, true);
     g_free(dwb.misc.hints);
     g_free(dwb.misc.hint_style);
-    g_free(dwb.misc.scripts);
 
     dwb_free_list(dwb.fc.bookmarks, (void_func)dwb_navigation_free);
     /*  TODO sqlite */
@@ -4545,7 +4544,6 @@ dwb_init_vars(void)
     dwb.misc.max_c_items = MAX_COMPLETIONS;
     dwb.misc.userscripts = NULL;
     dwb.misc.proxyuri = NULL;
-    dwb.misc.scripts = NULL;
 
     dwb.misc.hints = NULL;
     dwb.misc.hint_style = NULL;

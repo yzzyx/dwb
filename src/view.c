@@ -721,7 +721,6 @@ view_load_status_after_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl)
     WebKitLoadStatus status = webkit_web_view_get_load_status(web);
     if (status == WEBKIT_LOAD_COMMITTED) 
     {
-        dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts, false);
         if (VIEW(gl)->js_base != NULL) 
         {
             JSValueUnprotect(JS_CONTEXT_REF(gl), VIEW(gl)->js_base);
@@ -800,7 +799,6 @@ view_load_status_cb(WebKitWebView *web, GParamSpec *pspec, GList *gl)
             {
                 util_file_add_navigation(dwb.files[FILES_HISTORY], dwb.fc.history->data, false, dwb.misc.history_length);
             }
-            dwb_execute_script(webkit_web_view_get_main_frame(web), dwb.misc.scripts_onload, false);
             if (dwb.state.auto_insert_mode) 
                 dwb_check_auto_insert(gl);
 

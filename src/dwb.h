@@ -739,8 +739,6 @@ struct _Misc {
   const char *name;
   const char *prog_path;
   /* applied to the mainframe */
-  char *scripts;
-  char *scripts_onload;
   char *hints;
   /* applied to all frames */
   const char *profile;
