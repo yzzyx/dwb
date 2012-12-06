@@ -430,9 +430,13 @@ tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
 static GList *
 find_webview(JSObjectRef o) 
 {
-    GList *r = NULL;
-    for (r = dwb.state.views; r && VIEW(r)->script_wv != o; r=r->next);
-    return r;
+    for (GList *r = dwb.state.fview; r; r=r->next)
+        if (VIEW(r)->script_wv == o)
+            return r;
+    for (GList *r = dwb.state.fview->prev; r; r=r->prev)
+        if (VIEW(r)->script_wv == o)
+            return r;
+    return NULL;
 }
 /* wv_status_cb {{{*/
 static gboolean 
