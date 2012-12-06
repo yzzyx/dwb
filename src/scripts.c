@@ -203,7 +203,7 @@ static JSObjectRef make_object(JSContextRef ctx, GObject *o);
 static JSObjectRef m_sig_objects[SCRIPTS_SIG_LAST];
 static JSGlobalContextRef m_global_context;
 static GSList *m_script_list;
-static JSClassRef m_webview_class, m_frame_class, m_download_class, m_default_class, m_download_class, m_message_class;
+static JSClassRef m_gobject_class, m_webview_class, m_frame_class, m_download_class, m_download_class, m_message_class;
 static gboolean m_commandline = false;
 static JSObjectRef m_array_contructor;
 static JSObjectRef m_completion_callback;
@@ -668,7 +668,7 @@ wv_get_tab_widget(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSV
     GList *gl = find_webview(object);
     if (gl == NULL)
         return NIL;
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabevent), true);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(VIEW(gl)->tabevent), true);
 }
 static JSValueRef 
 wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
@@ -676,7 +676,7 @@ wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValu
     GList *gl = find_webview(object);
     if (gl == NULL)
         return NIL;
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabbox), true);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(VIEW(gl)->tabbox), true);
 }
 static JSValueRef 
 wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
@@ -684,7 +684,7 @@ wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVa
     GList *gl = find_webview(object);
     if (gl == NULL)
         return NIL;
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tablabel), true);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(VIEW(gl)->tablabel), true);
 }
 static JSValueRef 
 wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
@@ -692,7 +692,7 @@ wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSVal
     GList *gl = find_webview(object);
     if (gl == NULL)
         return NIL;
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->tabicon), true);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(VIEW(gl)->tabicon), true);
 }
 
 static JSValueRef 
@@ -701,7 +701,7 @@ wv_get_scrolled_window(JSContextRef ctx, JSObjectRef object, JSStringRef js_name
     GList *gl = find_webview(object);
     if (gl == NULL)
         return NIL;
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(VIEW(gl)->scroll), true);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(VIEW(gl)->scroll), true);
 }
 
 
@@ -1987,57 +1987,57 @@ signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef
 static JSValueRef
 gui_get_window(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.window), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.window), false);
 }
 static JSValueRef
 gui_get_main_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.vbox), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.vbox), false);
 }
 static JSValueRef
 gui_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.topbox), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.topbox), false);
 }
 static JSValueRef
 gui_get_content_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.mainbox), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.mainbox), false);
 }
 static JSValueRef
 gui_get_status_widget(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.statusbox), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.statusbox), false);
 }
 static JSValueRef
 gui_get_status_alignment(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.alignment), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.alignment), false);
 }
 static JSValueRef
 gui_get_status_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.status_hbox), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.status_hbox), false);
 }
     static JSValueRef
 gui_get_message_label(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.lstatus), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.lstatus), false);
 }
 static JSValueRef
 gui_get_entry(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.entry), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.entry), false);
 }
 static JSValueRef
 gui_get_uri_label(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.urilabel), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.urilabel), false);
 }
 static JSValueRef
 gui_get_status_label(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, m_default_class, G_OBJECT(dwb.gui.rstatus), false);
+    return make_object_for_class(ctx, m_gobject_class, G_OBJECT(dwb.gui.rstatus), false);
 }
 
 /* scripts_emit {{{*/
@@ -2123,7 +2123,7 @@ make_object(JSContextRef ctx, GObject *o)
     else if (SOUP_IS_MESSAGE(o)) 
         class = m_message_class;
     else 
-        class = m_default_class;
+        class = m_gobject_class;
     return make_object_for_class(ctx, class, o, true);
 }/*}}}*/
 
@@ -2259,7 +2259,6 @@ connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
         else 
             ssignal_free(sig);
     }
-
 
 error_out: 
     g_free(name);
@@ -2575,15 +2574,15 @@ create_global_object()
     cd.staticFunctions = default_functions;
     cd.getProperty = get_property;
     cd.setProperty = set_property;
-    m_default_class = JSClassCreate(&cd);
+    m_gobject_class = JSClassCreate(&cd);
 
-    m_constructors[CONSTRUCTOR_DEFAULT] = create_constructor(m_global_context, "GObject", m_default_class, NULL, NULL);
+    m_constructors[CONSTRUCTOR_DEFAULT] = create_constructor(m_global_context, "GObject", m_gobject_class, NULL, NULL);
 
     /* Webview */
     cd.className = "WebKitWebView";
     cd.staticFunctions = wv_functions;
     cd.staticValues = wv_values;
-    cd.parentClass = m_default_class;
+    cd.parentClass = m_gobject_class;
     m_webview_class = JSClassCreate(&cd);
 
     m_constructors[CONSTRUCTOR_WEBVIEW] = create_constructor(m_global_context, "WebKitWebView", m_webview_class, NULL, NULL);
@@ -2592,7 +2591,7 @@ create_global_object()
     cd.className = "WebKitWebFrame";
     cd.staticFunctions = frame_functions;
     cd.staticValues = frame_values;
-    cd.parentClass = m_default_class;
+    cd.parentClass = m_gobject_class;
     m_frame_class = JSClassCreate(&cd);
 
     m_constructors[CONSTRUCTOR_FRAME] = create_constructor(m_global_context, "WebKitWebFrame", m_frame_class, NULL, NULL);
@@ -2601,7 +2600,7 @@ create_global_object()
     cd.className = "SoupMessage";
     cd.staticFunctions = default_functions;
     cd.staticValues = message_values;
-    cd.parentClass = m_default_class;
+    cd.parentClass = m_gobject_class;
     m_message_class = JSClassCreate(&cd);
 
     m_constructors[CONSTRUCTOR_SOUP_MESSAGE] = create_constructor(m_global_context, "SoupMessage", m_frame_class, NULL, NULL);
@@ -2631,7 +2630,7 @@ create_global_object()
     cd.className = "Download";
     cd.staticFunctions = download_functions;
     cd.staticValues = NULL;
-    cd.parentClass = m_default_class;
+    cd.parentClass = m_gobject_class;
     m_download_class = JSClassCreate(&cd);
 
     m_constructors[CONSTRUCTOR_DOWNLOAD] = create_constructor(m_global_context, "Download", m_download_class, download_constructor_cb, NULL);
@@ -2647,13 +2646,12 @@ create_global_object()
     cd.className = "Scratchpad";
     cd.staticFunctions = scratchpad_functions;
     cd.staticValues = NULL;
-    cd.parentClass = m_default_class;
+    cd.parentClass = m_gobject_class;
     class = JSClassCreate(&cd);
 
 
     JSObjectRef o = make_object_for_class(m_global_context, class, G_OBJECT(scratchpad_get()), true);
     js_set_property(m_global_context, global_object, "scratchpad", o, kJSDefaultAttributes, NULL);
-
 }/*}}}*/
 /*}}}*/
 
@@ -2844,7 +2842,7 @@ scripts_end()
         JSValueUnprotect(m_global_context, m_array_contructor);
         JSValueUnprotect(m_global_context, UNDEFINED);
         JSValueUnprotect(m_global_context, NIL);
-        JSClassRelease(m_default_class);
+        JSClassRelease(m_gobject_class);
         JSClassRelease(m_webview_class);
         JSClassRelease(m_frame_class);
         JSClassRelease(m_download_class);
