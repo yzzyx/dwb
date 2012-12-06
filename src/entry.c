@@ -21,58 +21,63 @@
 static char *s_store;
 /* dwb_entry_history_forward {{{*/
 DwbStatus
-entry_history_forward(GList **last) {
-  const char *text = NULL;
-  GList *prev = NULL;
-  if (*last != NULL) {
-    if ((*last)->prev == NULL) {
-      text = s_store;
+entry_history_forward(GList **last) 
+{
+    const char *text = NULL;
+    GList *prev = NULL;
+    if (*last != NULL) 
+    {
+        if ((*last)->prev == NULL) 
+            text = s_store;
+        else 
+        {
+            prev = (*last)->prev;
+            text = prev->data;
+        }
     }
-    else {
-      prev = (*last)->prev;
-      text = prev->data;
-    }
-  }
-  *last = prev;
-  if (text != NULL) {
-    entry_set_text(text);
-  }
-  return STATUS_OK;
+    *last = prev;
+    if (text != NULL) 
+        entry_set_text(text);
+
+    return STATUS_OK;
 }/*}}}*/
 
 /* entry_history_back(GList **list, GList **last) {{{ */
 DwbStatus
-entry_history_back(GList **list, GList **last) {
-  char *text = NULL;
-  if (*list == NULL)
-    return STATUS_ERROR;
+entry_history_back(GList **list, GList **last) 
+{
+    char *text = NULL;
+    if (*list == NULL)
+        return STATUS_ERROR;
 
-  GList *next;
-  if (*last == NULL) {
-    next = *list;
-    g_free(s_store);
-    s_store = g_strdup(GET_TEXT());
-  }
-  else if ((*last)->next != NULL)
-    next = (*last)->next;
-  else 
+    GList *next;
+    if (*last == NULL) 
+    {
+        next = *list;
+        g_free(s_store);
+        s_store = g_strdup(GET_TEXT());
+    }
+    else if ((*last)->next != NULL)
+        next = (*last)->next;
+    else 
+        return STATUS_OK;
+
+    *last = next;
+    if (next) 
+        text = next->data;
+    if (text && *text) 
+    {
+        entry_set_text(text);
+    }
     return STATUS_OK;
-
-  *last = next;
-  if (next) 
-    text = next->data;
-  if (text && *text) {
-    entry_set_text(text);
-  }
-  return STATUS_OK;
 } /* }}} */
 
 /* entry_focus() {{{*/
 void 
 entry_focus() {
-  if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) {
+  if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) 
     gtk_widget_show_all(dwb.gui.bottombox);
-  }
+
   gtk_widget_show(dwb.gui.entry);
   gtk_widget_grab_focus(dwb.gui.entry);
   gtk_widget_set_can_focus(CURRENT_WEBVIEW_WIDGET(), false);
@@ -83,22 +88,25 @@ entry_focus() {
 
 /* entry_insert_text(const char *) {{{*/
 void 
-entry_insert_text(const char *text) {
-  int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
-  gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &position);
-  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), position);
+entry_insert_text(const char *text) 
+{
+    int position = gtk_editable_get_position(GTK_EDITABLE(dwb.gui.entry));
+    gtk_editable_insert_text(GTK_EDITABLE(dwb.gui.entry), text, -1, &position);
+    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), position);
 }/*}}}*/
 /* entry_set_text(const char *) {{{*/
 void 
-entry_set_text(const char *text) {
-  gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
-  gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
+entry_set_text(const char *text) 
+{
+    gtk_entry_set_text(GTK_ENTRY(dwb.gui.entry), text);
+    gtk_editable_set_position(GTK_EDITABLE(dwb.gui.entry), -1);
 }/*}}}*/
 
 /* entry_move_cursor_step(GtkMovementStep, int step, gboolean delete)  {{{*/
 void 
-entry_move_cursor_step(GtkMovementStep step, int stepcount, gboolean del) {
-  g_signal_emit_by_name(dwb.gui.entry, "move-cursor", step, stepcount, del);
-  if (del)
-    gtk_editable_delete_selection(GTK_EDITABLE(dwb.gui.entry));
+entry_move_cursor_step(GtkMovementStep step, int stepcount, gboolean del) 
+{
+    g_signal_emit_by_name(dwb.gui.entry, "move-cursor", step, stepcount, del);
+    if (del)
+        gtk_editable_delete_selection(GTK_EDITABLE(dwb.gui.entry));
 }/*}}}*/
