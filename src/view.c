@@ -423,6 +423,7 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
     }
 }/*}}}*/
 
+
 /* view_mime_type_policy_cb {{{*/
 static gboolean 
 view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mimetype, WebKitWebPolicyDecision *policy, GList *gl) 
@@ -452,8 +453,6 @@ view_mime_type_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwor
     }
     return  false;
 }/*}}}*/
-
-
 
 /* view_navigation_policy_cb {{{*/
 static gboolean 
@@ -990,9 +989,9 @@ view_init_signals(GList *gl)
 
     v->status->signals[SIG_LOAD_STATUS]           = g_signal_connect(v->web, "notify::load-status",                   G_CALLBACK(view_load_status_cb), gl);
     v->status->signals[SIG_LOAD_ERROR]            = g_signal_connect(v->web, "load-error",                            G_CALLBACK(view_load_error_cb), gl);
-    v->status->signals[SIG_LOAD_STATUS_AFTER]     = g_signal_connect_after(v->web, "notify::load-status",             G_CALLBACK(view_load_status_after_cb), gl);
+    v->status->signals[SIG_LOAD_STATUS_AFTER]     = g_signal_connect(v->web, "notify::load-status",   G_CALLBACK(view_load_status_after_cb), gl);
     v->status->signals[SIG_POPULATE_POPUP]        = g_signal_connect(v->web, "populate-popup",                        G_CALLBACK(view_populate_popup_cb), gl);
-    v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",                      G_CALLBACK(view_progress_cb), gl);
+    v->status->signals[SIG_PROGRESS]              = g_signal_connect(v->web, "notify::progress",               G_CALLBACK(view_progress_cb), gl);
     v->status->signals[SIG_TITLE]                 = g_signal_connect(v->web, "notify::title",                         G_CALLBACK(view_title_cb), gl);
     v->status->signals[SIG_URI]                   = g_signal_connect(v->web, "notify::uri",                           G_CALLBACK(view_uri_cb), gl);
     v->status->signals[SIG_SCROLL]                = g_signal_connect(v->web, "scroll-event",                          G_CALLBACK(view_scroll_cb), gl);

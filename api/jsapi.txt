@@ -532,25 +532,6 @@ _returns_;; A string with the file content
 ****
 
 ****
-[[statusBar]]
-[float]
-==== *statusBar()* ==== 
-
-[source,javascript]
-----
-void io.statusBar(Object text)
-----
-
-Sets the statusbar text. The statusbar consists of two labels, a 'middle' label and
-a 'right' label, on both labels pango markup can be used
-
- ::
-
-_text.middle_;; Text for the middle label
-_text.right_;; Text for the right label
-****
-
-****
 [[write]]
 [float]
 ==== *write()* ==== 

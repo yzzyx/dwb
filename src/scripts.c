@@ -1709,29 +1709,6 @@ io_error(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
     }
     return UNDEFINED;
 }/*}}}*/
-static JSValueRef 
-io_status_bar(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
-{
-    if (argc < 1) 
-        return UNDEFINED;
-
-    JSObjectRef o = JSValueToObject(ctx, argv[0], exc);
-    if (o == NULL) 
-        return UNDEFINED;
-
-    char *middle = js_get_string_property(ctx, o, "middle");
-    char *right = js_get_string_property(ctx, o, "right");
-
-    if (middle != NULL) 
-        gtk_label_set_markup(GTK_LABEL(dwb.gui.urilabel), middle);
-
-    if (right != NULL) 
-        gtk_label_set_markup(GTK_LABEL(dwb.gui.rstatus), right);
-
-    g_free(middle);
-    g_free(right);
-    return UNDEFINED;
-}
 
 static JSValueRef 
 io_dir_names(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
@@ -2515,7 +2492,6 @@ create_global_object()
         { "dirNames",  io_dir_names,        kJSDefaultAttributes },
         { "notify",    io_notify,           kJSDefaultAttributes },
         { "error",     io_error,            kJSDefaultAttributes },
-        { "statusBar", io_status_bar,      kJSDefaultAttributes },
         { 0,           0,           0 },
     };
     class = create_class("io", io_functions, NULL);
