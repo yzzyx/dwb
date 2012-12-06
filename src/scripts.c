@@ -2034,6 +2034,8 @@ signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef
         }
         break;
     }
+    
+    g_free(name);
     return false;
 }/*}}}*/
 
