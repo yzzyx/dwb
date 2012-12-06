@@ -780,10 +780,17 @@ scripts_scratchpad_send(JSContextRef ctx, JSValueRef val)
 }
 
 /* SOUP_MESSAGE {{{*/
-/* soup_uri_to_js_object {{{*/
-static JSObjectRef 
-soup_uri_to_js_object(JSContextRef ctx, SoupURI *uri, JSValueRef *exception) 
+static JSValueRef 
+get_soup_uri(JSContextRef ctx, JSObjectRef object, SoupURI * (*func)(SoupMessage *), JSValueRef *exception)
 {
+    SoupMessage *msg = JSObjectGetPrivate(object);
+    if (msg == NULL)
+        return NIL;
+
+    SoupURI *uri = func(msg);
+    if (uri == NULL)
+        return NIL;
+
     JSObjectRef o = JSObjectMake(ctx, NULL, NULL);
     js_set_object_property(ctx, o, "scheme", uri->scheme, exception);
     js_set_object_property(ctx, o, "user", uri->user, exception);
@@ -794,36 +801,20 @@ soup_uri_to_js_object(JSContextRef ctx, SoupURI *uri, JSValueRef *exception)
     js_set_object_property(ctx, o, "query", uri->query, exception);
     js_set_object_property(ctx, o, "fragment", uri->fragment, exception);
     return o;
-}/*}}}*/
+}
 
 /* message_get_uri {{{*/
 static JSValueRef 
 message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
 {
-    SoupMessage *msg = JSObjectGetPrivate(object);
-    if (msg == NULL)
-        return NIL;
-
-    SoupURI *uri = soup_message_get_uri(msg);
-    if (uri == NULL)
-        return NIL;
-
-    return soup_uri_to_js_object(ctx, uri, exception);
+    return get_soup_uri(ctx, object, soup_message_get_uri, exception);
 }/*}}}*/
 
 /* message_get_first_party {{{*/
 static JSValueRef 
 message_get_first_party(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
 {
-    SoupMessage *msg = JSObjectGetPrivate(object);
-    if (msg == NULL)
-        return NIL;
-
-    SoupURI *uri = soup_message_get_first_party(msg);
-    if (uri == NULL)
-        return NIL;
-
-    return soup_uri_to_js_object(ctx, uri, exception);
+    return get_soup_uri(ctx, object, soup_message_get_first_party, exception);
 }/*}}}*/
 /*}}}*/
 
