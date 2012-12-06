@@ -2026,7 +2026,10 @@ signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef
             continue;
 
         if (JSValueIsNull(ctx, value)) 
+        {
+            s_sig_objects[i] = NULL;
             dwb.misc.script_signals &= ~(1<<i);
+        }
         else if ( (o = JSValueToObject(ctx, value, exception)) != NULL && JSObjectIsFunction(ctx, o)) 
         {
             s_sig_objects[i] = o;
@@ -2034,7 +2037,7 @@ signal_set(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef
         }
         break;
     }
-    
+
     g_free(name);
     return false;
 }/*}}}*/
@@ -2602,9 +2605,9 @@ create_global_object()
     cd.parentClass = s_gobject_class;
     s_message_class = JSClassCreate(&cd);
 
-    s_constructors[CONSTRUCTOR_SOUP_MESSAGE] = create_constructor(s_global_context, "SoupMessage", s_frame_class, NULL, NULL);
+    s_constructors[CONSTRUCTOR_SOUP_MESSAGE] = create_constructor(s_global_context, "SoupMessage", s_message_class, NULL, NULL);
 
-    static JSStaticValue gui_values[] = {
+    JSStaticValue gui_values[] = {
         { "window",           gui_get_window, NULL, kJSDefaultAttributes }, 
         { "mainBox",          gui_get_main_box, NULL, kJSDefaultAttributes }, 
         { "tabBox",           gui_get_tab_box, NULL, kJSDefaultAttributes }, 
