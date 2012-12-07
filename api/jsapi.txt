@@ -1243,17 +1243,19 @@ function foo(message)
     });
     return d;
 }
+function callback1(response) 
+{
+    io.print(response); // Prints "foo" after 2 seconds
 
-foo("foo").done(
-    function(response) {
-        io.print(response); // Prints "foo" after 2 seconds
+    // Return a new Deferred, will replace the old one.
+    return foo("bar");
+}
+function callback2(response) 
+{
+    io.print(response); // Prints "bar" after 4 seconds
+}
 
-        // Return a new Deferred, will replace the old one.
-        return foo("bar");
-        }).done(
-    function(response) {
-        io.print(response); // Prints "bar" after 4 seconds
-    });
+foo("foo").done(callback1).done(callback2);
 ---------------------------------
 
 
