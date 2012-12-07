@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 12/07/2012
+.\"      Date: 12/08/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "12/07/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "12/08/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1292,7 +1292,7 @@ foo()\&.fail(onResponse)\&.fail(onResponse);
 .RE
 .\}
 .sp
-Note that if the deferred is rejected only the fail chain is called, when it is resolved only the done chain is called\&. It is not possible to mix up done and fail chain\&.
+Note that if the deferred is rejected only the fail chain is called, when it is resolved only the done chain is called\&.
 .sp
 .if n \{\
 .RS 4
@@ -1314,10 +1314,10 @@ function onResponse(response)
     io\&.print(response);
 }
 
-// Will not be executed at all\&.
-foo()\&.done(onResponse)\&.fail(onResponse);
-// Only the first callback is executed
+// Only the fail will be executed
+
 foo()\&.fail(onResponse)\&.done(onResponse);
+foo()\&.done(onResponse)\&.fail(onResponse);
 .fi
 .if n \{\
 .RE
