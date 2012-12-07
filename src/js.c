@@ -332,4 +332,12 @@ js_array_iterator_next(js_array_iterator *iter, JSValueRef *exc)
 
     return JSObjectGetPropertyAtIndex(iter->ctx, iter->array, iter->current_index++, exc);
 }
+JSObjectRef 
+js_value_to_function(JSContextRef ctx, JSValueRef val, JSValueRef *exc)
+{
+    JSObjectRef ret = JSValueToObject(ctx, val, exc);
+    if (ret != NULL && JSObjectIsFunction(ctx, ret))
+        return ret;
+    return NULL;
+}
 

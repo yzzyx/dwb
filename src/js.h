@@ -38,6 +38,7 @@ gboolean js_print_exception(JSContextRef ctx, JSValueRef exception);
 JSObjectRef js_make_function(JSContextRef ctx, const char *script);
 JSValueRef js_json_to_value(JSContextRef ctx, const char *text);
 JSValueRef js_context_change(JSContextRef, JSContextRef, JSValueRef, JSValueRef *);
+JSObjectRef js_value_to_function(JSContextRef, JSValueRef, JSValueRef *);
 
 typedef struct _js_array_iterator {
   JSContextRef ctx;

@@ -166,5 +166,17 @@
                 }
             }
     });
+    Object.defineProperties(Deferred.prototype, {
+            "done" : {
+                value : function(method) {
+                    return this.then(method);
+                }
+            },
+            "fail" : {
+                value : function(method) {
+                    return this.then(null, method);
+                }
+            }
+    });
 })();
 Object.preventExtensions(this);
