@@ -513,6 +513,176 @@ _gui.uriLabel (GtkLabel, read)_;; Label used for displaying uris, third child of
 _gui.statusLabel (GtkLabel, read)_;; Label used for status information, fourth child of *gui.statusBox*.
 
 
+=== Deferred === 
+
+Deferred objects can be used to manage asynchronous operations. It can trigger a
+callback function when an asynchrounous operation has finished, and allows
+chaining of callbacks. 
+Deferred basically have 2 callback chains, a _done_-chain and a _fail_-chain.
+If a asynchronous operation is successful the deferred should be resolved and
+the done callback chain of the deferred is called. 
+If a asynchronous operation fails the deferred should be rejected and
+the fail callback chain of the deferred is called. 
+
+
+Deferreds implement the following methods: 
+
+==== void Deferred.done(Function callback)
+****
+
+Registers a function for the done-chain.
+
+_callback_;; A callback function that will be called when the Deferred is
+resolved. If the function returns a deferred the original deferred will be replaced with
+the new deferred.
+****
+
+==== void Deferred.fail(Function callback)
+****
+
+Registers a function for the fail-chain.
+
+_callback_;; A callback function that will be called when the deferred is
+rejected. If the function returns a deferred the original deferred will be replaced with
+the new deferred.
+****
+
+==== void Deferred.reject(arguments)
+****
+
+Rejects a deferred, the fail-chain is called when a deferred is rejected. 
+
+_arguments_;; Arguments passed to the _fail_ callbacks.
+****
+
+==== void Deferred.resolve(arguments)
+****
+
+Resolves a deferred, the done-chain is called when a deferred is resolved. 
+
+_arguments_;; Arguments passed to the _done_ callbacks.
+****
+
+==== void Deferred.then(Function ondone, Function onfail)
+****
+
+Registers a function for the done and fail chain.
+
+_ondone_;; A callback function that will be called when the deferred is
+resolved. If the function returns a deferred the original deferred will be replaced with
+the new deferred.
+_onfail_;; A callback function that will be called when the deferred is
+rejected. If the function returns a deferred the original deferred will be replaced with
+the new deferred.
+****
+
+
+Simple usage of a deferred:
+
+[source,javascript]
+---------------------------------
+function loadUri(uri) {
+    var d = new Deferred();
+    tabs.current.loadUri(uri, function(wv) {
+        if (wv.loadStatus == LoadStatus.finished) 
+        {
+            d.resolve("Finished");
+            return true;
+        }
+        else if (wv.loadStatus == LoadStatus.failed) 
+        {
+            d.reject("Failed");
+            return true;
+        }
+    });
+    return d;
+}
+
+loadUri("http://www.example.com").then(
+    function(response) {
+        io.print(response); // Finished
+    }, 
+    function(response) {
+        io.print(response); // Failed
+    }
+);
+---------------------------------
+
+Chaining of a deferred: 
+
+[source,javascript]
+---------------------------------
+function foo() 
+{
+    var d = new Deferred();
+    timerStart(2000, function() {
+        d.reject("rejected");
+    });
+    return d;
+}
+
+function onResponse(response) 
+{
+    io.print(response);
+}
+
+// Will print "rejected" twice to stdout after 2 seconds
+foo().fail(onResponse).fail(onResponse);
+---------------------------------
+
+Note that if the deferred is rejected only the fail chain is called, when it is
+resolved only the done chain is called. It is not possible to mix up done
+and fail chain. 
+[source,javascript]
+---------------------------------
+function foo() 
+{
+    var d = new Deferred();
+    timerStart(2000, function() {
+        d.reject("rejected");
+        // Already rejected, will not execute the done chain
+        d.resolve("rejected");
+    });
+    return d;
+}
+
+function onResponse(response) 
+{
+    io.print(response);
+}
+
+// Will not be executed at all. 
+foo().done(onResponse).fail(onResponse);
+// Only the first callback is executed
+foo().fail(onResponse).done(onResponse);
+---------------------------------
+
+Changing the deferred in a callback chain:
+
+[source,javascript]
+---------------------------------
+function foo(message) 
+{
+    var d = new Deferred();
+    timerStart(2000, function() {
+        d.resolve(message);
+    });
+    return d;
+}
+
+foo("foo").done(
+    function(response) {
+        io.print(response); // Prints "foo" after 2 seconds
+
+        // Return a new Deferred, will replace the old one.
+        return foo("bar");
+        }).done(
+    function(response) {
+        io.print(response); // Prints "bar" after 4 seconds
+    });
+---------------------------------
+
+
 == WEBKIT OBJECTS ==
 
 All webkit objects correspond to gobject objects, i.e. they have the same
