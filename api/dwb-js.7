@@ -1155,6 +1155,11 @@ Registers a function for the done\-chain\&.
 .RS 4
 A callback function that will be called when the Deferred is resolved\&. If the function returns a deferred the original deferred will be replaced with the new deferred\&.
 .RE
+.PP
+\fIreturns\fR
+.RS 4
+A new deferred that can be used to chain callbacks\&.
+.RE
 .RE
 .sp
 .it 1 an-trap
@@ -1162,7 +1167,7 @@ A callback function that will be called when the Deferred is resolved\&. If the 
 .nr an-break-flag 1
 .br
 .ps +1
-\fBvoid Deferred.fail(Function callback)\fR
+\fBDeferred Deferred.fail(Function callback)\fR
 .RS 4
 .sp
 Registers a function for the fail\-chain\&.
@@ -1171,6 +1176,11 @@ Registers a function for the fail\-chain\&.
 .RS 4
 A callback function that will be called when the deferred is rejected\&. If the function returns a deferred the original deferred will be replaced with the new deferred\&.
 .RE
+.PP
+\fIreturns\fR
+.RS 4
+A new deferred that can be used to chain callbacks\&.
+.RE
 .RE
 .sp
 .it 1 an-trap
@@ -1178,7 +1188,7 @@ A callback function that will be called when the deferred is rejected\&. If the 
 .nr an-break-flag 1
 .br
 .ps +1
-\fBvoid Deferred.reject(arguments)\fR
+\fBDeferred Deferred.reject(arguments)\fR
 .RS 4
 .sp
 Rejects a deferred, the fail\-chain is called when a deferred is rejected\&.
@@ -1214,7 +1224,7 @@ callbacks\&.
 .nr an-break-flag 1
 .br
 .ps +1
-\fBvoid Deferred.then(Function ondone, Function onfail)\fR
+\fBDeferred Deferred.then(Function ondone, Function onfail)\fR
 .RS 4
 .sp
 Registers a function for the done and fail chain\&.
@@ -1227,6 +1237,11 @@ A callback function that will be called when the deferred is resolved\&. If the 
 \fIonfail\fR
 .RS 4
 A callback function that will be called when the deferred is rejected\&. If the function returns a deferred the original deferred will be replaced with the new deferred\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+A new deferred that can be used to chain callbacks\&.
 .RE
 .sp
 Simple usage of a deferred:

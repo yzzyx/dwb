@@ -1400,8 +1400,8 @@ deferred_new(JSContextRef ctx)
     priv->resolve = priv->reject = priv->next = NULL;
 
     JSObjectRef ret = JSObjectMake(ctx, s_deferred_class, priv);
-    
     JSValueProtect(ctx, ret);
+
     return ret;
 }
 static JSValueRef 
@@ -1425,9 +1425,11 @@ deferred_transition(JSContextRef ctx, JSObjectRef old, JSObjectRef new)
 {
     DeferredPriv *opriv = JSObjectGetPrivate(old);
     DeferredPriv *npriv = JSObjectGetPrivate(new);
+
     npriv->resolve = opriv->resolve;
     npriv->reject = opriv->reject;
     npriv->next = opriv->next;
+
     deferred_destroy(ctx, old, opriv);
     return npriv;
 }
@@ -1456,8 +1458,6 @@ deferred_resolve(JSContextRef ctx, JSObjectRef f, JSObjectRef this, size_t argc,
         else 
             deferred_resolve(ctx, f, next, argc, argv, exc);
     }
-
-
     return UNDEFINED;
 }
 static JSValueRef 
@@ -1485,7 +1485,6 @@ deferred_reject(JSContextRef ctx, JSObjectRef f, JSObjectRef this, size_t argc, 
         else 
             deferred_reject(ctx, f, next, argc, argv, exc);
     }
-
     return UNDEFINED;
 }
 

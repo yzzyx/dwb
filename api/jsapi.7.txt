@@ -535,9 +535,10 @@ Registers a function for the done-chain.
 _callback_;; A callback function that will be called when the Deferred is
 resolved. If the function returns a deferred the original deferred will be replaced with
 the new deferred.
+_returns_;; A new deferred that can be used to chain callbacks. 
 ****
 
-==== void Deferred.fail(Function callback)
+==== Deferred Deferred.fail(Function callback)
 ****
 
 Registers a function for the fail-chain.
@@ -545,9 +546,10 @@ Registers a function for the fail-chain.
 _callback_;; A callback function that will be called when the deferred is
 rejected. If the function returns a deferred the original deferred will be replaced with
 the new deferred.
+_returns_;; A new deferred that can be used to chain callbacks. 
 ****
 
-==== void Deferred.reject(arguments)
+==== Deferred Deferred.reject(arguments)
 ****
 
 Rejects a deferred, the fail-chain is called when a deferred is rejected. 
@@ -563,7 +565,7 @@ Resolves a deferred, the done-chain is called when a deferred is resolved.
 _arguments_;; Arguments passed to the _done_ callbacks.
 ****
 
-==== void Deferred.then(Function ondone, Function onfail)
+==== Deferred Deferred.then(Function ondone, Function onfail)
 ****
 
 Registers a function for the done and fail chain.
@@ -574,6 +576,7 @@ the new deferred.
 _onfail_;; A callback function that will be called when the deferred is
 rejected. If the function returns a deferred the original deferred will be replaced with
 the new deferred.
+_returns_;; A new deferred that can be used to chain callbacks. 
 ****
 
 
