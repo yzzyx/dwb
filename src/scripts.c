@@ -1426,9 +1426,11 @@ deferred_transition(JSContextRef ctx, JSObjectRef old, JSObjectRef new)
 {
     DeferredPriv *opriv = JSObjectGetPrivate(old);
     DeferredPriv *npriv = JSObjectGetPrivate(new);
+
     npriv->resolve = opriv->resolve;
     npriv->reject = opriv->reject;
     npriv->next = opriv->next;
+
     deferred_destroy(ctx, old, opriv);
     return npriv;
 }
