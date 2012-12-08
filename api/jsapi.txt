@@ -1635,7 +1635,7 @@ _steps_;; Number of steps, pass a negative value to go back in history
 Boolean wv.loadUri(String uri, [Function callback]) 
 ----
 
-Load an uri in a webview. 
+Loads an uri in a webview. 
 
  ::
 
@@ -1656,6 +1656,18 @@ void wv.reload(void)
 ----
 
 Reload a webview 
+****
+
+****
+[float]
+==== *stopLoading()* ====
+
+[source,javascript]
+----
+void wv.stopLoading(void) 
+----
+
+Stops any ongoing loading.
 ****
 
 ****

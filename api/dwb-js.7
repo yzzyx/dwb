@@ -1663,7 +1663,7 @@ Number of steps, pass a negative value to go back in history
 \fBBoolean wv.loadUri(String uri, [Function callback])\fR
 .RS 4
 .sp
-Load an uri in a webview\&.
+Loads an uri in a webview\&.
 .PP
 \fIuri\fR
 .RS 4
@@ -1679,6 +1679,28 @@ A callback function that will be called when the load status changes, return tru
 .RS 4
 true if the uri is loaded
 .RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid wv.reload(void)\fR
+.RS 4
+.sp
+Reloads a webview
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid wv.stopLoading()\fR
+.RS 4
+.sp
+Stops any ongoing loading\&.
 .RE
 .sp
 .it 1 an-trap
@@ -1715,17 +1737,6 @@ Whether to keep the aspect ratio, if set to true the new image will have the sam
 .RS 4
 A cairo_status_t (0 on success) or \-1 if an error occured\&.
 .RE
-.RE
-.sp
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBvoid wv.reload(void)\fR
-.RS 4
-.sp
-Reload a webview
 .RE
 .SS "frame"
 .sp

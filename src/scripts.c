@@ -107,6 +107,7 @@ static JSValueRef connect_object(JSContextRef ctx, JSObjectRef function, JSObjec
 static JSValueRef disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef wv_stop_loading(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
@@ -120,6 +121,7 @@ static JSStaticFunction default_functions[] = {
 };
 static JSStaticFunction wv_functions[] = { 
     { "loadUri",         wv_load_uri,             kJSDefaultAttributes },
+    { "stopLoading",         wv_stop_loading,        kJSDefaultAttributes },
     { "history",         wv_history,             kJSDefaultAttributes },
     { "reload",          wv_reload,             kJSDefaultAttributes },
     { "inject",          wv_inject,             kJSDefaultAttributes },
@@ -481,6 +483,15 @@ wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t arg
     }
     return false;
 }/*}}}*/
+
+static JSValueRef 
+wv_stop_loading(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
+{
+    WebKitWebView *wv = JSObjectGetPrivate(this);
+    if (wv != NULL)
+        webkit_web_view_stop_loading(wv);
+    return UNDEFINED;
+}
 
 /* wv_history {{{*/
 static JSValueRef 

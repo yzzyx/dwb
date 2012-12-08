@@ -837,13 +837,27 @@ _steps_;; Number of steps, pass a negative value to go back in history
 ==== Boolean wv.loadUri(String uri, [Function callback]) 
 ****
 
-Load an uri in a webview. 
+Loads an uri in a webview. 
 
 _uri_;; The uri to load
 _callback_;; A callback function that will be called when the load status
 changes, return true to stop the emission, optional
 _returns_;; true if the uri is loaded
 ****
+
+==== void wv.reload(void) 
+****
+
+Reloads a webview 
+****
+
+
+==== void wv.stopLoading() 
+****
+
+Stops any ongoing loading. 
+****
+
 
 ==== Number wv.toPng(String filename, [Number width, Number height], [Boolean keepAspect]) 
 ****
@@ -862,12 +876,6 @@ height are taken as maximum sizes and must both be > 0, optional.
 _returns_;; A cairo_status_t (0 on success) or -1 if an error occured.
 ****
 
-
-==== void wv.reload(void) 
-****
-
-Reload a webview 
-****
 
 === frame ===
 
