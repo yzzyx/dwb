@@ -284,6 +284,7 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
         if (func != NULL && JSObjectIsFunction(ctx, func)) 
         {
             JSValueRef wret = JSObjectCallAsFunction(wctx, func, NULL, count, count == 1 ? args : NULL, NULL) ;
+            // This could be replaced with js_context_change
             char *retx = js_value_to_json(wctx, wret, -1, NULL);
             if (retx) 
             {
@@ -1400,8 +1401,8 @@ deferred_new(JSContextRef ctx)
     priv->resolve = priv->reject = priv->next = NULL;
 
     JSObjectRef ret = JSObjectMake(ctx, s_deferred_class, priv);
-    
     JSValueProtect(ctx, ret);
+
     return ret;
 }
 static JSValueRef 
@@ -1456,8 +1457,6 @@ deferred_resolve(JSContextRef ctx, JSObjectRef f, JSObjectRef this, size_t argc,
         else 
             deferred_resolve(ctx, f, next, argc, argv, exc);
     }
-
-
     return UNDEFINED;
 }
 static JSValueRef 
@@ -1485,7 +1484,6 @@ deferred_reject(JSContextRef ctx, JSObjectRef f, JSObjectRef this, size_t argc, 
         else 
             deferred_reject(ctx, f, next, argc, argv, exc);
     }
-
     return UNDEFINED;
 }
 
@@ -1667,7 +1665,9 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
     }
 
     if (!g_shell_parse_argv(cmdline, &srgc, &srgv, NULL) || 
-            !g_spawn_async_with_pipes(NULL, srgv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, oc != NULL ? &outfd : NULL, ec != NULL ? &errfd : NULL, NULL)) 
+            !g_spawn_async_with_pipes(NULL, srgv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, 
+                oc != NULL ? &outfd : NULL, 
+                ec != NULL ? &errfd : NULL, NULL)) 
     {
         js_make_exception(ctx, exc, EXCEPTION("spawning %s failed."), cmdline);
         ret |= SPAWN_FAILED;
@@ -1824,10 +1824,8 @@ static JSValueRef
 io_dir_names(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
     if (argc < 1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("io.dirNames: missing argument."));
         return NIL;
-    }
+
     JSValueRef ret;
     GDir *dir;
     char *dir_name = js_value_to_char(ctx, argv[0], PATH_MAX, exc);
@@ -1839,7 +1837,8 @@ io_dir_names(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
     if ((dir = g_dir_open(dir_name, 0, NULL)) != NULL) 
     {
         GSList *list = NULL;
-        while ((name = g_dir_read_name(dir)) != NULL) {
+        while ((name = g_dir_read_name(dir)) != NULL) 
+        {
             list = g_slist_prepend(list, (gpointer)js_char_to_value(ctx, name));
         }
         g_dir_close(dir);
@@ -1907,10 +1906,7 @@ static JSValueRef
 io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
     if (argc == 0) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("io.print needs an argument."));
         return UNDEFINED;
-    }
 
     FILE *stream = stdout;
     if (argc >= 2) 
@@ -1971,10 +1967,7 @@ static JSObjectRef
 download_constructor_cb(JSContextRef ctx, JSObjectRef constructor, size_t argc, const JSValueRef argv[], JSValueRef* exception) 
 {
     if (argc<1) 
-    {
-        js_make_exception(ctx, exception, EXCEPTION("Download constructor: missing argument"));
         return JSValueToObject(ctx, NIL, NULL);
-    }
 
     char *uri = js_value_to_char(ctx, argv[0], -1, exception);
     if (uri == NULL) 
