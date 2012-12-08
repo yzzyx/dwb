@@ -1443,19 +1443,20 @@ deferred_resolve(JSContextRef ctx, JSObjectRef f, JSObjectRef this, size_t argc,
     if (priv->resolve) 
         ret = JSObjectCallAsFunction(ctx, priv->resolve, NULL, argc, argv, exc);
 
-    if (priv->next) 
+    JSObjectRef next = priv->next;
+    deferred_destroy(ctx, this, priv);
+
+    if (next) 
     {
         if ( ret && JSValueIsObjectOfClass(ctx, ret, s_deferred_class) ) 
         {
             JSObjectRef o = JSValueToObject(ctx, ret, NULL);
-            deferred_transition(ctx, priv->next, o)->reject = NULL;
-            priv->next = o;
+            deferred_transition(ctx, next, o)->reject = NULL;
         }
         else 
-            deferred_resolve(ctx, f, priv->next, argc, argv, exc);
+            deferred_resolve(ctx, f, next, argc, argv, exc);
     }
 
-    deferred_destroy(ctx, this, priv);
 
     return UNDEFINED;
 }
@@ -1471,18 +1472,19 @@ deferred_reject(JSContextRef ctx, JSObjectRef f, JSObjectRef this, size_t argc, 
     if (priv->reject) 
         ret = JSObjectCallAsFunction(ctx, priv->reject, NULL, argc, argv, exc);
 
-    if (priv->next) 
+    JSObjectRef next = priv->next;
+    deferred_destroy(ctx, this, priv);
+
+    if (next) 
     {
         if ( ret && JSValueIsObjectOfClass(ctx, ret, s_deferred_class) ) 
         {
             JSObjectRef o = JSValueToObject(ctx, ret, NULL);
-            deferred_transition(ctx, priv->next, o)->resolve = NULL;
-            priv->next = o;
+            deferred_transition(ctx, next, o)->resolve = NULL;
         }
         else 
-            deferred_reject(ctx, f, priv->next, argc, argv, exc);
+            deferred_reject(ctx, f, next, argc, argv, exc);
     }
-    deferred_destroy(ctx, this, priv);
 
     return UNDEFINED;
 }
