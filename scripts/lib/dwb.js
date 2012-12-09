@@ -155,7 +155,7 @@
                     var i = _getPrivateIdx(this, key, identifier);
                     if (i !== -1) 
                         return _privProps[i].value;
-                    return null;
+                    return undefined;
                 }
             },
             "notify" : 
