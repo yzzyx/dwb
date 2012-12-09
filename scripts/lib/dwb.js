@@ -164,6 +164,26 @@
                 { 
                     return this.connect("notify::" + util.uncamelize(name), callback, after || false);
                 }
+            },
+            "connectBlocked" : 
+            { 
+                value : function(name, callback, after) 
+                { 
+                    var self = this;
+                    var sig = self.connect(name, function() { 
+                        self.blockSignal(sig);
+                        callback.apply(null, arguments);
+                        self.unblockSignal(sig);
+                    });
+                    return sig;
+                }
+            },
+            "notifyBlocked" : 
+            {
+                value : function(name, callback, after) 
+                {
+                    return this.connectBlocked("notify::" + util.uncamelize(name), callback, after || false);
+                }
             }
     });
     Object.defineProperties(Deferred.prototype, {

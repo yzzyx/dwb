@@ -103,8 +103,10 @@ static Sigmap s_sigmap[] = {
 
 static JSObjectRef make_object_for_class(JSContextRef ctx, JSClassRef class, GObject *o, gboolean);
 
-static JSValueRef connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef gobject_connect(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef gobject_block_signal(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef gobject_unblock_signal(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
+static JSValueRef gobject_disconnect(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSValueRef wv_stop_loading(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
@@ -115,8 +117,10 @@ static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef 
 static JSValueRef wv_to_png(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 #endif
 static JSStaticFunction default_functions[] = { 
-    { "connect",         connect_object,                kJSDefaultAttributes },
-    { "disconnect",      disconnect_object,             kJSDefaultAttributes },
+    { "connect",            gobject_connect,                kJSDefaultAttributes },
+    { "blockSignal",        gobject_block_signal,                kJSDefaultAttributes },
+    { "unblockSignal",      gobject_unblock_signal,                kJSDefaultAttributes },
+    { "disconnect",         gobject_disconnect,             kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
 static JSStaticFunction wv_functions[] = { 
@@ -2295,11 +2299,12 @@ on_disconnect_object(SSignal *sig, GClosure *closure)
 static void
 notify_callback(GObject *o, GParamSpec *param, JSObjectRef func)
 {
-    JSValueRef argv[] = { make_object(s_global_context, o) };
+    JSObjectRef jso = make_object(s_global_context, o);
+    JSValueRef argv[] = { jso };
     JSObjectCallAsFunction(s_global_context, func, NULL, 1, argv, NULL);
 }
 static JSValueRef 
-connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
+gobject_connect(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
     GConnectFlags flags = 0;
     gulong id = 0;
@@ -2327,7 +2332,7 @@ connect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t 
 
     if (strncmp(name, "notify::", 8) == 0) 
     {
-        g_signal_connect_data(o, name, G_CALLBACK(notify_callback), func, NULL, flags);
+        id = g_signal_connect_data(o, name, G_CALLBACK(notify_callback), func, NULL, flags);
     }
     else
     {
@@ -2364,8 +2369,33 @@ error_out:
     g_free(name);
     return JSValueMakeNumber(ctx, id);
 }
+
 static JSValueRef 
-disconnect_object(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
+gobject_block_signal(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
+{
+    double sigid;
+    if (argc > 0 && (sigid = JSValueToNumber(ctx, argv[0], exc)) != NAN) 
+    {
+        GObject *o = JSObjectGetPrivate(this);
+        if (o != NULL)
+            g_signal_handler_block(o, (int)sigid);
+    }
+    return UNDEFINED;
+}
+static JSValueRef 
+gobject_unblock_signal(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
+{
+    double sigid;
+    if (argc > 0 && (sigid = JSValueToNumber(ctx, argv[0], exc)) != NAN) 
+    {
+        GObject *o = JSObjectGetPrivate(this);
+        if (o != NULL)
+            g_signal_handler_unblock(o, (int)sigid);
+    }
+    return UNDEFINED;
+}
+static JSValueRef 
+gobject_disconnect(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
     int id;
     if (argc > 0 && JSValueIsNumber(ctx, argv[0]) && (id = JSValueToNumber(ctx, argv[0], exc)) != NAN) 

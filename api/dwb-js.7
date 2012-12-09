@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 12/08/2012
+.\"      Date: 12/09/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "12/08/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "12/09/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1408,10 +1408,58 @@ The following methods are implemented by all Objects derived from GObject
 .nr an-break-flag 1
 .br
 .ps +1
+\fBvoid object.blockSignal(Number signalid)\fR
+.RS 4
+.sp
+Blocks emission of a gobect signal\&.
+.PP
+\fIsignalid\fR
+.RS 4
+The signalid returned from
+\fBobject\&.connect\fR
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
 \fBNumber object.connect(String name, Function callback, [Boolean after])\fR
 .RS 4
 .sp
 Connect to a gobject\-signal, note that all signals are connected using the \fIsignal::\fR\- or with \fInotify::\fR\-prefix\&. If connecting to a signal the \fIsignal::\fR\-prefix must be omitted\&. The callback function will have the same parameters as the GObject signal callback, however some parameters may be undefined if they cannot be converted to javascript objects\&. All signal handlers are executed after dwb\(cqs default handler\&.
+.PP
+\fIname\fR
+.RS 4
+The signal name to connect to\&.
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+Callback function that will be called when the signal is emitted\&.
+.RE
+.PP
+\fIafter\fR
+.RS 4
+Whether to install the handler after the default handler, default false\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The signal id of the signal\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNumber object.connectBlocked(String name, Function callback, [Boolean after])\fR
+.RS 4
+.sp
+Connect to a gobject\-signal but block the emission the own callback during execution of the callback, useful if the object is connected to a notify event and the the property is changed in the callback function\&.
 .PP
 \fIname\fR
 .RS 4
@@ -1491,6 +1539,37 @@ The signal id of the signal\&.
 .nr an-break-flag 1
 .br
 .ps +1
+\fBNumber object.notifyBlocked(String name, Function callback, [Boolean after])\fR
+.RS 4
+.sp
+Wrapper function for property\-change notification, the same as \fIobject\&.connectBlocked("notify::" + name, callback, after);\fR\&.
+.PP
+\fIname\fR
+.RS 4
+The property name to connect to, the name can also be in camelcase\&.
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+Callback function that will be called when the property changes\&.
+.RE
+.PP
+\fIafter\fR
+.RS 4
+Whether to install the handler after the default handler, default after\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+The signal id of the signal\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
 \fBObject GObject.getPrivate(String key, Object identifier)\fR
 .RS 4
 .sp
@@ -1535,6 +1614,23 @@ The property value
 \fIidentifier\fR
 .RS 4
 A local object to identify the calling script, the identifier must either be of type Object or of type Function\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid object.unblockSignal(Number signalid)\fR
+.RS 4
+.sp
+Unblocks a signal previously blocked with \fBobject\&.blockSignal\fR\&.
+.PP
+\fIsignalid\fR
+.RS 4
+The signalid returned from
+\fBobject\&.connect\fR
 .RE
 .RE
 .SS "webview"

@@ -1316,6 +1316,23 @@ All Objects derived from GObjets implement the following methods.
 
 ****
 [float]
+==== *blockSignal()* ==== 
+
+[source,javascript]
+----
+Number object.blockSignal(Number signalid)
+----
+
+Blocks emission of a gobect signal.
+
+ ::
+
+_signalid_;; The signalid returned from *object.connect*
+****
+
+
+****
+[float]
 ==== *connect()* ==== 
 
 [source,javascript]
@@ -1329,6 +1346,28 @@ _signal::_-prefix must be omitted. The callback function will have the
 same parameters as the GObject signal callback, however some parameters may be
 undefined if they cannot be converted to javascript objects. 
 All signal handlers are executed after dwb's default handler.
+
+ ::
+
+_name_;; The signal name to connect to.
+_callback_;; Callback function that will be called when the signal is emitted.
+_after_;; Whether to install the handler after the default handler, default
+false.
+_returns_;; The signal id of the signal.
+****
+
+****
+[float]
+==== *connectBlocked()* ==== 
+
+[source,javascript]
+----
+Number object.connectBlocked(String name, Function callback, [Boolean after]) 
+----
+
+Connect to a gobject-signal but block the emission of the own callback during
+execution of the callback, useful if the object is connected to a notify event
+and the the property is changed in the callback function. 
 
  ::
 
@@ -1365,7 +1404,7 @@ _returns_;; +true+ if the signal was disconnected
 Number object.notify(String name, Function callback, [Boolean after]) 
 ----
 
-Wrapper function for property-change notification, the same as 
+Wrapper function for property-change notification but with signal blocking, same as 
 _object.connect("notify::" +  name, callback, after);_.
 
  ::
@@ -1375,6 +1414,27 @@ _callback_;; Callback function that will be called when the property changes.
 _after_;; Whether to install the handler after the default handler.
 _returns_;; The signal id of the signal.
 ****
+
+****
+[float]
+==== *notifyBlocked()* ==== 
+
+[source,javascript]
+----
+Number object.notifyBlocked(String name, Function callback, [Boolean after]) 
+----
+
+Wrapper function for property-change notification but with signal blocking, same as 
+_object.connectBlocked("notify::" +  name, callback, after);_.
+
+ ::
+
+_name_;; The property name to connect to, can also be in camelcase.
+_callback_;; Callback function that will be called when the property changes.
+_after_;; Whether to install the handler after the default handler.
+_returns_;; The signal id of the signal.
+****
+
 
 ****
 [[getPrivate]]
@@ -1410,6 +1470,22 @@ _key_;; The property name
 _value_;; The property value
 _identifier_;; A local object to identify the calling script, the identifier
 must either be of type object or of type function.
+****
+
+****
+[float]
+==== *unblockSignal()* ==== 
+
+[source,javascript]
+----
+Number object.unblockSignal(Number signalid)
+----
+
+Unblocks a signal previously blocked with *object.blockSignal*.
+
+ ::
+
+_signalid_;; The signalid returned from *object.connect*
 ****
 
 
