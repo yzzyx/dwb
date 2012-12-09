@@ -4196,7 +4196,6 @@ dwb_init_gui()
 
     /* entry */
     dwb.gui.entry = gtk_entry_new();
-    gtk_entry_set_inner_border(GTK_ENTRY(dwb.gui.entry), NULL);
 
     gtk_entry_set_has_frame(GTK_ENTRY(dwb.gui.entry), false);
     gtk_entry_set_inner_border(GTK_ENTRY(dwb.gui.entry), false);
