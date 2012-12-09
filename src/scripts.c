@@ -1408,7 +1408,7 @@ deferred_destroy(JSContextRef ctx, JSObjectRef this, DeferredPriv *priv)
 static JSObjectRef
 deferred_new(JSContextRef ctx) 
 {
-    DeferredPriv *priv = g_try_malloc(sizeof(DeferredPriv));
+    DeferredPriv *priv = g_malloc(sizeof(DeferredPriv));
     priv->resolve = priv->reject = priv->next = NULL;
 
     JSObjectRef ret = JSObjectMake(ctx, s_deferred_class, priv);
@@ -2775,8 +2775,8 @@ apply_scripts()
     int i=0;
 
     // XXX Not needed?
-    JSValueRef *scripts = g_try_malloc(length * sizeof(JSValueRef));
-    JSObjectRef *objects = g_try_malloc(length * sizeof(JSObjectRef));
+    JSValueRef *scripts = g_malloc(length * sizeof(JSValueRef));
+    JSObjectRef *objects = g_malloc(length * sizeof(JSObjectRef));
     for (GSList *l=s_script_list; l; l=l->next, i++) 
     {
         scripts[i] = JSObjectMake(s_global_context, NULL, NULL);
