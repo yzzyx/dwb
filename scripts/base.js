@@ -16,6 +16,7 @@ Object.freeze((function () {
         lastInput : null,
         lastPosition : 0,
         newTab : false,
+        notify : null,
         hintTypes :  [ "a, textarea, select, input:not([type=hidden]), button,  frame, iframe, [onclick], [onmousedown]," + 
             "[role=link], [role=option], [role=button], [role=option], img",  // HINT_T_ALL
         //[ "iframe", 
@@ -278,7 +279,6 @@ Object.freeze((function () {
                 active.overlay.parentNode.removeChild(active.overlay);
 
             active.hint.style.font = globals.font;
-
         }
         globals.active = element;
         if (!globals.active.overlay) 
@@ -286,6 +286,16 @@ Object.freeze((function () {
 
         if (!globals.markHints) 
             globals.active.hint.parentNode.appendChild(globals.active.overlay);
+
+        var e = element.element;
+        if (e.href || e.src) 
+            globals.notify.innerText = encodeURI(e.href || e.ret);
+        else if (e.name) 
+            globals.notify.innerText = e.tagName.toLowerCase() + ", name=" + e.name;
+        else if (e.innerText && e.innerText.trim().length > 0) 
+            globals.notify.innerText = e.tagName.toLowerCase() + ": " + e.innerText.replace("\n\r", "").trim();
+        else 
+            globals.notify.innerText = e.tagName.toLowerCase();
 
         globals.active.overlay.style.background = globals.activeColor;
         globals.active.hint.style.fontSize = globals.bigFont;
@@ -448,6 +458,18 @@ Object.freeze((function () {
             return  __evaluate(globals.elements[0].element, type);
         }
 
+        globals.notify = document.createElement("div");
+        globals.notify.style.cssText = 
+            "bottom:0px;left:0px;position:fixed;z-index:1000;" + 
+            "text-overflow:ellipsis;white-space:nowrap;overflow:hidden;max-width:100%;" + 
+            "border-right:1px solid #555;" + 
+            "border-top:1px solid #555;" + 
+            "padding-right:2px;" + 
+            "border-radius:0px 5px 0px 0px;letter-spacing:0px;background:" + globals.bgColor + ";" + 
+            "color:" + globals.fgColor + ";font:" + globals.font + ";font-size:" + globals.fontSize + ";";
+        globals.notify.id = "dwb_hint_notifier";
+        document.body.appendChild(globals.notify);
+
         __getTextHints(globals.elements);
         globals.activeArr = globals.elements;
         __setActive(globals.elements[0]);
@@ -569,6 +591,8 @@ Object.freeze((function () {
         globals.lastPosition = 0;
         globals.lastInput = null;
         globals.positions = [];
+        globals.notify.parentNode.removeChild(globals.notify);
+        globals.notify = null;
     };
     var __evaluate = function (e, type) 
     {
