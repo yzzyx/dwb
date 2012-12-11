@@ -583,10 +583,6 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
         default: break;
 
     }
-    if (gl == dwb.state.fview && (dwb.state.mode == INSERT_MODE || dwb.state.mode == FIND_MODE) && frame == webkit_web_view_get_main_frame(web)) 
-    {
-        dwb_change_mode(NORMAL_MODE, true);
-    }
     return ret;
 }/*}}}*/
 

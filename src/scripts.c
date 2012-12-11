@@ -424,11 +424,9 @@ tabs_length(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* ex
 static JSValueRef 
 tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
-    if (argc < 1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("tabs.nth: missing argument"));
+    if (argc == 0) 
         return NIL;
-    }
+
     double n = JSValueToNumber(ctx, argv[0], exc);
     if (n == NAN)
         return NIL;
@@ -467,12 +465,9 @@ static JSValueRef
 wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
     if (argc == 0) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("webview.loadUri: missing argument."));
         return JSValueMakeBoolean(ctx, false);
-    }
-    WebKitWebView *wv = JSObjectGetPrivate(this);
 
+    WebKitWebView *wv = JSObjectGetPrivate(this);
     if (wv != NULL) 
     {
         char *uri = js_value_to_char(ctx, argv[0], -1, exc);
@@ -485,7 +480,7 @@ wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t arg
 
         return JSValueMakeBoolean(ctx, true);
     }
-    return false;
+    return JSValueMakeBoolean(ctx, false);
 }/*}}}*/
 
 static JSValueRef 
@@ -1650,11 +1645,9 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
     GIOChannel *out_channel, *err_channel;
     JSObjectRef oc = NULL, ec = NULL;
 
-    if (argc < 1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("system.spawn needs an argument."));
-        return JSValueMakeBoolean(ctx, SPAWN_FAILED);
-    }
+    if (argc == 0) 
+        return JSValueMakeNumber(ctx, SPAWN_FAILED);
+
     if (argc > 1) 
     {
         oc = js_value_to_function(ctx, argv[1], NULL);
@@ -1954,7 +1947,10 @@ io_print(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t 
         case kJSTypeNumber : 
             dout = JSValueToNumber(ctx, argv[0], exc);
             if (dout != NAN) 
-                fprintf(stream, "%f\n", dout);
+                if ((int)dout == dout) 
+                    fprintf(stream, "%d\n", (int)dout);
+                else 
+                    fprintf(stream, "%f\n", dout);
             else 
                 fprintf(stream, "NAN\n");
             break;
