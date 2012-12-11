@@ -22,7 +22,7 @@ Object.freeze((function () {
         //[ "iframe", 
         "a",  // HINT_T_LINKS
         "img",  // HINT_T_IMAGES
-        "input[type=text], input[type=password], input[type=search], textarea",  // HINT_T_EDITABLE
+        "input:not([type=hidden]), input[type=text], input[type=password], input[type=search], textarea",  // HINT_T_EDITABLE
         "[src], [href]"  // HINT_T_URL
                  ]
     };
@@ -591,8 +591,10 @@ Object.freeze((function () {
         globals.lastPosition = 0;
         globals.lastInput = null;
         globals.positions = [];
-        globals.notify.parentNode.removeChild(globals.notify);
-        globals.notify = null;
+        if (globals.notify && globals.notify.parentNode)
+        {
+            globals.notify.parentNode.removeChild(globals.notify);
+        }
     };
     var __evaluate = function (e, type) 
     {
