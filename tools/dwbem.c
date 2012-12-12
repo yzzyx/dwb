@@ -1053,12 +1053,14 @@ main(int argc, char **argv)
   char **o_update_ext = NULL;
   char **o_show_config = NULL;
   char **o_edit = NULL;
+  char *o_proxy = NULL;
   gboolean o_noconfig = false;
   gboolean o_update = false;
   gboolean o_list_installed = false;
   gboolean o_list_all = false;
   gboolean o_no_confirm = false;
   int flags = 0;
+  const char *proxy;
   GOptionEntry options[] = {
     { "list-all",  'a', 0, G_OPTION_ARG_NONE, &o_list_all, "List all installed extensions",  NULL},
     { "bind",     'b', 0, G_OPTION_ARG_NONE, &o_bind, "When installing an extension use extensions.bind instead of extensions.load", NULL },
@@ -1074,6 +1076,7 @@ main(int argc, char **argv)
     { "no-config", 'n', 0, G_OPTION_ARG_NONE, &o_noconfig, "Don't use config in loader script, use extensionrc instead", NULL },
     { "no-confirm",   'N', 0, G_OPTION_ARG_NONE, &o_no_confirm,  "Update extensions", NULL },
     { "remove",   'r', 0, G_OPTION_ARG_STRING_ARRAY, &o_remove, "Remove <extension>", "<extension>" },
+    { "proxy",   'p', 0, G_OPTION_ARG_STRING, &o_proxy, "HTTP-proxy to use", NULL },
     { "upgrade",   'u', 0, G_OPTION_ARG_NONE, &o_update,  "Update all extensions", NULL },
     { "update",   'U', 0, G_OPTION_ARG_STRING_ARRAY, &o_update_ext,  "Update <extension>", "<extension>" },
     { NULL },
@@ -1093,6 +1096,16 @@ main(int argc, char **argv)
   }
 
   session = soup_session_sync_new();
+  if (o_proxy != NULL)
+      proxy = o_proxy;
+  else if ( (proxy = g_getenv("https_proxy" )) == NULL )
+      proxy = g_getenv("http_proxy");
+  if (proxy) 
+  {
+      SoupURI *uri = soup_uri_new(proxy);
+      g_object_set(session, "proxy-uri", uri, NULL);
+      soup_uri_free(uri);
+  }
 
   m_user_dir = g_build_filename(g_get_user_data_dir(), "dwb", "extensions", NULL);
   check_dir(m_user_dir);

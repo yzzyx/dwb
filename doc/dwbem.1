@@ -2,12 +2,12 @@
 .\"     Title: dwbem
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 09/07/2012
+.\"      Date: 12/12/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWBEM" "1" "09/07/2012" "\ \&" "\ \&"
+.TH "DWBEM" "1" "12/12/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -148,6 +148,14 @@ editing configuration is skipped\&.
 \fB\-r\fR \fIextension\fR, \fB\-\-remove\fR \fIextension\fR
 .RS 4
 Remove an extension\&. If it is a remote extension the extension will be deleted\&. This option also discards the configuration\&.
+.RE
+.PP
+\fB\-p\fR \fIextension\fR, \fB\-\-proxy\fR \fIextension\fR
+.RS 4
+HTTP\-proxy to use, also overrides the environment variables
+\fBhttps_proxy\fR
+and
+\fBhttp_proxy\fR\&.
 .RE
 .PP
 \fB\-u\fR, \fB\-\-upgrade\fR

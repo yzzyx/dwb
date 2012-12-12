@@ -95,6 +95,10 @@ OPTIONS
   Remove an extension. If it is a remote extension the extension will be
   deleted. This option also discards the configuration. 
 
+*-p* 'extension':: 
+*--proxy* 'extension'::
+  HTTP-proxy to use, also overrides the environment variables *https_proxy* and *http_proxy*.
+
 *-u*::
 *--upgrade*::
   Update installed extensions. 
