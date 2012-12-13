@@ -291,7 +291,7 @@ update_installed(const char *name, const char *meta)
 char *
 xreadline(char *buffer, size_t length, const char *prompt) {
   for (;;) {
-    fprintf(stdout, prompt);
+    fputs(prompt, stderr);
     if (isatty(STDIN_FILENO))
       tcflush(STDIN_FILENO, TCIFLUSH);
     if (fgets(buffer, length, stdin)) {
@@ -363,8 +363,8 @@ get_response(char *buffer, size_t length, const char *format, ...)
 }
 
 int 
-create_tmp(char *buffer, int size, char *template, int suffix_length) {
-  snprintf(buffer, size, template);
+create_tmp(char *buffer, int size, const char *template, int suffix_length) {
+  strncpy(buffer, template, size);
   int fd = mkstemps(buffer, suffix_length);
   if (fd == -1) 
     die(1, "Cannot create temporary file");
@@ -842,7 +842,7 @@ do_update(const char *meta, int flags)
   char *space = strchr(meta, ' ');
   if (space != NULL) 
   {
-    snprintf(buffer, MIN(sizeof(buffer), (unsigned int)(space - meta + 1)), meta);
+    strncpy(buffer, meta, MIN(sizeof(buffer), (unsigned int)(space - meta + 1)));
     if ((flags & F_NO_CONFIRM) || yes_no(1, "Update "EXT(%s), buffer))
       if (cl_install(buffer, flags | F_UPDATE)) 
         notify(EXT(%s)" successfully updated", buffer);
@@ -1091,7 +1091,7 @@ main(int argc, char **argv)
       fprintf(stderr, "Unknown option %s\n", argv[1]);
     else 
       fprintf(stderr, "%s\n", missing ? "" : e->message);
-    fprintf(stderr, g_option_context_get_help(ctx, false, NULL));
+    fputs(g_option_context_get_help(ctx, false, NULL), stderr);
     return 1;
   }
 

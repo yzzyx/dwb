@@ -112,6 +112,7 @@ PLUGIN_FILE=pluginblocker.asc
 # CFLAGS
 CFLAGS := $(CFLAGS)
 CFLAGS += -Wall 
+CFLAGS += -Werror=format-security 
 CFLAGS += -pipe
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
 CFLAGS += --ansi
