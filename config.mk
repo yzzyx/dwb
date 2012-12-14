@@ -34,7 +34,7 @@ DTARGET=$(TARGET)_d
 
 
 # target directories
-PREFIX=/usr
+PREFIX=/home/stefan/foobar
 BINDIR=$(PREFIX)/bin
 DATAROOTDIR=$(PREFIX)/share
 DATADIR=$(DATAROOTDIR)

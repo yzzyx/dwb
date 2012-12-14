@@ -2272,6 +2272,7 @@ connect_callback(SSignal *sig, ...)
         }
         else 
         {
+            va_arg(args, void*);
             cur = UNDEFINED;
         }
 
