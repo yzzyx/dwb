@@ -2053,7 +2053,7 @@ download_cancel(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t
 static JSValueRef
 gui_get_window(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
 {
-    return make_object_for_class(ctx, s_gobject_class, G_OBJECT(dwb.gui.window), true);
+    return make_object_for_class(ctx, s_gobject_class, G_OBJECT(dwb.gui.window), false);
 }
 static JSValueRef
 gui_get_main_box(JSContextRef ctx, JSObjectRef object, JSStringRef property, JSValueRef* exception) 
