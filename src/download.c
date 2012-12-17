@@ -235,18 +235,21 @@ static void
 download_do_spawn(const char *command, const char *path, const char *mimetype) 
 {
     GError *error = NULL;
-    char *argv[64];
+    char **argv;
+    int argc;
+    char *unescaped;
 
     if (g_str_has_prefix(path, "file://")) 
         path += 7;
 
-    char **argcom = g_strsplit(command, " ", -1);
+    if (!g_shell_parse_argv(command, &argc, &argv, NULL))
+        return;
 
-    guint argc=0;
-    for (; argc<g_strv_length(argcom) && argc<62; argc++) 
-        argv[argc] = argcom[argc];
+    argv = g_realloc(argv, (argc+2) * sizeof(char*));
 
-    argv[argc++] = (char *)path;
+    unescaped = g_uri_unescape_string(path, NULL);
+
+    argv[argc++] = unescaped;
     argv[argc++] = NULL;
 
     if (! g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error) ) 
@@ -255,7 +258,6 @@ download_do_spawn(const char *command, const char *path, const char *mimetype)
         g_clear_error(&error);
     }
     /* Set mimetype */
-    g_strfreev(argcom);
     GList *list = NULL;
     if (mimetype && *mimetype) 
     {
@@ -268,6 +270,7 @@ download_do_spawn(const char *command, const char *path, const char *mimetype)
         dwb.fc.mimetypes = g_list_prepend(dwb.fc.mimetypes, n);
         util_file_add_navigation(dwb.files[FILES_MIMETYPES], n, true, -1);
     }
+    g_strfreev(argv);
 }/*}}}*/
 /* download_spawn(DwbDownload *) {{{*/
 static void 
