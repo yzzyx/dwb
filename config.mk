@@ -160,6 +160,7 @@ CFLAGS += -DLIBJS_DIR=\"$(LIBJSDIR)\"
 
 # LDFLAGS
 LDFLAGS += $(shell pkg-config --libs $(LIBS))
+LDFLAGS += -lpthread
 
 # Debug flags
 DCFLAGS = $(CFLAGS)
