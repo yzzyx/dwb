@@ -164,7 +164,9 @@ save_session Save current session
 save_named_session Save current session with name
 toggle_hidden_files Toggle hidden files in directory listing
 save_search_field Add a new searchengine 
+reload_bookmarks Reload bookmark file
 reload_scripts Reload all javascript userscripts 
+reload_quickmarks Reload quickmark file
 reload_userscripts Reload userscripts 
 show_bookmarks Show bookmarks page
 show_downloads Show download page

@@ -96,6 +96,7 @@ static Sigmap s_sigmap[] = {
     { SCRIPTS_SIG_DOCUMENT_LOADED, "documentLoaded" },
     { SCRIPTS_SIG_MOUSE_MOVE, "mouseMove" },
     { SCRIPTS_SIG_STATUS_BAR, "statusBarChange" },
+    { SCRIPTS_SIG_TAB_BUTTON_PRESS, "tabButtonPress" },
     { SCRIPTS_SIG_CHANGE_MODE, "changeMode" },
     { 0, NULL },
 };

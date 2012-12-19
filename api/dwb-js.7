@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 12/09/2012
+.\"      Date: 12/19/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "12/09/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "12/19/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1948,6 +1948,27 @@ Unique id for this connection, can be passed to disconnect
 .nr an-break-flag 1
 .br
 .ps +1
+\fBNumber signals.connectWebView(String signal, Function callback)\fR
+.RS 4
+.sp
+Connect all webviews to a GObject signal
+.PP
+\fIsignal\fR
+.RS 4
+The signal to connect to
+.RE
+.PP
+\fIcallback\fR
+.RS 4
+The callback function which will be called when the signal is emitted, the arguments of the callback function correspond to the GObject callback
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
 \fBBoolean signals.emit(String signal, \&...)\fR
 .RS 4
 .sp
@@ -2867,6 +2888,42 @@ Whether scripts are blocked
 \fIdata\&.pluginsBlocked\fR
 .RS 4
 Whether plugins are blocked
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBtabButtonPress\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("tabButtonPress", function(webview, tabwidget, event));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted when a button is pressed on a tabwidget, return true to prevent the default action
+.PP
+\fIwebview\fR
+.RS 4
+The webview which received the signal
+.RE
+.PP
+\fItabwidget\fR
+.RS 4
+The tabwidget
+.RE
+.PP
+\fIevent\fR
+.RS 4
+Same as buttonPress
 .RE
 .RE
 .sp

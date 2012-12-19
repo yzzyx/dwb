@@ -1975,6 +1975,26 @@ _callback_;; The callback function which will be called when the signal is emitt
 _returns_;;  Unique id for this connection, can be passed to <<disconnect>>
 ****
 
+[[connect]]
+[float]
+==== *connectWebView()* ====
+
+****
+[source,javascript]
+----
+void signals.connect(String signal, Function callback) 
+----
+Connect all webviews to a GObject signal
+
+ ::
+
+_signal_;; The signal to connect to 
+_callback_;; The callback function which will be called when the signal is
+emitted, the arguments of the callback function correspond to the GObject
+callback
+****
+
+
 ****
 [[emit]]
 [float]
@@ -2507,6 +2527,26 @@ _data.canGoForward_;; Whether it is possible to navigate forward in the webview
 _data.scriptsBlocked_;; Whether scripts are blocked
 _data.pluginsBlocked_;; Whether plugins are blocked
 ****
+
+****
+[[tabButtonPress]]
+[float]
+==== *tabButtonPress* ==== 
+
+[source,javascript]
+----
+Boolean callback(webview, tabwidget, event) 
+----
+
+Emitted when a button is pressed on a tabwidget, return true to prevent the default action
+
+ ::
+
+_webview_;; The <<webview>> which received the signal
+_tabwidget_;; The tabwidget
+_event_;; Same as buttonPress
+****
+  
 
 ****
 [[tabFocus]]

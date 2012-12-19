@@ -975,6 +975,8 @@ void dwb_free_list(GList *list, void (*func)(void*));
 void dwb_init(void);
 void dwb_init_files(void);
 void dwb_init_settings(void);
+void dwb_reload_bookmarks(void);
+void dwb_reload_quickmarks(void);
 #if 0
 void dwb_hide_tab(GList *gl);
 void dwb_show_tab(GList *gl);

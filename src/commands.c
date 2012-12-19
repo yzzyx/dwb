@@ -1011,6 +1011,18 @@ commands_toggle_tab(KeyMap *km, Arg *arg)
     }
     return STATUS_ERROR;
 }
+DwbStatus
+commands_reload_bookmarks(KeyMap *km, Arg *arg)
+{
+    dwb_reload_bookmarks();
+    return STATUS_OK;
+}
+DwbStatus
+commands_reload_quickmarks(KeyMap *km, Arg *arg)
+{
+    dwb_reload_quickmarks();
+    return STATUS_OK;
+}
 
 #if 0
 DwbStatus 

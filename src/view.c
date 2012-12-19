@@ -880,6 +880,16 @@ view_motion_notify_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
 static gboolean
 view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl) 
 {
+    if (EMIT_SCRIPT(TAB_BUTTON_PRESS)) 
+    {
+        char *json = util_create_json(8, 
+                UINTEGER, "time", e->time, UINTEGER,    "type", e->type, 
+                DOUBLE,   "x", e->x, DOUBLE,            "y", e->y, 
+                UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
+                DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
+        ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(tabevent) }, SCRIPTS_SIG_META(json, TAB_BUTTON_PRESS, 1) };
+        SCRIPTS_EMIT_RETURN(signal, json, true);
+    }
     if (e->button == 1 && e->type == GDK_BUTTON_PRESS) 
     {
         dwb_focus_view(gl);

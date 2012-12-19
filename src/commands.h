@@ -98,5 +98,7 @@ DwbStatus commands_toggle_tab(KeyMap *, Arg *);
 DwbStatus commands_group_tag(KeyMap *, Arg *);
 DwbStatus commands_group_toggle(KeyMap *, Arg *);
 DwbStatus commands_group_show(KeyMap *, Arg *);
+DwbStatus commands_reload_bookmarks(KeyMap *, Arg *);
+DwbStatus commands_reload_quickmarks(KeyMap *, Arg *);
 
 #endif

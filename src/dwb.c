@@ -4327,6 +4327,21 @@ dwb_get_simple_list(GList *gl, const char *filename)
     return gl;
 }
 
+void 
+dwb_reload_bookmarks()
+{
+    dwb_free_list(dwb.fc.bookmarks, (void_func)dwb_navigation_free);
+    dwb.fc.bookmarks = NULL;
+    dwb.fc.bookmarks = dwb_init_file_content(dwb.fc.bookmarks, dwb.files[FILES_BOOKMARKS], (Content_Func)dwb_navigation_new_from_line); 
+}
+void 
+dwb_reload_quickmarks()
+{
+    dwb_free_list(dwb.fc.quickmarks, (void_func)dwb_quickmark_free);
+    dwb.fc.quickmarks = NULL;
+    dwb.fc.quickmarks = dwb_init_file_content(dwb.fc.quickmarks, dwb.files[FILES_QUICKMARKS], (Content_Func)dwb_quickmark_new_from_line); 
+}
+
 /* dwb_init_files() {{{*/
 void
 dwb_init_files() 

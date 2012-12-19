@@ -799,7 +799,9 @@ COMMAND OVERVIEW
 |quickmark               |qmarks          |Open quickmark
 |quit                    |q               |Quit
 |reload                  |re              |Reload current page
+|reload_bookmarks        |                |Reload bookmark file
 |reload_bypass_cache     |refull          |Reload without using cached data
+|reload_quickmarks       |                |Reload quickmark file
 |reload_userscripts      |                |Reload userscripts
 |save                    |                |Save all configuration files
 |save_named_session      |wqn             |Save current session with name

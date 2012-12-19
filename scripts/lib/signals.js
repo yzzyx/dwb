@@ -81,6 +81,15 @@
                 };
             })()
         },
+        "connectWebView" :
+        {
+            value : function(name, callback)
+            {
+                this.connect("createTab", function(wv) {
+                    wv.connect(name, function() { callback.apply(null, arguments);});
+                });
+            }
+        },
         "disconnect" : 
         {
             value : _disconnectByProp.bind(this, "id")

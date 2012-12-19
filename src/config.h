@@ -184,6 +184,8 @@ static KeyValue KEYS[] = {
   { "eval",                     {   NULL,         0,                0 }, }, 
   { "download",                 {   "gd",         0,                0 }, }, 
   { "toggle_tab",               {   "@Tab@",      GDK_CONTROL_MASK, 0 }, }, 
+  { "reload_bookmarks",         {   NULL,         0, 0 }, }, 
+  { "reload_quickmarks",        {   NULL,         0, 0 }, }, 
 #if 1
   { "group_tag",                {   "am",         0,                0 }, }, 
   { "group_show",               {   "as",         0,                0 }, }, 
@@ -210,6 +212,12 @@ static FunctionMap FMAP [] = {
     { .p = NULL },                          EP_NONE,    { NULL }, },
 #endif
 
+  { { "reload_quickmarks",              "Reload quickmarks",                    }, CP_COMMANDLINE, 
+    (Func)commands_reload_quickmarks,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+  { { "reload_bookmarks",              "Reload bookmarks",                    }, CP_COMMANDLINE, 
+    (Func)commands_reload_bookmarks,            NULL,                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
   { { "toggle_tab",              "Toggle between last and current tab",                    }, CP_COMMANDLINE, 
     (Func)commands_toggle_tab,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { "ttab" }, },
