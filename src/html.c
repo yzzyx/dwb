@@ -448,9 +448,11 @@ html_quickmarks(GList *gl, HtmlTable *table)
         Quickmark *q = gl->data;
         g_string_append_printf(panels, "\n\
                 <tr class='dwb_table_row'>\n\
+                <td>\n\
+                <div class='dwb_qm'>%s</div>\n\
+                </td>\n\
                 <td class='dwb_table_cell_left'>\n\
                 <div>\n\
-                <div class='dwb_qm'>%s</div>\n\
                 <a href='%s'>\n\
                 <div class='dwb_ellipsize'>\n\
                 %s\n\
