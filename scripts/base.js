@@ -338,6 +338,10 @@ Object.freeze((function () {
             "border:" + globals.hintBorder + ";" + 
             "font:" + globals.font + ";" + 
             "display:inline;" +
+            "width:auto;" +
+            "height:auto;" +
+            "padding:0px;" +
+            "margin:0px;" +
             "opacity: " + globals.hintOpacity + "; }" + 
             ".dwb_overlay_normal { position:absolute!important;display:block!important; z-index:19999;background:" + globals.normalColor + ";}";
         doc.head.appendChild(styleSheet);
