@@ -1156,8 +1156,23 @@ _returns_;; A new deferred that can be used to chain callbacks.
 
 ==== *Examples* ====
 
-Simple usage of a deferred:
+The builtin function system.spawn returns a deferred: 
 
+[source,javascript]
+---------------------------------
+system.spawn("command").then(
+    function() 
+    {
+        /* called when execution was  successful */
+    }, 
+    function(errorcode) 
+    {
+        /* called when execution wasn't successful */
+    }
+);
+---------------------------------
+
+Simple usage of a deferred:
 [source,javascript]
 ---------------------------------
 function loadUri(uri) {

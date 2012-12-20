@@ -40,7 +40,7 @@ JSValueRef js_json_to_value(JSContextRef ctx, const char *text);
 JSValueRef js_context_change(JSContextRef, JSContextRef, JSValueRef, JSValueRef *);
 JSObjectRef js_value_to_function(JSContextRef, JSValueRef, JSValueRef *);
 
-typedef struct _js_array_iterator {
+typedef struct js_array_iterator_s {
   JSContextRef ctx;
   JSObjectRef array;
   int current_index;
