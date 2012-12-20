@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 12/19/2012
+.\"      Date: 12/20/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "12/19/2012" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "12/20/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -808,7 +808,7 @@ true if creation was successful or directory already existed
 .nr an-break-flag 1
 .br
 .ps +1
-\fBSpawnError system.spawn(String command, [Function stdin], [Function stderr])\fR
+\fBDeferred system.spawn(String command, [Function stdin], [Function stderr])\fR
 .RS 4
 .sp
 Executes a shell command using the default search path
@@ -830,7 +830,7 @@ Callback function for stderr, optional
 .PP
 \fIreturns\fR
 .RS 4
-SpawnError if an error occured, 0 otherwise
+A deferred, it will be resolved if the child exits normally, it will be rejected if the child process exits abnormally, the first parameter of the reject function will be the status code of the child process\&.
 .RE
 .RE
 .sp
@@ -3102,22 +3102,6 @@ const NavigationReason = {
   reload          : 3,
   formResubmitted : 4,
   other           : 5
-};
-.fi
-.if n \{\
-.RE
-.\}
-.SS "SpawnError"
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-const SpawnError = {
-  success       : 0,
-  spawnFailed   : 1<<0,
-  stdoutFailed  : 1<<1,
-  stderrFailed  : 1<<2
 };
 .fi
 .if n \{\

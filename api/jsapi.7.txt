@@ -368,7 +368,7 @@ _mode_;; The permissions the directory will get
 _returns_;; true if creation was successful or directory already existed 
 ****
 
-==== SpawnError system.spawn(String command, [Function stdin], [Function stderr])
+==== Deferred system.spawn(String command, [Function stdin], [Function stderr])
 ****
 
 Executes a shell command using the default search path
@@ -377,7 +377,9 @@ _command_;; The command to execute
 _stdin(String)_;; Callback function for stdin, pass null if only stderr is
 needed, optional
 _stderr(String)_;; Callback function for stderr, optional
-_returns_;; SpawnError if an error occured, 0 otherwise
+_returns_;; A deferred, it will be resolved if the child exits
+normally, it will be rejected if the child process exits abnormally, the first
+parameter of the reject function will be the status code of the child process. 
 ****
 
 ==== Object system.spawnSync(String command)
@@ -1537,20 +1539,6 @@ const NavigationReason = {
   reload          : 3,
   formResubmitted : 4,
   other           : 5
-};
---------
-****
-
-=== SpawnError
-
-****
-[source,javascript]
---------
-const SpawnError = {
-  success       : 0, 
-  spawnFailed   : 1<<0, 
-  stdoutFailed  : 1<<1, 
-  stderrFailed  : 1<<2
 };
 --------
 ****

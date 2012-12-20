@@ -191,12 +191,7 @@ static JSStaticFunction download_functions[] = {
     { "cancel",         download_cancel,        kJSDefaultAttributes },
     { 0, 0, 0 }, 
 };
-enum {
-    SPAWN_SUCCESS = 0, 
-    SPAWN_FAILED = 1<<0, 
-    SPAWN_STDOUT_FAILED = 1<<1, 
-    SPAWN_STDERR_FAILED = 1<<2, 
-};
+
 enum {
     CONSTRUCTOR_DEFAULT = 0,
     CONSTRUCTOR_WEBVIEW,
@@ -206,8 +201,6 @@ enum {
     CONSTRUCTOR_DEFERRED,
     CONSTRUCTOR_LAST,
 };
-
-
 
 static void callback(CallbackData *c);
 static void make_callback(JSContextRef ctx, JSObjectRef this, GObject *gobject, const char *signalname, JSValueRef value, StopCallbackNotify notify, JSValueRef *exception);
@@ -1612,10 +1605,8 @@ static JSValueRef
 system_spawn_sync(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
     if (argc<1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("system.spawnSync needs an argument."));
-        return JSValueMakeBoolean(ctx, SPAWN_FAILED);
-    }
+        return NIL;
+
     JSObjectRef ret = NULL;
     int srgc, status;
     char **srgv = NULL, *command = NULL, *out, *err;
@@ -1641,53 +1632,54 @@ system_spawn_sync(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject
     return ret;
 }/*}}}*/
 
+void 
+watch_spawn(GPid pid, gint status, JSObjectRef deferred)
+{
+    GError *e = NULL;
+    if (g_spawn_check_exit_status(status, &e)) 
+        deferred_resolve(s_global_context, NULL, deferred, 0, NULL, NULL);
+    else 
+    {
+        JSValueRef args[] = { JSValueMakeNumber(s_global_context, e->code), js_char_to_value(s_global_context, e->message) };
+        deferred_reject(s_global_context, NULL, deferred, 2, args, NULL);
+    }
+}
+
 /* system_spawn {{{*/
 static JSValueRef 
 system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
-    int ret = 0; 
+    JSValueRef ret = NIL; 
     int outfd, errfd;
     char **srgv = NULL, *cmdline = NULL;
     int srgc;
     GIOChannel *out_channel, *err_channel;
     JSObjectRef oc = NULL, ec = NULL;
+    GPid pid;
 
     if (argc == 0) 
-        return JSValueMakeNumber(ctx, SPAWN_FAILED);
+        return NIL;
 
     if (argc > 1) 
     {
         oc = js_value_to_function(ctx, argv[1], NULL);
-        if ( oc == NULL )
-        {
-            if (!JSValueIsNull(ctx, argv[1])) 
-                ret |= SPAWN_STDOUT_FAILED;
-            oc = NULL;
-        }
     }
     if (argc > 2) {
         ec = js_value_to_function(ctx, argv[2], NULL);
-        if ( ec == NULL )
-        {
-            if (!JSValueIsNull(ctx, argv[2])) 
-                ret |= SPAWN_STDERR_FAILED;
-            ec = NULL;
-        }
     }
     cmdline = js_value_to_char(ctx, argv[0], -1, exc);
     if (cmdline == NULL) 
     {
-        ret |= SPAWN_FAILED;
         goto error_out;
     }
 
     if (!g_shell_parse_argv(cmdline, &srgc, &srgv, NULL) || 
-            !g_spawn_async_with_pipes(NULL, srgv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, 
+            !g_spawn_async_with_pipes(NULL, srgv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, 
+                NULL, NULL, &pid, NULL, 
                 oc != NULL ? &outfd : NULL, 
                 ec != NULL ? &errfd : NULL, NULL)) 
     {
         js_make_exception(ctx, exc, EXCEPTION("spawning %s failed."), cmdline);
-        ret |= SPAWN_FAILED;
         goto error_out;
     }
 
@@ -1703,11 +1695,16 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
         g_io_add_watch(err_channel, G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL, (GIOFunc)spawn_output, ec);
         g_io_channel_set_close_on_unref(err_channel, true);
     }
+    JSObjectRef deferred = deferred_new(s_global_context);
+
+    g_child_watch_add(pid, (GChildWatchFunc)watch_spawn, deferred);
+    ret = deferred;
+    
 
 error_out:
     g_free(cmdline);
     g_strfreev(srgv);
-    return JSValueMakeNumber(ctx, ret);
+    return ret;
 }/*}}}*/
 
 /* system_file_test {{{*/

@@ -53,12 +53,6 @@ const DownloadStatus = {
   cancelled : 2,
   finished  : 3
 };
-const SpawnError = {
-  success       : 0, 
-  spawnFailed   : 1<<0, 
-  stdoutFailed  : 1<<1, 
-  stderrFailed  : 1<<2
-};
 const ChecksumType = {
   md5     : 0, 
   sha1    : 1, 
