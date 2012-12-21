@@ -20,6 +20,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+#include <sys/wait.h>
 #include <JavaScriptCore/JavaScript.h>
 #include <glib.h>
 #include "dwb.h"
@@ -1635,13 +1636,20 @@ system_spawn_sync(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject
 void 
 watch_spawn(GPid pid, gint status, JSObjectRef deferred)
 {
-    GError *e = NULL;
-    if (g_spawn_check_exit_status(status, &e)) 
+    int fail = 0;
+    if (WIFEXITED(status) != 0) 
+        fail = WEXITSTATUS(status);
+    else if (WIFSIGNALED(status))
+        fail = WTERMSIG(status);
+    else if (WIFSTOPPED(status)) 
+        fail = WSTOPSIG(status);
+
+    if (fail == 0)
         deferred_resolve(s_global_context, NULL, deferred, 0, NULL, NULL);
     else 
     {
-        JSValueRef args[] = { JSValueMakeNumber(s_global_context, e->code), js_char_to_value(s_global_context, e->message) };
-        deferred_reject(s_global_context, NULL, deferred, 2, args, NULL);
+            JSValueRef args[] = { JSValueMakeNumber(s_global_context, fail)  };
+            deferred_reject(s_global_context, NULL, deferred, 1, args, NULL);
     }
 }
 
