@@ -1648,8 +1648,8 @@ watch_spawn(GPid pid, gint status, JSObjectRef deferred)
         deferred_resolve(s_global_context, NULL, deferred, 0, NULL, NULL);
     else 
     {
-            JSValueRef args[] = { JSValueMakeNumber(s_global_context, fail)  };
-            deferred_reject(s_global_context, NULL, deferred, 1, args, NULL);
+        JSValueRef args[] = { JSValueMakeNumber(s_global_context, fail)  };
+        deferred_reject(s_global_context, NULL, deferred, 1, args, NULL);
     }
 }
 

@@ -470,7 +470,7 @@ Object.freeze((function () {
             "border-top:1px solid #555;" + 
             "padding-right:2px;" + 
             "border-radius:0px 5px 0px 0px;letter-spacing:0px;background:" + globals.bgColor + ";" + 
-            "color:" + globals.fgColor + ";font:" + globals.font + ";font-size:" + globals.fontSize + ";";
+            "color:" + globals.fgColor + ";font:" + globals.font + ";";
         globals.notify.id = "dwb_hint_notifier";
         document.body.appendChild(globals.notify);
 
