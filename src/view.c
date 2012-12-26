@@ -484,6 +484,26 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
             return true;
         }
     }
+    if (VIEW(gl)->status->deferred) 
+    {
+        if (gl != dwb.state.fview)
+        {
+            char buffer[128];
+            const char *stripped;
+
+            VIEW(gl)->status->deferred_uri = g_strdup(uri);
+
+            stripped = strstr(uri, "://");
+            snprintf(buffer, sizeof(buffer), "*%s", stripped ? stripped + 3 : uri);
+
+            dwb_tab_label_set_text(gl, buffer);
+            webkit_web_policy_decision_ignore(policy);
+            return true;
+        }
+        else 
+            VIEW(gl)->status->deferred = false;
+    }
+
 
     /* Check if tab is locked */
     if (LP_LOCKED_URI(VIEW(gl))) 
@@ -1037,6 +1057,8 @@ view_create_web_view()
     status->lockprotect = 0;
     status->frames = NULL;
     status->group = 0;
+    status->deferred = GET_BOOL("load-on-focus");
+    status->deferred_uri = NULL;
 
     v->js_base = NULL;
     v->inspector_window = NULL;
@@ -1184,6 +1206,7 @@ view_clean(GList *gl)
     gtk_widget_destroy(v->web);
     gtk_widget_destroy(v->scroll);
 
+    FREE0(v->status->deferred_uri);
     FREE0(v->status->hover_uri);
 #ifdef WITH_LIBSOUP_2_38
     FREE0(v->status->request_uri);

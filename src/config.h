@@ -1181,4 +1181,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL | SETTING_ONINIT,  BOOLEAN, { .b = true }, (S_Func)dwb_set_show_single_tab,   { 0 }, }, 
   { { "hints-key-lock",                            "Timeout keypresses are ignored after following a hint", },                                            
     SETTING_GLOBAL,  INTEGER, { .i = 250 }, NULL,   { 0 }, }, 
+  { { "load-on-focus",                            "Load uris at the earliest when a tab gets focus", },                                            
+    SETTING_GLOBAL,  BOOLEAN, { .b = false }, NULL,   { 0 }, }, 
 };/*}}}*/

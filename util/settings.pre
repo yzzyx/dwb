@@ -6,6 +6,7 @@ default-encoding text Default encoding used to display text
 enable-private-browsing checkbox Whether to enable private browsing mode
 enable-spell-checking checkbox Whether to enable spell checking
 full-content-zoom checkbox Whether the full content is scaled when zooming
+load-on-focus checkbox Whether to defer loading uris until a tab gets focus
 resizable-text-areas checkbox Whether text areas should be resizable
 scroll-step text Scroll step
 spell-checking-languages text Languages used for spell checking, seperated by commas

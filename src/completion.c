@@ -557,10 +557,18 @@ completion_complete_buffer()
     format = g_list_length(dwb.state.views) > 10 ? "%02d : %s" : "%d : %s";
     for (GList *l = dwb.state.views;l; l=l->next) 
     {
-        wv = WEBVIEW(l);
-        title = webkit_web_view_get_title(wv);
-        uri = webkit_web_view_get_uri(wv);
-        text = g_strdup_printf(format, i, title != NULL ? title : uri);
+        if (VIEW(l)->status->deferred) 
+        {
+            text = g_strdup_printf(format, i, VIEW(l)->status->deferred_uri);
+            uri = "deferred";
+        }
+        else 
+        {
+            wv = WEBVIEW(l);
+            title = webkit_web_view_get_title(wv);
+            uri = webkit_web_view_get_uri(wv);
+            text = g_strdup_printf(format, i, title != NULL ? title : uri);
+        }
         c = completion_get_completion_item(text, uri, NULL, l);
 
         gtk_box_pack_start(GTK_BOX(dwb.gui.compbox), c->event, false, false, 0);

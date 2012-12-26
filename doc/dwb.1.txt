@@ -1407,6 +1407,10 @@ default value: '500'.
 Whether to allow loading javascript snippets with scheme 'javascript',
 default value: 'true'.
 
+*load-on-focus*::
+Whether to defer loading of a tab until a tab is focused, especially
+useful on startup and with slow internet connections, default value: 'false'.
+
 *message-delay*::
 The duration messages are shown. Possible values: duration in seconds (integer),
 default value: '2'.

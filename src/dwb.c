@@ -2504,9 +2504,13 @@ dwb_update_layout()
 {
     for (GList *gl = dwb.state.views; gl; gl = gl->next) 
     {
-        View *v = gl->data;
-        const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
-        dwb_tab_label_set_text(gl, title);
+        if (!VIEW(gl)->status->deferred) 
+        {
+            View *v = gl->data;
+            const char *title = webkit_web_view_get_title(WEBKIT_WEB_VIEW(v->web));
+            dwb_tab_label_set_text(gl, title);
+        }
+
     }
     dwb_update_tabs();
 }/*}}}*/
@@ -2521,7 +2525,10 @@ dwb_focus(GList *gl)
     dwb.state.fview = gl;
     view_set_active_style(gl);
     dwb_focus_scroll(gl);
-    dwb_update_status(gl, NULL);
+    if (!VIEW(gl)->status->deferred)
+        dwb_update_status(gl, NULL);
+    else if (VIEW(gl)->status->deferred_uri) 
+        webkit_web_view_load_uri(WEBVIEW(gl), VIEW(gl)->status->deferred_uri);
 }/*}}}*/
 
 /* dwb_new_window(const char *arg) {{{*/
