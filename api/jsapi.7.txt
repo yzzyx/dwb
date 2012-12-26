@@ -520,7 +520,7 @@ _gui.statusLabel (GtkLabel, read)_;; Label used for status information, fourth c
 Deferred objects can be used to manage asynchronous operations. It can trigger a
 callback function when an asynchrounous operation has finished, and allows
 chaining of callbacks. 
-Deferred basically have 2 callback chains, a _done_-chain and a _fail_-chain.
+Deferred basically has 2 callback chains, a _done_-chain and a _fail_-chain.
 If a asynchronous operation is successful the deferred should be resolved and
 the done callback chain of the deferred is called. 
 If a asynchronous operation fails the deferred should be rejected and

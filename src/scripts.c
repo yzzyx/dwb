@@ -1707,7 +1707,6 @@ system_spawn(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, siz
 
     g_child_watch_add(pid, (GChildWatchFunc)watch_spawn, deferred);
     ret = deferred;
-    
 
 error_out:
     g_free(cmdline);
