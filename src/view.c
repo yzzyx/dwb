@@ -1162,6 +1162,7 @@ view_clean(GList *gl)
     gtk_widget_destroy(v->tabevent);
 
     plugins_free(v->plugins);
+    g_slist_free(v->status->allowed_plugins);
 
     scripts_remove_tab(v->script_wv);
 

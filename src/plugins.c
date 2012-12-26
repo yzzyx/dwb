@@ -33,6 +33,18 @@ plugins_new()
     p->max = 0;
     return p;
 }
+static void 
+plugins_free_elements(Plugins *p)
+{
+    if (p->elements != NULL) 
+    {
+        for (GSList *l = p->elements; l; l=l->next) 
+            g_object_unref(l->data);
+
+        g_slist_free(p->elements);
+        p->elements = NULL;
+    }
+}
 void 
 plugins_free(Plugins *p) 
 {
@@ -46,13 +58,7 @@ plugins_free(Plugins *p)
 
         g_slist_free(p->clicks);
     }
-    if (p->elements != NULL) 
-    {
-        for (GSList *l = p->elements; l; l=l->next) 
-            g_object_unref(l->data);
-
-        g_slist_free(p->elements);
-    }
+    plugins_free_elements(p);
     FREE0(p);
 }
 static void 
@@ -144,6 +150,7 @@ plugins_before_load_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl
     g_free(type);
     return true;
 }
+
 static void 
 plugins_remove_all(GList *gl) 
 {
@@ -154,21 +161,13 @@ plugins_remove_all(GList *gl)
     }
     View *v = VIEW(gl);
     v->plugins->created = 0;
-
-    if (v->plugins->elements != NULL) 
-    {
-        for (GSList *l = v->plugins->elements; l; l=l->next) 
-            g_object_unref(l->data);
-
-        g_slist_free(v->plugins->elements);
-        v->plugins->elements = NULL;
-    }
 }
 
 static gboolean
 plugins_before_unload_cb(WebKitDOMDOMWindow *win, WebKitDOMEvent *event, GList *gl) 
 {
     plugins_remove_all(gl);
+    plugins_free_elements(VIEW(gl)->plugins);
     return true;
 }
 
@@ -184,18 +183,6 @@ plugins_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl)
         webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), "beforeunload", G_CALLBACK(plugins_before_unload_cb), true, gl);
     }
 }
-
-#if 0
-void
-plugins_frame_load_status_cb(WebKitWebFrame *frame, GList *gl) {
-  WebKitWebView *wv = webkit_web_frame_get_web_view(frame);
-  WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-}
-void
-plugins_frame_created_cb(WebKitWebView *wv, WebKitWebFrame *frame, GList *gl) {
-  g_signal_connect(frame, "load-committed", G_CALLBACK(plugins_frame_load_status_cb), gl);
-}
-#endif
 
 void 
 plugins_frame_load_cb(WebKitWebFrame *frame, GParamSpec *p, GList *gl) 
