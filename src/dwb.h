@@ -654,6 +654,8 @@ struct _ViewStatus {
   GSList *frames;
   WebKitDOMElement *exc_style;
   guint group;
+  gboolean deferred;
+  char *deferred_uri;
 };
 struct _View {
   GtkWidget *web;
