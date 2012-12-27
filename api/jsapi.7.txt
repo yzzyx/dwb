@@ -42,6 +42,10 @@ properties on the global object, see also *Global data* for details.
 
 == Global ==
 
+=== Properties
+
+_global (Object, read)_;; Refers to the global object
+
 === Methods ===
 
 

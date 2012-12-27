@@ -1031,6 +1031,11 @@ error_out:
     return JSValueMakeBoolean(ctx, ret);
 }/*}}}*/
 
+static JSValueRef 
+global_get(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
+{
+    return JSContextGetGlobalObject(ctx);
+}
 /* global_execute {{{*/
 static JSValueRef 
 global_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
@@ -2616,6 +2621,11 @@ create_global_object()
 {
     s_ref_quark = g_quark_from_static_string("dwb_js_ref");
 
+    JSStaticValue global_values[] = {
+        { "global",      global_get, NULL,   kJSDefaultAttributes },
+        { 0, 0, 0, 0 }, 
+    };
+
     JSStaticFunction global_functions[] = { 
         { "execute",          global_execute,         kJSDefaultAttributes },
         { "exit",             global_exit,         kJSDefaultAttributes },
@@ -2631,7 +2641,7 @@ create_global_object()
         { 0, 0, 0 }, 
     };
 
-    JSClassRef class = create_class("dwb", global_functions, NULL);
+    JSClassRef class = create_class("dwb", global_functions, global_values);
     s_global_context = JSGlobalContextCreate(class);
     JSClassRelease(class);
 

@@ -38,6 +38,20 @@ properties on the global object, see also <<Globaldata,global data>> for details
 
 == Global ==
 
+=== Properties ===
+
+****
+[float]
+==== *global* ====
+
+[source,javascript]
+----
+global        object     read
+----
+
+Refers to the global object.
+****
+
 === Methods ===
 
 

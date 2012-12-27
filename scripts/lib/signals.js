@@ -43,7 +43,7 @@
                 {
                     if (sigs[i].connected) 
                     {
-                        ret = sigs[i].callback.apply(this, args) || ret;
+                        ret = sigs[i].callback.apply(sigs[i].callback, args) || ret;
                         i++;
                     }
                     else 
