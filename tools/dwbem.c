@@ -1079,7 +1079,7 @@ main(int argc, char **argv)
     { "proxy",   'p', 0, G_OPTION_ARG_STRING, &o_proxy, "HTTP-proxy to use", NULL },
     { "upgrade",   'u', 0, G_OPTION_ARG_NONE, &o_update,  "Update all extensions", NULL },
     { "update",   'U', 0, G_OPTION_ARG_STRING_ARRAY, &o_update_ext,  "Update <extension>", "<extension>" },
-    { NULL },
+    { NULL, 0, 0, 0, NULL, NULL, NULL },
   };
 
   ctx = g_option_context_new(NULL);

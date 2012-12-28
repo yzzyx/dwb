@@ -51,7 +51,7 @@ static GOptionEntry options[] = {
     { "execute", 'x', 0, G_OPTION_ARG_STRING_ARRAY, &s_opt_exe, "Execute commands", NULL},
     { "version", 'v', 0, G_OPTION_ARG_NONE, &s_opt_version, "Show version information and exit", NULL},
     { "enable-scripts", 'S', 0, G_OPTION_ARG_NONE, &s_opt_enable_scripts, "Enable javascript api", NULL},
-    { NULL }
+    { NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 static GOptionContext *option_context;
 /* }}} */
