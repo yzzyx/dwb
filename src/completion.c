@@ -501,7 +501,7 @@ static void
 completion_buffer_exec(GList *gl) 
 {
     completion_clean_completion(false);
-    dwb_focus_view(gl);
+    dwb_focus_view(gl, "buffer");
     dwb_change_mode(NORMAL_MODE, true);
 }
 #define COMPLETION_BUFFER_GET_PRIVATE(c)  (((Completion*)((c)->data))->data)

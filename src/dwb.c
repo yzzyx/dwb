@@ -1598,16 +1598,17 @@ dwb_hide_tabbar(int *running)
 
 /* dwb_focus_view(GList *gl){{{*/
 gboolean
-dwb_focus_view(GList *gl) 
+dwb_focus_view(GList *gl, const char *event) 
 {
     static int running;
     if (gl != dwb.state.fview) 
     {
         if (EMIT_SCRIPT(TAB_FOCUS)) 
         {
+            char *json = util_create_json(1, CHAR, "event", event);
             //ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { SCRIPTS_WV(dwb.state.fview) }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
-            ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { G_OBJECT(VIEW(dwb.state.fview)->web)  }, SCRIPTS_SIG_META(NULL, TAB_FOCUS, 1) };
-            SCRIPTS_EMIT_RETURN(signal, NULL, true);
+            ScriptSignal signal = { SCRIPTS_WV(gl), .objects = { G_OBJECT(VIEW(dwb.state.fview)->web)  }, SCRIPTS_SIG_META(json, TAB_FOCUS, 1) };
+            SCRIPTS_EMIT_RETURN(signal, json, true);
         }
         gtk_widget_show(VIEW(gl)->scroll);
         dwb_soup_clean();

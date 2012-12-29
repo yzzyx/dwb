@@ -210,8 +210,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
     }
     else if (e->button == 1 && e->type == GDK_BUTTON_PRESS && WEBVIEW(gl) != CURRENT_WEBVIEW()) 
     {
-        dwb_unfocus();
-        dwb_focus(gl);
+        dwb_focus_view(gl, "button_press");
     }
     else if (e->button == 3 && e->state & GDK_BUTTON1_MASK) 
         /* no popup if button 1 is presssed */
@@ -912,7 +911,7 @@ view_tab_button_press_cb(GtkWidget *tabevent, GdkEventButton *e, GList *gl)
     }
     if (e->button == 1 && e->type == GDK_BUTTON_PRESS) 
     {
-        dwb_focus_view(gl);
+        dwb_focus_view(gl, "tab_button_press");
         return true;
     }
     else if (e->button == 3 && e->type == GDK_BUTTON_PRESS) 
@@ -1304,7 +1303,7 @@ view_remove(GList *gl)
         dwb.state.undo_list = g_list_prepend(dwb.state.undo_list, store);
     }
 
-    dwb_focus(new_fview);
+    dwb_focus_view(new_fview, "close_tab");
     view_clean(gl);
 
     dwb_source_remove();
@@ -1384,10 +1383,7 @@ view_add(const char *uri, gboolean background)
         }
         else 
         {
-            if (! (CURRENT_VIEW()->status->lockprotect & LP_VISIBLE) )
-                gtk_widget_hide(VIEW(dwb.state.fview)->scroll);
-            dwb_unfocus();
-            dwb_focus(ret);
+            dwb_focus_view(ret, "new_tab");
         }
     }
     else 

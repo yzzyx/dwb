@@ -918,7 +918,7 @@ void dwb_update_uri(GList *);
 gboolean dwb_get_allowed(const char *, const char *);
 gboolean dwb_toggle_allowed(const char *, const char *, GList **);
 char * dwb_get_host(WebKitWebView *);
-gboolean dwb_focus_view(GList *);
+gboolean dwb_focus_view(GList *, const char *event);
 void dwb_clean_key_buffer(void);
 DwbStatus dwb_set_key(const char *, char *);
 DwbStatus dwb_set_setting(const char *, char *value, int);

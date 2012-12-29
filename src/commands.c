@@ -394,7 +394,7 @@ commands_focus(KeyMap *km, Arg *arg)
     {
         int pos = modulo(g_list_position(dwb.state.views, dwb.state.fview) + NUMMOD * arg->n, g_list_length(dwb.state.views));
         GList *g = g_list_nth(dwb.state.views, pos);
-        dwb_focus_view(g);
+        dwb_focus_view(g, km->map->n.first);
         return STATUS_OK;
     }
     return STATUS_ERROR;
@@ -418,7 +418,7 @@ commands_focus_nth_view(KeyMap *km, Arg *arg)
     if (l == NULL) 
         return STATUS_ERROR;
 
-    dwb_focus_view(l);
+    dwb_focus_view(l, km->map->n.first);
     return STATUS_OK;
 }/*}}}*/
 
@@ -1006,7 +1006,7 @@ commands_toggle_tab(KeyMap *km, Arg *arg)
     GList *last = g_list_nth(dwb.state.views, dwb.state.last_tab);
     if (last) 
     {
-        dwb_focus_view(last);
+        dwb_focus_view(last, km->map->n.first);
         return STATUS_OK;
     }
     return STATUS_ERROR;
