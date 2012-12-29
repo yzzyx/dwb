@@ -599,6 +599,14 @@ view_navigation_policy_cb(WebKitWebView *web, WebKitWebFrame *frame, WebKitNetwo
                 return true;
             }
             break;
+        case WEBKIT_WEB_NAVIGATION_REASON_FORM_RESUBMITTED: 
+            if (!dwb_confirm(dwb.state.fview, "Resubmit form [y/n]?")) 
+            {
+                webkit_web_policy_decision_ignore(policy);
+                return true;
+            }
+            break;
+
         default: break;
 
     }

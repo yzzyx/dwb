@@ -1152,6 +1152,25 @@ request_callback(SoupSession *session, SoupMessage *message, JSObjectRef functio
     }
     JSValueUnprotect(s_global_context, function);
 }
+static void 
+set_request(JSContextRef ctx, SoupMessage *msg, JSValueRef val, JSValueRef *exc)
+{
+    char *content_type = NULL, *body = NULL;
+    JSObjectRef data = JSValueToObject(ctx, val, exc);
+    if (data == NULL)
+        return;
+    content_type = js_get_string_property(ctx, data, "contentType");
+    if (content_type != NULL)
+    {
+        body = js_get_string_property(ctx, data, "data");
+        if (body != NULL) {
+            soup_message_set_request(msg, content_type, SOUP_MEMORY_COPY, body, strlen(body));
+        }
+    }
+    g_free(content_type);
+    g_free(body);
+}
+
 static JSValueRef 
 global_send_request(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
@@ -1179,6 +1198,8 @@ global_send_request(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, siz
     msg = soup_message_new(method == NULL ? "GET" : method, uri);
     if (msg == NULL)
         goto error_out;
+    if (argc > 3 && !strcasecmp("POST", method)) 
+        set_request(ctx, msg, argv[3], exc);
 
     JSValueProtect(ctx, function);
     soup_session_queue_message(webkit_get_default_session(), msg, (SoupSessionCallback)request_callback, function);
@@ -1213,6 +1234,8 @@ global_send_request_sync(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject
         method = js_value_to_char(ctx, argv[1], -1, exc);
 
     msg = soup_message_new(method == NULL ? "GET" : method, uri);
+    if (argc > 2)
+        set_request(ctx, msg, argv[2], exc);
 
     status = soup_session_send_message(webkit_get_default_session(), msg);
     o = get_message_data(msg);
