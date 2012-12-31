@@ -186,11 +186,6 @@ static KeyValue KEYS[] = {
   { "toggle_tab",               {   "@Tab@",      GDK_CONTROL_MASK, 0 }, }, 
   { "reload_bookmarks",         {   NULL,         0, 0 }, }, 
   { "reload_quickmarks",        {   NULL,         0, 0 }, }, 
-#if 1
-  { "group_tag",                {   "am",         0,                0 }, }, 
-  { "group_show",               {   "as",         0,                0 }, }, 
-  { "group_toggle",             {   "at",         0,                0 }, }, 
-#endif
 };
 
 /* FUNCTION_MAP{{{*/
@@ -198,20 +193,6 @@ static FunctionMap FMAP [] = {
   { { "tab_new",              "Add a new tab",                    }, CP_COMMANDLINE, 
     (Func)commands_add_view,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
-#if 0
-  { { "group_tag",              "Tag current tab to group",                    }, CP_COMMANDLINE, 
-    (Func)commands_group_tag,            NULL,                            POST_SM,     
-    { .p = NULL },                          EP_NONE,    { NULL }, },
-
-  { { "group_show",              "Show group",                    }, CP_COMMANDLINE, 
-    (Func)commands_group_show,            NULL,                            POST_SM,     
-    { .p = NULL },                          EP_NONE,    { NULL }, },
-
-  { { "group_toggle",              "Toggle group",                    }, CP_COMMANDLINE, 
-    (Func)commands_group_toggle,            NULL,                            POST_SM,     
-    { .p = NULL },                          EP_NONE,    { NULL }, },
-#endif
-
   { { "reload_quickmarks",              "Reload quickmarks",                    }, CP_COMMANDLINE, 
     (Func)commands_reload_quickmarks,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
