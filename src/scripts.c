@@ -893,10 +893,8 @@ global_checksum(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, 
     JSValueRef ret;
 
     if (argc < 1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("checksum: missing argument."));
         return NIL;
-    }
+
     original = (guchar*)js_value_to_char(ctx, argv[0], -1, exc);
     if (original == NULL)
         return NIL;
@@ -945,10 +943,8 @@ static JSValueRef
 global_unbind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
 {
     if (argc < 1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("unbind: missing argument."));
         return JSValueMakeBoolean(ctx, false);
-    }
+
     GList *l = NULL;
     KeyMap *m;
     if (JSValueIsString(ctx, argv[0])) 
@@ -986,10 +982,8 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
     guint option = CP_DONT_SAVE | CP_SCRIPT;
 
     if (argc < 2) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("bind: missing argument."));
         return JSValueMakeBoolean(ctx, false);
-    }
+
     keystr = js_value_to_char(ctx, argv[0], JS_STRING_MAX, exc);
 
     JSObjectRef func = js_value_to_function(ctx, argv[1], exc);
@@ -1042,10 +1036,8 @@ global_execute(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, s
 {
     DwbStatus status = STATUS_ERROR;
     if (argc < 1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("execute: missing argument."));
         return JSValueMakeBoolean(ctx, false);
-    }
+
     char *command = js_value_to_char(ctx, argv[0], -1, exc);
     if (command != NULL) 
     {
@@ -1076,10 +1068,7 @@ global_include(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t a
     char *path = NULL, *content = NULL; 
 
     if (argc < 1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("include: missing argument."));
         return NIL;
-    }
 
     if (argc > 1 && JSValueIsBoolean(ctx, argv[1])) 
         global = JSValueToBoolean(ctx, argv[1]);
@@ -1179,10 +1168,7 @@ global_send_request(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, siz
     SoupMessage *msg;
     JSObjectRef function;
     if (argc < 2) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("sendRequest: missing argument."));
         return JSValueMakeNumber(ctx, -1);
-    }
 
     uri = js_value_to_char(ctx, argv[0], -1, exc);
     if (uri == NULL) 
@@ -1222,10 +1208,8 @@ global_send_request_sync(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject
     JSValueRef js_value;
 
     if (argc < 1) 
-    {
-        js_make_exception(ctx, exc, EXCEPTION("sendRequestSync: missing argument."));
         return NIL;
-    }
+
     uri = js_value_to_char(ctx, argv[0], -1, exc);
     if (uri == NULL) 
         return NIL;

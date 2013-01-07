@@ -941,7 +941,7 @@ static WebSettings DWB_SETTINGS[] = {
   { { "user-agent",			                         "The user agent string", },                                              
     SETTING_PER_VIEW,                CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_agent,  { 0 }, },
   { { "user-stylesheet-uri",			               "The uri of a stylsheet applied to every page", },                                     
-    SETTING_BUILTIN,  CHAR,    { .p = NULL              }, (S_Func) dwb_webkit_setting,  { 0 }, },
+    SETTING_BUILTIN,  CHAR,    { .p = NULL              }, (S_Func) dwb_set_user_stylesheet,  { 0 }, },
   { { "zoom-step",			                         "The zoom step", },                                               
     SETTING_BUILTIN,  DOUBLE,  { .d = 0.1               }, (S_Func) dwb_webkit_setting,  { 0 }, },
   { { "custom-encoding",                         "The custom encoding of the tab", },                                         

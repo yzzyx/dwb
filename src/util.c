@@ -342,6 +342,7 @@ util_expand_home(char *buffer, const char *filename, size_t length) {
     strncpy(buffer, filename, length);
   return buffer;
 }
+
 char * 
 util_normalize_filename(char *buffer, const char *filename, size_t length) {
   char *tmp = buffer;

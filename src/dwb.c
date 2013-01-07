@@ -55,6 +55,7 @@ static DwbStatus dwb_webview_property(GList *, WebSettings *);
 static DwbStatus dwb_set_background_tab(GList *, WebSettings *);
 static DwbStatus dwb_set_scripts(GList *, WebSettings *);
 static DwbStatus dwb_set_user_agent(GList *, WebSettings *);
+static DwbStatus dwb_set_user_stylesheet(GList *, WebSettings *);
 static DwbStatus dwb_set_startpage(GList *, WebSettings *);
 static DwbStatus dwb_set_message_delay(GList *, WebSettings *);
 static DwbStatus dwb_set_history_length(GList *, WebSettings *);
@@ -488,6 +489,21 @@ dwb_set_user_agent(GList *gl, WebSettings *s)
     return STATUS_OK;
 }/*}}}*/
 
+static DwbStatus
+dwb_set_user_stylesheet(GList *gl, WebSettings *s) 
+{
+    char *ua = s->arg_local.p;
+    char *new = NULL;
+    if (ua) 
+        s->arg_local.p = new = util_string_replace(ua, "~", g_getenv("HOME"));
+
+    dwb_webkit_setting(gl, s);
+    if (ua)
+        s->arg_local.p = ua;
+    g_hash_table_insert(dwb.settings, g_strdup("user-stylesheet-uri"), s);
+    g_free(new);
+    return STATUS_OK;
+}/*}}}*/
 
 /* dwb_webkit_setting(GList *gl WebSettings *s) {{{*/
 static DwbStatus
