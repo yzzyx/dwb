@@ -1893,6 +1893,11 @@ _name_;; Name of the extension
 _message_;; The debug message to print.
 ****
 
+==== void extensions.disableAll() 
+****
+Disables all extensions.
+****
+
 ==== Boolean extensions.load(String name, [Object config]) 
 ****
 Loads an extension

@@ -932,7 +932,7 @@ scripts_eval_key(KeyMap *m, Arg *arg)
         json = util_create_json(2, INTEGER, "nummod", dwb.state.nummod, CHAR, "arg", arg->p);
 
     JSValueRef argv[] = { js_json_to_value(s_global_context, json) };
-    JSObjectCallAsFunction(s_global_context, arg->arg, NULL, 1, argv, NULL);
+    JSObjectCallAsFunction(s_global_context, arg->js, NULL, 1, argv, NULL);
 
     g_free(json);
     return STATUS_OK;
@@ -956,8 +956,10 @@ global_unbind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, si
     }
     else if (JSValueIsObject(ctx, argv[0])) 
     {
-        for (l = dwb.keymap; l && !JSValueIsEqual(ctx, argv[0], ((KeyMap*)l->data)->map->arg.arg, exc); l=l->next)
-            ;
+        for (l = dwb.keymap; l; l=l->next)
+            if ( ((KeyMap*)l->data)->map->arg.js && 
+                    JSValueIsEqual(ctx, argv[0], ((KeyMap*)l->data)->map->arg.js, exc) )
+                break;
     }
     if (l != NULL) 
     {
@@ -1013,7 +1015,7 @@ global_bind(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size
     map->key = key.str;
     map->mod = key.mod;
 
-    FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, POST_SM, { .arg = func }, EP_NONE,  {NULL} };
+    FunctionMap fm = { { name, callback }, option, (Func)scripts_eval_key, NULL, POST_SM, { .js = func }, EP_NONE,  {NULL} };
     *fmap = fm;
     map->map = fmap;
 
@@ -1081,8 +1083,16 @@ global_include(JSContextRef ctx, JSObjectRef f, JSObjectRef thisObject, size_t a
         js_make_exception(ctx, exc, EXCEPTION("include: reading %s failed."), path);
         goto error_out;
     }
+    const char *tmp = content;
+    if (*tmp == '#') 
+    {
+        do {
+            tmp++;
+        } while(*tmp && *tmp != '\n');
+        tmp++;
+    }
 
-    script = JSStringCreateWithUTF8CString(content);
+    script = JSStringCreateWithUTF8CString(tmp);
 
     if (global) 
         ret = JSEvaluateScript(ctx, script, NULL, NULL, 0, exc);

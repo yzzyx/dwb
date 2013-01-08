@@ -519,6 +519,7 @@ struct _Arg {
   double d;
   gpointer p;
   gpointer arg;
+  JSObjectRef js;
   gboolean b;
   char *e;
   gboolean ro;

@@ -507,7 +507,7 @@ set_loader(const char *name, const char *config, int flags)
   }
   if (! g_file_test(m_loader, G_FILE_TEST_EXISTS) ) 
   {
-    char *file_content = g_strdup_printf("#!javascript\n%s", script);
+    char *file_content = g_strdup_printf("//!javascript\n%s", script);
     g_file_set_contents(m_loader, file_content, -1, NULL);
     g_free(file_content);
   }

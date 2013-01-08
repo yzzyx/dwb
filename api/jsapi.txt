@@ -3139,6 +3139,19 @@ _name_;; Name of the extension
 _message_;; The debug message to print.
 ****
 
+****
+[[extensiondisableAll,disableAll]]
+[float]
+==== *disableAll()* ====
+
+[source,javascript]
+----
+void extensions.disableAll() 
+----
+
+Disables all extensions.
+****
+
 **** 
 [[extensionsGetConfig,getConfig]]
 [float]

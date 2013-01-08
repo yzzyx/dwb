@@ -217,6 +217,14 @@
               return _unload(name, true);
           }
       }, 
+      "disableAll" : 
+      {
+          value : function()
+          {
+              for (var key in _registered) 
+                  _unload(key, true);
+          }
+      }, 
       "reload" : 
       {
           value : function () 
