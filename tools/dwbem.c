@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2012-2013 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

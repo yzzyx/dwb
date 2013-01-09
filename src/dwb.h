@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2013 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 #define VERSION "0.0.18"
 #endif
 #ifndef COPYRIGHT
-#define COPYRIGHT "© 2010-2012 portix"
+#define COPYRIGHT "© 2010-2013 portix"
 #endif
 
 #define PBAR_LENGTH   20
