@@ -155,6 +155,7 @@ file-sync-interval text Interval to save files to hdd or 0 to directly write to 
 history-length text Length of the browsing history
 navigation-history-max Length of the navigation history
 print-backgrounds checkbox Whether background images should be printed
+print-previewer text Program used for printing previews, %f will be replaced by the filename
 scheme-handler Application or script that handles uris with schemes that cannot be handled by dwb 
 searchengine-submit-pattern text The pattern which will be replaced with the search terms
 sync-files select @all @cookies @history @session @cookies_history @cookies_session @history_session Files to sync, see also file-sync-interval

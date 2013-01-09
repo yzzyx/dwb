@@ -97,5 +97,6 @@ DwbStatus commands_download(KeyMap *, Arg *);
 DwbStatus commands_toggle_tab(KeyMap *, Arg *);
 DwbStatus commands_reload_bookmarks(KeyMap *, Arg *);
 DwbStatus commands_reload_quickmarks(KeyMap *, Arg *);
+DwbStatus commands_print_preview(KeyMap *, Arg *);
 
 #endif

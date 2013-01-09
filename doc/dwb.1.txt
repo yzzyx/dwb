@@ -794,6 +794,7 @@ COMMAND OVERVIEW
 |paste_primary           |ppaste          |Open from primary selection
 |presentation_mode       |present         |Toggle presentation mode
 |print                   |ha              |Print page
+|print_preview           |                |Show a print preview
 |protect                 |prot            |Protect/unprotect tab
 |proxy                   |                |Toggle proxy
 |quickmark               |qmarks          |Open quickmark
@@ -1432,6 +1433,9 @@ rgb color-string, default value: '#151515'.
 *normal-completion-fg-color*::
 The foreground color of inactive element in tab-completion. Possible values: an rgb color-string.
 color-string, default value: '#eeeeee'.
+
+*print-previewer*::
+Program used for printing previews, default value: 'NULL'.
 
 *proxy*::
 Whether to use a HTTP-proxy. Possible values: true/false,

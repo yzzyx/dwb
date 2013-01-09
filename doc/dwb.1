@@ -2,12 +2,12 @@
 .\"     Title: dwb
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 12/26/2012
+.\"      Date: 01/09/2013
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB" "1" "12/26/2012" "\ \&" "\ \&"
+.TH "DWB" "1" "01/09/2013" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1382,6 +1382,7 @@ lt lt lt
 lt lt lt
 lt lt lt
 lt lt lt
+lt lt lt
 lt lt lt.
 T{
 .sp
@@ -1941,6 +1942,15 @@ ha
 T}:T{
 .sp
 Print page
+T}
+T{
+.sp
+print_preview
+T}:T{
+.sp
+T}:T{
+.sp
+Show a print preview
 T}
 T{
 .sp
@@ -3437,6 +3447,12 @@ The background color of inactive element in tab\-completion\&. Possible values: 
 .RS 4
 The foreground color of inactive element in tab\-completion\&. Possible values: an rgb color\-string\&. color\-string, default value:
 \fI#eeeeee\fR\&.
+.RE
+.PP
+\fBprint\-previewer\fR
+.RS 4
+Program used for printing previews, default value:
+\fINULL\fR\&.
 .RE
 .PP
 \fBproxy\fR

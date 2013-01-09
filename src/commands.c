@@ -661,11 +661,35 @@ commands_print(KeyMap *km, Arg *arg)
     WebKitWebFrame *frame = webkit_web_view_get_focused_frame(wv);
     if (frame) 
     {
+        char *print_command = GET_CHAR("print-previewer");
+        if (print_command) 
+            g_object_set(gtk_settings_get_default(), "gtk-print-preview-command", print_command, NULL);
+
         webkit_web_frame_print(frame);
         return STATUS_OK;
     }
     return STATUS_ERROR;
 }/*}}}*/
+
+DwbStatus
+commands_print_preview(KeyMap *km, Arg *arg) 
+{
+    WebKitWebView *wv = commands_get_webview_with_nummod();
+    WebKitWebFrame *frame = webkit_web_view_get_focused_frame(wv);
+    if (frame) 
+    {
+        char *print_command = GET_CHAR("print-previewer");
+        if (print_command) 
+            g_object_set(gtk_settings_get_default(), "gtk-print-preview-command", print_command, NULL);
+
+        GtkPrintOperation *operation = gtk_print_operation_new();
+        webkit_web_frame_print_full(frame, operation, GTK_PRINT_OPERATION_ACTION_PREVIEW, NULL);
+        g_object_unref(operation);
+        return STATUS_OK;
+    }
+    return STATUS_ERROR;
+}/*}}}*/
+
 
 /* commands_web_inspector {{{*/
 DwbStatus

@@ -159,6 +159,7 @@ new_win New window for next navigation
 web_inspector Open the webinspector
 open_editor Open an external editor for current input/textarea.
 print Print current page
+print_preview Show a print preview
 save Save all configuration files
 save_session Save current session
 save_named_session Save current session with name

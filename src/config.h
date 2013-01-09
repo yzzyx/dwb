@@ -186,6 +186,7 @@ static KeyValue KEYS[] = {
   { "toggle_tab",               {   "@Tab@",      GDK_CONTROL_MASK, 0 }, }, 
   { "reload_bookmarks",         {   NULL,         0, 0 }, }, 
   { "reload_quickmarks",        {   NULL,         0, 0 }, }, 
+  { "print_preview",        {   NULL,         0, 0 }, }, 
 };
 
 /* FUNCTION_MAP{{{*/
@@ -204,6 +205,9 @@ static FunctionMap FMAP [] = {
     { .p = NULL },                          EP_NONE,    { "ttab" }, },
   { { "cancel_download",              "Cancel a download",                    }, CP_COMMANDLINE, 
     (Func)commands_cancel_download,            "No download to stop",                            ALWAYS_SM,     
+    { .p = NULL },                          EP_NONE,    { NULL }, },
+  { { "print_preview",              "Show a print preview",                    }, CP_COMMANDLINE, 
+    (Func)commands_print_preview,            NULL,                            ALWAYS_SM,     
     { .p = NULL },                          EP_NONE,    { NULL }, },
 
   { { "clear_tab",              "Clear current tab",                    }, CP_COMMANDLINE, 
@@ -1164,4 +1168,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  INTEGER, { .i = 250 }, NULL,   { 0 }, }, 
   { { "load-on-focus",                            "Load uris at the earliest when a tab gets focus", },                                            
     SETTING_GLOBAL,  BOOLEAN, { .b = false }, NULL,   { 0 }, }, 
+  { { "print-previewer",                            "Command used for the printing preview", },                                            
+    SETTING_GLOBAL,  CHAR, { .p = NULL }, NULL,   { 0 }, }, 
 };/*}}}*/
