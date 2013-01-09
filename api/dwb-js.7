@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 01/08/2013
+.\"      Date: 01/09/2013
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "01/08/2013" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "01/09/2013" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -2489,42 +2489,6 @@ The webview the frame belongs to
 \fIframe\fR
 .RS 4
 The frame
-.RE
-.RE
-.sp
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBhoveringOverLink\fR
-.RS 4
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-signals\&.connect("hoveringOverLink", function(webview, json));
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-Emitted when the mouse is over a link
-.PP
-\fIwebview\fR
-.RS 4
-The webview that emitted the signal
-.RE
-.PP
-\fIjson\&.uri\fR
-.RS 4
-The uri of the link or null if there is no link under the pointer, i\&.e\&. the pointer left a link
-.RE
-.PP
-\fIjson\&.title\fR
-.RS 4
-The link\(cqs title or null if the pointer left a link
 .RE
 .RE
 .sp

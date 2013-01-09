@@ -88,7 +88,6 @@ static Sigmap s_sigmap[] = {
     { SCRIPTS_SIG_FRAME_STATUS, "frameStatus" },
     { SCRIPTS_SIG_LOAD_FINISHED, "loadFinished" },
     { SCRIPTS_SIG_LOAD_COMMITTED, "loadCommitted" },
-    { SCRIPTS_SIG_HOVERING_OVER_LINK, "hoveringOverLink" },
     { SCRIPTS_SIG_CLOSE_TAB, "closeTab" },
     { SCRIPTS_SIG_CREATE_TAB, "createTab" },
     { SCRIPTS_SIG_FRAME_CREATED, "frameCreated" },
