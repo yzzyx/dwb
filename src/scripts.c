@@ -32,7 +32,6 @@
 #include "application.h" 
 #include "completion.h" 
 #include "entry.h" 
-#include "scratchpad.h" 
 //#define kJSDefaultFunction  (kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete )
 #define kJSDefaultProperty  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
 #define kJSDefaultAttributes  (kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly )
@@ -165,11 +164,6 @@ static JSStaticValue message_values[] = {
     { "firstParty",     message_get_first_party, NULL, kJSDefaultAttributes }, 
     { 0, 0, 0, 0 }, 
 };
-static JSValueRef sp_show(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef sp_hide(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef sp_load(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef sp_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef sp_send(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 
 static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
 static JSStaticFunction frame_functions[] = { 
@@ -215,11 +209,10 @@ static JSClassRef s_gobject_class, s_webview_class, s_frame_class, s_download_cl
 static gboolean s_commandline = false;
 static JSObjectRef s_array_contructor;
 static JSObjectRef s_completion_callback;
-static JSObjectRef s_sp_scripts_cb;
-static JSObjectRef s_sp_scratchpad_cb;
 static GQuark s_ref_quark;
 static JSObjectRef s_init_before, s_init_after;
 static JSObjectRef s_constructors[CONSTRUCTOR_LAST];
+static gboolean s_opt_force = false;
 
 /* Only defined once */
 static JSValueRef UNDEFINED, NIL;
@@ -724,76 +717,6 @@ wv_get_scrolled_window(JSContextRef ctx, JSObjectRef object, JSStringRef js_name
 
 
 /*}}}*/
-
-static JSValueRef 
-sp_show(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
-{
-    scratchpad_show();
-    return UNDEFINED;
-}
-static JSValueRef 
-sp_hide(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
-{
-    scratchpad_hide();
-    return UNDEFINED;
-}
-static JSValueRef 
-sp_load(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
-{
-    char *text;
-    if (argc > 0 && (text = js_value_to_char(ctx, argv[0], -1, exc)) != NULL) 
-    {
-        scratchpad_load(text);
-        g_free(text);
-    }
-    return UNDEFINED;
-}
-static JSObjectRef 
-sp_callback_create(JSContextRef ctx, size_t argc, const JSValueRef argv[], JSValueRef *exc) 
-{
-    JSObjectRef ret = NULL;
-    if (argc > 0)
-    {
-        ret = js_value_to_function(ctx, argv[0], exc);
-    }
-    return ret;
-}
-static JSValueRef 
-sp_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
-{
-    s_sp_scripts_cb = sp_callback_create(ctx, argc, argv, exc);
-    return UNDEFINED;
-}
-void 
-scripts_scratchpad_get(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
-{
-    s_sp_scratchpad_cb = sp_callback_create(ctx, argc, argv, exc);
-}
-void
-sp_context_change(JSContextRef src_ctx, JSContextRef dest_ctx, JSObjectRef func, JSValueRef val) 
-{
-    if (func != NULL) 
-    {
-        JSValueRef val_changed = js_context_change(src_ctx, dest_ctx, val, NULL);
-        JSValueRef argv[] = { val_changed == 0 ? NIL : val_changed };
-        JSObjectCallAsFunction(dest_ctx, func, NULL, 1, argv, NULL);
-    }
-}
-// send from scripts context to scratchpad context
-static JSValueRef 
-sp_send(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
-{
-    if (argc > 0) 
-        sp_context_change(s_global_context, webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(WEBKIT_WEB_VIEW(scratchpad_get()))), s_sp_scratchpad_cb, argv[0]);
-
-    return UNDEFINED;
-}
-// send from scratchpad context to script context
-void 
-scripts_scratchpad_send(JSContextRef ctx, JSValueRef val) 
-{
-    sp_context_change(ctx, s_global_context, s_sp_scripts_cb, val);
-}
 
 /* SOUP_MESSAGE {{{*/
 static JSValueRef 
@@ -2817,24 +2740,6 @@ create_global_object()
     s_download_class = JSClassCreate(&cd);
 
     s_constructors[CONSTRUCTOR_DOWNLOAD] = create_constructor(s_global_context, "Download", s_download_class, download_constructor_cb, NULL);
-
-    JSStaticFunction scratchpad_functions[] = { 
-        { "show",         sp_show,             kJSDefaultAttributes },
-        { "hide",         sp_hide,             kJSDefaultAttributes },
-        { "load",         sp_load,             kJSDefaultAttributes },
-        { "get",          sp_get,              kJSDefaultAttributes },
-        { "send",         sp_send,              kJSDefaultAttributes },
-        { 0, 0, 0 }, 
-    };
-    cd.className = "Scratchpad";
-    cd.staticFunctions = scratchpad_functions;
-    cd.staticValues = NULL;
-    cd.parentClass = s_gobject_class;
-    class = JSClassCreate(&cd);
-
-
-    JSObjectRef o = make_object_for_class(s_global_context, class, G_OBJECT(scratchpad_get()), true);
-    js_set_property(s_global_context, global_object, "scratchpad", o, kJSDefaultAttributes, NULL);
 }/*}}}*/
 /*}}}*/
 
@@ -2963,6 +2868,7 @@ void
 scripts_init(gboolean force) 
 {
     dwb.misc.script_signals = 0;
+    s_opt_force = force;
     if (s_global_context == NULL) 
     {
         if (force) 
@@ -3013,6 +2919,17 @@ scripts_unbind(JSObjectRef obj)
     if (obj != NULL) 
         JSValueUnprotect(s_global_context, obj);
 }
+//void
+//scripts_reinit()
+//{
+//    if (s_global_context || s_opt_force) 
+//    {
+//        scripts_init(s_opt_force);
+//        apply_scripts();
+//        for (GList *gl = dwb.state.views; gl; gl=gl->next) 
+//            VIEW(gl)->script_wv = make_object(s_global_context, G_OBJECT(VIEW(gl)->web));
+//    }
+//}
 
 /* scripts_end {{{*/
 void

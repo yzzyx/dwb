@@ -67,12 +67,11 @@ void scripts_remove_tab(JSObjectRef );
 void scripts_end(void);
 void scripts_init_script(const char *, const char *);
 void scripts_init(gboolean);
+void scripts_reinit();
 void scripts_unbind(JSObjectRef);
 DwbStatus scripts_eval_key(KeyMap *m, Arg *arg);
 gboolean scripts_execute_one(const char *script);
 void scripts_completion_activate(void);
-void scripts_scratchpad_send(JSContextRef ctx, JSValueRef val);
-void scripts_scratchpad_get(JSContextRef, JSObjectRef, JSObjectRef, size_t, const JSValueRef[], JSValueRef* );
 
 #define EMIT_SCRIPT(sig)  ((dwb.misc.script_signals & (1<<SCRIPTS_SIG_##sig)))
 #define SCRIPTS_EMIT_RETURN(signal, json, val) G_STMT_START  \
