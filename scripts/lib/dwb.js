@@ -169,12 +169,11 @@
             { 
                 value : function(name, callback, after) 
                 { 
-                    var self = this;
-                    var sig = self.connect(name, function() { 
-                        self.blockSignal(sig);
+                    var sig = this.connect(name, (function() { 
+                        this.blockSignal(sig);
                         callback.apply(null, arguments);
-                        self.unblockSignal(sig);
-                    });
+                        this.unblockSignal(sig);
+                    }).bind(this));
                     return sig;
                 }
             },
