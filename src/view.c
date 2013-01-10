@@ -153,10 +153,12 @@ view_caret_release_cb(WebKitWebView *web, GdkEventButton *e, WebKitDOMRange *oth
 static gboolean
 view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) 
 {
-    WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
-    WebKitHitTestResultContext context;
-    g_object_get(result, "context", &context, NULL);
     gboolean ret = false;
+    WebKitHitTestResultContext context;
+
+    WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(web, e);
+    g_object_get(result, "context", &context, NULL);
+
     s_click_time = e->time;
     if (EMIT_SCRIPT(BUTTON_PRESS)) 
     {
@@ -166,7 +168,10 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
                 UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
                 DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
         ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(result) }, SCRIPTS_SIG_META(json, BUTTON_PRESS, 1) };
-        SCRIPTS_EMIT_RETURN(signal, json, true);
+        ret = scripts_emit(&signal);
+        g_free(json);
+        if (ret) 
+            goto clean;
     }
 
     if (gtk_widget_has_focus(dwb.gui.entry)) 
@@ -177,7 +182,6 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
     if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) 
     {
         dwb_change_mode(INSERT_MODE);
-        return false;
     }
     else if (e->state & GDK_CONTROL_MASK && e->button == 1) 
     {
@@ -188,7 +192,6 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
         webkit_dom_dom_selection_add_range(selection, range);
         s_sig_caret_button_release = g_signal_connect(web, "button-release-event", G_CALLBACK(view_caret_release_cb), range);
         s_sig_caret_motion = g_signal_connect(web, "motion-notify-event", G_CALLBACK(view_caret_motion_cb), range);
-        return false;
     }
     else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_SELECTION && e->type == GDK_BUTTON_PRESS && e->state & GDK_BUTTON1_MASK) 
     {
@@ -206,7 +209,6 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
             ret = true;
         }
         g_free(backup);
-        return ret;
     }
     else if (e->button == 1 && e->type == GDK_BUTTON_PRESS && WEBVIEW(gl) != CURRENT_WEBVIEW()) 
     {
@@ -214,17 +216,19 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
     }
     else if (e->button == 3 && e->state & GDK_BUTTON1_MASK) 
         /* no popup if button 1 is presssed */
-        return true;
+        ret = true;
     else if (e->button == 8) 
     {
         dwb_history_back();
-        return true;
+        ret = true;
     }
     else if (e->button == 9) 
     {
         dwb_history_forward();
-        return true;
+        ret = true;
     }
+clean:
+    g_object_unref(result);
     return ret;
 }/*}}}*/
 
@@ -232,6 +236,7 @@ view_button_press_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
 static gboolean
 view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl) 
 {
+    gboolean ret = false;
     char *uri =  NULL;
     WebKitHitTestResultContext context;
 
@@ -246,7 +251,10 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
                 UINTEGER, "state", e->state, UINTEGER,  "button", e->button, 
                 DOUBLE,   "xRoot", e->x_root, DOUBLE,   "yRoot", e->y_root);
         ScriptSignal signal = { SCRIPTS_WV(gl), { G_OBJECT(result) }, SCRIPTS_SIG_META(json, BUTTON_RELEASE, 1) };
-        SCRIPTS_EMIT_RETURN(signal, json, true);
+        ret = scripts_emit(&signal);
+        g_free(json);
+        if (ret) 
+            goto clean;
     }
 
     if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) 
@@ -256,10 +264,12 @@ view_button_release_cb(WebKitWebView *web, GdkEventButton *e, GList *gl)
             g_object_get(result, "link-uri", &uri, NULL);
             view_add(uri, dwb.state.background_tabs);
             view_disconnect_caret(web);
-            return true;
+            ret = true;
         }
     }
-    return false;
+clean:
+    g_object_unref(result);
+    return ret;
 }/*}}}*/
 
 /* view_close_web_view_cb(WebKitWebView *web, GList *gl) {{{*/
