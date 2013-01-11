@@ -596,7 +596,7 @@ dwb_set_normal_message(GList *gl, gboolean hide, const char  *text, ...)
     if (gl != dwb.state.fview)
         return;
 
-    char message[STRING_LENGTH];
+    char message[STRING_LENGTH] = {0};
     va_list arg_list; 
 
     va_start(arg_list, text);
@@ -2320,9 +2320,10 @@ dwb_confirm(GList *gl, char *prompt, ...)
 }/*}}}*/
 
 /* dwb_prompt {{{*/
-const char *
+char *
 dwb_prompt(gboolean visibility, char *prompt, ...) 
 {
+    char *result = NULL;
     dwb.state.mode |= CONFIRM;
     va_list arg_list; 
     char message[STRING_LENGTH];
@@ -2351,8 +2352,13 @@ dwb_prompt(gboolean visibility, char *prompt, ...)
     dwb_focus_scroll(dwb.state.fview);
     CLEAR_COMMAND_TEXT();
 
+
+    if (state == 0)
+        result = g_strdup(GET_TEXT());
+
+    gtk_editable_delete_text(GTK_EDITABLE(dwb.gui.entry), 0, -1);
     gtk_entry_set_visibility(GTK_ENTRY(dwb.gui.entry), true);
-    return state == 0 ? GET_TEXT() : NULL;
+    return result;
 }/*}}}*/
 
 /* dwb_save_quickmark(const char *key) {{{*/

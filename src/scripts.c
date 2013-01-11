@@ -1716,13 +1716,17 @@ io_prompt(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t
     if (argc > 1 && JSValueIsBoolean(ctx, argv[1])) 
         visibility = JSValueToBoolean(ctx, argv[1]);
 
-    const char *response = dwb_prompt(visibility, prompt);
+    char *response = dwb_prompt(visibility, prompt);
     g_free(prompt);
 
     if (response == NULL)
         return NIL;
 
-    return js_char_to_value(ctx, response);
+    JSValueRef result = js_char_to_value(ctx, response);
+
+    memset(response, 0, strlen(response));
+    g_free(response);
+    return result;
 }/*}}}*/
 
 /* io_read {{{*/
