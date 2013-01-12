@@ -103,89 +103,6 @@ static Sigmap s_sigmap[] = {
 
 static JSObjectRef make_object_for_class(JSContextRef ctx, JSClassRef class, GObject *o, gboolean);
 
-static JSValueRef gobject_connect(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef gobject_block_signal(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef gobject_unblock_signal(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef gobject_disconnect(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-
-static JSValueRef wv_load_uri(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef wv_stop_loading(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef wv_history(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef wv_reload(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef wv_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-#if WEBKIT_CHECK_VERSION(1, 10, 0)
-static JSValueRef wv_to_png(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-#endif
-static JSStaticFunction default_functions[] = { 
-    { "connect",            gobject_connect,                kJSDefaultAttributes },
-    { "blockSignal",        gobject_block_signal,                kJSDefaultAttributes },
-    { "unblockSignal",      gobject_unblock_signal,                kJSDefaultAttributes },
-    { "disconnect",         gobject_disconnect,             kJSDefaultAttributes },
-    { 0, 0, 0 }, 
-};
-static JSStaticFunction wv_functions[] = { 
-    { "loadUri",         wv_load_uri,             kJSDefaultAttributes },
-    { "stopLoading",         wv_stop_loading,        kJSDefaultAttributes },
-    { "history",         wv_history,             kJSDefaultAttributes },
-    { "reload",          wv_reload,             kJSDefaultAttributes },
-    { "inject",          wv_inject,             kJSDefaultAttributes },
-#if WEBKIT_CHECK_VERSION(1, 10, 0)
-    { "toPng",           wv_to_png,             kJSDefaultAttributes },
-#endif
-    { 0, 0, 0 }, 
-};
-static JSValueRef wv_get_main_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef wv_get_focused_frame(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef wv_get_all_frames(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef wv_get_number(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef wv_get_tab_widget(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef wv_get_tab_box(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef wv_get_tab_label(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef wv_get_tab_icon(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef wv_get_scrolled_window(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSStaticValue wv_values[] = {
-    { "mainFrame",     wv_get_main_frame, NULL, kJSDefaultAttributes }, 
-    { "focusedFrame",  wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
-    { "allFrames",     wv_get_all_frames, NULL, kJSDefaultAttributes }, 
-    { "number",        wv_get_number, NULL, kJSDefaultAttributes }, 
-    { "tabWidget",     wv_get_tab_widget, NULL, kJSDefaultAttributes }, 
-    { "tabBox",        wv_get_tab_box, NULL, kJSDefaultAttributes }, 
-    { "tabLabel",      wv_get_tab_label, NULL, kJSDefaultAttributes }, 
-    { "tabIcon",       wv_get_tab_icon, NULL, kJSDefaultAttributes }, 
-    { "scrolledWindow",wv_get_scrolled_window, NULL, kJSDefaultAttributes }, 
-    { 0, 0, 0, 0 }, 
-};
-
-static JSValueRef message_get_uri(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef message_get_first_party(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSStaticValue message_values[] = {
-    { "uri",     message_get_uri, NULL, kJSDefaultAttributes }, 
-    { "firstParty",     message_get_first_party, NULL, kJSDefaultAttributes }, 
-    { 0, 0, 0, 0 }, 
-};
-
-static JSValueRef frame_inject(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSStaticFunction frame_functions[] = { 
-    { "inject",          frame_inject,             kJSDefaultAttributes },
-    { 0, 0, 0 }, 
-};
-
-static JSValueRef frame_get_domain(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSValueRef frame_get_host(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception);
-static JSStaticValue frame_values[] = {
-    { "host", frame_get_host, NULL, kJSDefaultAttributes }, 
-    { "domain", frame_get_domain, NULL, kJSDefaultAttributes }, 
-    { 0, 0, 0, 0 }, 
-};
-
-static JSValueRef download_start(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSValueRef download_cancel(JSContextRef ctx, JSObjectRef function, JSObjectRef this, size_t argc, const JSValueRef argv[], JSValueRef* exc);
-static JSStaticFunction download_functions[] = { 
-    { "start",          download_start,        kJSDefaultAttributes },
-    { "cancel",         download_cancel,        kJSDefaultAttributes },
-    { 0, 0, 0 }, 
-};
-
 enum {
     CONSTRUCTOR_DEFAULT = 0,
     CONSTRUCTOR_WEBVIEW,
@@ -2666,6 +2583,13 @@ create_global_object()
     JSClassRelease(class);
 
     /* Default gobject class */
+    JSStaticFunction default_functions[] = { 
+        { "connect",            gobject_connect,                kJSDefaultAttributes },
+        { "blockSignal",        gobject_block_signal,                kJSDefaultAttributes },
+        { "unblockSignal",      gobject_unblock_signal,                kJSDefaultAttributes },
+        { "disconnect",         gobject_disconnect,             kJSDefaultAttributes },
+        { 0, 0, 0 }, 
+    };
     cd = kJSClassDefinitionEmpty;
     cd.className = "GObject";
     cd.staticFunctions = default_functions;
@@ -2676,6 +2600,30 @@ create_global_object()
     s_constructors[CONSTRUCTOR_DEFAULT] = create_constructor(s_global_context, "GObject", s_gobject_class, NULL, NULL);
 
     /* Webview */
+    JSStaticFunction wv_functions[] = { 
+        { "loadUri",         wv_load_uri,             kJSDefaultAttributes },
+        { "stopLoading",         wv_stop_loading,        kJSDefaultAttributes },
+        { "history",         wv_history,             kJSDefaultAttributes },
+        { "reload",          wv_reload,             kJSDefaultAttributes },
+        { "inject",          wv_inject,             kJSDefaultAttributes },
+#if WEBKIT_CHECK_VERSION(1, 10, 0)
+        { "toPng",           wv_to_png,             kJSDefaultAttributes },
+#endif
+        { 0, 0, 0 }, 
+    };
+    JSStaticValue wv_values[] = {
+        { "mainFrame",     wv_get_main_frame, NULL, kJSDefaultAttributes }, 
+        { "focusedFrame",  wv_get_focused_frame, NULL, kJSDefaultAttributes }, 
+        { "allFrames",     wv_get_all_frames, NULL, kJSDefaultAttributes }, 
+        { "number",        wv_get_number, NULL, kJSDefaultAttributes }, 
+        { "tabWidget",     wv_get_tab_widget, NULL, kJSDefaultAttributes }, 
+        { "tabBox",        wv_get_tab_box, NULL, kJSDefaultAttributes }, 
+        { "tabLabel",      wv_get_tab_label, NULL, kJSDefaultAttributes }, 
+        { "tabIcon",       wv_get_tab_icon, NULL, kJSDefaultAttributes }, 
+        { "scrolledWindow",wv_get_scrolled_window, NULL, kJSDefaultAttributes }, 
+        { 0, 0, 0, 0 }, 
+    };
+
     cd.className = "WebKitWebView";
     cd.staticFunctions = wv_functions;
     cd.staticValues = wv_values;
@@ -2684,7 +2632,18 @@ create_global_object()
 
     s_constructors[CONSTRUCTOR_WEBVIEW] = create_constructor(s_global_context, "WebKitWebView", s_webview_class, NULL, NULL);
 
+
     /* Frame */
+    JSStaticFunction frame_functions[] = { 
+        { "inject",          frame_inject,             kJSDefaultAttributes },
+        { 0, 0, 0 }, 
+    };
+    JSStaticValue frame_values[] = {
+        { "host", frame_get_host, NULL, kJSDefaultAttributes }, 
+        { "domain", frame_get_domain, NULL, kJSDefaultAttributes }, 
+        { 0, 0, 0, 0 }, 
+    };
+
     cd.className = "WebKitWebFrame";
     cd.staticFunctions = frame_functions;
     cd.staticValues = frame_values;
@@ -2694,6 +2653,12 @@ create_global_object()
     s_constructors[CONSTRUCTOR_FRAME] = create_constructor(s_global_context, "WebKitWebFrame", s_frame_class, NULL, NULL);
 
     /* SoupMessage */ 
+    JSStaticValue message_values[] = {
+        { "uri",     message_get_uri, NULL, kJSDefaultAttributes }, 
+        { "firstParty",     message_get_first_party, NULL, kJSDefaultAttributes }, 
+        { 0, 0, 0, 0 }, 
+    };
+
     cd.className = "SoupMessage";
     cd.staticFunctions = default_functions;
     cd.staticValues = message_values;
@@ -2736,6 +2701,12 @@ create_global_object()
     JSClassRelease(class);
 
     /* download */
+    JSStaticFunction download_functions[] = { 
+        { "start",          download_start,        kJSDefaultAttributes },
+        { "cancel",         download_cancel,        kJSDefaultAttributes },
+        { 0, 0, 0 }, 
+    };
+
     cd.className = "Download";
     cd.staticFunctions = download_functions;
     cd.staticValues = NULL;
