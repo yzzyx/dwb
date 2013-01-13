@@ -290,6 +290,11 @@ session_save(const char *name, int flags)
     {
         WebKitWebView *web = WEBVIEW(l);
         WebKitWebBackForwardList *bf_list = webkit_web_view_get_back_forward_list(web);
+        if (VIEW(l)->status->deferred) 
+        {
+            g_string_append_printf(buffer, "0|%d %s unknown\n", VIEW(l)->status->lockprotect, VIEW(l)->status->deferred_uri);
+            continue;
+        }
         for (int i= -webkit_web_back_forward_list_get_back_length(bf_list); i<=webkit_web_back_forward_list_get_forward_length(bf_list); i++) 
         {
             WebKitWebHistoryItem *item = webkit_web_back_forward_list_get_nth_item(bf_list, i);
