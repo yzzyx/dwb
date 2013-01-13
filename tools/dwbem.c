@@ -842,7 +842,9 @@ do_update(const char *meta, int flags)
   char *space = strchr(meta, ' ');
   if (space != NULL) 
   {
-    strncpy(buffer, meta, MIN(sizeof(buffer), (unsigned int)(space - meta + 1)));
+    int length = MIN(sizeof(buffer)-2, (unsigned int)(space - meta));
+    strncpy(buffer, meta, length);
+    buffer[length] = '\0';
     if ((flags & F_NO_CONFIRM) || yes_no(1, "Update "EXT(%s), buffer))
       if (cl_install(buffer, flags | F_UPDATE)) 
         notify(EXT(%s)" successfully updated", buffer);
