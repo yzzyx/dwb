@@ -378,7 +378,7 @@ _returns_;; true if creation was successful or directory already existed
 Executes a shell command using the default search path
 
 _command_;; The command to execute
-_stdin(String)_;; Callback function for stdin, pass null if only stderr is
+_stdout(String)_;; Callback function for stdin, pass null if only stderr is
 needed, optional
 _stderr(String)_;; Callback function for stderr, optional
 _returns_;; A deferred, it will be resolved if the child exits
@@ -532,6 +532,17 @@ the fail callback chain of the deferred is called.
 
 
 Deferreds implement the following methods: 
+
+==== void Deferred.always(Function callback)
+****
+
+Registers a function for then done and fail chain.
+
+_callback_;; A callback function that will be called when the Deferred is
+resolved or rejected. If the function returns a deferred the original deferred will be replaced with
+the new deferred.
+_returns_;; A new deferred that can be used to chain callbacks. 
+****
 
 ==== void Deferred.done(Function callback)
 ****

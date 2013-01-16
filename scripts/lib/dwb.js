@@ -196,6 +196,12 @@
                 value : function(method) {
                     return this.then(null, method);
                 }
+            },
+            "always" : {
+                value : function(method)
+                {
+                    return this.then(method, method);
+                }
             }
     });
 })();

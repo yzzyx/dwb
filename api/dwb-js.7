@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 01/09/2013
+.\"      Date: 01/17/2013
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "01/09/2013" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "01/17/2013" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -824,7 +824,7 @@ Executes a shell command using the default search path
 The command to execute
 .RE
 .PP
-\fIstdin(String)\fR
+\fIstdout(String)\fR
 .RS 4
 Callback function for stdin, pass null if only stderr is needed, optional
 .RE
@@ -1146,6 +1146,27 @@ Label used for status information, fourth child of
 Deferred objects can be used to manage asynchronous operations\&. It can trigger a callback function when an asynchrounous operation has finished, and allows chaining of callbacks\&. Deferred basically has 2 callback chains, a \fIdone\fR\-chain and a \fIfail\fR\-chain\&. If a asynchronous operation is successful the deferred should be resolved and the done callback chain of the deferred is called\&. If a asynchronous operation fails the deferred should be rejected and the fail callback chain of the deferred is called\&.
 .sp
 Deferreds implement the following methods:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBvoid Deferred.always(Function callback)\fR
+.RS 4
+.sp
+Registers a function for then done and fail chain\&.
+.PP
+\fIcallback\fR
+.RS 4
+A callback function that will be called when the Deferred is resolved or rejected\&. If the function returns a deferred the original deferred will be replaced with the new deferred\&.
+.RE
+.PP
+\fIreturns\fR
+.RS 4
+A new deferred that can be used to chain callbacks\&.
+.RE
+.RE
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1

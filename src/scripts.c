@@ -1505,6 +1505,7 @@ watch_spawn(GPid pid, gint status, JSObjectRef deferred)
     else if (WIFSTOPPED(status)) 
         fail = WSTOPSIG(status);
 
+    puts("done");
     if (fail == 0)
         deferred_resolve(s_global_context, NULL, deferred, 0, NULL, NULL);
     else 
