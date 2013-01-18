@@ -193,13 +193,21 @@ inject(JSContextRef ctx, JSContextRef wctx, JSObjectRef function, JSObjectRef th
         JSObjectRef func = JSObjectMakeFunction(wctx, NULL, 0, NULL, script, NULL, 0, NULL);
         if (func != NULL && JSObjectIsFunction(ctx, func)) 
         {
-            JSValueRef wret = JSObjectCallAsFunction(wctx, func, NULL, count, count == 1 ? args : NULL, NULL) ;
-            // This could be replaced with js_context_change
-            char *retx = js_value_to_json(wctx, wret, -1, NULL);
-            if (retx) 
+            JSValueRef exc = NULL;
+            JSValueRef wret = JSObjectCallAsFunction(wctx, func, NULL, count, count == 1 ? args : NULL, &exc) ;
+            if (exc != NULL) 
             {
-                ret = js_char_to_value(ctx, retx);
-                g_free(retx);
+                fputs("DWB SCRIPT EXCEPTION: An error occured injecting a script.\n", stderr);
+                js_print_exception(wctx, exc);
+            }
+            else {
+                // This could be replaced with js_context_change
+                char *retx = js_value_to_json(wctx, wret, -1, NULL);
+                if (retx) 
+                {
+                    ret = js_char_to_value(ctx, retx);
+                    g_free(retx);
+                }
             }
         }
     }
