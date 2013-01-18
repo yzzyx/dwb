@@ -8,7 +8,7 @@
                 if (f !== null && f !== undefined && f instanceof Function) 
                 {
                     var m = f.toString().match(/\{([\s\S]*)\}/m)[1];
-                    return m.replace(/^\s*\/\/.*$/mg,'');
+                    return m.replace(/^\s*\/\/.*$/mg,'').trim();
                 }
                 return null;
             }
