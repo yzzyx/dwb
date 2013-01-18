@@ -1078,7 +1078,7 @@ Deferreds implement the following methods:
 
 **** 
 [float]
-==== *done()* ==== 
+==== *always()* ==== 
 
 [source,javascript]
 ----

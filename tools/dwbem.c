@@ -1064,7 +1064,7 @@ main(int argc, char **argv)
   int flags = 0;
   const char *proxy;
   GOptionEntry options[] = {
-    { "list-all",  'a', 0, G_OPTION_ARG_NONE, &o_list_all, "List all installed extensions",  NULL},
+    { "list-all",  'a', 0, G_OPTION_ARG_NONE, &o_list_all, "List all available extensions",  NULL},
     { "bind",     'b', 0, G_OPTION_ARG_NONE, &o_bind, "When installing an extension use extensions.bind instead of extensions.load", NULL },
     { "setbind",  'B', 0, G_OPTION_ARG_STRING_ARRAY, &o_setbind, "Edit configuration, use extensions.bind", "<extension>" },
     { "config",   'c', 0, G_OPTION_ARG_STRING_ARRAY, &o_show_config, "Show configuration for <extension>", "<extension>" },
