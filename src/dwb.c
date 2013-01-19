@@ -3492,7 +3492,14 @@ dwb_free_custom_keys()
 gboolean
 dwb_clean_up() 
 {
-    for (GList *l = dwb.keymap; l; l=l->next) {
+    for (GList *gl = dwb.state.views; gl; gl=gl->next) 
+        view_clean(gl);
+    // needs to be ended before anything else is freed, otherwise pending
+    // 'execute' can crash
+    scripts_end();
+    
+    for (GList *l = dwb.keymap; l; l=l->next) 
+    {
         KeyMap *m = l->data;
         if (m->map->prop & CP_SCRIPT) 
             scripts_unbind(m->map->arg.p);
@@ -3525,10 +3532,6 @@ dwb_clean_up()
     dwb_free_list(dwb.fc.pers_scripts, (void_func)g_free);
     dwb_free_custom_keys();
 
-    for (GList *gl = dwb.state.views; gl; gl=gl->next) 
-        view_clean(gl);
-    
-
     dwb_soup_end();
     adblock_end();
     domain_end();
@@ -3537,10 +3540,8 @@ dwb_clean_up()
 
     for (int i=FILES_FIRST; i<FILES_LAST; i++) 
         g_free(dwb.files[i]);
-    
 
     gtk_widget_destroy(dwb.gui.window);
-    scripts_end();
     return true;
 }/*}}}*/
 
