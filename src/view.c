@@ -1414,8 +1414,10 @@ view_add(const char *uri, gboolean background)
     }
     if (EMIT_SCRIPT(CREATE_TAB)) 
     {
-        ScriptSignal signal = { VIEW(ret)->script_wv, SCRIPTS_SIG_META(NULL, CREATE_TAB, 0) };
+        char *json = util_create_json(1, CHAR, "uri", uri);
+        ScriptSignal signal = { VIEW(ret)->script_wv, SCRIPTS_SIG_META(json, CREATE_TAB, 0) };
         scripts_emit(&signal);
+        g_free(json);
     }
 
 
