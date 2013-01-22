@@ -70,7 +70,7 @@ var sigCommitted = -1;
 /*
 //<DEFAULT_CONFIG
   // paths to userscripts, this extension will also load all scripts in from 
-  // $XDG_CONFIG_HOME/.config/dwb/scripts
+  // $XDG_CONFIG_HOME/scripts
   scripts : []
 //>DEFAULT_CONFIG
 */
