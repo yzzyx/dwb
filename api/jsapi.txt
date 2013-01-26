@@ -758,24 +758,6 @@ _n_;; Number of the tab
 _returns_;; The corresponding <<webview>>
 ****
 
-****
-[float]
-==== *iterate()* ====
-
-[source,javascript]
-----
-void tabs.iterate(Function callback) 
-----
-
-Iterates over all tabs until the callback returns true.
-
- ::
-
-_callback_;; Callback that is called for every tab. The function has two
-parameters, the webview and the index which will be the same as webview.number.
-****
-
-
 ====
 .Example
 [source,javascript]

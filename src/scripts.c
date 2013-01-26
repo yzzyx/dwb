@@ -338,23 +338,6 @@ tabs_length(JSContextRef ctx, JSObjectRef this, JSStringRef name, JSValueRef* ex
     return JSValueMakeNumber(ctx, g_list_length(dwb.state.views));
 }/*}}}*/
 
-static JSValueRef 
-tabs_iterate(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
-{
-    JSObjectRef callback;
-    if (argc == 0 || (callback = js_value_to_function(ctx, argv[0], exc)) == NULL)
-        return UNDEFINED;
-    int i=0;
-    for (GList *l = dwb.state.views; l; l=l->next)
-    {
-        JSValueRef args[] = { VIEW(l)->script_wv, JSValueMakeNumber(ctx, i++) };
-        JSValueRef ret = JSObjectCallAsFunction(ctx, callback, callback, 2, args, exc);
-        if (JSValueToBoolean(ctx, ret))
-            break;
-    }
-    return UNDEFINED;
-}
-
 /* tabs_get_nth {{{*/
 static JSValueRef 
 tabs_get_nth(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exc) 
@@ -2574,7 +2557,6 @@ create_global_object()
 
     JSStaticFunction tab_functions[] = { 
         { "nth",          tabs_get_nth,        kJSDefaultAttributes },
-        { "iterate",      tabs_iterate,        kJSDefaultAttributes },
         { 0, 0, 0 }, 
     };
     JSStaticValue tab_values[] = { 
