@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 01/17/2013
+.\"      Date: 01/26/2013
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "01/17/2013" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "01/26/2013" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -457,7 +457,7 @@ Either the function or the optional name passed to bind\&.
 .PP
 \fIreturns\fR
 .RS 4
-true if the function is unbinded
+true if the function was unbound
 .RE
 .RE
 .SH "GLOBAL OBJECTS"
@@ -897,6 +897,22 @@ Number of the tab
 \fIreturns\fR
 .RS 4
 The corresponding webview
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBwebview tabs.nth(Function callback)\fR
+.RS 4
+.sp
+Iterates over all tabs until the callback returns true\&.
+.PP
+\fIcallback\fR
+.RS 4
+Callback that is called for every tab\&. The function has two parameters, the webview and the index which will be the same as webview\&.number\&.
 .RE
 .RE
 .SS "util"
