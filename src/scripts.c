@@ -2498,7 +2498,7 @@ create_global_object()
 
     JSStaticValue global_values[] = {
         { "global",      global_get, NULL,   kJSDefaultAttributes },
-        { "webkitSession",      global_get_webkit_session, NULL,   kJSDefaultAttributes },
+        { "session",      global_get_webkit_session, NULL,   kJSDefaultAttributes },
         { 0, 0, 0, 0 }, 
     };
 

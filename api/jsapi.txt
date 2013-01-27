@@ -54,11 +54,11 @@ Refers to the global object.
 
 ****
 [float]
-==== *webkitSession* ====
+==== *session* ====
 
 [source,javascript]
 ----
-webkitSession        SoupSession     read
+session        SoupSession     read
 ----
 
 The webkit session.

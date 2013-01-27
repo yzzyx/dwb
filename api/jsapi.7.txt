@@ -45,7 +45,7 @@ properties on the global object, see also *Global data* for details.
 === Properties
 
 _global (Object, read)_;; Refers to the global object
-_webkitSession (SoupSession, read)_;; The webkit session
+_session (SoupSession, read)_;; The webkit session
 
 === Methods ===
 
