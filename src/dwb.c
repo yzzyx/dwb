@@ -77,6 +77,7 @@ static DwbStatus dwb_set_ntlm(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_find_delay(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_do_not_track(GList *gl, WebSettings *s);
 static DwbStatus dwb_set_show_single_tab(GList *gl, WebSettings *s);
+static DwbStatus dwb_set_accept_language(GList *gl, WebSettings *s);
 #ifdef WITH_LIBSOUP_2_38
 static DwbStatus dwb_set_dns_lookup(GList *gl, WebSettings *s);
 #endif
@@ -173,6 +174,14 @@ dwb_set_adblock(GList *gl, WebSettings *s)
         for (GList *l = dwb.state.views; l; l=l->next) 
             adblock_disconnect(l);
     }
+}/*}}}*/
+
+/*{{{*/
+static DwbStatus 
+dwb_set_accept_language(GList *gl, WebSettings *s)
+{
+    g_object_set(webkit_get_default_session(), "accept-language", s->arg_local.p, NULL);
+    return STATUS_OK;
 }/*}}}*/
 
 /* dwb_set_cookies {{{ */

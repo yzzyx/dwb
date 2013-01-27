@@ -1170,4 +1170,6 @@ static WebSettings DWB_SETTINGS[] = {
     SETTING_GLOBAL,  BOOLEAN, { .b = false }, NULL,   { 0 }, }, 
   { { "print-previewer",                            "Command used for the printing preview", },                                            
     SETTING_GLOBAL,  CHAR, { .p = NULL }, NULL,   { 0 }, }, 
+  { { "accept-language",                            "If set will be used for 'Accept-Language' header in all requests", },                                            
+    SETTING_GLOBAL | SETTING_ONINIT,  CHAR, { .p = NULL }, (S_Func)dwb_set_accept_language,   { 0 }, }, 
 };/*}}}*/
