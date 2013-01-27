@@ -129,6 +129,7 @@ static GQuark s_ref_quark;
 static JSObjectRef s_init_before, s_init_after;
 static JSObjectRef s_constructors[CONSTRUCTOR_LAST];
 static gboolean s_opt_force = false;
+static JSObjectRef s_soup_session;
 
 /* Only defined once */
 static JSValueRef UNDEFINED, NIL;
@@ -878,6 +879,11 @@ static JSValueRef
 global_get(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
 {
     return JSContextGetGlobalObject(ctx);
+}
+static JSValueRef 
+global_get_webkit_session(JSContextRef ctx, JSObjectRef object, JSStringRef js_name, JSValueRef* exception) 
+{
+    return s_soup_session;
 }
 /* global_execute {{{*/
 static JSValueRef 
@@ -2492,6 +2498,7 @@ create_global_object()
 
     JSStaticValue global_values[] = {
         { "global",      global_get, NULL,   kJSDefaultAttributes },
+        { "webkitSession",      global_get_webkit_session, NULL,   kJSDefaultAttributes },
         { 0, 0, 0, 0 }, 
     };
 
@@ -2723,6 +2730,9 @@ create_global_object()
     s_download_class = JSClassCreate(&cd);
 
     s_constructors[CONSTRUCTOR_DOWNLOAD] = create_constructor(s_global_context, "Download", s_download_class, download_constructor_cb, NULL);
+    
+    s_soup_session = make_object_for_class(s_global_context, s_gobject_class, G_OBJECT(webkit_get_default_session()), false);
+    JSValueProtect(s_global_context, s_soup_session);
 }/*}}}*/
 /*}}}*/
 
@@ -2925,6 +2935,7 @@ scripts_end()
         JSValueUnprotect(s_global_context, s_array_contructor);
         JSValueUnprotect(s_global_context, UNDEFINED);
         JSValueUnprotect(s_global_context, NIL);
+        JSValueUnprotect(s_global_context, s_soup_session);
         JSClassRelease(s_gobject_class);
         JSClassRelease(s_webview_class);
         JSClassRelease(s_frame_class);

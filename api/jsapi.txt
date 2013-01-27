@@ -52,6 +52,18 @@ global        object     read
 Refers to the global object.
 ****
 
+****
+[float]
+==== *webkitSession* ====
+
+[source,javascript]
+----
+webkitSession        SoupSession     read
+----
+
+The webkit session.
+****
+
 === Methods ===
 
 
