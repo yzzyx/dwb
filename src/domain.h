@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2010-2013 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2013 Elias Norberg <xyzzy@kudzu.se>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,4 +29,5 @@ void domain_end(void);
 GSList * domain_get_cookie_domains(WebKitWebView *wv);
 gboolean domain_match(char **, const char *, const char *);
 const char * domain_get_base_for_host(const char *host);
+const char * domain_get_tld(const char *domain);
 #endif
