@@ -279,11 +279,26 @@ dwb_soup_cookie_changed_cb(SoupCookieJar *jar, SoupCookie *old, SoupCookie *new,
         soup_cookie_jar_delete_cookie(s_pers_jar, old);
     if (new) 
     {
-        if (dwb.state.cookie_store_policy == COOKIE_STORE_PERSISTENT || dwb_soup_test_cookie_allowed(dwb.fc.cookies_allow, new)) 
+        /* Check if this is a super-cookie */
+        if (new->domain) {
+            const char *base;
+            base = domain_get_tld(new->domain);
+
+            /* If base is NULL, that means we're trying to set the cookie
+             * on a TLD (e.g. ".com", ".co.uk", ".c.jp", ".pref.kyoto.jp")
+             */
+            if (base == NULL) {
+                fprintf(stderr, "Site tried to set super-cookie @ TLD %s (base %s)\n", new->domain, base);
+                return;
+            }
+        }
+
+        if (dwb.state.cookie_store_policy == COOKIE_STORE_PERSISTENT || dwb_soup_test_cookie_allowed(dwb.fc.cookies_allow, new)) {
             soup_cookie_jar_add_cookie(s_pers_jar, soup_cookie_copy(new));
-        else 
+        } else 
         { 
             soup_cookie_jar_add_cookie(s_tmp_jar, soup_cookie_copy(new));
+
             if (dwb.state.cookie_store_policy == COOKIE_STORE_NEVER && !dwb_soup_test_cookie_allowed(dwb.fc.cookies_session_allow, new) ) 
             {
                 g_signal_handler_block(jar, s_changed_id);
