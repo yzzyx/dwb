@@ -32,8 +32,9 @@ $(DTARGET): $(DOBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(DOBJ) -o $(DTARGET) $(LDFLAGS) 
 
-tlds.h: tlds.in 
+tlds.h: tlds.in mktlds-header
 	@echo gen tlds.h
+	@./mktlds-header < tlds.in 
 	@echo "#ifndef TLDS_H" > $@
 	@echo "#define TLDS_H" >> $@
 	@echo "static char *TLDS_EFFECTIVE[] = {" >> $@
