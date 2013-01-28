@@ -35,13 +35,6 @@ $(DTARGET): $(DOBJ)
 tlds.h: tlds.in mktlds-header
 	@echo gen tlds.h
 	@./mktlds-header < tlds.in 
-	@echo "#ifndef TLDS_H" > $@
-	@echo "#define TLDS_H" >> $@
-	@echo "static char *TLDS_EFFECTIVE[] = {" >> $@
-	@sed '/^\/\//d;/^[[:space:]]*$$/d;s/^/	"/;s/$$/",/' $< >> $@
-	@echo "NULL," >> $@
-	@echo "};" >> $@
-	@echo "#endif" >> $@
 
 domain.o: tlds.h 
 
@@ -51,19 +44,6 @@ dependencies: $(DEPS)
 
 deps: 
 	$(MAKE) -B dependencies
-
-
-#
-#tlds.h: effective_tld_names.dat
-#	@echo gen tlds.h
-#	@echo "#ifndef TLDS_H" > $@
-#	@echo "#define TLDS_H" >> $@
-#	@echo "static char *effective_tlds[] = {" >> $@
-#	@sed '/^\/\//d;/^[[:space:]]*$$/d;s/\(.*\)/	"\1",/' $< >> $@
-#	@echo -e "\tNULL," >> $@
-#	@echo "};" >> $@
-#	@echo "#endif" >> $@
-
 
 cgdb: debug
 	cgdb $(DTARGET)
