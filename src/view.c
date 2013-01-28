@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 Stefan Bolte <portix@gmx.net>
+ * Copyright (c) 2010-2013 Stefan Bolte <portix@gmx.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include "adblock.h"
 #include "js.h"
 #include "scripts.h"
+#include "dom.h"
 
 static void view_ssl_state(GList *);
 static unsigned long s_click_time;
@@ -421,7 +422,7 @@ view_hovering_over_link_cb(WebKitWebView *web, char *title, char *uri, GList *gl
         VIEW(gl)->status->hover_uri = NULL;
         dwb_update_uri(gl);
         if (! (dwb.state.bar_visible & BAR_VIS_STATUS)) 
-            dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(VIEW(gl)->hover.element), NULL);
+            dom_remove_from_parent(WEBKIT_DOM_NODE(VIEW(gl)->hover.element), NULL);
     }
 }/*}}}*/
 

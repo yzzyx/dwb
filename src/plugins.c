@@ -19,6 +19,7 @@
 #include "dwb.h"
 #include "util.h"
 #include "view.h"
+#include "dom.h"
 
 #define ALLOWED(g)   (VIEW(g)->status->allowed_plugins)
 
@@ -187,7 +188,7 @@ plugins_load_status_cb(WebKitWebView *wv, GParamSpec *p, GList *gl)
 void 
 plugins_frame_load_cb(WebKitWebFrame *frame, GParamSpec *p, GList *gl) 
 {
-    dwb_dom_add_frame_listener(frame, "beforeload", G_CALLBACK(plugins_before_load_cb), true, gl);
+    dom_add_frame_listener(frame, "beforeload", G_CALLBACK(plugins_before_load_cb), true, gl);
 }
 
 void

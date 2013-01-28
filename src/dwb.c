@@ -47,6 +47,7 @@
 #include "domain.h"
 #include "application.h"
 #include "scripts.h"
+#include "dom.h"
 
 /* DECLARATIONS {{{*/
 static DwbStatus dwb_webkit_setting(GList *, WebSettings *);
@@ -99,13 +100,6 @@ static void dwb_init_gui(void);
 static Navigation * dwb_get_search_completion(const char *text);
 
 static void dwb_clean_vars(void);
-typedef struct _EditorInfo {
-    char *filename;
-    char *id;
-    GList *gl;
-    WebKitDOMElement *element;
-    char *tagname;
-} EditorInfo;
 
 typedef struct _UserScriptEnv {
     GIOChannel *channel;
@@ -593,7 +587,7 @@ dwb_hide_message()
         if (gtk_widget_get_visible(dwb.gui.bottombox)) 
             CLEAR_COMMAND_TEXT();
         else 
-            dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
+            dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
     }
     return NULL;
 }/*}}}*/
@@ -1058,241 +1052,12 @@ dwb_scroll(GList *gl, double step, ScrollDirection dir)
         gtk_adjustment_set_value(a, scroll);
 }/*}}}*/
 
-/* dwb_editor_watch (GChildWatchFunc) {{{*/
-static void
-dwb_editor_watch(GPid pid, int status, EditorInfo *info) 
-{
-    gsize length;
-    WebKitDOMElement *e = NULL;
-    WebKitWebView *wv;
-
-    char *content = util_get_file_content(info->filename, &length);
-
-    if (content == NULL) 
-        goto clean;
-
-    if (!info->gl || !g_list_find(dwb.state.views, info->gl->data)) 
-    {
-        if (info->id == NULL) 
-            goto clean;
-        else 
-            wv = CURRENT_WEBVIEW();
-    }
-    else 
-        wv = WEBVIEW(info->gl);
-    if (info->id != NULL) 
-    {
-        WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-        e = webkit_dom_document_get_element_by_id(doc, info->id);
-
-        if (e == NULL && (e = info->element) == NULL ) 
-            goto clean;
-    }
-    else 
-        e = info->element;
-
-    /*  g_file_get_contents adds an additional newline */
-    if (length > 0 && content[length-1] == '\n')
-        content[length-1] = 0;
-
-    if (!strcasecmp(info->tagname, "INPUT")) 
-        webkit_dom_html_input_element_set_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(e), content);
-    else if (!strcasecmp(info->tagname, "TEXTAREA")) 
-        webkit_dom_html_text_area_element_set_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(e), content);
-
-clean:
-    unlink(info->filename);
-    g_free(info->filename);
-    g_free(info->id);
-    g_free(info);
-}/*}}}*/
-
-/* dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error) {{{*/
-gboolean 
-dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error) 
-{
-    WebKitDOMNode *parent = webkit_dom_node_get_parent_node(node);
-    if (parent != NULL) 
-    {
-        webkit_dom_node_remove_child(parent, node, error);
-        return true;
-    }
-    return false;
-}/*}}}*/
-
-
-gboolean
-dwb_dom_add_frame_listener(WebKitWebFrame *frame, const char *signal, GCallback callback, gboolean bubble, GList *gl) 
-{
-    char *framesrc, *tagname;
-    gboolean ret = false;
-    WebKitDOMDOMWindow *win;
-    WebKitDOMNode *node;
-    WebKitWebView *wv = webkit_web_frame_get_web_view(frame);
-    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(wv);
-    const char *src = webkit_web_frame_get_uri(frame);
-    if (g_strcmp0(src, "about:blank")) 
-    {
-        /* We have to find the correct frame, but there is no access from the web_frame
-         * to the Htmlelement */
-        WebKitDOMNodeList *frames = webkit_dom_document_query_selector_all(doc, "iframe, frame", NULL);
-        for (guint i=0; i<webkit_dom_node_list_get_length(frames) && ret == false; i++) 
-        {
-            node = webkit_dom_node_list_item(frames, i);
-            tagname = webkit_dom_node_get_node_name(node);
-            if (!g_ascii_strcasecmp(tagname, "iframe")) 
-            {
-                framesrc = webkit_dom_html_iframe_element_get_src(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
-                win = webkit_dom_html_iframe_element_get_content_window(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
-            }
-            else 
-            {
-                framesrc = webkit_dom_html_frame_element_get_src(WEBKIT_DOM_HTML_FRAME_ELEMENT(node));
-                win = webkit_dom_html_frame_element_get_content_window(WEBKIT_DOM_HTML_FRAME_ELEMENT(node));
-            }
-            if (!g_strcmp0(src, framesrc)) 
-                ret = webkit_dom_event_target_add_event_listener(WEBKIT_DOM_EVENT_TARGET(win), signal, callback, true, gl);
-
-            g_free(framesrc);
-        }
-        g_object_unref(frames);
-    }
-    return ret;
-}
-
-/* dwb_get_editable(WebKitDOMElement *) {{{*/
-static gboolean
-dwb_get_editable(WebKitDOMElement *element) 
-{
-    if (element == NULL)
-        return false;
-
-    char *tagname = webkit_dom_node_get_node_name(WEBKIT_DOM_NODE(element));
-    if (tagname == NULL)
-        return false;
-    if (!strcasecmp(tagname, "INPUT")) 
-    {
-        char *type = webkit_dom_element_get_attribute((void*)element, "type");
-        if (!g_strcmp0(type, "text") || !g_strcmp0(type, "search")|| !g_strcmp0(type, "password")) 
-            return true;
-    }
-    else if (!strcasecmp(tagname, "TEXTAREA")) 
-        return true;
-
-    return false;
-}/*}}}*/
-
-/* dwb_get_active_input(WebKitDOMDocument )  {{{*/
-static WebKitDOMElement *
-dwb_get_active_element(WebKitDOMDocument *doc) 
-{
-    WebKitDOMElement *ret = NULL;
-    WebKitDOMDocument *d = NULL;
-
-    WebKitDOMElement *active = webkit_dom_html_document_get_active_element((void*)doc);
-    char *tagname = webkit_dom_element_get_tag_name(active);
-
-    if (! g_strcmp0(tagname, "FRAME")) 
-    {
-        d = webkit_dom_html_frame_element_get_content_document(WEBKIT_DOM_HTML_FRAME_ELEMENT(active));
-        ret = dwb_get_active_element(d);
-    }
-    else if (! g_strcmp0(tagname, "IFRAME")) 
-    {
-        d = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(active));
-        ret = dwb_get_active_element(d);
-    }
-    else 
-        ret = active;
-
-    return ret;
-}/*}}}*/
-
-/* dwb_open_in_editor(void) ret: gboolean success {{{*/
-DwbStatus
-dwb_open_in_editor(void) 
-{
-    DwbStatus ret = STATUS_OK;
-    char **commands = NULL;
-    char *commandstring = NULL, *tagname, *path;
-    char *value = NULL;
-    GPid pid;
-    gboolean success;
-
-    char *editor = GET_CHAR("editor");
-
-    if (editor == NULL) 
-        return STATUS_ERROR;
-
-    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(CURRENT_WEBVIEW());
-    WebKitDOMElement *active = dwb_get_active_element(doc);
-
-    if (active == NULL) 
-        return STATUS_ERROR;
-
-    tagname = webkit_dom_element_get_tag_name(active);
-    if (tagname == NULL) 
-    {
-        ret = STATUS_ERROR;
-        goto clean;
-    }
-    if (! strcasecmp(tagname, "INPUT")) 
-        value = webkit_dom_html_input_element_get_value(WEBKIT_DOM_HTML_INPUT_ELEMENT(active));
-    else if (! strcasecmp(tagname, "TEXTAREA"))
-        value = webkit_dom_html_text_area_element_get_value(WEBKIT_DOM_HTML_TEXT_AREA_ELEMENT(active));
-
-    if (value == NULL) 
-    {
-        ret = STATUS_ERROR;
-        goto clean;
-    }
-
-    path = util_get_temp_filename("edit");
-
-    commandstring = util_string_replace(editor, "dwb_uri", path);
-    if (commandstring == NULL)  
-    {
-        ret = STATUS_ERROR;
-        goto clean;
-    }
-
-    g_file_set_contents(path, value, -1, NULL);
-    commands = g_strsplit(commandstring, " ", -1);
-    g_free(commandstring);
-
-    success = g_spawn_async(NULL, commands, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &pid, NULL);
-    g_strfreev(commands);
-    if (!success) 
-    {
-        ret = STATUS_ERROR;
-        goto clean;
-    }
-
-    EditorInfo *info = dwb_malloc(sizeof(EditorInfo));
-    char *id = webkit_dom_html_element_get_id(WEBKIT_DOM_HTML_ELEMENT(active));
-    if (id != NULL && strlen(id) > 0) {
-        info->id = id;
-    }
-    else  {
-        info->id = NULL;
-    }
-    info->tagname = tagname;
-    info->element = active;
-    info->filename = path;
-    info->gl = dwb.state.fview;
-    g_child_watch_add(pid, (GChildWatchFunc)dwb_editor_watch, info);
-
-clean:
-    g_free(value);
-
-    return ret;
-}/*}}}*/
 
 /* Auto insert mode {{{*/
 static gboolean
 dwb_auto_insert(WebKitDOMElement *element) 
 {
-    if (dwb_get_editable(element)) 
+    if (dom_get_editable(element)) 
     {
         dwb_change_mode(INSERT_MODE);
         return true;
@@ -1317,7 +1082,7 @@ void
 dwb_check_auto_insert(GList *gl) 
 {
     WebKitDOMDocument *doc = webkit_web_view_get_dom_document(WEBVIEW(gl));
-    WebKitDOMElement *active = dwb_get_active_element(doc);
+    WebKitDOMElement *active = dom_get_active_element(doc);
     if (!dwb_auto_insert(active)) 
     {
         WebKitDOMHTMLElement *element = webkit_dom_document_get_body(doc);
@@ -1829,7 +1594,7 @@ dwb_unfocus()
         view_set_normal_style(dwb.state.fview);
         dwb_source_remove();
         CLEAR_COMMAND_TEXT();
-        dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
+        dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
         dwb.state.fview = NULL;
     }
 } /*}}}*/
@@ -3079,7 +2844,7 @@ dwb_normal_mode(gboolean clean)
         CLEAR_COMMAND_TEXT();
     }
 
-    dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
+    dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->status_element), NULL);
     if (mode == NORMAL_MODE) 
         webkit_web_view_set_highlight_text_matches(CURRENT_WEBVIEW(), false);
     
