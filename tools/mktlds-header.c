@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <glib.h>
+#include <ctype.h>
 
 #define P_BASE		(36)
 #define P_TMIN		(1)
@@ -50,7 +51,7 @@ adapt(int delta, int numpoints, int firsttime)
 }
 
 int
-get_minimum_char(char *str, int n)
+get_minimum_char(char *str, gunichar n)
 {
     gunichar	ch = 0;
     gunichar	min = 0xffffff;
@@ -81,7 +82,7 @@ punycode_encode_part(char *str)
     int		need_coding = 0;
     int		l, len, i;
 
-    int		n = INITIAL_N;
+    gunichar	n = INITIAL_N;
     int		delta = 0;
     int		bias = INITIAL_BIAS;
     int		h, b, m, k, t, q;
@@ -184,7 +185,7 @@ punycode_encode(const char *host)
     return g_strdup(enc_str);
 }
 
-int main(int argc, const char *argv[])
+int main()
 {
     char buf[512];
     char *ptr;
@@ -208,12 +209,12 @@ int main(int argc, const char *argv[])
         else {
             char *encoded = punycode_encode(buf);
             printf("\"%s\",\n", encoded);
-            free(encoded);
+            g_free(encoded);
         }
     }
     printf("NULL,\n");
     printf("};\n");
     printf("#endif\n");
-        
+
     return 0;
 }

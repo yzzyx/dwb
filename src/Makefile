@@ -32,9 +32,9 @@ $(DTARGET): $(DOBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(DOBJ) -o $(DTARGET) $(LDFLAGS) 
 
-tlds.h: tlds.in mktlds-header
+tlds.h: tlds.in ../tools/mktlds-header
 	@echo gen tlds.h
-	@./mktlds-header < tlds.in 
+	@../tools/mktlds-header < tlds.in > tlds.h
 
 domain.o: tlds.h 
 

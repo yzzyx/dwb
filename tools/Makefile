@@ -1,7 +1,7 @@
 # See COPYING for copyright and license details
 
 include ../config.mk
-TARGET=dwbem
+TARGET=dwbem mktlds-header
 
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
 LIBS=libsoup-2.4 glib-2.0
