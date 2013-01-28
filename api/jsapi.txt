@@ -2340,6 +2340,26 @@ Emitted when the <<DownloadStatus>> changes.
 _download_;; The <<Download>> 
 ****
 
+****
+[[executeCommand]]
+[float]
+==== *executeCommand* ==== 
+
+[source,javascript]
+----
+Boolean callback(detail) 
+----
+
+Emitted before a command is executed, return true to prevent the execution.
+
+ ::
+
+_detail.command_;; The command that is executed.
+_detail.argument_;; The command that is executed.
+_detail.nummod_;; The numerical modifier, will be -1 if no numerical modifier
+was used. 
+****
+
 
 ****
 [[frameCreated]]

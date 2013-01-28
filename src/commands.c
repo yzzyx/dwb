@@ -54,6 +54,21 @@ commands_simple_command(KeyMap *km)
         completion_clean_autocompletion();
     }
 
+    if (EMIT_SCRIPT(EXECUTE_COMMAND))
+    {
+        char *json = util_create_json(3, 
+                CHAR, "command", km->map->n.first, 
+                CHAR, "argument", arg->p, 
+                INTEGER, "nummod", dwb.state.nummod);
+        ScriptSignal sig = { NULL, SCRIPTS_SIG_META(json, EXECUTE_COMMAND, 0) } ;
+
+        gboolean prevent = scripts_emit(&sig);
+        g_free(json);
+
+        if (prevent) 
+            return STATUS_OK;
+    }
+
     ret = func(km, arg);
     switch (ret) 
     {

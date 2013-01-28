@@ -2461,6 +2461,42 @@ The Download
 .nr an-break-flag 1
 .br
 .ps +1
+\fBexecuteCommand\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("executeCommand", function(detail));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted before a command is executed, return true to prevent the execution\&.
+.PP
+\fIdetail\&.command\fR
+.RS 4
+The command that is executed\&.
+.RE
+.PP
+\fIdetail\&.argument\fR
+.RS 4
+The command that is executed\&.
+.RE
+.PP
+\fIdetail\&.nummod\fR
+.RS 4
+The numerical modifier, will be \-1 if no numerical modifier was used\&.
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
 \fBframeCreated\fR
 .RS 4
 .sp
