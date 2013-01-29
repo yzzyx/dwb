@@ -63,7 +63,7 @@ var onNavigation = function(wv, frame, request)
     var uri = request.uri;
     for (var i=tabs.length-1; i>=0; --i)
     {
-        if (tabs.nth(i).uri == uri) 
+        if (tabs.nth(i).uri == uri && i != wv.number) 
         {
             execute((i+1) + "focus_tab");
             if (/^\s*$/.test(wv.uri))
