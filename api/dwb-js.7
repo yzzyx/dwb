@@ -2,12 +2,12 @@
 .\"     Title: dwb-js
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 01/17/2013
+.\"      Date: 01/28/2013
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "DWB\-JS" "7" "01/17/2013" "\ \&" "\ \&"
+.TH "DWB\-JS" "7" "01/28/2013" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -89,6 +89,11 @@ for details\&.
 \fIglobal (Object, read)\fR
 .RS 4
 Refers to the global object
+.RE
+.PP
+\fIsession (SoupSession, read)\fR
+.RS 4
+The webkit session
 .RE
 .SS "Methods"
 .sp
@@ -457,7 +462,7 @@ Either the function or the optional name passed to bind\&.
 .PP
 \fIreturns\fR
 .RS 4
-true if the function is unbinded
+true if the function was unbound
 .RE
 .RE
 .SH "GLOBAL OBJECTS"
@@ -2448,6 +2453,42 @@ Emitted when the DownloadStatus changes\&.
 \fIdownload\fR
 .RS 4
 The Download
+.RE
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBexecuteCommand\fR
+.RS 4
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+signals\&.connect("executeCommand", function(detail));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Emitted before a command is executed, return true to prevent the execution\&.
+.PP
+\fIdetail\&.command\fR
+.RS 4
+The command that is executed\&.
+.RE
+.PP
+\fIdetail\&.argument\fR
+.RS 4
+The command that is executed\&.
+.RE
+.PP
+\fIdetail\&.nummod\fR
+.RS 4
+The numerical modifier, will be \-1 if no numerical modifier was used\&.
 .RE
 .RE
 .sp

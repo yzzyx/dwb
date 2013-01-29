@@ -1148,6 +1148,10 @@ default value:
 Other settings
 ~~~~~~~~~~~~~~
 
+*accept-language*::
+If set it will be used to set 'Accept-Language' header for all requests, 
+default value: 
+'NULL'
 
 *active-completion-bg-color*::
 The background color for an active element in tab-completion. Possible values:

@@ -30,6 +30,8 @@
 #include "download.h"
 #include "js.h"
 #include "scripts.h"
+#include "editor.h"
+#include "dom.h"
 
 inline static int 
 dwb_floor(double x) { 
@@ -52,6 +54,21 @@ commands_simple_command(KeyMap *km)
     if (dwb.state.mode & AUTO_COMPLETE) 
     {
         completion_clean_autocompletion();
+    }
+
+    if (EMIT_SCRIPT(EXECUTE_COMMAND))
+    {
+        char *json = util_create_json(3, 
+                CHAR, "command", km->map->n.first, 
+                CHAR, "argument", arg->p, 
+                INTEGER, "nummod", dwb.state.nummod);
+        ScriptSignal sig = { NULL, SCRIPTS_SIG_META(json, EXECUTE_COMMAND, 0) } ;
+
+        gboolean prevent = scripts_emit(&sig);
+        g_free(json);
+
+        if (prevent) 
+            return STATUS_OK;
     }
 
     ret = func(km, arg);
@@ -770,7 +787,7 @@ commands_fullscreen(KeyMap *km, Arg *arg)
 DwbStatus
 commands_open_editor(KeyMap *km, Arg *arg) 
 {
-    return dwb_open_in_editor();
+    return editor_open();
 }/*}}}*/
 
 /* dwb_command_mode {{{*/
@@ -803,7 +820,7 @@ commands_set_bars(int status)
     gtk_widget_set_visible(dwb.gui.topbox, (status & BAR_VIS_TOP) && (GET_BOOL("show-single-tab") || dwb.state.views->next));
     gtk_widget_set_visible(dwb.gui.bottombox, status & BAR_VIS_STATUS);
     if ((status & BAR_VIS_STATUS) ) 
-        dwb_dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->hover.element), NULL);
+        dom_remove_from_parent(WEBKIT_DOM_NODE(CURRENT_VIEW()->hover.element), NULL);
 }
 /* commands_toggle_bars {{{*/
 DwbStatus

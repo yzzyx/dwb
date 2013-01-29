@@ -15,6 +15,7 @@ zoom-level text The default zoom level
 zoom-step text The zoom step
 
 # session Network &amp Session
+accept-language text If set will be used for "Accept-Language" header in all requests
 addressbar-dns-lookup checkbox Whether to first perform a dns lookup for text typed in the addressbar before loading the site 
 cookies-accept-policy select @always @never @nothirdparty The cookies to accept, affects also session cookies
 cookies-store-policy select @session @persistent @never The storage policy for cookies

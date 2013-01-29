@@ -171,7 +171,7 @@
                 { 
                     var sig = this.connect(name, (function() { 
                         this.blockSignal(sig);
-                        var result = callback.apply(null, arguments);
+                        var result = callback.apply(callback, arguments);
                         this.unblockSignal(sig);
                         return result;
                     }).bind(this));

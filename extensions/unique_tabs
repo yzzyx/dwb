@@ -1,0 +1,125 @@
+//
+//  Copyright (c) 2013 Stefan Bolte <portix@gmx.net>
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 3 of the License, or
+//  (at your option) any later version.
+//  
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//  
+//  You should have received a copy of the GNU General Public License along
+//  with this program; if not, write to the Free Software Foundation, Inc.,
+//  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+//
+//
+
+/*<INFO
+Remove duplicate tabs or avoid duplicate tabs by autoswitching to tabs with same url
+INFO>*/
+
+var defaultConfig = {
+//<DEFAULT_CONFIG
+// Shortcut that removes duplicate tabs
+shortcutRemoveDuplicates : null,
+
+// Command that removes duplicate tabs
+commandRemoveDuplicates : "ut_remove_duplicates",
+
+// Autofocus a tab if an url is already opened, if the url would be loaded in a
+// new tab the new tab is closed. 
+// Setting this to true makes commandRemoveDuplicates and
+// shortcutRemoveDuplicates obsolete because there will be no duplicates. 
+autoFocus : true,
+
+// Shortcut for toggling autofocus
+shortcutToggleAutoFocus : null, 
+
+// Command for toggling autofocus
+commandToggleAutoFocus : "ut_toggle_autofocus", 
+
+//>DEFAULT_CONFIG
+};
+
+var signalId = -1;
+
+var removeDuplicates = function() 
+{
+    var uris = [];
+    for (var i=tabs.length-1; i>=0; --i)
+    {
+        var uri = tabs.nth(i).uri;
+        if (uris.fastIndexOf(uri) == -1)
+            uris.push(uri);
+        else 
+            execute((i+1) + "close_tab");
+    }
+};
+var onNavigation = function(wv, frame, request) 
+{
+    var uri = request.uri;
+    for (var i=tabs.length-1; i>=0; --i)
+    {
+        if (tabs.nth(i).uri == uri && i != wv.number) 
+        {
+            execute((i+1) + "focus_tab");
+            if (/^\s*$/.test(wv.uri))
+                execute((wv.number + 1) + "close");
+            return true;
+        }
+    }
+    return false;
+};
+var connectAutoFocus = function()
+{
+    signalId = signals.connect("navigation", onNavigation);
+};
+var disconnectAutoFocus = function()
+{
+    if (signalId != -1)
+    {
+        signals.disconnect(signalId);
+        signalId = -1;
+        return true;
+    }
+    return false;
+};
+var toggleAutoFocus = function()
+{
+    if (disconnectAutoFocus())
+        io.notify("unique_tabs: autofocus disabled");
+    else 
+    {
+        io.notify("unique_tabs: autofocus enabled");
+        connectAutoFocus();
+    }
+};
+
+return {
+    defaultConfig : defaultConfig, 
+    init : function(c) {
+        if (c.shortcutRemoveDuplicates || c.commandRemoveDuplicates)
+        {
+            bind(c.shortcutRemoveDuplicates, removeDuplicates, c.commandRemoveDuplicates);
+        }
+        if (c.shortcutToggleAutoFocus || c.commandToggleAutoFocus)
+        {
+            bind(c.shortcutToggleAutoFocus, toggleAutoFocus, c.commandToggleAutoFocus);
+        }
+
+        if (c.autoFocus)
+            connectAutoFocus();
+        return true;
+    }, 
+    end : function() {
+        unbind(removeDuplicates);
+        unbind(toggleAutoFocus);
+        disconnectAutoFocus();
+        return true;
+    }
+}
+
+// vim:set ft=javascript:

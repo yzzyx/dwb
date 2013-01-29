@@ -52,6 +52,18 @@ global        object     read
 Refers to the global object.
 ****
 
+****
+[float]
+==== *session* ====
+
+[source,javascript]
+----
+session        SoupSession     read
+----
+
+The webkit session.
+****
+
 === Methods ===
 
 
@@ -312,7 +324,7 @@ Unbind a shortcut that was previously binded with <<bind>>
  ::
 
 _func_ or _name_;; Either the function or the optional name passed to <<bind>>.
-_returns_;; +true+ if the function is unbinded
+_returns_;; +true+ if the function was unbound
 ****
 
 ======
@@ -757,7 +769,6 @@ Gets the webview object of the nth tab
 _n_;; Number of the tab
 _returns_;; The corresponding <<webview>>
 ****
-
 
 ====
 .Example
@@ -2327,6 +2338,26 @@ Emitted when the <<DownloadStatus>> changes.
  ::
 
 _download_;; The <<Download>> 
+****
+
+****
+[[executeCommand]]
+[float]
+==== *executeCommand* ==== 
+
+[source,javascript]
+----
+Boolean callback(detail) 
+----
+
+Emitted before a command is executed, return true to prevent the execution.
+
+ ::
+
+_detail.command_;; The command that is executed.
+_detail.argument_;; The command that is executed.
+_detail.nummod_;; The numerical modifier, will be -1 if no numerical modifier
+was used. 
 ****
 
 

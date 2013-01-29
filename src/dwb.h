@@ -465,6 +465,8 @@ enum Signal {
   SIG_PLUGINS_FRAME_CREATED,
   SIG_PLUGINS_LAST,
 
+  SIG_EDITOR_NAVIGATION, 
+
   SIG_KEY_PRESS,
   SIG_KEY_RELEASE,
   SIG_LAST,
@@ -941,7 +943,6 @@ DwbStatus dwb_set_clipboard(const char *text, GdkAtom atom);
 char * dwb_clipboard_get_text(GdkAtom atom);
 void dwb_paste_primary(void);
 
-DwbStatus dwb_open_in_editor(void);
 gboolean dwb_confirm(GList *gl, char *prompt, ...);
 
 void dwb_save_quickmark(const char *);
@@ -970,9 +971,7 @@ DwbStatus dwb_scheme_handler(GList *gl, WebKitNetworkRequest *request);
 GList *dwb_get_simple_list(GList *, const char *filename);
 char * dwb_prompt(gboolean visibility, char *prompt, ...);
 
-gboolean dwb_dom_remove_from_parent(WebKitDOMNode *node, GError **error);
 char * dwb_get_raw_data(GList *gl);
-gboolean dwb_dom_add_frame_listener(WebKitWebFrame *frame, const char *signal, GCallback callback, gboolean bubble, GList *gl);
 
 void dwb_free_list(GList *list, void (*func)(void*));
 void dwb_init(void);

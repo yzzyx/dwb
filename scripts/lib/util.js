@@ -73,7 +73,6 @@
     });
     Object.freeze(util);
     
-
     if (Object.prototype.forEach === undefined) 
     {
         Object.defineProperty(Object.prototype, "forEach", 

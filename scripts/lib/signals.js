@@ -86,17 +86,17 @@
             value : function(name, callback)
             {
                 this.connect("createTab", function(wv) {
-                    wv.connect(name, function() { callback.apply(null, arguments);});
+                    wv.connect(name, function() { callback.apply(callback, arguments);});
                 });
             }
         },
         "disconnect" : 
         {
-            value : _disconnectByProp.bind(this, "id")
+            value : _disconnectByProp.bind(null, "id")
         },
         "disconnectByFunction" : 
         {
-            value : _disconnectByProp.bind(this, "callback")
+            value : _disconnectByProp.bind(null, "callback")
         }, 
         "disconnectByName" : 
         {

@@ -23,6 +23,7 @@
 #include "domain.h"
 #include "adblock.h"
 #include "js.h"
+#include "dom.h"
 
 
 
@@ -435,7 +436,7 @@ adblock_frame_load_status_cb(WebKitWebFrame *frame, GParamSpec *p, GList *gl)
     if (status == WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT) 
         adblock_apply_element_hider(frame, gl);
     else if (status == WEBKIT_LOAD_COMMITTED) 
-        dwb_dom_add_frame_listener(frame, "beforeload", G_CALLBACK(adblock_before_load_cb), true, gl);
+        dom_add_frame_listener(frame, "beforeload", G_CALLBACK(adblock_before_load_cb), true, gl);
 }
 
 /* adblock_frame_created_cb {{{*/
