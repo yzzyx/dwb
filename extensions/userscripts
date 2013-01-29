@@ -85,449 +85,471 @@ UserScript.prototype = new Function();
 UserScript.prototype.constructor = UserScript;
 function UserScript() 
 {
-  this.description = null;
-  this.downloadURL = null;
-  this.exclude = [];
-  this.icon = null;
-  this.include = [];
-  this.match = [];
-  this.name = null;
-  this.namespace = null;
-  this.require = [];
-  this.resource = [];
-  this.runAt = "document-end";
-  this.unwrap = false;
-  this.updateURL = null;
-  this.version = null;
-  this.script = null;
-  this.scriptId = null;
-  // scriptish
-  this.delay = 0;
-  this.noframes = false;
-  this.priority = 0;
+    this.description = null;
+    this.downloadURL = null;
+    this.exclude = [];
+    this.icon = null;
+    this.include = [];
+    this.match = [];
+    this.name = null;
+    this.namespace = null;
+    this.require = [];
+    this.resource = [];
+    this.runAt = "document-end";
+    this.unwrap = false;
+    this.updateURL = null;
+    this.version = null;
+    this.script = null;
+    this.scriptId = null;
+    // scriptish
+    this.delay = 0;
+    this.noframes = false;
+    this.priority = 0;
 }
 
 // Reused regular expressions
 var regexes = {
-  isTld : /\.tld(?:\/|:|$)/, 
-  isRegExp : /^\/.*\/$/
+    isTld : /\.tld(?:\/|:|$)/, 
+    isRegExp : /^\/.*\/$/
 };
 
-var GM_compatability = function () {
-  var DWB_scriptPrefix = "dwb_userscript_";
-  if (DWB_scriptId !== undefined) {
-    DWB_scriptPrefix = DWB_scriptPrefix + DWB_scriptId + "_";
-  }
-  var GM_addStyle = function (styles) 
-  {
-    var style = document.createElement("style");
-    style.setAttribute("type", "text/css");
-    style.appendChild(document.createTextNode(styles));
-    document.getElementsByTagName("head")[0].appendChild(style);
-  };
-  var GM_log = function (text) {
-    console.log(text);
-  };
-  var GM_setValue = function (key, value) {
-    if (localStorage !== null && (typeof value === "string" || typeof value === "number" || typeof value == "boolean") )
-      localStorage.setItem(DWB_scriptPrefix + key, value);
-    else 
-      GM_log("GM_setValue only works with enabled localStorage and only for strings, numbers and booleans");
-  };
-  var GM_getValue = function (key, def) {
-    if (localStorage !== null) 
-      return localStorage.getItem(DWB_scriptPrefix + key) || def;
-    else 
-      GM_log("GM_getValue only works with enabled localStorage");
-    return undefined;
-  };
-  var GM_deleteValue = function (key) {
-    if (localStorage !== null) 
-      localStorage.removeItem(DWB_scriptPrefix + key);
-    else 
-      GM_log("GM_deleteValue only works with enabled localStorage");
-  };
-  var GM_listValues = function () {
-    var i;
-    var a = [];
-    for (i=0; i<localStorage.length; i++) {
-      a.push(localStorage.key(i).replace(DWB_scriptPrefix, ""));
+var GM_compatability = function () 
+{
+    var DWB_scriptPrefix = "dwb_userscript_";
+    if (DWB_scriptId !== undefined) 
+    {
+        DWB_scriptPrefix = DWB_scriptPrefix + DWB_scriptId + "_";
     }
-    return a;
-  };
-  var GM_info = function () { return undefined; };
-  var GM_registerMenuCommand = function () { return undefined; };
-  var GM_openInTab = function (url) { return null; };
-  var GM_getResourceText = function (name) {
-    // TODO implemnt
-    return ""; 
-  };
-  var GM_getResourceURL = function (name) {
-    // TODO implemnt
-    return ""; 
-  };
-  var GM_xmlHttpRequest = function (details) {
-    // TODO implemnt
-    return null;
-  };
+    var GM_addStyle = function (styles) 
+    {
+        var style = document.createElement("style");
+        style.setAttribute("type", "text/css");
+        style.appendChild(document.createTextNode(styles));
+        document.getElementsByTagName("head")[0].appendChild(style);
+    };
+    var GM_log = function (text) 
+    {
+        console.log(text);
+    };
+    var GM_setValue = function (key, value) 
+    {
+        if (localStorage !== null && (typeof value === "string" || typeof value === "number" || typeof value == "boolean") )
+            localStorage.setItem(DWB_scriptPrefix + key, value);
+        else 
+            GM_log("GM_setValue only works with enabled localStorage and only for strings, numbers and booleans");
+    };
+    var GM_getValue = function (key, def) 
+    {
+        if (localStorage !== null) 
+            return localStorage.getItem(DWB_scriptPrefix + key) || def;
+        else 
+            GM_log("GM_getValue only works with enabled localStorage");
+        return undefined;
+    };
+    var GM_deleteValue = function (key) 
+    {
+        if (localStorage !== null) 
+            localStorage.removeItem(DWB_scriptPrefix + key);
+        else 
+            GM_log("GM_deleteValue only works with enabled localStorage");
+    };
+    var GM_listValues = function () 
+    {
+        var i;
+        var a = [];
+        for (i=0; i<localStorage.length; i++) {
+            a.push(localStorage.key(i).replace(DWB_scriptPrefix, ""));
+        }
+        return a;
+    };
+    var GM_info = function () { return undefined; };
+    var GM_registerMenuCommand = function () { return undefined; };
+    var GM_openInTab = function (url) { return null; };
+    var GM_getResourceText = function (name) 
+    {
+        // TODO implemnt
+        return ""; 
+    };
+    var GM_getResourceURL = function (name) 
+    {
+        // TODO implemnt
+        return ""; 
+    };
+    var GM_xmlHttpRequest = function (details) 
+    {
+        // TODO implemnt
+        return null;
+    };
 };
 
 function matchIncludeExclude(frame, items) //{{{
 {
-  var uri = frame.uri;
-  var domain = frame.domain;
-  var i;
-  for (i=0; i<items.length; i++) {
-    try {
-      if (items[i].isTld && domain !== null) {
-        var reg = new RegExp("(?=.)" + domain + "($|/|:)");
-        var newDomain = domain.substring(0, domain.indexOf(".")) + ".tld$1";
-        uri = uri.replace(reg, newDomain);
-      }
-      if (items[i].regExp.test(uri)) {
-        return true;
-      }
+    var uri = frame.uri;
+    var domain = frame.domain;
+    var i;
+    for (i=0; i<items.length; i++) 
+    {
+        try 
+        {
+            if (items[i].isTld && domain !== null) 
+            {
+                var reg = new RegExp("(?=.)" + domain + "($|/|:)");
+                var newDomain = domain.substring(0, domain.indexOf(".")) + ".tld$1";
+                uri = uri.replace(reg, newDomain);
+            }
+            if (items[i].regExp.test(uri)) 
+                return true;
+        }
+        catch(e) 
+        {
+            extensions.error(me, e);
+        }
     }
-    catch(e) {
-      extensions.error(me, e);
-    }
-  }
-  return false;
+    return false;
 }//}}}
 
 function matchMatches(frame, items) //{{{
 {
-  var i, item;
-  var o = uriSplit(frame.uri);
-  if (o === null)
-    return false;
-  for (i=0; i<items.length; i++) {
-    item = items[i];
-    if (item.allUrls || 
-        (item.scheme.test(o.scheme)  &&  
-        item.host.test(o.host)      &&  
-        (o.path === null  || item.path.test(o.path)))) {
-      return true;
-    }
+    var i, item;
+    var o = uriSplit(frame.uri);
+    if (o === null)
+        return false;
+    for (i=0; i<items.length; i++) 
+    {
+        item = items[i];
+        if (item.allUrls || 
+            (item.scheme.test(o.scheme)  &&  
+             item.host.test(o.host)      &&  
+             (o.path === null  || item.path.test(o.path)))) 
+        {
+            return true;
+        }
 
-  }
+    }
   return false;
 }//}}}
 
-function doInject(frame, item) {
-  if (item.delay > 0) {
-    timerStart(item.delay, function() {
-      frame.inject(item.script, null, item.unwrap);
-      return false;
-    });
+function doInject(frame, item) 
+{
+  if (item.delay > 0) 
+  {
+      timerStart(item.delay, function() {
+          frame.inject(item.script, null, item.unwrap);
+          return false;
+      });
   }
-  else {
+  else 
     frame.inject(item.script, null, item.unwrap);
-  }
 }
 
 function handle(frame, array, isMainFrame) //{{{
 {
-  var i, item;
-  for (i=0; i<array.length; i++) {
-    item = array[i];
-    if (item.noframes && !isMainFrame)
-      continue;
-    try {
-      if (matchIncludeExclude(frame, item.exclude)) 
-        continue;
+    var i, item;
+    for (i=0; i<array.length; i++) 
+    {
+        item = array[i];
+        if (item.noframes && !isMainFrame)
+            continue;
+        try 
+        {
+            if (matchIncludeExclude(frame, item.exclude)) 
+                continue;
 
-      if (matchIncludeExclude(frame, item.include)) {
-        doInject(frame, item);
-      }
-      else if (matchMatches(frame, item.match)) {
-        doInject(frame, item);
-      }
+            if (matchIncludeExclude(frame, item.include)) 
+                doInject(frame, item);
+            else if (matchMatches(frame, item.match)) 
+                doInject(frame, item);
+        }
+        catch (e) 
+        {
+            extensions.debug(me);
+        }
     }
-    catch (e) {
-      extensions.debug(me);
-    }
-  }
 }//}}}
 
 function loadFinishedCallback(wv, frame) //{{{
 {
-  handle(frame, onEnd, wv.mainFrame === frame);
+    handle(frame, onEnd, wv.mainFrame === frame);
 }//}}}
 
 function loadCommittedCallback(wv) //{{{
 {
-  handle(wv.mainFrame, onStart, true);
+    handle(wv.mainFrame, onStart, true);
 }//}}}
 
 function parseIncludeExclude(array) //{{{
 {
-  var i, rule;
-  for (i=0; i<array.length; i++) {
-    rule = array[i];
-    if (regexes.isRegExp.test(rule)) {
-      array[i] = { 
-        regExp : new RegExp(rule.substring(1, rule.length-1)), 
-        isTld : regexes.isTld.test(rule) 
-      };
+    var i, rule;
+    for (i=0; i<array.length; i++) 
+    {
+        rule = array[i];
+        if (regexes.isRegExp.test(rule)) 
+        {
+            array[i] = { 
+                regExp : new RegExp(rule.substring(1, rule.length-1)), 
+                isTld : regexes.isTld.test(rule) 
+            };
+        }
+        else 
+        {
+            array[i] = { 
+                regExp : new RegExp(rule.replace(/\*/g, ".*")), 
+                isTld : regexes.isTld.test(rule) 
+            };
+        }
     }
-    else {
-      array[i] = { 
-        regExp : new RegExp(rule.replace(/\*/g, ".*")), 
-        isTld : regexes.isTld.test(rule) 
-      };
-    }
-  }
 }//}}}
 
 function uriSplit(uri) 
 {
-  var parts, scheme, host, path, idx; 
-  parts = uri.split("://");
-  if (parts[0] === uri) 
-    return null;
-  scheme = parts[0];
-  idx = parts[1].indexOf("/");
-  if (idx == -1) {
-    host = parts[1];
-    path = null;
-  }
-  else {
-    host = parts[1].substring(0, idx);
-    path = parts[1].substring(idx);
-  }
-  return { path : path, host: host, scheme : scheme }; 
+    var parts, scheme, host, path, idx; 
+    parts = uri.split("://");
+    if (parts[0] === uri) 
+        return null;
+    scheme = parts[0];
+    idx = parts[1].indexOf("/");
+    if (idx == -1) 
+    {
+        host = parts[1];
+        path = null;
+    }
+    else 
+    {
+        host = parts[1].substring(0, idx);
+        path = parts[1].substring(idx);
+    }
+    return { path : path, host: host, scheme : scheme }; 
 }
 
 function parseMatch(m) 
 {
-  var i, scheme, host, path, parts, j; 
-  if (m === "<all_urls>") {
-    return { allUrls : true };
-  }
+    var i, scheme, host, path, parts, j; 
+    if (m === "<all_urls>") {
+        return { allUrls : true };
+    }
 
-  var o = uriSplit(m);
-  if (o === null) {
-    extensions.warning(me, "Invalid or unsupported match rule: " + m);
-    return null;
-  }
-  if (!(/\*|http|https|file/.test(o.scheme))) {
-    extensions.warning(me, "Invalid scheme pattern: " + m);
-    return null;
-  }
-  else {
-    o.scheme = new RegExp(o.scheme.replace("*", ".*"));
-  }
-  if (! (/^(?:\*\.[^*\/]*|[^*]*|\*)$/.test(o.host))) {
-    extensions.warning(me, "Invalid host pattern: " + m);
-    return null;
-  }
-  else {
-    o.host = new RegExp(o.host.replace(/([.?+^$[\]\\(){}|-])/g, "\\$1").replace("*", ".*"));
-  }
-  if (! (/^\/.*/.test(o.path))) { 
-    extensions.warning(me, "Invalid path pattern: " + m);
-    return null;
-  }
-  else if (o.path !== null) {
-    o.path = new RegExp(o.path.replace(/([.?+^$[\]\\(){}|-])/g, "\\$1").replace("*", ".*"));
-  }
-  return { host : o.host, scheme : o.scheme, path : o.path, allUrls : false };
+    var o = uriSplit(m);
+    if (o === null) 
+    {
+        extensions.warning(me, "Invalid or unsupported match rule: " + m);
+        return null;
+    }
+    if (!(/\*|http|https|file/.test(o.scheme))) 
+    {
+        extensions.warning(me, "Invalid scheme pattern: " + m);
+        return null;
+    }
+    else 
+        o.scheme = new RegExp(o.scheme.replace("*", ".*"));
+    
+    if (! (/^(?:\*\.[^*\/]*|[^*]*|\*)$/.test(o.host))) 
+    {
+        extensions.warning(me, "Invalid host pattern: " + m);
+        return null;
+    }
+    else 
+        o.host = new RegExp(o.host.replace(/([.?+^$[\]\\(){}|-])/g, "\\$1").replace("*", ".*"));
+    
+    if (! (/^\/.*/.test(o.path))) 
+    { 
+        extensions.warning(me, "Invalid path pattern: " + m);
+        return null;
+    }
+    else if (o.path !== null) 
+        o.path = new RegExp(o.path.replace(/([.?+^$[\]\\(){}|-])/g, "\\$1").replace("*", ".*"));
+    
+    return { host : o.host, scheme : o.scheme, path : o.path, allUrls : false };
 }
 
-function getRequirements(userscript) {//{{{
-  var i;
-  for (i=0; i<userscript.require.length; i++) {
-    //io.print(userscript.require[i]);
-    //sendRequest(userscript.require[0], function (response, message) {
-    //  ;
-    //  //io.print(response);
-    //});
-    //sendRequest(userscripts.require[i], function (response) {
-    //  io.print(response);
-    //});
-  }
+function getRequirements(userscript) //{{{
+{
+    var i;
+    for (i=0; i<userscript.require.length; i++) {
+        //io.print(userscript.require[i]);
+        //sendRequest(userscript.require[0], function (response, message) {
+        //  ;
+        //  //io.print(response);
+        //});
+        //sendRequest(userscripts.require[i], function (response) {
+        //  io.print(response);
+        //});
+    }
 }//}}}
 
 function parseScript(path) //{{{
 {
-  var userscript;
-  var i, items, key, value, idx, m, matches = [], numVal;
+    var userscript;
+    var i, items, key, value, idx, m, matches = [], numVal;
 
-  var script = io.read(path);
-  if (!script || (/^\s*$/).test(script)) 
-    return;
+    var script = io.read(path);
+    if (!script || (/^\s*$/).test(script)) 
+      return;
 
-  var metaStart = script.search(/(^|\n)\/\/\s*==UserScript==/);
-  var metaEnd = script.search(/\n\/\/\s*==\/UserScript==/);
+    var metaStart = script.search(/(^|\n)\/\/\s*==UserScript==/);
+    var metaEnd = script.search(/\n\/\/\s*==\/UserScript==/);
 
-  userscript = new UserScript();
+    userscript = new UserScript();
 
-  if (metaStart == -1 || metaEnd == -1) {
-    userscript.script = script; 
-    userscript.include = [ { regExp : /.*/, isTld : false} ];
-    onEnd.push(userscript);
-    return;
-  }
+    if (metaStart == -1 || metaEnd == -1) 
+    {
+        userscript.script = script; 
+        userscript.include = [ { regExp : /.*/, isTld : false} ];
+        onEnd.push(userscript);
+        return;
+    }
 
-  var meta = script.substring(metaStart, metaEnd).split("\n");
-  var scriptStart = script.substring(metaEnd+1).indexOf("\n") + metaEnd + 1;
+    var meta = script.substring(metaStart, metaEnd).split("\n");
+    var scriptStart = script.substring(metaEnd+1).indexOf("\n") + metaEnd + 1;
 
-  var regValue = /\s[^\/@]\S?/;
-  var regIsRule = /^\s*\/\/\s*@/;
-  for (i=1; i<meta.length; i++) {
-    if (! (regIsRule.test(meta[i])) )
-      continue;
-    try {
-      items = meta[i].split(/\s+/, 2);
-      key = items[1].substring(1).trim();
-      idx = meta[i].search(regValue);
-      value = idx >= 0 ? meta[i].substring(idx+1).trim() : null;
-      if (key == "description"  || 
-          key == "downloadURL"  || 
-          key == "icon"         || 
-          key == "name"         || 
-          key == "namespace"    || 
-          key == "updateURL"    || 
-          key == "version") 
-      {
-        userscript[key] = value;
-      }
-      else if (typeof userscript[key] == "number") {
-        try {
-          numVal = parseInt(value, 10);
-          if (!isNaN(numVal)) 
-            userscript[key] = numVal;
+    var regValue = /\s[^\/@]\S?/;
+    var regIsRule = /^\s*\/\/\s*@/;
+    for (i=1; i<meta.length; i++) 
+    {
+        if (! (regIsRule.test(meta[i])) )
+            continue;
+        try 
+        {
+            items = meta[i].split(/\s+/, 2);
+            key = items[1].substring(1).trim();
+            idx = meta[i].search(regValue);
+            value = idx >= 0 ? meta[i].substring(idx+1).trim() : null;
+            if (key == "description"  || 
+                key == "downloadURL"  || 
+                key == "icon"         || 
+                key == "name"         || 
+                key == "namespace"    || 
+                key == "updateURL"    || 
+                key == "version") 
+            {
+                userscript[key] = value;
+            }
+            else if (typeof userscript[key] == "number") 
+            {
+                try 
+                {
+                    numVal = parseInt(value, 10);
+                    if (!isNaN(numVal)) 
+                        userscript[key] = numVal;
+                }
+                catch (e) {
+                    extensions.debug(me, e);
+                }
+            }
+            else if (key == "unwrap") 
+                userscript.unwrap = true;
+            else if (key == "noframes") 
+                userscript.noframes = true;
+            else if (key == "run-at")
+                userscript.runAt = value;
+            else if (userscript[key] instanceof Array) 
+                    userscript[key] = userscript[key].concat(value.match(/\S+/g));
         }
-        catch (e) {
-          extensions.debug(me, e);
+        catch(e) 
+        {
+            extensions.debug(me, e);
         }
-      }
-      else if (key == "unwrap") 
-        userscript.unwrap = true;
-      else if (key == "noframes") 
-        userscript.noframes = true;
-      else if (key == "run-at")
-        userscript.runAt = value;
-      else if (userscript[key] instanceof Array) {
-        userscript[key] = userscript[key].concat(value.match(/\S+/g));
-      }
+
     }
-    catch(e) {
-      extensions.debug(me, e);
+    if (userscript.include.length === 0) 
+        userscript.include.push({regExp : /.*/, isTld : false});
+    else 
+        parseIncludeExclude(userscript.include);
+    parseIncludeExclude(userscript.exclude);
+    // TODO resources
+
+    var scriptId = new String();
+    if (userscript.namespace === null || userscript.name === null) 
+        userscript.scriptId = path;
+    else
+        userscript.scriptId = userscript.namespace + "::" + userscript.name;
+    userscript.scriptId = userscript.scriptId.replace(/\s+/g, "_");
+    userscript.script = "var DWB_scriptId = '" + userscript.scriptId + "';" +  
+        util.getBody(GM_compatability) + script.substring(0, metaStart) + 
+        script.substring(scriptStart);
+
+    getRequirements(userscript);
+
+    for (i=0; i<userscript.match.length; i++) 
+    {
+        m = parseMatch(userscript.match[i]);
+        if (m !== null) 
+            matches.push(m);
     }
-
-  }
-  if (userscript.include.length === 0) 
-    userscript.include.push({regExp : /.*/, isTld : false});
-  else 
-    parseIncludeExclude(userscript.include);
-  parseIncludeExclude(userscript.exclude);
-  // TODO resources
-
-  var scriptId = new String();
-  if (userscript.namespace === null || userscript.name === null) 
-    userscript.scriptId = path;
-  else
-    userscript.scriptId = userscript.namespace + "::" + userscript.name;
-  userscript.scriptId = userscript.scriptId.replace(/\s+/g, "_");
-  userscript.script = "var DWB_scriptId = '" + userscript.scriptId + "';" +  
-    util.getBody(GM_compatability) + script.substring(0, metaStart) + 
-    script.substring(scriptStart);
-
-  getRequirements(userscript);
-
-  for (i=0; i<userscript.match.length; i++) {
-    m = parseMatch(userscript.match[i]);
-    if (m !== null) {
-      matches.push(m);
-    }
-  }
-  userscript.match = matches;
-  if (userscript.runAt == "document-start")
-    onStart.push(userscript);
-  else 
-    onEnd.push(userscript);
+    userscript.match = matches;
+    if (userscript.runAt == "document-start")
+        onStart.push(userscript);
+    else 
+        onEnd.push(userscript);
 }//}}}
 
-function userscriptsStart() {
-  var ret = false;
-  if (onStart.length > 0) {
-    onStart.sort(function(a, b) { return b.priority - a.priority; });
-    sigCommitted = signals.connect("loadCommitted", loadCommittedCallback);
-    ret = true;
-  }
-  if (onEnd.length > 0) {
-    onEnd.sort(function(a, b) { return b.priority - a.priority; });
-    sigDocument = signals.connect("documentLoaded", loadFinishedCallback);
-    ret = true;
-  }
-  //metaData = {};
-  //onStart.concat(onEnd).forEach(function (v, k, obj) {
-  //  var o = { 
-  //    require     : obj[k].require,
-  //    downloadURL : obj[k].downloadURL,
-  //    updateURL   : obj[k].updateURL,
-  //    version     : obj[k].version,
-  //    resource    : obj[k].resource
-  //  };
-  //  metaData[obj[k].scriptId] = o;
-  //});
-  //io.write(META_DATA, "w", JSON.stringify(metaData));
-  return ret;
+function userscriptsStart() 
+{
+    var ret = false;
+    if (onStart.length > 0) 
+    {
+        onStart.sort(function(a, b) { return b.priority - a.priority; });
+        sigCommitted = signals.connect("loadCommitted", loadCommittedCallback);
+        ret = true;
+    }
+    if (onEnd.length > 0) 
+    {
+        onEnd.sort(function(a, b) { return b.priority - a.priority; });
+        sigDocument = signals.connect("documentLoaded", loadFinishedCallback);
+        ret = true;
+    }
+    //metaData = {};
+    //onStart.concat(onEnd).forEach(function (v, k, obj) {
+    //  var o = { 
+    //    require     : obj[k].require,
+    //    downloadURL : obj[k].downloadURL,
+    //    updateURL   : obj[k].updateURL,
+    //    version     : obj[k].version,
+    //    resource    : obj[k].resource
+    //  };
+    //  metaData[obj[k].scriptId] = o;
+    //});
+    //io.write(META_DATA, "w", JSON.stringify(metaData));
+    return ret;
 }
 function parseScripts(scripts) //{{{
 {
-  var i, path;
-  var scriptDir = data.configDir + "/scripts";
-  for (i=0; i<scripts.length; i++) {
-    if (system.fileTest(scripts[i], FileTest.regular | FileTest.symlink)) {
-      parseScript(scripts[i]);
+    var i, path;
+    var scriptDir = data.configDir + "/scripts";
+    for (i=0; i<scripts.length; i++) 
+    {
+        if (system.fileTest(scripts[i], FileTest.regular | FileTest.symlink)) 
+            parseScript(scripts[i]);
     }
-  }
-  if (system.fileTest(scriptDir, FileTest.dir)) {
-    var lines = io.dirNames(scriptDir);
-    for (i=0; i<lines.length; i++) {
-      if (lines[i].charAt(0) == ".")
-        continue;
-      path = scriptDir + "/" + lines[i];
-      if (!(/^\s*$/.test(lines[i])) && system.fileTest(path, FileTest.regular | FileTest.symlink)) {
-        parseScript(path);
-      }
+    if (system.fileTest(scriptDir, FileTest.dir)) 
+    {
+        var lines = io.dirNames(scriptDir);
+        for (i=0; i<lines.length; i++) 
+        {
+            if (lines[i].charAt(0) == ".")
+                continue;
+            path = scriptDir + "/" + lines[i];
+            if (!(/^\s*$/.test(lines[i])) && system.fileTest(path, FileTest.regular | FileTest.symlink)) 
+                parseScript(path);
+        }
     }
-  }
-  return userscriptsStart();
+    return userscriptsStart();
 }//}}}
 
 return {
-  init : function (c) {
-    //var meta;
-    //if (! system.fileTest(DATA_DIR, FileTest.dir)) {
-    //  system.mkdir(DATA_DIR, 0700);
-    //}
-    //if (system.fileTest(META_DATA, FileTest.exists)) {
-    //  meta = io.read(META_DATA);
-    //  try {
-    //    metaData = JSON.parse(meta);
-    //  }
-    //  catch (e) {
-    //    io.debug(e);
-    //    metaData = {};
-    //  }
-    //}
-    return parseScripts(c ? c.scripts || [] : []);
-  },
-  end : function () {
-    if (sigDocument >= 0) {
-      signals.disconnect(sigDocument);
-      sigDocument = -1;
+    init : function (c) {
+        return parseScripts(c ? c.scripts || [] : []);
+    },
+    end : function () {
+        if (sigDocument >= 0) {
+            signals.disconnect(sigDocument);
+            sigDocument = -1;
+        }
+        if (sigCommitted >= 0) {
+            signals.disconnect(sigCommitted);
+            sigCommitted = -1;
+        }
+
     }
-    if (sigCommitted >= 0) {
-      signals.disconnect(sigCommitted);
-      sigCommitted = -1;
-    }
-    
-  }
 };
 
 // vim: set ft=javascript:

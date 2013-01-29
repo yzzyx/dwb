@@ -99,29 +99,29 @@ INFO>*/
 var me = "formfiller";
 var defaultConfig = {
 //<DEFAULT_CONFIG
-  // shortcut that gets and saves formdata
-  scGetForm : "efg",
+// shortcut that gets and saves formdata
+scGetForm : "efg",
 
-  // shortcut that fills a form
-  scFillForm : "eff",
+// shortcut that fills a form
+scFillForm : "eff",
 
-  // path to the formdata file
-  formData : data.configDir + "/forms",
+// path to the formdata file
+formData : data.configDir + "/forms",
 
-  // whether to use a gpg-encrypted file
-  useGPG : false,
+// whether to use a gpg-encrypted file
+useGPG : false,
 
-  // additional arguments passed to gpg2 when encrypting the formdata
-  GPGOptEncrypt : "",
+// additional arguments passed to gpg2 when encrypting the formdata
+GPGOptEncrypt : "",
 
-  // additional arguments passed to gpg2 when decrypting the formdata
-  GPGOptDecrypt : "",
+// additional arguments passed to gpg2 when decrypting the formdata
+GPGOptDecrypt : "",
 
-  // whether to save the password in memory when gpg is used
-  keepPassword : true,
-  
-  // whether to save the whole formdata in memory when gpg is used
-  keepFormdata : false
+// whether to save the password in memory when gpg is used
+keepPassword : true,
+
+// whether to save the whole formdata in memory when gpg is used
+keepFormdata : false
 
 //>DEFAULT_CONFIG
 };
@@ -129,286 +129,324 @@ var config = {};
 var passWord = null;
 var formData = null;
 
-var injectGetForm = function () {//{{{
-  var ret = null;
-  var forms = document.forms;
+var injectGetForm = function () //{{{
+{
+    var ret = null;
+    var forms = document.forms;
 
-  function objectifyForm(f) {
-    var query = "descendant::input[not(@type='hidden') and (@type='text' or @type='password' or @type='checkbox' or not(@type) or @type='email')]";
-    var input, data;
-    var r = document.evaluate(query, f, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
-    var o = {};
-    o.id = f.id || null;
-    o.form = {};
-    var hasValue = false;
-    var hasIds = true;
+    function objectifyForm(f) 
+    {
+        var query = "descendant::input[not(@type='hidden') and (@type='text' or @type='password' or @type='checkbox' or not(@type) or @type='email')]";
+        var input, data;
+        var r = document.evaluate(query, f, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+        var o = {};
+        o.id = f.id || null;
+        o.form = {};
+        var hasValue = false;
+        var hasIds = true;
 
-    while ((input = r.iterateNext()) !== null) {
-      if (input.value && !(/^\s*$/.test(input.value))) {
-        if (/^\**$/.test(input.value) )
-          return null;
-        if (!input.type || input.type.toLowerCase() === "text" || input.type.toLowerCase() === "password") 
-          hasValue = true;
-        data = {};
-        if (input.id) 
-          data.id = input.id;
-        else 
-          hasIds = false;
-        data.value = input.value;
-        o.form[input.name] = data;
-      }
+        while ((input = r.iterateNext()) !== null) 
+        {
+            if (input.value && !(/^\s*$/.test(input.value))) 
+            {
+                if (/^\**$/.test(input.value) )
+                    return null;
+                if (!input.type || input.type.toLowerCase() === "text" || input.type.toLowerCase() === "password") 
+                    hasValue = true;
+                data = {};
+                if (input.id) 
+                    data.id = input.id;
+                else 
+                    hasIds = false;
+                data.value = input.value;
+                o.form[input.name] = data;
+            }
+        }
+        if (hasValue) 
+        {
+            var ret = {};
+            o.hasIds = hasIds;
+            ret[window.location.host] = o;
+            return ret;
+        }
+        return null;
     }
-    if (hasValue) {
-      var ret = {};
-      o.hasIds = hasIds;
-      ret[window.location.host] = o;
-      return ret;
+
+    for (var i=0; i<forms.length; i++) 
+    {
+        if ((ret = objectifyForm(forms[i])) !== null) 
+            return ret;
+    }
+    return ret;
+};//}}}
+
+var injectFillForm = function () //{{{
+{
+    var key, i, forms, form = null, input;
+    var data = arguments[0];
+
+    function fillInput(input, key) 
+    {
+        var value = data.form[key].value;
+        if(input.type=="checkbox" || input.type=="radio") 
+            input.checked=(value.toLowerCase() !== "false" && value !== "0");
+        else 
+            input.value = value;
+        
+    }
+    function setValues(form) 
+    {
+        var input, value;
+        for (key in data.form) 
+        {
+            if (!form[key])
+                return null;
+        }
+        for (key in data.form) 
+        {
+            fillInput(form[key], key);
+        }
+        return form;
+    }
+
+    function fillElementsById() 
+    {
+        var input;
+        for (key in data.form) 
+        {
+            input = document.getElementById(data.form[key].id);
+            if (input === null || input === undefined) 
+                return null;
+
+            fillInput(input, key);
+        }
+        return input.form || null;
+    }
+
+    function fillFormById() 
+    {
+        var form = document.getElementById(data.id);
+        if (form === null) 
+            return null;
+        return setValues(form);
+    }
+    if (data.hasIds) 
+        form = fillElementsById();
+    
+    if (form === null && data.id !== undefined && data.id !== null) 
+        form = fillFormById();
+    
+    if (form === null) 
+    {
+        forms = document.forms;
+        for (i=0; i<forms.length && form === null; i++) 
+        {
+            form = setValues(forms[i]);
+        }
+    }
+    if (form !== null && data.autosubmit) 
+    {
+        var buttons = form.querySelectorAll("[type='submit']");
+        for (i=0; i<buttons.length; i++) 
+        {
+            var e = buttons[i];
+            var mouseEvent = e.ownerDocument.createEvent("MouseEvent");
+            mouseEvent.initMouseEvent("click", false, true,
+                e.ownerDocument.defaultView, 0, 0, 0, 0, 0, false, false, false, false,
+                0, null);
+            e.dispatchEvent(mouseEvent);
+        }
+        form.submit();
+    }
+    return form !== null;
+};//}}}
+
+function getFormData(callback) //{{{
+{
+    var stat, ret;
+    if (config.useGPG) 
+    {
+        if (formData !== null) 
+            return formData;
+
+        getPassWord();
+        stat = system.spawnSync("gpg2 " + config.GPGOptDecrypt + " --passphrase " + passWord + " --batch --no-tty --yes -d " + config.formData);
+        if (stat.status == 512) 
+        {
+            io.error("Wrong password");
+            passWord = null;
+            return null;
+        }
+        try 
+        {
+            ret = JSON.parse(stat.stdout.replace(/\\"/g, '"'));
+            if (config.keepFormdata) 
+                formData = ret;
+
+            return ret;
+        }
+        catch(e) 
+        {
+            io.debug({error : e, arguments : arguments});
+            io.error("Getting form data failed : " + e.message);
+        }
+    }
+    else 
+    {
+        try 
+        {
+            return JSON.parse(io.read(config.formData));
+        }
+        catch(e) 
+        {
+            io.debug({error : e, arguments : arguments});
+            io.error("Getting form data failed : " + e.message);
+        }
     }
     return null;
-  }
-
-  for (var i=0; i<forms.length; i++) {
-    if ((ret = objectifyForm(forms[i])) !== null) {
-      return ret;
-    }
-  }
-  return ret;
-};//}}}
-
-var injectFillForm = function () {//{{{
-  var key, i, forms, form = null, input;
-  var data = arguments[0];
-
-  function fillInput(input, key) {
-    var value = data.form[key].value;
-    if(input.type=="checkbox" || input.type=="radio") 
-      input.checked=(value.toLowerCase() !== "false" && value !== "0");
-    else {
-      input.value = value;
-    }
-  }
-  function setValues(form) {
-    var input, value;
-    for (key in data.form) {
-      if (!form[key])
-        return null;
-    }
-    for (key in data.form) {
-      fillInput(form[key], key);
-    }
-    return form;
-  }
-
-  function fillElementsById() {
-    var input;
-    for (key in data.form) {
-      input = document.getElementById(data.form[key].id);
-      if (input === null || input === undefined) {
-        return null;
-      }
-      fillInput(input, key);
-    }
-    return input.form || null;
-  }
-
-  function fillFormById() {
-    var form = document.getElementById(data.id);
-    if (form === null) 
-      return null;
-    return setValues(form);
-  }
-  if (data.hasIds) {
-    form = fillElementsById();
-  }
-  if (form === null && data.id !== undefined && data.id !== null) {
-      form = fillFormById();
-  }
-  if (form === null) {
-    forms = document.forms;
-    for (i=0; i<forms.length && form === null; i++) {
-      form = setValues(forms[i]);
-    }
-  }
-  if (form !== null && data.autosubmit) {
-    var buttons = form.querySelectorAll("[type='submit']");
-    for (i=0; i<buttons.length; i++) {
-      var e = buttons[i];
-      var mouseEvent = e.ownerDocument.createEvent("MouseEvent");
-      mouseEvent.initMouseEvent("click", false, true,
-        e.ownerDocument.defaultView, 0, 0, 0, 0, 0, false, false, false, false,
-        0, null);
-      e.dispatchEvent(mouseEvent);
-    }
-    form.submit();
-  }
-  return form !== null;
-};//}}}
-
-function getFormData(callback) {//{{{
-  var stat, ret;
-  if (config.useGPG) {
-    if (formData !== null) {
-      return formData;
-    }
-    getPassWord();
-    stat = system.spawnSync("gpg2 " + config.GPGOptDecrypt + " --passphrase " + passWord + " --batch --no-tty --yes -d " + config.formData);
-    if (stat.status == 512) {
-      io.error("Wrong password");
-      passWord = null;
-      return null;
-    }
-    try {
-      ret = JSON.parse(stat.stdout.replace(/\\"/g, '"'));
-      if (config.keepFormdata) {
-        formData = ret;
-      }
-      return ret;
-    }
-    catch(e) {
-      io.debug({error : e, arguments : arguments});
-      io.error("Getting form data failed : " + e.message);
-    }
-  }
-  else {
-    try {
-      return JSON.parse(io.read(config.formData));
-    }
-    catch(e) {
-      io.debug({error : e, arguments : arguments});
-      io.error("Getting form data failed : " + e.message);
-    }
-  }
-  return null;
 }//}}}
 
-function getPassWord() {//{{{
-  if (passWord === null) {
-    passWord = io.prompt("Password :", false);
-  }
-}//}}}
-
-function writeFormData(object) {//{{{
-  var written = true, ret;
-  if (config.useGPG) {
-    getPassWord();
+function getPassWord() //{{{
+{
     if (passWord === null) 
-      return false;
-
-    ret = system.spawnSync("sh -c \"echo '" + JSON.stringify(object).replace(/"/g, "\\\"") + 
-        "' | gpg2 " + config.GPGOptEncrypt + " --passphrase " + passWord + " --batch --no-tty --yes -c --output " + config.formData + "\"");
-    if (ret.status == 512) {
-      io.error("Wrong password");
-      password = null;
-      return false;
-    }
-    written = ret.status === 0;
-  }
-  else {
-    written = io.write(config.formData, "w", JSON.stringify(object, null, 2));
-  }
-  return written;
+        passWord = io.prompt("Password :", false);
 }//}}}
 
-function saveForm(form) {//{{{
-  var key, object, data, written = false;
-  var autosubmit = io.prompt("Autosubmit (y/n)?").toLowerCase() == "y" ? true : false;
-  var saved = false;
-  if (! system.fileTest(config.formData, FileTest.regular | FileTest.symlink)) {
-    object = JSON.parse(form);
-    for (key in object) 
-      break;
-    object[key].autosubmit = autosubmit;
-    written = writeFormData(object);
-  }
-  else {
-    object = JSON.parse(form);
-    data = getFormData();
-    if (data) {
-      for (key in object) 
-        break;
-      data[key] = object[key];
-      data[key].autosubmit = autosubmit;
+function writeFormData(object) //{{{
+{
+    var written = true, ret;
+    if (config.useGPG) 
+    {
+        getPassWord();
+        if (passWord === null) 
+            return false;
+
+        ret = system.spawnSync("sh -c \"echo '" + JSON.stringify(object).replace(/"/g, "\\\"") + 
+            "' | gpg2 " + config.GPGOptEncrypt + " --passphrase " + passWord + " --batch --no-tty --yes -c --output " + config.formData + "\"");
+        if (ret.status == 512) 
+        {
+            io.error("Wrong password");
+            password = null;
+            return false;
+        }
+        written = ret.status === 0;
     }
-    else if (data === null) {
-      return false;
-    }
-    else {
-      data = object;
-    }
-    written = writeFormData(data);
-  }
-  return written;
+    else 
+        written = io.write(config.formData, "w", JSON.stringify(object, null, 2));
+    
+    return written;
 }//}}}
 
-function getForm() {//{{{
-  var frames = tabs.current.allFrames;
-  var form, i, formFound = false;
-  for (i=0; i<frames.length; i++) {
-    form = frames[i].inject(util.getBody(injectGetForm));
-    if (form != "null") {
-      if (saveForm(form)) {
-        io.notify("Form saved");
-      }
-      else {
-        io.notify("An error occured saving formdata");
-      }
-      formFound = true;
-      break;
+function saveForm(form) //{{{
+{
+    var key, object, data, written = false;
+    var autosubmit = io.prompt("Autosubmit (y/n)?").toLowerCase() == "y" ? true : false;
+    var saved = false;
+    if (! system.fileTest(config.formData, FileTest.regular | FileTest.symlink)) 
+    {
+        object = JSON.parse(form);
+        for (key in object) 
+            break;
+        object[key].autosubmit = autosubmit;
+        written = writeFormData(object);
     }
-  }
-  if (!config.keepPassword)
-    passWord = null;
-  if (!formFound) 
-    io.error("No storable form found");
-}//}}}
-function getHasForms(frames) {//{{{
-  var i;
-  for (i=0; i<frames.length; i++) {
-    if (frames[i].inject("return document.forms.length > 0;") == "true") 
-      return true;
-  }
-  return false;
+    else 
+    {
+        object = JSON.parse(form);
+        data = getFormData();
+        if (data) 
+        {
+            for (key in object) 
+                break;
+            data[key] = object[key];
+            data[key].autosubmit = autosubmit;
+        }
+        else if (data === null) 
+            return false;
+        else 
+            data = object;
+        
+        written = writeFormData(data);
+    }
+    return written;
 }//}}}
 
-function fillForm() {//{{{
-  var data, frames, host, i, ret = false;
-  if (! system.fileTest(config.formData, FileTest.regular | FileTest.symlink)) {
-    io.error("No formdata found");
-    return;
-  }
-  frames = tabs.current.allFrames;
-  if (!getHasForms(frames)) {
-    io.error("No form found");
-    return;
-  }
-  data = getFormData(); 
-  
-  if (data === null)
-    return;
-  for (i=0; i<frames.length; i++) {
-    host = frames[i].host;
-    if (data[host]) {
-      frames[i].inject(util.getBody(injectFillForm), data[host]);
+function getForm() //{{{
+{ 
+    var frames = tabs.current.allFrames;
+    var form, i, formFound = false;
+    for (i=0; i<frames.length; i++) 
+    {
+        form = frames[i].inject(util.getBody(injectGetForm));
+        if (form != "null") 
+        {
+            if (saveForm(form))
+                io.notify("Form saved");
+            else 
+                io.notify("An error occured saving formdata");
+            formFound = true;
+            break;
+        }
     }
-  }
-  if (!config.keepPassword) {
-    passWord = null;
-  }
-  io.notify("Executed formfiller");
+    if (!config.keepPassword)
+        passWord = null;
+    if (!formFound) 
+        io.error("No storable form found");
+}//}}}
+function getHasForms(frames) //{{{
+{
+    var i;
+    for (i=0; i<frames.length; i++) 
+    {
+        if (frames[i].inject("return document.forms.length > 0;") == "true") 
+            return true;
+    }
+    return false;
+}//}}}
+
+function fillForm() //{{{
+{
+    var data, frames, host, i, ret = false;
+    if (! system.fileTest(config.formData, FileTest.regular | FileTest.symlink)) 
+    {
+        io.error("No formdata found");
+        return;
+    }
+    frames = tabs.current.allFrames;
+    if (!getHasForms(frames)) 
+    {
+        io.error("No form found");
+        return;
+    }
+    data = getFormData(); 
+
+    if (data === null)
+        return;
+    for (i=0; i<frames.length; i++) 
+    {
+        host = frames[i].host;
+        if (data[host]) 
+            frames[i].inject(util.getBody(injectFillForm), data[host]);
+    }
+    if (!config.keepPassword) 
+        passWord = null;
+    
+    io.notify("Executed formfiller");
 }//}}}
 
 // init {{{
 return {
-  init : function (c) {
-    config = extensions.getConfig(c, defaultConfig);
-    bind(config.scGetForm, getForm, "formfillerGet");
-    bind(config.scFillForm, fillForm, "formfillerFill");
-    return true;
-  }, 
-  end : function () {
-    unbind("formfillerGet");
-    unbind("formfillerFill");
-    return true;
-  }
+    defaultConfig : defaultConfig,
+    init : function (c) {
+        config = c;
+        bind(config.scGetForm, getForm, "formfillerGet");
+        bind(config.scFillForm, fillForm, "formfillerFill");
+        return true;
+    }, 
+    end : function () {
+        unbind("formfillerGet");
+        unbind("formfillerFill");
+        return true;
+    }
 }//}}}
 // vim: set ft=javascript:
